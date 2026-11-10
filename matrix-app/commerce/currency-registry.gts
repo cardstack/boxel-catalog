@@ -78,7 +78,7 @@ export class RateEntryField extends FieldDef {
         .rate-meta {
           color: var(--muted-foreground);
           font-size: var(--boxel-font-size-xs);
-          text-align: right;
+          text-align: end;
         }
       </style>
     </template>

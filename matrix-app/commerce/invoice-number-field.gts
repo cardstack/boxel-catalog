@@ -31,7 +31,7 @@ export class InvoiceNumberField extends StringField {
           font-variant-numeric: tabular-nums;
           letter-spacing: 0.02em;
           font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>

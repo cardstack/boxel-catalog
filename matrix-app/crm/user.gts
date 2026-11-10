@@ -39,7 +39,7 @@ export class User extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: var(--boxel-sp-2xs);
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           color: var(--foreground);
         }
@@ -143,7 +143,7 @@ export class User extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -235,7 +235,7 @@ export class User extends CardDef {
           color: var(--muted-foreground);
         }
         h1 {
-          font-size: var(--boxel-font-size-xl);
+          font-size: var(--boxel-font-size-lg);
           line-height: 1.1;
         }
         .panel {

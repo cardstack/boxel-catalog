@@ -109,7 +109,7 @@ export class Order extends CardDef {
           font-weight: 600;
         }
         .total {
-          margin-left: auto;
+          margin-inline-start: auto;
           font-weight: 600;
           font-variant-numeric: tabular-nums;
         }
@@ -128,7 +128,7 @@ export class Order extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: var(--boxel-sp-2xs);
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           color: var(--foreground);
         }
@@ -255,7 +255,7 @@ export class Order extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -585,7 +585,7 @@ export class Order extends CardDef {
           font-size: var(--boxel-font-size-sm);
         }
         .t-num {
-          text-align: right;
+          text-align: end;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -606,7 +606,7 @@ export class Order extends CardDef {
           padding-top: var(--boxel-sp-xs);
           border-top: 0.125rem solid var(--foreground);
           color: var(--foreground);
-          font-size: var(--boxel-font-size-md);
+          font-size: var(--boxel-font-size);
           font-weight: 700;
         }
         /* The rule runs across both columns: both cells fill the row, and the

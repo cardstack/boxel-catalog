@@ -46,7 +46,7 @@ export class ProductReview extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: var(--boxel-sp-2xs);
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           color: var(--foreground);
         }

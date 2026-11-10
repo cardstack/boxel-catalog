@@ -61,7 +61,7 @@ export class TaxJurisdiction extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: var(--boxel-sp-2xs);
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           color: var(--foreground);
         }
@@ -150,7 +150,7 @@ export class TaxJurisdiction extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -159,7 +159,7 @@ export class TaxJurisdiction extends CardDef {
         .rate {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           white-space: nowrap;
         }
         @container fitted-card (max-width: 150px) and (max-height: 169px) {
@@ -228,11 +228,11 @@ export class TaxJurisdiction extends CardDef {
           color: var(--muted-foreground);
         }
         h1 {
-          font-size: var(--boxel-font-size-xl);
+          font-size: var(--boxel-font-size-lg);
           line-height: 1.1;
         }
         .rate-line {
-          font-size: var(--boxel-font-size-md);
+          font-size: var(--boxel-font-size);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }

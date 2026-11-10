@@ -199,7 +199,7 @@ export class Proposal extends CardDef {
           line-height: 1.4;
           --boxel-sp-xs: 0.35rem;
           --boxel-sp-lg: 0.75rem;
-          --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
+          --pretui-kv-label-font-size: 0.5625rem;
           --pretui-kv-label-color: var(--muted-foreground);
           border: 1px solid var(--border);
           border-radius: var(--radius);
@@ -355,7 +355,7 @@ export class Proposal extends CardDef {
           line-height: 1.4;
           --boxel-sp-xs: 0.35rem;
           --boxel-sp-lg: 0.75rem;
-          --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
+          --pretui-kv-label-font-size: 0.5625rem;
           --pretui-kv-label-color: var(--muted-foreground);
           border: 1px solid var(--border);
           border-radius: var(--radius);

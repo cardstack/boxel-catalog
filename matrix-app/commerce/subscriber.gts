@@ -132,7 +132,7 @@ export class Subscriber extends CardDef {
         /* Constant-width slot so subscriber rows column-align. */
         .sub-active {
           width: 5.5rem;
-          text-align: right;
+          text-align: end;
           flex-shrink: 0;
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;

@@ -79,7 +79,7 @@ export class Payment extends CardDef {
           flex-shrink: 0;
         }
         .when {
-          margin-left: auto;
+          margin-inline-start: auto;
           color: var(--muted-foreground);
           font-size: var(--boxel-font-size-xs);
         }
@@ -98,7 +98,7 @@ export class Payment extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: var(--boxel-sp-2xs);
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           color: var(--foreground);
         }

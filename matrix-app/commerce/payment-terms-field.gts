@@ -70,7 +70,7 @@ export class PaymentTermsField extends FieldDef {
         }
         .notes {
           flex-basis: 100%;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>
@@ -84,7 +84,7 @@ export class PaymentTermsField extends FieldDef {
         .terms-atom {
           font-weight: 600;
           font-variant-numeric: tabular-nums;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>

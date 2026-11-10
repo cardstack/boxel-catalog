@@ -95,7 +95,7 @@ export class Campaign extends CardDef {
           align-items: center;
           gap: var(--boxel-sp-2xs);
           min-width: 0;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           color: var(--foreground);
         }
@@ -246,11 +246,11 @@ export class Campaign extends CardDef {
           flex-shrink: 0;
         }
         .status {
-          margin-left: auto;
+          margin-inline-start: auto;
         }
         .name {
           font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -390,11 +390,11 @@ export class Campaign extends CardDef {
           color: var(--muted-foreground);
         }
         h1 {
-          font-size: var(--boxel-font-size-xl);
+          font-size: var(--boxel-font-size-lg);
         }
         .status-line {
           margin: var(--boxel-sp-4xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           text-transform: capitalize;
         }
@@ -425,7 +425,7 @@ export class Campaign extends CardDef {
           font-weight: 700;
         }
         .of {
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         /* Pret UI ProgressBar paints its fill with --primary, which measures

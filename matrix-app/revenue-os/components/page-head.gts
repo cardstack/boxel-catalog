@@ -21,7 +21,7 @@ export class PageHead extends Component<Signature> {
       .cap {
         font-family: var(--font-mono);
         font-weight: 600;
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem;
         line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -30,7 +30,7 @@ export class PageHead extends Component<Signature> {
       h1 {
         font-family: var(--boxel-heading-font-family, var(--font-sans));
         font-weight: 400;
-        font-size: var(--boxel-font-size-2xl);
+        font-size: 2.5rem;
         line-height: 1;
         text-transform: uppercase;
       }

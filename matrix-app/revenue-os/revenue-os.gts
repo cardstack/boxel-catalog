@@ -1565,7 +1565,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       .selection-name {
         font-weight: 600;
         font-size: var(--boxel-font-size-xs);
-        margin-right: auto;
+        margin-inline-end: auto;
       }
       .empty {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
