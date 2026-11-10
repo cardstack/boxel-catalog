@@ -1,0 +1,37 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Collectible Product",
+      "cardDescription": "A catalogue entry for a manufactured collectible: the thing itself, not anyone's copy of it.",
+      "specType": "card",
+      "ref": {
+        "module": "../collectible-product",
+        "name": "CollectibleProduct"
+      },
+      "readMe": "## Collectible Product\n\nOne row per SKU, shared by everyone. `sku` is the definitive identifier, `colorway` distinguishes releases of the same silhouette, and `availableVariants` is the manufacturer's size run.\n\n### The split against CollectionItem\n\nThis card is the **catalogue**; `CollectionItem` is the **owned copy**. `retailPrice` lives here because it is a fact about the product. What someone paid lives on their `CollectionItem` because it is a fact about their purchase. Getting this wrong collapses two different questions — \"what did this cost at launch\" and \"what did I pay\" — into one field that answers neither reliably.\n\n### No lowestPrice, no listingCount\n\nBoth are computed. They are deliberately absent: each is an unbounded rollup over active listings, so a live realm query in a metrics component is the right home, not a cached field on the hot catalogue card. The app reads them via a reverse query on `Listing`.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Collectible Product"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../CollectibleProduct/aj1-lost-and-found"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../CollectibleProduct/yeezy-350-zebra"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

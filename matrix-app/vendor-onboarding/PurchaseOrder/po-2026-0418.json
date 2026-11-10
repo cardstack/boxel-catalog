@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "poNumber": "PO-2026-0418",
+      "status": "partially-received",
+      "lineItems": [
+        {
+          "description": "Q4 restock",
+          "quantity": 1,
+          "unitPrice": {
+            "amount": 8240,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "cardInfo": {
+        "name": "PO-2026-0418"
+      },
+      "expectedDelivery": "2026-10-24"
+    },
+    "relationships": {
+      "vendor": {
+        "links": {
+          "self": "../Vendor/atlas-office-supply"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../procurement/purchase-order",
+        "name": "PurchaseOrder"
+      }
+    }
+  }
+}

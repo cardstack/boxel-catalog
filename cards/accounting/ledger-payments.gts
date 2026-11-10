@@ -18,7 +18,6 @@ import NumberField from '@cardstack/base/number';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import {
   operation,
-  bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
 import {
@@ -32,7 +31,14 @@ import {
   day,
   type Fact,
 } from './record-kit';
-import { PostingLine, journalOperation } from './ledger-document';
+import {
+  PostingLine,
+  journalOperation,
+  FX_CHECKS,
+  toHome,
+  currencyFacts,
+} from './ledger-document';
+import { REALIZED_FX } from './ledger-settings';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 import { PaymentMethod } from './ledger-terms';
@@ -46,7 +52,8 @@ const isPosted = (s: string | undefined) => s === 'posted';
 export class PaymentApplication extends FieldDef {
   static displayName = 'Payment application';
   @field billNo = contains(StringField);
-  @field amountMinor = contains(NumberField);
+  @field amountMinor = contains(NumberField); // in the bill's currency
+  @field rateMicros = contains(NumberField); // the bill's rate, for one in another currency
 }
 
 export class BillPayment extends CardDef {
@@ -62,6 +69,8 @@ export class BillPayment extends CardDef {
   @field sourcePayment = linksTo(() => CommercePayment); // the commerce payment it was posted from
   @field memo = contains(StringField);
   @field applications = containsMany(PaymentApplication);
+  @field currency = contains(StringField); // empty: the home currency
+  @field rateMicros = contains(NumberField); // the rate the money went out at
   @field status = contains(DocumentStatusField);
   @field enteredBy = contains(StringField);
   @field postedBy = contains(StringField);
@@ -73,33 +82,52 @@ export class BillPayment extends CardDef {
       );
     },
   });
-  // Debit Accounts Payable for each bill paid; credit the account it was paid from.
+  // Debit Accounts Payable for each bill paid; credit the account it was paid from. In another
+  // currency, each bill's payable clears at the rate it was booked at and the money goes out at this
+  // payment's; the difference is realized exchange gain or loss.
   @field ledgerLines = containsMany(PostingLine, {
     computeVia: function (this: BillPayment) {
       let date = this.date ?? '',
-        party = this.vendorId ?? '';
+        party = this.vendorId ?? '',
+        foreign = !!this.currency;
+      let at = (minor: number | undefined, rate: number | undefined) =>
+        foreign ? toHome(minor, rate) : (minor ?? 0);
       let debits = (this.applications ?? [])
         .filter((a) => a && (a.amountMinor ?? 0) > 0)
         .map(
           (a) =>
             new PostingLine({
               account: '2000',
-              debitMinor: a.amountMinor,
+              debitMinor: at(a.amountMinor, a.rateMicros),
               creditMinor: 0,
               date,
               party,
               doc: a.billNo,
             }),
         );
+      let paid = at(this.totalMinor, this.rateMicros),
+        loss = paid - debits.reduce((n, l) => n + (l.debitMinor ?? 0), 0);
       return [
         ...debits,
         new PostingLine({
           account: this.fromAccount ?? '',
           debitMinor: 0,
-          creditMinor: this.totalMinor ?? 0,
+          creditMinor: paid,
           date,
           doc: this.paymentNo,
         }),
+        ...(loss
+          ? [
+              new PostingLine({
+                account: REALIZED_FX,
+                debitMinor: Math.max(0, loss),
+                creditMinor: Math.max(0, -loss),
+                date,
+                party,
+                doc: this.paymentNo,
+              }),
+            ]
+          : []),
       ];
     },
   });
@@ -112,7 +140,8 @@ export class BillPayment extends CardDef {
   /** Post a draft payment: the realm checks it against itself and stamps who posted it. */
   @operation static post = {
     base: 'transform',
-    transformations: bxl`
+    transformations: {
+      $bxl: `
       assert(if .status == null then true else .status == "draft" end; "Only a draft payment can be posted. This one is already posted.");
       assert((.applications | length) > 0; "A payment has to pay at least one bill.");
       assert(([.applications[].amountMinor | type] | unique) == ["number"]; "Every bill paid needs an amount.");
@@ -120,10 +149,13 @@ export class BillPayment extends CardDef {
       assert([.applications[].amountMinor | floor] == [.applications[].amountMinor]; "Amounts are in whole cents.");
       assert(.fromAccount != null; "Say which account the payment comes from.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the payment can't post.");
-      assert(if realmConfig().chart == null then true else (([.fromAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this payment isn't in the chart of accounts. Add it to the chart, then post.");
+      assert(if realmConfig().chart == null then true else (([.fromAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this payment isn't in the chart of accounts. Add it to the chart, then post.");${FX_CHECKS}
+      assert(if .currency == null then true else ([.applications[].rateMicros] | all(. > 0)) end; "Each bill paid in another currency needs the rate it was booked at.");
+      assert(if .currency == null then true else (if realmConfig().chart == null then true else (["${REALIZED_FX}"] - realmConfig().chart | length == 0) end) end; "Add ${REALIZED_FX}, realized exchange gain or loss, to the chart to post a payment in another currency.");
       .status = "posted";
       .postedBy = actor();
     `,
+    },
   } satisfies OperationDeclaration;
   /** Post it into a journal month: every check `post` makes, recorded as journaled. */
   @operation static journal = journalOperation(this.post);
@@ -135,15 +167,17 @@ export class BillPayment extends CardDef {
         { key: 'Payment no.', value: m.paymentNo ?? '', mono: true },
         { key: 'Vendor', value: m.vendorId ?? '' },
         { key: 'Date', value: day(m.date) },
+        ...currencyFacts(m.currency, m.rateMicros),
         { key: 'From', value: m.fromAccount ?? '' },
         { key: 'Method', value: m.paymentMethod?.name ?? m.method ?? '' },
         { key: 'Posted by', value: m.postedBy ?? '' },
       ];
     }
     get applied(): Fact[] {
-      return (this.args.model.applications ?? [])
-        .filter(Boolean)
-        .map((a) => ({ key: a!.billNo ?? '', value: money(a!.amountMinor) }));
+      return (this.args.model.applications ?? []).filter(Boolean).map((a) => ({
+        key: a!.billNo ?? '',
+        value: money(a!.amountMinor, this.args.model.currency),
+      }));
     }
     get postLines() {
       return (this.args.model.ledgerLines ?? []).map((l) => ({
@@ -158,7 +192,7 @@ export class BillPayment extends CardDef {
         @eyebrow='Bill payment'
         @title={{@model.cardTitle}}
         @meta={{@model.memo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
         @figureLabel='Paid'
         @status={{if (isPosted @model.status) 'Posted' 'Draft'}}
       >
@@ -179,7 +213,7 @@ export class BillPayment extends CardDef {
         @eyebrow='Bill payment'
         @title={{@model.cardTitle}}
         @meta={{@model.date}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
       />
     </template>
   };
@@ -188,7 +222,7 @@ export class BillPayment extends CardDef {
       <Fit
         @eyebrow='Payment'
         @title={{@model.paymentNo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
         @meta={{@model.vendorId}}
       />
     </template>

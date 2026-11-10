@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Close Listing",
+      "cardDescription": "End an active listing as sold, cancelled or expired, and take its collection item off sale.",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/close-listing-command",
+        "name": "default"
+      },
+      "readMe": "## Close Listing\n\nEnds an active `Listing` as `sold`, `cancelled` or `expired`, and clears `listedAt` on its `CollectionItem`, so the item's computed `forSale` turns off and the item can be listed again.\n\n### Example\n\n`linkedExamples` points at the command's natural target: `Listing/yeezy-350-zebra-11`, an active listing.\n\n### Behaviour\n\n- The outcome must be a move the Listing status graph allows from the current status. A sold listing can't be reopened, and a closed listing can't change to a different ending.\n- Create Listing and Close Listing are the only writers of `listedAt`, which is why a Listing's status is read-only in its edit form.\n- Running it again with the same outcome changes nothing on the Listing and only re-clears `listedAt`.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Close Listing",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Listing/yeezy-350-zebra-11"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

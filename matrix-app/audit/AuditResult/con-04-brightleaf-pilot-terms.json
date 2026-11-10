@@ -1,0 +1,68 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rule": {
+        "ruleId": "CON-04",
+        "statement": "Contracts are governed by Delaware or English law.",
+        "regime": {
+          "regime": "Contract Policy",
+          "version": "2026",
+          "clause": "\u00a75.3",
+          "clauseTitle": "Governing law"
+        },
+        "kind": "predicate",
+        "fieldPath": "governingLaw.jurisdiction",
+        "parameters": "{\"oneOf\": [\"Delaware\", \"England & Wales\"]}",
+        "evidenceRequired": false,
+        "severityIfFailed": {
+          "level": "minor"
+        }
+      },
+      "status": {
+        "status": "not-applicable"
+      },
+      "observedValue": "\u2014",
+      "evaluatedAt": "2026-09-21T09:00:00.000Z",
+      "meta": {
+        "createdAt": "2026-09-21T09:00:00.000Z",
+        "changeCount": 0,
+        "sourceVersion": "contract-controls v1"
+      },
+      "cardInfo": {
+        "name": "CON-04 \u00b7 brightleaf-pilot-terms",
+        "summary": "governingLaw.jurisdiction holds no value to compare.",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../../legal/Contract/brightleaf-pilot-terms"
+        }
+      },
+      "audit": {
+        "links": {
+          "self": null
+        }
+      },
+      "evaluatedBy": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-result",
+        "name": "AuditResult"
+      }
+    }
+  }
+}

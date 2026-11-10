@@ -5,6 +5,7 @@
       "sku": "SVC-CUPPING",
       "assetAccount": null,
       "cogsAccount": null,
+      "incomeAccount": "4000",
       "cardInfo": {
         "name": "Cupping program fee"
       },

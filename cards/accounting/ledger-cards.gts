@@ -64,7 +64,14 @@ import {
   day,
   type Fact,
 } from './record-kit';
-import { PostingLine } from './ledger-document';
+import {
+  PostingLine,
+  inHome,
+  currencyFacts,
+  FX_CHECKS,
+  SETTLE_FX_CHECKS,
+  useCurrencyOperation,
+} from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 import {
@@ -79,7 +86,14 @@ import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-ord
 import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 import { Vendor } from './ledger-vendor';
+import { InventoryStock } from '@cardstack/catalog/cards/fulfilment/inventory-stock';
+import { TimeActivity } from './ledger-time';
 import { TaxCode } from './ledger-tax-codes';
+import {
+  BankTransaction,
+  BankStatementImport,
+  ImportRejection,
+} from './ledger-bank';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 // Each account type: its label, the statement section it rolls up to, and its cash flow activity.
@@ -188,29 +202,156 @@ export class LedgerAccount extends CardDef {
   };
 }
 
+/** One product in a bundle, and how much of it a bundle holds. */
+export class BundleComponent extends FieldDef {
+  static displayName = 'Bundle component';
+  @field sku = contains(StringField);
+  @field qty = contains(NumberField); // thousandths of a unit, per bundle
+}
+
 // The matrix Product, plus the ledger accounts an inventory item posts to.
 export class Item extends Product {
   static displayName = 'Product';
   @field assetAccount = contains(StringField);
   @field cogsAccount = contains(StringField);
+  @field incomeAccount = contains(StringField); // the account a sale of it credits
+  @field salesPriceMinor = contains(NumberField); // the price a sale line starts from, per unit
+  @field reorderPoint = contains(NumberField); // thousandths of a unit; at or below it, stock is low
+  @field reorderQty = contains(NumberField); // thousandths of a unit to order
+  // A bundle holds no stock of its own: selling it sells each component.
+  @field components = containsMany(BundleComponent);
+  @field isBundle = contains(BooleanField, {
+    computeVia: function (this: Item) {
+      return (this.components ?? []).filter(Boolean).length > 0;
+    },
+  });
+  // The fulfilment cluster's stock rows for this SKU, by warehouse. Its units are its own (each, case),
+  // so they're shown beside the books' quantity, not reconciled with it.
+  @field warehouseStock = linksToMany(() => InventoryStock, {
+    query: {
+      filter: { eq: { sku: '$this.sku' } },
+      page: { size: 20 },
+    },
+    eager: false,
+  });
   static isolated = class extends Component<typeof Item> {
     get facts(): Fact[] {
       let m = this.args.model;
       return [
         { key: 'SKU', value: m.sku ?? '', mono: true },
-        { key: 'Type', value: m.productType ?? '' },
+        { key: 'Type', value: m.isBundle ? 'Bundle' : (m.productType ?? '') },
         { key: 'Asset account', value: m.assetAccount ?? '' },
         { key: 'Cost account', value: m.cogsAccount ?? '' },
+        ...(m.incomeAccount
+          ? [{ key: 'Income account', value: m.incomeAccount }]
+          : []),
+        ...(m.salesPriceMinor != null
+          ? [{ key: 'Sales price', value: money(m.salesPriceMinor) }]
+          : []),
+        ...(m.reorderPoint != null
+          ? [
+              {
+                key: 'Reorder at',
+                value: `${(m.reorderPoint / 1000).toLocaleString('en-US')}${m.reorderQty ? ` · order ${(m.reorderQty / 1000).toLocaleString('en-US')}` : ''}`,
+              },
+            ]
+          : []),
+        ...(m.components ?? []).filter(Boolean).map((c) => ({
+          key: `Holds ${c!.sku ?? ''}`,
+          value: ((c!.qty ?? 0) / 1000).toLocaleString('en-US'),
+        })),
       ];
+    }
+    get warehouseRows(): Fact[] {
+      return (this.args.model.warehouseStock ?? [])
+        .filter(Boolean)
+        .map((w) => ({
+          key: (w as any).warehouse?.warehouseName ?? 'Warehouse',
+          value: `${(w as any).quantityOnHand ?? 0} on hand · ${(w as any).stockState ?? ''}`,
+        }));
     }
     <template>
       <Sheet
         @eyebrow='Product'
         @title={{@model.cardTitle}}
         @meta={{@model.sku}}
-      ><Part @title='Product'><Facts @items={{this.facts}} /></Part></Sheet>
+      ><Part @title='Product'><Facts @items={{this.facts}} /></Part>
+        {{#if this.warehouseRows.length}}<Part @title='In the warehouses'><Facts
+              @items={{this.warehouseRows}}
+            /></Part>{{/if}}</Sheet>
     </template>
   };
+}
+
+interface BundleProduct {
+  sku?: string | null;
+  productName?: string | null;
+  salesPriceMinor?: number | null;
+  incomeAccount?: string | null;
+  components?: ({ sku?: string | null; qty?: number | null } | null)[] | null;
+}
+
+/**
+ * The sale lines `count` of a bundle add to a draft: one per component, at that product's own
+ * price, so fulfillment draws by component and a post's price-times-quantity check holds per line.
+ */
+export function bundleSaleLines(
+  bundle: BundleProduct,
+  products: Map<string, BundleProduct>,
+  count: number,
+) {
+  if (!(count > 0)) throw new Error('Enter how many bundles.');
+  let components = (bundle.components ?? []).filter(Boolean);
+  if (!components.length)
+    throw new Error(`${bundle.productName} holds no products.`);
+  return components.map((k) => {
+    let item = products.get(k!.sku ?? '');
+    if (!item)
+      throw new Error(
+        `${bundle.productName} holds ${k!.sku}, which isn't a product.`,
+      );
+    if ((item.components ?? []).some(Boolean))
+      throw new Error(
+        `${bundle.productName} holds ${item.productName}, which is a bundle too. A bundle holds products only.`,
+      );
+    if (!((item.salesPriceMinor ?? 0) > 0))
+      throw new Error(`Give ${item.productName} a sales price first.`);
+    let account = item.incomeAccount || bundle.incomeAccount;
+    if (!account)
+      throw new Error(`Give ${item.productName} an income account first.`);
+    let qty = Math.round((k!.qty ?? 0) * count);
+    if (!(qty > 0))
+      throw new Error(
+        `${bundle.productName} holds no quantity of ${item.productName}.`,
+      );
+    let priceMinor = item.salesPriceMinor!;
+    return {
+      sku: k!.sku!,
+      description: `${bundle.productName}: ${item.productName}`,
+      qty,
+      priceMinor,
+      amountMinor: Math.round((priceMinor * qty) / 1000),
+      account,
+      taxCode: null,
+      cls: null,
+      loc: null,
+    };
+  });
+}
+
+/**
+ * A product's low-stock reading against its reorder point: empty (not listed) with no reorder point
+ * or for a bundle, which holds no stock. Past the lots read (`capped`), a low reading can't be
+ * trusted, so it reads Check.
+ */
+export function lowStockStatus(
+  item: { reorderPoint?: number | null; isBundle?: boolean | null },
+  onHand: number,
+  capped: boolean,
+): '' | 'OK' | 'Check' | 'Low' {
+  if (item.reorderPoint == null || item.isBundle) return '';
+  if (onHand > item.reorderPoint) return 'OK';
+  return capped ? 'Check' : 'Low';
 }
 
 // ── a bill ───────────────────────────────────────────────────────────────────
@@ -226,6 +367,7 @@ export class BillLine extends FieldDef {
   @field description = contains(StringField);
   @field cls = contains(StringField);
   @field loc = contains(StringField);
+  @field project = contains(StringField);
 }
 
 export class Bill extends CardDef {
@@ -240,6 +382,8 @@ export class Bill extends CardDef {
   // The operational document it was posted from, when it came from procurement or commerce (see ledger-bridge).
   @field purchaseOrder = linksTo(() => PurchaseOrder);
   @field sourceInvoice = linksTo(() => CommerceInvoice);
+  @field currency = contains(StringField); // empty: the home currency
+  @field rateMicros = contains(NumberField); // home units per unit of `currency`, times a million
   @field memo = contains(StringField);
   @field lines = containsMany(BillLine);
   @field status = contains(DocumentStatusField); // only the post operation moves it
@@ -267,32 +411,33 @@ export class Bill extends CardDef {
       let doc = this.billNo ?? '',
         date = this.date ?? '',
         party = this.vendorId ?? '';
-      let debits = (this.lines ?? [])
-        .filter((l) => l && (l.amountMinor ?? 0) > 0)
-        .map(
-          (l) =>
-            new PostingLine({
-              account: l.debitAccount || l.account,
-              debitMinor: l.amountMinor,
-              creditMinor: 0,
-              date,
-              cls: l.cls,
-              loc: l.loc,
-              party: '',
-              doc,
-            }),
-        );
-      return [
-        ...debits,
-        new PostingLine({
+      let lines = [
+        ...(this.lines ?? [])
+          .filter((l) => l && (l.amountMinor ?? 0) > 0)
+          .map((l) => ({
+            account: l.debitAccount || l.account,
+            debitMinor: l.amountMinor ?? 0,
+            creditMinor: 0,
+            date,
+            cls: l.cls,
+            loc: l.loc,
+            project: l.project,
+            party: '',
+            doc,
+          })),
+        {
           account: '2000',
           debitMinor: 0,
           creditMinor: this.totalMinor ?? 0,
           date,
           party,
           doc,
-        }),
+        },
       ];
+      // A bill in another currency posts in the home currency at its rate.
+      return inHome(lines, this.rateMicros, '2000').map(
+        (l) => new PostingLine(l),
+      );
     },
   });
   @field cardTitle = contains(StringField, {
@@ -307,7 +452,8 @@ export class Bill extends CardDef {
    */
   @operation static post = {
     base: 'transform',
-    transformations: bxl`
+    transformations: {
+      $bxl: `
       assert(if .status == null then true else .status == "draft" end; "Only a draft bill can be posted. This one is already posted.");
       assert((.lines | length) > 0; "A bill needs at least one line.");
       assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
@@ -316,11 +462,14 @@ export class Bill extends CardDef {
       assert([.lines[] | select(.sku != null) | .unitCostMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its unit cost times its quantity.");
       assert([.lines[] | select(.sku == null) | .account != null] | all; "Every line needs an account or a product.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the bill can't post.");
-      assert(if realmConfig().chart == null then true else (([.lines[].account, .lines[].debitAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this bill isn't in the chart of accounts. Add it to the chart, then post.");
+      assert(if realmConfig().chart == null then true else (([.lines[].account, .lines[].debitAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this bill isn't in the chart of accounts. Add it to the chart, then post.");${FX_CHECKS}
       .status = "posted";
       .postedBy = actor();
     `,
+    },
   } satisfies OperationDeclaration;
+  /** Put a draft in another currency at a rate, or back in the home currency. */
+  @operation static useCurrency = useCurrencyOperation;
   /**
    * Record part or all of a payment against this bill. Sent in the same batch as the payment's post,
    * so the payment and the bills it pays land together. Refuses paying a draft or paying more than
@@ -332,15 +481,21 @@ export class Bill extends CardDef {
       amountMinor: NumberField,
       paymentNo: StringField,
       vendorId: StringField,
+      currency: StringField, // the payment's or credit's currency; null for the home currency
+      rateMicros: NumberField, // the bill's rate as the payment clears it; null for the home currency
     },
-    transformations: bxl`
+    transformations: {
+      $bxl: `
       assert(.status == "posted"; "Only a posted bill can be paid.");
       assert(.voidDate == null; "This bill is void, so it can't be paid.");
       assert(params("vendorId") == .vendorId; "A payment pays only its own vendor's bills. This bill is from someone else.");
-      assert(params("amountMinor") > 0; "A payment amount must be positive.");
+      assert(params("currency") == .currency; "A payment or credit applies only to bills in its own currency.");
+      assert(params("rateMicros") == .rateMicros; "A payment clears a bill at the rate it was booked at.");
+      assert(params("amountMinor") > 0; "A payment amount must be positive.");${SETTLE_FX_CHECKS}
       assert([.lines[].amountMinor] + [0 - .paidMinor - params("amountMinor")] | add | . >= 0; "That pays more than the bill has open.");
       .paidMinor |= . + params("amountMinor");
     `,
+    },
   } satisfies OperationDeclaration;
   /** Take back a payment or vendor credit, when its posting is reversed. Sent in the same batch as the reversal. */
   @operation static unapplyPayment = {
@@ -417,6 +572,7 @@ export class Bill extends CardDef {
         { key: 'Vendor', value: m.vendorId ?? '' },
         { key: 'Bill date', value: day(m.date) },
         { key: 'Due', value: day(m.due) },
+        ...currencyFacts(m.currency, m.rateMicros),
         ...termsFacts(m.date, m.due, m.terms),
         { key: 'Posted by', value: m.postedBy ?? '' },
         ...(m.voidDate
@@ -432,7 +588,9 @@ export class Bill extends CardDef {
     get postLines() {
       return (this.args.model.ledgerLines ?? []).map((l) => ({
         accountCode: l?.account,
-        accountName: [l?.cls, l?.loc, l?.party].filter(Boolean).join(' · '),
+        accountName: [l?.cls, l?.project, l?.loc, l?.party]
+          .filter(Boolean)
+          .join(' · '),
         debitMinor: l?.debitMinor ?? 0,
         creditMinor: l?.creditMinor ?? 0,
       }));
@@ -452,7 +610,7 @@ export class Bill extends CardDef {
         @eyebrow='Bill'
         @title={{@model.cardTitle}}
         @meta={{@model.memo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
         @figureLabel='Total'
         @status={{this.status}}
       >
@@ -472,7 +630,7 @@ export class Bill extends CardDef {
         @eyebrow='Bill'
         @title={{@model.cardTitle}}
         @meta={{@model.date}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
       />
     </template>
   };
@@ -481,7 +639,7 @@ export class Bill extends CardDef {
       <Fit
         @eyebrow='Bill'
         @title={{@model.billNo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
         @meta={{@model.vendorId}}
       />
     </template>
@@ -930,6 +1088,96 @@ export class Ledger extends CardDef {
       enteredBy: actor(),
     },
   } satisfies OperationDeclaration;
+  /** Record time worked; billable time waits to be invoiced. */
+  @operation static enterTime = {
+    base: 'create',
+    of: TimeActivity,
+    params: {
+      date: StringField,
+      workerKind: StringField,
+      worker: StringField,
+      customerId: StringField,
+      projectId: StringField,
+      serviceSku: StringField,
+      hours: NumberField,
+      rateMinor: NumberField,
+      costRateMinor: NumberField,
+      billable: BooleanField,
+      description: StringField,
+    },
+    fill: {
+      date: params('date'),
+      workerKind: params('workerKind'),
+      worker: params('worker'),
+      customerId: params('customerId'),
+      projectId: params('projectId'),
+      serviceSku: params('serviceSku'),
+      hours: params('hours'),
+      rateMinor: params('rateMinor'),
+      costRateMinor: params('costRateMinor'),
+      billable: params('billable'),
+      description: params('description'),
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Record a statement import's receipt. Its lines come in the same batch through enterBankLine. */
+  @operation static enterBankImport = {
+    base: 'create',
+    of: BankStatementImport,
+    params: {
+      importNo: StringField,
+      account: StringField,
+      fileName: StringField,
+      format: StringField,
+      contentHash: StringField,
+      importedOn: StringField,
+      firstDate: StringField,
+      lastDate: StringField,
+      acceptedCount: NumberField,
+      skippedCount: NumberField,
+      rejected: ImportRejection,
+    },
+    fill: {
+      importNo: params('importNo'),
+      account: params('account'),
+      fileName: params('fileName'),
+      format: params('format'),
+      contentHash: params('contentHash'),
+      importedOn: params('importedOn'),
+      firstDate: params('firstDate'),
+      lastDate: params('lastDate'),
+      acceptedCount: params('acceptedCount'),
+      skippedCount: params('skippedCount'),
+      rejected: params('rejected'),
+      importedBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** One line from a bank statement, waiting for review. */
+  @operation static enterBankLine = {
+    base: 'create',
+    of: BankTransaction,
+    params: {
+      account: StringField,
+      externalId: StringField,
+      date: StringField,
+      description: StringField,
+      amountMinor: NumberField,
+      reference: StringField,
+      payee: StringField,
+      importNo: StringField,
+    },
+    fill: {
+      account: params('account'),
+      externalId: params('externalId'),
+      date: params('date'),
+      description: params('description'),
+      amountMinor: params('amountMinor'),
+      reference: params('reference'),
+      payee: params('payee'),
+      importNo: params('importNo'),
+      status: 'for-review',
+    },
+  } satisfies OperationDeclaration;
   /** Draft a credit card charge; CardCharge.post checks it. */
   @operation static enterCardCharge = {
     base: 'create',
@@ -1197,6 +1445,18 @@ export class Ledger extends CardDef {
                   .filter(Boolean)
                   .join('. ')
               : `${s.chart.length} codes, each with an account card`,
+        },
+        {
+          setting: 'multicurrency',
+          key: 'Multicurrency',
+          value: s.multicurrency
+            ? 'On'
+            : 'Off: every document is in the home currency',
+        },
+        {
+          setting: 'currencies',
+          key: 'Other currencies',
+          value: s.currencies.length ? s.currencies.join(', ') : 'None',
         },
         {
           setting: 'taxCodes',

@@ -1,0 +1,102 @@
+name: PR Preview Realm
+
+# Each PR gets its own staging realm holding the folders it touches and what
+# they reach by relative path (scripts/preview-paths.mjs). boxel's reusable
+# workflow creates, pushes, publishes and unpublishes it, and keeps a sticky
+# comment with the link. A failed deploy is reported there and leaves the
+# check green: the preview is for reviewers, not a gate.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: preview-realm-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  paths:
+    name: Choose the preview's files
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      paths: ${{ steps.paths.outputs.paths }}
+      published: ${{ steps.published.outputs.published }}
+    steps:
+      - name: Check the bot's username is set
+        env:
+          BOT_USERNAME: ${{ vars.STAGING_SUBMISSIONBOT_MATRIX_USERNAME }}
+        run: |
+          [ -n "$BOT_USERNAME" ] || { echo "::error::The STAGING_SUBMISSIONBOT_MATRIX_USERNAME repository variable isn't set."; exit 1; }
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        if: github.event.action != 'closed'
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        if: github.event.action != 'closed'
+        with:
+          node-version: "24"
+
+      - name: Test the path selection
+        if: github.event.action != 'closed'
+        run: node --test scripts/preview-paths.test.mjs
+
+      - name: List the preview's files
+        id: paths
+        if: github.event.action != 'closed'
+        run: |
+          git -c core.quotePath=false diff --name-only HEAD^1 HEAD > "${RUNNER_TEMP}/changed.txt"
+          paths=$(node scripts/preview-paths.mjs < "${RUNNER_TEMP}/changed.txt")
+          echo "$(printf '%s' "$paths" | grep -c .) file(s) for the preview"
+          {
+            echo "paths<<PREVIEW_PATHS_EOF"
+            printf '%s\n' "$paths"
+            echo "PREVIEW_PATHS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # The sticky comment says whether a preview is up: one that was never
+      # published, or is already cleaned up, has nothing to unpublish.
+      - name: Check for a published preview
+        id: published
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          last=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" \
+            --jq '.[] | select(.body | contains("<!-- Sticky Pull Request Commentcatalog-preview-realm -->")) | .body | split("\n")[0]' | tail -n 1)
+          if [ -n "$last" ] && [ "$last" != "## Preview Realm - Cleaned Up" ]; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Deploys while the PR has files to preview; unpublishes when it closes, or
+  # when a later push leaves it nothing to preview, if a preview is up.
+  preview:
+    needs: paths
+    if: >-
+      ${{ !cancelled() && needs.paths.result == 'success'
+      && (needs.paths.outputs.paths != '' && github.event.action != 'closed'
+      || needs.paths.outputs.published == 'true') }}
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: cardstack/boxel/.github/workflows/preview-realm.yml@1370ccd00c605d45beee306176864fc3a76c4c50 # main
+    with:
+      realm-server-url: https://realms-staging.stack.cards/
+      matrix-url: https://matrix-staging.stack.cards
+      published-realm-base: https://${{ vars.STAGING_SUBMISSIONBOT_MATRIX_USERNAME }}.staging.boxel.dev
+      realm-endpoint-prefix: catalog-pr-
+      display-name-prefix: Catalog PR
+      sticky-header: catalog-preview-realm
+      paths: ${{ needs.paths.outputs.paths }}
+      unpublish: ${{ needs.paths.outputs.paths == '' }}
+      fail-on-deploy-error: false
+    secrets:
+      matrix-username: ${{ vars.STAGING_SUBMISSIONBOT_MATRIX_USERNAME }}
+      matrix-password: ${{ secrets.STAGING_SUBMISSIONBOT_MATRIX_PASSWORD }}

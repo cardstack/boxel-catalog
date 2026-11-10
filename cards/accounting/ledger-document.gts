@@ -31,6 +31,7 @@ import {
 import { type OperationDeclaration } from '@cardstack/base/operations';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
+import { NOT_TWO_DECIMAL, REALIZED_FX } from './ledger-settings';
 
 export class PostingLine extends FieldDef {
   static displayName = 'Ledger line';
@@ -40,6 +41,7 @@ export class PostingLine extends FieldDef {
   @field date = contains(IsoDateField);
   @field cls = contains(StringField);
   @field loc = contains(StringField);
+  @field project = contains(StringField); // the books project the line belongs to, beside its class
   @field party = contains(StringField);
   @field doc = contains(StringField);
 }
@@ -60,9 +62,127 @@ export type PostingInput = {
   date?: string;
   cls?: string;
   loc?: string;
+  project?: string;
   party?: string;
   doc?: string;
 };
+
+/** An exchange rate as documents store it: home-currency units per foreign unit, times a million. */
+export const RATE_SCALE = 1_000_000;
+
+/** An amount in a document's currency, in the home currency at its rate; unchanged without one. */
+export const toHome = (
+  minor: number | null | undefined,
+  rateMicros: number | null | undefined,
+) =>
+  rateMicros && rateMicros !== RATE_SCALE
+    ? Math.round(((minor ?? 0) * rateMicros) / RATE_SCALE)
+    : (minor ?? 0);
+
+/** A document's currency and rate as a fact, when it isn't in the home currency. */
+export const currencyFacts = (
+  currency: string | null | undefined,
+  rateMicros: number | null | undefined,
+): Fact[] =>
+  currency
+    ? [
+        {
+          key: 'Currency',
+          value: `${currency} at ${((rateMicros ?? 0) / RATE_SCALE).toFixed(6)}`,
+        },
+      ]
+    : [];
+
+type Side = 'debitMinor' | 'creditMinor';
+
+/**
+ * A foreign-currency document's lines in the home currency, at its rate. The line for `balance`
+ * (receivables or payables) is the document's total at the rate, rounded once, so a payment of the
+ * whole amount at the same rate clears it exactly. Each other line rounds on its own, and each cent
+ * that leaves over goes to the line it moves least from its exact amount, on the side that line is
+ * already on and never below zero, so the entry still balances. Lines of a home-currency document
+ * (no rate) come back unchanged.
+ */
+export function inHome<
+  T extends { account?: string; debitMinor?: number; creditMinor?: number },
+>(lines: T[], rateMicros: number | null | undefined, balance: string): T[] {
+  if (!rateMicros || rateMicros === RATE_SCALE) return lines;
+  let exact = (minor: number | undefined) =>
+    ((minor ?? 0) * rateMicros) / RATE_SCALE;
+  let out = lines.map((l) => ({
+    ...l,
+    debitMinor: toHome(l.debitMinor, rateMicros),
+    creditMinor: toHome(l.creditMinor, rateMicros),
+  }));
+  let off =
+    out.reduce((n, l) => n + l.debitMinor, 0) -
+    out.reduce((n, l) => n + l.creditMinor, 0);
+  while (off) {
+    let step = Math.sign(off); // 1 when the debits are over
+    let best:
+        | { line: (typeof out)[number]; side: Side; next: number }
+        | undefined,
+      bestGap = Infinity;
+    for (let i = 0; i < out.length; i++) {
+      let line = out[i];
+      if (line.account === balance) continue;
+      let side: Side | undefined = lines[i].creditMinor
+        ? 'creditMinor'
+        : lines[i].debitMinor
+          ? 'debitMinor'
+          : undefined;
+      if (!side) continue;
+      let next = line[side] + (side === 'creditMinor' ? step : -step);
+      if (next < 0) continue;
+      let gap = Math.abs(next - exact(lines[i][side]));
+      if (gap < bestGap) {
+        best = { line, side, next };
+        bestGap = gap;
+      }
+    }
+    if (!best) break;
+    best.line[best.side] = best.next;
+    off -= step;
+  }
+  return out;
+}
+
+/**
+ * The checks a document in another currency adds to its post. Its currency is empty in the home
+ * currency; otherwise the books must allow multicurrency and that currency, and the document must
+ * carry its rate.
+ */
+export const FX_CHECKS = `
+      assert(if .currency == null then true else realmConfig().multicurrency == true end; "This document is in another currency. Turn on multicurrency in the books' settings to post it.");
+      assert(if .currency == null then true else .currency != (if realmConfig().currency == null then "USD" else realmConfig().currency end) end; "A document in the home currency leaves its currency empty.");
+      assert(if .currency == null then true else (if realmConfig().currencies == null then false else ([.currency] - realmConfig().currencies | length == 0) end) end; "The books' settings don't list this document's currency.");
+      assert(if .currency == null then true else ([.currency] - ${JSON.stringify(NOT_TWO_DECIMAL)} | length == 1) end; "Only currencies with cents are supported, so this document's currency can't post.");
+      assert(if .currency == null then true else .rateMicros > 0 end; "A document in another currency needs its exchange rate.");
+      assert(if .currency == null then .rateMicros == null else true end; "A document in the home currency has no exchange rate.");
+      assert(if .rateMicros == null then true else ([.rateMicros | floor] == [.rateMicros]) end; "An exchange rate is stored in millionths, as a whole number.");`;
+
+/**
+ * The checks settling a document in another currency makes, from the settlement's `currency`
+ * param: the same settings its own post needs, and the account its exchange difference posts to.
+ */
+export const SETTLE_FX_CHECKS = `
+      assert(if params("currency") == null then true else realmConfig().multicurrency == true end; "This is in another currency. Turn on multicurrency in the books' settings to settle it.");
+      assert(if params("currency") == null then true else (if realmConfig().currencies == null then false else ([params("currency")] - realmConfig().currencies | length == 0) end) end; "The books' settings don't list this currency, so it can't be settled.");
+      assert(if params("currency") == null then true else (if realmConfig().chart == null then true else (["${REALIZED_FX}"] - realmConfig().chart | length == 0) end) end; "Add ${REALIZED_FX}, realized exchange gain or loss, to the chart to settle in another currency.");`;
+
+/** Set a draft's currency and rate; empty for the home currency. */
+export const useCurrencyOperation = {
+  base: 'transform',
+  params: { currency: StringField, rateMicros: NumberField },
+  transformations: {
+    $bxl: `
+      assert(if .status == null then true else .status == "draft" end; "Only a draft's currency can change.");
+      assert(if params("currency") == null then params("rateMicros") == null else params("rateMicros") > 0 end; "A currency other than the home currency needs its exchange rate.");
+      .currency = params("currency");
+      .rateMicros = params("rateMicros");
+    `,
+  },
+} as OperationDeclaration;
 
 /**
  * A document's `journal` operation, made from its own `post`: every check its post makes, then the
@@ -131,6 +251,10 @@ export class LedgerDocument extends CardDef {
   party(): string {
     return '';
   }
+  /** The currency its own amounts are in; empty for the home currency. */
+  currencyCode(): string | undefined {
+    return undefined;
+  }
 
   static isolated = class extends Component<typeof LedgerDocument> {
     get kind() {
@@ -142,10 +266,13 @@ export class LedgerDocument extends CardDef {
     get state() {
       return this.args.model.state?.() ?? '';
     }
+    get currency() {
+      return this.args.model.currencyCode?.();
+    }
     get postLines() {
       return (this.args.model.ledgerLines ?? []).map((l) => ({
         accountCode: l?.account,
-        accountName: [l?.cls, l?.loc, l?.party, l?.doc]
+        accountName: [l?.cls, l?.project, l?.loc, l?.party, l?.doc]
           .filter(Boolean)
           .join(' · '),
         debitMinor: l?.debitMinor ?? 0,
@@ -157,7 +284,7 @@ export class LedgerDocument extends CardDef {
         @eyebrow={{this.kind}}
         @title={{@model.cardTitle}}
         @meta={{@model.memo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor this.currency}}
         @figureLabel='Total'
         @status={{this.state}}
       >
@@ -175,12 +302,15 @@ export class LedgerDocument extends CardDef {
     get kind() {
       return (this.args.model.constructor as typeof CardDef).displayName;
     }
+    get currency() {
+      return this.args.model.currencyCode?.();
+    }
     <template>
       <Strip
         @eyebrow={{this.kind}}
         @title={{@model.cardTitle}}
         @meta={{@model.date}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor this.currency}}
       />
     </template>
   };
@@ -191,11 +321,14 @@ export class LedgerDocument extends CardDef {
     get party() {
       return this.args.model.party?.() ?? '';
     }
+    get currency() {
+      return this.args.model.currencyCode?.();
+    }
     <template>
       <Fit
         @eyebrow={{this.kind}}
         @title={{@model.docNo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor this.currency}}
         @meta={{this.party}}
       />
     </template>

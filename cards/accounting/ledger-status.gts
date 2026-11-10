@@ -48,10 +48,46 @@ export const ReconciliationStatusField = lifecycle({
       value: 'reconciled',
       hue: 'green',
       terminal: true,
-      meaning: 'The books agree with the bank statement at its end date.',
+      meaning:
+        'The books agree with the bank statement at its end date. Only the owner can reopen it.',
     },
   ],
   transitions: { draft: ['reconciled'] },
+});
+
+export const BankLineStatusField = lifecycle({
+  displayName: 'Bank line status',
+  options: [
+    {
+      value: 'for-review',
+      label: 'For review',
+      hue: 'amber',
+      meaning:
+        'Came in from the bank and is waiting to be matched, added or excluded.',
+    },
+    {
+      value: 'matched',
+      hue: 'green',
+      meaning: 'Matched to something already in the books.',
+    },
+    {
+      value: 'added',
+      hue: 'teal',
+      meaning: 'Added to the books as a new entry.',
+    },
+    {
+      value: 'excluded',
+      hue: 'slate',
+      meaning:
+        'Left out of the books, such as a duplicate or a personal charge.',
+    },
+  ],
+  transitions: {
+    'for-review': ['matched', 'added', 'excluded'],
+    matched: ['for-review'],
+    added: ['for-review'],
+    excluded: ['for-review'],
+  },
 });
 
 export const MonthCloseStatusField = lifecycle({

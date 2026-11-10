@@ -9,7 +9,11 @@
         "name": "Roasted \u00b7 Ethiopia light 12oz retail bag"
       },
       "productName": "Roasted \u00b7 Ethiopia light 12oz retail bag",
-      "productType": "inventory"
+      "productType": "inventory",
+      "incomeAccount": "4200",
+      "salesPriceMinor": 1900,
+      "reorderPoint": 200000,
+      "reorderQty": 600000
     },
     "relationships": {
       "cardInfo.theme": {

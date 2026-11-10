@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "baseCurrency": "USD",
+      "staleAfterDays": 90,
+      "rates": [
+        {
+          "currency": "EUR",
+          "rate": 1.0812,
+          "asOf": "2026-12-31",
+          "source": "ECB reference rate"
+        },
+        {
+          "currency": "CAD",
+          "rate": 0.7341,
+          "asOf": "2026-12-31",
+          "source": "Bank of Canada"
+        },
+        {
+          "currency": "EUR",
+          "rate": 1.0897,
+          "asOf": "2027-01-15",
+          "source": "ECB reference rate"
+        },
+        {
+          "currency": "CAD",
+          "rate": 0.7298,
+          "asOf": "2027-01-15",
+          "source": "Bank of Canada"
+        }
+      ],
+      "cardInfo": {
+        "name": "Books exchange rates"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../commerce/currency-registry",
+        "name": "CurrencyRegistry"
+      }
+    }
+  }
+}

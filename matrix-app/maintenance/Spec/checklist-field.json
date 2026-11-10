@@ -1,0 +1,92 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ChecklistField",
+        "module": "../checklist-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Checklist\n\n`title` + `items[]` of **Checklist Item** (`label`, `kind` check / measure / photo / text / signature, `required`, `expectedValue` ± `tolerance` in `unit` for measures, `result` pending / pass / fail / na, `value`, `photoUrl`, `note`, `completedByName/At`). A measure outside tolerance auto-fails and reports the delta.\n\nComputed: `total`, `done`, `failedCount`, `requiredRemaining`, `completionPercent`, `isComplete` — via `checklistStats` in `utils/maintenance.ts`, shared with the **Checklist Runner** component and **Complete Work Order** so they agree on “complete”.\n\nLives twice by design: as a **template** on a Maintenance Plan (no results) and as a deep **copy** on each Work Order (`cloneChecklistItems`). Results never flow back.\n\nGeneric: onboarding checklists, publish checklists and audit procedures can carry it; the Runner executes any of them.",
+      "cardInfo": {
+        "name": "Checklist",
+        "summary": "The steps that define “done” — check / measure / photo / text / signature items with results; template on a plan, deep copy on each work order."
+      },
+      "containedExamples": [
+        {
+          "title": "Quarterly compressor service",
+          "items": [
+            {
+              "label": "LOTO applied and verified",
+              "kind": "check",
+              "required": true,
+              "result": "pass",
+              "completedByName": "R. Osei"
+            },
+            {
+              "label": "Inlet filter replaced (P/N KF-4410)",
+              "kind": "check",
+              "required": true,
+              "result": "pass",
+              "completedByName": "R. Osei"
+            },
+            {
+              "label": "Oil level",
+              "kind": "measure",
+              "required": true,
+              "expectedValue": 4.75,
+              "unit": "L",
+              "tolerance": 0.25,
+              "result": "pass",
+              "value": "4.8"
+            },
+            {
+              "label": "Belt tension",
+              "kind": "measure",
+              "required": false,
+              "expectedValue": 80,
+              "unit": "N",
+              "tolerance": 10,
+              "result": "fail",
+              "value": "62"
+            },
+            {
+              "label": "Discharge temperature",
+              "kind": "measure",
+              "required": true,
+              "expectedValue": 90,
+              "unit": "°C",
+              "tolerance": 5,
+              "result": "pending"
+            },
+            {
+              "label": "Photo: nameplate",
+              "kind": "photo",
+              "required": false,
+              "result": "pending"
+            }
+          ]
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../checklist-field",
+              "name": "ChecklistField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

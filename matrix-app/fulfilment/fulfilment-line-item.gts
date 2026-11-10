@@ -1,0 +1,211 @@
+import {
+  Component,
+  FieldDef,
+  StringField,
+  contains,
+  field,
+} from 'https://cardstack.com/base/card-api';
+import NumberField from 'https://cardstack.com/base/number';
+import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
+import { Money } from './fulfilment-ui';
+import { Token } from '@cardstack/pretui/components/token';
+import CurrencyField from 'https://cardstack.com/base/currency';
+import ListIcon from '@cardstack/boxel-icons/list';
+
+// Invoice Line Item (IL) — one row of what was bought.
+//
+// The line holds the SKU and product name as ATTRIBUTES rather than a link to
+// the Product card, for two independent reasons that happen to agree:
+//
+//   1. Layering. A field must not import a card; that would be an upward
+//      dependency and would make this field unusable without the whole
+//      fulfilment card set.
+//   2. Correctness. An order line is a snapshot. Prices change and products get
+//      renamed, but what the customer bought at 14:02 on Tuesday does not. A
+//      line that reads through a link would silently rewrite history.
+//
+// It also happens to be what fitted rendering needs: prerendered fitted does not
+// resolve links, so an attribute-only line renders at every size.
+export class FulfilmentLineItemField extends FieldDef {
+  static displayName = 'Line Item';
+  static icon = ListIcon;
+
+  @field sku = contains(StringField);
+  @field productName = contains(StringField);
+  @field quantity = contains(NumberField);
+  @field unitPrice = contains(AmountWithCurrency);
+  // How many of `quantity` have actually left the building. Fulfilment is not
+  // all-or-nothing: a split shipment ships 2 of 3 now and 1 next week.
+  @field quantityFulfilled = contains(NumberField);
+
+  @field lineTotal = contains(AmountWithCurrency, {
+    computeVia: function (this: FulfilmentLineItemField) {
+      let result = new AmountWithCurrency();
+      let currency = new CurrencyField();
+      currency.code = this.unitPrice?.currency?.code ?? 'USD';
+      result.currency = currency;
+      result.amount = (this.unitPrice?.amount ?? 0) * (this.quantity ?? 0);
+      return result;
+    },
+  });
+
+  get outstanding() {
+    return (this.quantity ?? 0) - (this.quantityFulfilled ?? 0);
+  }
+
+  get isFullyFulfilled() {
+    return (this.quantity ?? 0) > 0 && this.outstanding <= 0;
+  }
+
+  static atom = class Atom extends Component<typeof FulfilmentLineItemField> {
+    <template>
+      <span class='li-atom'>
+        <span class='li-qty'>{{if @model.quantity @model.quantity 0}}×</span>
+        {{if @model.productName @model.productName @model.sku}}
+      </span>
+
+      <style scoped>
+        .li-atom {
+          font-size: 0.85em;
+          color: var(--foreground);
+        }
+        .li-qty {
+          font-family: var(--font-mono);
+          font-weight: 700;
+          color: var(--muted-foreground);
+        }
+      </style>
+    </template>
+  };
+
+  // Row-shaped. Every trailing slot is always rendered at a constant width —
+  // an em dash when there is no value — so a list of these column-aligns no
+  // matter what any individual row is missing.
+  static embedded = class Embedded extends Component<
+    typeof FulfilmentLineItemField
+  > {
+    <template>
+      <div class='li'>
+        <div class='li-id'>
+          <span class='li-name'>{{if
+              @model.productName
+              @model.productName
+              'Unnamed item'
+            }}</span>
+          {{#if @model.sku}}
+            <span class='li-sku'><Token
+                class='li-sku-token'
+                @value={{@model.sku}}
+              /></span>
+          {{else}}
+            <span class='li-sku'>—</span>
+          {{/if}}
+        </div>
+
+        <span class='li-slot li-qty'>
+          {{#if @model.quantity}}
+            {{@model.quantity}}
+          {{else}}
+            —
+          {{/if}}
+        </span>
+
+        {{! `Money` rather than the AmountWithCurrency atom. The atom renders
+            "£ 42" — a space after the symbol and no minor units — while every
+            other figure on the host card goes through `money` / `Money` and
+            renders "£6.87". Two money formats on one screen is exactly what
+            those exist to prevent, and a row of line items is where it showed. }}
+        <span class='li-slot li-price'>
+          {{#if @model.unitPrice.amount}}
+            <Money
+              @amount={{@model.unitPrice.amount}}
+              @code={{@model.unitPrice.currency.code}}
+            />
+          {{else}}
+            —
+          {{/if}}
+        </span>
+
+        <span class='li-slot li-total'>
+          {{#if @model.lineTotal.amount}}
+            <Money
+              @amount={{@model.lineTotal.amount}}
+              @code={{@model.lineTotal.currency.code}}
+            />
+          {{else}}
+            —
+          {{/if}}
+        </span>
+      </div>
+
+      <style scoped>
+        .li {
+          display: grid;
+          /* Constant-width trailing columns make a stack of rows read as a table;
+             the name column takes the rest. */
+          grid-template-columns: minmax(0, 1fr) 2.25rem 4.5rem 5rem;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-2xs) 0;
+          font-size: 0.85rem;
+        }
+        .li-id {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+        }
+        .li-name {
+          font-weight: 600;
+          color: var(--foreground);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .li-sku {
+          min-width: 0;
+          font-size: 0.7rem;
+          color: var(--muted-foreground);
+        }
+        /* Pret UI Token for the SKU, on the muted ink at the old 0.7rem. */
+        .li-sku .li-sku-token {
+          --pretui-token-hue: var(--muted-foreground);
+          --pretui-token-font-size: 0.7rem;
+          margin-inline: 0;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .li-slot {
+          text-align: right;
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
+          color: var(--muted-foreground);
+        }
+        .li-total {
+          font-weight: 700;
+          color: var(--foreground);
+        }
+        /* A narrow container drops the unit price before the total: the total
+           is what anyone reading a compressed row is looking for. Below 250px the quantity goes too, leaving name + total. */
+        @container (width < 430px) {
+          .li {
+            grid-template-columns: minmax(0, 1fr) 2.25rem 5rem;
+          }
+          .li-price {
+            display: none;
+          }
+        }
+        @container (width < 250px) {
+          .li {
+            grid-template-columns: minmax(0, 1fr) 5rem;
+          }
+          .li-qty {
+            display: none;
+          }
+        }
+      </style>
+    </template>
+  };
+}
+
+export default FulfilmentLineItemField;

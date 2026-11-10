@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": "## Books Location\n\nA reporting dimension for where a transaction happened: a site, store, roastery or warehouse. Its only stored field is `name`; `cardTitle` is the name.\n\nDocuments carry the location as a plain string (`loc`) on their posting lines, matched to this card's `name`. Roast batches and fulfillments put `loc` on every line they post; purchase orders carry it as well. The card itself computes nothing and has no operations.\n\n```ts\nimport { BooksLocation } from '@cardstack/catalog/cards/accounting/ledger-dimensions';\n```\n\n### Non-goals\nNo address, no stock-by-location tracking, and no location report in this module (Profit by Class groups by class only).\n\n### Example\nNo example ships for this card.",
+      "readMe": "## Books Location\n\nA reporting dimension for where a transaction happened: a site, store, roastery or warehouse. It stores `name` and `warehouse`, a link to the fulfilment cluster's Warehouse at this location; `cardTitle` is the name.\n\nDocuments carry the location as a plain string (`loc`) on their posting lines, matched to this card's `name`. Roast batches and fulfillments put `loc` on every line they post; purchase orders carry it as well. The card itself computes nothing and has no operations.\n\n```ts\nimport { BooksLocation } from '@cardstack/catalog/cards/accounting/ledger-dimensions';\n```\n\n### Non-goals\nNo address, no stock tracked by location in the books (the warehouse's own stock is the fulfilment cluster's), and no location report in this module (Profit by Class groups by class only).\n\n### Example\nNo example ships for this card.",
       "ref": {
         "module": "../ledger-dimensions",
         "name": "BooksLocation"
