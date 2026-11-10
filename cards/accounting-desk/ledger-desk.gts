@@ -196,11 +196,12 @@ import {
   ExpensesByVendor,
   GeneralLedger,
 } from '../accounting/ledger-report-library';
+import { ReportActions } from '../accounting/ledger-report-custom';
 import {
-  ReportActions,
-  CustomReportRunner,
+  LibraryReport,
   MyReports,
-} from '../accounting/ledger-report-custom';
+  isLibraryKind,
+} from '../accounting/ledger-report-desk';
 import {
   KIND_LABEL,
   seqText,
@@ -1170,6 +1171,105 @@ const PAGES: PageDef[] = [
     report: 'custom',
   },
   {
+    id: 'r-txn-detail',
+    area: 'Reports',
+    label: 'Transaction detail by account',
+    blurb:
+      'Every posting line in a period, account by account, with subtotals.',
+    report: 'transaction-detail',
+  },
+  {
+    id: 'r-journal',
+    area: 'Reports',
+    label: 'Journal',
+    blurb: 'Every entry in a period in date order, with its lines.',
+    report: 'journal',
+  },
+  {
+    id: 'r-pnl-detail',
+    area: 'Reports',
+    label: 'Profit and loss detail',
+    blurb: 'The income, cost and expense postings behind the profit and loss.',
+    report: 'pnl-detail',
+  },
+  {
+    id: 'r-pnl-customer',
+    area: 'Reports',
+    label: 'Profit and loss by customer',
+    blurb: 'The profit and loss with a column for each customer or vendor.',
+    report: 'profitAndLoss',
+  },
+  {
+    id: 'r-pnl-month',
+    area: 'Reports',
+    label: 'Profit and loss by month',
+    blurb: 'The profit and loss with a column for each month.',
+    report: 'profitAndLoss',
+  },
+  {
+    id: 'r-bs-detail',
+    area: 'Reports',
+    label: 'Balance sheet detail',
+    blurb: 'The asset, liability and equity postings behind the balance sheet.',
+    report: 'bs-detail',
+  },
+  {
+    id: 'r-open-invoices',
+    area: 'Reports',
+    label: 'Open invoices',
+    blurb: 'Every invoice with a balance, by customer.',
+    report: 'open-invoices',
+  },
+  {
+    id: 'r-collections',
+    area: 'Reports',
+    label: 'Collections',
+    blurb: 'Invoices past due, by customer, oldest first.',
+    report: 'collections',
+  },
+  {
+    id: 'r-customer-balance',
+    area: 'Reports',
+    label: 'Customer balance detail',
+    blurb: 'Every posting to receivables, by customer, with what each owes.',
+    report: 'customer-balance-detail',
+  },
+  {
+    id: 'r-unpaid-bills',
+    area: 'Reports',
+    label: 'Unpaid bills',
+    blurb: 'Every bill with a balance, by vendor.',
+    report: 'unpaid-bills',
+  },
+  {
+    id: 'r-vendor-balance',
+    area: 'Reports',
+    label: 'Vendor balance detail',
+    blurb: 'Every posting to payables, by vendor, with what is owed to each.',
+    report: 'vendor-balance-detail',
+  },
+  {
+    id: 'r-inv-detail',
+    area: 'Reports',
+    label: 'Inventory valuation detail',
+    blurb: 'Every lot with stock left, at its remaining FIFO cost.',
+    report: 'inventory-detail',
+  },
+  {
+    id: 'r-time',
+    area: 'Reports',
+    label: 'Time by customer',
+    blurb: 'Hours worked by customer, and billable time still to bill.',
+    report: 'time-by-customer',
+  },
+  {
+    id: 'r-projects',
+    area: 'Reports',
+    label: 'Profit by project',
+    blurb: 'Income, costs and labor by project.',
+    report: 'profit-by-project',
+  },
+  {
     id: 'r-sales-customer',
     area: 'Reports',
     label: 'Sales by customer',
@@ -1285,8 +1385,8 @@ const PAGES: PageDef[] = [
   {
     id: 'r-inv',
     area: 'Reports',
-    label: 'Inventory valuation',
-    blurb: 'What is on hand at FIFO cost.',
+    label: 'Inventory valuation summary',
+    blurb: 'What is on hand at FIFO cost, by product.',
     report: 'inventory',
   },
   {
@@ -7708,8 +7808,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @pages={{this.reportPages}}
                 @onOpenPage={{this.go}}
               />
-            {{else if (eq this.page 'r-custom')}}
-              <CustomReportRunner
+            {{else if (isLibraryKind this.def.report)}}
+              <LibraryReport
                 @context={{@context}}
                 @realms={{this.realms}}
                 @refRealms={{this.refRealms}}

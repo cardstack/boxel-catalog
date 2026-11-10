@@ -25,7 +25,17 @@ import {
   csvText,
   saveParams,
   applySettings,
+  PRESETS,
+  presetTable,
+  presetCustomization,
 } from '../../../cards/accounting/ledger-report-custom';
+import {
+  openDocOf,
+  openDocumentsTable,
+  lotsTable,
+  timeTable,
+  projectTable,
+} from '../../../cards/accounting/ledger-report-lists';
 import {
   customizationOf,
   NO_CUSTOMIZATION,
@@ -254,6 +264,255 @@ export function runTests() {
         ]),
         'Name,Amount\r\n"Harbor, Inc.","Say ""hi"""\r\n',
       );
+    });
+  });
+
+  module('Catalog | accounting - report library', function () {
+    const preset = (kind: string, from = '2027-01', to = '2027-01') =>
+      presetTable(
+        LINES,
+        PRESETS[kind],
+        presetCustomization(PRESETS[kind]),
+        from,
+        to,
+      );
+
+    test('profit and loss detail lists the income and expense lines by account', function (assert) {
+      let t = preset('pnl-detail');
+      assert.strictEqual(t.count, 3);
+      assert.deepEqual(Object.fromEntries(t.groups), {
+        '4000': { debit: 0, credit: 12000, amount: -12000 },
+        '6000': { debit: 8000, credit: 0, amount: 8000 },
+      });
+      assert.strictEqual(t.totals.amount, -4000, 'a profit of $40.00');
+    });
+
+    test('balance sheet detail reads the balance accounts only', function (assert) {
+      let t = preset('bs-detail');
+      assert.deepEqual([...t.groups.keys()], ['1000', '1100', '2000']);
+      assert.strictEqual(
+        t.totals.amount,
+        4000,
+        'the profit, still in the books',
+      );
+    });
+
+    test('customer and vendor balance detail carry every posting up to the period end', function (assert) {
+      let customers = preset('customer-balance-detail', '2027-02', '2027-02');
+      assert.strictEqual(customers.count, 1, "January's invoice is still owed");
+      assert.deepEqual(Object.fromEntries(customers.groups), {
+        harbor: { debit: 12000, credit: 0, amount: 12000 },
+      });
+      let vendors = preset('vendor-balance-detail');
+      assert.deepEqual(Object.fromEntries(vendors.groups), {
+        roastery: { debit: 5000, credit: 5000, amount: 0 },
+      });
+    });
+
+    test('the journal lists each entry in date order with its lines', function (assert) {
+      let t = preset('journal');
+      assert.deepEqual(
+        t.rows.filter((r) => r.role === 'heading').map((r) => r.cells.date),
+        [seqText('2027-01', 1), 'B-1', 'INV-1', 'BP-1'],
+      );
+      assert.deepEqual(t.totals, { debit: 25000, credit: 25000, amount: 0 });
+    });
+
+    test('transaction detail by account subtotals every account', function (assert) {
+      let t = preset('transaction-detail');
+      assert.strictEqual(t.groups.size, 5);
+      assert.strictEqual(t.groups.get('1000')?.amount, -8000);
+    });
+
+    const DOCS = [
+      {
+        docNo: 'INV-1',
+        customerId: 'harbor',
+        date: '2027-01-10',
+        due: '2027-02-09',
+        totalMinor: 12000,
+        openMinor: 12000,
+      },
+      {
+        docNo: 'INV-2',
+        customerId: 'harbor',
+        date: '2027-02-01',
+        due: '2027-03-03',
+        totalMinor: 5000,
+        openMinor: 2000,
+      },
+      {
+        docNo: 'INV-3',
+        customerId: 'juniper',
+        date: '2027-01-15',
+        due: '2027-01-30',
+        totalMinor: 8000,
+        openMinor: 0,
+      },
+      {
+        docNo: 'INV-4',
+        customerId: 'juniper',
+        date: '2027-03-05',
+        due: '2027-04-04',
+        totalMinor: 3000,
+        openMinor: 3000,
+      },
+    ].map(openDocOf);
+
+    test('open invoices lists each invoice with a balance on the date, by customer', function (assert) {
+      let t = openDocumentsTable(DOCS, '2027-02-20', 'open-invoices');
+      assert.strictEqual(t.count, 2);
+      assert.strictEqual(t.totalMinor, 14000);
+      let sub = t.rows.find((r) => r.key === 's-harbor');
+      assert.strictEqual(sub?.cells.open, 14000);
+    });
+
+    test('collections keeps only the invoices past due, with the days late', function (assert) {
+      let t = openDocumentsTable(DOCS, '2027-02-20', 'collections');
+      assert.strictEqual(t.count, 1);
+      assert.strictEqual(t.totalMinor, 12000);
+      let line = t.rows.find((r) => r.key === 'harbor-INV-1');
+      assert.strictEqual(line?.cells.late, 11);
+    });
+
+    test('unpaid bills reads the bills the same way', function (assert) {
+      let t = openDocumentsTable(
+        [
+          openDocOf({
+            billNo: 'B-1',
+            vendorId: 'roastery',
+            date: '2027-01-08',
+            due: '2027-02-07',
+            totalMinor: 5000,
+            openMinor: 5000,
+            rateMicros: 1_100_000,
+          }),
+        ],
+        '2027-02-20',
+        'unpaid-bills',
+      );
+      assert.strictEqual(
+        t.totalMinor,
+        5500,
+        'in the home currency at the booked rate',
+      );
+    });
+
+    test('inventory valuation detail values each lot with stock left', function (assert) {
+      let t = lotsTable([
+        {
+          sku: 'ETH',
+          lot: 'A',
+          received: '2027-01-02',
+          remainingQty: 2000,
+          remainingCostMinor: 3000,
+        },
+        {
+          sku: 'ETH',
+          lot: 'B',
+          received: '2027-01-10',
+          remainingQty: 500,
+          remainingCostMinor: 1000,
+        },
+        {
+          sku: 'COL',
+          lot: 'C',
+          received: '2027-01-03',
+          remainingQty: 0,
+          remainingCostMinor: 0,
+        },
+      ]);
+      assert.strictEqual(t.count, 2);
+      assert.strictEqual(t.totalMinor, 4000);
+      assert.deepEqual(
+        t.rows.filter((r) => !r.role).map((r) => r.cells.unit),
+        [1500, 2000],
+      );
+      assert.deepEqual(t.rows.find((r) => r.key === 's-ETH')?.cells, {
+        lot: 'Total for ETH',
+        qty: 2500,
+        value: 4000,
+      });
+    });
+
+    test('time by customer adds up hours and what is still to bill', function (assert) {
+      let t = timeTable(
+        [
+          {
+            date: '2027-01-05',
+            customerId: 'harbor',
+            worker: 'ana',
+            hours: 2500,
+            billable: true,
+            billed: true,
+            amountMinor: 25000,
+          },
+          {
+            date: '2027-01-06',
+            customerId: 'harbor',
+            worker: 'ana',
+            hours: 1000,
+            billable: true,
+            billed: false,
+            amountMinor: 10000,
+          },
+          {
+            date: '2027-01-07',
+            customerId: 'juniper',
+            worker: 'ben',
+            hours: 500,
+            billable: false,
+            billed: false,
+            amountMinor: 0,
+          },
+          {
+            date: '2027-02-01',
+            customerId: 'harbor',
+            worker: 'ana',
+            hours: 9999,
+            billable: true,
+            billed: false,
+            amountMinor: 99990,
+          },
+        ],
+        '2027-01',
+        '2027-01',
+      );
+      assert.deepEqual(t.rows.find((r) => r.key === 'harbor')?.cells, {
+        customer: 'harbor',
+        hours: 3500,
+        billable: 3500,
+        billed: 2500,
+        unbilled: 10000,
+      });
+      assert.deepEqual(t.rows.at(-1)?.cells, {
+        customer: 'Total',
+        hours: 4000,
+        billable: 3500,
+        billed: 2500,
+        unbilled: 10000,
+      });
+    });
+
+    test('profit by project totals its projects', function (assert) {
+      let t = projectTable([
+        {
+          project: 'PRJ-A',
+          incomeMinor: 50000,
+          costMinor: 23000,
+          laborMinor: 12333,
+          profitMinor: 14667,
+        },
+        {
+          project: 'PRJ-B',
+          incomeMinor: 0,
+          costMinor: 0,
+          laborMinor: 3752,
+          profitMinor: -3752,
+        },
+      ]);
+      assert.strictEqual(t.totalMinor, 10915);
+      assert.strictEqual(t.rows.at(-1)?.cells.labor, 16085);
     });
   });
 

@@ -20,7 +20,6 @@ import { Chip } from '@cardstack/pretui/components/chip';
 import { Callout } from '@cardstack/pretui/components/callout';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
-import { DataTable } from '@cardstack/pretui/components/data-table';
 import {
   StatementTable,
   type StatementColumn as Col,
@@ -220,7 +219,16 @@ export function customTable(
       return name ? `${k} ${name}` : k;
     };
     let n = 0;
-    for (let k of [...by.keys()].sort()) {
+    // A journal reads entry by entry in date order; any other grouping in key order.
+    let keys =
+      custom.groupBy === 'doc'
+        ? [...by.keys()].sort(
+            (a, b) =>
+              by.get(a)![0].date.localeCompare(by.get(b)![0].date) ||
+              a.localeCompare(b),
+          )
+        : [...by.keys()].sort();
+    for (let k of keys) {
       let group = by.get(k)!,
         s = sums(group);
       groups.set(k, s);
@@ -477,10 +485,32 @@ export class SaveReportAs extends GlimmerComponent<SaveSignature> {
 }
 
 // Marks the element a report's actions export from: the nearest report body around it.
-const reportBody = modifier(
+export const reportBody = modifier(
   (el: HTMLElement, [setter]: [(el: HTMLElement | undefined) => void]) => {
     setter(el.closest('[data-report-body]') as HTMLElement | undefined);
     return () => setter(undefined);
+  },
+);
+
+// The statements the picker opens with their columns set: the profit and loss by customer or by month.
+export const PAGE_COLUMNS: Record<string, string> = {
+  'r-pnl': 'total',
+  'r-pnl-customer': 'party',
+  'r-pnl-month': 'month',
+};
+/** Set a statement's columns for the picker entry it was opened from, after the render that read them. */
+const columnsFor = modifier(
+  (_el: HTMLElement, [card, kind]: [unknown, string]) => {
+    let columns = PAGE_COLUMNS[kind],
+      c = card as { view?: ReportView } | undefined;
+    if (!columns || !c || (c.view?.columns || 'total') === columns) return;
+    Promise.resolve().then(() => {
+      c!.view = new ReportView({
+        basis: c!.view?.basis || 'accrual',
+        columns,
+        compare: c!.view?.compare || 'none',
+      });
+    });
   },
 );
 
@@ -505,7 +535,12 @@ export class ReportActions extends GlimmerComponent<ActionsSignature> {
   };
   onSaved = (name: string) => (this.saved = name);
   <template>
-    <div class='report-actions' data-report-actions {{reportBody this.setBody}}>
+    <div
+      class='report-actions'
+      data-report-actions
+      {{reportBody this.setBody}}
+      {{columnsFor @card @kind}}
+    >
       {{#if this.saved}}<span class='muted'>Saved as “{{this.saved}}” in My
           reports.</span>{{/if}}
       <SaveReportAs
@@ -542,15 +577,20 @@ export class ReportActions extends GlimmerComponent<ActionsSignature> {
 }
 
 // ── the custom report on the desk ───────────────────────────────────────────
-const instancesOf = (r: unknown): any[] =>
+export const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
-const loadingOf = (r: unknown) => (r as any)?.isLoading !== false;
+export const loadingOf = (r: unknown) => (r as any)?.isLoading !== false;
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
 };
-const thisMonth = () => new Date().toISOString().slice(0, 7);
-const GROUPS = [{ value: '', label: 'No grouping' }, ...DIMENSIONS];
+export const thisMonth = () => new Date().toISOString().slice(0, 7);
+const GROUPS = [
+  { value: '', label: 'No grouping' },
+  ...DIMENSIONS,
+  { value: 'party', label: 'Name' },
+  { value: 'doc', label: 'Entry' },
+];
 const SORT_DIRS = [
   { value: 'asc', label: 'Ascending' },
   { value: 'desc', label: 'Descending' },
@@ -568,6 +608,8 @@ export interface DetailPreset {
   columns: string[];
   groupBy?: string;
   sections?: string[]; // only accounts in these chart sections
+  accounts?: string[]; // only these accounts
+  through?: boolean; // a balance: every line up to the period's end, not just those in it
 }
 export const PRESETS: Record<string, DetailPreset> = {
   custom: {
@@ -585,7 +627,100 @@ export const PRESETS: Record<string, DetailPreset> = {
       'credit',
     ],
   },
+  'transaction-detail': {
+    kind: 'transaction-detail',
+    label: 'Transaction detail by account',
+    note: 'Every posting line in the period, account by account, with a subtotal for each.',
+    columns: [
+      'date',
+      'kind',
+      'doc',
+      'party',
+      'cls',
+      'debit',
+      'credit',
+      'amount',
+    ],
+    groupBy: 'account',
+  },
+  journal: {
+    kind: 'journal',
+    label: 'Journal',
+    note: 'Every entry in the period in date order, each with its lines.',
+    columns: [
+      'date',
+      'kind',
+      'party',
+      'account',
+      'accountName',
+      'debit',
+      'credit',
+    ],
+    groupBy: 'doc',
+  },
+  'pnl-detail': {
+    kind: 'pnl-detail',
+    label: 'Profit and loss detail',
+    note: 'The postings behind the profit and loss: income, cost of goods and expense lines by account.',
+    columns: ['date', 'kind', 'doc', 'party', 'cls', 'amount'],
+    groupBy: 'account',
+    sections: ['income', 'cogs', 'expense'],
+  },
+  'bs-detail': {
+    kind: 'bs-detail',
+    label: 'Balance sheet detail',
+    note: 'The postings behind the balance sheet: asset, liability and equity lines by account, up to the period end.',
+    columns: ['date', 'kind', 'doc', 'party', 'amount'],
+    groupBy: 'account',
+    sections: ['asset', 'liability', 'equity'],
+    through: true,
+  },
+  'customer-balance-detail': {
+    kind: 'customer-balance-detail',
+    label: 'Customer balance detail',
+    note: 'What each customer owes: every posting to receivables (1100) up to the period end, by customer.',
+    columns: ['date', 'kind', 'doc', 'amount'],
+    groupBy: 'party',
+    accounts: ['1100'],
+    through: true,
+  },
+  'vendor-balance-detail': {
+    kind: 'vendor-balance-detail',
+    label: 'Vendor balance detail',
+    note: 'What is owed to each vendor: every posting to payables (2000) up to the period end, by vendor. A credit is owed.',
+    columns: ['date', 'kind', 'doc', 'amount'],
+    groupBy: 'party',
+    accounts: ['2000'],
+    through: true,
+  },
 };
+
+/** The lines a preset reads: its chart sections or accounts. */
+export const presetLines = (lines: DetailLine[], p: DetailPreset) =>
+  lines.filter(
+    (l) =>
+      (!p.sections || p.sections.includes(l.section)) &&
+      (!p.accounts || p.accounts.includes(l.account)),
+  );
+/** A preset's report over a period: a balance reads every line up to the period's end. */
+export const presetTable = (
+  lines: DetailLine[],
+  p: DetailPreset,
+  custom: Customization,
+  from: string,
+  to: string,
+) =>
+  customTable(presetLines(lines, p), custom, {
+    from: p.through ? '' : from,
+    to,
+    columns: p.columns,
+  });
+/** A preset's own customization, as the report first opens. */
+export const presetCustomization = (p: DetailPreset): Customization => ({
+  ...NO_CUSTOMIZATION,
+  columns: [...p.columns],
+  groupBy: p.groupBy ?? '',
+});
 
 interface RunnerSignature {
   Args: {
@@ -617,7 +752,9 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
   @tracked savedName = '';
 
   get readFrom() {
-    return this.basis === 'cash' ? '0000-01' : this.fromMonth;
+    return this.basis === 'cash' || this.preset.through
+      ? '0000-01'
+      : this.fromMonth;
   }
   journalData = this.args.context?.getCards(
     this,
@@ -718,16 +855,16 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
     };
     let entries =
       this.basis === 'cash' ? cashEntries(src) : accrualEntries(src);
-    let lines = detailLines(entries, this.accounts),
-      sections = this.preset.sections;
-    return sections ? lines.filter((l) => sections.includes(l.section)) : lines;
+    return presetLines(detailLines(entries, this.accounts), this.preset);
   }
   get table() {
-    return customTable(this.lines, this.custom, {
-      from: this.fromMonth,
-      to: this.toMonth,
-      columns: this.preset.columns,
-    });
+    return presetTable(
+      this.lines,
+      this.preset,
+      this.custom,
+      this.fromMonth,
+      this.toMonth,
+    );
   }
   get columnOptions() {
     return DETAIL_COLUMNS.map((c) => ({ value: c.key, label: c.label }));
@@ -1004,136 +1141,6 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
-      }
-    </style>
-  </template>
-}
-
-// ── My reports ──────────────────────────────────────────────────────────────
-export interface ReportPage {
-  id: string;
-  label: string;
-  report: string; // the desk field holding the statement card
-}
-interface MineSignature {
-  Args: {
-    context?: CardContext;
-    realms: string[];
-    refRealms?: string[];
-    ledger?: CardDef;
-    app: unknown; // the desk card, whose fields hold the statement cards
-    pages: ReportPage[];
-    onOpenPage: (id: string) => void;
-  };
-}
-const eqKey = (a: unknown, b: unknown) => a === b;
-type SavedRow = {
-  id: string;
-  name: string;
-  kindLabel: string;
-  period: string;
-  savedBy: string;
-  visibility: string;
-  card: SavedReport;
-};
-const SAVED_COLUMNS = [
-  { key: 'name', label: 'Name' },
-  { key: 'kindLabel', label: 'Report' },
-  { key: 'period', label: 'Period', mono: true },
-  { key: 'visibility', label: 'Shared' },
-  { key: 'savedBy', label: 'Saved by', mono: true },
-];
-/** The saved reports in the books, each opening with its settings applied. */
-export class MyReports extends GlimmerComponent<MineSignature> {
-  @tracked open: SavedReport | undefined;
-  savedData = this.args.context?.getCards(
-    this,
-    () =>
-      ({
-        filter: { type: identifyCard(SavedReport) },
-        sort: [{ by: 'name', on: identifyCard(SavedReport) }],
-        page: { size: 200 },
-      }) as never,
-    () => this.args.realms,
-    { isLive: true },
-  );
-  get loading() {
-    return loadingOf(this.savedData);
-  }
-  get rows(): SavedRow[] {
-    return instancesOf(this.savedData).map((c: SavedReport) => ({
-      id: c.id,
-      name: c.name ?? '',
-      kindLabel: c.kindLabel || c.kind || '',
-      period: c.asOfMonth
-        ? `as of ${c.asOfMonth}`
-        : [c.fromMonth, c.toMonth].filter(Boolean).join(' – '),
-      savedBy: c.savedBy ?? '',
-      visibility: c.visibility === 'private' ? 'Only its saver' : 'Shared',
-      card: c,
-    }));
-  }
-  rowKey = (r: SavedRow) => r.id;
-  rowLabel = (r: SavedRow) => r.name;
-  isRunner = (kind: string | undefined) => !!PRESETS[kind ?? ''];
-  openReport = (r: SavedRow) => {
-    let c = r.card;
-    if (this.isRunner(c.kind)) {
-      this.open = c;
-      return;
-    }
-    let page = this.args.pages.find((p) => p.id === c.kind);
-    if (!page) return;
-    applySettings((this.args.app as any)?.[page.report], c.settings());
-    this.args.onOpenPage(page.id);
-  };
-  back = () => (this.open = undefined);
-  <template>
-    {{#if this.open}}
-      <div class='mine-back'><Button
-          @appearance='plain'
-          @size='s'
-          {{on 'click' this.back}}
-        >← My reports</Button></div>
-      <CustomReportRunner
-        @context={{@context}}
-        @realms={{@realms}}
-        @refRealms={{@refRealms}}
-        @ledger={{@ledger}}
-        @kind={{this.open.kind}}
-        @saved={{this.open}}
-      />
-    {{else if this.loading}}
-      <Skeleton @height='6rem' />
-    {{else if this.rows.length}}
-      <DataTable
-        @columns={{SAVED_COLUMNS}}
-        @rows={{this.rows}}
-        @key={{this.rowKey}}
-        @rowLabel={{this.rowLabel}}
-        @label='My reports'
-        @size='s'
-        data-saved-reports
-      >
-        <:cell as |text row col|>
-          {{#if (eqKey col.key 'name')}}<Button
-              @appearance='link'
-              @tone='neutral'
-              @size='s'
-              data-test-open-saved-report={{row.name}}
-              {{on 'click' (fn this.openReport row)}}
-            >{{text}}</Button>{{else}}{{text}}{{/if}}
-        </:cell>
-      </DataTable>
-    {{else}}
-      <EmptyState
-        @title='No saved reports yet'
-        @message='Open any report, set it up the way you want it, then choose Save as. It lists here and opens with those settings.'
-      />
-    {{/if}}
-    <style scoped>
-      .mine-back {
-        margin-bottom: var(--boxel-sp-xs);
       }
     </style>
   </template>
