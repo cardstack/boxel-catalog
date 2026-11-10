@@ -28,6 +28,7 @@ import {
   type OperationDeclaration,
 } from '@cardstack/base/operations';
 import { Product } from '../commerce/product';
+import { SavedReport, ReportFilter } from './ledger-saved-report';
 import { BillPayment, PaymentApplication } from './ledger-payments';
 import { Deposit, DepositItem } from './ledger-sales';
 import {
@@ -685,6 +686,48 @@ export class Ledger extends CardDef {
       return this.company || 'Ledger';
     },
   });
+  /** Save a report with its settings and customization. The realm stamps who saved it. */
+  @operation static saveReport = {
+    base: 'create',
+    of: SavedReport,
+    params: {
+      name: StringField,
+      kind: StringField,
+      kindLabel: StringField,
+      fromMonth: StringField,
+      toMonth: StringField,
+      asOfMonth: StringField,
+      basis: StringField,
+      columns: StringField,
+      compare: StringField,
+      account: StringField,
+      columnKeys: StringField,
+      filters: ReportFilter,
+      groupBy: StringField,
+      sortBy: StringField,
+      sortDir: StringField,
+      visibility: StringField,
+    },
+    fill: {
+      name: params('name'),
+      kind: params('kind'),
+      kindLabel: params('kindLabel'),
+      fromMonth: params('fromMonth'),
+      toMonth: params('toMonth'),
+      asOfMonth: params('asOfMonth'),
+      basis: params('basis'),
+      columns: params('columns'),
+      compare: params('compare'),
+      account: params('account'),
+      columnKeys: params('columnKeys'),
+      filters: params('filters'),
+      groupBy: params('groupBy'),
+      sortBy: params('sortBy'),
+      sortDir: params('sortDir'),
+      visibility: params('visibility'),
+      savedBy: actor(),
+    },
+  } satisfies OperationDeclaration;
   /**
    * Enter a draft bill: the realm stamps who entered it and creates the Bill card as a draft. It
    * checks nothing (a create can't assert); Bill.post does the checking.

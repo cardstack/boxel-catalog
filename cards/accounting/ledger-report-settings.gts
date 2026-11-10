@@ -112,6 +112,8 @@ export interface ReportEntry {
   account: string;
   net: number;
   cls: string;
+  loc: string;
+  project: string;
   party: string;
   doc: string; // the document it came from
   kind: string; // the kind of document: a journal posting's kind, or invoice, bill, opening
@@ -122,6 +124,8 @@ interface LineLike {
   creditMinor?: number;
   date?: string;
   cls?: string;
+  loc?: string;
+  project?: string;
   party?: string;
   doc?: string;
 }
@@ -143,6 +147,8 @@ const entry = (
   account: l.account ?? '',
   net: Math.round(((l.debitMinor ?? 0) - (l.creditMinor ?? 0)) * share),
   cls: l.cls ?? '',
+  loc: l.loc ?? '',
+  project: l.project ?? '',
   party: l.party || party,
   doc: l.doc || doc,
   kind,

@@ -51,7 +51,7 @@ const changeCol: Col = {
 };
 // Whose name a posting's line is reported under: a sale's customer, a purchase's vendor. Other
 // postings (a fulfillment's cost, payroll, a journal entry) carry a party that isn't one of those.
-const CUSTOMER_KINDS = new Set([
+export const CUSTOMER_KINDS = new Set([
   'invoice',
   'sales-receipt',
   'refund-receipt',
@@ -60,7 +60,7 @@ const CUSTOMER_KINDS = new Set([
   'customer-payment',
   'void',
 ]);
-const VENDOR_KINDS = new Set([
+export const VENDOR_KINDS = new Set([
   'bill',
   'bill-payment',
   'card-charge',

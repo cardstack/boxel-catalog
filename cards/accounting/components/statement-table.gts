@@ -279,7 +279,10 @@ const CellContent: TemplateOnlyComponent<{
         @spoken='off'
         @placeholder={{@cell.placeholder}}
       />
-      <span class='pretui-statement-sr'>{{@cell.spoken}}</span>
+      <span
+        class='pretui-statement-sr'
+        data-statement-sr
+      >{{@cell.spoken}}</span>
     {{else}}
       <FormatNumber
         @value={{@cell.major}}
