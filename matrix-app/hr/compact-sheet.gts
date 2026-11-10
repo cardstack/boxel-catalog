@@ -73,9 +73,9 @@ export const Sheet: TemplateOnlyComponent<SheetSignature> = <template>
         --meeting-mark-size: 2rem;
         --pto-mark-size: 2rem;
         --review-mark-size: 2rem;
-        --review-mark-font-size: var(--boxel-font-size-2xs);
-        --pto-mark-font-size: var(--boxel-font-size-2xs);
-        --meeting-mark-font-size: var(--boxel-font-size-2xs);
+        --review-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --pto-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --meeting-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         flex: none;
         display: inline-flex;
       }
@@ -167,7 +167,7 @@ export const SheetSection: TemplateOnlyComponent<SectionSignature> = <template>
       .sheet-label {
         margin: 0;
         font-weight: 600;
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem; /* 9px ladder label: no token */
         line-height: 1.3;
         font-family: var(--font-mono);
         letter-spacing: 0.13em;
@@ -226,7 +226,7 @@ export const SheetRows: TemplateOnlyComponent<RowsSignature> = <template>
         flex: none;
         inline-size: 7.5rem;
         font-weight: 600;
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem; /* 9px ladder label: no token */
         line-height: 1.3;
         font-family: var(--font-mono);
         letter-spacing: 0.13em;
@@ -297,7 +297,7 @@ export const SheetStat: TemplateOnlyComponent<StatSignature> = <template>
         flex: none;
         inline-size: 7.5rem;
         font-weight: 600;
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem; /* 9px ladder label: no token */
         line-height: 1.3;
         font-family: var(--font-mono);
         letter-spacing: 0.13em;
@@ -436,9 +436,9 @@ export const IsoHead: TemplateOnlyComponent<IsoHeadSignature> = <template>
         --meeting-mark-size: 2.25rem;
         --pto-mark-size: 2.25rem;
         --review-mark-size: 2.25rem;
-        --review-mark-font-size: var(--boxel-font-size-2xs);
-        --pto-mark-font-size: var(--boxel-font-size-2xs);
-        --meeting-mark-font-size: var(--boxel-font-size-2xs);
+        --review-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --pto-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --meeting-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         flex: none;
         display: inline-flex;
       }
@@ -547,7 +547,7 @@ export const StatStrip: TemplateOnlyComponent<StatStripSignature> = <template>
     /* shortcut: Pret UI Stat has no label or value weight/size knobs, so the kit's mono caps label and 22px 700 value are set here; drop once Stat exposes them. */
     .strip-cell :deep(.pretui-stat-label) {
       font-weight: 600;
-      font-size: var(--boxel-font-size-2xs);
+      font-size: 0.5625rem; /* 9px ladder label: no token */
       line-height: 1.3;
       font-family: var(--font-mono);
       letter-spacing: 0.13em;
@@ -728,7 +728,7 @@ export const Kv: TemplateOnlyComponent<KvSignature> = <template>
   <style scoped>
     .kv {
       --pretui-kv-label-font-family: var(--font-mono);
-      --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
+      --pretui-kv-label-font-size: 0.5625rem; /* 9px ladder label: no token */
       --pretui-kv-label-font-weight: 600;
       --pretui-kv-label-line-height: 1.3;
       --pretui-kv-label-letter-spacing: 0.13em;
@@ -799,9 +799,9 @@ export const EmbCard: TemplateOnlyComponent<EmbCardSignature> = <template>
         --meeting-mark-size: 1.5rem;
         --pto-mark-size: 1.5rem;
         --review-mark-size: 1.5rem;
-        --review-mark-font-size: var(--boxel-font-size-2xs);
-        --pto-mark-font-size: var(--boxel-font-size-2xs);
-        --meeting-mark-font-size: var(--boxel-font-size-2xs);
+        --review-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --pto-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --meeting-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         flex: none;
         display: inline-flex;
       }
@@ -890,9 +890,9 @@ export const FitCard: TemplateOnlyComponent<FitCardSignature> = <template>
         --meeting-mark-size: 1.25rem;
         --pto-mark-size: 1.25rem;
         --review-mark-size: 1.25rem;
-        --review-mark-font-size: var(--boxel-font-size-2xs);
-        --pto-mark-font-size: var(--boxel-font-size-2xs);
-        --meeting-mark-font-size: var(--boxel-font-size-2xs);
+        --review-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --pto-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --meeting-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         flex: none;
         display: inline-flex;
       }
@@ -974,7 +974,7 @@ export const FitRow: TemplateOnlyComponent<FitRowSignature> = <template>
       .fr-k {
         flex: none;
         font-weight: 600;
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem; /* 9px ladder label: no token */
         line-height: 1.3;
         font-family: var(--font-mono);
         letter-spacing: 0.13em;

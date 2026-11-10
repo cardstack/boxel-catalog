@@ -512,7 +512,7 @@ export class Meeting extends CardDef {
           flex: none;
           inline-size: 5.5rem;
           font-weight: 600;
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
           line-height: 1.3;
           font-family: var(--font-mono);
           letter-spacing: 0.13em;
@@ -579,7 +579,7 @@ export class Meeting extends CardDef {
         .k {
           inline-size: 7.5rem;
           font-weight: 600;
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
           line-height: 1.3;
           font-family: var(--font-mono);
           letter-spacing: 0.13em;
