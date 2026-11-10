@@ -941,7 +941,7 @@ export class Candidate extends PersonBase {
             vertical-align: middle;
             font-size: var(--boxel-font-size-xs);
             font-weight: 600;
-            line-height: 1.375rem;
+            line-height: 1;
             white-space: nowrap;
             color: var(--foreground);
           }

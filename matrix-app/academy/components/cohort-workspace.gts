@@ -600,7 +600,7 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
                   {{#if (this.canWithdraw e)}}
                     <Button
                       class='cta'
-                      @tone='neutral'
+                      @tone='danger'
                       @appearance='plain'
                       @size='xs'
                       @busy={{this.isBusy (concat 'withdraw-' e.id)}}

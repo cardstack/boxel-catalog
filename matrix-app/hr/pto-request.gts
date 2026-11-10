@@ -343,7 +343,7 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
                 {{on 'click' (fn this.decideApprovalStep 'approved')}}
               >Approve step</Button>
               <Button
-                @tone='neutral'
+                @tone='danger'
                 @appearance='link'
                 @size='xs'
                 @disabled={{this.approvalBusy}}

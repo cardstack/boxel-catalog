@@ -137,6 +137,7 @@ class EnrollmentIsolated extends Component<typeof Enrollment> {
           <Button
             type='button'
             @size='xs'
+            @tone='danger'
             @appearance='outlined'
             @busy={{this.busy}}
             @disabled={{this.busy}}

@@ -189,7 +189,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       }
       @media (prefers-reduced-motion: no-preference) {
         .today-tag {
-          animation: tl-breathe 2.8s ease-in-out 3;
+          animation: tl-breathe 2.8s ease-in-out 1;
         }
         .interactive .week {
           transition: background 140ms ease;
@@ -198,6 +198,8 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         .dot {
           transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
         }
+      }
+      @media (prefers-reduced-motion: no-preference) and (hover: hover) {
         .interactive .week:hover .mark,
         .interactive .week:hover .dot {
           transform: scale(1.35);
@@ -241,8 +243,10 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         line-height: inherit;
         min-width: 0;
       }
-      .interactive .week:hover {
-        background: var(--muted);
+      @media (hover: hover) {
+        .interactive .week:hover {
+          background: var(--muted);
+        }
       }
       .week:focus-visible {
         outline: 2px solid var(--ring);

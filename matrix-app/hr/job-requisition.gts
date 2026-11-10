@@ -476,7 +476,7 @@ export class JobRequisition extends CardDef {
             font-size: var(--boxel-font-size-xs);
             font-weight: 600;
             block-size: 1.375rem;
-            line-height: 1.375rem;
+            line-height: 1;
             white-space: nowrap;
             color: var(--foreground);
           }
