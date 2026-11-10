@@ -30,6 +30,10 @@ import {
   presetCustomization,
 } from '../../../cards/accounting/ledger-report-custom';
 import {
+  auditEvents,
+  filterAudit,
+} from '../../../cards/accounting/ledger-audit';
+import {
   openDocOf,
   openDocumentsTable,
   lotsTable,
@@ -513,6 +517,108 @@ export function runTests() {
       ]);
       assert.strictEqual(t.totalMinor, 10915);
       assert.strictEqual(t.rows.at(-1)?.cells.labor, 16085);
+    });
+  });
+
+  module('Catalog | accounting - audit log', function () {
+    const SOURCES = {
+      journal: [
+        {
+          month: '2027-01',
+          lastDay: '2027-01-31',
+          closedBy: '@owner:books',
+          postings: [
+            {
+              seq: 1,
+              kind: 'journal',
+              date: '2027-01-05',
+              source: 'JE-1',
+              preparer: '@ana:books',
+              reviewer: '@ben:books',
+              postedBy: '@ana:books',
+              postedAt: '2027-01-05 09:00:00',
+              lines: [
+                { account: '6000', debitMinor: 3000 },
+                { account: '1000', creditMinor: 3000 },
+              ],
+            },
+            {
+              seq: 2,
+              kind: 'reversal',
+              reverses: 1,
+              date: '2027-01-06',
+              source: 'JE-1',
+              postedBy: '@ben:books',
+              postedAt: '2027-01-06 14:30:00',
+              lines: [
+                { account: '1000', debitMinor: 3000 },
+                { account: '6000', creditMinor: 3000 },
+              ],
+            },
+            {
+              seq: 3,
+              kind: 'void',
+              date: '2027-01-07',
+              source: 'INV-9',
+              postedBy: '@ana:books',
+              postedAt: '2027-01-07 08:15:00',
+              lines: [
+                { account: '4000', debitMinor: 1200 },
+                { account: '1100', creditMinor: 1200 },
+              ],
+            },
+          ],
+        },
+      ],
+      documents: [
+        {
+          docNo: 'INV-1',
+          date: '2027-01-03',
+          status: 'posted',
+          enteredBy: '@cy:books',
+          postedBy: '@ana:books',
+          totalMinor: 12000,
+        },
+      ],
+      closes: [{ month: '2026-12', closedBy: '@owner:books', debitMinor: 500 }],
+    };
+
+    test('the log lists postings, reversals, voids and closes newest first, with who and when', function (assert) {
+      let events = auditEvents(SOURCES);
+      assert.deepEqual(
+        events.map((e) => [e.kind, e.who, e.at || e.date, e.doc]),
+        [
+          ['closed', '@owner:books', '2027-01-31', 'Journal 2027-01'],
+          ['void', '@ana:books', '2027-01-07 08:15:00', 'INV-9'],
+          ['reversal', '@ben:books', '2027-01-06 14:30:00', 'JE-1'],
+          ['posted', '@ana:books', '2027-01-05 09:00:00', 'JE-1'],
+          ['entered', '@cy:books', '2027-01-03', 'INV-1'],
+          ['posted', '@ana:books', '2027-01-03', 'INV-1'],
+          ['closed', '@owner:books', '2026-12-31', 'Month close 2026-12'],
+        ],
+      );
+      let reversal = events.find((e) => e.kind === 'reversal');
+      assert.strictEqual(reversal?.amountMinor, 3000);
+      assert.ok(
+        reversal?.detail.startsWith(`Reverses ${seqText('2027-01', 1)}`),
+      );
+      let posted = events.find((e) => e.at === '2027-01-05 09:00:00');
+      assert.ok(posted?.detail.includes('reviewed by @ben:books'));
+    });
+
+    test('the log filters by user, kind and period', function (assert) {
+      let events = auditEvents(SOURCES);
+      assert.deepEqual(
+        filterAudit(events, { who: '@ana:books' }).map((e) => e.kind),
+        ['void', 'posted', 'posted'],
+      );
+      assert.strictEqual(filterAudit(events, { kind: 'closed' }).length, 2);
+      assert.deepEqual(
+        filterAudit(events, { from: '2027-01-05', to: '2027-01-06' }).map(
+          (e) => e.kind,
+        ),
+        ['reversal', 'posted'],
+      );
     });
   });
 
