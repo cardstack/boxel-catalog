@@ -43,9 +43,9 @@ export class Product extends CardDef {
         .product-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
           color: var(--foreground);
         }
         .icon {
@@ -79,9 +79,9 @@ export class Product extends CardDef {
         .product-row {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .icon {
           color: var(--muted-foreground);
@@ -92,7 +92,7 @@ export class Product extends CardDef {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
         }
         .name {
           font-weight: 600;
@@ -102,8 +102,8 @@ export class Product extends CardDef {
         }
         .meta {
           display: flex;
-          gap: 0.5rem;
-          font-size: 0.75rem;
+          gap: var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .sku {
@@ -129,10 +129,10 @@ export class Product extends CardDef {
           container-type: size;
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           width: 100%;
           height: 100%;
-          padding: 0.5rem 0.75rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           overflow: hidden;
         }
         .icon {
@@ -143,17 +143,17 @@ export class Product extends CardDef {
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
         }
         .name {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 600;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .sku {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
@@ -189,30 +189,30 @@ export class Product extends CardDef {
       </article>
       <style scoped>
         .product {
-          padding: 1.5rem;
+          padding: var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: var(--boxel-sp-lg);
           color: var(--foreground);
         }
         header {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: var(--boxel-sp-sm);
         }
         .icon {
           color: var(--muted-foreground);
         }
         .type {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }
         dl {
           display: grid;
           grid-template-columns: max-content 1fr;
-          gap: 0.5rem 1.5rem;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-lg);
           margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         dt {
           color: var(--muted-foreground);

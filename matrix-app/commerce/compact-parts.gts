@@ -63,9 +63,9 @@ export const CompactFitted: TemplateOnlyComponent<FittedSig> = <template>
         flex-direction: column;
         box-sizing: border-box;
         block-size: 100%;
-        padding: 0.5rem;
+        padding: var(--boxel-sp-xs);
         overflow: hidden;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.25;
         color: var(--card-foreground);
       }
@@ -77,7 +77,7 @@ export const CompactFitted: TemplateOnlyComponent<FittedSig> = <template>
       .cf-t {
         display: flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
         block-size: 1.5rem;
       }
       .cf-n {
@@ -91,7 +91,7 @@ export const CompactFitted: TemplateOnlyComponent<FittedSig> = <template>
       .cf-st {
         flex: none;
         display: flex;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       .cf-sub,
       .cf-fact {
@@ -103,7 +103,7 @@ export const CompactFitted: TemplateOnlyComponent<FittedSig> = <template>
       .cf-sub {
         block-size: 1rem;
         line-height: 1rem;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       .cf-fact {
         block-size: 1.25rem;
@@ -119,18 +119,18 @@ export const CompactFitted: TemplateOnlyComponent<FittedSig> = <template>
         display: none;
         block-size: 1.75rem;
         align-items: baseline;
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
         overflow: hidden;
         white-space: nowrap;
       }
       .cf-big b {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         line-height: 1.75rem;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
       }
       .cf-big span {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       /* Whole rows only: the rows box takes whatever height is left, the grid
@@ -235,14 +235,14 @@ export const CompactRow: TemplateOnlyComponent<RowSig> = <template>
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         border-block-start: 1px solid var(--border);
         overflow: hidden;
       }
       .cr-k {
         flex: none;
         font-family: var(--font-mono);
-        font-size: 0.5625rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;

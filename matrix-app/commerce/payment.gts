@@ -62,9 +62,9 @@ export class Payment extends CardDef {
         .payment {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .icon {
           width: 1.25rem;
@@ -81,7 +81,7 @@ export class Payment extends CardDef {
         .when {
           margin-left: auto;
           color: var(--muted-foreground);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>
@@ -97,9 +97,9 @@ export class Payment extends CardDef {
         .payment-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
           color: var(--foreground);
         }
         .pa-icon {
@@ -208,17 +208,17 @@ export class Payment extends CardDef {
         .figure {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           white-space: nowrap;
         }
         .figure-lg {
-          font-size: 1.25rem;
+          font-size: var(--boxel-font-size-md);
         }
         .chip {
           flex-shrink: 0;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -228,14 +228,14 @@ export class Payment extends CardDef {
         .row {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           min-width: 0;
         }
         .col,
         .info {
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
+          gap: var(--boxel-sp-4xs);
           min-width: 0;
           flex: 1;
         }
@@ -245,8 +245,8 @@ export class Payment extends CardDef {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 0.375rem;
-            padding: 0.5rem;
+            gap: var(--boxel-sp-2xs);
+            padding: var(--boxel-sp-xs);
             text-align: center;
           }
         }
@@ -254,11 +254,11 @@ export class Payment extends CardDef {
           .strip {
             display: flex;
             align-items: center;
-            gap: 0.625rem;
-            padding: 0.625rem 0.75rem;
+            gap: var(--boxel-sp-xs);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           }
           .strip .info {
-            gap: 0.125rem;
+            gap: var(--boxel-sp-6xs);
           }
           .strip .chip {
             align-self: flex-start;
@@ -270,8 +270,8 @@ export class Payment extends CardDef {
             flex-direction: column;
             align-items: flex-start;
             justify-content: center;
-            gap: 0.375rem;
-            padding: 0.875rem;
+            gap: var(--boxel-sp-2xs);
+            padding: var(--boxel-sp-sm);
           }
         }
         @container fitted-card (min-width: 400px) and (min-height: 170px) {
@@ -279,8 +279,8 @@ export class Payment extends CardDef {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
-            padding: 1.25rem;
+            gap: var(--boxel-sp);
+            padding: var(--boxel-sp-lg);
           }
         }
       </style>
@@ -330,7 +330,7 @@ export class Payment extends CardDef {
       </article>
       <style scoped>
         .receipt-wrap {
-          padding: 2.5rem 1.5rem;
+          padding: var(--boxel-sp-2xl) var(--boxel-sp-lg);
           display: flex;
           justify-content: center;
         }
@@ -348,12 +348,11 @@ export class Payment extends CardDef {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 0.5rem;
-          padding: 2rem 1.5rem 1.5rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg) var(--boxel-sp-lg);
           text-align: center;
         }
         .r-label {
-          margin: 0;
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -363,15 +362,14 @@ export class Payment extends CardDef {
           color: var(--muted-foreground);
         }
         .r-amount {
-          margin: 0;
-          font-size: 2.25rem;
+          font-size: var(--boxel-font-size-2xl);
           line-height: 1.1;
           font-variant-numeric: tabular-nums;
           font-family: var(--boxel-heading-font-family);
         }
         .tear {
           border-top: 0.125rem dashed var(--border);
-          margin: 0 1rem;
+          margin: 0 var(--boxel-sp);
           position: relative;
         }
         .tear::before,
@@ -391,15 +389,12 @@ export class Payment extends CardDef {
         .tear::after {
           right: -1.5rem;
         }
-        /* Pret UI KeyValue at the receipt's text size and column gap, with
+        /* Pret UI KeyValue rows, spaced for the receipt, with
            the values set against the receipt's right edge. */
         .r-rows {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1.25rem;
-          row-gap: 0.625rem;
-          padding: 1.25rem 1.5rem 1.75rem;
-          font-weight: 500;
+          row-gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-lg) var(--boxel-sp-lg) var(--boxel-sp-xl);
+          font-weight: 600;
         }
         /* shortcut: KeyValue has no value min-width knob, so a long value would widen its 1fr column; drop once KeyValue exposes one. */
         .r-rows :deep(dd) {

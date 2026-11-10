@@ -45,15 +45,15 @@ export class ProductReview extends CardDef {
         .review-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
           color: var(--foreground);
         }
         .ra-icon {
           width: 14px;
           height: 14px;
-          color: var(--warning);
+          color: var(--warning-ink);
           flex-shrink: 0;
         }
       </style>
@@ -87,13 +87,13 @@ export class ProductReview extends CardDef {
         .review-row {
           display: flex;
           flex-direction: column;
-          gap: 0.375rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
+          gap: var(--boxel-sp-2xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .stars {
           display: flex;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
         }
         .star {
           width: 14px;
@@ -101,11 +101,10 @@ export class ProductReview extends CardDef {
           color: var(--border);
         }
         .star-on {
-          color: var(--warning);
+          color: var(--warning-ink);
           fill: currentColor;
         }
         .body {
-          margin: 0;
           color: var(--foreground);
           line-height: 1.5;
         }
@@ -141,21 +140,21 @@ export class ProductReview extends CardDef {
           box-sizing: border-box;
           overflow: hidden;
           align-items: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
         }
         .doc-icon {
           width: 18px;
           height: 18px;
-          color: var(--warning);
+          color: var(--warning-ink);
           flex-shrink: 0;
         }
         .figure {
           font-weight: 700;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           white-space: nowrap;
         }
         .meta {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -166,14 +165,14 @@ export class ProductReview extends CardDef {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 0.5rem;
+            padding: var(--boxel-sp-xs);
             text-align: center;
           }
         }
         @container fitted-card (min-width: 151px) {
           .strip {
             display: flex;
-            padding: 0.625rem 0.75rem;
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           }
         }
       </style>
@@ -207,12 +206,12 @@ export class ProductReview extends CardDef {
         .review-page {
           max-width: 32rem;
           margin: 0 auto;
-          padding: 2rem 1.5rem;
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
         }
         .stars-lg {
           display: flex;
-          gap: 0.25rem;
-          margin-bottom: 1rem;
+          gap: var(--boxel-sp-4xs);
+          margin-bottom: var(--boxel-sp);
         }
         .star {
           width: 22px;
@@ -220,11 +219,11 @@ export class ProductReview extends CardDef {
           color: var(--border);
         }
         .star-on {
-          color: var(--warning);
+          color: var(--warning-ink);
           fill: currentColor;
         }
         .body {
-          font-size: 1rem;
+          font-size: var(--boxel-font-size);
           line-height: 1.6;
         }
       </style>

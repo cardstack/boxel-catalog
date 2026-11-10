@@ -37,9 +37,9 @@ export class Service extends CardDef {
         .service-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
           color: var(--foreground);
         }
         .sa-icon {
@@ -72,9 +72,9 @@ export class Service extends CardDef {
         .service-row {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .icon {
           width: 1.25rem;
@@ -87,7 +87,7 @@ export class Service extends CardDef {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
         }
         .name {
           font-weight: 600;
@@ -96,7 +96,7 @@ export class Service extends CardDef {
           white-space: nowrap;
         }
         .meta {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -157,17 +157,17 @@ export class Service extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           max-width: 100%;
         }
         .name-lg {
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -177,13 +177,13 @@ export class Service extends CardDef {
         .row {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           min-width: 0;
         }
         .col {
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
+          gap: var(--boxel-sp-4xs);
           min-width: 0;
           flex: 1;
         }
@@ -193,8 +193,8 @@ export class Service extends CardDef {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 0.375rem;
-            padding: 0.5rem;
+            gap: var(--boxel-sp-2xs);
+            padding: var(--boxel-sp-xs);
             text-align: center;
           }
         }
@@ -202,8 +202,8 @@ export class Service extends CardDef {
           .strip {
             display: flex;
             align-items: center;
-            gap: 0.625rem;
-            padding: 0.625rem 0.75rem;
+            gap: var(--boxel-sp-xs);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           }
         }
         @container fitted-card (max-width: 399px) and (min-height: 170px) {
@@ -212,16 +212,16 @@ export class Service extends CardDef {
             flex-direction: column;
             align-items: flex-start;
             justify-content: center;
-            gap: 0.375rem;
-            padding: 0.875rem;
+            gap: var(--boxel-sp-2xs);
+            padding: var(--boxel-sp-sm);
           }
         }
         @container fitted-card (min-width: 400px) and (min-height: 170px) {
           .card {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 1.25rem;
+            gap: var(--boxel-sp);
+            padding: var(--boxel-sp-lg);
           }
         }
       </style>
@@ -246,17 +246,17 @@ export class Service extends CardDef {
         .service-page {
           max-width: 40rem;
           margin: 0 auto;
-          padding: 2rem 1.5rem;
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: var(--boxel-sp-lg);
         }
         .sh {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: var(--boxel-sp);
           border-bottom: 2px solid var(--foreground);
-          padding-bottom: 1.25rem;
+          padding-bottom: var(--boxel-sp-lg);
         }
         .avatar-icon {
           width: 2.5rem;
@@ -271,18 +271,16 @@ export class Service extends CardDef {
           line-height: var(--boxel-eyebrow-line-height);
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          margin: 0 0 0.125rem;
+          margin: 0 0 var(--boxel-sp-6xs);
           color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
-          font-size: 1.625rem;
+          font-size: var(--boxel-font-size-xl);
           line-height: 1.1;
         }
         .desc {
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
-          margin: 0;
         }
       </style>
     </template>

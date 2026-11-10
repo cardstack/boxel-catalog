@@ -14,7 +14,6 @@ import RepeatIcon from '@cardstack/boxel-icons/repeat';
 import { Contact } from '../crm/contact';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { Subscription } from './subscription';
 
 /**
@@ -63,9 +62,9 @@ export class Subscriber extends CardDef {
         .sub-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.25rem;
+          gap: var(--boxel-sp-4xs);
           font-size: var(--boxel-font-size-xs);
-          font-weight: 500;
+          font-weight: 600;
         }
         .sub-icon {
           flex-shrink: 0;
@@ -109,15 +108,15 @@ export class Subscriber extends CardDef {
         .sub-row {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.875rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
         .sub-id {
           min-width: 0;
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
         }
         .sub-name {
           font-weight: 600;
@@ -165,10 +164,10 @@ export class Subscriber extends CardDef {
           display: flex;
           flex-direction: column;
           justify-content: center;
-          gap: 0.25rem;
+          gap: var(--boxel-sp-4xs);
           width: 100%;
           height: 100%;
-          padding: 0.625rem 0.75rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           box-sizing: border-box;
           overflow: hidden;
         }
@@ -190,8 +189,8 @@ export class Subscriber extends CardDef {
         /* Badge degradation: strip height keeps only the first line. */
         @container fitted-card (max-height: 50px) {
           .fitted {
-            padding: 0.25rem 0.5rem;
-            gap: 0.125rem;
+            padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+            gap: var(--boxel-sp-6xs);
           }
         }
         @container fitted-card (min-height: 65px) {
@@ -243,7 +242,7 @@ export class Subscriber extends CardDef {
             <EmptyState
               @title='No subscriptions yet'
               @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
+              @size='s'
             />
           {{/if}}
         </section>
@@ -252,24 +251,24 @@ export class Subscriber extends CardDef {
         .sub-page {
           max-width: 40rem;
           margin: 0 auto;
-          padding: 2rem 1.5rem;
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: var(--boxel-sp-lg);
         }
         .sh {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: var(--boxel-sp);
           border-bottom: 2px solid var(--foreground);
-          padding-bottom: 1.25rem;
+          padding-bottom: var(--boxel-sp-lg);
         }
         .sh-id {
           flex: 1;
           min-width: 0;
         }
         .doc-kind {
-          margin: 0 0 0.125rem;
+          margin: 0 0 var(--boxel-sp-6xs);
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -278,23 +277,20 @@ export class Subscriber extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        h1 {
-          margin: 0;
-        }
         .sh-since {
-          margin: 0.25rem 0 0;
+          margin: var(--boxel-sp-4xs) 0 0;
           font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }
         .panel {
           border: 1px solid var(--border);
           border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
+          padding: var(--boxel-sp) var(--boxel-sp-lg);
           background: var(--card);
           color: var(--card-foreground);
         }
         h2 {
-          margin: 0 0 0.75rem;
+          margin: 0 0 var(--boxel-sp-sm);
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);

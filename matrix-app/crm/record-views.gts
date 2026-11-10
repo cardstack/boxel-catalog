@@ -52,8 +52,8 @@ const Header: TemplateOnlyComponent<{
     .rv-head {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 0.625rem;
+      gap: var(--boxel-sp-xs);
+      padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
       min-inline-size: 0;
     }
     .rv-id {
@@ -68,7 +68,7 @@ const Header: TemplateOnlyComponent<{
       white-space: nowrap;
     }
     .rv-sub {
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -76,12 +76,12 @@ const Header: TemplateOnlyComponent<{
     }
     .rv-acts {
       display: flex;
-      gap: 0.375rem;
+      gap: var(--boxel-sp-2xs);
       flex-shrink: 0;
     }
     .rv-chips {
       display: flex;
-      gap: 0.5rem;
+      gap: var(--boxel-sp-xs);
       flex-shrink: 0;
     }
   </style>
@@ -115,13 +115,11 @@ export const RecordEmbedded: TemplateOnlyComponent<{
   </article>
   <style scoped>
     .rv-embedded {
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       line-height: 1.4;
-      --text-stat: 1.375rem;
-      --text-ui-xs: 0.6875rem;
       --boxel-sp-xs: 0.35rem;
       --boxel-sp-lg: 0.75rem;
-      --pretui-kv-label-font-size: 0.5625rem;
+      --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
       --pretui-kv-label-color: var(--muted-foreground);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -129,16 +127,15 @@ export const RecordEmbedded: TemplateOnlyComponent<{
       color: var(--card-foreground);
     }
     .rv-summary {
-      margin: 0;
-      padding: 0 0.625rem 0.375rem;
-      font-size: 0.6875rem;
+      padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
     .rv-kv {
       border-block-start: 1px solid var(--border);
-      padding-inline: 0.625rem;
-      padding-block-end: 0.4375rem;
-      --pretui-kv-label-size: 0.5625rem;
+      padding-inline: var(--boxel-sp-xs);
+      padding-block-end: var(--boxel-sp-2xs);
+      --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
     }
   </style>
 </template>;
@@ -228,13 +225,11 @@ export const RecordPage: TemplateOnlyComponent<{
   </article>
   <style scoped>
     .rv-page {
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       line-height: 1.4;
-      --text-stat: 1.375rem;
-      --text-ui-xs: 0.6875rem;
       --boxel-sp-xs: 0.35rem;
       --boxel-sp-lg: 0.75rem;
-      --pretui-kv-label-font-size: 0.5625rem;
+      --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
       --pretui-kv-label-color: var(--muted-foreground);
       max-inline-size: 64rem;
       margin: 0 auto;
@@ -250,7 +245,7 @@ export const RecordPage: TemplateOnlyComponent<{
       border-block: 1px solid var(--border);
     }
     .rv-stat {
-      padding: 0.5rem 0.625rem;
+      padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
       border-inline-end: 1px solid var(--border);
     }
     .rv-cols {
@@ -261,26 +256,25 @@ export const RecordPage: TemplateOnlyComponent<{
       min-inline-size: 0;
     }
     .rv-main > :not(section):not(h2):not(div) {
-      margin: 0.4375rem 0.625rem;
+      margin: var(--boxel-sp-2xs) var(--boxel-sp-xs);
     }
     .rv-side {
       border-inline-start: 1px solid var(--border);
-      padding-block-end: 0.4375rem;
+      padding-block-end: var(--boxel-sp-2xs);
     }
     .rv-side[data-solo] {
       border-inline-start: 0;
       grid-column: 1 / -1;
     }
     .rv-h {
-      margin: 0;
-      padding: 0.5rem 0.625rem;
-      font-size: 0.75rem;
+      padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
+      font-size: var(--boxel-font-size-xs);
       font-weight: 700;
       border-block-end: 1px solid var(--border);
     }
     .rv-kv {
-      padding-inline: 0.625rem;
-      --pretui-kv-label-size: 0.5625rem;
+      padding-inline: var(--boxel-sp-xs);
+      --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
     }
   </style>
 </template>;
@@ -386,9 +380,8 @@ export const RelatedList: TemplateOnlyComponent<{ Args: RelatedArgs }> =
     </section>
     <style scoped>
       .rl-h {
-        margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         border-block-end: 1px solid var(--border);
       }
@@ -396,8 +389,8 @@ export const RelatedList: TemplateOnlyComponent<{ Args: RelatedArgs }> =
         display: flex;
         align-items: center;
         min-block-size: 1.75rem;
-        padding-inline: 0.625rem;
-        font-size: 0.75rem;
+        padding-inline: var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
         min-inline-size: 0;
       }
       .rl-atom {
@@ -409,8 +402,8 @@ export const RelatedList: TemplateOnlyComponent<{ Args: RelatedArgs }> =
       }
       .rl-meta {
         flex: 1 1 0;
-        margin-inline-start: 0.5rem;
-        font-size: 0.6875rem;
+        margin-inline-start: var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
         white-space: nowrap;
         overflow: hidden;
@@ -421,22 +414,21 @@ export const RelatedList: TemplateOnlyComponent<{ Args: RelatedArgs }> =
         margin-inline-start: auto;
         display: inline-flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: var(--boxel-sp-sm);
         flex-shrink: 0;
-        padding-inline-start: 0.5rem;
+        padding-inline-start: var(--boxel-sp-xs);
       }
       .rl-amt {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .rl-row + .rl-row {
         border-block-start: 1px solid var(--border);
       }
       .rl-empty {
-        margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.6875rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
     </style>

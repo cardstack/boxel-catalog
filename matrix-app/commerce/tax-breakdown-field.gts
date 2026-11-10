@@ -37,7 +37,7 @@ export class TaxBreakdownField extends FieldDef {
       {{/if}}
       <style scoped>
         .tax-breakdown {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }
       </style>

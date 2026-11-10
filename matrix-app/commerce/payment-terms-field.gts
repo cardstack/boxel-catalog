@@ -59,7 +59,7 @@ export class PaymentTermsField extends FieldDef {
           align-items: baseline;
           gap: var(--boxel-sp-xs);
           flex-wrap: wrap;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .shorthand {
           font-weight: 700;
@@ -70,7 +70,7 @@ export class PaymentTermsField extends FieldDef {
         }
         .notes {
           flex-basis: 100%;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }
       </style>
@@ -84,7 +84,7 @@ export class PaymentTermsField extends FieldDef {
         .terms-atom {
           font-weight: 600;
           font-variant-numeric: tabular-nums;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
         }
       </style>
     </template>

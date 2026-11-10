@@ -24,6 +24,11 @@
         "links": {
           "self": "../CurrencyRegistry/desk-book"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {
