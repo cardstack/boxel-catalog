@@ -286,7 +286,7 @@ class FulfilmentOrderIsolated extends Component<typeof FulfilmentOrder> {
         border-radius: calc(var(--radius) * 0.6);
         background-color: var(--muted);
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 700;
       }
       .id {
@@ -336,7 +336,7 @@ class FulfilmentOrderIsolated extends Component<typeof FulfilmentOrder> {
       }
       .cap {
         font-family: var(--font-mono);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -609,7 +609,7 @@ export class FulfilmentOrder extends CardDef {
           border-radius: calc(var(--radius) * 0.6);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .id {
@@ -667,7 +667,7 @@ export class FulfilmentOrder extends CardDef {
         .kv dt {
           padding-left: var(--boxel-sp-xs);
           font-family: var(--font-mono);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -707,7 +707,7 @@ export class FulfilmentOrder extends CardDef {
           border-radius: calc(var(--radius) * 0.5);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .name {

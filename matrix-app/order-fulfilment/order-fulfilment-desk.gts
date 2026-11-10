@@ -2011,7 +2011,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         line-height: 1;
       }
@@ -2027,7 +2027,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       }
       .eyebrow {
         font-family: var(--font-mono);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
@@ -2074,7 +2074,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       .of-h1 {
         font-family: var(--boxel-heading-font-family, var(--font-sans));
         font-weight: 400;
-        font-size: var(--boxel-font-size-2xl);
+        font-size: 2.5rem; /* ladder 40px page title: no Boxel display token */
         line-height: 1;
         text-transform: uppercase;
       }
@@ -2178,7 +2178,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         text-align: start;
         white-space: nowrap;
         font-family: var(--font-mono);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;

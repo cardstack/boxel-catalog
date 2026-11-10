@@ -156,7 +156,7 @@ export const CompoundAtom: TemplateOnlyComponent<CompoundAtomSignature> =
         background-color: var(--muted);
         color: var(--foreground);
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 700;
       }
       .ca-name {

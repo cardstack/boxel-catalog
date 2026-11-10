@@ -260,7 +260,7 @@ export class FulfilmentVendor extends CardDef {
           border-radius: calc(var(--radius) * 0.6);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
           color: var(--foreground);
         }
@@ -310,7 +310,7 @@ export class FulfilmentVendor extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -495,7 +495,7 @@ export class FulfilmentVendor extends CardDef {
           border-radius: calc(var(--radius) * 0.6);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .id {
@@ -556,7 +556,7 @@ export class FulfilmentVendor extends CardDef {
         .kv dt {
           padding-left: var(--boxel-sp-sm);
           font-family: var(--font-mono);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
