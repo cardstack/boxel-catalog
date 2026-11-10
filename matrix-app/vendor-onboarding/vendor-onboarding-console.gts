@@ -1313,9 +1313,12 @@ export class VendorOnboardingConsole extends Component<
                                 @appearance='link'
                                 class='who'
                                 {{on 'click' (fn this.openCard c.card)}}
-                              ><Avatar @name={{c.name}} @size={{20}} /><span
-                                  class='nm'
-                                >{{c.name}}</span></Button>
+                              ><span class='who-in'><Avatar
+                                    @name={{c.name}}
+                                    @size={{20}}
+                                  /><span
+                                    class='nm'
+                                  >{{c.name}}</span></span></Button>
                               <span class='meta'>{{if c.meta c.meta '—'}}</span>
                               <StatusChip
                                 @value={{c.compliance.text}}
@@ -1375,12 +1378,12 @@ export class VendorOnboardingConsole extends Component<
                                       @appearance='link'
                                       class='who'
                                       {{on 'click' (fn this.openCard row.card)}}
-                                    ><Avatar
-                                        @name={{cell.text}}
-                                        @size={{16}}
-                                      /><span
-                                        class='nm'
-                                      >{{cell.text}}</span></Button>
+                                    ><span class='who-in'><Avatar
+                                          @name={{cell.text}}
+                                          @size={{16}}
+                                        /><span
+                                          class='nm'
+                                        >{{cell.text}}</span></span></Button>
                                   </th>
                                 {{else if (eq cell.kind 'status')}}
                                   <td><span class='st strong'><span
@@ -1652,7 +1655,16 @@ export class VendorOnboardingConsole extends Component<
         min-inline-size: 0;
         max-inline-size: 100%;
       }
+      /* Button's label is a plain inline span, so the Avatar + name row
+         brings its own flex layout and lets the name truncate */
+      .who-in {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xxs);
+        min-inline-size: 0;
+      }
       .nm {
+        min-inline-size: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
