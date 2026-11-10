@@ -277,7 +277,7 @@ export class PayrollFiling extends CardDef {
   static fitted = class extends Component<typeof PayrollFiling> {
     <template>
       <Fit
-        @eyebrow={{@model.form}}
+        @eyebrow='Payroll filing'
         @title={{@model.agencyId}}
         @figure={{money @model.dueMinor}}
         @meta={{@model.periodEnd}}
