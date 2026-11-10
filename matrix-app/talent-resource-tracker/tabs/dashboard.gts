@@ -605,8 +605,8 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         <:default>
           {{#if this.attentionCount}}
             <div class='dash-attn'>
-              <Button
-                @appearance='plain'
+              <button
+                type='button'
                 class='dash-attn-short'
                 aria-expanded={{if this.alertsOpen 'true' 'false'}}
                 {{on 'click' this.toggleAlerts}}
@@ -618,7 +618,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                   {{this.expiringContractorCount}}
                   · PTO
                   {{this.ptoAwaitingApprovalCount}}
-                  ▾</span></Button>
+                  ▾</span></button>
               <div
                 class='dash-alerts'
                 role='group'
@@ -1081,18 +1081,27 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         padding: var(--trt-py) 0;
         border-block: 1px solid var(--border);
       }
-      /* Pret UI plain Button as the full-width alerts toggle */
+      /* a native button: a Pret UI Button can't be a full-width row whose
+         dot and summary are flex items */
       .dash-attn-short {
-        --pretui-button-h: 2.125rem;
-        --pretui-button-px: 0;
-        --pretui-button-radius: 0;
-        --pretui-button-gap: var(--boxel-sp-2xs);
         display: none;
-        justify-content: start;
+        align-items: center;
+        gap: var(--boxel-sp-2xs);
         inline-size: 100%;
+        block-size: 2.125rem;
+        padding: 0;
+        border: 0;
         border-block: 1px solid var(--border);
+        background: none;
+        color: var(--foreground);
+        font-family: var(--font-sans);
         font-size: var(--boxel-font-size-sm);
         font-weight: 700;
+        cursor: pointer;
+      }
+      .dash-attn-short:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 0.125rem;
       }
       .dash-dot {
         inline-size: 0.4375rem;
