@@ -740,6 +740,7 @@ export class ListReport extends GlimmerComponent<ListSignature> {
     columns: '',
     compare: '',
     account: '',
+    statement: '',
   });
   onSaved = (name: string) => (this.savedName = name);
   body: HTMLElement | undefined;
