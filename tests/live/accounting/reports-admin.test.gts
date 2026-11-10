@@ -2,6 +2,7 @@ import { click, waitUntil } from '@ember/test-helpers';
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
+import { realmURL as realmSymbol } from '@cardstack/base/card-api';
 import type { CardDef } from '@cardstack/base/card-api';
 import { operations } from '@cardstack/base/operations';
 
@@ -1146,10 +1147,11 @@ export function runTests() {
         RealmPolicy,
         realm: RealmConfig,
       };
-      const ops = async (path: string) =>
-        operations(
-          new TYPES[path.split('/')[0]]({ id: `${realmURL}${path}` }),
-        ) as any;
+      const ops = async (path: string) => {
+        let card = new TYPES[path.split('/')[0]]({ id: `${realmURL}${path}` });
+        (card as any)[realmSymbol] = new URL(realmURL);
+        return operations(card) as any;
+      };
       async function refused(
         assert: Assert,
         call: Promise<unknown>,
