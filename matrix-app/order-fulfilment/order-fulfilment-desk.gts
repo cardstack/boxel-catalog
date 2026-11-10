@@ -1996,7 +1996,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         font-size: var(--boxel-font-size-xs);
       }
       p {
-        margin: 0;
       }
       .of-brand {
         display: flex;
@@ -2028,7 +2027,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       }
       .eyebrow {
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
@@ -2073,7 +2072,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         gap: var(--boxel-sp-4xs);
       }
       .of-h1 {
-        margin: 0;
         font-family: var(--boxel-heading-font-family, var(--font-sans));
         font-weight: 400;
         font-size: var(--boxel-font-size-2xl);
@@ -2180,7 +2178,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         text-align: start;
         white-space: nowrap;
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
@@ -2253,8 +2251,10 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       .link.mono {
         color: var(--muted-foreground);
       }
-      .link:hover {
-        text-decoration: underline;
+      @media (hover: hover) {
+        .link:hover {
+          text-decoration: underline;
+        }
       }
       .link:focus-visible,
       .row-pick:focus-visible {
@@ -2305,7 +2305,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         background: none;
         color: var(--muted-foreground);
         text-align: start;
-        cursor: pointer;
       }
       .row-pick[aria-pressed='true'] {
         border-inline-start-color: var(--foreground);

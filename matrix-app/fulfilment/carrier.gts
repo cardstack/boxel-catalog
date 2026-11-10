@@ -450,7 +450,6 @@ export class Carrier extends CardDef {
           min-width: 0;
         }
         .name {
-          margin: 0;
           font-family: var(--font-sans);
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
@@ -493,7 +492,7 @@ export class Carrier extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -610,7 +609,6 @@ export class Carrier extends CardDef {
           font-size: inherit;
           font-weight: inherit;
           line-height: inherit;
-          cursor: pointer;
         }
         .link .strong {
           font-family: var(--font-mono);
@@ -697,7 +695,6 @@ export class Carrier extends CardDef {
           min-width: 0;
         }
         h3 {
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           overflow: hidden;
@@ -751,7 +748,7 @@ export class Carrier extends CardDef {
         .kv dt {
           padding-left: var(--boxel-sp-sm);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;

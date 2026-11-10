@@ -260,7 +260,6 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         font-size: inherit;
         font-weight: inherit;
         line-height: inherit;
-        cursor: pointer;
       }
       .link:focus-visible {
         outline: 2px solid var(--ring);
@@ -297,7 +296,6 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         min-width: 0;
       }
       .name {
-        margin: 0;
         font-family: var(--font-sans);
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
@@ -340,7 +338,7 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
       }
       .cap {
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -412,8 +410,10 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
       button.row {
         cursor: pointer;
       }
-      button.row:hover {
-        background-color: var(--muted);
+      @media (hover: hover) {
+        button.row:hover {
+          background-color: var(--muted);
+        }
       }
       button.row:focus-visible {
         outline: 2px solid var(--ring);
@@ -424,17 +424,8 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         padding: 0;
         list-style: none;
       }
-      .lead {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        min-width: 0;
-      }
-      .lead .meta {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
+
+
       .strong {
         flex: none;
         font-weight: 600;
@@ -645,7 +636,6 @@ export class Warehouse extends CardDef {
           min-width: 0;
         }
         h3 {
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           overflow: hidden;
@@ -699,7 +689,7 @@ export class Warehouse extends CardDef {
         .kv dt {
           padding-left: var(--boxel-sp-sm);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;

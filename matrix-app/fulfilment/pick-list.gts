@@ -124,7 +124,7 @@ export class PickItemField extends FieldDef {
         }
         .pi-flag {
           text-align: right;
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: color-mix(in oklch, var(--destructive) 60%, var(--foreground));
@@ -562,7 +562,7 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .cap {
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -802,7 +802,6 @@ export class PickList extends CardDef {
           min-width: 0;
         }
         h3 {
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
@@ -847,7 +846,7 @@ export class PickList extends CardDef {
         .kv dt {
           padding-left: var(--boxel-sp-xs);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;

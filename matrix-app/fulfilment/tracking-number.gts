@@ -118,7 +118,7 @@ export class TrackingNumberField extends FieldDef {
         }
         .tn-carrier {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 700;
           letter-spacing: 0.08em;
           text-transform: uppercase;

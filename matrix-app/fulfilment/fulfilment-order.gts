@@ -336,7 +336,7 @@ class FulfilmentOrderIsolated extends Component<typeof FulfilmentOrder> {
       }
       .cap {
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -617,7 +617,6 @@ export class FulfilmentOrder extends CardDef {
           min-width: 0;
         }
         h3 {
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
@@ -668,7 +667,7 @@ export class FulfilmentOrder extends CardDef {
         .kv dt {
           padding-left: var(--boxel-sp-xs);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;

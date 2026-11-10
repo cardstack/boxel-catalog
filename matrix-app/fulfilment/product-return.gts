@@ -586,7 +586,6 @@ export class ProductReturn extends CardDef {
           min-width: 0;
         }
         .name {
-          margin: 0;
           font-family: var(--font-sans);
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
@@ -629,7 +628,7 @@ export class ProductReturn extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -686,7 +685,6 @@ export class ProductReturn extends CardDef {
           gap: var(--boxel-sp-sm);
           width: 100%;
           min-height: 1.75rem;
-          margin: 0;
           padding: 0 var(--boxel-sp-sm);
           border: 0;
           border-top: 1px solid var(--border);
@@ -701,18 +699,16 @@ export class ProductReturn extends CardDef {
         button.row {
           cursor: pointer;
         }
-        button.row:hover {
-          background-color: var(--muted);
+        @media (hover: hover) {
+          button.row:hover {
+            background-color: var(--muted);
+          }
         }
         button.row:focus-visible {
           outline: 2px solid var(--ring);
           outline-offset: -2px;
         }
-        .rows {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-        }
+
         .lead {
           display: flex;
           align-items: baseline;
@@ -830,7 +826,6 @@ export class ProductReturn extends CardDef {
           min-width: 0;
         }
         h3 {
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           overflow: hidden;
@@ -884,7 +879,7 @@ export class ProductReturn extends CardDef {
         .kv dt {
           padding-left: var(--boxel-sp-sm);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
