@@ -58,6 +58,9 @@ export class Acquisition extends FieldDef {
     // Routed through the one formatter, NOT `<@fields.price @format='atom'/>`.
     // The field atom does no number formatting at all, so it prints 11.5 for
     // 11.50 — a price missing a digit is not a price.
+    get paid() {
+      return formatMoney(this.args.model?.price);
+    }
 
     <template>
       <span class='acq'>
@@ -84,10 +87,6 @@ export class Acquisition extends FieldDef {
   };
 
   static embedded = class Embedded extends Component<typeof Acquisition> {
-    get paid() {
-      return formatMoney(this.args.model?.price);
-    }
-
     <template>
       <dl class='acquisition'>
         <div class='pair'>

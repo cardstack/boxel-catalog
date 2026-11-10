@@ -200,7 +200,7 @@ export const SnStat: TemplateOnlyComponent<StatSignature> = <template>
     <Stat
       @label={{@label}}
       @value={{shown @value}}
-      @hint={{@hint}}
+      @hint={{if @hint @hint undefined}}
       @tone={{toneOf @hue}}
       @roll={{false}}
     />
