@@ -218,7 +218,7 @@ export class MarketplaceOffer extends CardDef {
               @tone='primary'
               @onConfirm={{this.accept}}
             >
-              <:trigger as |isOpen toggle|>
+              <:trigger as |_isOpen toggle|>
                 <Button
                   @tone='primary'
                   @appearance='accent'
@@ -233,7 +233,7 @@ export class MarketplaceOffer extends CardDef {
               @confirmLabel='Decline offer'
               @onConfirm={{this.decline}}
             >
-              <:trigger as |isOpen toggle|>
+              <:trigger as |_isOpen toggle|>
                 <Button
                   @tone='danger'
                   @appearance='outlined'
