@@ -341,38 +341,12 @@ export class ReviewCycle extends CardDef {
             color: var(--card-foreground);
             container-type: inline-size;
           }
-          .iso-head {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp);
-          }
-          .iso-id {
-            flex: 1 1 0;
-            min-width: 0;
-          }
           h1 {
             font-size: var(--boxel-font-size-lg);
             font-weight: 600;
             line-height: 1.25;
             color: var(--primary-ink);
             overflow-wrap: break-word;
-          }
-          .iso-sub {
-            margin: var(--boxel-sp-6xs) 0 0;
-            font-size: var(--boxel-font-size-sm);
-            color: var(--muted-foreground);
-            font-variant-numeric: tabular-nums;
-          }
-          .chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
-          }
-          .stat-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
-            gap: var(--boxel-sp);
           }
           .iso-body {
             display: grid;

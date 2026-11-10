@@ -550,11 +550,6 @@ class OfferIsolated extends Component<typeof Offer> {
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
-      .letter-doc {
-        max-height: 24rem;
-        overflow-y: auto;
-        min-width: 0;
-      }
     </style>
   </template>
 

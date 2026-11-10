@@ -175,9 +175,6 @@ export class OnboardingTemplate extends CardDef {
           border-radius: var(--boxel-border-radius);
           overflow: hidden;
         }
-        .task-item {
-          padding: 0;
-        }
       </style>
     </template>
   };

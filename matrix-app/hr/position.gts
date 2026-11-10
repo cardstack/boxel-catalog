@@ -602,9 +602,6 @@ export class Position extends CardDef {
             --position-mark-size: 1.25rem;
             --position-mark-font-size: var(--boxel-font-size-2xs);
           }
-          .position-atom-chip {
-            flex: none;
-          }
           .position-atom-name {
             flex: 1 1 4rem;
             min-width: 0;
