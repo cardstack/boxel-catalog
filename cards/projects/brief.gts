@@ -6,6 +6,7 @@ import {
   StepList,
   type StepItem,
 } from '@cardstack/pretui/components/step-list';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Each stage writes independently, so a stage's state is whether its field
 // is written, not its position in the list.
@@ -45,59 +46,63 @@ export class Brief extends CardDef {
 
   static isolated = class Isolated extends Component<typeof Brief> {
     <template>
-      <article class='brief'>
-        <header class='brief-header'>
-          <p class='eyebrow'>Brief</p>
-          <h1 class='title'>{{@model.cardTitle}}</h1>
-          <p class='summary'>{{@model.cardDescription}}</p>
-        </header>
+      <IsoFrame>
+        <article class='brief'>
+          <header class='brief-header'>
+            <p class='eyebrow'>Brief</p>
+            <h1 class='title'>{{@model.cardTitle}}</h1>
+            <p class='summary'>{{@model.cardDescription}}</p>
+          </header>
 
-        <section class='stage'>
-          <h2 class='stage-title'>Spec</h2>
-          {{#if @model.spec}}
-            <@fields.spec />
-          {{else}}
-            <EmptyState
-              @title='Not written yet'
-              @texture={{false}}
-              @size='s'
-            ><code>domain-interview</code> writes this.</EmptyState>
-          {{/if}}
-        </section>
+          <section class='stage'>
+            <h2 class='stage-title'>Spec</h2>
+            {{#if @model.spec}}
+              <@fields.spec />
+            {{else}}
+              <EmptyState
+                @title='Not written yet'
+                @texture={{false}}
+                @size='s'
+              ><code>domain-interview</code> writes this.</EmptyState>
+            {{/if}}
+          </section>
 
-        <section class='stage'>
-          <h2 class='stage-title'>Design direction</h2>
-          {{#if @model.designDirection}}
-            <@fields.designDirection />
-          {{else}}
-            <EmptyState
-              @title='Not written yet'
-              @texture={{false}}
-              @size='s'
-            ><code>design-direction</code> writes this.</EmptyState>
-          {{/if}}
-        </section>
+          <section class='stage'>
+            <h2 class='stage-title'>Design direction</h2>
+            {{#if @model.designDirection}}
+              <@fields.designDirection />
+            {{else}}
+              <EmptyState
+                @title='Not written yet'
+                @texture={{false}}
+                @size='s'
+              ><code>design-direction</code> writes this.</EmptyState>
+            {{/if}}
+          </section>
 
-        <section class='stage'>
-          <h2 class='stage-title'>Motion</h2>
-          {{#if @model.motion}}
-            <@fields.motion />
-          {{else}}
-            <EmptyState
-              @title='Not needed, or not written yet'
-              @texture={{false}}
-              @size='s'
-            ><code>motion-authoring</code>
-              writes this only when the direction asked for an arc.</EmptyState>
-          {{/if}}
-        </section>
-      </article>
-
+          <section class='stage'>
+            <h2 class='stage-title'>Motion</h2>
+            {{#if @model.motion}}
+              <@fields.motion />
+            {{else}}
+              <EmptyState
+                @title='Not needed, or not written yet'
+                @texture={{false}}
+                @size='s'
+              ><code>motion-authoring</code>
+                writes this only when the direction asked for an arc.</EmptyState>
+            {{/if}}
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .brief {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp-xl);
           color: var(--foreground);
-          background: var(--background);
         }
         .brief-header {
           padding-bottom: var(--boxel-sp-lg);
