@@ -1718,14 +1718,16 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                           class='strip-clock'
                         />
                         <p class='strip-case'>
-                          <button
-                            type='button'
+                          <Button
                             class='link-button'
+                            @tone='neutral'
+                            @appearance='link'
+                            @size='s'
                             {{on
                               'click'
                               (fn this.openCard this.nearestBreach.card)
                             }}
-                          >{{this.nearestBreach.label}}</button>
+                          >{{this.nearestBreach.label}}</Button>
                           <span>Nearest breach ·
                             {{this.nearestBreach.clockKind}}
                             clock ·
@@ -1772,11 +1774,13 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                           /></:empty>
                         <:cell as |text row col|>
                           {{#if (eq col.key 'case')}}
-                            <button
-                              type='button'
+                            <Button
                               class='link-button row-id'
+                              @tone='neutral'
+                              @appearance='link'
+                              @size='s'
                               {{on 'click' (fn this.openCard row.card)}}
-                            >{{this.shortId text}}</button>
+                            >{{this.shortId text}}</Button>
                           {{else if (eq col.key 'subject')}}
                             <span class='row-subject'>{{text}}</span>
                           {{else if (eq col.key 'severity')}}
@@ -1941,11 +1945,13 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                             /></:empty>
                           <:cell as |text row col|>
                             {{#if (eq col.key 'caseId')}}
-                              <button
-                                type='button'
+                              <Button
                                 class='link-button row-id'
+                                @tone='neutral'
+                                @appearance='link'
+                                @size='s'
                                 {{on 'click' (fn this.openCard row)}}
-                              >{{text}}</button>
+                              >{{text}}</Button>
                             {{else if (eq col.key 'subject')}}
                               <span class='row-subject'>{{text}}</span>
                             {{else if (eq col.key 'severity')}}
@@ -2107,7 +2113,12 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                             @tone='neutral'
                             @appearance='plain'
                           />
-                          <ArrowRightIcon class='to-arrow' aria-hidden='true' />
+                          <ArrowRightIcon
+                            class='to-arrow'
+                            width='16'
+                            height='16'
+                            aria-hidden='true'
+                          />
                           <SegmentedControl
                             @label='Escalate to'
                             @options={{this.raiseLevelOptions}}
@@ -2510,18 +2521,23 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         block-size: 1.75rem;
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        font: 600 0.5625rem/1 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: 600;
+        line-height: 1;
       }
       .desk-brand-text {
         display: grid;
-        margin: 0;
         min-inline-size: 0;
         font-weight: 700;
         line-height: 1.2;
       }
       .desk-brand-text small,
       .desk-eyebrow {
-        font: 600 0.5625rem/1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -2532,7 +2548,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         gap: var(--boxel-sp-xs);
       }
       .desk-account-text {
-        margin: 0;
         font-weight: 600;
       }
       .desk-account-text small {
@@ -2582,10 +2597,9 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         margin: 0;
       }
       .desk-h1 {
-        margin: 0;
         font-family: var(--boxel-heading-font-family);
         font-weight: 400;
-        font-size: 2.5rem;
+        font-size: 2.5rem; /* ladder 40px page title: no Boxel display token */
         line-height: 1;
         text-transform: uppercase;
       }
@@ -2672,7 +2686,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         font-weight: 700;
       }
       .block-meta {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
@@ -2753,7 +2766,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         flex: 1;
         min-inline-size: 12rem;
         display: grid;
-        margin: 0;
       }
       .strip-case span {
         color: var(--muted-foreground);
@@ -2766,14 +2778,18 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         border: 0;
         background: none;
         padding: 0;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         font-weight: 600;
         color: var(--foreground);
         text-align: start;
-        cursor: pointer;
       }
-      .link-button:hover {
-        text-decoration: underline;
+      @media (hover: hover) {
+        .link-button:hover {
+          text-decoration: underline;
+        }
       }
       .link-button:focus-visible,
       .case-open:focus-visible,
@@ -2820,12 +2836,10 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         background: var(--card);
       }
       .home-greeting {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .home-identity {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
@@ -2874,10 +2888,11 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         overflow: hidden;
-        cursor: pointer;
       }
-      .agent-tile:hover {
-        border-color: var(--foreground);
+      @media (hover: hover) {
+        .agent-tile:hover {
+          border-color: var(--foreground);
+        }
       }
 
       /* dialogs */
@@ -2887,7 +2902,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         font-weight: 700;
       }
       .dlg-hint {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
@@ -2897,8 +2911,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         gap: var(--boxel-sp-xs);
       }
       .to-arrow {
-        inline-size: 1rem;
-        block-size: 1rem;
+        flex: none;
       }
       .add-agent {
         display: flex;
@@ -2928,11 +2941,17 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         border: 0;
         background: var(--card);
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: start;
-        cursor: pointer;
       }
-      .pick-row:hover,
+      @media (hover: hover) {
+        .pick-row:hover {
+          background: var(--muted);
+        }
+      }
       .pick-row[aria-pressed='true'] {
         background: var(--muted);
       }
@@ -2998,6 +3017,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
       }
+
       .case-grid,
       .case-list {
         display: grid;
@@ -3025,11 +3045,12 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         background: var(--card);
         color: inherit;
         text-align: start;
-        cursor: pointer;
         overflow: hidden;
       }
-      .case-open:hover {
-        border-color: var(--foreground);
+      @media (hover: hover) {
+        .case-open:hover {
+          border-color: var(--foreground);
+        }
       }
       .case-face {
         inline-size: 100%;

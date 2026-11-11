@@ -159,11 +159,11 @@ export class WorkRail extends GlimmerComponent<Signature> {
       .grp {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: var(--boxel-sp-6xs);
       }
       .grp-h {
-        margin: 0 0 2px;
-        font-size: 0.5625rem;
+        margin: 0 0 var(--boxel-sp-6xs);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -200,8 +200,10 @@ export class WorkRail extends GlimmerComponent<Signature> {
           transition: background 0.1s ease-out;
         }
       }
-      .item:hover {
-        background: var(--muted);
+      @media (hover: hover) {
+        .item:hover {
+          background: var(--muted);
+        }
       }
       .item:focus-visible {
         outline: 2px solid var(--primary);
@@ -259,7 +261,7 @@ export class WorkRail extends GlimmerComponent<Signature> {
         }
         .items {
           flex-direction: row;
-          gap: 2px;
+          gap: var(--boxel-sp-6xs);
         }
         .item {
           width: auto;

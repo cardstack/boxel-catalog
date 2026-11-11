@@ -70,7 +70,7 @@ export class AuditMetadataField extends FieldDef {
           flex-wrap: wrap;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .mono {
@@ -89,7 +89,7 @@ export class AuditMetadataField extends FieldDef {
       <span class='atom'>{{@model.summary}}</span>
       <style scoped>
         .atom {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>

@@ -19,6 +19,11 @@
         "links": {
           "self": "../InterviewPlan/178f4bd9-d637-4c5a-aae2-96eec26fbbd0"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -21,6 +21,11 @@
         "links": {
           "self": "../Okr/q3-activation"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

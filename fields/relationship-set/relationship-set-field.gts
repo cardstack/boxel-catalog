@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -22,10 +23,12 @@ export const RELATION_KINDS = [
   'follows-up',
 ] as const;
 
-export const RelationKindField = enumField(StringField, {
-  displayName: 'Relation Kind',
-  options: RELATION_KINDS as unknown as string[],
-});
+export const RelationKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Relation Kind',
+    options: RELATION_KINDS as unknown as string[],
+  }),
+);
 
 /**
  * One typed link between this record and another card. The type is data —

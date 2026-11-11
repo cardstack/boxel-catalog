@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Component,
   field,
@@ -89,10 +90,12 @@ export const CANDIDATE_STAGE_COLORS: Record<string, StateColor> =
     ]),
   );
 
-export const CandidateStatusField = enumField(StringField, {
-  options: CANDIDATE_STAGES.map((stage) => ({ value: stage, label: stage })),
-  displayName: 'Candidate Stage',
-});
+export const CandidateStatusField = markDefinition(
+  enumField(StringField, {
+    options: CANDIDATE_STAGES.map((stage) => ({ value: stage, label: stage })),
+    displayName: 'Candidate Stage',
+  }),
+);
 
 // Hoisted out of `static isolated = class {…}`: decorators are not valid in a
 // class expression under the catalog type-check.

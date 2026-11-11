@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import CalendarCheckIcon from '@cardstack/boxel-icons/calendar-check';
 
 import { statusField } from '@cardstack/catalog/fields/status/status';
@@ -18,43 +19,45 @@ import { statusField } from '@cardstack/catalog/fields/status/status';
  * vocabulary (a wedding's "Attending with guest") build their own via
  * `statusField`; this export is the common five-answer form.
  */
-export const RsvpStatusField = statusField({
-  displayName: 'RSVP Status',
-  icon: CalendarCheckIcon,
-  options: [
-    {
-      value: 'Invited',
-      hue: 'slate',
-      meaning: 'Asked, no answer yet',
+export const RsvpStatusField = markDefinition(
+  statusField({
+    displayName: 'RSVP Status',
+    icon: CalendarCheckIcon,
+    options: [
+      {
+        value: 'Invited',
+        hue: 'slate',
+        meaning: 'Asked, no answer yet',
+      },
+      {
+        value: 'Going',
+        hue: 'green',
+        meaning: 'Confirmed they will attend',
+      },
+      {
+        value: 'Maybe',
+        hue: 'amber',
+        meaning: 'Interested but not committed',
+      },
+      {
+        value: 'Waitlisted',
+        hue: 'purple',
+        meaning: 'Wants to attend; no place for them yet',
+      },
+      {
+        value: 'Declined',
+        hue: 'red',
+        meaning: 'Said no — can still change their mind',
+      },
+    ],
+    transitions: {
+      Invited: ['Going', 'Maybe', 'Waitlisted', 'Declined'],
+      Going: ['Maybe', 'Declined'],
+      Maybe: ['Going', 'Waitlisted', 'Declined'],
+      Waitlisted: ['Going', 'Declined'],
+      Declined: ['Going', 'Maybe'],
     },
-    {
-      value: 'Going',
-      hue: 'green',
-      meaning: 'Confirmed they will attend',
-    },
-    {
-      value: 'Maybe',
-      hue: 'amber',
-      meaning: 'Interested but not committed',
-    },
-    {
-      value: 'Waitlisted',
-      hue: 'purple',
-      meaning: 'Wants to attend; no place for them yet',
-    },
-    {
-      value: 'Declined',
-      hue: 'red',
-      meaning: 'Said no — can still change their mind',
-    },
-  ],
-  transitions: {
-    Invited: ['Going', 'Maybe', 'Waitlisted', 'Declined'],
-    Going: ['Maybe', 'Declined'],
-    Maybe: ['Going', 'Waitlisted', 'Declined'],
-    Waitlisted: ['Going', 'Declined'],
-    Declined: ['Going', 'Maybe'],
-  },
-});
+  }),
+);
 
 export default RsvpStatusField;

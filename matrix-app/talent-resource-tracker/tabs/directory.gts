@@ -368,7 +368,7 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
         text-overflow: ellipsis;
       }
       .dir-mgr {
-        font-weight: 500;
+        font-weight: 600;
       }
       .dir-mono {
         font-family: var(--font-mono);

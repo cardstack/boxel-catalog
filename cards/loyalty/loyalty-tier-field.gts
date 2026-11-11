@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { htmlSafe } from '@ember/template';
 import GlimmerComponent from '@glimmer/component';
 import { Component, StringField } from 'https://cardstack.com/base/card-api';
@@ -261,14 +262,16 @@ export class TierBadge extends GlimmerComponent<TierBadgeSignature> {
  * have a program yet. Anything with a real program calls `loyaltyTierField`
  * with its own rungs, colours and multipliers.
  */
-export const LoyaltyTierField = loyaltyTierField({
-  displayName: 'Loyalty Tier',
-  options: [
-    { value: 'Bronze', hue: 'bronze' },
-    { value: 'Silver', hue: 'slate' },
-    { value: 'Gold', hue: 'gold' },
-    { value: 'Platinum', hue: 'teal' },
-  ],
-});
+export const LoyaltyTierField = markDefinition(
+  loyaltyTierField({
+    displayName: 'Loyalty Tier',
+    options: [
+      { value: 'Bronze', hue: 'bronze' },
+      { value: 'Silver', hue: 'slate' },
+      { value: 'Gold', hue: 'gold' },
+      { value: 'Platinum', hue: 'teal' },
+    ],
+  }),
+);
 
 export default LoyaltyTierField;

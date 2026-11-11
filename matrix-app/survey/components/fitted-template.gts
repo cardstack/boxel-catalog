@@ -31,7 +31,7 @@ export class SurveyFitted extends Component<typeof Survey> {
         height: 1.5rem;
         border-radius: 0.25rem;
         background-color: var(--muted);
-        font-size: 0.625rem;
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 700;
       }
       .dot-text {

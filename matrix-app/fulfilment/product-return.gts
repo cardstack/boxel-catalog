@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -49,10 +50,12 @@ export function returnStatusStyle(value?: string | null): StatusStyle {
   );
 }
 
-export const ReturnStatusField = enumField(StringField, {
-  options: RETURN_STATUSES.map((s) => ({ value: s.value, label: s.label })),
-  displayName: 'Return Status',
-});
+export const ReturnStatusField = markDefinition(
+  enumField(StringField, {
+    options: RETURN_STATUSES.map((s) => ({ value: s.value, label: s.label })),
+    displayName: 'Return Status',
+  }),
+);
 
 // Why it came back, and what the policy says about it. `restockable` and
 // `restockingFeeRate` live on this table rather than in the refund code, so a
@@ -119,10 +122,12 @@ export function isOurFault(value?: string | null) {
   );
 }
 
-export const ReturnReasonField = enumField(StringField, {
-  options: RETURN_REASONS.map((r) => ({ value: r.value, label: r.label })),
-  displayName: 'Return Reason',
-});
+export const ReturnReasonField = markDefinition(
+  enumField(StringField, {
+    options: RETURN_REASONS.map((r) => ({ value: r.value, label: r.label })),
+    displayName: 'Return Reason',
+  }),
+);
 
 export const ITEM_CONDITIONS = [
   { value: 'new', label: 'As new' },
@@ -131,10 +136,12 @@ export const ITEM_CONDITIONS = [
   { value: 'defective', label: 'Defective' },
 ];
 
-export const ItemConditionField = enumField(StringField, {
-  options: ITEM_CONDITIONS,
-  displayName: 'Condition',
-});
+export const ItemConditionField = markDefinition(
+  enumField(StringField, {
+    options: ITEM_CONDITIONS,
+    displayName: 'Condition',
+  }),
+);
 
 // What happens to the unit now. Only `restock` puts stock back — the others all
 // remove it from sellable inventory in different ways, and the difference
@@ -147,10 +154,12 @@ export const DISPOSITIONS = [
   { value: 'return_to_vendor', label: 'Return to vendor' },
 ];
 
-export const DispositionField = enumField(StringField, {
-  options: DISPOSITIONS,
-  displayName: 'Disposition',
-});
+export const DispositionField = markDefinition(
+  enumField(StringField, {
+    options: DISPOSITIONS,
+    displayName: 'Disposition',
+  }),
+);
 
 export const REFUND_METHODS = [
   { value: 'original', label: 'Original payment method' },
@@ -158,10 +167,12 @@ export const REFUND_METHODS = [
   { value: 'exchange', label: 'Exchange' },
 ];
 
-export const RefundMethodField = enumField(StringField, {
-  options: REFUND_METHODS,
-  displayName: 'Refund Method',
-});
+export const RefundMethodField = markDefinition(
+  enumField(StringField, {
+    options: REFUND_METHODS,
+    displayName: 'Refund Method',
+  }),
+);
 
 export class ReturnItemField extends FieldDef {
   static displayName = 'Return Item';
@@ -220,7 +231,7 @@ export class ReturnItemField extends FieldDef {
           min-height: 1.75rem;
           padding: 0 var(--boxel-sp-sm);
           border-top: 1px solid var(--border);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
         .lead {
           display: flex;
@@ -238,7 +249,7 @@ export class ReturnItemField extends FieldDef {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .st {
@@ -541,7 +552,7 @@ export class ProductReturn extends CardDef {
         .ret {
           container-type: inline-size;
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           color: var(--card-foreground);
           background-color: var(--card);
@@ -578,7 +589,7 @@ export class ProductReturn extends CardDef {
           border-radius: calc(var(--radius) * 0.6);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
           color: var(--foreground);
         }
@@ -586,16 +597,15 @@ export class ProductReturn extends CardDef {
           min-width: 0;
         }
         .name {
-          margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           letter-spacing: normal;
           text-transform: none;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .bar {
@@ -629,7 +639,7 @@ export class ProductReturn extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -656,7 +666,7 @@ export class ProductReturn extends CardDef {
           white-space: nowrap;
         }
         .num {
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           line-height: 1.1;
           font-variant-numeric: tabular-nums;
@@ -674,7 +684,7 @@ export class ProductReturn extends CardDef {
           margin: 0;
           padding: var(--boxel-sp-sm) var(--boxel-sp-sm) var(--boxel-sp-4xs);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           letter-spacing: normal;
           text-transform: none;
@@ -686,30 +696,30 @@ export class ProductReturn extends CardDef {
           gap: var(--boxel-sp-sm);
           width: 100%;
           min-height: 1.75rem;
-          margin: 0;
           padding: 0 var(--boxel-sp-sm);
           border: 0;
           border-top: 1px solid var(--border);
           background: none;
           color: inherit;
-          font: inherit;
+          font-family: inherit;
+          font-size: inherit;
+          font-weight: inherit;
+          line-height: inherit;
           text-align: start;
         }
         button.row {
           cursor: pointer;
         }
-        button.row:hover {
-          background-color: var(--muted);
+        @media (hover: hover) {
+          button.row:hover {
+            background-color: var(--muted);
+          }
         }
         button.row:focus-visible {
           outline: 2px solid var(--ring);
           outline-offset: -2px;
         }
-        .rows {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-        }
+
         .lead {
           display: flex;
           align-items: baseline;
@@ -744,7 +754,8 @@ export class ProductReturn extends CardDef {
         .kv dd {
           padding: 0 var(--boxel-sp-sm);
           min-width: 0;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
+          min-width: 0;
         }
         .mono {
           font-family: var(--font-mono);
@@ -795,7 +806,7 @@ export class ProductReturn extends CardDef {
       <style scoped>
         .emb {
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           color: var(--card-foreground);
           background-color: var(--card);
@@ -818,7 +829,7 @@ export class ProductReturn extends CardDef {
           border-radius: calc(var(--radius) * 0.6);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .id {
@@ -826,8 +837,7 @@ export class ProductReturn extends CardDef {
           min-width: 0;
         }
         h3 {
-          margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -835,7 +845,7 @@ export class ProductReturn extends CardDef {
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -880,7 +890,7 @@ export class ProductReturn extends CardDef {
         .kv dt {
           padding-left: var(--boxel-sp-sm);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -939,7 +949,7 @@ export class ProductReturn extends CardDef {
           border-radius: calc(var(--radius) * 0.6);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           color: var(--foreground);
         }

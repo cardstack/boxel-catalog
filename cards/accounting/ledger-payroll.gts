@@ -1,6 +1,7 @@
 // Payroll on the books' side: the tax tables paychecks are worked out from, the agencies the taxes
 // are owed to, and each employee's pay setup, linked to their HR Employee card. HR stays the record
 // of who someone is; the books own how they're paid. Contractors stay vendors, paid by bill.
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   FieldDef,
@@ -57,22 +58,30 @@ export const labelOf = (
   options: { value: string; label: string }[],
   value: string | null | undefined,
 ) => options.find((o) => o.value === value)?.label ?? value ?? '';
-export const FilingStatusField = enumField(StringField, {
-  displayName: 'Filing status',
-  options: FILING_STATUSES,
-});
-export const PayScheduleField = enumField(StringField, {
-  displayName: 'Pay schedule',
-  options: PAY_SCHEDULES,
-});
-export const PayTypeField = enumField(StringField, {
-  displayName: 'Pay type',
-  options: PAY_TYPES,
-});
-export const DeductionKindField = enumField(StringField, {
-  displayName: 'Deduction kind',
-  options: DEDUCTION_KINDS,
-});
+export const FilingStatusField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Filing status',
+    options: FILING_STATUSES,
+  }),
+);
+export const PayScheduleField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Pay schedule',
+    options: PAY_SCHEDULES,
+  }),
+);
+export const PayTypeField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Pay type',
+    options: PAY_TYPES,
+  }),
+);
+export const DeductionKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Deduction kind',
+    options: DEDUCTION_KINDS,
+  }),
+);
 
 // ── tax tables ───────────────────────────────────────────────────────────────
 export class TaxBracket extends FieldDef {

@@ -13,7 +13,6 @@ import ChecklistIcon from '@cardstack/boxel-icons/checklist';
 
 import { DurationField, durationLabel } from './duration-field';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // containsMany takes a FieldDef, never a CardDef: this type's data lives inline
 // on the OnboardingTemplate instance and it is never addressable on its own, so
@@ -52,7 +51,7 @@ export class OnboardingTemplateTaskField extends FieldDef {
         .task-row {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           border-bottom: 1px solid var(--border);
@@ -119,7 +118,7 @@ export class OnboardingTemplate extends CardDef {
             <EmptyState
               @title='No tasks defined yet'
               @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
+              @size='s'
             />
           {{/if}}
         </div>
@@ -130,8 +129,8 @@ export class OnboardingTemplate extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          background: var(--canvas);
-          color: var(--foreground);
+          background: var(--card);
+          color: var(--card-foreground);
         }
         .header {
           flex: none;
@@ -142,12 +141,11 @@ export class OnboardingTemplate extends CardDef {
           max-width: 100%;
         }
         h1 {
-          margin: 0;
           font-size: var(--boxel-font-size-xl);
           font-weight: 750;
           letter-spacing: -0.02em;
           line-height: 1.2;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
         }
         .description {
           margin: var(--boxel-sp-xs) 0 0;
@@ -177,9 +175,6 @@ export class OnboardingTemplate extends CardDef {
           border-radius: var(--boxel-border-radius);
           overflow: hidden;
         }
-        .task-item {
-          padding: 0;
-        }
       </style>
     </template>
   };
@@ -196,9 +191,9 @@ export class OnboardingTemplate extends CardDef {
         .template-embedded {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
-          padding: 0.625rem 0.75rem;
-          font-size: 0.8125rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
           border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
           background: var(--card);
@@ -263,8 +258,8 @@ export class OnboardingTemplate extends CardDef {
           height: 100%;
           display: flex;
           flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
+          gap: var(--boxel-sp-3xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
           overflow: hidden;
           background: var(--card);
           color: var(--card-foreground);
@@ -279,7 +274,7 @@ export class OnboardingTemplate extends CardDef {
           flex: none;
           display: flex;
           align-items: flex-start;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
           flex-wrap: wrap;
         }
         .fit-head {
@@ -324,7 +319,7 @@ export class OnboardingTemplate extends CardDef {
           list-style: none;
           margin: 0;
           margin-top: auto;
-          padding: 0.3rem 0 0;
+          padding: var(--boxel-sp-3xs) 0 0;
           border-top: 1px dashed var(--border);
         }
         .fit-task {
@@ -391,8 +386,8 @@ export class OnboardingTemplate extends CardDef {
         .template-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 500;
           color: var(--foreground);
         }

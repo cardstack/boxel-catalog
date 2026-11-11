@@ -457,7 +457,7 @@ export class InvoicesPane extends Component<Signature> {
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         white-space: nowrap;
       }
       .row-actions {
@@ -468,11 +468,8 @@ export class InvoicesPane extends Component<Signature> {
       }
       .empty,
       .loading {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
-      }
-      .loading {
-        margin: 0;
       }
     </style>
   </template>

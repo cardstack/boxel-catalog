@@ -40,6 +40,11 @@
         "links": {
           "self": "../../commerce/Invoice/inv-n-4466"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -131,13 +132,15 @@ function reqFacts(m?: PurchaseRequisition) {
   };
 }
 
-export const RequisitionStatusField = enumField(StringField, {
-  options: REQUISITION_STATUSES.map((value) => ({
-    value,
-    label: REQUISITION_STATUS_LABELS[value],
-  })),
-  displayName: 'Requisition Status',
-});
+export const RequisitionStatusField = markDefinition(
+  enumField(StringField, {
+    options: REQUISITION_STATUSES.map((value) => ({
+      value,
+      label: REQUISITION_STATUS_LABELS[value],
+    })),
+    displayName: 'Requisition Status',
+  }),
+);
 
 // The internal "I need to buy X" request that starts the Procure-to-Pay
 // audit trail. No vendor is involved yet: a requisition names what is

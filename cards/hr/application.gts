@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Component,
   field,
@@ -59,13 +60,15 @@ export const APPLICATION_STATUS_COLORS: Record<string, StateColor> =
     ]),
   );
 
-export const ApplicationStatusField = enumField(StringField, {
-  options: APPLICATION_STATUSES.map((status) => ({
-    value: status,
-    label: status,
-  })),
-  displayName: 'Application Status',
-});
+export const ApplicationStatusField = markDefinition(
+  enumField(StringField, {
+    options: APPLICATION_STATUSES.map((status) => ({
+      value: status,
+      label: status,
+    })),
+    displayName: 'Application Status',
+  }),
+);
 
 export class Application extends PersonBase {
   static displayName = 'Application';
