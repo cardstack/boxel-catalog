@@ -37,6 +37,7 @@ import {
   formatDateTime,
   type Tone,
 } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
@@ -214,41 +215,43 @@ export class AuditEntry extends CardDef {
       return [...this.v.facts, { key: 'Trail', value: this.position }];
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='Au' @size='lg' /></:mark>
-        <:main>
-          {{#if @model.note}}
-            <Section @title='Note'><Text>{{@model.note}}</Text></Section>
-          {{/if}}
-          {{#if @model.conditions}}
-            <Section @title='Conditions'><Text
-              >{{@model.conditions}}</Text></Section>
-          {{/if}}
-          {{#if this.rows.length}}
-            <Section @title='Trail for this subject' @flush={{true}}><Rows
-                @rows={{this.rows}}
-              /></Section>
-          {{/if}}
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkRow @label='Subject'><@fields.subject
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-            <LinkRow @label='By'><@fields.doneBy
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-          </Section>
-          <Section @title='Details'><Facts @items={{this.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='Au' @size='lg' /></:mark>
+          <:main>
+            {{#if @model.note}}
+              <Section @title='Note'><Text>{{@model.note}}</Text></Section>
+            {{/if}}
+            {{#if @model.conditions}}
+              <Section @title='Conditions'><Text
+                >{{@model.conditions}}</Text></Section>
+            {{/if}}
+            {{#if this.rows.length}}
+              <Section @title='Trail for this subject' @flush={{true}}><Rows
+                  @rows={{this.rows}}
+                /></Section>
+            {{/if}}
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkRow @label='Subject'><@fields.subject
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+              <LinkRow @label='By'><@fields.doneBy
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+            </Section>
+            <Section @title='Details'><Facts @items={{this.facts}} /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 
