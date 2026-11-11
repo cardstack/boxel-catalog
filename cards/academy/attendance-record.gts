@@ -31,6 +31,7 @@ import {
   Sheet,
   Stat,
 } from './components/record-sheet';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * One learner × one live lesson × one mark. Small on purpose: the Attendance
@@ -74,78 +75,82 @@ export class AttendanceRecord extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     <template>
-      <Sheet @mark='At' @title={{headline @model}} @meta={{metaLine @model}}>
-        <:status>
-          <Dot @hue={{attendanceHue @model.attendanceStatus}}>{{lower
-              @model.statusLabel
-            }}</Dot>
-        </:status>
-        <:stats>
-          <Stat
-            @label='Status'
-            @value={{@model.statusLabel}}
-            @sub={{attendedLine @model.attendanceStatus}}
-          />
-          <Stat
-            @label='Session'
-            @value={{fmtShort @model.sessionDate}}
-            @sub={{@model.lessonTitle}}
-          />
-          <Stat
-            @label='Marked'
-            @value={{fmtShort @model.markedAt}}
-            @sub={{@model.markedBy.name}}
-          />
-        </:stats>
-        <:main>
-          <Section @title='Note'>
-            <p class='note'>{{if @model.note @model.note '—'}}</p>
-          </Section>
-          <Section @title='Record'>
-            <Kv @label='Session date' @mono={{true}}>{{fmtLong
-                @model.sessionDate
-              }}</Kv>
-            <Kv @label='Status'><Dot
-                @hue={{attendanceHue @model.attendanceStatus}}
-              >{{lower @model.statusLabel}}</Dot></Kv>
-            <Kv @label='Marked by'>{{if
-                @model.markedBy
-                @model.markedBy.name
-                '—'
-              }}</Kv>
-            <Kv @label='Marked at' @mono={{true}}>{{fmtDateTime
-                @model.markedAt
-              }}</Kv>
-          </Section>
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <Kv @label='Enrollment'>{{#if @model.enrollment}}<@fields.enrollment
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}—{{/if}}</Kv>
-            <Kv @label='Lesson'>{{#if @model.lesson}}<@fields.lesson
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}—{{/if}}</Kv>
-            <Kv @label='Marked by'>{{#if @model.markedBy}}<@fields.markedBy
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}—{{/if}}</Kv>
-          </Section>
-          <Section @title='Details'>
-            <Kv @label='Learner'>{{dash @model.learnerName}}</Kv>
-            <Kv @label='Lesson'>{{dash @model.lessonTitle}}</Kv>
-            <Kv @label='Session' @mono={{true}}>{{fmtLong
-                @model.sessionDate
-              }}</Kv>
-            <Kv @label='Status'>{{@model.statusLabel}}</Kv>
-            <Kv @label='Marked at' @mono={{true}}>{{fmtDateTime
-                @model.markedAt
-              }}</Kv>
-          </Section>
-        </:side>
-      </Sheet>
+      <IsoFrame>
+        <Sheet @mark='At' @title={{headline @model}} @meta={{metaLine @model}}>
+          <:status>
+            <Dot @hue={{attendanceHue @model.attendanceStatus}}>{{lower
+                @model.statusLabel
+              }}</Dot>
+          </:status>
+          <:stats>
+            <Stat
+              @label='Status'
+              @value={{@model.statusLabel}}
+              @sub={{attendedLine @model.attendanceStatus}}
+            />
+            <Stat
+              @label='Session'
+              @value={{fmtShort @model.sessionDate}}
+              @sub={{@model.lessonTitle}}
+            />
+            <Stat
+              @label='Marked'
+              @value={{fmtShort @model.markedAt}}
+              @sub={{@model.markedBy.name}}
+            />
+          </:stats>
+          <:main>
+            <Section @title='Note'>
+              <p class='note'>{{if @model.note @model.note '—'}}</p>
+            </Section>
+            <Section @title='Record'>
+              <Kv @label='Session date' @mono={{true}}>{{fmtLong
+                  @model.sessionDate
+                }}</Kv>
+              <Kv @label='Status'><Dot
+                  @hue={{attendanceHue @model.attendanceStatus}}
+                >{{lower @model.statusLabel}}</Dot></Kv>
+              <Kv @label='Marked by'>{{if
+                  @model.markedBy
+                  @model.markedBy.name
+                  '—'
+                }}</Kv>
+              <Kv @label='Marked at' @mono={{true}}>{{fmtDateTime
+                  @model.markedAt
+                }}</Kv>
+            </Section>
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <Kv @label='Enrollment'>{{#if
+                  @model.enrollment
+                }}<@fields.enrollment
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</Kv>
+              <Kv @label='Lesson'>{{#if @model.lesson}}<@fields.lesson
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</Kv>
+              <Kv @label='Marked by'>{{#if @model.markedBy}}<@fields.markedBy
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</Kv>
+            </Section>
+            <Section @title='Details'>
+              <Kv @label='Learner'>{{dash @model.learnerName}}</Kv>
+              <Kv @label='Lesson'>{{dash @model.lessonTitle}}</Kv>
+              <Kv @label='Session' @mono={{true}}>{{fmtLong
+                  @model.sessionDate
+                }}</Kv>
+              <Kv @label='Status'>{{@model.statusLabel}}</Kv>
+              <Kv @label='Marked at' @mono={{true}}>{{fmtDateTime
+                  @model.markedAt
+                }}</Kv>
+            </Section>
+          </:side>
+        </Sheet>
+      </IsoFrame>
       <style scoped>
         .note {
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);

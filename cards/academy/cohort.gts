@@ -46,6 +46,7 @@ import { FitTile } from '../shared/fit-tile';
 import { DeskRow, KvList, cardsLinkedTo } from './components/desk-status';
 import { ENROLLMENT_STATUSES } from './enrollment-status-field';
 import { tracked } from '@glimmer/tracking';
+import { IsoFrame } from '../shared/compact-sheet';
 
 function hueOf(m: any) {
   return statusHue(CohortStatusField, m?.status);
@@ -173,89 +174,95 @@ class CohortIsolated extends Component<typeof Cohort> {
   };
 
   <template>
-    <Sheet @mark='Ch' @title={{@model.cardTitle}} @meta={{metaLine @model}}>
-      <:status>
-        <Dot @hue={{hueOf @model}}>{{@model.status}}</Dot>
-        {{#if @model.currentWeek}}<Dot @hue='blue'>{{weekLabel
-              @model
-            }}</Dot>{{/if}}
-      </:status>
-      <:actions>
-        {{#if @context.getCards}}
-          <Button
-            type='button'
-            @size='xs'
-            @tone='primary'
-            @appearance='accent'
-            {{on 'click' this.toggleWorkspace}}
-          >{{if this.workspaceOpen 'Close workspace' 'Open workspace'}}</Button>
-        {{/if}}
-      </:actions>
-      <:stats>{{#each this.stats as |st|}}<Stat
-            @label={{st.label}}
-            @value={{st.value}}
-            @sub={{st.hint}}
-          />{{/each}}</:stats>
-      <:main>
+    <IsoFrame>
+      <Sheet @mark='Ch' @title={{@model.cardTitle}} @meta={{metaLine @model}}>
+        <:status>
+          <Dot @hue={{hueOf @model}}>{{@model.status}}</Dot>
+          {{#if @model.currentWeek}}<Dot @hue='blue'>{{weekLabel
+                @model
+              }}</Dot>{{/if}}
+        </:status>
+        <:actions>
+          {{#if @context.getCards}}
+            <Button
+              type='button'
+              @size='xs'
+              @tone='primary'
+              @appearance='accent'
+              {{on 'click' this.toggleWorkspace}}
+            >{{if
+                this.workspaceOpen
+                'Close workspace'
+                'Open workspace'
+              }}</Button>
+          {{/if}}
+        </:actions>
+        <:stats>{{#each this.stats as |st|}}<Stat
+              @label={{st.label}}
+              @value={{st.value}}
+              @sub={{st.hint}}
+            />{{/each}}</:stats>
+        <:main>
 
-        {{#if this.workspaceOpen}}
-          <Section @title='Workspace'><div class='pad'><CohortWorkspace
-                @cohort={{@model}}
-                @context={{@context}}
-                @onOpenCard={{this.view}}
-              /></div>
+          {{#if this.workspaceOpen}}
+            <Section @title='Workspace'><div class='pad'><CohortWorkspace
+                  @cohort={{@model}}
+                  @context={{@context}}
+                  @onOpenCard={{this.view}}
+                /></div>
+            </Section>
+          {{/if}}
+          <Section @title='Releases'>
+            {{#each @model.releases as |r|}}
+              <DeskRow @title={{r.moduleTitle}} @meta={{releaseMeta r}}>
+                <Dot @hue='green'>released</Dot>
+              </DeskRow>
+            {{else}}
+              <DeskRow
+                @title='Nothing released yet'
+                @meta='Release a module from the workspace.'
+              />
+            {{/each}}
           </Section>
-        {{/if}}
-        <Section @title='Releases'>
-          {{#each @model.releases as |r|}}
-            <DeskRow @title={{r.moduleTitle}} @meta={{releaseMeta r}}>
-              <Dot @hue='green'>released</Dot>
-            </DeskRow>
-          {{else}}
-            <DeskRow
-              @title='Nothing released yet'
-              @meta='Release a module from the workspace.'
-            />
-          {{/each}}
-        </Section>
-        <Section @title='Roster'>
-          {{#each this.roster as |e|}}
-            <DeskRow @title={{e.learnerName}} @meta={{rosterMeta e}}>
-              <Dot
-                @hue={{enrollmentHue e.enrollmentStatus}}
-              >{{e.enrollmentStatus}}</Dot>
-            </DeskRow>
-          {{else}}
-            <DeskRow
-              @title='No learners yet'
-              @meta='Enroll learners from the workspace.'
-            />
-          {{/each}}
-        </Section>
-        {{#if @model.notes}}
-          <Section @title='Notes'><p
-              class='notes'
-            >{{@model.notes}}</p></Section>
-        {{/if}}
-      </:main>
-      <:side>
-        <Section @title='Linked'>
-          <Kv @label='Course'>{{#if @model.course}}<@fields.course
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</Kv>
-          {{#each @model.instructors as |ia|}}
-            <Kv @label={{roleLabel ia.role}}>{{if
-                ia.instructorName
-                ia.instructorName
-                '—'
-              }}</Kv>
-          {{/each}}
-        </Section>
-        <Section @title='Details'><KvList
-            @items={{cohortItems @model}}
-          /></Section>
-      </:side></Sheet>
+          <Section @title='Roster'>
+            {{#each this.roster as |e|}}
+              <DeskRow @title={{e.learnerName}} @meta={{rosterMeta e}}>
+                <Dot
+                  @hue={{enrollmentHue e.enrollmentStatus}}
+                >{{e.enrollmentStatus}}</Dot>
+              </DeskRow>
+            {{else}}
+              <DeskRow
+                @title='No learners yet'
+                @meta='Enroll learners from the workspace.'
+              />
+            {{/each}}
+          </Section>
+          {{#if @model.notes}}
+            <Section @title='Notes'><p
+                class='notes'
+              >{{@model.notes}}</p></Section>
+          {{/if}}
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <Kv @label='Course'>{{#if @model.course}}<@fields.course
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+            {{#each @model.instructors as |ia|}}
+              <Kv @label={{roleLabel ia.role}}>{{if
+                  ia.instructorName
+                  ia.instructorName
+                  '—'
+                }}</Kv>
+            {{/each}}
+          </Section>
+          <Section @title='Details'><KvList
+              @items={{cohortItems @model}}
+            /></Section>
+        </:side></Sheet>
+    </IsoFrame>
     <style scoped>
       .pad {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);

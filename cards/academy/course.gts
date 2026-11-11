@@ -44,6 +44,7 @@ import {
 } from './components/record-sheet';
 import { FitTile } from '../shared/fit-tile';
 import { DeskRow, KvList, cardsLinkedTo } from './components/desk-status';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const COURSE_STATUSES: StatusOption[] = [
   {
@@ -285,73 +286,83 @@ class CourseIsolated extends Component<typeof Course> {
     }
   };
   <template>
-    <Sheet @mark='Co' @title={{@model.cardTitle}} @meta={{metaLine @model}}>
-      <:status>
-        <Dot @hue={{hueOf @model}}>{{this.statusLabel}}</Dot>
-        <Dot>{{this.moduleLabel}}</Dot>
-      </:status>
-      <:actions>
-        {{#if this.canPublish}}
-          <Button
-            type='button'
-            @size='xs'
-            @tone='primary'
-            @appearance='accent'
-            @busy={{this.busy}}
-            @disabled={{this.busy}}
-            {{on 'click' this.publish}}
-          >Publish course</Button>
-        {{/if}}
-      </:actions>
-      <:stats>{{#each this.stats as |st|}}<Stat
-            @label={{st.label}}
-            @value={{st.value}}
-            @sub={{st.hint}}
-          />{{/each}}</:stats>
-      <:main>
-        {{#if this.error}}
-          <Alert @tone='danger' @title='Not published'>{{this.error}}</Alert>
-        {{/if}}
-        {{#if this.notice}}<Alert @tone='success'>{{this.notice}}</Alert>{{/if}}
+    <IsoFrame>
+      <Sheet @mark='Co' @title={{@model.cardTitle}} @meta={{metaLine @model}}>
+        <:status>
+          <Dot @hue={{hueOf @model}}>{{this.statusLabel}}</Dot>
+          <Dot>{{this.moduleLabel}}</Dot>
+        </:status>
+        <:actions>
+          {{#if this.canPublish}}
+            <Button
+              type='button'
+              @size='xs'
+              @tone='primary'
+              @appearance='accent'
+              @busy={{this.busy}}
+              @disabled={{this.busy}}
+              {{on 'click' this.publish}}
+            >Publish course</Button>
+          {{/if}}
+        </:actions>
+        <:stats>{{#each this.stats as |st|}}<Stat
+              @label={{st.label}}
+              @value={{st.value}}
+              @sub={{st.hint}}
+            />{{/each}}</:stats>
+        <:main>
+          {{#if this.error}}
+            <Alert @tone='danger' @title='Not published'>{{this.error}}</Alert>
+          {{/if}}
+          {{#if this.notice}}<Alert
+              @tone='success'
+            >{{this.notice}}</Alert>{{/if}}
 
-        {{#if @model.summary}}
-          <Section @title='Summary'><div class='summary'><@fields.summary
-              /></div></Section>
-        {{/if}}
-        <Section @title='Outline'>
-          {{#each @model.modules as |mod|}}
-            <DeskRow @title={{mod.cardTitle}} @meta={{moduleMeta mod}}>
-              <Dot @hue='blue'>{{mod.releaseLabel}}</Dot>
-            </DeskRow>
-          {{else}}
-            <DeskRow @title='No modules yet' @meta='Add modules to publish.' />
-          {{/each}}
-        </Section>
-        <Section @title='Completion rule'><KvList
-            @items={{ruleItems @model.completionRule}}
-          /></Section>
-        <Section @title='Late policy'><KvList
-            @items={{lateItems @model.latePolicy}}
-          /></Section>
-        <Section @title='Grade scale'><p class='bands'>{{bandsLine
-              @model.gradeScale
-            }}</p></Section>
-      </:main>
-      <:side>
-        <Section @title='Linked'>
-          <Kv @label='Owner'>{{#if @model.owner}}<@fields.owner
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</Kv>
-          {{#each this.cohorts as |c|}}
-            <Kv @label='Cohort'><AtomChip @mark='Ch' @title={{c.cardTitle}}><Dot
-                  @hue={{cohortHue c.status}}
-                >{{c.status}}</Dot></AtomChip></Kv>
-          {{/each}}
-        </Section>
-        <Section @title='Details'>
-          <KvList @items={{courseItems @model}} /></Section>
-      </:side></Sheet>
+          {{#if @model.summary}}
+            <Section @title='Summary'><div class='summary'><@fields.summary
+                /></div></Section>
+          {{/if}}
+          <Section @title='Outline'>
+            {{#each @model.modules as |mod|}}
+              <DeskRow @title={{mod.cardTitle}} @meta={{moduleMeta mod}}>
+                <Dot @hue='blue'>{{mod.releaseLabel}}</Dot>
+              </DeskRow>
+            {{else}}
+              <DeskRow
+                @title='No modules yet'
+                @meta='Add modules to publish.'
+              />
+            {{/each}}
+          </Section>
+          <Section @title='Completion rule'><KvList
+              @items={{ruleItems @model.completionRule}}
+            /></Section>
+          <Section @title='Late policy'><KvList
+              @items={{lateItems @model.latePolicy}}
+            /></Section>
+          <Section @title='Grade scale'><p class='bands'>{{bandsLine
+                @model.gradeScale
+              }}</p></Section>
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <Kv @label='Owner'>{{#if @model.owner}}<@fields.owner
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+            {{#each this.cohorts as |c|}}
+              <Kv @label='Cohort'><AtomChip
+                  @mark='Ch'
+                  @title={{c.cardTitle}}
+                ><Dot
+                    @hue={{cohortHue c.status}}
+                  >{{c.status}}</Dot></AtomChip></Kv>
+            {{/each}}
+          </Section>
+          <Section @title='Details'>
+            <KvList @items={{courseItems @model}} /></Section>
+        </:side></Sheet>
+    </IsoFrame>
     <style scoped>
       .summary,
       .bands {
