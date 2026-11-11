@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Song Version\n\nOne mix of the song in one language: the audio, an isolated vocal for timing, a measured tempo map, and the lyrics as lines of timed words you can edit and re-time by ear.\n\nPart of [Lyric Player](../LyricVideo/just-ask-for-it), the Choreo-animated K-pop lyric video by @ctse.\n",
+      "ref": {
+        "module": "../song-version",
+        "name": "SongVersion"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Song Version",
+      "cardDescription": "One mix of the song in one language: the audio, an isolated vocal for timing, a measured tempo map, and the lyrics as lines of timed words you can edit and re-time by ear.",
+      "cardInfo": {
+        "name": "Song Version",
+        "summary": "One mix of the song in one language: the audio, an isolated vocal for timing, a measured tempo map, and the lyrics as lines of timed words you can edit and re-time by ear."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../SongVersion/korean"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
