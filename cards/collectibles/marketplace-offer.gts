@@ -38,6 +38,7 @@ import { Accordion } from '@cardstack/pretui/components/accordion';
 import { Spinner } from '@cardstack/pretui/components/spinner';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Offer — a buyer proposing a price below asking, and the negotiation that
 // follows: offer, counter, negotiate.
@@ -484,167 +485,168 @@ export class MarketplaceOffer extends CardDef {
     }
 
     <template>
-      <article class='card'>
-        <header class='hero'>
-          <div class='hero-top'>
-            <h1 class='hero-title'>{{if
-                @model.productTitle
-                @model.productTitle
-                'Unlinked listing'
-              }}</h1>
-            {{#if @model.isCounter}}
-              <span class='counter-flag'>Counter-offer</span>
-            {{/if}}
-          </div>
+      <IsoFrame>
+        <article class='card'>
+          <header class='hero'>
+            <div class='hero-top'>
+              <h1 class='hero-title'>{{if
+                  @model.productTitle
+                  @model.productTitle
+                  'Unlinked listing'
+                }}</h1>
+              {{#if @model.isCounter}}
+                <span class='counter-flag'>Counter-offer</span>
+              {{/if}}
+            </div>
 
-          <p class='parties'>
-            {{#if @model.offeredByName}}
-              <span class='party'>from
-                <strong>{{@model.offeredByName}}</strong></span>
-            {{/if}}
-            {{#if this.asking}}
-              <span class='party'>asking
-                <strong class='mono'>{{moneyText
-                    @model.listingPrice
-                  }}</strong></span>
-            {{/if}}
-          </p>
+            <p class='parties'>
+              {{#if @model.offeredByName}}
+                <span class='party'>from
+                  <strong>{{@model.offeredByName}}</strong></span>
+              {{/if}}
+              {{#if this.asking}}
+                <span class='party'>asking
+                  <strong class='mono'>{{moneyText
+                      @model.listingPrice
+                    }}</strong></span>
+              {{/if}}
+            </p>
 
-          {{! THE PLAQUE — real gold surface area. The offered amount is the
+            {{! THE PLAQUE — real gold surface area. The offered amount is the
               dominant element; the gap annotates it as a delta pill (a ratio
               is not an amount), the status qualifies it. }}
-          <div class='plaque'>
-            <div class='plaque-figure'>
-              <p class='plaque-label'>Offered</p>
-              <p class='plaque-amount'>{{moneyText @model.amount}}</p>
+            <div class='plaque'>
+              <div class='plaque-figure'>
+                <p class='plaque-label'>Offered</p>
+                <p class='plaque-amount'>{{moneyText @model.amount}}</p>
+              </div>
+              <div class='plaque-meta'>
+                {{#if @model.offerStatus}}
+                  <@fields.offerStatus @format='embedded' />
+                {{/if}}
+                {{#if this.gap}}
+                  <span
+                    class='delta
+                      {{if this.gapIsBelowAsking "delta--down" "delta--up"}}'
+                  >{{this.gap.label}}</span>
+                {{/if}}
+              </div>
             </div>
-            <div class='plaque-meta'>
-              {{#if @model.offerStatus}}
-                <@fields.offerStatus @format='embedded' />
-              {{/if}}
-              {{#if this.gap}}
-                <span
-                  class='delta
-                    {{if this.gapIsBelowAsking "delta--down" "delta--up"}}'
-                >{{this.gap.label}}</span>
-              {{/if}}
-            </div>
-          </div>
-        </header>
+          </header>
 
-        {{! The negotiation thread — the section that makes this view worth
+          {{! The negotiation thread — the section that makes this view worth
             opening. Given more visual weight than the utility panels below, so
             it does not read as a third identical icon+heading box. }}
-        <section class='thread'>
-          <h2 class='thread-h'><MessageCircleIcon
-              class='thread-icon'
-              aria-hidden='true'
-            />Negotiation</h2>
-
-          {{#if @model.message}}
-            <blockquote class='msg'>
-              “{{@model.message}}”
-            </blockquote>
-          {{/if}}
-
-          {{#if @model.counterTo}}
-            <p class='thread-k'>Answers</p>
-            <ul class='links'>
-              <li><@fields.counterTo @format='embedded' /></li>
-            </ul>
-          {{/if}}
-
-          <p class='thread-k'>Countered by<span
-              class='count'
-            >{{this.counters.length}}</span></p>
-          {{#if this.countersError}}
-            <p class='err'>
-              <AlertTriangleIcon
-                width='18'
-                height='18'
+          <section class='thread'>
+            <h2 class='thread-h'><MessageCircleIcon
+                class='thread-icon'
                 aria-hidden='true'
-              />Could not load counters.
-            </p>
-          {{else if this.countersLoading}}
-            <p class='wait'><Spinner />Looking for counters…</p>
-          {{else if this.counters.length}}
-            <ul class='links'>
-              {{! getCards instances have no `.component` — getComponent(card)
+              />Negotiation</h2>
+
+            {{#if @model.message}}
+              <blockquote class='msg'>
+                “{{@model.message}}”
+              </blockquote>
+            {{/if}}
+
+            {{#if @model.counterTo}}
+              <p class='thread-k'>Answers</p>
+              <ul class='links'>
+                <li><@fields.counterTo @format='embedded' /></li>
+              </ul>
+            {{/if}}
+
+            <p class='thread-k'>Countered by<span
+                class='count'
+              >{{this.counters.length}}</span></p>
+            {{#if this.countersError}}
+              <p class='err'>
+                <AlertTriangleIcon
+                  width='18'
+                  height='18'
+                  aria-hidden='true'
+                />Could not load counters.
+              </p>
+            {{else if this.countersLoading}}
+              <p class='wait'><Spinner />Looking for counters…</p>
+            {{else if this.counters.length}}
+              <ul class='links'>
+                {{! getCards instances have no `.component` — getComponent(card)
                   is the API; the property renders an empty row silently. }}
-              {{#each this.counters as |c|}}
-                <li>{{#let (getComponent c) as |CounterCard|}}
-                    <CounterCard @format='embedded' />
-                  {{/let}}</li>
-              {{/each}}
-            </ul>
-          {{else}}
-            <EmptyState
-              @title='No counter yet. A counter is a new Offer linked back to this one — this card is never edited to answer it.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
-          {{/if}}
-        </section>
+                {{#each this.counters as |c|}}
+                  <li>{{#let (getComponent c) as |CounterCard|}}
+                      <CounterCard @format='embedded' />
+                    {{/let}}</li>
+                {{/each}}
+              </ul>
+            {{else}}
+              <EmptyState
+                @title='No counter yet. A counter is a new Offer linked back to this one — this card is never edited to answer it.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
+            {{/if}}
+          </section>
 
-        <div class='cols'>
-          {{! Shape: a compact party rail — quieter utility panel, distinct
+          <div class='cols'>
+            {{! Shape: a compact party rail — quieter utility panel, distinct
               from the thread's prose shape above and the ledger below. }}
-          <section class='sec'>
-            <h2 class='sec-h'><TagIcon
-                class='sec-icon'
-                aria-hidden='true'
-              />Listing &amp; parties</h2>
-            <ul class='links'>
-              {{#if @model.listing}}
-                <li><@fields.listing @format='embedded' /></li>
-              {{else}}
-                <li class='empty-li'>
-                  <EmptyState
-                    @title='No listing linked — an offer with nothing to buy.'
-                    @texture={{false}}
-                    style={{COMPACT_EMPTY_STYLE}}
-                  />
-                </li>
-              {{/if}}
-              {{#if @model.offeredBy}}
-                <li><@fields.offeredBy @format='embedded' /></li>
-              {{/if}}
-            </ul>
-          </section>
+            <section class='sec'>
+              <h2 class='sec-h'><TagIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Listing &amp; parties</h2>
+              <ul class='links'>
+                {{#if @model.listing}}
+                  <li><@fields.listing @format='embedded' /></li>
+                {{else}}
+                  <li class='empty-li'>
+                    <EmptyState
+                      @title='No listing linked — an offer with nothing to buy.'
+                      @texture={{false}}
+                      style={{COMPACT_EMPTY_STYLE}}
+                    />
+                  </li>
+                {{/if}}
+                {{#if @model.offeredBy}}
+                  <li><@fields.offeredBy @format='embedded' /></li>
+                {{/if}}
+              </ul>
+            </section>
 
-          {{! Shape: a mono ledger — a third, structurally different panel
+            {{! Shape: a mono ledger — a third, structurally different panel
               (definition list of dated facts, not a link list or prose). }}
-          <section class='sec'>
-            <h2 class='sec-h'><CalendarIcon
-                class='sec-icon'
-                aria-hidden='true'
-              />Dates</h2>
-            <dl class='facts'>
-              <div class='f-row'>
-                <dt>Offered</dt>
-                <dd>{{#if @model.offeredAt}}<@fields.offeredAt
-                      @format='atom'
-                    />{{else}}—{{/if}}</dd>
-              </div>
-              <div class='f-row'>
-                <dt>Responded</dt>
-                <dd>{{#if @model.respondedAt}}<@fields.respondedAt
-                      @format='atom'
-                    />{{else}}—{{/if}}</dd>
-              </div>
-              <div class='f-row'>
-                <dt>Expires</dt>
-                <dd>{{#if @model.expiresAt}}<@fields.expiresAt
-                      @format='atom'
-                    />{{else}}—{{/if}}</dd>
-              </div>
-            </dl>
-            <p class='facts-note'>Past its expiry an offer must be MOVED to
-              expired — it does not lapse on its own.</p>
-          </section>
-        </div>
-      </article>
-
+            <section class='sec'>
+              <h2 class='sec-h'><CalendarIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Dates</h2>
+              <dl class='facts'>
+                <div class='f-row'>
+                  <dt>Offered</dt>
+                  <dd>{{#if @model.offeredAt}}<@fields.offeredAt
+                        @format='atom'
+                      />{{else}}—{{/if}}</dd>
+                </div>
+                <div class='f-row'>
+                  <dt>Responded</dt>
+                  <dd>{{#if @model.respondedAt}}<@fields.respondedAt
+                        @format='atom'
+                      />{{else}}—{{/if}}</dd>
+                </div>
+                <div class='f-row'>
+                  <dt>Expires</dt>
+                  <dd>{{#if @model.expiresAt}}<@fields.expiresAt
+                        @format='atom'
+                      />{{else}}—{{/if}}</dd>
+                </div>
+              </dl>
+              <p class='facts-note'>Past its expiry an offer must be MOVED to
+                expired — it does not lapse on its own.</p>
+            </section>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         /* Rule 1: isolated gets NO host container — declare our own, named. */
         .card {

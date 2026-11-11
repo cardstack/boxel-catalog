@@ -34,6 +34,7 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // CollectionItem — one physical thing someone owns, catalogued.
 //
@@ -649,259 +650,266 @@ export class CollectionItem extends CardDef {
     }
 
     <template>
-      <article class='card'>
-        <header class='hero'>
-          <div class='hero-photo'>
-            {{#if @model.photos.primaryUrl}}
-              <img src={{@model.photos.primaryUrl}} alt={{@model.itemTitle}} />
-            {{else}}
-              {{! Empty state, not a decorative placeholder box — it says the
-                  photo is missing rather than filling the slot with grey. }}
-              <div class='photo-empty'>
-                <ImageOffIcon width='28' height='28' aria-hidden='true' />
-                <span>No photo yet</span>
-              </div>
-            {{/if}}
-          </div>
-
-          <div class='hero-body'>
-            <p class='eyebrow'>
-              <ArchiveIcon
-                width='max(12px, 0.9em)'
-                height='max(12px, 0.9em)'
-                aria-hidden='true'
-              />
-              Collection item
-              {{#if @model.variantLabel}}
-                <span class='eyebrow-sep'>·</span>{{@model.variantLabel}}
-              {{/if}}
-            </p>
-
-            <h1 class='hero-title'>{{if
-                @model.itemTitle
-                @model.itemTitle
-                'Untitled item'
-              }}</h1>
-
-            <div class='answer'>
-              {{#if this.worthNow}}
-                <p class='worth'>{{moneyText @model.lastKnownValue}}</p>
-                {{#if this.delta}}
-                  <p class='delta delta--{{this.delta.direction}}'>
-                    {{#if (eq this.delta.direction 'up')}}
-                      <TrendingUpIcon
-                        width='max(14px, 1em)'
-                        height='max(14px, 1em)'
-                        aria-hidden='true'
-                      />
-                    {{else if (eq this.delta.direction 'down')}}
-                      <TrendingDownIcon
-                        width='max(14px, 1em)'
-                        height='max(14px, 1em)'
-                        aria-hidden='true'
-                      />
-                    {{/if}}
-                    {{this.delta.text}}
-                    {{#if this.delta.percent}}
-                      <span class='delta-pct'>({{this.delta.percent}})</span>
-                    {{/if}}
-                    <span class='delta-vs'>vs paid</span>
-                  </p>
-                {{/if}}
+      <IsoFrame>
+        <article class='card'>
+          <header class='hero'>
+            <div class='hero-photo'>
+              {{#if @model.photos.primaryUrl}}
+                <img
+                  src={{@model.photos.primaryUrl}}
+                  alt={{@model.itemTitle}}
+                />
               {{else}}
-                <p class='worth worth--unknown'>Not valued</p>
+                {{! Empty state, not a decorative placeholder box — it says the
+                  photo is missing rather than filling the slot with grey. }}
+                <div class='photo-empty'>
+                  <ImageOffIcon width='28' height='28' aria-hidden='true' />
+                  <span>No photo yet</span>
+                </div>
               {{/if}}
+            </div>
 
-              <div class='badges'>
-                {{#if @model.verified}}
-                  <StatePill
-                    @label='Authenticated'
-                    @hue='green'
-                    @dot={{true}}
-                  />
+            <div class='hero-body'>
+              <p class='eyebrow'>
+                <ArchiveIcon
+                  width='max(12px, 0.9em)'
+                  height='max(12px, 0.9em)'
+                  aria-hidden='true'
+                />
+                Collection item
+                {{#if @model.variantLabel}}
+                  <span class='eyebrow-sep'>·</span>{{@model.variantLabel}}
+                {{/if}}
+              </p>
+
+              <h1 class='hero-title'>{{if
+                  @model.itemTitle
+                  @model.itemTitle
+                  'Untitled item'
+                }}</h1>
+
+              <div class='answer'>
+                {{#if this.worthNow}}
+                  <p class='worth'>{{moneyText @model.lastKnownValue}}</p>
+                  {{#if this.delta}}
+                    <p class='delta delta--{{this.delta.direction}}'>
+                      {{#if (eq this.delta.direction 'up')}}
+                        <TrendingUpIcon
+                          width='max(14px, 1em)'
+                          height='max(14px, 1em)'
+                          aria-hidden='true'
+                        />
+                      {{else if (eq this.delta.direction 'down')}}
+                        <TrendingDownIcon
+                          width='max(14px, 1em)'
+                          height='max(14px, 1em)'
+                          aria-hidden='true'
+                        />
+                      {{/if}}
+                      {{this.delta.text}}
+                      {{#if this.delta.percent}}
+                        <span class='delta-pct'>({{this.delta.percent}})</span>
+                      {{/if}}
+                      <span class='delta-vs'>vs paid</span>
+                    </p>
+                  {{/if}}
                 {{else}}
-                  <StatePill @label='Not authenticated' @hue='slate' />
+                  <p class='worth worth--unknown'>Not valued</p>
                 {{/if}}
-                {{#if @model.forSale}}
-                  <StatePill @label='Listed' @hue='amber' @dot={{true}} />
-                {{/if}}
+
+                <div class='badges'>
+                  {{#if @model.verified}}
+                    <StatePill
+                      @label='Authenticated'
+                      @hue='green'
+                      @dot={{true}}
+                    />
+                  {{else}}
+                    <StatePill @label='Not authenticated' @hue='slate' />
+                  {{/if}}
+                  {{#if @model.forSale}}
+                    <StatePill @label='Listed' @hue='amber' @dot={{true}} />
+                  {{/if}}
+                </div>
               </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {{! AT A GLANCE — shape: ul. Three figures, and the only mark on the card
+          {{! AT A GLANCE — shape: ul. Three figures, and the only mark on the card
             is a proportion rail, because valueRetention IS a proportion of a
             whole. The paid→worth relationship is a single delta, so it is a
             figure with an arrow, not a chart. }}
-        <section class='sec glance'>
-          <h2><CoinsIcon class='sec-icon' aria-hidden='true' />At a glance</h2>
-          <ul class='stats'>
-            <li class='stat'>
-              {{! Live values, so the digits do not roll. }}
-              <Stat
-                @label='Paid'
-                @value={{this.paidAmount}}
-                @style='currency'
-                @currency={{@model.acquisition.price.currency.code}}
-                @roll={{false}}
-              />
-            </li>
-            <li class='stat'>
-              {{! Live values, so the digits do not roll. }}
-              <Stat
-                @label='Worth now'
-                @value={{this.worthAmount}}
-                @style='currency'
-                @currency={{@model.lastKnownValue.currency.code}}
-                @roll={{false}}
-              />
-            </li>
-            <li class='stat stat--rail'>
-              <span class='stat-k'>Condition</span>
-              <span class='stat-v'>
-                {{#if
-                  @model.condition.code
-                }}{{@model.condition.code}}{{else}}—{{/if}}
+          <section class='sec glance'>
+            <h2><CoinsIcon class='sec-icon' aria-hidden='true' />At a glance</h2>
+            <ul class='stats'>
+              <li class='stat'>
+                {{! Live values, so the digits do not roll. }}
+                <Stat
+                  @label='Paid'
+                  @value={{this.paidAmount}}
+                  @style='currency'
+                  @currency={{@model.acquisition.price.currency.code}}
+                  @roll={{false}}
+                />
+              </li>
+              <li class='stat'>
+                {{! Live values, so the digits do not roll. }}
+                <Stat
+                  @label='Worth now'
+                  @value={{this.worthAmount}}
+                  @style='currency'
+                  @currency={{@model.lastKnownValue.currency.code}}
+                  @roll={{false}}
+                />
+              </li>
+              <li class='stat stat--rail'>
+                <span class='stat-k'>Condition</span>
+                <span class='stat-v'>
+                  {{#if
+                    @model.condition.code
+                  }}{{@model.condition.code}}{{else}}—{{/if}}
+                  {{#if this.retention}}
+                    <span class='stat-sub'>{{this.retention}}% of market</span>
+                  {{/if}}
+                </span>
+                {{! A ProgressBar, so a screen reader announces the value. }}
                 {{#if this.retention}}
-                  <span class='stat-sub'>{{this.retention}}% of market</span>
-                {{/if}}
-              </span>
-              {{! A ProgressBar, so a screen reader announces the value. }}
-              {{#if this.retention}}
-                {{! aria-label attribute, not @label — @label renders as
+                  {{! aria-label attribute, not @label — @label renders as
                     visible text inside this 5px rail and shears. }}
-                <ProgressBar
-                  class='rail'
-                  @value={{this.retention}}
-                  @max={{100}}
-                  @hue='var(--primary-ink)'
-                  aria-label='Market value retained'
+                  <ProgressBar
+                    class='rail'
+                    @value={{this.retention}}
+                    @max={{100}}
+                    @hue='var(--primary-ink)'
+                    aria-label='Market value retained'
+                  />
+                {{/if}}
+              </li>
+            </ul>
+          </section>
+
+          <div class='cols'>
+            {{! SIGNATURE ELEMENT — shape: ol. The record's own lifecycle, drawn
+              from the event-fact dates. }}
+            <section class='sec'>
+              <h2><CalendarIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Provenance</h2>
+              {{#if this.hasProvenance}}
+                <ol class='prov'>
+                  {{#if @model.acquisition.acquiredOnDay}}
+                    <li class='prov-step prov-step--done'>
+                      <span class='prov-label'>Acquired</span>
+                      <span
+                        class='prov-when'
+                      >{{@model.acquisition.acquiredOnDay}}</span>
+                      {{#if @model.acquisition.source}}
+                        <span
+                          class='prov-note'
+                        >{{@model.acquisition.source}}</span>
+                      {{/if}}
+                    </li>
+                  {{/if}}
+                  {{#if @model.verified}}
+                    <li class='prov-step prov-step--done'>
+                      <span class='prov-label'>Authenticated</span>
+                      <span class='prov-when'><@fields.verifiedOn
+                          @format='atom'
+                        /></span>
+                      {{#if @model.verifiedBy}}
+                        <span class='prov-note'>{{@model.verifiedBy}}</span>
+                      {{/if}}
+                    </li>
+                  {{else}}
+                    <li class='prov-step prov-step--todo'>
+                      <span class='prov-label'>Authentication</span>
+                      <span class='prov-when'>Not submitted</span>
+                    </li>
+                  {{/if}}
+                  {{#if @model.forSale}}
+                    <li class='prov-step prov-step--done'>
+                      <span class='prov-label'>Listed for sale</span>
+                      <span class='prov-when'><@fields.listedAt
+                          @format='atom'
+                        /></span>
+                    </li>
+                  {{/if}}
+                </ol>
+              {{else}}
+                <EmptyState
+                  @title='No dates recorded yet — an acquisition date starts the trail.'
+                  @texture={{false}}
+                  style={{COMPACT_EMPTY_STYLE}}
                 />
               {{/if}}
-            </li>
-          </ul>
-        </section>
+            </section>
 
-        <div class='cols'>
-          {{! SIGNATURE ELEMENT — shape: ol. The record's own lifecycle, drawn
-              from the event-fact dates. }}
+            {{! shape: dl }}
+            <section class='sec'>
+              <h2><ReceiptIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Acquisition</h2>
+              <@fields.acquisition @format='embedded' />
+            </section>
+          </div>
+
+          {{! shape: ul of chips — identity, deliberately a different shape from the dl above }}
           <section class='sec'>
-            <h2><CalendarIcon
+            <h2><RulerIcon class='sec-icon' aria-hidden='true' />Specifics</h2>
+            <ul class='chips'>
+              <li><span class='chip-k'>Variant</span><span class='chip-v'>{{if
+                    @model.variantLabel
+                    @model.variantLabel
+                    '—'
+                  }}</span></li>
+              <li><span class='chip-k'>Packaging</span><span class='chip-v'>{{if
+                    @model.packaging
+                    @model.packaging
+                    '—'
+                  }}</span></li>
+              <li><span class='chip-k'>Cert. ref</span><span
+                  class='chip-v chip-v--id'
+                >{{if
+                    @model.verificationReference
+                    @model.verificationReference
+                    '—'
+                  }}</span></li>
+              <li><span class='chip-k'>Receipt ref</span><span
+                  class='chip-v chip-v--id'
+                >{{if
+                    @model.acquisition.reference
+                    @model.acquisition.reference
+                    '—'
+                  }}</span></li>
+            </ul>
+          </section>
+
+          {{! shape: prose }}
+          <section class='sec'>
+            <h2><NotebookPenIcon
                 class='sec-icon'
                 aria-hidden='true'
-              />Provenance</h2>
-            {{#if this.hasProvenance}}
-              <ol class='prov'>
-                {{#if @model.acquisition.acquiredOnDay}}
-                  <li class='prov-step prov-step--done'>
-                    <span class='prov-label'>Acquired</span>
-                    <span
-                      class='prov-when'
-                    >{{@model.acquisition.acquiredOnDay}}</span>
-                    {{#if @model.acquisition.source}}
-                      <span
-                        class='prov-note'
-                      >{{@model.acquisition.source}}</span>
-                    {{/if}}
-                  </li>
-                {{/if}}
-                {{#if @model.verified}}
-                  <li class='prov-step prov-step--done'>
-                    <span class='prov-label'>Authenticated</span>
-                    <span class='prov-when'><@fields.verifiedOn
-                        @format='atom'
-                      /></span>
-                    {{#if @model.verifiedBy}}
-                      <span class='prov-note'>{{@model.verifiedBy}}</span>
-                    {{/if}}
-                  </li>
-                {{else}}
-                  <li class='prov-step prov-step--todo'>
-                    <span class='prov-label'>Authentication</span>
-                    <span class='prov-when'>Not submitted</span>
-                  </li>
-                {{/if}}
-                {{#if @model.forSale}}
-                  <li class='prov-step prov-step--done'>
-                    <span class='prov-label'>Listed for sale</span>
-                    <span class='prov-when'><@fields.listedAt
-                        @format='atom'
-                      /></span>
-                  </li>
-                {{/if}}
-              </ol>
+              />Notes</h2>
+            {{#if @model.notes}}
+              <div class='prose'><@fields.notes /></div>
             {{else}}
               <EmptyState
-                @title='No dates recorded yet — an acquisition date starts the trail.'
+                @title='Nothing written down about this one yet.'
                 @texture={{false}}
                 style={{COMPACT_EMPTY_STYLE}}
               />
             {{/if}}
           </section>
 
-          {{! shape: dl }}
-          <section class='sec'>
-            <h2><ReceiptIcon
-                class='sec-icon'
-                aria-hidden='true'
-              />Acquisition</h2>
-            <@fields.acquisition @format='embedded' />
-          </section>
-        </div>
-
-        {{! shape: ul of chips — identity, deliberately a different shape from the dl above }}
-        <section class='sec'>
-          <h2><RulerIcon class='sec-icon' aria-hidden='true' />Specifics</h2>
-          <ul class='chips'>
-            <li><span class='chip-k'>Variant</span><span class='chip-v'>{{if
-                  @model.variantLabel
-                  @model.variantLabel
-                  '—'
-                }}</span></li>
-            <li><span class='chip-k'>Packaging</span><span class='chip-v'>{{if
-                  @model.packaging
-                  @model.packaging
-                  '—'
-                }}</span></li>
-            <li><span class='chip-k'>Cert. ref</span><span
-                class='chip-v chip-v--id'
-              >{{if
-                  @model.verificationReference
-                  @model.verificationReference
-                  '—'
-                }}</span></li>
-            <li><span class='chip-k'>Receipt ref</span><span
-                class='chip-v chip-v--id'
-              >{{if
-                  @model.acquisition.reference
-                  @model.acquisition.reference
-                  '—'
-                }}</span></li>
-          </ul>
-        </section>
-
-        {{! shape: prose }}
-        <section class='sec'>
-          <h2><NotebookPenIcon class='sec-icon' aria-hidden='true' />Notes</h2>
-          {{#if @model.notes}}
-            <div class='prose'><@fields.notes /></div>
-          {{else}}
-            <EmptyState
-              @title='Nothing written down about this one yet.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
-          {{/if}}
-        </section>
-
-        {{! NO ACTIONS ZONE: listing for sale, submitting for authentication and
+          {{! NO ACTIONS ZONE: listing for sale, submitting for authentication and
             logging a valuation run through the Create Listing and Authenticate
             Item commands, which the consuming app wires to its own controls. A
             control here that looks live and does nothing would teach the user to
             distrust every other control on the card. }}
-      </article>
-
+        </article>
+      </IsoFrame>
       <style scoped>
         /* --- Rule 1: an isolated card gets NO host container. Declaring our own
            is the one line that makes every @container rule below live rather than

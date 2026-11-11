@@ -33,6 +33,7 @@ import { Spinner } from '@cardstack/pretui/components/spinner';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // CompletionSet — a curated collecting goal and the arithmetic for how far along
 // it is. "All Travis Scott x Nike", "every Chicago colourway", "my top 10 grails".
@@ -407,153 +408,159 @@ export class CompletionSet extends CardDef {
     }
 
     <template>
-      <article class='card'>
-        <header class='hero'>
-          {{! `resolvedUrl`, NOT `url`. ImageSourceField accepts either a pasted
+      <IsoFrame>
+        <article class='card'>
+          <header class='hero'>
+            {{! `resolvedUrl`, NOT `url`. ImageSourceField accepts either a pasted
               URL or a file uploaded into the realm and exposes the winner as
               `resolvedUrl` — reading `.url` silently renders nothing for every
               uploaded cover, which is the majority case once someone uses the
               file picker. Decorative here (the title names the set), so alt=''. }}
-          {{#if @model.coverImage.resolvedUrl}}
-            <div class='hero-photo'>
-              <img src={{@model.coverImage.resolvedUrl}} alt='' />
-            </div>
-          {{/if}}
+            {{#if @model.coverImage.resolvedUrl}}
+              <div class='hero-photo'>
+                <img src={{@model.coverImage.resolvedUrl}} alt='' />
+              </div>
+            {{/if}}
 
-          <div class='hero-body'>
-            <p class='eyebrow'>
-              <TargetArrowIcon
-                width='max(12px, 0.9em)'
-                height='max(12px, 0.9em)'
-                aria-hidden='true'
-              />
-              Completion set
-              {{#if @model.isPublic}}
-                <span class='eyebrow-sep'>·</span>Public
-              {{/if}}
-            </p>
+            <div class='hero-body'>
+              <p class='eyebrow'>
+                <TargetArrowIcon
+                  width='max(12px, 0.9em)'
+                  height='max(12px, 0.9em)'
+                  aria-hidden='true'
+                />
+                Completion set
+                {{#if @model.isPublic}}
+                  <span class='eyebrow-sep'>·</span>Public
+                {{/if}}
+              </p>
 
-            <h1 class='hero-title'>{{if
-                @model.cardTitle
-                @model.cardTitle
-                'Untitled set'
-              }}</h1>
+              <h1 class='hero-title'>{{if
+                  @model.cardTitle
+                  @model.cardTitle
+                  'Untitled set'
+                }}</h1>
 
-            {{! THE VAULT PLAQUE. Gold covers real surface area here, not a
+              {{! THE VAULT PLAQUE. Gold covers real surface area here, not a
                 thin accent — a filled gold slab carrying the dominant
                 figure, matching the ledger-hero treatment the app shell
                 commits to for its own headline number. }}
-            {{#if this.isLoading}}
-              <p class='plaque plaque--wait'>
-                <Spinner />
-                Reading your collection…
-              </p>
-            {{else}}
-              <div class='plaque'>
-                <p class='plaque-pct'>{{this.result.percent}}<span
-                    class='plaque-pct-sym'
-                  >%</span></p>
-                <p class='plaque-frac'>
-                  {{this.result.ownedCount}}
-                  of
-                  {{this.result.targetCount}}
-                  <span class='plaque-frac-k'>owned</span>
+              {{#if this.isLoading}}
+                <p class='plaque plaque--wait'>
+                  <Spinner />
+                  Reading your collection…
                 </p>
-                {{! aria-label attribute, not @label — @label renders as
+              {{else}}
+                <div class='plaque'>
+                  <p class='plaque-pct'>{{this.result.percent}}<span
+                      class='plaque-pct-sym'
+                    >%</span></p>
+                  <p class='plaque-frac'>
+                    {{this.result.ownedCount}}
+                    of
+                    {{this.result.targetCount}}
+                    <span class='plaque-frac-k'>owned</span>
+                  </p>
+                  {{! aria-label attribute, not @label — @label renders as
                     visible text inside this 6px meter and shears. }}
-                <ProgressBar
-                  class='meter'
-                  @value={{this.result.percent}}
-                  @max={{100}}
-                  @hue='var(--primary-ink)'
-                  aria-label='Set completion'
-                />
-              </div>
-            {{/if}}
-          </div>
-        </header>
+                  <ProgressBar
+                    class='meter'
+                    @value={{this.result.percent}}
+                    @max={{100}}
+                    @hue='var(--primary-ink)'
+                    aria-label='Set completion'
+                  />
+                </div>
+              {{/if}}
+            </div>
+          </header>
 
-        {{! DETAIL — shape: prose. The goal in the owner's own words. }}
-        {{#if @model.goal}}
-          <section class='sec'>
-            <h2><NotebookPenIcon class='sec-icon' aria-hidden='true' />The goal</h2>
-            <div class='prose'><@fields.goal /></div>
-          </section>
-        {{/if}}
+          {{! DETAIL — shape: prose. The goal in the owner's own words. }}
+          {{#if @model.goal}}
+            <section class='sec'>
+              <h2><NotebookPenIcon class='sec-icon' aria-hidden='true' />The
+                goal</h2>
+              <div class='prose'><@fields.goal /></div>
+            </section>
+          {{/if}}
 
-        <div class='cols'>
-          {{! DETAIL — shape: ul of linked cards. Distinct from the prose above
+          <div class='cols'>
+            {{! DETAIL — shape: ul of linked cards. Distinct from the prose above
               and from the dl below, so the sections do not read as one shape
               three times. }}
-          <section class='sec'>
-            <h2><BadgeCheckIcon class='sec-icon' aria-hidden='true' />Owned<span
-                class='count'
-              >{{this.owned.length}}</span></h2>
-            {{#if this.owned.length}}
-              <ul class='plist'>
-                {{#each this.owned as |p|}}
-                  <li><span class='pname'>{{p.displayTitle}}</span></li>
-                {{/each}}
-              </ul>
-            {{else}}
-              <EmptyState
-                @title='Nothing from this set is in your collection yet.'
-                @texture={{false}}
-                style={{COMPACT_EMPTY_STYLE}}
-              />
-            {{/if}}
-          </section>
+            <section class='sec'>
+              <h2><BadgeCheckIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Owned<span class='count'>{{this.owned.length}}</span></h2>
+              {{#if this.owned.length}}
+                <ul class='plist'>
+                  {{#each this.owned as |p|}}
+                    <li><span class='pname'>{{p.displayTitle}}</span></li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <EmptyState
+                  @title='Nothing from this set is in your collection yet.'
+                  @texture={{false}}
+                  style={{COMPACT_EMPTY_STYLE}}
+                />
+              {{/if}}
+            </section>
 
-          {{! The half a collector actually opens this card for — what is left
+            {{! The half a collector actually opens this card for — what is left
               to hunt. Same shape as Owned on purpose: they are two halves of
               one list, and reading them side by side is the point. }}
-          <section class='sec'>
-            <h2><TargetArrowIcon class='sec-icon' aria-hidden='true' />Still
-              needed<span class='count'>{{this.missing.length}}</span></h2>
-            {{#if this.missing.length}}
-              <ul class='plist'>
-                {{#each this.missing as |p|}}
-                  <li><span
-                      class='pname pname--want'
-                    >{{p.displayTitle}}</span></li>
-                {{/each}}
-              </ul>
-            {{else}}
-              <p class='empty empty--done'>
-                <BadgeCheckIcon width='18' height='18' aria-hidden='true' />Set
-                complete — every pair accounted for.
-              </p>
-            {{/if}}
-          </section>
-        </div>
+            <section class='sec'>
+              <h2><TargetArrowIcon class='sec-icon' aria-hidden='true' />Still
+                needed<span class='count'>{{this.missing.length}}</span></h2>
+              {{#if this.missing.length}}
+                <ul class='plist'>
+                  {{#each this.missing as |p|}}
+                    <li><span
+                        class='pname pname--want'
+                      >{{p.displayTitle}}</span></li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <p class='empty empty--done'>
+                  <BadgeCheckIcon
+                    width='18'
+                    height='18'
+                    aria-hidden='true'
+                  />Set complete — every pair accounted for.
+                </p>
+              {{/if}}
+            </section>
+          </div>
 
-        {{! DETAIL — shape: dl. The rule the arithmetic above obeys, which is
+          {{! DETAIL — shape: dl. The rule the arithmetic above obeys, which is
             otherwise invisible and is the first thing questioned when a
             percentage looks wrong. }}
-        <section class='sec'>
-          <h2><FileTextIcon class='sec-icon' aria-hidden='true' />How this is
-            counted</h2>
-          <dl class='rules'>
-            <div class='rule-row'>
-              <dt>Completion rule</dt>
-              <dd>{{if
-                  @model.completionRule
-                  @model.completionRule
-                  'Own any'
-                }}</dd>
-            </div>
-            <div class='rule-row'>
-              <dt>Products tracked</dt>
-              <dd>{{this.result.targetCount}}</dd>
-            </div>
-            <div class='rule-row'>
-              <dt>Visibility</dt>
-              <dd>{{if @model.isPublic 'Public' 'Private'}}</dd>
-            </div>
-          </dl>
-        </section>
-      </article>
-
+          <section class='sec'>
+            <h2><FileTextIcon class='sec-icon' aria-hidden='true' />How this is
+              counted</h2>
+            <dl class='rules'>
+              <div class='rule-row'>
+                <dt>Completion rule</dt>
+                <dd>{{if
+                    @model.completionRule
+                    @model.completionRule
+                    'Own any'
+                  }}</dd>
+              </div>
+              <div class='rule-row'>
+                <dt>Products tracked</dt>
+                <dd>{{this.result.targetCount}}</dd>
+              </div>
+              <div class='rule-row'>
+                <dt>Visibility</dt>
+                <dd>{{if @model.isPublic 'Public' 'Private'}}</dd>
+              </div>
+            </dl>
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         /* Rule 1: isolated gets NO host container, so this template declares
            its own, NAMED — otherwise every @container rule below is inert

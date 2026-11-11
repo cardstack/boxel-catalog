@@ -26,6 +26,7 @@ import { FittedCard, FieldContainer } from '@cardstack/boxel-ui/components';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // AuthenticationRecord — one legit-check on one item: who checked it, when, the
 // verdict, and the certificate reference.
@@ -403,150 +404,155 @@ export class AuthenticationRecord extends CardDef {
     }
 
     <template>
-      <article class='card'>
-        <header class='hero'>
-          <div class='hero-head'>
-            <h1 class='hero-title'>
-              <ShieldCheckIcon
-                class='hero-glyph'
-                width='max(18px, 0.85em)'
-                height='max(18px, 0.85em)'
-                aria-hidden='true'
-              />{{if @model.itemTitle @model.itemTitle 'Unlinked item'}}
-            </h1>
-            {{#if @model.service}}
-              <p class='hero-service'>{{@model.service}}</p>
-            {{/if}}
-          </div>
+      <IsoFrame>
+        <article class='card'>
+          <header class='hero'>
+            <div class='hero-head'>
+              <h1 class='hero-title'>
+                <ShieldCheckIcon
+                  class='hero-glyph'
+                  width='max(18px, 0.85em)'
+                  height='max(18px, 0.85em)'
+                  aria-hidden='true'
+                />{{if @model.itemTitle @model.itemTitle 'Unlinked item'}}
+              </h1>
+              {{#if @model.service}}
+                <p class='hero-service'>{{@model.service}}</p>
+              {{/if}}
+            </div>
 
-          {{! THE PLAQUE — the family's filled-panel hero device (same
+            {{! THE PLAQUE — the family's filled-panel hero device (same
               radius/shadow as CollectionItem's worth figure, CompletionSet's
               percentage, Listing's price), recoloured per verdict rather than
               rendered as a small inline pill. The verdict is the one loud
               thing; turnaround is its quiet annotation, stepping DOWN in
               weight beside the figure it modifies. }}
-          <div class='plaque {{this.verdictModifierClass}}'>
-            <p class='plaque-value'>{{if
-                @model.outcome
-                this.verdictOption.label
-                'Not submitted'
-              }}</p>
-            {{#if @model.turnaroundDays}}
-              <p class='turnaround'>
-                <CalendarClockIcon
-                  width='max(13px, 0.95em)'
-                  height='max(13px, 0.95em)'
-                  aria-hidden='true'
-                />
-                {{@model.turnaroundDays}}
-                <span class='turnaround-k'>turnaround</span>
-              </p>
-            {{/if}}
-          </div>
-        </header>
+            <div class='plaque {{this.verdictModifierClass}}'>
+              <p class='plaque-value'>{{if
+                  @model.outcome
+                  this.verdictOption.label
+                  'Not submitted'
+                }}</p>
+              {{#if @model.turnaroundDays}}
+                <p class='turnaround'>
+                  <CalendarClockIcon
+                    width='max(13px, 0.95em)'
+                    height='max(13px, 0.95em)'
+                    aria-hidden='true'
+                  />
+                  {{@model.turnaroundDays}}
+                  <span class='turnaround-k'>turnaround</span>
+                </p>
+              {{/if}}
+            </div>
+          </header>
 
-        {{! AT A GLANCE — shape: ol. The lifecycle rail, the family signature.
+          {{! AT A GLANCE — shape: ol. The lifecycle rail, the family signature.
             The three steps are written out rather than looped: each row needs
             its OWN date field, and a loop over a getter forced one shared
             `<@fields.x>` into every row — which rendered the submission date
             beside the verdict. Three explicit rows carrying one fact each beats
             a loop that has to lie about one of them. }}
-        <section class='sec'>
-          <h2><CalendarIcon class='sec-icon' aria-hidden='true' />Progress</h2>
-          <ol class='steps'>
-            <li class='step {{if @model.submittedAt "step--done"}}'>
-              <span class='step-label'>Submitted</span>
-              {{#if @model.submittedAt}}
-                <span class='step-when'><@fields.submittedAt
-                    @format='atom'
-                  /></span>
-              {{/if}}
-            </li>
-            <li class='step {{if this.isUnderReview "step--done"}}'>
-              <span class='step-label'>Under review</span>
-            </li>
-            <li class='step {{if @model.completedAt "step--done"}}'>
-              <span class='step-label'>{{this.verdictLabel}}</span>
-              {{#if @model.completedAt}}
-                <span class='step-when'><@fields.completedAt
-                    @format='atom'
-                  /></span>
-              {{/if}}
-            </li>
-          </ol>
-        </section>
-
-        <div class='cols'>
-          {{! DETAIL — shape: dl. The paper trail: the values someone types into
-              another system, so identifiers never ellipsis. }}
           <section class='sec'>
-            <h2><FileTextIcon class='sec-icon' aria-hidden='true' />Paper trail</h2>
-            {{#if this.hasPaperTrail}}
-              <dl class='trail'>
-                {{#if @model.certificateId}}
-                  <div class='trail-row'>
-                    <dt>Certificate</dt>
-                    <dd class='trail-id'>{{@model.certificateId}}</dd>
-                  </div>
-                {{/if}}
-                {{#if @model.service}}
-                  <div class='trail-row'>
-                    <dt>Service</dt>
-                    <dd>{{@model.service}}</dd>
-                  </div>
-                {{/if}}
-                {{#if @model.authenticator}}
-                  <div class='trail-row'>
-                    <dt>Authenticator</dt>
-                    <dd>{{@model.authenticator}}</dd>
-                  </div>
-                {{/if}}
-              </dl>
-            {{else}}
-              {{! Rule 5: an empty section with a muted glyph reads as designed;
-                  the same sentence alone reads as a bug. }}
-              <EmptyState
-                @title='No certificate recorded yet.'
-                @texture={{false}}
-                style={{COMPACT_EMPTY_STYLE}}
-              />
-            {{/if}}
-          </section>
-
-          {{! DETAIL — shape: prose. Deliberately a different shape from the dl
-              beside it, so the two sections do not read as one list twice. }}
-          <section class='sec'>
-            <h2><NotebookPenIcon
+            <h2><CalendarIcon
                 class='sec-icon'
                 aria-hidden='true'
-              />Authenticator notes</h2>
-            {{#if @model.authenticatorNotes}}
-              <div class='notes'><@fields.authenticatorNotes /></div>
+              />Progress</h2>
+            <ol class='steps'>
+              <li class='step {{if @model.submittedAt "step--done"}}'>
+                <span class='step-label'>Submitted</span>
+                {{#if @model.submittedAt}}
+                  <span class='step-when'><@fields.submittedAt
+                      @format='atom'
+                    /></span>
+                {{/if}}
+              </li>
+              <li class='step {{if this.isUnderReview "step--done"}}'>
+                <span class='step-label'>Under review</span>
+              </li>
+              <li class='step {{if @model.completedAt "step--done"}}'>
+                <span class='step-label'>{{this.verdictLabel}}</span>
+                {{#if @model.completedAt}}
+                  <span class='step-when'><@fields.completedAt
+                      @format='atom'
+                    /></span>
+                {{/if}}
+              </li>
+            </ol>
+          </section>
+
+          <div class='cols'>
+            {{! DETAIL — shape: dl. The paper trail: the values someone types into
+              another system, so identifiers never ellipsis. }}
+            <section class='sec'>
+              <h2><FileTextIcon class='sec-icon' aria-hidden='true' />Paper
+                trail</h2>
+              {{#if this.hasPaperTrail}}
+                <dl class='trail'>
+                  {{#if @model.certificateId}}
+                    <div class='trail-row'>
+                      <dt>Certificate</dt>
+                      <dd class='trail-id'>{{@model.certificateId}}</dd>
+                    </div>
+                  {{/if}}
+                  {{#if @model.service}}
+                    <div class='trail-row'>
+                      <dt>Service</dt>
+                      <dd>{{@model.service}}</dd>
+                    </div>
+                  {{/if}}
+                  {{#if @model.authenticator}}
+                    <div class='trail-row'>
+                      <dt>Authenticator</dt>
+                      <dd>{{@model.authenticator}}</dd>
+                    </div>
+                  {{/if}}
+                </dl>
+              {{else}}
+                {{! Rule 5: an empty section with a muted glyph reads as designed;
+                  the same sentence alone reads as a bug. }}
+                <EmptyState
+                  @title='No certificate recorded yet.'
+                  @texture={{false}}
+                  style={{COMPACT_EMPTY_STYLE}}
+                />
+              {{/if}}
+            </section>
+
+            {{! DETAIL — shape: prose. Deliberately a different shape from the dl
+              beside it, so the two sections do not read as one list twice. }}
+            <section class='sec'>
+              <h2><NotebookPenIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Authenticator notes</h2>
+              {{#if @model.authenticatorNotes}}
+                <div class='notes'><@fields.authenticatorNotes /></div>
+              {{else}}
+                <EmptyState
+                  @title='No notes from the authenticator.'
+                  @texture={{false}}
+                  style={{COMPACT_EMPTY_STYLE}}
+                />
+              {{/if}}
+            </section>
+          </div>
+
+          {{! DETAIL — shape: linked card + gallery. Third distinct shape. }}
+          <section class='sec'>
+            <h2><ArchiveIcon class='sec-icon' aria-hidden='true' />Item checked</h2>
+            {{#if @model.item}}
+              <@fields.item @format='embedded' @displayContainer={{false}} />
             {{else}}
               <EmptyState
-                @title='No notes from the authenticator.'
+                @title='This record is not linked to a collection item.'
                 @texture={{false}}
                 style={{COMPACT_EMPTY_STYLE}}
               />
             {{/if}}
           </section>
-        </div>
-
-        {{! DETAIL — shape: linked card + gallery. Third distinct shape. }}
-        <section class='sec'>
-          <h2><ArchiveIcon class='sec-icon' aria-hidden='true' />Item checked</h2>
-          {{#if @model.item}}
-            <@fields.item @format='embedded' @displayContainer={{false}} />
-          {{else}}
-            <EmptyState
-              @title='This record is not linked to a collection item.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
-          {{/if}}
-        </section>
-      </article>
-
+        </article>
+      </IsoFrame>
       <style scoped>
         /* Rule 1: an isolated card gets NO host container — nothing up the chain
            declares one — so this template declares its own, NAMED, or every

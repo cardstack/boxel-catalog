@@ -38,6 +38,7 @@ import { Spinner } from '@cardstack/pretui/components/spinner';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Listing — one seller offering one owned item for sale.
 //
@@ -448,174 +449,175 @@ export class Listing extends CardDef {
     }
 
     <template>
-      <article class='card'>
-        <header class='hero'>
-          {{#if @model.photos.primaryUrl}}
-            <img
-              class='hero-img'
-              src={{@model.photos.primaryUrl}}
-              alt={{@model.productTitle}}
-            />
-          {{else}}
-            <div class='hero-img hero-img--empty'>
-              <TagIcon width='40%' height='40%' aria-hidden='true' />
-            </div>
-          {{/if}}
+      <IsoFrame>
+        <article class='card'>
+          <header class='hero'>
+            {{#if @model.photos.primaryUrl}}
+              <img
+                class='hero-img'
+                src={{@model.photos.primaryUrl}}
+                alt={{@model.productTitle}}
+              />
+            {{else}}
+              <div class='hero-img hero-img--empty'>
+                <TagIcon width='40%' height='40%' aria-hidden='true' />
+              </div>
+            {{/if}}
 
-          <div class='hero-body'>
-            <div class='hero-head'>
-              <h1 class='hero-title'>{{if
-                  @model.productTitle
-                  @model.productTitle
-                  'Unlinked item'
-                }}</h1>
+            <div class='hero-body'>
+              <div class='hero-head'>
+                <h1 class='hero-title'>{{if
+                    @model.productTitle
+                    @model.productTitle
+                    'Unlinked item'
+                  }}</h1>
 
-              <p class='parties'>
-                {{#if @model.variantLabel}}
-                  <span class='party'>{{@model.variantLabel}}</span>
-                {{/if}}
-                {{#if @model.seller}}
-                  <span class='party'>sold by
-                    <strong>{{@model.seller.title}}</strong></span>
-                {{/if}}
-                {{#if @model.conditionCode}}
-                  <span class='party'>condition
-                    <strong>{{@model.conditionCode}}</strong></span>
-                {{/if}}
-              </p>
-            </div>
+                <p class='parties'>
+                  {{#if @model.variantLabel}}
+                    <span class='party'>{{@model.variantLabel}}</span>
+                  {{/if}}
+                  {{#if @model.seller}}
+                    <span class='party'>sold by
+                      <strong>{{@model.seller.title}}</strong></span>
+                  {{/if}}
+                  {{#if @model.conditionCode}}
+                    <span class='party'>condition
+                      <strong>{{@model.conditionCode}}</strong></span>
+                  {{/if}}
+                </p>
+              </div>
 
-            {{! THE PLAQUE — real gold surface area, not a hairline accent.
+              {{! THE PLAQUE — real gold surface area, not a hairline accent.
                 The asking price is the dominant figure on the whole card; the
                 status and verified badge qualify it, they do not compete. }}
-            <div class='plaque'>
-              <p class='plaque-price'>{{moneyText @model.price}}</p>
-              <div class='plaque-meta'>
-                {{#if @model.listingStatus}}
-                  <@fields.listingStatus @format='embedded' />
-                {{/if}}
-                {{#if @model.verified}}
-                  <StatePill
-                    class='l-verified'
-                    @label='Verified'
-                    @hue='green'
-                    @dot={{true}}
-                  />
-                {{/if}}
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {{! Offers — the "is anyone biting?" section. Full width: on an active
-            listing this is what the seller opens the card to check. }}
-        <section class='sec'>
-          <h2><HandshakeIcon class='sec-icon' aria-hidden='true' />Offers<span
-              class='count'
-            >{{this.offers.length}}</span></h2>
-
-          {{#if this.offersError}}
-            <p class='err'>
-              <AlertTriangleIcon
-                width='18'
-                height='18'
-                aria-hidden='true'
-              />Could not load offers.
-            </p>
-          {{else if this.offersLoading}}
-            <p class='wait'><Spinner />Looking for offers…</p>
-          {{else if this.offers.length}}
-            <ul class='links'>
-              {{! getCards instances have no `.component` — getComponent(card)
-                  is the API; the property renders an empty row silently. }}
-              {{#each this.offers as |o|}}
-                <li>{{#let (getComponent o) as |OfferCard|}}
-                    <OfferCard @format='embedded' />
-                  {{/let}}</li>
-              {{/each}}
-            </ul>
-          {{else}}
-            <EmptyState
-              @title='No offers yet. Buyers can offer below asking; each counter is its own card linked back to the one it answers.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
-          {{/if}}
-        </section>
-
-        <div class='cols'>
-          {{! Shape: linked cards — the provenance chain behind this listing. }}
-          <section class='sec'>
-            <h2><ArchiveIcon class='sec-icon' aria-hidden='true' />Item &amp;
-              seller</h2>
-            <ul class='links'>
-              {{#if @model.collectionItem}}
-                <li><@fields.collectionItem @format='embedded' /></li>
-              {{else}}
-                <li class='empty-li'>
-                  <EmptyState
-                    @title='No collection item linked — condition and authentication read through it.'
-                    @texture={{false}}
-                    style={{COMPACT_EMPTY_STYLE}}
-                  />
-                </li>
-              {{/if}}
-              {{#if @model.product}}
-                <li><@fields.product @format='embedded' /></li>
-              {{/if}}
-              {{#if @model.seller}}
-                <li><@fields.seller @format='embedded' /></li>
-              {{/if}}
-            </ul>
-          </section>
-
-          {{! Shape: dl — fulfilment terms and the sale window. }}
-          <section class='sec'>
-            <h2><TruckIcon class='sec-icon' aria-hidden='true' />Fulfilment
-              &amp; window</h2>
-            <dl class='facts'>
-              <div class='f-row'>
-                <dt>Shipping</dt>
-                <dd>{{moneyText @model.shippingPrice}}</dd>
-              </div>
-              <div class='f-row'>
-                <dt>Ships from</dt>
-                <dd>{{if @model.shipsFrom @model.shipsFrom '—'}}</dd>
-              </div>
-              <div class='f-row'>
-                <dt>Listed</dt>
-                <dd>{{#if @model.listedAt}}<@fields.listedAt
-                      @format='atom'
-                    />{{else}}—{{/if}}</dd>
-              </div>
-              <div class='f-row'>
-                <dt>Expires</dt>
-                <dd>{{#if @model.expiresAt}}<@fields.expiresAt
-                      @format='atom'
-                    />{{else}}—{{/if}}</dd>
-              </div>
-              {{#if @model.soldAt}}
-                <div class='f-row f-row--sold'>
-                  <dt>Sold</dt>
-                  <dd><@fields.soldAt @format='atom' /></dd>
+              <div class='plaque'>
+                <p class='plaque-price'>{{moneyText @model.price}}</p>
+                <div class='plaque-meta'>
+                  {{#if @model.listingStatus}}
+                    <@fields.listingStatus @format='embedded' />
+                  {{/if}}
+                  {{#if @model.verified}}
+                    <StatePill
+                      class='l-verified'
+                      @label='Verified'
+                      @hue='green'
+                      @dot={{true}}
+                    />
+                  {{/if}}
                 </div>
-              {{/if}}
-            </dl>
-          </section>
-        </div>
-
-        {{#if @model.listingNotes}}
-          {{! Shape: prose — the seller's own words, distinct from every dl. }}
-          <section class='sec'>
-            <h2><NotebookIcon class='sec-icon' aria-hidden='true' />Seller's
-              notes</h2>
-            <div class='notes'>
-              <@fields.listingNotes />
+              </div>
             </div>
-          </section>
-        {{/if}}
-      </article>
+          </header>
 
+          {{! Offers — the "is anyone biting?" section. Full width: on an active
+            listing this is what the seller opens the card to check. }}
+          <section class='sec'>
+            <h2><HandshakeIcon class='sec-icon' aria-hidden='true' />Offers<span
+                class='count'
+              >{{this.offers.length}}</span></h2>
+
+            {{#if this.offersError}}
+              <p class='err'>
+                <AlertTriangleIcon
+                  width='18'
+                  height='18'
+                  aria-hidden='true'
+                />Could not load offers.
+              </p>
+            {{else if this.offersLoading}}
+              <p class='wait'><Spinner />Looking for offers…</p>
+            {{else if this.offers.length}}
+              <ul class='links'>
+                {{! getCards instances have no `.component` — getComponent(card)
+                  is the API; the property renders an empty row silently. }}
+                {{#each this.offers as |o|}}
+                  <li>{{#let (getComponent o) as |OfferCard|}}
+                      <OfferCard @format='embedded' />
+                    {{/let}}</li>
+                {{/each}}
+              </ul>
+            {{else}}
+              <EmptyState
+                @title='No offers yet. Buyers can offer below asking; each counter is its own card linked back to the one it answers.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
+            {{/if}}
+          </section>
+
+          <div class='cols'>
+            {{! Shape: linked cards — the provenance chain behind this listing. }}
+            <section class='sec'>
+              <h2><ArchiveIcon class='sec-icon' aria-hidden='true' />Item &amp;
+                seller</h2>
+              <ul class='links'>
+                {{#if @model.collectionItem}}
+                  <li><@fields.collectionItem @format='embedded' /></li>
+                {{else}}
+                  <li class='empty-li'>
+                    <EmptyState
+                      @title='No collection item linked — condition and authentication read through it.'
+                      @texture={{false}}
+                      style={{COMPACT_EMPTY_STYLE}}
+                    />
+                  </li>
+                {{/if}}
+                {{#if @model.product}}
+                  <li><@fields.product @format='embedded' /></li>
+                {{/if}}
+                {{#if @model.seller}}
+                  <li><@fields.seller @format='embedded' /></li>
+                {{/if}}
+              </ul>
+            </section>
+
+            {{! Shape: dl — fulfilment terms and the sale window. }}
+            <section class='sec'>
+              <h2><TruckIcon class='sec-icon' aria-hidden='true' />Fulfilment
+                &amp; window</h2>
+              <dl class='facts'>
+                <div class='f-row'>
+                  <dt>Shipping</dt>
+                  <dd>{{moneyText @model.shippingPrice}}</dd>
+                </div>
+                <div class='f-row'>
+                  <dt>Ships from</dt>
+                  <dd>{{if @model.shipsFrom @model.shipsFrom '—'}}</dd>
+                </div>
+                <div class='f-row'>
+                  <dt>Listed</dt>
+                  <dd>{{#if @model.listedAt}}<@fields.listedAt
+                        @format='atom'
+                      />{{else}}—{{/if}}</dd>
+                </div>
+                <div class='f-row'>
+                  <dt>Expires</dt>
+                  <dd>{{#if @model.expiresAt}}<@fields.expiresAt
+                        @format='atom'
+                      />{{else}}—{{/if}}</dd>
+                </div>
+                {{#if @model.soldAt}}
+                  <div class='f-row f-row--sold'>
+                    <dt>Sold</dt>
+                    <dd><@fields.soldAt @format='atom' /></dd>
+                  </div>
+                {{/if}}
+              </dl>
+            </section>
+          </div>
+
+          {{#if @model.listingNotes}}
+            {{! Shape: prose — the seller's own words, distinct from every dl. }}
+            <section class='sec'>
+              <h2><NotebookIcon class='sec-icon' aria-hidden='true' />Seller's
+                notes</h2>
+              <div class='notes'>
+                <@fields.listingNotes />
+              </div>
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         /* Rule 1: an isolated card gets NO host container — declare our own,
            NAMED, or every @container rule below is inert. `inline-size`, not

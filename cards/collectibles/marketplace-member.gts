@@ -27,6 +27,7 @@ import type { Listing as ListingType } from './listing';
 import { Spinner } from '@cardstack/pretui/components/spinner';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // The isolated landing page, exported so SellerProfile can extend it.
 export class MarketplaceMemberIsolated<
@@ -76,85 +77,89 @@ export class MarketplaceMemberIsolated<
   }
 
   <template>
-    <article class='card'>
-      <header class='hero'>
-        {{#if @model.photo.resolvedUrl}}
-          <img
-            class='portrait'
-            src={{@model.photo.resolvedUrl}}
-            alt={{@model.title}}
-          />
-        {{else}}
-          <div class='portrait portrait--plaque' aria-hidden='true'>
-            {{#if @model.name}}
-              <span class='init'>{{@model.initials}}</span>
-            {{else}}
-              <UserIcon width='40%' height='40%' />
-            {{/if}}
-          </div>
-        {{/if}}
+    <IsoFrame>
+      <article class='card'>
+        <header class='hero'>
+          {{#if @model.photo.resolvedUrl}}
+            <img
+              class='portrait'
+              src={{@model.photo.resolvedUrl}}
+              alt={{@model.title}}
+            />
+          {{else}}
+            <div class='portrait portrait--plaque' aria-hidden='true'>
+              {{#if @model.name}}
+                <span class='init'>{{@model.initials}}</span>
+              {{else}}
+                <UserIcon width='40%' height='40%' />
+              {{/if}}
+            </div>
+          {{/if}}
 
-        <div class='hero-body'>
-          <h1 class='name'>{{@model.title}}</h1>
+          <div class='hero-body'>
+            <h1 class='name'>{{@model.title}}</h1>
 
-          {{! Contact facts as quiet pills, each with its own glyph —
+            {{! Contact facts as quiet pills, each with its own glyph —
               identifiers, so the value itself never truncates. }}
-          <ul class='contact'>
-            {{#if @model.email}}
-              <li class='c-pill'>
-                <MailIcon class='c-icon' aria-hidden='true' />
-                <a class='c-link' href='mailto:{{@model.email}}'>
-                  {{@model.email}}</a>
-              </li>
-            {{/if}}
-            {{#if @model.phone}}
-              <li class='c-pill'>
-                <PhoneIcon class='c-icon' aria-hidden='true' />
-                <span class='c-val'>{{@model.phone}}</span>
-              </li>
-            {{/if}}
-            {{#unless @model.email}}
-              {{#unless @model.phone}}
-                <li class='c-none'>No contact details recorded.</li>
+            <ul class='contact'>
+              {{#if @model.email}}
+                <li class='c-pill'>
+                  <MailIcon class='c-icon' aria-hidden='true' />
+                  <a class='c-link' href='mailto:{{@model.email}}'>
+                    {{@model.email}}</a>
+                </li>
+              {{/if}}
+              {{#if @model.phone}}
+                <li class='c-pill'>
+                  <PhoneIcon class='c-icon' aria-hidden='true' />
+                  <span class='c-val'>{{@model.phone}}</span>
+                </li>
+              {{/if}}
+              {{#unless @model.email}}
+                {{#unless @model.phone}}
+                  <li class='c-none'>No contact details recorded.</li>
+                {{/unless}}
               {{/unless}}
-            {{/unless}}
-          </ul>
-        </div>
-      </header>
+            </ul>
+          </div>
+        </header>
 
-      {{! What they are selling — reverse query over Listing.seller. }}
-      <section class='sec'>
-        <h2><TagIcon class='sec-icon' aria-hidden='true' />Listings<span
-            class='count'
-          >{{this.listings.length}}</span></h2>
+        {{! What they are selling — reverse query over Listing.seller. }}
+        <section class='sec'>
+          <h2><TagIcon class='sec-icon' aria-hidden='true' />Listings<span
+              class='count'
+            >{{this.listings.length}}</span></h2>
 
-        {{#if this.listingsError}}
-          <p class='err'>
-            <AlertTriangleIcon width='18' height='18' aria-hidden='true' />Could
-            not load listings.
-          </p>
-        {{else if this.listingsLoading}}
-          <p class='wait'><Spinner />Looking for listings…</p>
-        {{else if this.listings.length}}
-          <ul class='links'>
-            {{! getCards instances have no `.component` — getComponent(card)
+          {{#if this.listingsError}}
+            <p class='err'>
+              <AlertTriangleIcon
+                width='18'
+                height='18'
+                aria-hidden='true'
+              />Could not load listings.
+            </p>
+          {{else if this.listingsLoading}}
+            <p class='wait'><Spinner />Looking for listings…</p>
+          {{else if this.listings.length}}
+            <ul class='links'>
+              {{! getCards instances have no `.component` — getComponent(card)
                 is the API; the property renders an empty row silently. }}
-            {{#each this.listings as |l|}}
-              <li>{{#let (getComponent l) as |ListingCard|}}
-                  <ListingCard @format='embedded' />
-                {{/let}}</li>
-            {{/each}}
-          </ul>
-        {{else}}
-          <EmptyState
-            @title='Nothing listed for sale by this person yet.'
-            @texture={{false}}
-            style={{COMPACT_EMPTY_STYLE}}
-          />
-        {{/if}}
-      </section>
-    </article>
-
+              {{#each this.listings as |l|}}
+                <li>{{#let (getComponent l) as |ListingCard|}}
+                    <ListingCard @format='embedded' />
+                  {{/let}}</li>
+              {{/each}}
+            </ul>
+          {{else}}
+            <EmptyState
+              @title='Nothing listed for sale by this person yet.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
+          {{/if}}
+        </section>
+      </article>
+    </IsoFrame>
     <style scoped>
       /* Rule 1: an isolated card gets NO host container — declaring our own
          is what makes every @container rule below live rather than inert. */
