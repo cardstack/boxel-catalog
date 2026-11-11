@@ -1453,8 +1453,6 @@ export class AutomationCaps extends FieldDef {
           </Field>
         {{/each}}
       </div>
-      <p class='automation-caps-edit__footnote'>¹ Boxel charges the actual
-        amount once the AI provider reports the amount.</p>
       <div class='automation-caps-edit automation-caps-edit--credits'>
         {{#each this.creditLimits as |limit|}}
           <Field
@@ -1474,6 +1472,8 @@ export class AutomationCaps extends FieldDef {
           </Field>
         {{/each}}
       </div>
+      <p class='automation-caps-edit__footnote'>¹ Boxel charges the actual
+        amount once the AI provider reports the amount.</p>
       <style scoped>
         .automation-caps-edit {
           display: grid;
@@ -1481,7 +1481,7 @@ export class AutomationCaps extends FieldDef {
           gap: var(--boxel-sp-xs) var(--boxel-sp);
         }
         .automation-caps-edit__footnote {
-          margin: var(--boxel-sp-xs) 0 var(--boxel-sp);
+          margin: var(--boxel-sp) 0 0;
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
