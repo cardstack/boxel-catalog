@@ -22,6 +22,11 @@
         "links": {
           "self": "../Brief/live-show-platform"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {
