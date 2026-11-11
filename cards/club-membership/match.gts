@@ -16,6 +16,7 @@ import BallFootballIcon from '@cardstack/boxel-icons/ball-football';
 import { Event } from '../events/event';
 import { FitTile } from '../shared/fit-tile';
 import CountField from '@cardstack/catalog/fields/count/count-field';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
 const moduleURL: string = import.meta.url;
@@ -450,145 +451,147 @@ export class Match extends Event {
     }
 
     <template>
-      <article class='page'>
-        <header class='head'>
-          <MatchMark @size='lg' />
-          <div class='id'>
-            <h1 class='name'>{{this.name}}</h1>
-            {{#if this.meta}}<p class='meta'>{{this.meta}}</p>{{/if}}
-          </div>
-          <div class='tags'>
-            <DotText
-              @label={{this.match.status}}
-              @tone={{statusTone this.match.status}}
-            />
-            <DotText @label={{this.match.homeAway}} />
-          </div>
-        </header>
+      <IsoFrame>
+        <article class='page'>
+          <header class='head'>
+            <MatchMark @size='lg' />
+            <div class='id'>
+              <h1 class='name'>{{this.name}}</h1>
+              {{#if this.meta}}<p class='meta'>{{this.meta}}</p>{{/if}}
+            </div>
+            <div class='tags'>
+              <DotText
+                @label={{this.match.status}}
+                @tone={{statusTone this.match.status}}
+              />
+              <DotText @label={{this.match.homeAway}} />
+            </div>
+          </header>
 
-        <dl class='stats' aria-label='Key numbers'>
-          <div class='stat'>
-            <dt class='label'>Sold</dt>
-            <dd class='value'>{{num this.match.ticketsSold}}</dd>
-            <dd class='sub'>{{this.soldPercent}}</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Club bookings</dt>
-            <dd class='value'>{{this.bookings.length}}</dd>
-            <dd class='sub'>{{this.bookingHint}}</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Kick-off</dt>
-            <dd class='value'>{{timeOf this.match.startsAt}}</dd>
-            <dd class='sub'>{{dateOf this.match.startsAt}}</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Capacity</dt>
-            <dd class='value'>{{num this.match.capacity.total}}</dd>
-            <dd class='sub'>{{if
-                this.match.capacity.unit
-                this.match.capacity.unit
-                'seats'
-              }}</dd>
-          </div>
-        </dl>
+          <dl class='stats' aria-label='Key numbers'>
+            <div class='stat'>
+              <dt class='label'>Sold</dt>
+              <dd class='value'>{{num this.match.ticketsSold}}</dd>
+              <dd class='sub'>{{this.soldPercent}}</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Club bookings</dt>
+              <dd class='value'>{{this.bookings.length}}</dd>
+              <dd class='sub'>{{this.bookingHint}}</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Kick-off</dt>
+              <dd class='value'>{{timeOf this.match.startsAt}}</dd>
+              <dd class='sub'>{{dateOf this.match.startsAt}}</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Capacity</dt>
+              <dd class='value'>{{num this.match.capacity.total}}</dd>
+              <dd class='sub'>{{if
+                  this.match.capacity.unit
+                  this.match.capacity.unit
+                  'seats'
+                }}</dd>
+            </div>
+          </dl>
 
-        <div class='cols'>
-          <div class='main'>
-            {{#if this.match.description}}
+          <div class='cols'>
+            <div class='main'>
+              {{#if this.match.description}}
+                <section class='sec'>
+                  <h2>About</h2>
+                  <div class='body'><@fields.description /></div>
+                </section>
+              {{/if}}
+              {{#if this.match.capacity.allocations.length}}
+                <section class='sec'>
+                  <h2>Capacity</h2>
+                  <dl class='kv'>
+                    {{#each this.match.capacity.allocations as |a|}}
+                      <dt>{{a.name}}</dt><dd class='num'>{{num a.quantity}}</dd>
+                    {{/each}}
+                  </dl>
+                </section>
+              {{/if}}
               <section class='sec'>
-                <h2>About</h2>
-                <div class='body'><@fields.description /></div>
+                <h2>Club bookings</h2>
+                {{#if this.bookings.length}}
+                  <ul class='rows'>
+                    {{#each this.bookings key='id' as |b|}}
+                      <li class='row'>
+                        <span class='ref'>{{b.reference}}</span>
+                        <span class='what'><strong>{{b.holderName}}</strong>
+                          <span class='muted'>·
+                            {{b.quantity}}
+                            tickets{{#if b.rsvp}}
+                              ·
+                              {{b.rsvp}}{{/if}}</span></span>
+                        <DotText
+                          @label={{b.paymentStatus}}
+                          @tone={{payTone b.paymentStatus}}
+                        />
+                      </li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <p class='empty'>No club bookings yet</p>
+                {{/if}}
               </section>
-            {{/if}}
-            {{#if this.match.capacity.allocations.length}}
+            </div>
+
+            <aside class='side'>
               <section class='sec'>
-                <h2>Capacity</h2>
+                <h2>Linked</h2>
                 <dl class='kv'>
-                  {{#each this.match.capacity.allocations as |a|}}
-                    <dt>{{a.name}}</dt><dd class='num'>{{num a.quantity}}</dd>
+                  <dt>Venue</dt>
+                  <dd>{{#if this.match.venue}}<@fields.venue
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                  {{#each this.bookingCards as |b|}}
+                    <dt>Booking</dt>
+                    <dd>{{#let (getComponent b) as |B|}}<B
+                          @format='atom'
+                          @displayContainer={{false}}
+                        />{{/let}}</dd>
                   {{/each}}
                 </dl>
               </section>
-            {{/if}}
-            <section class='sec'>
-              <h2>Club bookings</h2>
-              {{#if this.bookings.length}}
-                <ul class='rows'>
-                  {{#each this.bookings key='id' as |b|}}
-                    <li class='row'>
-                      <span class='ref'>{{b.reference}}</span>
-                      <span class='what'><strong>{{b.holderName}}</strong>
-                        <span class='muted'>·
-                          {{b.quantity}}
-                          tickets{{#if b.rsvp}}
-                            ·
-                            {{b.rsvp}}{{/if}}</span></span>
-                      <DotText
-                        @label={{b.paymentStatus}}
-                        @tone={{payTone b.paymentStatus}}
-                      />
-                    </li>
-                  {{/each}}
-                </ul>
-              {{else}}
-                <p class='empty'>No club bookings yet</p>
-              {{/if}}
-            </section>
+              <section class='sec'>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  <dt>Kick-off</dt><dd>{{kickoff this.match.startsAt}}</dd>
+                  <dt>Ends</dt><dd>{{timeOf this.match.endsAt}}</dd>
+                  <dt>Sold</dt><dd class='num'>{{num this.match.ticketsSold}}
+                    seats</dd>
+                  <dt>Capacity</dt><dd class='num'>{{num
+                      this.match.capacity.total
+                    }}
+                    seats</dd>
+                  <dt>Competition</dt><dd>{{if
+                      this.match.competition
+                      this.match.competition
+                      '—'
+                    }}</dd>
+                  <dt>Home / Away</dt><dd>{{if
+                      this.match.homeAway
+                      this.match.homeAway
+                      '—'
+                    }}</dd>
+                  <dt>Club bookings</dt><dd>{{this.bookings.length}}
+                    ·
+                    {{this.bookingHint}}</dd>
+                  <dt>Status</dt><dd>{{if
+                      this.match.status
+                      this.match.status
+                      '—'
+                    }}</dd>
+                </dl>
+              </section>
+            </aside>
           </div>
-
-          <aside class='side'>
-            <section class='sec'>
-              <h2>Linked</h2>
-              <dl class='kv'>
-                <dt>Venue</dt>
-                <dd>{{#if this.match.venue}}<@fields.venue
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-                {{#each this.bookingCards as |b|}}
-                  <dt>Booking</dt>
-                  <dd>{{#let (getComponent b) as |B|}}<B
-                        @format='atom'
-                        @displayContainer={{false}}
-                      />{{/let}}</dd>
-                {{/each}}
-              </dl>
-            </section>
-            <section class='sec'>
-              <h2>Details</h2>
-              <dl class='kv'>
-                <dt>Kick-off</dt><dd>{{kickoff this.match.startsAt}}</dd>
-                <dt>Ends</dt><dd>{{timeOf this.match.endsAt}}</dd>
-                <dt>Sold</dt><dd class='num'>{{num this.match.ticketsSold}}
-                  seats</dd>
-                <dt>Capacity</dt><dd class='num'>{{num
-                    this.match.capacity.total
-                  }}
-                  seats</dd>
-                <dt>Competition</dt><dd>{{if
-                    this.match.competition
-                    this.match.competition
-                    '—'
-                  }}</dd>
-                <dt>Home / Away</dt><dd>{{if
-                    this.match.homeAway
-                    this.match.homeAway
-                    '—'
-                  }}</dd>
-                <dt>Club bookings</dt><dd>{{this.bookings.length}}
-                  ·
-                  {{this.bookingHint}}</dd>
-                <dt>Status</dt><dd>{{if
-                    this.match.status
-                    this.match.status
-                    '—'
-                  }}</dd>
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .page {
           container-type: inline-size;
