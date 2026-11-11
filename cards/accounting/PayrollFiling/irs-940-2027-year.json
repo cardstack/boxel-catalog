@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "agencyId": "irs-940",
+      "form": "940",
+      "periodStart": "2027-01-01",
+      "periodEnd": "2027-12-31",
+      "status": "open",
+      "filedLines": [],
+      "filedDueMinor": null,
+      "filedOn": null,
+      "filedBy": null,
+      "paidMinor": 0,
+      "payments": [],
+      "cardInfo": {
+        "name": "940 · 2027-01-01 to 2027-12-31"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll-filings",
+        "name": "PayrollFiling"
+      }
+    }
+  }
+}

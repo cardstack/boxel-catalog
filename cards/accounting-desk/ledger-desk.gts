@@ -185,7 +185,13 @@ import {
 } from '../accounting/ledger-registers';
 import { Form1099Report } from '../accounting/ledger-tax';
 import { PnlForecast } from '../accounting/ledger-forecast';
-import { PayrollPage, payrollPostGuard } from './payroll-page';
+import {
+  PayrollPage,
+  payrollPostGuard,
+  payrollPostSteps,
+  payrollUnwindSteps,
+  payrollTie,
+} from './payroll-page';
 import {
   Budget,
   BudgetVsActual,
@@ -864,7 +870,7 @@ const PAGES: PageDef[] = [
     area: 'Payroll',
     label: 'Run payroll',
     blurb:
-      'Employees and their pay setup, running payroll for a pay date, and each run with its paychecks.',
+      'Employees and their pay setup, running payroll for a pay date, each run with its paychecks, and the payroll tax liabilities and filings by agency and period.',
   },
   {
     id: 'payroll',
@@ -5424,6 +5430,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let recs = (((this.recData as any)?.instances ?? []) as any[]).filter(
       (r) => r && r.status === 'reconciled' && (r.differenceMinor ?? 0) !== 0,
     );
+    let payroll = payrollTie(this.journalMonths);
     let stuck = this.drafts.filter(
       (d) => this.asOfAll && String(d.date ?? '') <= this.asOfAll,
     );
@@ -5499,6 +5506,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         stuck.length ? `${stuck.length} can never post as dated` : '',
       ),
       this.taxGate(gate),
+      gate(
+        'payroll',
+        "Each payroll tax agency's account ties to what it's owed",
+        payroll.ok,
+        payroll.caption,
+      ),
     ];
   }
   // What the agencies were owed at the last close against 2200 in the closed months. Every agency's
@@ -6194,6 +6207,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               ? m.lastDay
               : today;
       let { unwound, ops } = this.unwindPlan(p);
+      ops.push(...payrollUnwindSteps(p));
       // A bank line matched to or added as this posting goes back for review with it.
       if (p.key)
         ops.push((b) =>
@@ -6638,6 +6652,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           )
           .markPaid({ paymentNo: c.docNo, amountMinor: c.amountMinor }),
       );
+    ops.push(...payrollPostSteps(c));
     return ops;
   };
   post = async () => {

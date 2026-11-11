@@ -16,6 +16,11 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import enumField from '@cardstack/base/enum';
 import BookIcon from '@cardstack/boxel-icons/book-open';
+import {
+  operation,
+  bxl,
+  type OperationDeclaration,
+} from '@cardstack/base/operations';
 import UserIcon from '@cardstack/boxel-icons/user';
 import { Employee } from '../hr/employee';
 import { Sheet, Part, Facts, Strip, Fit, money, type Fact } from './record-kit';
@@ -199,14 +204,37 @@ export class PayrollAgency extends CardDef {
   @field frequency = contains(StringField); // quarterly or annual
   @field liabilityAccount = contains(StringField);
   @field taxes = containsMany(StringField); // the tax keys it collects
+  @field filedThrough = contains(IsoDateField); // written only by markFiled, when a filing is filed
   @field cardTitle = contains(StringField, {
     computeVia: function (this: PayrollAgency) {
       return this.name ?? this.agencyId ?? 'Payroll tax agency';
     },
   });
+  /** Refuse a payroll run dated in a period filed with this agency. Sent in the run's posting batch. */
+  @operation static checkOpen = {
+    base: 'transform',
+    params: { date: StringField },
+    transformations: bxl`
+      assert(if .filedThrough == null then true else params("date") > .filedThrough end; "Payroll for that date has been filed with this agency. Date the run after the filed period; a correction goes in the next period.");
+      .filedThrough = .filedThrough;
+    `,
+  } satisfies OperationDeclaration;
+  /** Lock a filed period. Sent in the same batch as the filing's file. */
+  @operation static markFiled = {
+    base: 'transform',
+    params: { periodStart: StringField, periodEnd: StringField },
+    transformations: bxl`
+      assert(if .filedThrough == null then true else params("periodStart") > .filedThrough end; "A filing for part of that period has already been filed with this agency.");
+      assert(params("periodEnd") >= params("periodStart"); "A filing's period ends on or after it starts.");
+      .filedThrough = params("periodEnd");
+    `,
+  } satisfies OperationDeclaration;
   facts(): Fact[] {
     return [
       { key: 'Agency', value: this.agencyId ?? '', mono: true },
+      ...(this.filedThrough
+        ? [{ key: 'Filed through', value: this.filedThrough }]
+        : []),
       { key: 'Files', value: `${this.form ?? ''} · ${this.frequency ?? ''}` },
       { key: 'Liability account', value: this.liabilityAccount ?? '' },
       { key: 'Taxes', value: (this.taxes ?? []).join(', ') },

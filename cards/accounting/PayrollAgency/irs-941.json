@@ -10,7 +10,8 @@
       "taxes": ["federal-income", "social-security", "medicare"],
       "cardInfo": {
         "name": "IRS · Form 941 (withholding, Social Security, Medicare)"
-      }
+      },
+      "filedThrough": "2026-12-31"
     },
     "relationships": {
       "cardInfo.theme": {
