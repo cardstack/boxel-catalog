@@ -210,6 +210,7 @@ import {
   isLibraryKind,
 } from '../accounting/ledger-report-desk';
 import { AuditLog } from '../accounting/ledger-audit';
+import { UsersPage } from '../accounting/ledger-users';
 import {
   KIND_LABEL,
   seqText,
@@ -1469,6 +1470,13 @@ const PAGES: PageDef[] = [
     }),
   },
   {
+    id: 'users',
+    area: 'Accounting',
+    label: 'Users',
+    blurb:
+      'Who has access to the books and their role. Only an Admin changes a role.',
+  },
+  {
     id: 'r-year',
     area: 'Close',
     label: 'Year-end close',
@@ -1630,6 +1638,7 @@ const WORKSPACES: Workspace[] = [
       'drafts',
       'recurring',
       'currencies',
+      'users',
       'inbox',
       'journalmonths',
       'pads',
@@ -3634,6 +3643,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // operating account. In another currency the payment takes today's rate, and the difference from
   // the document's rate posts as realized gain or loss.
   get canSettle() {
+    return this.canSettleShape && !this.canSettleRefused;
+  }
+  get canSettleShape() {
     let c = this.sel as any;
     return (
       !this.selPosting &&
@@ -4022,7 +4034,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       );
       await (operations(customer as never as CardDef) as any).atomic(
         (b: any) => [
-          this.enterOnTerms(b, 'enterInvoice', customer, {
+          this.enterOnTerms(b, 'enterTimeInvoice', customer, {
             docNo,
             date,
             kind: 'sale',
@@ -6107,6 +6119,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     return !this.selPosting && this.sel?.status === 'draft';
   }
   get canReverse() {
+    return this.canReverseShape && !this.canReverseRefused;
+  }
+  get canReverseShape() {
     let p = this.selPosting,
       m = this.selected?.month as any;
     return (
@@ -6417,6 +6432,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   @tracked voiding = false;
   @tracked voidReason = '';
   get canVoid() {
+    return this.canVoidShape && !this.canVoidRefused;
+  }
+  get canVoidShape() {
     let c = this.sel;
     return (
       !this.selPosting &&
@@ -6568,6 +6586,43 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.busy = false;
     }
   };
+  // The realm's answer for this viewer's role: only a refusal hides an action.
+  refused = (operation: string, target: unknown) =>
+    !!target &&
+    this.args.context?.canInvoke?.(operation, target as CardDef) === false;
+  get canSettleRefused() {
+    return this.refused('applyPayment', this.sel);
+  }
+  get canVoidRefused() {
+    return this.refused('void', this.sel);
+  }
+  get canReverseRefused() {
+    return this.refused('reverse', this.selected?.month);
+  }
+  get roleNote() {
+    let held = [
+      this.canSettleShape && this.canSettleRefused && 'settle',
+      this.canVoidShape && this.canVoidRefused && 'void',
+      this.canReverseShape && this.canReverseRefused && 'reverse',
+    ].filter(Boolean);
+    return held.length
+      ? `Your role can't ${held.join(' or ')} this; a writer of the realm does.`
+      : '';
+  }
+  // The realm's answer for this viewer's role; only a refusal hides the button.
+  get postRefused() {
+    let c = this.sel as CardDef | undefined,
+      ask = this.args.context?.canInvoke;
+    if (!c || !ask) return false;
+    if (!this.selJournalable) return ask('post', c) === false;
+    // Posting into a journal also appends to the month, which the role may not be granted.
+    let month = this.journalMonths.find(
+      (m: any) => m?.month === this.selMonth && m?.status === 'open',
+    );
+    return (
+      ask('journal', c) === false || (!!month && ask('post', month) === false)
+    );
+  }
   get canPost() {
     return (
       this.selIsDraft &&
@@ -7843,6 +7898,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @pages={{this.reportPages}}
                 @onOpenPage={{this.go}}
               />
+            {{else if (eq this.page 'users')}}
+              <UsersPage @context={{@context}} @realms={{this.realms}} />
             {{else if (eq this.page 'r-audit')}}
               <AuditLog @context={{@context}} @realms={{this.realms}} />
             {{else if (isLibraryKind this.def.report)}}
@@ -8291,12 +8348,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.calculateTax}}
               >Calculate tax</Button>{{/if}}
-            {{#if this.canPost}}<Button
-                @tone='primary'
-                @appearance='accent'
-                @busy={{this.busy}}
-                {{on 'click' this.post}}
-              >Post</Button>{{/if}}
+            {{#if this.canPost}}{{#if this.postRefused}}<span
+                  class='muted'
+                  data-post-refused
+                >Your role can't post this; a writer of the realm does.</span>{{else}}<Button
+                  @tone='primary'
+                  @appearance='accent'
+                  @busy={{this.busy}}
+                  {{on 'click' this.post}}
+                >Post</Button>{{/if}}{{/if}}
             {{#if this.selTemplate}}<Button
                 @tone='neutral'
                 @appearance='outlined'
@@ -8322,6 +8382,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @disabled={{if this.bundleSku false true}}
                 {{on 'click' this.addBundle}}
               >Add bundle</Button>{{/if}}
+            {{#if this.roleNote}}<span
+                class='muted'
+                data-role-note
+              >{{this.roleNote}}</span>{{/if}}
             {{#if this.canSettle}}<Button
                 @tone='primary'
                 @appearance='outlined'
