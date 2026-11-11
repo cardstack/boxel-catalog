@@ -3015,7 +3015,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // A full page may have left out a line that took a posting, so nothing is offered rather than a
   // posting that's already matched.
   get takenFull() {
-    return this.takenData.incomplete;
+    return this.takenData.isLoading || this.takenData.incomplete;
   }
   // What's already in the books this line could be: a posting on its account (so a transfer or payout
   // isn't entered twice), or an open invoice or bill it pays in full.
@@ -3179,7 +3179,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     );
   }
   get recFeedFull() {
-    return this.bankLineData.incomplete;
+    return this.bankLineData.isLoading || this.bankLineData.incomplete;
   }
   get recItems(): {
     key: string;
@@ -8185,7 +8185,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     @busy={{this.busy}}
                     {{on 'click' (fn this.matchBankCandidate m)}}
                   >Match</Button></div>{{/each}}
-            {{else if this.takenFull}}
+            {{else if this.takenData.incomplete}}
               <p class='muted'>Too many lines on this account near this date to
                 check what's already matched. Add or exclude it instead.</p>
             {{/if}}

@@ -158,18 +158,30 @@ export class MyReports extends GlimmerComponent<MineSignature> {
   @tracked returnTo = '';
   // The saved reports read from the store, by id, for the rows the search answered as HTML only.
   @tracked cards: Record<string, SavedLike> = {};
+  // The saved reports that couldn't be read, by id, with why.
+  @tracked unreadable: Record<string, string> = {};
   #asked = new Set<string>();
   private readCard(id: string) {
     if (this.#asked.has(id)) return;
     this.#asked.add(id);
     Promise.resolve().then(async () => {
+      let failure: string;
       try {
-        let card = (await this.args.context?.store?.get(id)) as unknown;
-        if (card && typeof card === 'object' && 'kind' in (card as object))
+        // The store answers a card it couldn't load with an error document rather than throwing.
+        let card = (await this.args.context?.store?.get(id)) as any;
+        if (card && typeof card === 'object' && 'kind' in card) {
           this.cards = { ...this.cards, [id]: card as SavedLike };
-      } catch {
-        this.#asked.delete(id);
+          return;
+        }
+        failure =
+          card?.errors?.[0]?.detail ??
+          card?.detail ??
+          card?.message ??
+          'the report could not be read';
+      } catch (e: any) {
+        failure = e?.detail ?? e?.message ?? String(e);
       }
+      this.unreadable = { ...this.unreadable, [id]: failure };
     });
   }
   get loading() {
@@ -189,7 +201,9 @@ export class MyReports extends GlimmerComponent<MineSignature> {
         this.readCard(e.id);
         return {
           id: e.id,
-          name: 'Loading…',
+          name: this.unreadable[e.id]
+            ? "Couldn't read this report"
+            : 'Loading…',
           kindLabel: '',
           period: '',
           savedBy: '',
@@ -218,8 +232,10 @@ export class MyReports extends GlimmerComponent<MineSignature> {
     let c = r.card;
     this.openError = '';
     if (!c) {
-      this.openError =
-        'This report is still loading. Open it again in a moment.';
+      let failure = this.unreadable[r.id];
+      this.openError = failure
+        ? failureText({ message: failure })
+        : 'This report is still loading. Open it again in a moment.';
       return;
     }
     if (this.isRunner(c.kind)) {

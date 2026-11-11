@@ -4,12 +4,11 @@
 export const SEARCH_PAGE = 100;
 export const MAX_SEARCH_PAGES = 20;
 
+// What getCards answers with: its rows, whether a search is running, and the paging metadata.
 interface PageResource {
   instances?: any[];
   isLoading?: boolean;
-  errors?: unknown[];
-  totalMatchCount?: number;
-  meta?: { incomplete?: boolean };
+  meta?: { page?: { total?: number }; incomplete?: boolean };
 }
 
 interface CardsContext {
@@ -21,11 +20,15 @@ interface CardsContext {
   ) => unknown;
 }
 
-// A page has answered once its own search has finished: with a count, or with an error. Until then
-// it may be a page whose query was only just set, which reads as idle and empty.
+const totalOf = (p: PageResource | undefined) => {
+  let total = p?.meta?.page?.total;
+  return typeof total === 'number' ? total : undefined;
+};
+// A failed search marks its result incomplete, and so does a realm it couldn't search.
+const failedPage = (p: PageResource) => !!p.meta?.incomplete;
+// A page has answered once its search has finished: with a count, or as failed.
 const answered = (p: PageResource) =>
-  p.isLoading === false &&
-  (typeof p.totalMatchCount === 'number' || (p.errors ?? []).length > 0);
+  p.isLoading === false && (totalOf(p) !== undefined || failedPage(p));
 
 export class AllCards {
   private pages: (PageResource | undefined)[];
@@ -66,9 +69,7 @@ export class AllCards {
   // How many records the query matches, as the first page last answered; undefined until it has.
   get total(): number | undefined {
     let first = this.pages[0];
-    return typeof first?.totalMatchCount === 'number'
-      ? first.totalMatchCount
-      : undefined;
+    return first && !failedPage(first) ? totalOf(first) : undefined;
   }
 
   private get matchedPages(): number {
@@ -101,10 +102,7 @@ export class AllCards {
   }
 
   get failed(): boolean {
-    return (
-      !this.pages[0] ||
-      this.needed.some((p) => (p.errors ?? []).length > 0 || p.meta?.incomplete)
-    );
+    return !this.pages[0] || this.needed.some(failedPage);
   }
 
   // Not every record was read: too many matched, or a page failed.
@@ -163,13 +161,14 @@ export async function searchAll(
   tooMany = `More than ${max} records match, more than the desk reads at once.`,
 ): Promise<any[]> {
   let out: any[] = [];
+  // A page can come back short when a row on it fails to load, so only an empty page ends the walk.
   for (let number = 0; ; number++) {
     if (number * SEARCH_PAGE >= max) throw new Error(tooMany);
     let page = (await store.search(
       { ...query, page: { size: SEARCH_PAGE, number } },
       realms,
     )) as any[];
+    if (!page.length) return out;
     out.push(...page);
-    if (page.length < SEARCH_PAGE) return out;
   }
 }
