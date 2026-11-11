@@ -60,6 +60,7 @@ import {
   hueTone,
   type KvItem,
 } from './card-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * One physical thing worth tracking individually — tagged, located,
@@ -365,122 +366,127 @@ export class Asset extends CardDef {
     };
 
     <template>
-      <Sheet>
-        <:head>
-          <Head
-            @mark='As'
-            @title={{if @model.name @model.name 'Untitled asset'}}
-            @meta={{metaLine @model}}
-          >
-            <:status><StatusDots @model={{@model}} /></:status>
-            <:actions>
-              <Button
-                @size='s'
-                @disabled={{if @createCard false true}}
-                {{on 'click' this.raiseWorkOrder}}
-              >Raise work order</Button>
-              <Button
-                @tone='neutral'
-                @appearance='outlined'
-                @size='s'
-                @disabled={{if this.meter false true}}
-                {{on 'click' this.logReading}}
-              >Log reading</Button>
-            </:actions>
-          </Head>
-        </:head>
-        <:stats>
-          <Stat
-            @label='Running hours'
-            @value={{num @model.primaryMeterValue @model.primaryMeterUnit}}
-            @hint={{if
-              this.meter.lastReadAt
-              (concat 'read ' (shortDate this.meter.lastReadAt))
-              'no reading yet'
-            }}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Next due'
-            @value={{dash this.next.due}}
-            @hint={{dash this.next.plan}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Condition'
-            @value={{dash @model.condition.code}}
-            @hint={{if
-              @model.condition.valueRetention
-              (concat @model.condition.valueRetention '% value retained')
-              '—'
-            }}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Warranty'
-            @value={{monthYear @model.warranty.endsOn}}
-            @hint={{join @model.warranty.providerName @model.warranty.kind}}
-            @roll={{false}}
-          />
-        </:stats>
-        <:main>
-          {{#if @model.notes}}
-            <Section @title='Notes'><p>{{@model.notes}}</p></Section>
-          {{/if}}
-          <Section @title='Identity'>
-            <KeyValue
-              class='kv-pad'
-              @items={{this.identity}}
-              @labelStyle='eyebrow'
-              @divided={{true}}
+      <IsoFrame>
+        <Sheet>
+          <:head>
+            <Head
+              @mark='As'
+              @title={{if @model.name @model.name 'Untitled asset'}}
+              @meta={{metaLine @model}}
+            >
+              <:status><StatusDots @model={{@model}} /></:status>
+              <:actions>
+                <Button
+                  @size='s'
+                  @disabled={{if @createCard false true}}
+                  {{on 'click' this.raiseWorkOrder}}
+                >Raise work order</Button>
+                <Button
+                  @tone='neutral'
+                  @appearance='outlined'
+                  @size='s'
+                  @disabled={{if this.meter false true}}
+                  {{on 'click' this.logReading}}
+                >Log reading</Button>
+              </:actions>
+            </Head>
+          </:head>
+          <:stats>
+            <Stat
+              @label='Running hours'
+              @value={{num @model.primaryMeterValue @model.primaryMeterUnit}}
+              @hint={{if
+                this.meter.lastReadAt
+                (concat 'read ' (shortDate this.meter.lastReadAt))
+                'no reading yet'
+              }}
+              @roll={{false}}
             />
-          </Section>
-          <Section @title='Acquisition & warranty'>
-            <KeyValue
-              class='kv-pad'
-              @items={{this.acquisition}}
-              @labelStyle='eyebrow'
-              @divided={{true}}
+            <Stat
+              @label='Next due'
+              @value={{dash this.next.due}}
+              @hint={{dash this.next.plan}}
+              @roll={{false}}
             />
-          </Section>
-          <Section @title='Custody'>
-            {{#each @model.custodyLog as |c|}}
-              <Row
-                @title={{custodyTitle c}}
-                @meta={{join (shortDate c.at) c.toTeamName c.note}}
-                @state={{if c.conditionCode (concat 'grade ' c.conditionCode)}}
+            <Stat
+              @label='Condition'
+              @value={{dash @model.condition.code}}
+              @hint={{if
+                @model.condition.valueRetention
+                (concat @model.condition.valueRetention '% value retained')
+                '—'
+              }}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Warranty'
+              @value={{monthYear @model.warranty.endsOn}}
+              @hint={{join @model.warranty.providerName @model.warranty.kind}}
+              @roll={{false}}
+            />
+          </:stats>
+          <:main>
+            {{#if @model.notes}}
+              <Section @title='Notes'><p>{{@model.notes}}</p></Section>
+            {{/if}}
+            <Section @title='Identity'>
+              <KeyValue
+                class='kv-pad'
+                @items={{this.identity}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
               />
-            {{else}}
-              <Row @title='No custody events' />
-            {{/each}}
-          </Section>
-          <Section @title='Plans'>
-            {{#each this.plans as |p|}}
-              <Row
-                @title={{p.name}}
-                @meta={{p.dueLabel}}
-                @tone={{if p.active 'ok'}}
-                @state={{if p.active 'active' 'paused'}}
+            </Section>
+            <Section @title='Acquisition & warranty'>
+              <KeyValue
+                class='kv-pad'
+                @items={{this.acquisition}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
               />
-            {{else}}
-              <Row @title='No maintenance plans' />
-            {{/each}}
-          </Section>
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkedRows @model={{@model}} @fields={{@fields}} />
-          </Section>
-          <Section @title='Details'>
-            <KeyValue
-              class='kv-pad'
-              @items={{this.details}}
-              @labelStyle='eyebrow'
-              @divided={{true}}
-            />
-          </Section>
-        </:side>
-      </Sheet>
+            </Section>
+            <Section @title='Custody'>
+              {{#each @model.custodyLog as |c|}}
+                <Row
+                  @title={{custodyTitle c}}
+                  @meta={{join (shortDate c.at) c.toTeamName c.note}}
+                  @state={{if
+                    c.conditionCode
+                    (concat 'grade ' c.conditionCode)
+                  }}
+                />
+              {{else}}
+                <Row @title='No custody events' />
+              {{/each}}
+            </Section>
+            <Section @title='Plans'>
+              {{#each this.plans as |p|}}
+                <Row
+                  @title={{p.name}}
+                  @meta={{p.dueLabel}}
+                  @tone={{if p.active 'ok'}}
+                  @state={{if p.active 'active' 'paused'}}
+                />
+              {{else}}
+                <Row @title='No maintenance plans' />
+              {{/each}}
+            </Section>
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkedRows @model={{@model}} @fields={{@fields}} />
+            </Section>
+            <Section @title='Details'>
+              <KeyValue
+                class='kv-pad'
+                @items={{this.details}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              />
+            </Section>
+          </:side>
+        </Sheet>
+      </IsoFrame>
       <style scoped>
         .kv-pad {
           padding-inline: var(--boxel-sp-sm);

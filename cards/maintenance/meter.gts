@@ -46,6 +46,7 @@ import {
   shortDate,
   type KvItem,
 } from './card-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 function sorted(readings: MeterReadingField[] | null | undefined) {
   return (readings ?? [])
@@ -194,96 +195,98 @@ class MeterIsolated extends MeterView {
   };
 
   <template>
-    <Sheet>
-      <:head>
-        <Head @mark='Me' @title={{@model.name}} @meta={{metaLine @model}}>
-          <:status><MeterDots @model={{@model}} /></:status>
-          <:actions>
-            <form class='log' {{on 'submit' this.recordReading}}>
-              <Input
-                class='log-input'
-                aria-label='Reading value'
-                @value={{this.newValue}}
-                @onInput={{this.setNewValue}}
-                @placeholder={{if @model.unit @model.unit 'Value'}}
-                @type='number'
-              />
-              <Button
-                class='log-btn'
-                @size='s'
-                @disabled={{this.recordDisabled}}
-                type='submit'
-              >Log reading</Button>
-            </form>
-          </:actions>
-        </Head>
-        {{#if this.recordError}}
-          <p class='log-error' role='alert'>{{this.recordError}}</p>
-        {{/if}}
-      </:head>
-      <:stats>
-        <Stat
-          @label='Current'
-          @value={{num @model.current @model.unit}}
-          @hint={{if
-            this.last
-            (concat 'read ' (shortDate this.last.readAt))
-            'no readings yet'
-          }}
-          @roll={{false}}
-        />
-        <Stat
-          @label='Per week'
-          @value={{num @model.averagePerWeek @model.unit}}
-          @hint={{this.sinceLabel}}
-          @roll={{false}}
-        />
-        <Stat
-          @label='To service'
-          @value={{num this.toService @model.unit}}
-          @hint={{if
-            this.plan.nextDueMeter
-            (concat 'due at ' (num this.plan.nextDueMeter @model.unit))
-            'no meter plan'
-          }}
-          @roll={{false}}
-        />
-      </:stats>
-      <:main>
-        <Section @title='Readings'>
-          {{#each this.rows as |r|}}
-            <Row @title={{r.value}} @meta={{r.meta}} @state={{r.source}} />
-          {{else}}
-            <Row @title='No readings recorded yet' />
-          {{/each}}
-        </Section>
-        <Section @title='Thresholds'>
-          <KeyValue
-            class='kv-pad'
-            @items={{this.thresholds}}
-            @labelStyle='eyebrow'
-            @divided={{true}}
+    <IsoFrame>
+      <Sheet>
+        <:head>
+          <Head @mark='Me' @title={{@model.name}} @meta={{metaLine @model}}>
+            <:status><MeterDots @model={{@model}} /></:status>
+            <:actions>
+              <form class='log' {{on 'submit' this.recordReading}}>
+                <Input
+                  class='log-input'
+                  aria-label='Reading value'
+                  @value={{this.newValue}}
+                  @onInput={{this.setNewValue}}
+                  @placeholder={{if @model.unit @model.unit 'Value'}}
+                  @type='number'
+                />
+                <Button
+                  class='log-btn'
+                  @size='s'
+                  @disabled={{this.recordDisabled}}
+                  type='submit'
+                >Log reading</Button>
+              </form>
+            </:actions>
+          </Head>
+          {{#if this.recordError}}
+            <p class='log-error' role='alert'>{{this.recordError}}</p>
+          {{/if}}
+        </:head>
+        <:stats>
+          <Stat
+            @label='Current'
+            @value={{num @model.current @model.unit}}
+            @hint={{if
+              this.last
+              (concat 'read ' (shortDate this.last.readAt))
+              'no readings yet'
+            }}
+            @roll={{false}}
           />
-        </Section>
-      </:main>
-      <:side>
-        <Section @title='Linked'>
-          <MeterLinks
-            @model={{@model}}
-            @fields={{@fields}}
-            @plan={{this.plan}}
+          <Stat
+            @label='Per week'
+            @value={{num @model.averagePerWeek @model.unit}}
+            @hint={{this.sinceLabel}}
+            @roll={{false}}
           />
-        </Section>
-        <Section @title='Details'>
-          <KeyValue
-            class='kv-pad'
-            @items={{this.details}}
-            @labelStyle='eyebrow'
-            @divided={{true}}
+          <Stat
+            @label='To service'
+            @value={{num this.toService @model.unit}}
+            @hint={{if
+              this.plan.nextDueMeter
+              (concat 'due at ' (num this.plan.nextDueMeter @model.unit))
+              'no meter plan'
+            }}
+            @roll={{false}}
           />
-        </Section>
-      </:side>
-    </Sheet>
+        </:stats>
+        <:main>
+          <Section @title='Readings'>
+            {{#each this.rows as |r|}}
+              <Row @title={{r.value}} @meta={{r.meta}} @state={{r.source}} />
+            {{else}}
+              <Row @title='No readings recorded yet' />
+            {{/each}}
+          </Section>
+          <Section @title='Thresholds'>
+            <KeyValue
+              class='kv-pad'
+              @items={{this.thresholds}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+            />
+          </Section>
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <MeterLinks
+              @model={{@model}}
+              @fields={{@fields}}
+              @plan={{this.plan}}
+            />
+          </Section>
+          <Section @title='Details'>
+            <KeyValue
+              class='kv-pad'
+              @items={{this.details}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+            />
+          </Section>
+        </:side>
+      </Sheet>
+    </IsoFrame>
     <style scoped>
       .kv-pad {
         padding-inline: var(--boxel-sp-sm);

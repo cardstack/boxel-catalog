@@ -32,6 +32,7 @@ import {
   money,
   type Tone,
 } from './card-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const STOCK_TONE: Record<string, Tone> = { out: 'bad', low: 'warn', ok: 'ok' };
 const ASSET_TONE: Record<string, Tone> = {
@@ -176,82 +177,93 @@ export class SparePart extends CardDef {
       ];
     }
     <template>
-      <article class='sp'>
-        <Head @mark='Pt' @title={{@model.name}} @meta={{metaLine @model}}>
-          <StockDots @model={{@model}} />
-        </Head>
-        <Stats @items={{this.stats}} />
-        <div class='cols'>
-          <div class='col'>
-            <Section @title='Stock'>
-              <Kv>
-                <KvRow @label='On hand' @value={{n @model.onHand}} />
-                <KvRow
-                  @label='Reorder point'
-                  @value={{n @model.reorderPoint}}
-                />
-                <KvRow
-                  @label='Reorder quantity'
-                  @value={{n @model.reorderQuantity}}
-                />
-                <KvRow @label='State'><Dot
-                    @tone={{stockTone @model}}
-                    @label={{stockLabel @model}}
-                  /></KvRow>
-              </Kv>
-            </Section>
-            <Section @title='Cost'>
-              <Kv>
-                <KvRow @label='Unit cost' @value={{unitCost @model}} />
-                <KvRow @label='Stock value' @value={{stockValue @model}} />
-                <KvRow @label='Preferred vendor' @value={{@model.vendorName}} />
-              </Kv>
-            </Section>
-            <Section @title='Compatible with'>
-              {{#each @model.compatibleCategories as |c|}}
-                <Row @title={{c.name}} @meta='category' @state={{catCode c}} />
-              {{/each}}
-              {{#each @model.compatibleAssets as |a|}}
-                <Row
-                  @title={{a.name}}
-                  @meta={{a.tag}}
-                  @tone={{assetTone a}}
-                  @state={{label a.status}}
-                />
-              {{/each}}
-              {{#unless (fits @model)}}<p class='empty'>No compatibility
-                  recorded</p>{{/unless}}
-            </Section>
+      <IsoFrame>
+        <article class='sp'>
+          <Head @mark='Pt' @title={{@model.name}} @meta={{metaLine @model}}>
+            <StockDots @model={{@model}} />
+          </Head>
+          <Stats @items={{this.stats}} />
+          <div class='cols'>
+            <div class='col'>
+              <Section @title='Stock'>
+                <Kv>
+                  <KvRow @label='On hand' @value={{n @model.onHand}} />
+                  <KvRow
+                    @label='Reorder point'
+                    @value={{n @model.reorderPoint}}
+                  />
+                  <KvRow
+                    @label='Reorder quantity'
+                    @value={{n @model.reorderQuantity}}
+                  />
+                  <KvRow @label='State'><Dot
+                      @tone={{stockTone @model}}
+                      @label={{stockLabel @model}}
+                    /></KvRow>
+                </Kv>
+              </Section>
+              <Section @title='Cost'>
+                <Kv>
+                  <KvRow @label='Unit cost' @value={{unitCost @model}} />
+                  <KvRow @label='Stock value' @value={{stockValue @model}} />
+                  <KvRow
+                    @label='Preferred vendor'
+                    @value={{@model.vendorName}}
+                  />
+                </Kv>
+              </Section>
+              <Section @title='Compatible with'>
+                {{#each @model.compatibleCategories as |c|}}
+                  <Row
+                    @title={{c.name}}
+                    @meta='category'
+                    @state={{catCode c}}
+                  />
+                {{/each}}
+                {{#each @model.compatibleAssets as |a|}}
+                  <Row
+                    @title={{a.name}}
+                    @meta={{a.tag}}
+                    @tone={{assetTone a}}
+                    @state={{label a.status}}
+                  />
+                {{/each}}
+                {{#unless (fits @model)}}<p class='empty'>No compatibility
+                    recorded</p>{{/unless}}
+              </Section>
+            </div>
+            <aside class='col side'>
+              <Section @title='Linked'>
+                <Kv>
+                  <KvRow @label='Vendor'>{{#if
+                      @model.preferredVendor
+                    }}<@fields.preferredVendor
+                        @format='atom'
+                      />{{else}}—{{/if}}</KvRow>
+                  <KvRow @label='Fits'>{{#if
+                      @model.compatibleAssets.length
+                    }}<@fields.compatibleAssets
+                        @format='atom'
+                      />{{else}}—{{/if}}</KvRow>
+                  <KvRow @label='Category'>{{#if
+                      @model.compatibleCategories.length
+                    }}<@fields.compatibleCategories
+                        @format='atom'
+                      />{{else}}—{{/if}}</KvRow>
+                  {{#if @model.stock}}
+                    <KvRow @label='Stock'><@fields.stock
+                        @format='atom'
+                      /></KvRow>
+                  {{/if}}
+                </Kv>
+              </Section>
+              <Section @title='Details'>
+                <PartDetails @model={{@model}} />
+              </Section>
+            </aside>
           </div>
-          <aside class='col side'>
-            <Section @title='Linked'>
-              <Kv>
-                <KvRow @label='Vendor'>{{#if
-                    @model.preferredVendor
-                  }}<@fields.preferredVendor
-                      @format='atom'
-                    />{{else}}—{{/if}}</KvRow>
-                <KvRow @label='Fits'>{{#if
-                    @model.compatibleAssets.length
-                  }}<@fields.compatibleAssets
-                      @format='atom'
-                    />{{else}}—{{/if}}</KvRow>
-                <KvRow @label='Category'>{{#if
-                    @model.compatibleCategories.length
-                  }}<@fields.compatibleCategories
-                      @format='atom'
-                    />{{else}}—{{/if}}</KvRow>
-                {{#if @model.stock}}
-                  <KvRow @label='Stock'><@fields.stock @format='atom' /></KvRow>
-                {{/if}}
-              </Kv>
-            </Section>
-            <Section @title='Details'>
-              <PartDetails @model={{@model}} />
-            </Section>
-          </aside>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .sp {
           container-type: inline-size;

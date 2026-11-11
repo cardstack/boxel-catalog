@@ -59,6 +59,7 @@ import {
   money,
   type Tone,
 } from './card-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const STATUS_TONE: Record<string, Tone> = {
   requested: 'muted',
@@ -271,143 +272,148 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
   }
 
   <template>
-    <article class='wo'>
-      <Head @mark='WO' @title={{@model.title}} @meta={{metaLine @model}}>
-        <StatusDots @model={{@model}} />
-        {{#if this.inProgress}}
-          <Button
-            @tone='primary'
-            @appearance='accent'
-            @size='s'
-            {{on 'click' this.complete}}
-          >Complete</Button>
-          <Button
-            @tone='neutral'
-            @appearance='outlined'
-            @size='s'
-            {{on 'click' this.hold}}
-          >Put on hold</Button>
-        {{else if this.canStart}}
-          <Button
-            @tone='primary'
-            @appearance='accent'
-            @size='s'
-            {{on 'click' this.start}}
-          >{{if (isHeld @model.status) 'Resume' 'Start'}}</Button>
-        {{/if}}
-      </Head>
-      {{#if this.error}}<p class='err' role='alert'>{{this.error}}</p>{{/if}}
-
-      <Stats @items={{this.stats}} />
-
-      <div class='cols'>
-        <div class='col'>
-          {{#if @model.description}}
-            <Section @title='Description'><div
-                class='prose'
-              ><@fields.description /></div></Section>
+    <IsoFrame>
+      <article class='wo'>
+        <Head @mark='WO' @title={{@model.title}} @meta={{metaLine @model}}>
+          <StatusDots @model={{@model}} />
+          {{#if this.inProgress}}
+            <Button
+              @tone='primary'
+              @appearance='accent'
+              @size='s'
+              {{on 'click' this.complete}}
+            >Complete</Button>
+            <Button
+              @tone='neutral'
+              @appearance='outlined'
+              @size='s'
+              {{on 'click' this.hold}}
+            >Put on hold</Button>
+          {{else if this.canStart}}
+            <Button
+              @tone='primary'
+              @appearance='accent'
+              @size='s'
+              {{on 'click' this.start}}
+            >{{if (isHeld @model.status) 'Resume' 'Start'}}</Button>
           {{/if}}
-          {{#if @model.failure.symptom}}
-            <Section @title='Failure'>
+        </Head>
+        {{#if this.error}}<p class='err' role='alert'>{{this.error}}</p>{{/if}}
+
+        <Stats @items={{this.stats}} />
+
+        <div class='cols'>
+          <div class='col'>
+            {{#if @model.description}}
+              <Section @title='Description'><div
+                  class='prose'
+                ><@fields.description /></div></Section>
+            {{/if}}
+            {{#if @model.failure.symptom}}
+              <Section @title='Failure'>
+                <Kv>
+                  <KvRow @label='Symptom' @value={{@model.failure.symptom}} />
+                  <KvRow @label='Cause' @value={{@model.failure.cause}} />
+                  <KvRow @label='Code' @value={{cap @model.failure.codeText}} />
+                  <KvRow
+                    @label='Detected'
+                    @value={{fmtStamp @model.failure.detectedAt}}
+                  />
+                  <KvRow
+                    @label='Asset down'
+                    @value={{if @model.failure.assetDown 'Yes' 'No'}}
+                  />
+                </Kv>
+              </Section>
+            {{/if}}
+            {{#if @model.checklist.items.length}}
+              <Section @title='Checklist'>
+                {{#each @model.checklist.items as |i|}}
+                  <Row
+                    @title={{i.label}}
+                    @meta={{itemSub i}}
+                    @tone={{itemTone i}}
+                    @state={{if i.result i.result 'pending'}}
+                  />
+                {{/each}}
+              </Section>
+            {{/if}}
+            <Section @title='Labor & parts'>
               <Kv>
-                <KvRow @label='Symptom' @value={{@model.failure.symptom}} />
-                <KvRow @label='Cause' @value={{@model.failure.cause}} />
-                <KvRow @label='Code' @value={{cap @model.failure.codeText}} />
-                <KvRow
-                  @label='Detected'
-                  @value={{fmtStamp @model.failure.detectedAt}}
-                />
-                <KvRow
-                  @label='Asset down'
-                  @value={{if @model.failure.assetDown 'Yes' 'No'}}
-                />
+                {{#each @model.labour as |l|}}
+                  <KvRow @label={{l.workerName}} @value={{labourLine l}} />
+                {{/each}}
+                {{#each @model.parts as |p|}}
+                  <KvRow @label={{partLabel p}} @value={{partLine p}} />
+                {{/each}}
+              </Kv>
+              {{#unless (hasWork @model)}}<p class='empty'>No labor or parts
+                  logged yet</p>{{/unless}}
+            </Section>
+          </div>
+
+          <aside class='col side'>
+            <Section @title='Linked'>
+              <Kv>
+                <KvRow @label='Asset'>{{#if
+                    @model.subjectAsset
+                  }}<@fields.subjectAsset
+                      @format='atom'
+                    />{{else}}—{{/if}}</KvRow>
+                {{#if @model.subjectLocation}}
+                  <KvRow @label='Location'><@fields.subjectLocation
+                      @format='atom'
+                    /></KvRow>
+                {{/if}}
+                <KvRow @label='Owner'>{{#if @model.ownership.ownerName}}<Chip
+                      @mark={{initials @model.ownership.ownerName}}
+                      @name={{@model.ownership.ownerName}}
+                    />{{else}}—{{/if}}</KvRow>
+                {{#each @model.parts as |p|}}
+                  <KvRow @label='Part'><Chip
+                      @mark='Pt'
+                      @name={{p.partName}}
+                    /></KvRow>
+                {{/each}}
+                {{#if @model.plan}}
+                  <KvRow @label='Plan'><@fields.plan @format='atom' /></KvRow>
+                {{/if}}
               </Kv>
             </Section>
-          {{/if}}
-          {{#if @model.checklist.items.length}}
-            <Section @title='Checklist'>
-              {{#each @model.checklist.items as |i|}}
-                <Row
-                  @title={{i.label}}
-                  @meta={{itemSub i}}
-                  @tone={{itemTone i}}
-                  @state={{if i.result i.result 'pending'}}
+            <Section @title='Details'>
+              <Kv>
+                <KvRow @label='Requested' @value={{requestedLine @model}} />
+                <KvRow
+                  @label='Started'
+                  @value={{fmtDay @model.startedAt true}}
                 />
-              {{/each}}
+                {{#if @model.completedAt}}
+                  <KvRow
+                    @label='Completed'
+                    @value={{fmtDay @model.completedAt true}}
+                  />
+                {{/if}}
+                <KvRow @label='Checklist' @value={{checklistDone @model}} />
+                <KvRow
+                  @label='Parts'
+                  @value={{money @model.partsCost (currency @model)}}
+                />
+                <KvRow @label='Labor rate' @value={{labourRate @model}} />
+                <KvRow @label='Failure' @value={{@model.failure.codeText}} />
+                <KvRow @label='Team' @value={{@model.ownership.teamName}} />
+                <KvRow @label='Downtime' @value={{downtimeKind @model}} />
+                {{#if @model.holdReason}}
+                  <KvRow
+                    @label='Hold reason'
+                    @value={{woStatusLabel @model.holdReason}}
+                  />
+                {{/if}}
+              </Kv>
             </Section>
-          {{/if}}
-          <Section @title='Labor & parts'>
-            <Kv>
-              {{#each @model.labour as |l|}}
-                <KvRow @label={{l.workerName}} @value={{labourLine l}} />
-              {{/each}}
-              {{#each @model.parts as |p|}}
-                <KvRow @label={{partLabel p}} @value={{partLine p}} />
-              {{/each}}
-            </Kv>
-            {{#unless (hasWork @model)}}<p class='empty'>No labor or parts
-                logged yet</p>{{/unless}}
-          </Section>
+          </aside>
         </div>
-
-        <aside class='col side'>
-          <Section @title='Linked'>
-            <Kv>
-              <KvRow @label='Asset'>{{#if
-                  @model.subjectAsset
-                }}<@fields.subjectAsset
-                    @format='atom'
-                  />{{else}}—{{/if}}</KvRow>
-              {{#if @model.subjectLocation}}
-                <KvRow @label='Location'><@fields.subjectLocation
-                    @format='atom'
-                  /></KvRow>
-              {{/if}}
-              <KvRow @label='Owner'>{{#if @model.ownership.ownerName}}<Chip
-                    @mark={{initials @model.ownership.ownerName}}
-                    @name={{@model.ownership.ownerName}}
-                  />{{else}}—{{/if}}</KvRow>
-              {{#each @model.parts as |p|}}
-                <KvRow @label='Part'><Chip
-                    @mark='Pt'
-                    @name={{p.partName}}
-                  /></KvRow>
-              {{/each}}
-              {{#if @model.plan}}
-                <KvRow @label='Plan'><@fields.plan @format='atom' /></KvRow>
-              {{/if}}
-            </Kv>
-          </Section>
-          <Section @title='Details'>
-            <Kv>
-              <KvRow @label='Requested' @value={{requestedLine @model}} />
-              <KvRow @label='Started' @value={{fmtDay @model.startedAt true}} />
-              {{#if @model.completedAt}}
-                <KvRow
-                  @label='Completed'
-                  @value={{fmtDay @model.completedAt true}}
-                />
-              {{/if}}
-              <KvRow @label='Checklist' @value={{checklistDone @model}} />
-              <KvRow
-                @label='Parts'
-                @value={{money @model.partsCost (currency @model)}}
-              />
-              <KvRow @label='Labor rate' @value={{labourRate @model}} />
-              <KvRow @label='Failure' @value={{@model.failure.codeText}} />
-              <KvRow @label='Team' @value={{@model.ownership.teamName}} />
-              <KvRow @label='Downtime' @value={{downtimeKind @model}} />
-              {{#if @model.holdReason}}
-                <KvRow
-                  @label='Hold reason'
-                  @value={{woStatusLabel @model.holdReason}}
-                />
-              {{/if}}
-            </Kv>
-          </Section>
-        </aside>
-      </div>
-    </article>
+      </article>
+    </IsoFrame>
     <style scoped>
       .wo {
         container-type: inline-size;

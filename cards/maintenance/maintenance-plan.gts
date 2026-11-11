@@ -47,6 +47,7 @@ import {
   Stats,
   fmtDay,
 } from './card-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * Plain-data view of a plan's trigger, for `nextOccurrence`. Shared with the
@@ -306,76 +307,80 @@ export class MaintenancePlan extends CardDef {
       ];
     }
     <template>
-      <article class='mp'>
-        <Head @mark='Pl' @title={{@model.name}} @meta={{subjectLine @model}}>
-          <PlanDots @model={{@model}} />
-        </Head>
-        <Stats @items={{this.stats}} />
-        <div class='cols'>
-          <div class='col'>
-            <Section @title='Trigger'>
-              <Kv>
-                <KvRow @label='Calendar' @value={{calendarLine @model}} />
-                <KvRow @label='Meter' @value={{meterLine @model}} />
-                <KvRow @label='Rule' @value={{ruleLine @model}} />
-                <KvRow
-                  @label='Raise ahead'
-                  @value={{days @model.trigger.leadDays}}
-                />
-                <KvRow
-                  @label='Compliance window'
-                  @value={{days @model.complianceWindowDays}}
-                />
-              </Kv>
-            </Section>
-            <Section @title='Checklist'>
-              {{#each @model.checklist.items as |i|}}
-                <Row
-                  @title={{i.label}}
-                  @meta={{itemSub i}}
-                  @tone={{if i.required 'info' 'muted'}}
-                  @state={{if i.required 'required' 'optional'}}
-                />
-              {{else}}
-                <p class='empty'>No steps yet</p>
-              {{/each}}
-            </Section>
-            <Section @title='History'>
-              {{#each this.history as |w|}}
-                <Row
-                  @title={{w.cardTitle}}
-                  @meta={{historySub w}}
-                  @tone={{woTone w.status}}
-                  @state={{woLabel w.status}}
-                />
-              {{else}}
-                <p class='empty'>Not done yet</p>
-              {{/each}}
-            </Section>
-          </div>
-          <aside class='col side'>
-            <Section @title='Linked'>
-              <Kv>
-                {{#if @model.asset}}
-                  <KvRow @label='Asset'><@fields.asset @format='atom' /></KvRow>
+      <IsoFrame>
+        <article class='mp'>
+          <Head @mark='Pl' @title={{@model.name}} @meta={{subjectLine @model}}>
+            <PlanDots @model={{@model}} />
+          </Head>
+          <Stats @items={{this.stats}} />
+          <div class='cols'>
+            <div class='col'>
+              <Section @title='Trigger'>
+                <Kv>
+                  <KvRow @label='Calendar' @value={{calendarLine @model}} />
+                  <KvRow @label='Meter' @value={{meterLine @model}} />
+                  <KvRow @label='Rule' @value={{ruleLine @model}} />
+                  <KvRow
+                    @label='Raise ahead'
+                    @value={{days @model.trigger.leadDays}}
+                  />
+                  <KvRow
+                    @label='Compliance window'
+                    @value={{days @model.complianceWindowDays}}
+                  />
+                </Kv>
+              </Section>
+              <Section @title='Checklist'>
+                {{#each @model.checklist.items as |i|}}
+                  <Row
+                    @title={{i.label}}
+                    @meta={{itemSub i}}
+                    @tone={{if i.required 'info' 'muted'}}
+                    @state={{if i.required 'required' 'optional'}}
+                  />
                 {{else}}
-                  <KvRow @label='Category'>{{#if
-                      @model.category
-                    }}<@fields.category
+                  <p class='empty'>No steps yet</p>
+                {{/each}}
+              </Section>
+              <Section @title='History'>
+                {{#each this.history as |w|}}
+                  <Row
+                    @title={{w.cardTitle}}
+                    @meta={{historySub w}}
+                    @tone={{woTone w.status}}
+                    @state={{woLabel w.status}}
+                  />
+                {{else}}
+                  <p class='empty'>Not done yet</p>
+                {{/each}}
+              </Section>
+            </div>
+            <aside class='col side'>
+              <Section @title='Linked'>
+                <Kv>
+                  {{#if @model.asset}}
+                    <KvRow @label='Asset'><@fields.asset
                         @format='atom'
+                      /></KvRow>
+                  {{else}}
+                    <KvRow @label='Category'>{{#if
+                        @model.category
+                      }}<@fields.category
+                          @format='atom'
+                        />{{else}}—{{/if}}</KvRow>
+                  {{/if}}
+                  <KvRow @label='Next work'>{{#if this.nextWork}}<WoChip
+                        @wo={{this.nextWork}}
                       />{{else}}—{{/if}}</KvRow>
-                {{/if}}
-                <KvRow @label='Next work'>{{#if this.nextWork}}<WoChip
-                      @wo={{this.nextWork}}
-                    />{{else}}—{{/if}}</KvRow>
-              </Kv>
-            </Section>
-            <Section @title='Details'>
-              <PlanDetails @model={{@model}} />
-            </Section>
-          </aside>
-        </div>
-      </article>
+                </Kv>
+              </Section>
+              <Section @title='Details'>
+                <PlanDetails @model={{@model}} />
+              </Section>
+            </aside>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .mp {
           container-type: inline-size;

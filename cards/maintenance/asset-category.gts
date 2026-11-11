@@ -42,6 +42,7 @@ import {
   hueTone,
   type KvItem,
 } from './card-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /** Icon names a category may pick; anything else falls back to boxes. */
 export const CATEGORY_ICONS: Record<string, unknown> = {
@@ -226,85 +227,87 @@ export class AssetCategory extends CardDef {
     }
 
     <template>
-      <Sheet>
-        <:head>
-          <Head
-            @mark='Ca'
-            @title={{@model.cardTitle}}
-            @meta={{metaLine @model}}
-          >
-            <:status><CategoryDots @model={{@model}} /></:status>
-          </Head>
-        </:head>
-        <:stats>
-          <Stat
-            @label='Assets'
-            @value={{this.assets.length}}
-            @hint='{{this.inService}} in service'
-            @roll={{false}}
-          />
-          <Stat
-            @label='Expected life'
-            @value={{lifeYears @model.expectedLifeMonths}}
-            @hint={{if
-              @model.expectedLifeMonths
-              (concat @model.expectedLifeMonths ' months')
-              '—'
-            }}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Criticality'
-            @value={{capital this.level}}
-            @hint='default for new assets'
-            @roll={{false}}
-          />
-        </:stats>
-        <:main>
-          {{#if @model.description}}
-            <Section @title='Description'><p
-              >{{@model.description}}</p></Section>
-          {{/if}}
-          <Section @title='Defaults'>
-            <KeyValue
-              @items={{this.defaults}}
-              @labelStyle='eyebrow'
-              @divided={{true}}
+      <IsoFrame>
+        <Sheet>
+          <:head>
+            <Head
+              @mark='Ca'
+              @title={{@model.cardTitle}}
+              @meta={{metaLine @model}}
             >
-              <:value as |item|>
-                {{#if item.value}}{{item.value}}{{else if this.level}}<Dot
-                    @tone={{criticalityTone this.level}}
-                    @label={{this.level}}
-                  />{{else}}—{{/if}}
-              </:value>
-            </KeyValue>
-          </Section>
-          <Section @title='Assets'>
-            {{#each this.assets as |a|}}
-              <Row
-                @title={{a.name}}
-                @meta={{join a.tag (shortPlace a.location.name)}}
-                @tone={{hueTone a.statusHue}}
-                @state={{enumText a.status}}
-              />
-            {{else}}
-              <Row @title='No assets in this category yet' />
-            {{/each}}
-          </Section>
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <AssetAtoms @assets={{this.assets}} />
-          </Section>
-          <Section @title='Details'>
-            <KeyValue
-              @items={{this.details}}
-              @labelStyle='eyebrow'
-              @divided={{true}}
+              <:status><CategoryDots @model={{@model}} /></:status>
+            </Head>
+          </:head>
+          <:stats>
+            <Stat
+              @label='Assets'
+              @value={{this.assets.length}}
+              @hint='{{this.inService}} in service'
+              @roll={{false}}
             />
-          </Section>
-        </:side>
-      </Sheet>
+            <Stat
+              @label='Expected life'
+              @value={{lifeYears @model.expectedLifeMonths}}
+              @hint={{if
+                @model.expectedLifeMonths
+                (concat @model.expectedLifeMonths ' months')
+                '—'
+              }}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Criticality'
+              @value={{capital this.level}}
+              @hint='default for new assets'
+              @roll={{false}}
+            />
+          </:stats>
+          <:main>
+            {{#if @model.description}}
+              <Section @title='Description'><p
+                >{{@model.description}}</p></Section>
+            {{/if}}
+            <Section @title='Defaults'>
+              <KeyValue
+                @items={{this.defaults}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              >
+                <:value as |item|>
+                  {{#if item.value}}{{item.value}}{{else if this.level}}<Dot
+                      @tone={{criticalityTone this.level}}
+                      @label={{this.level}}
+                    />{{else}}—{{/if}}
+                </:value>
+              </KeyValue>
+            </Section>
+            <Section @title='Assets'>
+              {{#each this.assets as |a|}}
+                <Row
+                  @title={{a.name}}
+                  @meta={{join a.tag (shortPlace a.location.name)}}
+                  @tone={{hueTone a.statusHue}}
+                  @state={{enumText a.status}}
+                />
+              {{else}}
+                <Row @title='No assets in this category yet' />
+              {{/each}}
+            </Section>
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <AssetAtoms @assets={{this.assets}} />
+            </Section>
+            <Section @title='Details'>
+              <KeyValue
+                @items={{this.details}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              />
+            </Section>
+          </:side>
+        </Sheet>
+      </IsoFrame>
     </template>
   };
 }
