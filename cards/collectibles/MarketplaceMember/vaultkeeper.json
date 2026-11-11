@@ -1,6 +1,13 @@
 {
   "data": {
     "type": "card",
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "attributes": {
       "name": "Mika Tan",
       "email": "mika.tan@example.com",
@@ -21,13 +28,6 @@
       "adoptsFrom": {
         "module": "../marketplace-member",
         "name": "MarketplaceMember"
-      }
-    },
-    "relationships": {
-      "cardInfo.theme": {
-        "links": {
-          "self": "../../Theme/site-tools"
-        }
       }
     }
   }

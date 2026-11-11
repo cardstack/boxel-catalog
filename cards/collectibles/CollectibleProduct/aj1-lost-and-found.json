@@ -11,7 +11,7 @@
           "code": "USD"
         }
       },
-      "productDescription": "The Air Jordan 1 \"Lost & Found\" reimagines the 1985 Chicago colorway as though a deadstock pair had been found in a forgotten stockroom — cracked leather, aged midsoles, and a shoebox printed to look water-damaged and taped shut.",
+      "productDescription": "The Air Jordan 1 \"Lost & Found\" reimagines the 1985 Chicago colorway as though a deadstock pair had been found in a forgotten stockroom \u2014 cracked leather, aged midsoles, and a shoebox printed to look water-damaged and taped shut.",
       "availableVariants": [
         "7",
         "7.5",
@@ -26,11 +26,7 @@
         "12",
         "13"
       ],
-      "tags": [
-        "retro",
-        "chicago",
-        "vintage"
-      ],
+      "tags": ["retro", "chicago", "vintage"],
       "images": {
         "images": [
           {
@@ -51,6 +47,11 @@
       }
     },
     "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      },
       "silhouette": {
         "links": {
           "self": null
@@ -59,11 +60,6 @@
       "brand": {
         "links": {
           "self": null
-        }
-      },
-      "cardInfo.theme": {
-        "links": {
-          "self": "../../Theme/site-tools"
         }
       }
     },

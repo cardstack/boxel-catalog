@@ -18,13 +18,18 @@
         ]
       },
       "cardInfo": {
-        "name": "Check Check — AJ1 Lost & Found US 10.5",
+        "name": "Check Check \u2014 AJ1 Lost & Found US 10.5",
         "summary": "A passed legit check, with the certificate reference the collection item denormalizes.",
         "notes": null,
         "cardThumbnailURL": null
       }
     },
     "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      },
       "item": {
         "links": {
           "self": "../CollectionItem/aj1-lost-and-found-105"
@@ -33,11 +38,6 @@
       "order": {
         "links": {
           "self": null
-        }
-      },
-      "cardInfo.theme": {
-        "links": {
-          "self": "../../Theme/site-tools"
         }
       }
     },

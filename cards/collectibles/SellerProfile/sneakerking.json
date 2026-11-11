@@ -1,6 +1,13 @@
 {
   "data": {
     "type": "card",
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "attributes": {
       "name": "Marcus Idowu",
       "email": "marcus@solevault.example",
@@ -21,13 +28,6 @@
       "adoptsFrom": {
         "module": "../seller-profile",
         "name": "SellerProfile"
-      }
-    },
-    "relationships": {
-      "cardInfo.theme": {
-        "links": {
-          "self": "../../Theme/site-tools"
-        }
       }
     }
   }
