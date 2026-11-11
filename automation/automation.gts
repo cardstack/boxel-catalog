@@ -1085,6 +1085,12 @@ export class AutomationTrigger extends FieldDef {
 }
 
 // An outside service as it reads: its call, and the card type it is on.
+// `openIssues` reads as "Open issues".
+function operationTitle(name: string | null | undefined): string {
+  let words = (name ?? '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 class OperationView extends Component<typeof AutomationOperation> {
   // Both halves are set by Add an outside service; a row missing either
   // came from somewhere else and can't be called.
@@ -1093,11 +1099,8 @@ class OperationView extends Component<typeof AutomationOperation> {
       this.args.model.operation && this.args.model.targetType?.name,
     );
   }
-  // `openIssues` reads as "Open issues".
   get title() {
-    let name = this.args.model.operation ?? '';
-    let words = name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase();
-    return words.charAt(0).toUpperCase() + words.slice(1);
+    return operationTitle(this.args.model.operation);
   }
   <template>
     <Item @size='s' @wrap={{true}}>
@@ -1475,15 +1478,26 @@ function scriptText(
     tools: Tools | undefined;
   },
 ) {
+  // The resource runs again whenever an argument it reads changes, such as
+  // the card context after a save. The state lives across those runs while
+  // the script is the same file, so a run never blanks text already read,
+  // which would empty the editor and make it read-only until the read ends.
+  let kept: { url: string | undefined; state: ScriptState } | undefined;
   return use(
     owner,
     resource(({ on }) => {
-      let state = new TrackedObject<ScriptState>({
-        text: undefined,
-        failure: undefined,
-        loading: false,
-      });
       let { url, realm, realmId, tools } = args();
+      if (!kept || kept.url !== url) {
+        kept = {
+          url,
+          state: new TrackedObject<ScriptState>({
+            text: undefined,
+            failure: undefined,
+            loading: false,
+          }),
+        };
+      }
+      let state = kept.state;
       if (!url || !tools) {
         return state;
       }
@@ -1491,6 +1505,12 @@ function scriptText(
       let latest = 0;
       let read = async () => {
         let asked = ++latest;
+        // Not while the resource runs: the page may have read `loading`
+        // already in this render.
+        await Promise.resolve();
+        if (ended || asked !== latest) {
+          return;
+        }
         state.loading = true;
         try {
           let file = await new ReadSourceTool(tools).execute({ path: url });
@@ -1568,11 +1588,22 @@ class ScriptView extends GlimmerComponent<{
   get state() {
     return this.script.current;
   }
+  get empty() {
+    return this.state.text === '';
+  }
   <template>
     {{#if this.state.failure}}
       <Callout @tone='warning' @title='The script can’t be shown'>
         {{this.state.failure}}
       </Callout>
+    {{else if this.empty}}
+      <EmptyState
+        @size='s'
+        @texture={{false}}
+        @title='This script is empty'
+        @message='Write the script in the edit view.'
+        data-test-automation-script-empty
+      />
     {{else if this.state.text}}
       <CodeView
         @code={{this.state.text}}
@@ -1608,18 +1639,26 @@ class ScriptEditor extends GlimmerComponent<{
   get state() {
     return this.script.current;
   }
+  // The file has been read. Until then, or after a read that failed, the
+  // editor is read-only and Save is off, so typing can't replace a script
+  // nobody has seen.
+  get loaded() {
+    return this.state.text !== undefined;
+  }
   get text() {
     return this.draft ?? this.state.text ?? '';
   }
   get dirty() {
-    return this.draft !== undefined && this.draft !== this.state.text;
+    return (
+      this.loaded && this.draft !== undefined && this.draft !== this.state.text
+    );
   }
   setDraft = (code: string) => {
     this.draft = code;
   };
   save = async () => {
     let tools = toolsOf(this.args.context);
-    if (!this.args.url || !tools || !this.dirty) {
+    if (!this.args.url || !tools || !this.loaded || !this.dirty) {
       return;
     }
     this.saving = true;
@@ -1650,10 +1689,24 @@ class ScriptEditor extends GlimmerComponent<{
   <template>
     {{#if @url}}
       <div class='script-editor'>
+        {{#if this.state.failure}}
+          <Callout
+            @tone='warning'
+            @title='The script can’t be shown'
+            data-test-automation-script-read-failure
+          >
+            {{this.state.failure}}
+          </Callout>
+        {{else if this.state.loading}}
+          {{#unless this.loaded}}
+            <LoadingState @label='Loading the script' />
+          {{/unless}}
+        {{/if}}
         <CodeEdit
           @code={{this.text}}
           @language='javascript'
           @label={{fileName @url}}
+          @readOnly={{if this.loaded false true}}
           @onInput={{this.setDraft}}
           data-test-automation-script-editor
         />
@@ -2151,7 +2204,9 @@ class AddOutsideService extends GlimmerComponent<{
   choose = async () => {
     this.failure = undefined;
     // The dialog is modal, so the card chooser can't be used while it's
-    // open. It reopens once a card is picked.
+    // open. It reopens once a card is picked, or when the chooser is
+    // cancelled from Choose another card.
+    let wasOpen = this.open;
     this.open = false;
     let id = await chooseCard(
       { filter: { type: baseCardRef } },
@@ -2163,6 +2218,7 @@ class AddOutsideService extends GlimmerComponent<{
         : undefined,
     );
     if (!id) {
+      this.open = wasOpen;
       return;
     }
     let card = await this.args.context?.store.get(id);
@@ -2360,6 +2416,25 @@ class Edit extends Component<typeof Automation> {
       new AutomationTrigger(),
     ];
   };
+  // Each row's controls are named for their row, so a screen reader's list
+  // of buttons says which trigger, service or param each one removes. A row
+  // with no name yet goes by its position.
+  removeTriggerLabel = (index: number) => {
+    let label = this.args.model.triggers?.[index]?.label?.trim();
+    return `Remove this trigger, ${label || `trigger ${index + 1}`}`;
+  };
+  removeServiceLabel = (index: number) => {
+    let operation = this.args.model.operations?.[index]?.operation;
+    return operation
+      ? `Remove the outside service ${operationTitle(operation)}`
+      : `Remove outside service ${index + 1}`;
+  };
+  removeParamLabel = (index: number) => {
+    let name = this.args.model.params?.[index]?.name?.trim();
+    return name ? `Remove the param ${name}` : `Remove param ${index + 1}`;
+  };
+  paramInputLabel = (index: number, part: 'Name' | 'Value') =>
+    `${part} of param ${index + 1}`;
   removeTrigger = (index: number) => {
     this.args.model.triggers = (this.args.model.triggers ?? []).filter(
       (_, i) => i !== index,
@@ -2468,6 +2543,7 @@ class Edit extends Component<typeof Automation> {
               @appearance='plain'
               @size='s'
               class='automation-edit__remove'
+              aria-label={{this.removeTriggerLabel index}}
               {{on 'click' (fn this.removeTrigger index)}}
               data-test-automation-remove-trigger={{index}}
             >Remove this trigger</Button>
@@ -2561,7 +2637,7 @@ class Edit extends Component<typeof Automation> {
               <div class='automation-edit__operation'>
                 <Operation @format='embedded' />
                 <IconButton
-                  @label='Remove this outside service'
+                  @label={{this.removeServiceLabel index}}
                   @icon={{TrashIcon}}
                   @tone='neutral'
                   @appearance='plain'
@@ -2602,16 +2678,16 @@ class Edit extends Component<typeof Automation> {
               >
                 <Input
                   @value={{param.name}}
-                  aria-label='Param name'
+                  aria-label={{this.paramInputLabel index 'Name'}}
                   @onInput={{fn this.setParam index 'name'}}
                 />
                 <Input
                   @value={{param.value}}
-                  aria-label='Param value'
+                  aria-label={{this.paramInputLabel index 'Value'}}
                   @onInput={{fn this.setParam index 'value'}}
                 />
                 <IconButton
-                  @label='Remove this param'
+                  @label={{this.removeParamLabel index}}
                   @icon={{TrashIcon}}
                   @tone='neutral'
                   @appearance='plain'
