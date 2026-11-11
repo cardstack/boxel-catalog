@@ -16,16 +16,24 @@ import {
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
-import { PayrollRun, AmountLine } from '../../../cards/accounting/ledger-cash';
+import {
+  PayrollRun,
+  AmountLine,
+  BankPayment,
+} from '../../../cards/accounting/ledger-cash';
 import { Ledger } from '../../../cards/accounting/ledger-cards';
-import { payrollPostGuard } from '../../../cards/accounting-desk/payroll-page';
+import {
+  payrollPostGuard,
+  payrollPostSteps,
+  payrollUnwindSteps,
+  payrollTie,
+} from '../../../cards/accounting-desk/payroll-page';
 import {
   Paycheck,
   PaycheckDeduction,
   PaySetup,
 } from '../../../cards/accounting/ledger-payroll';
 import { Employee } from '../../../cards/hr/employee';
-import { payrollUnwindSteps } from '../../../cards/accounting-desk/payroll-page';
 import {
   journalPostingFor,
   journalPostings,
@@ -1308,6 +1316,30 @@ export function runTests() {
       assert.strictEqual(f.dueMinor, 4200, '0.6% of $7,000');
     });
 
+    test('a journal entry or opening balance on a payroll liability account leaves the tie alone', function (assert) {
+      let month = quarterMonth();
+      month.postings.push({
+        seq: 9,
+        kind: 'journal',
+        date: '2026-02-01',
+        source: 'JE-1',
+        lines: [
+          { account: '2310', debitMinor: 0, creditMinor: 5000 },
+          { account: '3900', debitMinor: 5000, creditMinor: 0 },
+        ],
+        facts: [],
+        items: [],
+      } as any);
+      let tie = payrollTie([month]);
+      assert.true(tie.ok, tie.caption);
+      let all = journalPostings([month]);
+      assert.notStrictEqual(
+        liabilityBalance(all).get('irs-941'),
+        agencyOwed(all).get('irs-941'),
+        'the entry does move the account itself',
+      );
+    });
+
     test('what the agencies are owed ties to the liability accounts, and a payment clears its share', function (assert) {
       let posts = journalPostings([quarterMonth()]);
       let owed = agencyOwed(posts);
@@ -1547,6 +1579,48 @@ export function runTests() {
           ],
           ['irs-941', '941', '2026-04-01', '2026-06-30', 'open'],
         );
+      });
+
+      test('posting a payroll tax payment marks the filing it pays, and posting a run checks the period locks', async function (assert) {
+        let agency = async () =>
+          operations(await card('PayrollAgency/irs-941')) as any;
+        let payment = new BankPayment({
+          docNo: 'PTX-5',
+          date: '2026-04-10',
+          kind: PAYROLL_TAX_KIND,
+          bank: '1000',
+          account: '2310',
+          payee: 'irs-941',
+          period: '2026-01-01 to 2026-03-31',
+          amountMinor: 100000,
+        } as any);
+        let steps = payrollPostSteps(payment);
+        assert.strictEqual(steps.length, 1);
+        await (await agency()).atomic((b: any) => steps.map((step) => step(b)));
+        let paid = await stored('PayrollFiling/filed');
+        assert.strictEqual(paid.paidMinor, 100000);
+        assert.deepEqual(paid.payments, ['PTX-5']);
+
+        let run = runCard();
+        assert.strictEqual(payrollPostSteps(run).length, 1, 'one lock step');
+        await (
+          await agency()
+        ).markFiled({
+          periodStart: '2026-01-01',
+          periodEnd: '2026-03-31',
+        });
+        await assert.rejects(
+          (await agency()).atomic((b: any) =>
+            payrollPostSteps(run).map((step) => step(b)),
+          ),
+          refusedWith('Payroll for that date has been filed with this agency'),
+          'a run dated in the filed quarter',
+        );
+        run.date = '2026-04-03';
+        await (
+          await agency()
+        ).atomic((b: any) => payrollPostSteps(run).map((step) => step(b)));
+        assert.ok(true, 'a run after it passes the lock');
       });
 
       test("reversing a run dated in a filed period is refused, and a payment's reversal comes off its filing", async function (assert) {
