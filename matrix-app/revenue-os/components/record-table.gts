@@ -137,7 +137,7 @@ export class RecordTable extends Component<Signature> {
     </div>
     <style scoped>
       .rt {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         --pretui-table-head-height: 1.5rem;
         --rt-gap: 0.625rem;
       }
@@ -171,13 +171,13 @@ export class RecordTable extends Component<Signature> {
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .meta,
       .muted {
         color: var(--muted-foreground);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       .meta {
         margin-inline-start: var(--rt-gap);

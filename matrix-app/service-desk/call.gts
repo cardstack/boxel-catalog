@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -25,12 +26,14 @@ import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import enumField from '@cardstack/base/enum';
 
-export const CallDirectionField = enumField(StringField, {
-  options: [
-    { value: 'inbound', label: 'Inbound' },
-    { value: 'outbound', label: 'Outbound' },
-  ],
-});
+export const CallDirectionField = markDefinition(
+  enumField(StringField, {
+    options: [
+      { value: 'inbound', label: 'Inbound' },
+      { value: 'outbound', label: 'Outbound' },
+    ],
+  }),
+);
 
 /**
  * How the call ended. `connected` is one of six, and that is the point: a
@@ -38,16 +41,18 @@ export const CallDirectionField = enumField(StringField, {
  * the connected ones loses the attempt history that tells you someone has
  * been unreachable for two weeks.
  */
-export const CallOutcomeField = enumField(StringField, {
-  options: [
-    { value: 'connected', label: 'Connected' },
-    { value: 'no-answer', label: 'No answer' },
-    { value: 'voicemail', label: 'Left voicemail' },
-    { value: 'busy', label: 'Busy' },
-    { value: 'wrong-number', label: 'Wrong number' },
-    { value: 'failed', label: 'Failed to connect' },
-  ],
-});
+export const CallOutcomeField = markDefinition(
+  enumField(StringField, {
+    options: [
+      { value: 'connected', label: 'Connected' },
+      { value: 'no-answer', label: 'No answer' },
+      { value: 'voicemail', label: 'Left voicemail' },
+      { value: 'busy', label: 'Busy' },
+      { value: 'wrong-number', label: 'Wrong number' },
+      { value: 'failed', label: 'Failed to connect' },
+    ],
+  }),
+);
 
 /**
  * One phone call, connected or not.
@@ -278,13 +283,12 @@ export class Call extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           box-sizing: border-box;
-          background: var(--canvas);
+          background: var(--background);
           color: var(--foreground);
           font-family: var(--font-sans);
 
           /* One panel primitive. Tint may differ per block; padding and
              radius may not — that is what keeps blocks registered. */
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
           --panel-radius: var(--radius);
           /* The family's status hue, set once and diluted at each use. */
@@ -313,7 +317,7 @@ export class Call extends CardDef {
         .rail {
           flex: none;
           width: 0.25rem;
-          border-radius: 2px;
+          border-radius: var(--boxel-border-radius-2xs);
           background: var(--tone);
         }
         .hero-body {
@@ -322,9 +326,8 @@ export class Call extends CardDef {
         .eyebrow {
           display: flex;
           align-items: center;
-          gap: 0.3125rem;
-          margin: 0;
-          font-size: 0.75rem;
+          gap: var(--boxel-sp-3xs);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: var(--boxel-lsp-lg);
@@ -332,7 +335,7 @@ export class Call extends CardDef {
         }
         .title {
           margin: var(--boxel-sp-xxs) 0 0;
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 600;
           line-height: 1.25;
           letter-spacing: -0.01em;
@@ -341,7 +344,8 @@ export class Call extends CardDef {
            top and the reader's eye lands on the answer, not the title. */
         .answer {
           margin: var(--boxel-sp-xs) 0 0;
-          font-size: 2.875rem;
+          /* display answer, one step above the ladder top */
+          font-size: calc(var(--boxel-font-size-2xl) * 1.28);
           font-weight: 700;
           line-height: 1.05;
           letter-spacing: -0.03em;
@@ -350,8 +354,8 @@ export class Call extends CardDef {
           color: var(--tone);
         }
         .answer-cap {
-          margin: 2px 0 0;
-          font-size: 0.8125rem;
+          margin: var(--boxel-sp-6xs) 0 0;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
 
@@ -359,7 +363,7 @@ export class Call extends CardDef {
         .glance {
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background: var(--muted);
           font-variant-numeric: tabular-nums;
         }
         .num {
@@ -374,14 +378,14 @@ export class Call extends CardDef {
         .sec {
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background: var(--muted);
         }
         .sec h2 {
           display: flex;
           align-items: center;
           gap: var(--boxel-sp-xxs);
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: var(--boxel-lsp-lg);
@@ -393,7 +397,7 @@ export class Call extends CardDef {
         }
         .prose {
           max-width: 68ch;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.55;
         }
         .people {
@@ -405,24 +409,24 @@ export class Call extends CardDef {
           gap: var(--boxel-sp-xxs);
         }
         .people li {
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
+          padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
+          border-radius: var(--boxel-border-radius-pill);
           background: color-mix(in oklch, var(--foreground) 6%, transparent);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
 
         /* ── Container queries — live because .card declares the container */
         @container card (width < 560px) {
           .answer {
-            font-size: 2.25rem;
+            font-size: var(--boxel-font-size-2xl);
           }
         }
         @container card (width < 400px) {
           .title {
-            font-size: 1.125rem;
+            font-size: var(--boxel-font-size);
           }
           .answer {
-            font-size: 1.875rem;
+            font-size: var(--boxel-font-size-xl);
           }
         }
       </style>
@@ -477,7 +481,7 @@ export class Call extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
+          gap: var(--boxel-sp-6xs);
           padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
           box-sizing: border-box;
           overflow: hidden;
@@ -489,7 +493,7 @@ export class Call extends CardDef {
           grid-area: head;
           display: flex;
           align-items: baseline;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
           min-height: 0;
           overflow: hidden;
           flex-shrink: 0;
@@ -504,7 +508,7 @@ export class Call extends CardDef {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
           min-height: 0;
           overflow: hidden;
           flex-shrink: 0;
@@ -525,7 +529,8 @@ export class Call extends CardDef {
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;
           overflow: hidden;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
+          min-width: 0;
         }
         .glyph {
           flex: none;
@@ -534,7 +539,6 @@ export class Call extends CardDef {
           color: var(--muted-foreground);
         }
         .note {
-          margin: 0;
           font-size: var(--type-base);
           line-height: 1.25;
           color: var(--muted-foreground);
@@ -542,7 +546,8 @@ export class Call extends CardDef {
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 3;
           overflow: hidden;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
+          min-width: 0;
         }
         /* Data is all-or-nothing: the duration and the outcome are never
            ellipsised, they are hidden whole at quanta with no room. */
@@ -656,7 +661,7 @@ export class Call extends CardDef {
           display: flex;
           align-items: baseline;
           gap: var(--boxel-sp-xxs);
-          font: var(--boxel-font-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .dir {
           flex: none;

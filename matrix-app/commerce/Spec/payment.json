@@ -33,6 +33,11 @@
         "links": {
           "self": "../Payment/pay-inv-2026-070-1"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

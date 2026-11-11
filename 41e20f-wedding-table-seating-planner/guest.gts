@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Component,
   field,
@@ -26,13 +27,17 @@ import {
   dietaryLabel,
 } from './utils/index';
 
-export const CategoryField = enumField(StringField, {
-  options: GUEST_CATEGORIES.map(({ value, label }) => ({ value, label })),
-});
+export const CategoryField = markDefinition(
+  enumField(StringField, {
+    options: GUEST_CATEGORIES.map(({ value, label }) => ({ value, label })),
+  }),
+);
 
-export const DietaryField = enumField(StringField, {
-  options: DIETARY_OPTIONS.map(({ value, label }) => ({ value, label })),
-});
+export const DietaryField = markDefinition(
+  enumField(StringField, {
+    options: DIETARY_OPTIONS.map(({ value, label }) => ({ value, label })),
+  }),
+);
 
 function swatch(color: string | null | undefined) {
   return htmlSafe(`background-color:${color || 'var(--accent)'}`);

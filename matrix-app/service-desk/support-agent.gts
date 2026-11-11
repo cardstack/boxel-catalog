@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Component,
   field,
@@ -56,10 +57,12 @@ export const AGENT_TIER_LABELS: Record<string, string> = {
   L3: 'L3 · Engineering',
 };
 
-export const AgentTierField = enumField(StringField, {
-  displayName: 'Support Tier',
-  options: AGENT_TIERS as unknown as string[],
-});
+export const AgentTierField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Support Tier',
+    options: AGENT_TIERS as unknown as string[],
+  }),
+);
 
 /** The next tier up, or undefined at the top. Escalation reads this. */
 export function nextTier(tier?: string | null): string | undefined {
@@ -266,12 +269,12 @@ export class SupportAgent extends PersonBase {
       </RecCard>
       <style scoped>
         .dim {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
         }
       </style>
     </template>
@@ -310,9 +313,8 @@ export class SupportAgent extends PersonBase {
       </RecCard>
       <style scoped>
         .fact {
-          margin: 0;
-          padding: 0 0.625rem 0.4375rem;
-          font-size: 0.6875rem;
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .fact b {
@@ -335,10 +337,10 @@ export class SupportAgent extends PersonBase {
         .atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
           min-inline-size: 0;
           max-inline-size: 100%;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
         .mark {
           flex: none;
@@ -347,7 +349,10 @@ export class SupportAgent extends PersonBase {
           inline-size: 1rem;
           block-size: 1rem;
           border: 1px solid var(--border);
-          font: 600 0.5625rem/1 var(--font-mono);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1;
           color: var(--muted-foreground);
         }
         .nm {

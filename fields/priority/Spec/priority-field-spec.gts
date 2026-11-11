@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Spec,
   SpecHeader,
@@ -29,15 +30,17 @@ const ticketCode = `const TicketPriorityField = priorityField({
 
 @field priority = contains(TicketPriorityField);`;
 
-export const TicketPriorityField = priorityField({
-  displayName: 'Ticket Priority',
-  options: [
-    { value: 'P1', hue: 'red', factor: 0.25 },
-    { value: 'P2', hue: 'orange', factor: 0.5 },
-    { value: 'P3', hue: 'amber', factor: 1 },
-    { value: 'P4', hue: 'slate', factor: 2 },
-  ],
-});
+export const TicketPriorityField = markDefinition(
+  priorityField({
+    displayName: 'Ticket Priority',
+    options: [
+      { value: 'P1', hue: 'red', factor: 0.25 },
+      { value: 'P2', hue: 'orange', factor: 0.5 },
+      { value: 'P3', hue: 'amber', factor: 1 },
+      { value: 'P4', hue: 'slate', factor: 2 },
+    ],
+  }),
+);
 
 class PriorityFieldSpecIsolated extends Component<typeof PriorityFieldSpec> {
   <template>

@@ -1299,7 +1299,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                       @forms={{this.SEARCH_FORMS}}
                       @label='Search'
                     >
-                      <label class='search-label'>
+                      <label>
                         <VisuallyHidden>Search leads</VisuallyHidden>
                         <SearchInput
                           @placeholder='Search leads'
@@ -1368,7 +1368,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                       @forms={{this.SEARCH_FORMS}}
                       @label='Search'
                     >
-                      <label class='search-label'>
+                      <label>
                         <VisuallyHidden>Search territories</VisuallyHidden>
                         <SearchInput
                           @placeholder='Search territories'
@@ -1400,7 +1400,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                       @forms={{this.SEARCH_FORMS}}
                       @label='Search'
                     >
-                      <label class='search-label'>
+                      <label>
                         <VisuallyHidden>Search proposals</VisuallyHidden>
                         <SearchInput
                           @placeholder='Search proposals'
@@ -1432,7 +1432,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                       @forms={{this.SEARCH_FORMS}}
                       @label='Search'
                     >
-                      <label class='search-label'>
+                      <label>
                         <VisuallyHidden>Search quotes</VisuallyHidden>
                         <SearchInput
                           @placeholder='Search quotes'
@@ -1497,11 +1497,11 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       }
       .brand-name {
         display: grid;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .brand-name small {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
         color: var(--muted-foreground);
       }
@@ -1520,9 +1520,8 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         overflow: hidden;
       }
       .block-title {
-        margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .spacer {
@@ -1535,12 +1534,11 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       h2 {
-        margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .meta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .board-wrap {
@@ -1552,7 +1550,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         gap: var(--boxel-sp-xs);
       }
       .switch-text {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         color: var(--muted-foreground);
         white-space: nowrap;
@@ -1566,13 +1564,12 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       }
       .selection-name {
         font-weight: 600;
-        font-size: 0.75rem;
-        margin-right: auto;
+        font-size: var(--boxel-font-size-xs);
+        margin-inline-end: auto;
       }
       .empty {
-        margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
     </style>

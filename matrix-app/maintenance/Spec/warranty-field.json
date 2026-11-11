@@ -1,0 +1,60 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WarrantyField",
+        "module": "../warranty-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Warranty\n\nProvider (id + name), kind (manufacturer / extended / service-contract / none), startsOn / endsOn, terms and a claim reference. `isActive` and `daysRemaining` are computed on **calendar days** (never `toISOString`) so boundary days are right in every timezone.\n\nThe field's job: say *“covered until 2027-03-14 — claim, don't pay”* before a technician orders a part. The Work Order shows that banner while `isActive`.\n\nGeneric: an asset, a laptop, a vehicle, a building system. FieldDefs cannot `linksTo`, so the provider is stamped as id + name; the consuming card may also link the Vendor.",
+      "cardInfo": {
+        "name": "Warranty",
+        "summary": "A coverage period from a provider with terms and how to claim; computed isActive / daysRemaining on calendar days."
+      },
+      "containedExamples": [
+        {
+          "providerId": "../Vendor/acme-supply",
+          "providerName": "Kaeser Asia",
+          "kind": "manufacturer",
+          "startsOn": "2024-03-14",
+          "endsOn": "2027-03-14",
+          "terms": "Parts and labour on compressor block and controller. Consumables excluded.",
+          "claimReference": "KAE-WTY-7781"
+        },
+        {
+          "providerName": "Dell",
+          "kind": "extended",
+          "startsOn": "2023-01-10",
+          "endsOn": "2026-01-09",
+          "claimReference": "DELL-PS-99120"
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../warranty-field",
+              "name": "WarrantyField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../warranty-field",
+              "name": "WarrantyField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

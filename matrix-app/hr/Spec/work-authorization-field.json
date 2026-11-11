@@ -24,6 +24,13 @@
         "module": "@cardstack/base/spec",
         "name": "Spec"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

@@ -24,6 +24,11 @@
         "links": {
           "self": "../VendorProfile/norvik-ltd"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -1,0 +1,54 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WorkOrder",
+        "module": "../work-order"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Work Order\n\n`identifier` (Record Identifier, `WO-{seq4}`), `subjectAsset` / `subjectLocation`, `plan`, **`planDueKey`** (\"planId@yyyy-mm-dd\" — the generator's idempotency key: one work order per plan per due day, ever), `kind` preventive / corrective / inspection / project, `priority` (catalog priorityField P1–P4), `status` (catalog statusField: requested → approved → scheduled → in-progress ⇄ on-hold → completed → closed, or cancelled), dates, `ownership` (Record Owner — named so the shared **Assign Owner** command accepts it), `checklist` (deep copy of the plan template), `labour[]`, `parts[]`, `downtime`, `failure`, `findings[]` (Richard's Inspection Finding, consumed unchanged), `holdReason`, `cancelReason`, `noLabourReason`.\n\nComputed: `labourCost`, `partsCost`, `totalCost`, `labourHours`, `isOverdue`, `isCompliant`, `warrantyCovered` (subject asset's warranty active → \"claim, don't pay\" banner), join keys `assetId` / `planId` / `assetTag` / `assetName`.\n\n### Single writers\n**Raise Work Order** creates and mints the id; the board transition helper moves `status`; **Complete Work Order** stamps completion, closes downtime, decrements stock, rolls up cost and advances the plan; **Complete Inspection** does the same for `kind = inspection` and turns failed checklist items into Inspection Findings; **Cancel** terminates with a reason. Nothing raw-patches state.\n\n### An Inspection is a Work Order\nThere is no separate Inspection card: `kind = inspection` + the checklist run + `findings[]` is the whole difference, so one board and one calendar show all work.",
+      "cardInfo": {
+        "name": "Work Order",
+        "summary": "One job on one asset — kind, priority, status ladder, checklist, labour, parts, downtime, failure report and inspection findings; the unit of work, cost and history."
+      },
+      "containedExamples": []
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../WorkOrder/wo-0871"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../WorkOrder/wo-0870"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../WorkOrder/wo-0874"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../WorkOrder/wo-0862"
+        }
+      },
+      "linkedExamples.4": {
+        "links": {
+          "self": "../WorkOrder/wo-0876"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

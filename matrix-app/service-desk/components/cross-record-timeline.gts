@@ -132,7 +132,7 @@ export class CrossRecordTimeline extends GlimmerComponent<Signature> {
         z-index: 1;
         width: 0.5rem;
         height: 0.5rem;
-        margin-top: 0.125rem;
+        margin-top: var(--boxel-sp-6xs);
         border-radius: 50%;
         background: var(--dot);
         align-self: center;

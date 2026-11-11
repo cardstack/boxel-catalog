@@ -48,6 +48,11 @@
         "links": {
           "self": "../Invoice/inv-2026-052"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   type CardDef,
@@ -20,18 +21,22 @@ import CountField from '@cardstack/catalog/fields/count/count-field';
 const moduleURL: string = import.meta.url;
 const bookingRef = codeRef(moduleURL, '../events/booking', 'Booking');
 
-export const HomeAwayField = enumField(StringField, {
-  displayName: 'Home / Away',
-  options: [
-    { value: 'Home', label: 'Home' },
-    { value: 'Away', label: 'Away' },
-  ],
-});
+export const HomeAwayField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Home / Away',
+    options: [
+      { value: 'Home', label: 'Home' },
+      { value: 'Away', label: 'Away' },
+    ],
+  }),
+);
 
-export const CompetitionField = enumField(StringField, {
-  displayName: 'Competition',
-  options: ['League', 'Cup', 'Friendly'],
-});
+export const CompetitionField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Competition',
+    options: ['League', 'Cup', 'Friendly'],
+  }),
+);
 
 const NUM = new Intl.NumberFormat();
 const KICKOFF = new Intl.DateTimeFormat(undefined, {
@@ -346,7 +351,7 @@ export class Match extends Event {
         }
         .kv dt {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -609,11 +614,10 @@ export class Match extends Event {
         }
         .name {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
-          margin: 0;
           font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
@@ -646,7 +650,7 @@ export class Match extends Event {
         .label,
         .kv dt {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -686,7 +690,6 @@ export class Match extends Event {
           border-top: 1px solid var(--border);
         }
         h2 {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
@@ -722,7 +725,6 @@ export class Match extends Event {
           white-space: nowrap;
         }
         .empty {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border-top: 1px solid var(--border);
         }

@@ -29,6 +29,11 @@
         "links": {
           "self": "../PtoRequest/dana-vacation-draft"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

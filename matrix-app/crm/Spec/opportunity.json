@@ -28,6 +28,11 @@
         "links": {
           "self": "../Opportunity/brightleaf-workspace"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

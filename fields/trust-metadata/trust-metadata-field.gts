@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -52,13 +53,15 @@ export const TRUST_HUE: Record<string, Hue> = {
   'independently-verified': 'green',
 };
 
-export const TrustLevelField = enumField(StringField, {
-  displayName: 'Trust Level',
-  options: TRUST_LEVELS.map((value) => ({
-    value,
-    label: TRUST_LABELS[value],
-  })),
-});
+export const TrustLevelField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Trust Level',
+    options: TRUST_LEVELS.map((value) => ({
+      value,
+      label: TRUST_LABELS[value],
+    })),
+  }),
+);
 
 /**
  * How far to believe an artefact, and on what basis.

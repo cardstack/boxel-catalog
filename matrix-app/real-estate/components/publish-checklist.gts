@@ -78,7 +78,7 @@ export class PublishChecklist extends GlimmerComponent<Signature> {
               ? `Description is short (${descriptionLength} chars)`
               : 'No description',
             state: 'warn',
-            hint: 'min 100 chars recommended',
+            hint: 'Write at least 100 characters',
           },
     );
     rows.push(
@@ -122,7 +122,7 @@ export class PublishChecklist extends GlimmerComponent<Signature> {
         list-style: none;
         display: grid;
         gap: var(--boxel-sp-5xs);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
       }
       .row {
         display: flex;
@@ -146,7 +146,7 @@ export class PublishChecklist extends GlimmerComponent<Signature> {
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
         line-height: 1;
         color: var(--ck-ink);
@@ -159,7 +159,7 @@ export class PublishChecklist extends GlimmerComponent<Signature> {
         color: var(--ck-ink);
       }
       .hint {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-style: italic;
         color: var(--muted-foreground);
       }
