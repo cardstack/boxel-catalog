@@ -33,6 +33,7 @@ import { formatMoney } from './money-format';
 import type { Listing as ListingType } from './listing';
 import type { Order as OrderType } from './order';
 import type { MarketplaceOffer as OfferType } from './marketplace-offer';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // A seller is a SellerProfile, which adds `rating`; one set of formats serves
 // both roles and reads the role from that field.
@@ -164,136 +165,141 @@ export class MarketplaceMemberIsolated<
       .join(' · ');
 
   <template>
-    <SnSheet>
-      <:mark><Avatar
-          @name={{if @model.name @model.name '?'}}
-          @src={{@model.photo.resolvedUrl}}
-          @size={{22}}
-          aria-hidden='true'
-        /></:mark>
-      <:title>{{@model.title}}</:title>
-      <:meta>{{roleLine @model}}</:meta>
-      <:actions>
-        <DotLabel @hue='blue' @label={{if this.seller 'seller' 'buyer'}} />
-        {{#if this.seller}}
-          <DotLabel @label={{ratingText @model}} />
-        {{/if}}
-      </:actions>
-      <:stats>
-        {{#if this.seller}}
-          <SnStat
-            @label='Rating'
-            @hue='green'
-            @value={{ratingText @model}}
-            @hint='buyer score'
-          />
-          <SnStat
-            @label='Listings'
-            @hue='blue'
-            @value={{this.listings.length}}
-            @hint='active'
-          />
-        {{/if}}
-        <SnStat
-          @label='Orders'
-          @value={{this.orders.length}}
-          @hint={{this.refundedLine}}
-        />
-        {{#unless this.seller}}
-          <SnStat
-            @label='Spent'
-            @hue='green'
-            @value={{this.spent}}
-            @hint='net of refunds'
-          />
-          <SnStat
-            @label='Open offers'
-            @hue='blue'
-            @value={{this.openOffers.length}}
-            @hint={{this.offerLine}}
-          />
-        {{/unless}}
-      </:stats>
-      <:main>
-        <SnSection @title='Contact' @flush={{true}}><SnKv>
-            <SnRow @label='Email' @value={{@model.email}} />
-            <SnRow @label='Phone' @value={{@model.phone}} />
-          </SnKv></SnSection>
-        {{#if this.seller}}
-          <SnSection @title='Active listings' @flush={{true}}><SnKv>
-              {{#each this.listings as |l|}}
-                <SnRow
-                  @label={{this.listingLabel l}}
-                  @value={{this.listingValue l}}
-                  @hue='green'
-                  @state='active'
-                />
-              {{else}}
-                <SnRow @label='Listings' @value='none active' />
-              {{/each}}
-            </SnKv></SnSection>
-        {{else}}
-          <SnSection @title='Orders' @flush={{true}}><SnKv>
-              {{#each this.orders as |o|}}
-                <SnRow
-                  @label={{this.orderLabel o}}
-                  @value={{this.orderValue o}}
-                  @hue={{orderHue o}}
-                  @state={{orderStateLabel o}}
-                />
-              {{else}}
-                <SnRow @label='Orders' @value='none yet' />
-              {{/each}}
-            </SnKv></SnSection>
-        {{/if}}
-      </:main>
-      <:side>
-        <SnSection @title='Linked' @flush={{true}}><SnKv>
-            {{#if this.seller}}
-              {{#each this.listings as |l|}}
-                <SnRow @label='Listing'>{{#let (getComponent l) as |C|}}<C
-                      @format='atom'
-                    />{{/let}}</SnRow>
-              {{else}}
-                <SnRow @label='Listing' />
-              {{/each}}
-            {{else}}
-              {{#each this.orders as |o|}}
-                <SnRow
-                  @label='Order'
-                  @hue={{orderHue o}}
-                  @state={{orderStateLabel o}}
-                >{{#let (getComponent o) as |C|}}<C
-                      @format='atom'
-                    />{{/let}}</SnRow>
-              {{/each}}
-              {{#each this.openOffers as |f|}}
-                <SnRow @label='Offer' @hue='blue' @state='open'>{{#let
-                    (getComponent f)
-                    as |C|
-                  }}<C @format='atom' />{{/let}}</SnRow>
-              {{/each}}
-            {{/if}}
-          </SnKv></SnSection>
-        <SnSection @title='Details' @flush={{true}}><SnKv>
-            {{#if this.seller}}
-              <SnRow @label='Rating' @value={{ratingText @model}} />
-            {{/if}}
-            <SnRow @label='Email' @value={{@model.email}} />
-            <SnRow
-              @label='Phone'
-              @value={{if @model.phone @model.phone 'not given'}}
+    <IsoFrame>
+      <SnSheet>
+        <:mark><Avatar
+            @name={{if @model.name @model.name '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @size={{22}}
+            aria-hidden='true'
+          /></:mark>
+        <:title>{{@model.title}}</:title>
+        <:meta>{{roleLine @model}}</:meta>
+        <:actions>
+          <DotLabel @hue='blue' @label={{if this.seller 'seller' 'buyer'}} />
+          {{#if this.seller}}
+            <DotLabel @label={{ratingText @model}} />
+          {{/if}}
+        </:actions>
+        <:stats>
+          {{#if this.seller}}
+            <SnStat
+              @label='Rating'
+              @hue='green'
+              @value={{ratingText @model}}
+              @hint='buyer score'
             />
-            {{#if this.seller}}
-              <SnRow @label='Active listings' @value={{this.listings.length}} />
-            {{/if}}
-            <SnRow @label='Orders' @value={{this.orders.length}} />
-            {{#unless this.seller}}
-              <SnRow @label='Open offers' @value={{this.openOffers.length}} />
-            {{/unless}}
-          </SnKv></SnSection>
-      </:side>
-    </SnSheet>
+            <SnStat
+              @label='Listings'
+              @hue='blue'
+              @value={{this.listings.length}}
+              @hint='active'
+            />
+          {{/if}}
+          <SnStat
+            @label='Orders'
+            @value={{this.orders.length}}
+            @hint={{this.refundedLine}}
+          />
+          {{#unless this.seller}}
+            <SnStat
+              @label='Spent'
+              @hue='green'
+              @value={{this.spent}}
+              @hint='net of refunds'
+            />
+            <SnStat
+              @label='Open offers'
+              @hue='blue'
+              @value={{this.openOffers.length}}
+              @hint={{this.offerLine}}
+            />
+          {{/unless}}
+        </:stats>
+        <:main>
+          <SnSection @title='Contact' @flush={{true}}><SnKv>
+              <SnRow @label='Email' @value={{@model.email}} />
+              <SnRow @label='Phone' @value={{@model.phone}} />
+            </SnKv></SnSection>
+          {{#if this.seller}}
+            <SnSection @title='Active listings' @flush={{true}}><SnKv>
+                {{#each this.listings as |l|}}
+                  <SnRow
+                    @label={{this.listingLabel l}}
+                    @value={{this.listingValue l}}
+                    @hue='green'
+                    @state='active'
+                  />
+                {{else}}
+                  <SnRow @label='Listings' @value='none active' />
+                {{/each}}
+              </SnKv></SnSection>
+          {{else}}
+            <SnSection @title='Orders' @flush={{true}}><SnKv>
+                {{#each this.orders as |o|}}
+                  <SnRow
+                    @label={{this.orderLabel o}}
+                    @value={{this.orderValue o}}
+                    @hue={{orderHue o}}
+                    @state={{orderStateLabel o}}
+                  />
+                {{else}}
+                  <SnRow @label='Orders' @value='none yet' />
+                {{/each}}
+              </SnKv></SnSection>
+          {{/if}}
+        </:main>
+        <:side>
+          <SnSection @title='Linked' @flush={{true}}><SnKv>
+              {{#if this.seller}}
+                {{#each this.listings as |l|}}
+                  <SnRow @label='Listing'>{{#let (getComponent l) as |C|}}<C
+                        @format='atom'
+                      />{{/let}}</SnRow>
+                {{else}}
+                  <SnRow @label='Listing' />
+                {{/each}}
+              {{else}}
+                {{#each this.orders as |o|}}
+                  <SnRow
+                    @label='Order'
+                    @hue={{orderHue o}}
+                    @state={{orderStateLabel o}}
+                  >{{#let (getComponent o) as |C|}}<C
+                        @format='atom'
+                      />{{/let}}</SnRow>
+                {{/each}}
+                {{#each this.openOffers as |f|}}
+                  <SnRow @label='Offer' @hue='blue' @state='open'>{{#let
+                      (getComponent f)
+                      as |C|
+                    }}<C @format='atom' />{{/let}}</SnRow>
+                {{/each}}
+              {{/if}}
+            </SnKv></SnSection>
+          <SnSection @title='Details' @flush={{true}}><SnKv>
+              {{#if this.seller}}
+                <SnRow @label='Rating' @value={{ratingText @model}} />
+              {{/if}}
+              <SnRow @label='Email' @value={{@model.email}} />
+              <SnRow
+                @label='Phone'
+                @value={{if @model.phone @model.phone 'not given'}}
+              />
+              {{#if this.seller}}
+                <SnRow
+                  @label='Active listings'
+                  @value={{this.listings.length}}
+                />
+              {{/if}}
+              <SnRow @label='Orders' @value={{this.orders.length}} />
+              {{#unless this.seller}}
+                <SnRow @label='Open offers' @value={{this.openOffers.length}} />
+              {{/unless}}
+            </SnKv></SnSection>
+        </:side>
+      </SnSheet>
+    </IsoFrame>
   </template>
 }
 

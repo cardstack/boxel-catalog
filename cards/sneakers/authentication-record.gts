@@ -27,6 +27,7 @@ import {
   SnStat,
   day,
 } from './parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // AuthenticationRecord — one legit-check on one item: who checked it, when, the
 // verdict, and the certificate reference.
@@ -138,54 +139,58 @@ export class AuthenticationRecord extends CardDef {
     typeof AuthenticationRecord
   > {
     <template>
-      <SnSheet @title={{titleOf @model}} @src={{photoOf @model}}>
-        <:meta>{{metaLine @model}}</:meta>
-        <:actions><Outcome @model={{@model}} /></:actions>
-        <:stats>
-          <SnStat
-            @label='Outcome'
-            @value={{outcomeLabel @model.outcome}}
-            @hint={{@model.service}}
-          />
-          <SnStat
-            @label='Turnaround'
-            @value={{or @model.turnaroundDays}}
-            @hint={{spanText @model}}
-          />
-          <SnStat
-            @label='Certificate'
-            @value={{or @model.certificateId}}
-            @hint={{@model.authenticator}}
-          />
-        </:stats>
-        <:main>
-          <SnSection @title='Authenticator notes'>
-            {{#if @model.authenticatorNotes}}<@fields.authenticatorNotes
-              />{{else}}—{{/if}}
-          </SnSection>
-          <SnSection @title='Record' @flush={{true}}>
-            <SnKv>
-              <SnRow @label='Service'>{{or @model.service}}</SnRow>
-              <SnRow @label='Authenticator'>{{or @model.authenticator}}</SnRow>
-              <SnRow @label='Submitted' @value={{day @model.submittedAt}} />
-              <SnRow @label='Completed' @value={{day @model.completedAt}} />
-              <SnRow @label='Certificate'>{{or @model.certificateId}}</SnRow>
-              <SnRow @label='Order'>{{#if @model.order}}<@fields.order
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</SnRow>
-            </SnKv>
-          </SnSection>
-        </:main>
-        <:side>
-          <SnSection @title='Linked' @flush={{true}}>
-            <ItemRow @model={{@model}} @fields={{@fields}} />
-          </SnSection>
-          <SnSection @title='Details' @flush={{true}}>
-            <DetailRows @model={{@model}} />
-          </SnSection>
-        </:side>
-      </SnSheet>
+      <IsoFrame>
+        <SnSheet @title={{titleOf @model}} @src={{photoOf @model}}>
+          <:meta>{{metaLine @model}}</:meta>
+          <:actions><Outcome @model={{@model}} /></:actions>
+          <:stats>
+            <SnStat
+              @label='Outcome'
+              @value={{outcomeLabel @model.outcome}}
+              @hint={{@model.service}}
+            />
+            <SnStat
+              @label='Turnaround'
+              @value={{or @model.turnaroundDays}}
+              @hint={{spanText @model}}
+            />
+            <SnStat
+              @label='Certificate'
+              @value={{or @model.certificateId}}
+              @hint={{@model.authenticator}}
+            />
+          </:stats>
+          <:main>
+            <SnSection @title='Authenticator notes'>
+              {{#if @model.authenticatorNotes}}<@fields.authenticatorNotes
+                />{{else}}—{{/if}}
+            </SnSection>
+            <SnSection @title='Record' @flush={{true}}>
+              <SnKv>
+                <SnRow @label='Service'>{{or @model.service}}</SnRow>
+                <SnRow @label='Authenticator'>{{or
+                    @model.authenticator
+                  }}</SnRow>
+                <SnRow @label='Submitted' @value={{day @model.submittedAt}} />
+                <SnRow @label='Completed' @value={{day @model.completedAt}} />
+                <SnRow @label='Certificate'>{{or @model.certificateId}}</SnRow>
+                <SnRow @label='Order'>{{#if @model.order}}<@fields.order
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</SnRow>
+              </SnKv>
+            </SnSection>
+          </:main>
+          <:side>
+            <SnSection @title='Linked' @flush={{true}}>
+              <ItemRow @model={{@model}} @fields={{@fields}} />
+            </SnSection>
+            <SnSection @title='Details' @flush={{true}}>
+              <DetailRows @model={{@model}} />
+            </SnSection>
+          </:side>
+        </SnSheet>
+      </IsoFrame>
     </template>
   };
 

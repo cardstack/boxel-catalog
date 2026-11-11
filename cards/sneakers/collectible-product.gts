@@ -31,6 +31,7 @@ import {
   instances,
   linkedQuery,
 } from './parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // CollectibleProduct — a catalogue entry for a manufactured collectible: the
 // thing itself, not anyone's copy of it.
@@ -123,70 +124,72 @@ export class CollectibleProduct extends CardDef {
     }
 
     <template>
-      <SnSheet @title={{@model.cardTitle}} @src={{photoOf @model}}>
-        <:meta>{{metaLine @model}}</:meta>
-        <:stats>
-          <SnStat
-            @label='Retail'
-            @value={{moneyText @model.retailPrice}}
-            @hint={{day @model.releaseDate}}
-          />
-          <SnStat
-            @label='Sizes'
-            @value={{sizeCount @model}}
-            @hint={{sizeRange @model}}
-          />
-          <SnStat
-            @label='In collection'
-            @value={{countText this.owned}}
-            @hint={{this.ownedHint}}
-          />
-        </:stats>
-        <:main>
-          <SnSection @title='Description'>
-            {{#if @model.productDescription}}<@fields.productDescription
-              />{{else}}—{{/if}}
-          </SnSection>
-          <SnSection @title='Available sizes'>
-            <span class='mono'>{{listText @model.availableVariants}}</span>
-          </SnSection>
-          <SnSection @title='Tags'>{{listText @model.tags}}</SnSection>
-        </:main>
-        <:side>
-          <SnSection @title='Linked' @flush={{true}}>
-            <SnKv>
-              {{#each this.owned as |copy|}}
-                <SnRow @label='Owned as'>
-                  {{#let (getComponent copy) as |Copy|}}
-                    <Copy @format='atom' @displayContainer={{false}} />
-                  {{/let}}
-                  {{#if copy.condition.code}}<DotLabel
-                      @label={{copy.condition.code}}
-                      @hue='green'
-                    />{{/if}}
-                </SnRow>
-              {{/each}}
-              {{#each this.sets as |set|}}
-                <SnRow @label='Set'>
-                  {{#let (getComponent set) as |SetCard|}}
-                    <SetCard @format='atom' @displayContainer={{false}} />
-                  {{/let}}
-                  <DotLabel
-                    @label={{if set.isPublic 'public' 'private'}}
-                    @hue={{if set.isPublic 'blue' 'slate'}}
-                  />
-                </SnRow>
-              {{/each}}
-              {{#unless this.owned.length}}{{#unless this.sets.length}}
-                  <SnRow @label='Owned as'>—</SnRow>
-                {{/unless}}{{/unless}}
-            </SnKv>
-          </SnSection>
-          <SnSection @title='Details' @flush={{true}}>
-            <DetailRows @model={{@model}} />
-          </SnSection>
-        </:side>
-      </SnSheet>
+      <IsoFrame>
+        <SnSheet @title={{@model.cardTitle}} @src={{photoOf @model}}>
+          <:meta>{{metaLine @model}}</:meta>
+          <:stats>
+            <SnStat
+              @label='Retail'
+              @value={{moneyText @model.retailPrice}}
+              @hint={{day @model.releaseDate}}
+            />
+            <SnStat
+              @label='Sizes'
+              @value={{sizeCount @model}}
+              @hint={{sizeRange @model}}
+            />
+            <SnStat
+              @label='In collection'
+              @value={{countText this.owned}}
+              @hint={{this.ownedHint}}
+            />
+          </:stats>
+          <:main>
+            <SnSection @title='Description'>
+              {{#if @model.productDescription}}<@fields.productDescription
+                />{{else}}—{{/if}}
+            </SnSection>
+            <SnSection @title='Available sizes'>
+              <span class='mono'>{{listText @model.availableVariants}}</span>
+            </SnSection>
+            <SnSection @title='Tags'>{{listText @model.tags}}</SnSection>
+          </:main>
+          <:side>
+            <SnSection @title='Linked' @flush={{true}}>
+              <SnKv>
+                {{#each this.owned as |copy|}}
+                  <SnRow @label='Owned as'>
+                    {{#let (getComponent copy) as |Copy|}}
+                      <Copy @format='atom' @displayContainer={{false}} />
+                    {{/let}}
+                    {{#if copy.condition.code}}<DotLabel
+                        @label={{copy.condition.code}}
+                        @hue='green'
+                      />{{/if}}
+                  </SnRow>
+                {{/each}}
+                {{#each this.sets as |set|}}
+                  <SnRow @label='Set'>
+                    {{#let (getComponent set) as |SetCard|}}
+                      <SetCard @format='atom' @displayContainer={{false}} />
+                    {{/let}}
+                    <DotLabel
+                      @label={{if set.isPublic 'public' 'private'}}
+                      @hue={{if set.isPublic 'blue' 'slate'}}
+                    />
+                  </SnRow>
+                {{/each}}
+                {{#unless this.owned.length}}{{#unless this.sets.length}}
+                    <SnRow @label='Owned as'>—</SnRow>
+                  {{/unless}}{{/unless}}
+              </SnKv>
+            </SnSection>
+            <SnSection @title='Details' @flush={{true}}>
+              <DetailRows @model={{@model}} />
+            </SnSection>
+          </:side>
+        </SnSheet>
+      </IsoFrame>
       <style scoped>
         .mono {
           font-family: var(--font-mono);
