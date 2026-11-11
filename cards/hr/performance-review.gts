@@ -55,6 +55,7 @@ import {
   StatStrip,
   type StripItem,
 } from '../shared/compact-sheet';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const REVIEW_CYCLE_STATUSES = ['planned', 'active', 'closed'];
 
@@ -259,88 +260,95 @@ export class ReviewCycle extends CardDef {
     }
 
     <template>
-      <Sheet
-        class='cycle-isolated'
-        @title={{@model.title}}
-        @meta={{this.period}}
-      >
-        <:mark><Avatar
-            @name='Review Cycle'
-            @hue={{QUIET_AVATAR_HUE}}
-            @size={{32}}
-            aria-hidden='true'
-          /></:mark>
-        <:aside>{{#if @model.status}}
-            <StatePill
-              @label={{@model.status}}
-              @hue={{hueOf REVIEW_CYCLE_STATUS_HUES @model.status}}
-              @dot={{true}}
-            />
-          {{/if}}
-          <StatePill @label={{this.reviewCount}} /></:aside>
-        <:default>
-
-          <SheetSection @label='Summary'>
-            <SheetStat
-              @label='Reviews'
-              @value={{this.reviews.length}}
-              @hint='{{this.signedOffCount}} signed off'
-            />
-            <SheetStat
-              @label='Period'
-              @value={{cycleShort @model.name}}
-              @hint={{this.period}}
-            />
-            {{#if this.daysLeft}}
-              <SheetStat
-                @label='Days left'
-                @value={{this.daysLeft}}
-                @hint={{this.endsLabel}}
+      <IsoFrame>
+        <Sheet
+          class='cycle-isolated'
+          @title={{@model.title}}
+          @meta={{this.period}}
+        >
+          <:mark><Avatar
+              @name='Review Cycle'
+              @hue={{QUIET_AVATAR_HUE}}
+              @size={{32}}
+              aria-hidden='true'
+            /></:mark>
+          <:aside>{{#if @model.status}}
+              <StatePill
+                @label={{@model.status}}
+                @hue={{hueOf REVIEW_CYCLE_STATUS_HUES @model.status}}
+                @dot={{true}}
               />
             {{/if}}
-          </SheetSection>
+            <StatePill @label={{this.reviewCount}} /></:aside>
+          <:default>
 
-          <div class='iso-body'>
-            <div class='iso-col'>
-              {{#if @model.description}}
-                <SheetSection @label='About this cycle'>
-                  <p class='iso-text'>{{@model.description}}</p>
-                </SheetSection>
+            <SheetSection @label='Summary'>
+              <SheetStat
+                @label='Reviews'
+                @value={{this.reviews.length}}
+                @hint='{{this.signedOffCount}} signed off'
+              />
+              <SheetStat
+                @label='Period'
+                @value={{cycleShort @model.name}}
+                @hint={{this.period}}
+              />
+              {{#if this.daysLeft}}
+                <SheetStat
+                  @label='Days left'
+                  @value={{this.daysLeft}}
+                  @hint={{this.endsLabel}}
+                />
               {{/if}}
-              <SheetSection @label='Reviews'>
-                {{#if this.reviews.length}}
-                  <ul class='review-list'>
-                    {{#each this.reviews as |review|}}
-                      <li>
-                        {{#let (getComponent review) as |ReviewCard|}}
-                          <ReviewCard @format='atom' />
-                        {{/let}}
-                        <span class='row-sub'>{{reviewScoreLine review}}</span>
-                      </li>
-                    {{/each}}
-                  </ul>
-                {{else}}
-                  <p class='iso-muted'>No reviews link to this cycle yet.</p>
+            </SheetSection>
+
+            <div class='iso-body'>
+              <div class='iso-col'>
+                {{#if @model.description}}
+                  <SheetSection @label='About this cycle'>
+                    <p class='iso-text'>{{@model.description}}</p>
+                  </SheetSection>
                 {{/if}}
-              </SheetSection>
+                <SheetSection @label='Reviews'>
+                  {{#if this.reviews.length}}
+                    <ul class='review-list'>
+                      {{#each this.reviews as |review|}}
+                        <li>
+                          {{#let (getComponent review) as |ReviewCard|}}
+                            <ReviewCard @format='atom' />
+                          {{/let}}
+                          <span class='row-sub'>{{reviewScoreLine
+                              review
+                            }}</span>
+                        </li>
+                      {{/each}}
+                    </ul>
+                  {{else}}
+                    <p class='iso-muted'>No reviews link to this cycle yet.</p>
+                  {{/if}}
+                </SheetSection>
+              </div>
+              <div class='iso-col'>
+                <SheetSection @label='Details'>
+                  <SheetRows @items={{this.details}} />
+                </SheetSection>
+              </div>
             </div>
-            <div class='iso-col'>
-              <SheetSection @label='Details'>
-                <SheetRows @items={{this.details}} />
-              </SheetSection>
-            </div>
-          </div>
-        </:default>
-      </Sheet>
+          </:default>
+        </Sheet>
+      </IsoFrame>
       <style scoped>
         @layer PretComponent {
           .cycle-isolated {
+            background: var(--card);
+            color: var(--card-foreground);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             min-height: 100%;
             display: flex;
             flex-direction: column;
             gap: var(--boxel-sp-lg);
             padding: var(--boxel-sp-lg);
-            background: var(--card);
             color: var(--card-foreground);
             container-type: inline-size;
           }

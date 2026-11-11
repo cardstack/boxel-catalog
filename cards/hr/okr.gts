@@ -14,6 +14,7 @@ import { Employee } from './employee';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { IsoFrame } from '../shared/compact-sheet';
 
 function krProgress(kr: KeyResultField | undefined): number {
   // A key result with no target hasn't been defined yet, so it has made no
@@ -173,47 +174,52 @@ export class Okr extends CardDef {
       return bandHue(this.pct);
     }
     <template>
-      <article class='okr'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Objective · {{@model.period}}</p>
-            <h1>{{@model.objective}}</h1>
-            {{#if @model.owner}}
-              <p class='sub'>owned by <@fields.owner @format='atom' /></p>
-            {{/if}}
-          </div>
-          <div class='score'>
-            <span class='score-num pct-{{this.hue}}'>{{this.pct}}%</span>
-            <span class='score-label'>overall</span>
-          </div>
-        </header>
-        <section class='panel'>
-          <h2>Key Results</h2>
-          <div class='krs'>
-            {{#each @fields.keyResults as |KR|}}
-              <KR />
-            {{else}}
-              <EmptyState
-                @title='No key results yet'
-                @message='An objective without measures is a wish.'
-                @texture={{false}}
-                @size='s'
-              />
-            {{/each}}
-          </div>
-        </section>
-        {{#if @model.notes}}
+      <IsoFrame>
+        <article class='okr'>
+          <header class='head'>
+            <div>
+              <p class='kicker'>Objective · {{@model.period}}</p>
+              <h1>{{@model.objective}}</h1>
+              {{#if @model.owner}}
+                <p class='sub'>owned by <@fields.owner @format='atom' /></p>
+              {{/if}}
+            </div>
+            <div class='score'>
+              <span class='score-num pct-{{this.hue}}'>{{this.pct}}%</span>
+              <span class='score-label'>overall</span>
+            </div>
+          </header>
           <section class='panel'>
-            <h2>Notes</h2>
-            <p class='notes'>{{@model.notes}}</p>
+            <h2>Key Results</h2>
+            <div class='krs'>
+              {{#each @fields.keyResults as |KR|}}
+                <KR />
+              {{else}}
+                <EmptyState
+                  @title='No key results yet'
+                  @message='An objective without measures is a wish.'
+                  @texture={{false}}
+                  @size='s'
+                />
+              {{/each}}
+            </div>
           </section>
-        {{/if}}
-      </article>
+          {{#if @model.notes}}
+            <section class='panel'>
+              <h2>Notes</h2>
+              <p class='notes'>{{@model.notes}}</p>
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .okr {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--card);
           color: var(--card-foreground);
           display: grid;
           gap: var(--boxel-sp);

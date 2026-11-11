@@ -18,6 +18,7 @@ import {
 import { CompensationField } from './compensation-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const COMP_CHANGE_REASONS = [
   'new-hire',
@@ -107,60 +108,65 @@ export class Compensation extends CardDef {
       return COMP_CHANGE_REASON_LABELS[this.args.model?.reason ?? ''] ?? '—';
     }
     <template>
-      <article class='comp-rec'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Compensation Record</p>
-            <h1>{{@model.cardTitle}}</h1>
-            <p class='sub'>effective
-              {{#if @model.effectiveDate}}<FormatDate
-                  @date={{@model.effectiveDate}}
-                  @dateStyle='long'
-                />{{else}}—{{/if}}</p>
-          </div>
-          <StatePill
-            @label={{this.reasonLabel}}
-            @hue='blue'
-            @emphatic={{true}}
-          />
-        </header>
-        <section class='panel'>
-          <h2>Package</h2>
-          <@fields.package @format='embedded' />
-          {{#if this.breakdown.length}}
-            <CompensationBreakdown
-              @components={{this.breakdown}}
-              @currencyCode='USD'
-              @heading='Annual cash'
+      <IsoFrame>
+        <article class='comp-rec'>
+          <header class='head'>
+            <div>
+              <p class='kicker'>Compensation Record</p>
+              <h1>{{@model.cardTitle}}</h1>
+              <p class='sub'>effective
+                {{#if @model.effectiveDate}}<FormatDate
+                    @date={{@model.effectiveDate}}
+                    @dateStyle='long'
+                  />{{else}}—{{/if}}</p>
+            </div>
+            <StatePill
+              @label={{this.reasonLabel}}
+              @hue='blue'
+              @emphatic={{true}}
             />
+          </header>
+          <section class='panel'>
+            <h2>Package</h2>
+            <@fields.package @format='embedded' />
+            {{#if this.breakdown.length}}
+              <CompensationBreakdown
+                @components={{this.breakdown}}
+                @currencyCode='USD'
+                @heading='Annual cash'
+              />
+            {{/if}}
+          </section>
+          <div class='grid'>
+            <section class='panel'>
+              <h2>Employee</h2>
+              {{#if @model.employee}}<@fields.employee @format='atom' />{{else}}
+                <p class='empty'>No employee linked.</p>{{/if}}
+            </section>
+            <section class='panel'>
+              <h2>Approved By</h2>
+              {{#if @model.approvedBy}}<@fields.approvedBy
+                  @format='atom'
+                />{{else}}
+                <p class='empty'>Unapproved draft.</p>{{/if}}
+            </section>
+          </div>
+          {{#if @model.notes}}
+            <section class='panel'>
+              <h2>Notes</h2>
+              <p class='notes'>{{@model.notes}}</p>
+            </section>
           {{/if}}
-        </section>
-        <div class='grid'>
-          <section class='panel'>
-            <h2>Employee</h2>
-            {{#if @model.employee}}<@fields.employee @format='atom' />{{else}}
-              <p class='empty'>No employee linked.</p>{{/if}}
-          </section>
-          <section class='panel'>
-            <h2>Approved By</h2>
-            {{#if @model.approvedBy}}<@fields.approvedBy
-                @format='atom'
-              />{{else}}
-              <p class='empty'>Unapproved draft.</p>{{/if}}
-          </section>
-        </div>
-        {{#if @model.notes}}
-          <section class='panel'>
-            <h2>Notes</h2>
-            <p class='notes'>{{@model.notes}}</p>
-          </section>
-        {{/if}}
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .comp-rec {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--card);
           color: var(--card-foreground);
           display: grid;
           gap: var(--boxel-sp);
