@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "tiles": null,
+      "focus": null,
+      "chat": null,
+      "includeTests": true,
+      "chatSide": null
+    },
+    "relationships": {
+      "brief": {
+        "links": {
+          "self": "../InterviewBrief/sixteen-types"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../analysis",
+        "name": "StudyAnalysis"
+      }
+    }
+  }
+}

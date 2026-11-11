@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "A screen that feels calm",
+      "brief": "What 'calm' looks like to this person in a work app: the layout, density and colour choices they reach for when asked for calm.",
+      "mode": "describe",
+      "prompt": "Describe a screen for keeping track of your team's work that would feel calm to you. Anything: what's on it, how full it is, the colours.",
+      "subject": "a work app screen for tracking a team's tasks",
+      "look": "ui",
+      "edits": 2,
+      "editPrompt": "Is this calm to you? Change one thing to make it more so.",
+      "seed": null,
+      "seedImage": null,
+      "questions": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../picture",
+        "name": "PictureQuestion"
+      }
+    }
+  }
+}

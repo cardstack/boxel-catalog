@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Sample participant · Which would you rather use every working day?",
+      "brief": "Aims 1 and 5: dense vs airy and looks vs speed through forced choices",
+      "prompt": "Which would you rather use every working day?",
+      "items": "Screen 1\nScreen 9\nScreen 15\nScreen 7\nScreen 6",
+      "media": "{\"Screen 1\":{\"image\":\"../Stimuli/s1-image.png\"},\"Screen 9\":{\"image\":\"../Stimuli/s9-image.png\"},\"Screen 15\":{\"image\":\"../Stimuli/s15-image.png\"},\"Screen 7\":{\"image\":\"../Stimuli/s7-image.png\"},\"Screen 6\":{\"image\":\"../Stimuli/s6-image.jpg\"}}",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../duels",
+        "name": "DuelsQuestion"
+      }
+    }
+  }
+}

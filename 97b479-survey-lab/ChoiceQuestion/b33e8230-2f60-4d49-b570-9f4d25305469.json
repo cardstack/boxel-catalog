@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Sample participant · Which of these would you trust least?",
+      "brief": "Aim 4: pin which screen feels least trustworthy/cheap, forcing a commitment to a numbered screen",
+      "prompt": "Which of these would you trust least?",
+      "options": "Screen 15\nScreen 6\nScreen 16",
+      "multi": false,
+      "maxPicks": 1,
+      "allowOther": true,
+      "shuffle": true,
+      "media": "{\"Screen 15\":{\"image\":\"../Stimuli/s15-image.png\"},\"Screen 6\":{\"image\":\"../Stimuli/s6-image.jpg\"},\"Screen 16\":{\"image\":\"../Stimuli/s16-image.jpg\",\"video\":\"https://app.boxel.ai/chuanstack/survey-lab/Stimuli/s16-video.mp4\"}}",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../choice",
+        "name": "ChoiceQuestion"
+      }
+    }
+  }
+}

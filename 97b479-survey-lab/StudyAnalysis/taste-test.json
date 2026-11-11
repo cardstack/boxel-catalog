@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "tiles": "[{\"id\":\"part\",\"kind\":\"participation\",\"title\":\"Who took part\",\"size\":\"s\",\"config\":{}},{\"id\":\"duels\",\"kind\":\"duels\",\"title\":\"How the screens ranked\",\"size\":\"m\",\"config\":{}},{\"id\":\"src-note\",\"kind\":\"note\",\"title\":\"Win rate by source\",\"size\":\"s\",\"config\":{\"text\":\"Real products 83% of 6. Dribbble concepts 33% of 3. Our AI concepts 29% of 7. One person, 8 picks, so a hint only.\"}},{\"id\":\"dense\",\"kind\":\"measure\",\"title\":\"Dense or airy\",\"size\":\"m\",\"config\":{\"measure\":1}}]",
+      "focus": null,
+      "chat": "[{\"who\":\"you\",\"text\":\"Present the headline results for the CEO: who took part, how the screens ranked, and where people leaned on dense vs airy.\",\"at\":\"2026-11-10T21:45:07.362Z\"},{\"who\":\"analyst\",\"text\":\"Only one person is in so far, a sample participant who finished in 4.4 minutes with Mei. Everything I show is one person's view, so treat it as a hint, not a finding.\",\"at\":\"2026-11-10T21:45:15.008Z\"},{\"who\":\"analyst\",\"text\":\"On the screen ranking, their top two were both real products, Screen 9 and Screen 1. The two AI concepts landed mid and bottom: Screen 7 in the middle and Screen 15 last. This rests on 8 picks from one person.\",\"at\":\"2026-11-10T21:45:21.513Z\"},{\"who\":\"analyst\",\"text\":\"By source, real products won 83% of their 6 matchups, Dribbble concepts 33% of 3, and our AI concepts 29% of 7. The counts are tiny, but the direction is that our AI concepts trailed the real products for this person.\",\"at\":\"2026-11-10T21:45:27.519Z\"},{\"who\":\"analyst\",\"text\":\"On dense versus airy, this person leans moderately dense but calm, and cites Linear as the model. That is one reading at medium confidence. They also couldn't say why the dense Screen 15 ranked last.\",\"at\":\"2026-11-10T21:45:33.529Z\"}]",
+      "includeTests": true,
+      "chatSide": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "brief": {
+        "links": {
+          "self": "../InterviewBrief/taste-test"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../analysis",
+        "name": "StudyAnalysis"
+      }
+    }
+  }
+}

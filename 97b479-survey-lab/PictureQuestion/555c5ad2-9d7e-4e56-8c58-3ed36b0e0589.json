@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Sample participant · Look at this scene and tell me what you make of it.",
+      "brief": "Attention (S/N): do they list concrete details or read patterns and stories into an open scene",
+      "mode": "react",
+      "prompt": "Look at this scene and tell me what you make of it.",
+      "subject": null,
+      "look": "photo",
+      "edits": 0,
+      "editPrompt": null,
+      "seed": "an empty park bench at dusk, a closed umbrella leaning against it, one lit window in a building far behind, no people, no text",
+      "seedImage": null,
+      "questions": "What's going on here?\nHow does it feel?\nWhat happens next?",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../picture",
+        "name": "PictureQuestion"
+      }
+    }
+  }
+}
