@@ -30,6 +30,7 @@ import {
 } from './order-status';
 import { Warehouse } from './warehouse';
 import { money } from './fulfilment-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Where the order came from. v1 enters orders by hand; the field exists now so
 // that an integration later is a new option rather than a migration.
@@ -140,125 +141,126 @@ class FulfilmentOrderIsolated extends Component<typeof FulfilmentOrder> {
   hold = () => this.setStatus('on_hold');
 
   <template>
-    <article class='ord'>
-      <header class='ihead'>
-        <div class='who'>
-          <span class='mark' aria-hidden='true'>Or</span>
-          <div class='id'>
-            <h1 class='name'>{{@model.cardTitle}}</h1>
-            <p class='meta'>{{metaLine @model}}</p>
+    <IsoFrame>
+      <article class='ord'>
+        <header class='ihead'>
+          <div class='who'>
+            <span class='mark' aria-hidden='true'>Or</span>
+            <div class='id'>
+              <h1 class='name'>{{@model.cardTitle}}</h1>
+              <p class='meta'>{{metaLine @model}}</p>
+            </div>
           </div>
-        </div>
-        <div class='bar'>
-          <span class='st' data-tone={{statusTone @model.status}}><span
-              class='dot'
-            ></span>{{statusText @model.status}}</span>
-          {{#if @model.isExpress}}
-            <span class='st' data-tone='bad'><span class='dot'></span>{{lower
-                @model.priorityLabel
-              }}</span>
-          {{/if}}
-          {{#if @model.paymentStatus}}
-            <span
-              class='st'
-              data-tone={{paymentTone @model.paymentStatus}}
-            ><span class='dot'></span>{{lower
-                (paymentLabel @model.paymentStatus)
-              }}</span>
-          {{/if}}
-          {{#if this.canAct}}
-            {{#if this.nextStatus}}
-              <Button
-                @tone='primary'
-                @appearance='accent'
-                @size='sm'
-                @busy={{this.busy}}
-                {{on 'click' this.advance}}
-              >{{this.nextLabel}}</Button>
-            {{/if}}
-            {{#if this.canHold}}
-              <Button
-                @tone='neutral'
-                @appearance='outlined'
-                @size='sm'
-                @disabled={{this.busy}}
-                {{on 'click' this.hold}}
-              >Hold</Button>
-            {{/if}}
-          {{/if}}
-        </div>
-      </header>
-
-      <div class='stats'>
-        {{#each this.stats as |s|}}
-          <div class='stat'>
-            <span class='st cap' data-tone={{s.tone}}><span
+          <div class='bar'>
+            <span class='st' data-tone={{statusTone @model.status}}><span
                 class='dot'
-              ></span>{{s.label}}</span>
-            <span class='num'>{{s.value}}</span>
-            <span class='meta'>{{s.meta}}</span>
+              ></span>{{statusText @model.status}}</span>
+            {{#if @model.isExpress}}
+              <span class='st' data-tone='bad'><span class='dot'></span>{{lower
+                  @model.priorityLabel
+                }}</span>
+            {{/if}}
+            {{#if @model.paymentStatus}}
+              <span
+                class='st'
+                data-tone={{paymentTone @model.paymentStatus}}
+              ><span class='dot'></span>{{lower
+                  (paymentLabel @model.paymentStatus)
+                }}</span>
+            {{/if}}
+            {{#if this.canAct}}
+              {{#if this.nextStatus}}
+                <Button
+                  @tone='primary'
+                  @appearance='accent'
+                  @size='sm'
+                  @busy={{this.busy}}
+                  {{on 'click' this.advance}}
+                >{{this.nextLabel}}</Button>
+              {{/if}}
+              {{#if this.canHold}}
+                <Button
+                  @tone='neutral'
+                  @appearance='outlined'
+                  @size='sm'
+                  @disabled={{this.busy}}
+                  {{on 'click' this.hold}}
+                >Hold</Button>
+              {{/if}}
+            {{/if}}
           </div>
-        {{/each}}
-      </div>
+        </header>
 
-      <section class='blk'>
-        <h2>Line items</h2>
-        {{#each @model.lineItems as |l|}}
-          <div class='row'>
-            <span class='lead'>
-              <span class='strong'>{{l.productName}} × {{l.quantity}}</span>
-              <span class='meta'>{{lineMeta l}}</span>
-            </span>
-            <span class='mono'>{{shippedText l}}</span>
-          </div>
-        {{else}}
-          <p class='row meta'>No line items — add one before allocating.</p>
-        {{/each}}
-      </section>
-
-      <section class='blk'>
-        <h2>Totals</h2>
-        <dl class='kv'>
-          {{#each this.totals as |r|}}
-            <dt class='cap'>{{r.k}}</dt>
-            <dd>{{r.v}}</dd>
+        <div class='stats'>
+          {{#each this.stats as |s|}}
+            <div class='stat'>
+              <span class='st cap' data-tone={{s.tone}}><span
+                  class='dot'
+                ></span>{{s.label}}</span>
+              <span class='num'>{{s.value}}</span>
+              <span class='meta'>{{s.meta}}</span>
+            </div>
           {{/each}}
-        </dl>
-      </section>
+        </div>
 
-      <section class='blk'>
-        <h2>Customer</h2>
-        <dl class='kv'>
-          <dt class='cap'>Name</dt>
-          <dd>{{dash @model.customerName}}</dd>
-          <dt class='cap'>Email</dt>
-          <dd>{{dash @model.customerEmail}}</dd>
-          <dt class='cap'>Ship to</dt>
-          <dd>{{addressLine @model.shippingAddress}}</dd>
-          <dt class='cap'>Tags</dt>
-          <dd>{{tagLine @model.tags}}</dd>
-        </dl>
-      </section>
-
-      {{#if @model.notes}}
         <section class='blk'>
-          <h2>Notes</h2>
-          <div class='notes'><@fields.notes /></div>
+          <h2>Line items</h2>
+          {{#each @model.lineItems as |l|}}
+            <div class='row'>
+              <span class='lead'>
+                <span class='strong'>{{l.productName}} × {{l.quantity}}</span>
+                <span class='meta'>{{lineMeta l}}</span>
+              </span>
+              <span class='mono'>{{shippedText l}}</span>
+            </div>
+          {{else}}
+            <p class='row meta'>No line items — add one before allocating.</p>
+          {{/each}}
         </section>
-      {{/if}}
 
-      <section class='blk'>
-        <h2>Linked</h2>
-        <dl class='kv'>
-          <dt class='cap'>Warehouse</dt>
-          <dd>{{#if @model.allocatedWarehouse}}<@fields.allocatedWarehouse
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</dd>
-        </dl>
-      </section>
-    </article>
+        <section class='blk'>
+          <h2>Totals</h2>
+          <dl class='kv'>
+            {{#each this.totals as |r|}}
+              <dt class='cap'>{{r.k}}</dt>
+              <dd>{{r.v}}</dd>
+            {{/each}}
+          </dl>
+        </section>
 
+        <section class='blk'>
+          <h2>Customer</h2>
+          <dl class='kv'>
+            <dt class='cap'>Name</dt>
+            <dd>{{dash @model.customerName}}</dd>
+            <dt class='cap'>Email</dt>
+            <dd>{{dash @model.customerEmail}}</dd>
+            <dt class='cap'>Ship to</dt>
+            <dd>{{addressLine @model.shippingAddress}}</dd>
+            <dt class='cap'>Tags</dt>
+            <dd>{{tagLine @model.tags}}</dd>
+          </dl>
+        </section>
+
+        {{#if @model.notes}}
+          <section class='blk'>
+            <h2>Notes</h2>
+            <div class='notes'><@fields.notes /></div>
+          </section>
+        {{/if}}
+
+        <section class='blk'>
+          <h2>Linked</h2>
+          <dl class='kv'>
+            <dt class='cap'>Warehouse</dt>
+            <dd>{{#if @model.allocatedWarehouse}}<@fields.allocatedWarehouse
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd>
+          </dl>
+        </section>
+      </article>
+    </IsoFrame>
     <style scoped>
       .ord {
         container-type: inline-size;

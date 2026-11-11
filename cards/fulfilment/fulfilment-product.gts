@@ -24,6 +24,7 @@ import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import { Product } from '../commerce/product';
 import { realmURL } from 'https://cardstack.com/base/card-api';
 import type Owner from '@ember/owner';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // A Product as fulfilment sees it: the base Product's SKU and name, plus the
 // things you need to *move* an item (weight, box size, barcode, who supplies
@@ -141,122 +142,123 @@ export class FulfilmentProduct extends Product {
     }
 
     <template>
-      <article class='prod'>
-        <header class='ihead'>
-          <div class='who'>
-            {{#if @model.image.resolvedUrl}}
-              <img class='mark' src={{@model.image.resolvedUrl}} alt='' />
-            {{else}}
-              <span class='mark' aria-hidden='true'>Pr</span>
-            {{/if}}
-            <div class='id'>
-              <h1 class='name'>{{@model.cardTitle}}</h1>
-              <p class='meta'>{{metaLine @model}}</p>
-            </div>
-          </div>
-          <div class='bar'>
-            <span class='st' data-tone={{if @model.isActive 'ok'}}><span
-                class='dot'
-              ></span>{{if @model.isActive 'active' 'inactive'}}</span>
-            {{#if @model.isDropship}}
-              <span class='st'><span class='dot'></span>dropship</span>
-            {{/if}}
-            <span class='st'><span class='dot'></span>{{money
-                @model.price.amount
-                @model.price.currency.code
-              }}</span>
-          </div>
-        </header>
-
-        <div class='stats'>
-          {{#each this.stats as |s|}}
-            <div class='stat'>
-              <span class='st cap' data-tone={{s.tone}}><span
-                  class='dot'
-                ></span>{{s.label}}</span>
-              <span class='num'>{{s.value}}</span>
-              <span class='meta'>{{s.meta}}</span>
-            </div>
-          {{/each}}
-        </div>
-
-        <section class='blk'>
-          <h2>Pricing</h2>
-          <dl class='kv'>
-            {{#each this.pricingRows as |r|}}
-              <dt class='cap'>{{r.k}}</dt>
-              <dd>{{r.v}}</dd>
-            {{/each}}
-          </dl>
-        </section>
-
-        <section class='blk'>
-          <h2>Shipping profile</h2>
-          <dl class='kv'>
-            {{#each this.parcelRows as |r|}}
-              <dt class='cap'>{{r.k}}</dt>
-              <dd>{{r.v}}</dd>
-            {{/each}}
-          </dl>
-        </section>
-
-        <section class='blk'>
-          <h2>Identifiers</h2>
-          <dl class='kv'>
-            {{#each this.idRows as |r|}}
-              <dt class='cap'>{{r.k}}</dt>
-              <dd>{{r.v}}</dd>
-            {{/each}}
-          </dl>
-        </section>
-
-        <section class='blk'>
-          <h2>Stock</h2>
-          {{#if this.queryError}}
-            <p class='row' role='alert'><span class='st' data-tone='bad'><span
-                  class='dot'
-                ></span>Could not read stock:
-                {{this.queryError}}</span></p>
-          {{else if this.isQueryLoading}}
-            <p class='row meta'>Loading stock…</p>
-          {{else}}
-            {{#each this.stockRows as |row|}}
-              <div class='row'>
-                <span class='lead'>
-                  <span class='strong'>{{if
-                      row.warehouseCode
-                      row.warehouseCode
-                      '—'
-                    }}</span>
-                  <span class='mono'>{{if
-                      row.binLocation
-                      row.binLocation
-                      '—'
-                    }}</span>
-                </span>
-                <span class='st' data-tone={{stockTone row}}><span
-                    class='dot'
-                  ></span>{{row.quantityAvailable}}
-                  available</span>
+      <IsoFrame>
+        <article class='prod'>
+          <header class='ihead'>
+            <div class='who'>
+              {{#if @model.image.resolvedUrl}}
+                <img class='mark' src={{@model.image.resolvedUrl}} alt='' />
+              {{else}}
+                <span class='mark' aria-hidden='true'>Pr</span>
+              {{/if}}
+              <div class='id'>
+                <h1 class='name'>{{@model.cardTitle}}</h1>
+                <p class='meta'>{{metaLine @model}}</p>
               </div>
-            {{else}}
-              <p class='row meta'>No stock rows reference this product yet.</p>
+            </div>
+            <div class='bar'>
+              <span class='st' data-tone={{if @model.isActive 'ok'}}><span
+                  class='dot'
+                ></span>{{if @model.isActive 'active' 'inactive'}}</span>
+              {{#if @model.isDropship}}
+                <span class='st'><span class='dot'></span>dropship</span>
+              {{/if}}
+              <span class='st'><span class='dot'></span>{{money
+                  @model.price.amount
+                  @model.price.currency.code
+                }}</span>
+            </div>
+          </header>
+
+          <div class='stats'>
+            {{#each this.stats as |s|}}
+              <div class='stat'>
+                <span class='st cap' data-tone={{s.tone}}><span
+                    class='dot'
+                  ></span>{{s.label}}</span>
+                <span class='num'>{{s.value}}</span>
+                <span class='meta'>{{s.meta}}</span>
+              </div>
             {{/each}}
-          {{/if}}
-        </section>
+          </div>
 
-        <section class='blk'>
-          <h2>Linked</h2>
-          <dl class='kv'>
-            <dt class='cap'>Vendor</dt>
-            <dd>{{#if @model.vendor}}<@fields.vendor
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}—{{/if}}</dd>
-          </dl>
-        </section>
-      </article>
+          <section class='blk'>
+            <h2>Pricing</h2>
+            <dl class='kv'>
+              {{#each this.pricingRows as |r|}}
+                <dt class='cap'>{{r.k}}</dt>
+                <dd>{{r.v}}</dd>
+              {{/each}}
+            </dl>
+          </section>
 
+          <section class='blk'>
+            <h2>Shipping profile</h2>
+            <dl class='kv'>
+              {{#each this.parcelRows as |r|}}
+                <dt class='cap'>{{r.k}}</dt>
+                <dd>{{r.v}}</dd>
+              {{/each}}
+            </dl>
+          </section>
+
+          <section class='blk'>
+            <h2>Identifiers</h2>
+            <dl class='kv'>
+              {{#each this.idRows as |r|}}
+                <dt class='cap'>{{r.k}}</dt>
+                <dd>{{r.v}}</dd>
+              {{/each}}
+            </dl>
+          </section>
+
+          <section class='blk'>
+            <h2>Stock</h2>
+            {{#if this.queryError}}
+              <p class='row' role='alert'><span class='st' data-tone='bad'><span
+                    class='dot'
+                  ></span>Could not read stock:
+                  {{this.queryError}}</span></p>
+            {{else if this.isQueryLoading}}
+              <p class='row meta'>Loading stock…</p>
+            {{else}}
+              {{#each this.stockRows as |row|}}
+                <div class='row'>
+                  <span class='lead'>
+                    <span class='strong'>{{if
+                        row.warehouseCode
+                        row.warehouseCode
+                        '—'
+                      }}</span>
+                    <span class='mono'>{{if
+                        row.binLocation
+                        row.binLocation
+                        '—'
+                      }}</span>
+                  </span>
+                  <span class='st' data-tone={{stockTone row}}><span
+                      class='dot'
+                    ></span>{{row.quantityAvailable}}
+                    available</span>
+                </div>
+              {{else}}
+                <p class='row meta'>No stock rows reference this product yet.</p>
+              {{/each}}
+            {{/if}}
+          </section>
+
+          <section class='blk'>
+            <h2>Linked</h2>
+            <dl class='kv'>
+              <dt class='cap'>Vendor</dt>
+              <dd>{{#if @model.vendor}}<@fields.vendor
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</dd>
+            </dl>
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .prod {
           container-type: inline-size;

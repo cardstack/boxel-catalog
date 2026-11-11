@@ -24,6 +24,7 @@ import { Button } from '@cardstack/pretui/components/button';
 import { Input } from '@cardstack/pretui/components/input';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { FitTile } from '../shared/fit-tile';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const PICK_LIST_STATUSES = [
   { value: 'pending', label: 'Not started' },
@@ -339,146 +340,147 @@ class PickListIsolated extends Component<typeof PickList> {
   }
 
   <template>
-    <article class='pl'>
-      <header class='ihead'>
-        <div class='who'>
-          <span class='mark' aria-hidden='true'>Pk</span>
-          <div class='id'>
-            <h1 class='name'>{{@model.cardTitle}}</h1>
-            <p class='meta'>{{metaLine @model}}</p>
-          </div>
-        </div>
-        <div class='bar'>
-          <span class='st' data-tone={{statusTone @model.status}}><span
-              class='dot'
-            ></span>{{statusText @model.status}}</span>
-          <span class='st'><span class='dot'></span>{{unitsText @model}}
-            picked</span>
-        </div>
-      </header>
-
-      <div class='stats'>
-        {{#each this.stats as |s|}}
-          <div class='stat'>
-            <span class='st cap' data-tone={{s.tone}}><span
-                class='dot'
-              ></span>{{s.label}}</span>
-            <span class='num'>{{s.value}}</span>
-            <span class='meta'>{{s.meta}}</span>
-          </div>
-        {{/each}}
-      </div>
-
-      <section class='blk'>
-        <h2>Next pick</h2>
-        {{#if @model.nextItem}}
-          <div class='row'>
-            <span class='lead'>
-              <span class='strong'>{{@model.nextItem.productName}}
-                ×
-                {{@model.nextItem.quantity}}</span>
-              <span class='meta'>{{itemMeta @model.nextItem}}</span>
-            </span>
-            <span class='mono'>{{dash @model.nextItem.binLocation}}</span>
-          </div>
-          {{#if this.canAct}}
-            <div class='scan'>
-              <Input
-                class='scan-input'
-                @value={{this.scanValue}}
-                @onInput={{this.setScan}}
-                @placeholder='Scan barcode or type SKU'
-                aria-label='Scan barcode or SKU'
-                {{on 'keydown' this.handleScanKey}}
-              />
-              <Button
-                @tone='primary'
-                @appearance='accent'
-                @size='sm'
-                @disabled={{this.busy}}
-                {{on 'click' this.pickCurrent}}
-              >Picked {{@model.nextItem.quantity}}</Button>
-              <Button
-                @tone='neutral'
-                @appearance='outlined'
-                @size='sm'
-                @disabled={{this.busy}}
-                {{on 'click' this.markShort}}
-              >Item missing</Button>
+    <IsoFrame>
+      <article class='pl'>
+        <header class='ihead'>
+          <div class='who'>
+            <span class='mark' aria-hidden='true'>Pk</span>
+            <div class='id'>
+              <h1 class='name'>{{@model.cardTitle}}</h1>
+              <p class='meta'>{{metaLine @model}}</p>
             </div>
-            {{#if this.scanFeedback}}
-              <p class='row meta' role='status'>{{this.scanFeedback}}</p>
+          </div>
+          <div class='bar'>
+            <span class='st' data-tone={{statusTone @model.status}}><span
+                class='dot'
+              ></span>{{statusText @model.status}}</span>
+            <span class='st'><span class='dot'></span>{{unitsText @model}}
+              picked</span>
+          </div>
+        </header>
+
+        <div class='stats'>
+          {{#each this.stats as |s|}}
+            <div class='stat'>
+              <span class='st cap' data-tone={{s.tone}}><span
+                  class='dot'
+                ></span>{{s.label}}</span>
+              <span class='num'>{{s.value}}</span>
+              <span class='meta'>{{s.meta}}</span>
+            </div>
+          {{/each}}
+        </div>
+
+        <section class='blk'>
+          <h2>Next pick</h2>
+          {{#if @model.nextItem}}
+            <div class='row'>
+              <span class='lead'>
+                <span class='strong'>{{@model.nextItem.productName}}
+                  ×
+                  {{@model.nextItem.quantity}}</span>
+                <span class='meta'>{{itemMeta @model.nextItem}}</span>
+              </span>
+              <span class='mono'>{{dash @model.nextItem.binLocation}}</span>
+            </div>
+            {{#if this.canAct}}
+              <div class='scan'>
+                <Input
+                  class='scan-input'
+                  @value={{this.scanValue}}
+                  @onInput={{this.setScan}}
+                  @placeholder='Scan barcode or type SKU'
+                  aria-label='Scan barcode or SKU'
+                  {{on 'keydown' this.handleScanKey}}
+                />
+                <Button
+                  @tone='primary'
+                  @appearance='accent'
+                  @size='sm'
+                  @disabled={{this.busy}}
+                  {{on 'click' this.pickCurrent}}
+                >Picked {{@model.nextItem.quantity}}</Button>
+                <Button
+                  @tone='neutral'
+                  @appearance='outlined'
+                  @size='sm'
+                  @disabled={{this.busy}}
+                  {{on 'click' this.markShort}}
+                >Item missing</Button>
+              </div>
+              {{#if this.scanFeedback}}
+                <p class='row meta' role='status'>{{this.scanFeedback}}</p>
+              {{/if}}
+            {{else}}
+              <p class='row meta'>Open this pick list in the app to scan and
+                record picks.</p>
             {{/if}}
           {{else}}
-            <p class='row meta'>Open this pick list in the app to scan and
-              record picks.</p>
+            <p class='row meta'>Every line is accounted for. Take the tote to
+              the packing station.</p>
           {{/if}}
-        {{else}}
-          <p class='row meta'>Every line is accounted for. Take the tote to the
-            packing station.</p>
-        {{/if}}
-      </section>
+        </section>
 
-      <section class='blk'>
-        <h2>Pick path</h2>
-        {{#each @model.route as |item|}}
-          <div class='row'>
-            <span class='lead'>
-              <span class='strong'>{{item.productName}}
-                ×
-                {{item.quantity}}</span>
-              <span class='meta'>{{routeMeta item}}</span>
-            </span>
-            <span class='st' data-tone={{itemTone item}}><span
-                class='dot'
-              ></span>{{if item.isShort 'short · '}}{{if
-                item.pickedQuantity
-                item.pickedQuantity
-                0
-              }}
-              /
-              {{if item.quantity item.quantity 0}}</span>
-          </div>
-        {{else}}
-          <p class='row meta'>No items on this list.</p>
-        {{/each}}
-      </section>
-
-      <section class='blk'>
-        <h2>Progress</h2>
-        <dl class='kv'>
-          <dt class='cap'>Units picked</dt>
-          <dd>{{unitsText @model}}</dd>
-        </dl>
-        <div class='prog'>
-          <ProgressBar
-            @value={{if @model.pickedUnits @model.pickedUnits 0}}
-            @max={{if @model.totalUnits @model.totalUnits 1}}
-            @label='Units picked'
-            @hue='var(--foreground)'
-          />
-        </div>
-      </section>
-
-      <section class='blk'>
-        <h2>Linked</h2>
-        <dl class='kv'>
-          <dt class='cap'>Warehouse</dt>
-          <dd>{{#if @model.warehouse}}<@fields.warehouse
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</dd>
-          {{#each @fields.orders as |Order|}}
-            <dt class='cap'>Order</dt>
-            <dd><Order @format='atom' @displayContainer={{false}} /></dd>
+        <section class='blk'>
+          <h2>Pick path</h2>
+          {{#each @model.route as |item|}}
+            <div class='row'>
+              <span class='lead'>
+                <span class='strong'>{{item.productName}}
+                  ×
+                  {{item.quantity}}</span>
+                <span class='meta'>{{routeMeta item}}</span>
+              </span>
+              <span class='st' data-tone={{itemTone item}}><span
+                  class='dot'
+                ></span>{{if item.isShort 'short · '}}{{if
+                  item.pickedQuantity
+                  item.pickedQuantity
+                  0
+                }}
+                /
+                {{if item.quantity item.quantity 0}}</span>
+            </div>
           {{else}}
-            <dt class='cap'>Order</dt>
-            <dd>—</dd>
+            <p class='row meta'>No items on this list.</p>
           {{/each}}
-        </dl>
-      </section>
-    </article>
+        </section>
 
+        <section class='blk'>
+          <h2>Progress</h2>
+          <dl class='kv'>
+            <dt class='cap'>Units picked</dt>
+            <dd>{{unitsText @model}}</dd>
+          </dl>
+          <div class='prog'>
+            <ProgressBar
+              @value={{if @model.pickedUnits @model.pickedUnits 0}}
+              @max={{if @model.totalUnits @model.totalUnits 1}}
+              @label='Units picked'
+              @hue='var(--foreground)'
+            />
+          </div>
+        </section>
+
+        <section class='blk'>
+          <h2>Linked</h2>
+          <dl class='kv'>
+            <dt class='cap'>Warehouse</dt>
+            <dd>{{#if @model.warehouse}}<@fields.warehouse
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd>
+            {{#each @fields.orders as |Order|}}
+              <dt class='cap'>Order</dt>
+              <dd><Order @format='atom' @displayContainer={{false}} /></dd>
+            {{else}}
+              <dt class='cap'>Order</dt>
+              <dd>—</dd>
+            {{/each}}
+          </dl>
+        </section>
+      </article>
+    </IsoFrame>
     <style scoped>
       .pl {
         container-type: inline-size;

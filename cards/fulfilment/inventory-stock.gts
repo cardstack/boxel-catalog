@@ -19,6 +19,7 @@ import { Stat } from '@cardstack/pretui/components/stat';
 import { FitTile } from '../shared/fit-tile';
 import { DotLabel } from '../hr/dot-enum-field';
 import { on } from '@ember/modifier';
+import { IsoFrame } from '../shared/compact-sheet';
 // Inventory Stock — one product, in one warehouse, at one bin.
 //
 // Three quantities are stored and one is computed, and which is which is the
@@ -211,102 +212,104 @@ export class InventoryStock extends CardDef {
       ];
     }
     <template>
-      <article class='page'>
-        <header>
-          <Avatar
-            @name={{if @model.productName @model.productName 'Stock'}}
-            @src={{@model.productImageUrl}}
-            @shape='square'
-            @size={{32}}
-          />
-          <div class='id'>
-            <h1>{{@model.cardTitle}}</h1>
-            <p>{{subLine @model}}</p>
-          </div>
-          <div class='acts'>
-            <DotLabel
-              @label={{stateWord @model}}
-              @hue={{@model.stockStateHue}}
+      <IsoFrame>
+        <article class='page'>
+          <header>
+            <Avatar
+              @name={{if @model.productName @model.productName 'Stock'}}
+              @src={{@model.productImageUrl}}
+              @shape='square'
+              @size={{32}}
             />
-            <DotLabel @label='{{num @model.quantityAvailable}} available' />
-            <Button
-              @variant='primary'
-              @size='sm'
-              {{on 'click' this.openProduct}}
-            >Reorder {{num @model.reorderQuantity}}</Button>
-            <Button
-              @variant='outline'
-              @size='sm'
-              {{on 'click' this.openWarehouse}}
-            >Count</Button>
+            <div class='id'>
+              <h1>{{@model.cardTitle}}</h1>
+              <p>{{subLine @model}}</p>
+            </div>
+            <div class='acts'>
+              <DotLabel
+                @label={{stateWord @model}}
+                @hue={{@model.stockStateHue}}
+              />
+              <DotLabel @label='{{num @model.quantityAvailable}} available' />
+              <Button
+                @variant='primary'
+                @size='sm'
+                {{on 'click' this.openProduct}}
+              >Reorder {{num @model.reorderQuantity}}</Button>
+              <Button
+                @variant='outline'
+                @size='sm'
+                {{on 'click' this.openWarehouse}}
+              >Count</Button>
+            </div>
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Available'
+              @tone={{stateTone @model}}
+              @value={{num @model.quantityAvailable}}
+              @hint='{{num @model.quantityOnHand}} on hand, {{num
+                @model.quantityReserved
+              }} reserved'
+              @roll={{false}}
+            />
+            <Stat
+              @label='Reorder point'
+              @tone='neutral'
+              @value={{num @model.reorderPoint}}
+              @hint='reorder {{num @model.reorderQuantity}} when hit'
+              @roll={{false}}
+            />
+            <Stat
+              @label='Incoming'
+              @tone='neutral'
+              @value={{num @model.quantityIncoming}}
+              @hint={{if @model.quantityIncoming 'on order' 'nothing on order'}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Last movement'
+              @tone='neutral'
+              @value={{shortDate @model.lastMovementAt}}
+              @hint={{shortTime @model.lastMovementAt}}
+              @roll={{false}}
+            />
           </div>
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Available'
-            @tone={{stateTone @model}}
-            @value={{num @model.quantityAvailable}}
-            @hint='{{num @model.quantityOnHand}} on hand, {{num
-              @model.quantityReserved
-            }} reserved'
-            @roll={{false}}
-          />
-          <Stat
-            @label='Reorder point'
-            @tone='neutral'
-            @value={{num @model.reorderPoint}}
-            @hint='reorder {{num @model.reorderQuantity}} when hit'
-            @roll={{false}}
-          />
-          <Stat
-            @label='Incoming'
-            @tone='neutral'
-            @value={{num @model.quantityIncoming}}
-            @hint={{if @model.quantityIncoming 'on order' 'nothing on order'}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Last movement'
-            @tone='neutral'
-            @value={{shortDate @model.lastMovementAt}}
-            @hint={{shortTime @model.lastMovementAt}}
-            @roll={{false}}
-          />
-        </div>
-        <section>
-          <h2>Quantities</h2>
-          <dl class='kv'>
-            {{#each this.quantities as |r|}}
-              <dt class='cap'>{{r.key}}</dt>
-              <dd>{{r.value}}</dd>
-            {{/each}}
-          </dl>
-        </section>
-        <section>
-          <h2>Location</h2>
-          <dl class='kv'>
-            {{#each this.location as |r|}}
-              <dt class='cap'>{{r.key}}</dt>
-              <dd>{{r.value}}</dd>
-            {{/each}}
-          </dl>
-        </section>
-        <section>
-          <h2>Linked</h2>
-          <dl class='kv'>
-            <dt class='cap'>Product</dt>
-            <dd><@fields.product
-                @format='atom'
-                @displayContainer={{false}}
-              /></dd>
-            <dt class='cap'>Warehouse</dt>
-            <dd><@fields.warehouse
-                @format='atom'
-                @displayContainer={{false}}
-              /></dd>
-          </dl>
-        </section>
-      </article>
+          <section>
+            <h2>Quantities</h2>
+            <dl class='kv'>
+              {{#each this.quantities as |r|}}
+                <dt class='cap'>{{r.key}}</dt>
+                <dd>{{r.value}}</dd>
+              {{/each}}
+            </dl>
+          </section>
+          <section>
+            <h2>Location</h2>
+            <dl class='kv'>
+              {{#each this.location as |r|}}
+                <dt class='cap'>{{r.key}}</dt>
+                <dd>{{r.value}}</dd>
+              {{/each}}
+            </dl>
+          </section>
+          <section>
+            <h2>Linked</h2>
+            <dl class='kv'>
+              <dt class='cap'>Product</dt>
+              <dd><@fields.product
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></dd>
+              <dt class='cap'>Warehouse</dt>
+              <dd><@fields.warehouse
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></dd>
+            </dl>
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .page {
           font-size: 0.75rem;

@@ -23,6 +23,7 @@ import { isShipmentException } from './shipment-status';
 import { CompoundAtom } from './fulfilment-ui';
 import { money } from './fulfilment-format';
 import { FitTile } from '../shared/fit-tile';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // A carrier's service level: the promise, and what it costs.
 //
@@ -279,128 +280,129 @@ export class Carrier extends CardDef {
     }
 
     <template>
-      <article class='car'>
-        <header class='ihead'>
-          <div class='who'>
-            <span class='mark' aria-hidden='true'>{{carrierMark
-                @model.code
-              }}</span>
-            <div class='id'>
-              <h1 class='name'>{{@model.cardTitle}}</h1>
-              <p class='meta'>{{metaLine @model}}</p>
+      <IsoFrame>
+        <article class='car'>
+          <header class='ihead'>
+            <div class='who'>
+              <span class='mark' aria-hidden='true'>{{carrierMark
+                  @model.code
+                }}</span>
+              <div class='id'>
+                <h1 class='name'>{{@model.cardTitle}}</h1>
+                <p class='meta'>{{metaLine @model}}</p>
+              </div>
             </div>
-          </div>
-          <div class='bar'>
-            {{#if @model.onTimePercent}}
-              <span
-                class='st'
-                data-tone={{onTimeTone @model.onTimePercent}}
-              ><span class='dot'></span>{{@model.onTimePercent}}% on time</span>
-            {{/if}}
-            <span class='st' data-tone={{if @model.isActive 'ok'}}><span
-                class='dot'
-              ></span>{{if @model.isActive 'active' 'inactive'}}</span>
-          </div>
-        </header>
-
-        <div class='stats'>
-          <div class='stat'>
-            <span
-              class='st cap'
-              data-tone={{onTimeTone @model.onTimePercent}}
-            ><span class='dot'></span>On time</span>
-            <span class='num'>{{if
-                @model.onTimePercent
-                (concat @model.onTimePercent '%')
-                '—'
-              }}</span>
-            <span class='meta'>{{deliveriesLine @model}}</span>
-          </div>
-          <div class='stat'>
-            <span class='st cap'><span class='dot'></span>Services</span>
-            <span class='num'>{{count @model.services}}</span>
-            <span class='meta'>{{serviceNames @model.services}}</span>
-          </div>
-          <div class='stat'>
-            <span class='st cap'><span class='dot'></span>Countries</span>
-            <span class='num'>{{count @model.supportedCountries}}</span>
-            <span class='meta'>{{join @model.supportedCountries}}</span>
-          </div>
-        </div>
-
-        <section class='blk'>
-          <h2>Services</h2>
-          {{#if @model.services.length}}
-            {{#each @model.services as |svc|}}
-              <div class='row svc-row'>
-                <span class='svc-lead'>
-                  <span class='svc-name'>{{svc.serviceName}}</span>
-                  <span class='meta'>{{serviceMeta svc}}</span>
-                </span>
+            <div class='bar'>
+              {{#if @model.onTimePercent}}
                 <span
                   class='st'
-                  data-tone={{if svc.supportsTracking 'ok'}}
-                ><span class='dot'></span>{{if
-                    svc.supportsTracking
-                    'tracked'
-                    'untracked'
-                  }}</span>
-              </div>
-            {{/each}}
-          {{else}}
-            <p class='row meta'>No services configured — rate shopping skips
-              this carrier.</p>
-          {{/if}}
-        </section>
-
-        <section class='blk'>
-          <h2>Account</h2>
-          <dl class='kv'>
-            <dt class='cap'>Code</dt>
-            <dd class='mono'>{{dash @model.code}}</dd>
-            <dt class='cap'>Account number</dt>
-            <dd class='mono'>{{dash @model.accountNumber}}</dd>
-            <dt class='cap'>Volumetric divisor</dt>
-            <dd class='mono'>{{dash @model.dimDivisor}}</dd>
-            <dt class='cap'>Supported countries</dt>
-            <dd>{{dash (join @model.supportedCountries)}}</dd>
-            <dt class='cap'>Tracking URL</dt>
-            <dd class='mono'>{{dash @model.trackingUrlPattern}}</dd>
-          </dl>
-        </section>
-
-        <section class='blk'>
-          <h2>Linked</h2>
-          <dl class='kv'>
-            <dt class='cap'>Shipment</dt>
-            <dd class='links'>
-              {{#if this.queryError}}
-                <span class='meta'>Could not read shipments:
-                  {{this.queryError}}</span>
-              {{else if this.isQueryLoading}}
-                <span class='meta'>Loading…</span>
-              {{else}}
-                {{#each this.shipments as |s|}}
-                  <button
-                    type='button'
-                    class='link'
-                    {{on 'click' (fn this.open s)}}
-                  >
-                    <span class='amark' aria-hidden='true'>Sh</span>
-                    <span class='strong'>{{s.shipmentNumber}}</span>
-                    <span class='st' data-tone={{shipmentTone s.status}}><span
-                        class='dot'
-                      ></span>{{lower s.statusStyle.label}}</span>
-                  </button>
-                {{else}}
-                  —
-                {{/each}}
+                  data-tone={{onTimeTone @model.onTimePercent}}
+                ><span class='dot'></span>{{@model.onTimePercent}}% on time</span>
               {{/if}}
-            </dd>
-          </dl>
-        </section>
-      </article>
+              <span class='st' data-tone={{if @model.isActive 'ok'}}><span
+                  class='dot'
+                ></span>{{if @model.isActive 'active' 'inactive'}}</span>
+            </div>
+          </header>
 
+          <div class='stats'>
+            <div class='stat'>
+              <span
+                class='st cap'
+                data-tone={{onTimeTone @model.onTimePercent}}
+              ><span class='dot'></span>On time</span>
+              <span class='num'>{{if
+                  @model.onTimePercent
+                  (concat @model.onTimePercent '%')
+                  '—'
+                }}</span>
+              <span class='meta'>{{deliveriesLine @model}}</span>
+            </div>
+            <div class='stat'>
+              <span class='st cap'><span class='dot'></span>Services</span>
+              <span class='num'>{{count @model.services}}</span>
+              <span class='meta'>{{serviceNames @model.services}}</span>
+            </div>
+            <div class='stat'>
+              <span class='st cap'><span class='dot'></span>Countries</span>
+              <span class='num'>{{count @model.supportedCountries}}</span>
+              <span class='meta'>{{join @model.supportedCountries}}</span>
+            </div>
+          </div>
+
+          <section class='blk'>
+            <h2>Services</h2>
+            {{#if @model.services.length}}
+              {{#each @model.services as |svc|}}
+                <div class='row svc-row'>
+                  <span class='svc-lead'>
+                    <span class='svc-name'>{{svc.serviceName}}</span>
+                    <span class='meta'>{{serviceMeta svc}}</span>
+                  </span>
+                  <span
+                    class='st'
+                    data-tone={{if svc.supportsTracking 'ok'}}
+                  ><span class='dot'></span>{{if
+                      svc.supportsTracking
+                      'tracked'
+                      'untracked'
+                    }}</span>
+                </div>
+              {{/each}}
+            {{else}}
+              <p class='row meta'>No services configured — rate shopping skips
+                this carrier.</p>
+            {{/if}}
+          </section>
+
+          <section class='blk'>
+            <h2>Account</h2>
+            <dl class='kv'>
+              <dt class='cap'>Code</dt>
+              <dd class='mono'>{{dash @model.code}}</dd>
+              <dt class='cap'>Account number</dt>
+              <dd class='mono'>{{dash @model.accountNumber}}</dd>
+              <dt class='cap'>Volumetric divisor</dt>
+              <dd class='mono'>{{dash @model.dimDivisor}}</dd>
+              <dt class='cap'>Supported countries</dt>
+              <dd>{{dash (join @model.supportedCountries)}}</dd>
+              <dt class='cap'>Tracking URL</dt>
+              <dd class='mono'>{{dash @model.trackingUrlPattern}}</dd>
+            </dl>
+          </section>
+
+          <section class='blk'>
+            <h2>Linked</h2>
+            <dl class='kv'>
+              <dt class='cap'>Shipment</dt>
+              <dd class='links'>
+                {{#if this.queryError}}
+                  <span class='meta'>Could not read shipments:
+                    {{this.queryError}}</span>
+                {{else if this.isQueryLoading}}
+                  <span class='meta'>Loading…</span>
+                {{else}}
+                  {{#each this.shipments as |s|}}
+                    <button
+                      type='button'
+                      class='link'
+                      {{on 'click' (fn this.open s)}}
+                    >
+                      <span class='amark' aria-hidden='true'>Sh</span>
+                      <span class='strong'>{{s.shipmentNumber}}</span>
+                      <span class='st' data-tone={{shipmentTone s.status}}><span
+                          class='dot'
+                        ></span>{{lower s.statusStyle.label}}</span>
+                    </button>
+                  {{else}}
+                    —
+                  {{/each}}
+                {{/if}}
+              </dd>
+            </dl>
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .car {
           container-type: inline-size;

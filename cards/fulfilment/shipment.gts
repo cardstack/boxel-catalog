@@ -28,6 +28,7 @@ import {
 import { FulfilmentOrder } from './fulfilment-order';
 import { Warehouse } from './warehouse';
 import { Carrier } from './carrier';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // One scan on the package's journey. Carriers emit these; we store them
 // verbatim rather than collapsing them into the status, because the sequence is
@@ -123,132 +124,133 @@ class ShipmentIsolated extends Component<typeof Shipment> {
   };
 
   <template>
-    <article class='shp'>
-      <header class='ihead'>
-        <div class='who'>
-          <span class='mark' aria-hidden='true'>Sh</span>
-          <div class='id'>
-            <h1 class='name'>{{if
-                @model.shipmentNumber
-                @model.shipmentNumber
-                'Untitled shipment'
-              }}</h1>
-            <p class='meta'>{{metaLine @model}}</p>
+    <IsoFrame>
+      <article class='shp'>
+        <header class='ihead'>
+          <div class='who'>
+            <span class='mark' aria-hidden='true'>Sh</span>
+            <div class='id'>
+              <h1 class='name'>{{if
+                  @model.shipmentNumber
+                  @model.shipmentNumber
+                  'Untitled shipment'
+                }}</h1>
+              <p class='meta'>{{metaLine @model}}</p>
+            </div>
           </div>
-        </div>
-        <div class='bar'>
-          <span class='st' data-tone={{statusTone @model.status}}><span
-              class='dot'
-            ></span>{{statusText @model}}</span>
-          <span class='st'><span class='dot'></span>{{if
-              @model.isDropship
-              'dropship'
-              'warehouse'
-            }}</span>
-          {{#if @model.order}}
-            {{#if this.offPath}}
-              <Button
-                @variant='primary'
-                @size='sm'
-                {{on 'click' this.openOrder}}
-              >Re-ship</Button>
-              <Button
-                @variant='outline'
-                @size='sm'
-                {{on 'click' this.openOrder}}
-              >Open return</Button>
-            {{else}}
-              <Button
-                @variant='outline'
-                @size='sm'
-                {{on 'click' this.openOrder}}
-              >Open order</Button>
-            {{/if}}
-          {{/if}}
-        </div>
-      </header>
-
-      <div class='stats'>
-        {{#each this.stats as |s|}}
-          <div class='stat'>
-            <span class='st cap' data-tone={{s.tone}}><span
+          <div class='bar'>
+            <span class='st' data-tone={{statusTone @model.status}}><span
                 class='dot'
-              ></span>{{s.label}}</span>
-            <span class='num'>{{s.value}}</span>
-            <span class='meta'>{{s.meta}}</span>
-          </div>
-        {{/each}}
-      </div>
-
-      <section class='blk'>
-        <h2>Tracking</h2>
-        {{#each this.events as |e|}}
-          <div class='row'>
-            <span class='lead'>
-              <span class='st' data-tone={{eventTone e.statusCode}}><span
-                  class='dot'
-                ></span></span>
-              <span class='strong'>{{e.statusDescription}}</span>
-              <span class='meta mono-ish'>{{eventMeta e}}</span>
-            </span>
-            <span class='mono'>{{e.statusCode}}</span>
-          </div>
-        {{else}}
-          <p class='row meta'>No scans yet</p>
-        {{/each}}
-      </section>
-
-      <section class='blk'>
-        <h2>Parcel</h2>
-        <dl class='kv'>
-          {{#each this.parcelRows as |r|}}
-            <dt class='cap'>{{r.k}}</dt>
-            <dd>{{r.v}}</dd>
-          {{/each}}
-        </dl>
-      </section>
-
-      <section class='blk'>
-        <h2>Line items</h2>
-        {{#each @model.lineItems as |l|}}
-          <div class='row'>
-            <span class='lead'>
-              <span class='strong'>{{l.productName}} × {{l.quantity}}</span>
-              <span class='meta'>{{lineMeta l}}</span>
-            </span>
-            <span class='mono'>{{if
+              ></span>{{statusText @model}}</span>
+            <span class='st'><span class='dot'></span>{{if
                 @model.isDropship
                 'dropship'
-                l.quantityFulfilled
+                'warehouse'
               }}</span>
+            {{#if @model.order}}
+              {{#if this.offPath}}
+                <Button
+                  @variant='primary'
+                  @size='sm'
+                  {{on 'click' this.openOrder}}
+                >Re-ship</Button>
+                <Button
+                  @variant='outline'
+                  @size='sm'
+                  {{on 'click' this.openOrder}}
+                >Open return</Button>
+              {{else}}
+                <Button
+                  @variant='outline'
+                  @size='sm'
+                  {{on 'click' this.openOrder}}
+                >Open order</Button>
+              {{/if}}
+            {{/if}}
           </div>
-        {{else}}
-          <p class='row meta'>—</p>
-        {{/each}}
-      </section>
+        </header>
 
-      <section class='blk'>
-        <h2>Linked</h2>
-        <dl class='kv'>
-          <dt class='cap'>Order</dt>
-          <dd>{{#if @model.order}}<@fields.order
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</dd>
-          <dt class='cap'>Origin</dt>
-          <dd>{{#if @model.originWarehouse}}<@fields.originWarehouse
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</dd>
-          <dt class='cap'>Carrier</dt>
-          <dd>{{#if @model.carrier}}<@fields.carrier
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</dd>
-        </dl>
-      </section>
-    </article>
+        <div class='stats'>
+          {{#each this.stats as |s|}}
+            <div class='stat'>
+              <span class='st cap' data-tone={{s.tone}}><span
+                  class='dot'
+                ></span>{{s.label}}</span>
+              <span class='num'>{{s.value}}</span>
+              <span class='meta'>{{s.meta}}</span>
+            </div>
+          {{/each}}
+        </div>
 
+        <section class='blk'>
+          <h2>Tracking</h2>
+          {{#each this.events as |e|}}
+            <div class='row'>
+              <span class='lead'>
+                <span class='st' data-tone={{eventTone e.statusCode}}><span
+                    class='dot'
+                  ></span></span>
+                <span class='strong'>{{e.statusDescription}}</span>
+                <span class='meta mono-ish'>{{eventMeta e}}</span>
+              </span>
+              <span class='mono'>{{e.statusCode}}</span>
+            </div>
+          {{else}}
+            <p class='row meta'>No scans yet</p>
+          {{/each}}
+        </section>
+
+        <section class='blk'>
+          <h2>Parcel</h2>
+          <dl class='kv'>
+            {{#each this.parcelRows as |r|}}
+              <dt class='cap'>{{r.k}}</dt>
+              <dd>{{r.v}}</dd>
+            {{/each}}
+          </dl>
+        </section>
+
+        <section class='blk'>
+          <h2>Line items</h2>
+          {{#each @model.lineItems as |l|}}
+            <div class='row'>
+              <span class='lead'>
+                <span class='strong'>{{l.productName}} × {{l.quantity}}</span>
+                <span class='meta'>{{lineMeta l}}</span>
+              </span>
+              <span class='mono'>{{if
+                  @model.isDropship
+                  'dropship'
+                  l.quantityFulfilled
+                }}</span>
+            </div>
+          {{else}}
+            <p class='row meta'>—</p>
+          {{/each}}
+        </section>
+
+        <section class='blk'>
+          <h2>Linked</h2>
+          <dl class='kv'>
+            <dt class='cap'>Order</dt>
+            <dd>{{#if @model.order}}<@fields.order
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd>
+            <dt class='cap'>Origin</dt>
+            <dd>{{#if @model.originWarehouse}}<@fields.originWarehouse
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd>
+            <dt class='cap'>Carrier</dt>
+            <dd>{{#if @model.carrier}}<@fields.carrier
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd>
+          </dl>
+        </section>
+      </article>
+    </IsoFrame>
     <style scoped>
       .shp {
         container-type: inline-size;
