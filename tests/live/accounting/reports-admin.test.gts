@@ -591,6 +591,28 @@ export function runTests() {
                 lines: [],
                 items: [],
               },
+              // A credit before the date, reversed after it, had reduced INV-2 on the date too.
+              {
+                seq: 3,
+                kind: 'credit-memo',
+                date: '2027-02-12',
+                party: 'harbor',
+                lines: [
+                  { account: '4000', debitMinor: 200 },
+                  { account: '1100', creditMinor: 200 },
+                ],
+                facts: [{ key: 'invoiceNo', value: 'INV-2' }],
+                items: [],
+              },
+              {
+                seq: 4,
+                kind: 'reversal',
+                reverses: 3,
+                date: '2027-03-02',
+                party: 'harbor',
+                lines: [],
+                items: [],
+              },
             ],
           },
           {
@@ -610,7 +632,7 @@ export function runTests() {
       });
       assert.deepEqual(Object.fromEntries(after), {
         'invoice:INV-1': 12000,
-        'invoice:INV-2': -500,
+        'invoice:INV-2': -700,
       });
       let docs = invoices
         .map((d) => openDocAsOf(d, '2027-02-20', after))
@@ -619,7 +641,7 @@ export function runTests() {
         docs.map((d) => [d.number, d.openMinor]),
         [
           ['INV-1', 12000],
-          ['INV-2', 500],
+          ['INV-2', 300],
         ],
         'a payment after the date counts as open, one reversed after it as paid; the voided invoice is gone',
       );
@@ -630,7 +652,7 @@ export function runTests() {
           .map((r) => [r.cells.number, r.cells.late, r.cells.open]),
         [
           ['INV-1', 11, 12000],
-          ['INV-2', 9, 500],
+          ['INV-2', 9, 300],
         ],
       );
     });
