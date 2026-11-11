@@ -10,6 +10,7 @@ import UserIcon from '@cardstack/boxel-icons/user';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { avatarHue } from './utils';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export class User extends CardDef {
   static displayName = 'User';
@@ -187,33 +188,39 @@ export class User extends CardDef {
     }
     contactRows = [{ key: 'Email', value: 'email' }];
     <template>
-      <article class='user-page'>
-        <header class='uh'>
-          <Avatar
-            @name={{if @model.name @model.name ''}}
-            @hue={{avatarHue @model.name}}
-            @size={{56}}
-          />
-          <div class='uh-id'>
-            <p class='doc-kind'>{{@model.constructor.displayName}}</p>
-            <h1>{{this.name}}</h1>
-          </div>
-        </header>
-        {{#if @model.email}}
-          <section class='panel'>
-            <h2>Contact</h2>
-            <KeyValue class='kv-pad' @items={{this.contactRows}}>
-              <:value><@fields.email /></:value>
-            </KeyValue>
-          </section>
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='user-page'>
+          <header class='uh'>
+            <Avatar
+              @name={{if @model.name @model.name ''}}
+              @hue={{avatarHue @model.name}}
+              @size={{56}}
+            />
+            <div class='uh-id'>
+              <p class='doc-kind'>{{@model.constructor.displayName}}</p>
+              <h1>{{this.name}}</h1>
+            </div>
+          </header>
+          {{#if @model.email}}
+            <section class='panel'>
+              <h2>Contact</h2>
+              <KeyValue class='kv-pad' @items={{this.contactRows}}>
+                <:value><@fields.email /></:value>
+              </KeyValue>
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .kv-pad {
           padding-inline: var(--boxel-sp-sm);
         }
 
         .user-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 40rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);

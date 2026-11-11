@@ -21,6 +21,7 @@ import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { Money } from './money';
 import { hasNumber, labelProgress } from './utils';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Mirrors the channels Lead.source names, so a lead's channel and the specific
 // activity it came from describe the same thing at two levels of detail.
@@ -307,71 +308,79 @@ export class Campaign extends CardDef {
       return rows;
     }
     <template>
-      <article class='campaign-page'>
-        <header class='ch'>
-          <div class='ch-id'>
-            <p class='doc-kind'>Campaign</p>
-            <h1>{{@model.cardTitle}}</h1>
-            <p class='status-line'>{{@model.campaignType}}{{#if @model.status}}
-                ·
-                {{@model.status}}{{/if}}</p>
-          </div>
-        </header>
-
-        {{#if (hasNumber @model.budget.amount)}}
-          <section class='panel'>
-            <h2>Budget</h2>
-            <div class='spend-row'>
-              <Money
-                class='spend'
-                @amount={{@model.spend.amount}}
-                @code={{@model.spend.currency.code}}
-              />
-              <span class='of'>of
-                <Money
-                  @amount={{@model.budget.amount}}
-                  @code={{@model.budget.currency.code}}
-                /></span>
+      <IsoFrame>
+        <article class='campaign-page'>
+          <header class='ch'>
+            <div class='ch-id'>
+              <p class='doc-kind'>Campaign</p>
+              <h1>{{@model.cardTitle}}</h1>
+              <p class='status-line'>{{@model.campaignType}}{{#if
+                  @model.status
+                }}
+                  ·
+                  {{@model.status}}{{/if}}</p>
             </div>
-            <ProgressBar
-              class='bar {{if @model.isOverBudget "bar-over"}}'
-              @value={{this.barValue}}
-              @max={{100}}
-              @steps={{false}}
-              {{labelProgress this.noteId}}
-            />
-            <p
-              id={{this.noteId}}
-              class='bar-note {{if @model.isOverBudget "over"}}'
-            >
-              {{@model.budgetUsedPercent}}% spent{{#if @model.isOverBudget}}
-                — over budget{{/if}}
-            </p>
-          </section>
-        {{/if}}
+          </header>
 
-        <section class='panel'>
-          <h2>Details</h2>
-          <KeyValue class='kv-pad' @items={{this.details}}>
-            <:value as |row|>
-              {{#if (eq row.value 'startDate')}}
-                <@fields.startDate />
-              {{else}}
-                <@fields.endDate />
-              {{/if}}
-            </:value>
-          </KeyValue>
-          <p class='hint'>Leads attributed to this campaign are counted by
-            querying leads that point at it — a campaign does not hold a list of
-            them.</p>
-        </section>
-      </article>
+          {{#if (hasNumber @model.budget.amount)}}
+            <section class='panel'>
+              <h2>Budget</h2>
+              <div class='spend-row'>
+                <Money
+                  class='spend'
+                  @amount={{@model.spend.amount}}
+                  @code={{@model.spend.currency.code}}
+                />
+                <span class='of'>of
+                  <Money
+                    @amount={{@model.budget.amount}}
+                    @code={{@model.budget.currency.code}}
+                  /></span>
+              </div>
+              <ProgressBar
+                class='bar {{if @model.isOverBudget "bar-over"}}'
+                @value={{this.barValue}}
+                @max={{100}}
+                @steps={{false}}
+                {{labelProgress this.noteId}}
+              />
+              <p
+                id={{this.noteId}}
+                class='bar-note {{if @model.isOverBudget "over"}}'
+              >
+                {{@model.budgetUsedPercent}}% spent{{#if @model.isOverBudget}}
+                  — over budget{{/if}}
+              </p>
+            </section>
+          {{/if}}
+
+          <section class='panel'>
+            <h2>Details</h2>
+            <KeyValue class='kv-pad' @items={{this.details}}>
+              <:value as |row|>
+                {{#if (eq row.value 'startDate')}}
+                  <@fields.startDate />
+                {{else}}
+                  <@fields.endDate />
+                {{/if}}
+              </:value>
+            </KeyValue>
+            <p class='hint'>Leads attributed to this campaign are counted by
+              querying leads that point at it — a campaign does not hold a list
+              of them.</p>
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .kv-pad {
           padding-inline: var(--boxel-sp-sm);
         }
 
         .campaign-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 42rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
