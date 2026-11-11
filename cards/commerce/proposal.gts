@@ -20,6 +20,7 @@ import {
 import { formatMoney, hasNumber } from '../crm/utils';
 import { CompactFitted, CompactRow, fmtDate, orEmpty } from './compact-parts';
 import { Deal } from './deal';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const QUOTE_TONE: Record<string, 'success' | 'danger' | 'info' | 'neutral'> = {
   won: 'success',
@@ -279,76 +280,78 @@ export class Proposal extends CardDef {
       return rows;
     }
     <template>
-      <article class='pp'>
-        <header class='ph'>
-          <Avatar @name='Proposal' @shape='square' @size={{24}} />
-          <div class='id'>
-            <h1>{{@model.cardTitle}}</h1>
-            <p class='meta'>{{this.f.sub}}</p>
-          </div>
-          <span class='tags'>{{#each this.f.tags as |t|}}<Chip
-                @label={{t.label}}
-                @tone={{t.tone}}
-                @appearance='plain'
-              />{{/each}}</span>
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Deal value'
-            @tone='info'
-            @value={{orEmpty this.f.amount}}
-            @style='currency'
-            @currency={{@model.deal.value.currency.code}}
-            @maximumFractionDigits={{0}}
-            @roll={{false}}
-            @hint={{this.f.stage}}
-          />
-          <Stat
-            @label='Quotes'
-            @tone='success'
-            @value={{this.quoteCards.length}}
-            @roll={{false}}
-            @hint={{this.f.leadLabel}}
-          />
-          <Stat @label='Close date' @value={{this.f.close}} @roll={{false}} />
-        </div>
-        <div class='cols'>
-          <div>
-            {{#if @model.narrative}}
-              <div class='pad'><@fields.narrative /></div>
-            {{/if}}
-          </div>
-          <div>
-            <section>
-              <h2>Linked</h2>
-              <KeyValue
-                @items={{this.linked}}
-                @divided={{true}}
-                @labelStyle='eyebrow'
-                class='kv'
-              >
-                <:value>
-                  <@fields.deal @format='atom' @displayContainer={{false}} />
-                </:value>
-              </KeyValue>
-            </section>
-            <RelatedList
-              @title='Quotes'
-              @cards={{this.quoteCards}}
-              @empty='No quotes yet'
+      <IsoFrame>
+        <article class='pp'>
+          <header class='ph'>
+            <Avatar @name='Proposal' @shape='square' @size={{24}} />
+            <div class='id'>
+              <h1>{{@model.cardTitle}}</h1>
+              <p class='meta'>{{this.f.sub}}</p>
+            </div>
+            <span class='tags'>{{#each this.f.tags as |t|}}<Chip
+                  @label={{t.label}}
+                  @tone={{t.tone}}
+                  @appearance='plain'
+                />{{/each}}</span>
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Deal value'
+              @tone='info'
+              @value={{orEmpty this.f.amount}}
+              @style='currency'
+              @currency={{@model.deal.value.currency.code}}
+              @maximumFractionDigits={{0}}
+              @roll={{false}}
+              @hint={{this.f.stage}}
             />
-            <section>
-              <h2>Details</h2>
-              <KeyValue
-                @items={{this.details}}
-                @divided={{true}}
-                @labelStyle='eyebrow'
-                class='kv'
-              />
-            </section>
+            <Stat
+              @label='Quotes'
+              @tone='success'
+              @value={{this.quoteCards.length}}
+              @roll={{false}}
+              @hint={{this.f.leadLabel}}
+            />
+            <Stat @label='Close date' @value={{this.f.close}} @roll={{false}} />
           </div>
-        </div>
-      </article>
+          <div class='cols'>
+            <div>
+              {{#if @model.narrative}}
+                <div class='pad'><@fields.narrative /></div>
+              {{/if}}
+            </div>
+            <div>
+              <section>
+                <h2>Linked</h2>
+                <KeyValue
+                  @items={{this.linked}}
+                  @divided={{true}}
+                  @labelStyle='eyebrow'
+                  class='kv'
+                >
+                  <:value>
+                    <@fields.deal @format='atom' @displayContainer={{false}} />
+                  </:value>
+                </KeyValue>
+              </section>
+              <RelatedList
+                @title='Quotes'
+                @cards={{this.quoteCards}}
+                @empty='No quotes yet'
+              />
+              <section>
+                <h2>Details</h2>
+                <KeyValue
+                  @items={{this.details}}
+                  @divided={{true}}
+                  @labelStyle='eyebrow'
+                  class='kv'
+                />
+              </section>
+            </div>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .pp {
           font-size: var(--boxel-font-size-xs);

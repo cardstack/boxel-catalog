@@ -51,6 +51,7 @@ import {
   type ResolutionLike,
 } from '../procurement/three-way-match';
 import { ThreeWayMatchPanel } from '../procurement/components/three-way-match-panel';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Overdue is not a state anyone sets — it is what being unpaid past the due
 // date looks like, so it is derived rather than stored and cannot drift from
@@ -233,163 +234,165 @@ class InvoiceIsolated extends Component<typeof Invoice> {
     return rows;
   }
   <template>
-    <article class='ip'>
-      <header class='ih'>
-        <Avatar @name='Invoice' @shape='square' @size={{24}} />
-        <div class='id'>
-          <h1>{{this.f.number}}</h1>
-          <p class='meta'>{{this.f.sub}}</p>
-        </div>
-        <span class='tags'>{{#each this.f.tags as |t|}}<Chip
-              @label={{t.label}}
-              @tone={{t.tone}}
-              @appearance='plain'
-            />{{/each}}</span>
-        {{#if this.balance}}
-          <Button
-            @appearance='filled'
-            @disabled={{this.busy}}
-            {{on 'click' this.recordPayment}}
-          >Record payment</Button>
-        {{/if}}
-      </header>
-      <div class='stats'>
-        <Stat
-          @label='Balance due'
-          @tone={{if (eq this.f.status 'overdue') 'danger' 'info'}}
-          @value={{this.f.a.balance}}
-          @style='currency'
-          @currency={{this.f.code}}
-          @maximumFractionDigits={{0}}
-          @roll={{false}}
-          @hint={{if this.f.a.paid 'part paid' 'nothing paid'}}
-        />
-        <Stat
-          @label='Days overdue'
-          @tone={{if this.f.days 'warning'}}
-          @value={{this.f.days}}
-          @roll={{false}}
-          @hint={{if this.f.due (concat 'due ' this.f.due)}}
-        />
-        <Stat
-          @label='Tax'
-          @value={{this.f.a.tax}}
-          @style='currency'
-          @currency={{this.f.code}}
-          @maximumFractionDigits={{0}}
-          @roll={{false}}
-          @hint={{if this.f.taxText this.f.taxText}}
-        />
-      </div>
-      <div class='cols'>
-        <div>
-          <section>
-            <h2>Line items</h2>
-            {{#if this.rows.length}}
-              <Table class='lines' @label='Line items'>
-                <:head>
-                  <tr>
-                    <th scope='col'>Description</th>
-                    <th scope='col' class='num'>Qty</th>
-                    <th scope='col' class='num'>Amount</th>
-                  </tr>
-                </:head>
-                <:body>
-                  {{#each this.rows as |row|}}
-                    <tr>
-                      <td>{{row.description}}</td>
-                      <td class='num'>{{row.quantity}}</td>
-                      <td class='num'><Money
-                          @amount={{row.total}}
-                          @code={{row.code}}
-                        /></td>
-                    </tr>
-                  {{/each}}
-                  {{#if this.f.taxText}}
-                    <tr>
-                      <td>Tax</td>
-                      <td></td>
-                      <td class='num'><Money
-                          @amount={{this.f.a.tax}}
-                          @code={{this.f.code}}
-                        /></td>
-                    </tr>
-                  {{/if}}
-                  <tr class='total'>
-                    <td>Total</td>
-                    <td></td>
-                    <td class='num'>{{this.f.total}}</td>
-                  </tr>
-                </:body>
-              </Table>
-            {{else}}
-              <p class='empty-note'>No line items yet</p>
-            {{/if}}
-          </section>
-          {{#if @model.purchaseOrder}}
-            <section>
-              <h2>Three-way match · vs {{@model.purchaseOrder.poNumber}}</h2>
-              <ThreeWayMatchPanel @invoice={{@model}} @context={{@context}} />
-            </section>
+    <IsoFrame>
+      <article class='ip'>
+        <header class='ih'>
+          <Avatar @name='Invoice' @shape='square' @size={{24}} />
+          <div class='id'>
+            <h1>{{this.f.number}}</h1>
+            <p class='meta'>{{this.f.sub}}</p>
+          </div>
+          <span class='tags'>{{#each this.f.tags as |t|}}<Chip
+                @label={{t.label}}
+                @tone={{t.tone}}
+                @appearance='plain'
+              />{{/each}}</span>
+          {{#if this.balance}}
+            <Button
+              @appearance='filled'
+              @disabled={{this.busy}}
+              {{on 'click' this.recordPayment}}
+            >Record payment</Button>
           {{/if}}
-          <section>
-            <h2>Payments</h2>
-            {{#if @model.payments.length}}
-              <@fields.payments @format='embedded' />
-            {{else}}
-              <p class='empty-note'>No payments recorded</p>
+        </header>
+        <div class='stats'>
+          <Stat
+            @label='Balance due'
+            @tone={{if (eq this.f.status 'overdue') 'danger' 'info'}}
+            @value={{this.f.a.balance}}
+            @style='currency'
+            @currency={{this.f.code}}
+            @maximumFractionDigits={{0}}
+            @roll={{false}}
+            @hint={{if this.f.a.paid 'part paid' 'nothing paid'}}
+          />
+          <Stat
+            @label='Days overdue'
+            @tone={{if this.f.days 'warning'}}
+            @value={{this.f.days}}
+            @roll={{false}}
+            @hint={{if this.f.due (concat 'due ' this.f.due)}}
+          />
+          <Stat
+            @label='Tax'
+            @value={{this.f.a.tax}}
+            @style='currency'
+            @currency={{this.f.code}}
+            @maximumFractionDigits={{0}}
+            @roll={{false}}
+            @hint={{if this.f.taxText this.f.taxText}}
+          />
+        </div>
+        <div class='cols'>
+          <div>
+            <section>
+              <h2>Line items</h2>
+              {{#if this.rows.length}}
+                <Table class='lines' @label='Line items'>
+                  <:head>
+                    <tr>
+                      <th scope='col'>Description</th>
+                      <th scope='col' class='num'>Qty</th>
+                      <th scope='col' class='num'>Amount</th>
+                    </tr>
+                  </:head>
+                  <:body>
+                    {{#each this.rows as |row|}}
+                      <tr>
+                        <td>{{row.description}}</td>
+                        <td class='num'>{{row.quantity}}</td>
+                        <td class='num'><Money
+                            @amount={{row.total}}
+                            @code={{row.code}}
+                          /></td>
+                      </tr>
+                    {{/each}}
+                    {{#if this.f.taxText}}
+                      <tr>
+                        <td>Tax</td>
+                        <td></td>
+                        <td class='num'><Money
+                            @amount={{this.f.a.tax}}
+                            @code={{this.f.code}}
+                          /></td>
+                      </tr>
+                    {{/if}}
+                    <tr class='total'>
+                      <td>Total</td>
+                      <td></td>
+                      <td class='num'>{{this.f.total}}</td>
+                    </tr>
+                  </:body>
+                </Table>
+              {{else}}
+                <p class='empty-note'>No line items yet</p>
+              {{/if}}
+            </section>
+            {{#if @model.purchaseOrder}}
+              <section>
+                <h2>Three-way match · vs {{@model.purchaseOrder.poNumber}}</h2>
+                <ThreeWayMatchPanel @invoice={{@model}} @context={{@context}} />
+              </section>
             {{/if}}
-          </section>
+            <section>
+              <h2>Payments</h2>
+              {{#if @model.payments.length}}
+                <@fields.payments @format='embedded' />
+              {{else}}
+                <p class='empty-note'>No payments recorded</p>
+              {{/if}}
+            </section>
+          </div>
+          <div>
+            <section>
+              <h2>Linked</h2>
+              <KeyValue
+                @items={{this.linked}}
+                @divided={{true}}
+                @labelStyle='eyebrow'
+                class='kv'
+              >
+                <:value as |row|>
+                  {{#if (eq row.key 'Account')}}<@fields.account
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else if (eq row.key 'Quote')}}<@fields.quote
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else if (eq row.key 'Owner')}}<@fields.owner
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else if (eq row.key 'Order')}}<@fields.order
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else if (eq row.key 'Subscription')}}<@fields.subscription
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else}}<@fields.taxBreakdown.jurisdiction
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{/if}}
+                </:value>
+              </KeyValue>
+            </section>
+            <section>
+              <h2>Details</h2>
+              <KeyValue
+                @items={{this.details}}
+                @divided={{true}}
+                @labelStyle='eyebrow'
+                class='kv'
+              />
+            </section>
+          </div>
         </div>
-        <div>
-          <section>
-            <h2>Linked</h2>
-            <KeyValue
-              @items={{this.linked}}
-              @divided={{true}}
-              @labelStyle='eyebrow'
-              class='kv'
-            >
-              <:value as |row|>
-                {{#if (eq row.key 'Account')}}<@fields.account
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else if (eq row.key 'Quote')}}<@fields.quote
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else if (eq row.key 'Owner')}}<@fields.owner
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else if (eq row.key 'Order')}}<@fields.order
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else if (eq row.key 'Subscription')}}<@fields.subscription
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else}}<@fields.taxBreakdown.jurisdiction
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{/if}}
-              </:value>
-            </KeyValue>
-          </section>
-          <section>
-            <h2>Details</h2>
-            <KeyValue
-              @items={{this.details}}
-              @divided={{true}}
-              @labelStyle='eyebrow'
-              class='kv'
-            />
-          </section>
-        </div>
-      </div>
-    </article>
+      </article>
+    </IsoFrame>
     <style scoped>
       .empty-note {
         margin: 0;

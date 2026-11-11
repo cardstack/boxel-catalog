@@ -21,6 +21,7 @@ import { Contract } from '../legal/contract';
 import { Money } from '../crm/money';
 import { hasNumber } from '../crm/utils';
 import { orEmpty } from './compact-parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const BillingCycleField = enumField(StringField, {
   options: ['monthly', 'yearly'],
@@ -265,98 +266,100 @@ export class Subscription extends CardDef {
         : undefined;
     }
     <template>
-      <article class='page'>
-        <header>
-          <Avatar @name='Subscription' @shape='square' @size={{32}} />
-          <div class='id'>
-            <h1>{{@model.cardTitle}}</h1>
-            <p>{{@model.account.cardTitle}} · {{@model.billingCycle}}</p>
+      <IsoFrame>
+        <article class='page'>
+          <header>
+            <Avatar @name='Subscription' @shape='square' @size={{32}} />
+            <div class='id'>
+              <h1>{{@model.cardTitle}}</h1>
+              <p>{{@model.account.cardTitle}} · {{@model.billingCycle}}</p>
+            </div>
+            {{#if @model.status}}<StatusChip
+                @value={{@model.status}}
+                @appearance='plain'
+              />{{/if}}
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Price'
+              @tone='neutral'
+              @value={{orEmpty @model.price.amount}}
+              @style='currency'
+              @maximumFractionDigits={{0}}
+              @currency={{@model.price.currency.code}}
+              @hint={{if
+                (eq @model.billingCycle 'yearly')
+                'per year'
+                'per month'
+              }}
+              @roll={{false}}
+            />
+            <Stat
+              @label='MRR'
+              @tone='neutral'
+              @value={{orEmpty this.mrr}}
+              @style='currency'
+              @maximumFractionDigits={{0}}
+              @currency={{@model.price.currency.code}}
+              @hint='counts toward the dashboard'
+              @roll={{false}}
+            />
+            <Stat
+              @label='Renews'
+              @tone='neutral'
+              @value={{fmtDate @model.renewalDate}}
+              @roll={{false}}
+            />
           </div>
-          {{#if @model.status}}<StatusChip
-              @value={{@model.status}}
-              @appearance='plain'
-            />{{/if}}
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Price'
-            @tone='neutral'
-            @value={{orEmpty @model.price.amount}}
-            @style='currency'
-            @maximumFractionDigits={{0}}
-            @currency={{@model.price.currency.code}}
-            @hint={{if
-              (eq @model.billingCycle 'yearly')
-              'per year'
-              'per month'
-            }}
-            @roll={{false}}
-          />
-          <Stat
-            @label='MRR'
-            @tone='neutral'
-            @value={{orEmpty this.mrr}}
-            @style='currency'
-            @maximumFractionDigits={{0}}
-            @currency={{@model.price.currency.code}}
-            @hint='counts toward the dashboard'
-            @roll={{false}}
-          />
-          <Stat
-            @label='Renews'
-            @tone='neutral'
-            @value={{fmtDate @model.renewalDate}}
-            @roll={{false}}
-          />
-        </div>
-        <div class='cols'>
-          <div class='main'>
-            <section>
-              <h2>Status</h2>
-              <div class='steps'>
-                {{#each this.statuses as |st|}}
-                  <span class='step' data-current={{st.current}}><StatusChip
-                      @value={{st.label}}
-                      @appearance='plain'
-                    /></span>
-                {{/each}}
-              </div>
-            </section>
-            <section>
-              <h2>Plan</h2>
-              <KeyValue
-                @items={{this.planRows}}
-                @labelStyle='eyebrow'
-                @divided={{true}}
-                class='kv'
-              />
-            </section>
+          <div class='cols'>
+            <div class='main'>
+              <section>
+                <h2>Status</h2>
+                <div class='steps'>
+                  {{#each this.statuses as |st|}}
+                    <span class='step' data-current={{st.current}}><StatusChip
+                        @value={{st.label}}
+                        @appearance='plain'
+                      /></span>
+                  {{/each}}
+                </div>
+              </section>
+              <section>
+                <h2>Plan</h2>
+                <KeyValue
+                  @items={{this.planRows}}
+                  @labelStyle='eyebrow'
+                  @divided={{true}}
+                  class='kv'
+                />
+              </section>
+            </div>
+            <div class='side'>
+              <section>
+                <h2>Linked</h2>
+                <div class='linked'><span class='cap'>Account</span>
+                  <@fields.account
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></div>
+                <div class='linked'><span class='cap'>Contract</span>
+                  <@fields.contract
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></div>
+              </section>
+              <section>
+                <h2>Details</h2>
+                <KeyValue
+                  @items={{this.rows}}
+                  @labelStyle='eyebrow'
+                  @divided={{true}}
+                />
+              </section>
+            </div>
           </div>
-          <div class='side'>
-            <section>
-              <h2>Linked</h2>
-              <div class='linked'><span class='cap'>Account</span>
-                <@fields.account
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></div>
-              <div class='linked'><span class='cap'>Contract</span>
-                <@fields.contract
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></div>
-            </section>
-            <section>
-              <h2>Details</h2>
-              <KeyValue
-                @items={{this.rows}}
-                @labelStyle='eyebrow'
-                @divided={{true}}
-              />
-            </section>
-          </div>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .stats > * {
           padding: 0.4375rem 0.625rem;

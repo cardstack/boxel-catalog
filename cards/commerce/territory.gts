@@ -14,6 +14,7 @@ import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { CompactFitted, CompactRow, orEmpty } from './compact-parts';
 import { User } from '../crm/user';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Territory — a named sales region or account segment with an owning rep.
 // Deals/Opportunities and forecasts are scoped to a Territory, not to an
@@ -205,65 +206,67 @@ export class Territory extends CardDef {
       return this.rows.filter((r) => r.key !== 'Name');
     }
     <template>
-      <article class='page'>
-        <header>
-          <Avatar
-            @name={{orEmpty @model.cardTitle}}
-            @shape='square'
-            @size={{32}}
-          />
-          <div class='id'>
-            <h1>{{@model.cardTitle}}</h1>
-            <p>{{@model.region}} · {{@model.owner.name}}</p>
-          </div>
-          {{#if @model.region}}<Chip
-              @label={{@model.region}}
-              @appearance='plain'
-            />{{/if}}
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Region'
-            @tone='neutral'
-            @value={{if @model.region @model.region '—'}}
-            @hint='territory'
-            @roll={{false}}
-          />
-          <Stat
-            @label='Owner'
-            @tone='neutral'
-            @value={{if @model.owner.name @model.owner.name '—'}}
-            @roll={{false}}
-          />
-        </div>
-        <section>
-          <h2>Territory</h2>
-          <KeyValue
-            @items={{this.nameRows}}
-            @labelStyle='eyebrow'
-            @divided={{true}}
-            class='kv'
-          />
-        </section>
-        {{#if @model.owner}}
-          <section>
-            <h2>Linked</h2>
-            <div class='linked'>
-              <span class='cap'>Owner</span>
-              <@fields.owner @format='atom' />
+      <IsoFrame>
+        <article class='page'>
+          <header>
+            <Avatar
+              @name={{orEmpty @model.cardTitle}}
+              @shape='square'
+              @size={{32}}
+            />
+            <div class='id'>
+              <h1>{{@model.cardTitle}}</h1>
+              <p>{{@model.region}} · {{@model.owner.name}}</p>
             </div>
+            {{#if @model.region}}<Chip
+                @label={{@model.region}}
+                @appearance='plain'
+              />{{/if}}
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Region'
+              @tone='neutral'
+              @value={{if @model.region @model.region '—'}}
+              @hint='territory'
+              @roll={{false}}
+            />
+            <Stat
+              @label='Owner'
+              @tone='neutral'
+              @value={{if @model.owner.name @model.owner.name '—'}}
+              @roll={{false}}
+            />
+          </div>
+          <section>
+            <h2>Territory</h2>
+            <KeyValue
+              @items={{this.nameRows}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+              class='kv'
+            />
           </section>
-        {{/if}}
-        <section>
-          <h2>Details</h2>
-          <KeyValue
-            @items={{this.detailRows}}
-            @labelStyle='eyebrow'
-            @divided={{true}}
-            class='kv'
-          />
-        </section>
-      </article>
+          {{#if @model.owner}}
+            <section>
+              <h2>Linked</h2>
+              <div class='linked'>
+                <span class='cap'>Owner</span>
+                <@fields.owner @format='atom' />
+              </div>
+            </section>
+          {{/if}}
+          <section>
+            <h2>Details</h2>
+            <KeyValue
+              @items={{this.detailRows}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+              class='kv'
+            />
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .page {
           font-size: var(--boxel-font-size-xs);
