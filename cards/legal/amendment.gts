@@ -18,6 +18,7 @@ import { ClauseReferenceField } from './clause-reference-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import FileDiffIcon from '@cardstack/boxel-icons/file-diff';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // An amendment CHANGES existing terms of an executed contract — a new
 // price, a moved end date, a rewritten section. Numbered per contract so
@@ -71,50 +72,52 @@ export class Amendment extends CardDef {
       return this.args.model?.status === 'executed';
     }
     <template>
-      <article class='doc'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Amendment</p>
-            <h1>{{@model.cardTitle}}</h1>
-            <p class='sub'>effective {{this.effectiveLabel}}</p>
-          </div>
-          <StatePill
-            @label={{if this.executed 'EXECUTED' 'DRAFT'}}
-            @hue={{if this.executed 'green' 'slate'}}
-            @emphatic={{true}}
-          />
-        </header>
-        {{#if @model.contract}}
-          <section class='panel'>
-            <h2>Amends Contract</h2>
-            <@fields.contract @format='atom' />
-          </section>
-        {{/if}}
-        {{#if @model.changesSummary}}
-          <section class='panel'>
-            <h2>Summary of Changes</h2>
-            <p class='summary'>{{@model.changesSummary}}</p>
-          </section>
-        {{/if}}
-        {{#if @model.changedClauses.length}}
-          <section class='panel'>
-            <h2>Clauses Affected</h2>
-            <ul class='clause-refs'>
-              {{#each @fields.changedClauses as |Ref|}}
-                <li><Ref @format='embedded' /></li>
-              {{/each}}
-            </ul>
-          </section>
-        {{/if}}
-        <section class='panel'>
-          <h2>Amended Terms</h2>
-          {{#if @model.changedTerms}}
-            <@fields.changedTerms />
-          {{else}}
-            <p class='empty'>No amended text drafted yet.</p>
+      <IsoFrame>
+        <article class='doc'>
+          <header class='head'>
+            <div>
+              <p class='kicker'>Amendment</p>
+              <h1>{{@model.cardTitle}}</h1>
+              <p class='sub'>effective {{this.effectiveLabel}}</p>
+            </div>
+            <StatePill
+              @label={{if this.executed 'EXECUTED' 'DRAFT'}}
+              @hue={{if this.executed 'green' 'slate'}}
+              @emphatic={{true}}
+            />
+          </header>
+          {{#if @model.contract}}
+            <section class='panel'>
+              <h2>Amends Contract</h2>
+              <@fields.contract @format='atom' />
+            </section>
           {{/if}}
-        </section>
-      </article>
+          {{#if @model.changesSummary}}
+            <section class='panel'>
+              <h2>Summary of Changes</h2>
+              <p class='summary'>{{@model.changesSummary}}</p>
+            </section>
+          {{/if}}
+          {{#if @model.changedClauses.length}}
+            <section class='panel'>
+              <h2>Clauses Affected</h2>
+              <ul class='clause-refs'>
+                {{#each @fields.changedClauses as |Ref|}}
+                  <li><Ref @format='embedded' /></li>
+                {{/each}}
+              </ul>
+            </section>
+          {{/if}}
+          <section class='panel'>
+            <h2>Amended Terms</h2>
+            {{#if @model.changedTerms}}
+              <@fields.changedTerms />
+            {{else}}
+              <p class='empty'>No amended text drafted yet.</p>
+            {{/if}}
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .clause-refs {
           list-style: none;
@@ -124,6 +127,10 @@ export class Amendment extends CardDef {
           gap: var(--boxel-sp-sm);
         }
         .doc {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
           display: grid;

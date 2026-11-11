@@ -18,6 +18,7 @@ import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import HandStopIcon from '@cardstack/boxel-icons/hand-stop';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const WAIVER_SCOPES = ['one-time', 'ongoing'];
 
@@ -71,52 +72,57 @@ export class Waiver extends CardDef {
       return '—';
     }
     <template>
-      <article class='doc'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Waiver</p>
-            <h1>{{@model.cardTitle}}</h1>
-            <p class='sub'>{{this.windowLabel}}</p>
+      <IsoFrame>
+        <article class='doc'>
+          <header class='head'>
+            <div>
+              <p class='kicker'>Waiver</p>
+              <h1>{{@model.cardTitle}}</h1>
+              <p class='sub'>{{this.windowLabel}}</p>
+            </div>
+            <StatePill
+              @label='{{@model.scope}}'
+              @hue={{if (isOngoing @model.scope) 'amber' 'slate'}}
+              @emphatic={{true}}
+            />
+          </header>
+          <div class='grid'>
+            {{#if @model.contract}}
+              <section class='panel'>
+                <h2>Under Contract</h2>
+                <@fields.contract @format='atom' />
+              </section>
+            {{/if}}
+            {{#if @model.grantedTo}}
+              <section class='panel'>
+                <h2>Granted To</h2>
+                <@fields.grantedTo @format='atom' />
+              </section>
+            {{/if}}
           </div>
-          <StatePill
-            @label='{{@model.scope}}'
-            @hue={{if (isOngoing @model.scope) 'amber' 'slate'}}
-            @emphatic={{true}}
-          />
-        </header>
-        <div class='grid'>
-          {{#if @model.contract}}
+          {{#if @model.reason}}
             <section class='panel'>
-              <h2>Under Contract</h2>
-              <@fields.contract @format='atom' />
+              <h2>Reason</h2>
+              <p class='reason'>{{@model.reason}}</p>
             </section>
           {{/if}}
-          {{#if @model.grantedTo}}
-            <section class='panel'>
-              <h2>Granted To</h2>
-              <@fields.grantedTo @format='atom' />
-            </section>
+          {{#if (needsExpiry @model.scope @model.expiresOn)}}
+            <Alert
+              @tone='attention'
+              @title='Ongoing waiver'
+              style={{ALERT_STYLE.attention}}
+            >Without an expiry this can read as abandoning the right entirely.</Alert>
           {{/if}}
-        </div>
-        {{#if @model.reason}}
-          <section class='panel'>
-            <h2>Reason</h2>
-            <p class='reason'>{{@model.reason}}</p>
-          </section>
-        {{/if}}
-        {{#if (needsExpiry @model.scope @model.expiresOn)}}
-          <Alert
-            @tone='attention'
-            @title='Ongoing waiver'
-            style={{ALERT_STYLE.attention}}
-          >Without an expiry this can read as abandoning the right entirely.</Alert>
-        {{/if}}
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .doc {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background);
           color: var(--foreground);
           font-family: var(--font-sans);
           display: grid;

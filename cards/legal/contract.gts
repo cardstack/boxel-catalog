@@ -44,6 +44,7 @@ import { GoverningLawField } from './governing-law-field';
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import { ContractTypeField, contractTypeLabel } from './contract-type';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
@@ -302,234 +303,243 @@ class ContractIsolated extends Component<typeof Contract> {
     return a || b ? `${a || '—'} – ${b || '—'}` : '';
   }
   <template>
-    <article class='contract-page'>
-      <header class='ch'>
-        <span class='mark' aria-hidden='true'>Ct</span>
-        <div class='ch-id'>
-          <h1>{{@model.cardTitle}}</h1>
-          <p class='meta'>{{contractMeta @model}}</p>
-        </div>
-        <ul class='ch-state'>
-          {{#if @model.status}}
-            <li
-              class='dot'
-              data-tone={{statusTone @model.status}}
-            >{{contractStatusLabel @model.status}}</li>
-          {{/if}}
-          {{#if @model.riskGrade}}
-            <li class='dot' data-tone='warn'>{{@model.riskGrade}} risk</li>
-          {{/if}}
-          {{#if @model.autoRenews}}
-            <li class='dot'>auto-renews</li>
-          {{/if}}
-        </ul>
-      </header>
+    <IsoFrame>
+      <article class='contract-page'>
+        <header class='ch'>
+          <span class='mark' aria-hidden='true'>Ct</span>
+          <div class='ch-id'>
+            <h1>{{@model.cardTitle}}</h1>
+            <p class='meta'>{{contractMeta @model}}</p>
+          </div>
+          <ul class='ch-state'>
+            {{#if @model.status}}
+              <li
+                class='dot'
+                data-tone={{statusTone @model.status}}
+              >{{contractStatusLabel @model.status}}</li>
+            {{/if}}
+            {{#if @model.riskGrade}}
+              <li class='dot' data-tone='warn'>{{@model.riskGrade}} risk</li>
+            {{/if}}
+            {{#if @model.autoRenews}}
+              <li class='dot'>auto-renews</li>
+            {{/if}}
+          </ul>
+        </header>
 
-      <section class='stats' aria-label='Key numbers'>
-        <div class='stat'>
-          <span class='cap dot' data-tone='ok'>Value</span>
-          <strong>{{pick (moneyShort @model) '—'}}</strong>
-          <span class='sub'>{{if @model.value.amount 'per year' ''}}</span>
-        </div>
-        <div class='stat'>
-          <span class='cap dot' data-tone='info'>Notice by</span>
-          <strong>{{pick (shortDate @model.noticeBy) '—'}}</strong>
-          <span class='sub'>{{yearOf @model.noticeBy}}{{#if
-              @model.daysToNotice
-            }} · {{@model.daysToNotice}} days left{{/if}}</span>
-        </div>
-        <div class='stat'>
-          <span class='cap dot' data-tone='warn'>Risk</span>
-          <strong>{{if
-              @model.risk.score
-              (concat @model.risk.score ' / 100')
-              '—'
-            }}</strong>
-          <span class='sub'>{{riskGradeLabel @model.riskGrade}}
-            ·
-            {{this.riskRows.length}}
-            criteria</span>
-        </div>
-        <div class='stat'>
-          <span class='cap dot' data-tone='ok'>Signed</span>
-          <strong>{{pick (shortDate @model.signedAt) '—'}}</strong>
-          <span class='sub'>{{yearOf @model.signedAt}}{{#if
-              @model.signatureProvider
-            }} · {{@model.signatureProvider}}{{/if}}</span>
-        </div>
-      </section>
+        <section class='stats' aria-label='Key numbers'>
+          <div class='stat'>
+            <span class='cap dot' data-tone='ok'>Value</span>
+            <strong>{{pick (moneyShort @model) '—'}}</strong>
+            <span class='sub'>{{if @model.value.amount 'per year' ''}}</span>
+          </div>
+          <div class='stat'>
+            <span class='cap dot' data-tone='info'>Notice by</span>
+            <strong>{{pick (shortDate @model.noticeBy) '—'}}</strong>
+            <span class='sub'>{{yearOf @model.noticeBy}}{{#if
+                @model.daysToNotice
+              }} · {{@model.daysToNotice}} days left{{/if}}</span>
+          </div>
+          <div class='stat'>
+            <span class='cap dot' data-tone='warn'>Risk</span>
+            <strong>{{if
+                @model.risk.score
+                (concat @model.risk.score ' / 100')
+                '—'
+              }}</strong>
+            <span class='sub'>{{riskGradeLabel @model.riskGrade}}
+              ·
+              {{this.riskRows.length}}
+              criteria</span>
+          </div>
+          <div class='stat'>
+            <span class='cap dot' data-tone='ok'>Signed</span>
+            <strong>{{pick (shortDate @model.signedAt) '—'}}</strong>
+            <span class='sub'>{{yearOf @model.signedAt}}{{#if
+                @model.signatureProvider
+              }} · {{@model.signatureProvider}}{{/if}}</span>
+          </div>
+        </section>
 
-      <div class='cols'>
-        <div class='col'>
-          {{#if @model.terms}}
+        <div class='cols'>
+          <div class='col'>
+            {{#if @model.terms}}
+              <section class='blk'>
+                <h2>Terms</h2>
+                <p class='terms'>{{plainTerms @model.terms}}</p>
+              </section>
+            {{/if}}
+
+            {{#if this.steps.length}}
+              <section class='blk'>
+                <h2>Approval chain</h2>
+                <ol class='rows'>
+                  {{#each this.steps as |s i|}}
+                    <li class='row'>
+                      <span class='num'>{{inc i}}</span>
+                      <strong>{{pick
+                          s.approver.cardTitle
+                          'Unassigned'
+                        }}</strong>
+                      <span class='muted'>{{shortDate
+                          (pick s.decidedAt s.openedAt)
+                          true
+                        }}{{#if s.comment}} · {{s.comment}}{{/if}}
+                        {{s.decision}}</span>
+                    </li>
+                  {{/each}}
+                </ol>
+              </section>
+            {{/if}}
+
+            {{#if this.riskRows.length}}
+              <section class='blk'>
+                <h2>Risk scorecard</h2>
+                <ul class='rows'>
+                  {{#each this.riskRows as |r|}}
+                    <li class='row risk'>
+                      <span>{{r.name}}</span>
+                      <span class='bar' style={{r.style}}></span>
+                      <span class='mono'>{{r.score}} / 5</span>
+                    </li>
+                  {{/each}}
+                </ul>
+              </section>
+            {{/if}}
+
+            {{#if @model.signatureBlocks.length}}
+              <section class='blk'>
+                <h2>Signature blocks</h2>
+                <ul class='rows'>
+                  {{#each @model.signatureBlocks as |b|}}
+                    <li class='row sig'>
+                      <div>
+                        <strong>{{b.signingOrder}}
+                          ·
+                          {{pick
+                            b.signerName
+                            b.signatory.cardTitle
+                            'Signer'
+                          }}{{#if b.signerTitle}},
+                            {{b.signerTitle}}{{/if}}</strong>
+                        <span class='muted'>{{b.party.definedTerm}}{{#if
+                            b.party.entity.cardTitle
+                          }} · {{b.party.entity.cardTitle}}{{/if}}{{#if
+                            b.signedAt
+                          }} · {{shortDate b.signedAt true}}{{/if}}</span>
+                      </div>
+                      <span
+                        class='dot'
+                        data-tone={{if (eq b.lineStatus 'signed') 'ok'}}
+                      >{{b.lineStatus}}</span>
+                    </li>
+                  {{/each}}
+                </ul>
+              </section>
+            {{/if}}
+
+            {{#if @model.governingLaw.jurisdiction}}
+              <section class='blk'>
+                <h2>Governing law</h2>
+                <dl class='kv'>
+                  <dt>Jurisdiction</dt><dd
+                  >{{@model.governingLaw.jurisdiction}}</dd>
+                  <dt>Venue</dt><dd>{{pick @model.governingLaw.venue '—'}}</dd>
+                </dl>
+              </section>
+            {{/if}}
+
+            {{#if this.queryFailed}}
+              <Alert
+                @tone='danger'
+                @title="Could not load this contract's clauses and obligations"
+                style={{ALERT_STYLE.danger}}
+              >
+                <:default>This is a failed lookup, not an empty record — reload
+                  before concluding there are none.</:default>
+              </Alert>
+            {{/if}}
+          </div>
+
+          <div class='col'>
             <section class='blk'>
-              <h2>Terms</h2>
-              <p class='terms'>{{plainTerms @model.terms}}</p>
-            </section>
-          {{/if}}
-
-          {{#if this.steps.length}}
-            <section class='blk'>
-              <h2>Approval chain</h2>
-              <ol class='rows'>
-                {{#each this.steps as |s i|}}
-                  <li class='row'>
-                    <span class='num'>{{inc i}}</span>
-                    <strong>{{pick s.approver.cardTitle 'Unassigned'}}</strong>
-                    <span class='muted'>{{shortDate
-                        (pick s.decidedAt s.openedAt)
-                        true
-                      }}{{#if s.comment}} · {{s.comment}}{{/if}}
-                      {{s.decision}}</span>
-                  </li>
-                {{/each}}
-              </ol>
-            </section>
-          {{/if}}
-
-          {{#if this.riskRows.length}}
-            <section class='blk'>
-              <h2>Risk scorecard</h2>
-              <ul class='rows'>
-                {{#each this.riskRows as |r|}}
-                  <li class='row risk'>
-                    <span>{{r.name}}</span>
-                    <span class='bar' style={{r.style}}></span>
-                    <span class='mono'>{{r.score}} / 5</span>
-                  </li>
-                {{/each}}
-              </ul>
-            </section>
-          {{/if}}
-
-          {{#if @model.signatureBlocks.length}}
-            <section class='blk'>
-              <h2>Signature blocks</h2>
-              <ul class='rows'>
-                {{#each @model.signatureBlocks as |b|}}
-                  <li class='row sig'>
-                    <div>
-                      <strong>{{b.signingOrder}}
-                        ·
-                        {{pick
-                          b.signerName
-                          b.signatory.cardTitle
-                          'Signer'
-                        }}{{#if b.signerTitle}},
-                          {{b.signerTitle}}{{/if}}</strong>
-                      <span class='muted'>{{b.party.definedTerm}}{{#if
-                          b.party.entity.cardTitle
-                        }} · {{b.party.entity.cardTitle}}{{/if}}{{#if
-                          b.signedAt
-                        }} · {{shortDate b.signedAt true}}{{/if}}</span>
-                    </div>
-                    <span
-                      class='dot'
-                      data-tone={{if (eq b.lineStatus 'signed') 'ok'}}
-                    >{{b.lineStatus}}</span>
-                  </li>
-                {{/each}}
-              </ul>
-            </section>
-          {{/if}}
-
-          {{#if @model.governingLaw.jurisdiction}}
-            <section class='blk'>
-              <h2>Governing law</h2>
+              <h2>Linked</h2>
               <dl class='kv'>
-                <dt>Jurisdiction</dt><dd
-                >{{@model.governingLaw.jurisdiction}}</dd>
-                <dt>Venue</dt><dd>{{pick @model.governingLaw.venue '—'}}</dd>
+                <dt>Owner</dt>
+                <dd>{{#if @model.owner}}<@fields.owner
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                <dt>Account</dt>
+                <dd>{{#if @model.account}}<@fields.account
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                {{#if @model.deal}}
+                  <dt>Deal</dt>
+                  <dd><@fields.deal
+                      @format='atom'
+                      @displayContainer={{false}}
+                    /></dd>
+                {{/if}}
+                <dt>Signatory</dt>
+                <dd>{{pick this.firstSignatory.cardTitle '—'}}</dd>
+                {{#if (and this.isClmManaged this.isLoadingLinked)}}
+                  <dt>Clauses</dt>
+                  <dd class='muted' role='status'>Loading…</dd>
+                {{/if}}
+                {{#each this.deviations as |c|}}
+                  <dt>Deviation</dt>
+                  <dd><button
+                      type='button'
+                      class='link'
+                      {{on 'click' (fn this.openCard c)}}
+                    >{{c.cardTitle}}</button></dd>
+                {{/each}}
+                {{#each this.obligations as |o|}}
+                  <dt>Obligation</dt>
+                  <dd><button
+                      type='button'
+                      class='link'
+                      {{on 'click' (fn this.openCard o)}}
+                    >{{o.cardTitle}}</button></dd>
+                {{/each}}
               </dl>
             </section>
-          {{/if}}
 
-          {{#if this.queryFailed}}
-            <Alert
-              @tone='danger'
-              @title="Could not load this contract's clauses and obligations"
-              style={{ALERT_STYLE.danger}}
-            >
-              <:default>This is a failed lookup, not an empty record — reload
-                before concluding there are none.</:default>
-            </Alert>
-          {{/if}}
+            <section class='blk'>
+              <h2>Details</h2>
+              <dl class='kv'>
+                <dt>Value</dt><dd>{{pick this.valueDisplay '—'}}</dd>
+                <dt>Term</dt><dd>{{pick this.termRange '—'}}</dd>
+                <dt>Notice</dt><dd class='mono'>{{if
+                    @model.renewalNoticeDays
+                    (concat @model.renewalNoticeDays ' days')
+                    '—'
+                  }}</dd>
+                <dt>Risk</dt><dd>{{pick @model.risk.summary '—'}}</dd>
+                <dt>Signed</dt><dd class='mono'>{{pick
+                    (shortDate @model.signedAt true)
+                    '—'
+                  }}</dd>
+                <dt>Provider</dt><dd>{{pick @model.signatureProvider '—'}}</dd>
+                <dt>Governing law</dt><dd>{{pick
+                    @model.governingLaw.jurisdiction
+                    '—'
+                  }}</dd>
+                <dt>Approval</dt><dd>{{pick this.approvalSummary '—'}}</dd>
+              </dl>
+            </section>
+          </div>
         </div>
-
-        <div class='col'>
-          <section class='blk'>
-            <h2>Linked</h2>
-            <dl class='kv'>
-              <dt>Owner</dt>
-              <dd>{{#if @model.owner}}<@fields.owner
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</dd>
-              <dt>Account</dt>
-              <dd>{{#if @model.account}}<@fields.account
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</dd>
-              {{#if @model.deal}}
-                <dt>Deal</dt>
-                <dd><@fields.deal
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></dd>
-              {{/if}}
-              <dt>Signatory</dt>
-              <dd>{{pick this.firstSignatory.cardTitle '—'}}</dd>
-              {{#if (and this.isClmManaged this.isLoadingLinked)}}
-                <dt>Clauses</dt>
-                <dd class='muted' role='status'>Loading…</dd>
-              {{/if}}
-              {{#each this.deviations as |c|}}
-                <dt>Deviation</dt>
-                <dd><button
-                    type='button'
-                    class='link'
-                    {{on 'click' (fn this.openCard c)}}
-                  >{{c.cardTitle}}</button></dd>
-              {{/each}}
-              {{#each this.obligations as |o|}}
-                <dt>Obligation</dt>
-                <dd><button
-                    type='button'
-                    class='link'
-                    {{on 'click' (fn this.openCard o)}}
-                  >{{o.cardTitle}}</button></dd>
-              {{/each}}
-            </dl>
-          </section>
-
-          <section class='blk'>
-            <h2>Details</h2>
-            <dl class='kv'>
-              <dt>Value</dt><dd>{{pick this.valueDisplay '—'}}</dd>
-              <dt>Term</dt><dd>{{pick this.termRange '—'}}</dd>
-              <dt>Notice</dt><dd class='mono'>{{if
-                  @model.renewalNoticeDays
-                  (concat @model.renewalNoticeDays ' days')
-                  '—'
-                }}</dd>
-              <dt>Risk</dt><dd>{{pick @model.risk.summary '—'}}</dd>
-              <dt>Signed</dt><dd class='mono'>{{pick
-                  (shortDate @model.signedAt true)
-                  '—'
-                }}</dd>
-              <dt>Provider</dt><dd>{{pick @model.signatureProvider '—'}}</dd>
-              <dt>Governing law</dt><dd>{{pick
-                  @model.governingLaw.jurisdiction
-                  '—'
-                }}</dd>
-              <dt>Approval</dt><dd>{{pick this.approvalSummary '—'}}</dd>
-            </dl>
-          </section>
-        </div>
-      </div>
-    </article>
+      </article>
+    </IsoFrame>
     <style scoped>
       .contract-page {
+        background: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         container-type: inline-size;
         container-name: contract-page;
         font-family: var(--font-sans);

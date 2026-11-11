@@ -17,6 +17,7 @@ import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Token } from '@cardstack/pretui/components/token';
 import { LegalFacts } from './legal-ui';
 import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const LEGAL_ENTITY_TYPES = [
   'corporation',
@@ -113,66 +114,73 @@ export class LegalEntity extends CardDef {
       ];
     }
     <template>
-      <article class='entity'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Legal Entity</p>
-            <h1>{{@model.legalName}}</h1>
-            <p class='sub'>{{this.typeLabel}} · {{@model.jurisdiction}}</p>
-          </div>
-          <StatePill
-            @label={{this.typeLabel}}
-            @hue='slate'
-            @emphatic={{true}}
-          />
-        </header>
-        <div class='grid'>
-          <section class='panel'>
-            <h2>Registration</h2>
-            <LegalFacts @items={{this.registrationFacts}}>
-              <:value as |row|>
-                {{#if (eq row.key 'Reg. number')}}
-                  {{#if @model.registrationNumber}}
-                    <Token
-                      @value={{@model.registrationNumber}}
-                      style={{ID_TOKEN_STYLE.sm}}
-                    />
+      <IsoFrame>
+        <article class='entity'>
+          <header class='head'>
+            <div>
+              <p class='kicker'>Legal Entity</p>
+              <h1>{{@model.legalName}}</h1>
+              <p class='sub'>{{this.typeLabel}} · {{@model.jurisdiction}}</p>
+            </div>
+            <StatePill
+              @label={{this.typeLabel}}
+              @hue='slate'
+              @emphatic={{true}}
+            />
+          </header>
+          <div class='grid'>
+            <section class='panel'>
+              <h2>Registration</h2>
+              <LegalFacts @items={{this.registrationFacts}}>
+                <:value as |row|>
+                  {{#if (eq row.key 'Reg. number')}}
+                    {{#if @model.registrationNumber}}
+                      <Token
+                        @value={{@model.registrationNumber}}
+                        style={{ID_TOKEN_STYLE.sm}}
+                      />
+                    {{/if}}
+                  {{else if (eq row.key 'Tax ID')}}
+                    {{#if @model.maskedTaxId}}
+                      <Token
+                        @value={{@model.maskedTaxId}}
+                        style={{ID_TOKEN_STYLE.sm}}
+                      />
+                    {{/if}}
+                  {{else}}
+                    {{row.value}}
                   {{/if}}
-                {{else if (eq row.key 'Tax ID')}}
-                  {{#if @model.maskedTaxId}}
-                    <Token
-                      @value={{@model.maskedTaxId}}
-                      style={{ID_TOKEN_STYLE.sm}}
-                    />
-                  {{/if}}
-                {{else}}
-                  {{row.value}}
-                {{/if}}
-              </:value>
-            </LegalFacts>
-          </section>
-          <section class='panel'>
-            <h2>Authorized Signatory</h2>
-            <LegalFacts @items={{this.signatoryFacts}}>
-              <:value as |row|>
-                {{#if (eq row.key 'Email')}}
-                  {{#if @model.signatoryEmail}}<@fields.signatoryEmail />{{/if}}
-                {{else}}
-                  {{row.value}}
-                {{/if}}
-              </:value>
-            </LegalFacts>
-          </section>
-          {{#if @model.notes}}
-            <section class='panel span'>
-              <h2>Notes</h2>
-              <p class='notes'>{{@model.notes}}</p>
+                </:value>
+              </LegalFacts>
             </section>
-          {{/if}}
-        </div>
-      </article>
+            <section class='panel'>
+              <h2>Authorized Signatory</h2>
+              <LegalFacts @items={{this.signatoryFacts}}>
+                <:value as |row|>
+                  {{#if (eq row.key 'Email')}}
+                    {{#if @model.signatoryEmail}}<@fields.signatoryEmail
+                      />{{/if}}
+                  {{else}}
+                    {{row.value}}
+                  {{/if}}
+                </:value>
+              </LegalFacts>
+            </section>
+            {{#if @model.notes}}
+              <section class='panel span'>
+                <h2>Notes</h2>
+                <p class='notes'>{{@model.notes}}</p>
+              </section>
+            {{/if}}
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .entity {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
         }

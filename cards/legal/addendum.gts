@@ -15,6 +15,7 @@ import { Contract } from './contract';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import FilePlusIcon from '@cardstack/boxel-icons/file-plus';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const MOD_DOC_STATUSES = ['draft', 'executed'];
 
@@ -58,36 +59,42 @@ export class Addendum extends CardDef {
         : '—';
     }
     <template>
-      <article class='doc'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Addendum</p>
-            <h1>{{@model.name}}</h1>
-            <p class='sub'>effective {{this.effectiveLabel}}</p>
-          </div>
-          <StatePill
-            @label={{if (eqStr @model.status 'executed') 'EXECUTED' 'DRAFT'}}
-            @hue={{if (eqStr @model.status 'executed') 'green' 'slate'}}
-            @emphatic={{true}}
-          />
-        </header>
-        {{#if @model.contract}}
-          <section class='panel'>
-            <h2>Supplements Contract</h2>
-            <@fields.contract @format='atom' />
-          </section>
-        {{/if}}
-        <section class='panel'>
-          <h2>Added Terms</h2>
-          {{#if @model.addedTerms}}
-            <@fields.addedTerms />
-          {{else}}
-            <p class='empty'>No terms drafted yet.</p>
+      <IsoFrame>
+        <article class='doc'>
+          <header class='head'>
+            <div>
+              <p class='kicker'>Addendum</p>
+              <h1>{{@model.name}}</h1>
+              <p class='sub'>effective {{this.effectiveLabel}}</p>
+            </div>
+            <StatePill
+              @label={{if (eqStr @model.status 'executed') 'EXECUTED' 'DRAFT'}}
+              @hue={{if (eqStr @model.status 'executed') 'green' 'slate'}}
+              @emphatic={{true}}
+            />
+          </header>
+          {{#if @model.contract}}
+            <section class='panel'>
+              <h2>Supplements Contract</h2>
+              <@fields.contract @format='atom' />
+            </section>
           {{/if}}
-        </section>
-      </article>
+          <section class='panel'>
+            <h2>Added Terms</h2>
+            {{#if @model.addedTerms}}
+              <@fields.addedTerms />
+            {{else}}
+              <p class='empty'>No terms drafted yet.</p>
+            {{/if}}
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .doc {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
           display: grid;
