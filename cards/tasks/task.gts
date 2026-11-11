@@ -18,6 +18,7 @@ import DueDateField from '@cardstack/catalog/fields/due-date/due-date';
 import CreatedAtField from '@cardstack/catalog/fields/created-at/created-at';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { User } from '../crm/user';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * The generic actionable item, not any app's version of one. Composed from
@@ -193,59 +194,67 @@ export class Task extends CardDef {
       return subtaskList(this.args.model).length;
     }
     <template>
-      <article class='task-page'>
-        <header>
-          <div class='head-row'>
-            <@fields.status @format='embedded' />
-            {{#if @model.priority}}
-              <@fields.priority @format='embedded' />
-            {{/if}}
-          </div>
-          <h1>{{@model.cardTitle}}</h1>
-          <div class='meta'>
-            {{#if @model.dueDate}}
-              <span class='meta-item'><@fields.dueDate
-                  @format='embedded'
-                /></span>
-            {{/if}}
-            {{#if @model.assignee}}
-              <span class='meta-item'><@fields.assignee @format='atom' /></span>
-            {{/if}}
-            {{#if @model.createdAt}}
-              <span class='meta-item muted'>created
-                <@fields.createdAt @format='atom' /></span>
-            {{/if}}
-          </div>
-          {{#if @model.tags.length}}
-            <div class='tags'><@fields.tags @format='atom' /></div>
-          {{/if}}
-        </header>
-        {{#if @model.details}}
-          <section class='panel details'><@fields.details /></section>
-        {{/if}}
-        <section class='panel'>
-          <h2>Subtasks
-            {{#if this.total}}<span class='progress'>{{this.done}}
-                of
-                {{this.total}}
-                done</span>{{/if}}</h2>
-          {{#if this.total}}
-            <div class='subtask-list'>
-              {{#each @fields.subtasks as |Subtask|}}
-                <Subtask
-                  class='subtask'
-                  @format='embedded'
-                  @displayContainer={{false}}
-                />
-              {{/each}}
+      <IsoFrame>
+        <article class='task-page'>
+          <header>
+            <div class='head-row'>
+              <@fields.status @format='embedded' />
+              {{#if @model.priority}}
+                <@fields.priority @format='embedded' />
+              {{/if}}
             </div>
-          {{else}}
-            <p class='empty'>No subtasks — this task stands alone.</p>
+            <h1>{{@model.cardTitle}}</h1>
+            <div class='meta'>
+              {{#if @model.dueDate}}
+                <span class='meta-item'><@fields.dueDate
+                    @format='embedded'
+                  /></span>
+              {{/if}}
+              {{#if @model.assignee}}
+                <span class='meta-item'><@fields.assignee
+                    @format='atom'
+                  /></span>
+              {{/if}}
+              {{#if @model.createdAt}}
+                <span class='meta-item muted'>created
+                  <@fields.createdAt @format='atom' /></span>
+              {{/if}}
+            </div>
+            {{#if @model.tags.length}}
+              <div class='tags'><@fields.tags @format='atom' /></div>
+            {{/if}}
+          </header>
+          {{#if @model.details}}
+            <section class='panel details'><@fields.details /></section>
           {{/if}}
-        </section>
-      </article>
+          <section class='panel'>
+            <h2>Subtasks
+              {{#if this.total}}<span class='progress'>{{this.done}}
+                  of
+                  {{this.total}}
+                  done</span>{{/if}}</h2>
+            {{#if this.total}}
+              <div class='subtask-list'>
+                {{#each @fields.subtasks as |Subtask|}}
+                  <Subtask
+                    class='subtask'
+                    @format='embedded'
+                    @displayContainer={{false}}
+                  />
+                {{/each}}
+              </div>
+            {{else}}
+              <p class='empty'>No subtasks — this task stands alone.</p>
+            {{/if}}
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .task-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 44rem;
           margin: 0 auto;
           padding: 2rem 1.5rem;
