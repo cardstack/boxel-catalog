@@ -48,6 +48,7 @@ import {
   STAGE_COLORS,
   stageSlug,
 } from './pipeline-stage-field';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
 const moduleURL: string = import.meta.url;
@@ -218,44 +219,46 @@ class OpportunityIsolated extends Component<typeof Opportunity> {
     return rows;
   }
   <template>
-    <RecordPage
-      @mark='O P'
-      @title={{@model.cardTitle}}
-      @subtitle={{this.subtitle}}
-      @chips={{this.chips}}
-      @stats={{this.stats}}
-      @linked={{this.linked}}
-      @details={{this.details}}
-    >
-      <:actions>
-        <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
-          activity</Button>
-        {{#if this.canCloseWon}}<Button
-            @appearance='accent'
-            @disabled={{this.closing}}
-            {{on 'click' this.closeWon}}
-          >Close won</Button>{{/if}}
-      </:actions>
-      <:main>
-        <h2 class='h'>Stage</h2>
-        <StepList @steps={{this.stages}} />
-        {{#if this.error}}
-          <p class='action-error' role='alert'>{{this.error}}</p>
-        {{/if}}
-        <RelatedList
-          @title='Activity'
-          @cards={{this.activityCards}}
-          @empty='No activity logged'
-        />
-      </:main>
-      <:value as |row|>
-        {{#if (eq row.value '@account')}}
-          <@fields.account @format='atom' @displayContainer={{false}} />
-        {{else if (eq row.value '@owner')}}
-          <@fields.owner @format='atom' @displayContainer={{false}} />
-        {{else}}{{row.value}}{{/if}}
-      </:value>
-    </RecordPage>
+    <IsoFrame>
+      <RecordPage
+        @mark='O P'
+        @title={{@model.cardTitle}}
+        @subtitle={{this.subtitle}}
+        @chips={{this.chips}}
+        @stats={{this.stats}}
+        @linked={{this.linked}}
+        @details={{this.details}}
+      >
+        <:actions>
+          <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
+            activity</Button>
+          {{#if this.canCloseWon}}<Button
+              @appearance='accent'
+              @disabled={{this.closing}}
+              {{on 'click' this.closeWon}}
+            >Close won</Button>{{/if}}
+        </:actions>
+        <:main>
+          <h2 class='h'>Stage</h2>
+          <StepList @steps={{this.stages}} />
+          {{#if this.error}}
+            <p class='action-error' role='alert'>{{this.error}}</p>
+          {{/if}}
+          <RelatedList
+            @title='Activity'
+            @cards={{this.activityCards}}
+            @empty='No activity logged'
+          />
+        </:main>
+        <:value as |row|>
+          {{#if (eq row.value '@account')}}
+            <@fields.account @format='atom' @displayContainer={{false}} />
+          {{else if (eq row.value '@owner')}}
+            <@fields.owner @format='atom' @displayContainer={{false}} />
+          {{else}}{{row.value}}{{/if}}
+        </:value>
+      </RecordPage>
+    </IsoFrame>
     <style scoped>
       .h {
         margin: 0;

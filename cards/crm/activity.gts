@@ -17,6 +17,7 @@ import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { CompactFitted, CompactRow } from '../commerce/compact-parts';
 import { RecordEmbedded, RecordPage, shortDate } from './record-views';
 import { User } from './user';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const ActivityTypeField = enumField(StringField, {
   options: ['note', 'call', 'email', 'meeting', 'status change'],
@@ -186,30 +187,32 @@ export class Activity extends CardDef {
       return [when(m?.occurredAt), m?.author?.name].filter(Boolean).join(' · ');
     }
     <template>
-      <RecordPage
-        @mark='A C'
-        @title={{@model.cardTitle}}
-        @subtitle={{this.subtitle}}
-        @chips={{if
-          @model.activityType
-          (array (hash label=@model.activityType hue='slate'))
-        }}
-        @stats={{this.stats}}
-        @linked={{this.linked}}
-        @details={{this.details}}
-      >
-        <:main>
-          <h2 class='notes-h'>Notes</h2>
-          <div class='notes'><@fields.body /></div>
-        </:main>
-        <:value as |row|>
-          {{#if (eq row.value '@about')}}
-            <@fields.about @format='atom' @displayContainer={{false}} />
-          {{else if (eq row.value '@author')}}
-            <@fields.author @format='atom' @displayContainer={{false}} />
-          {{else}}{{row.value}}{{/if}}
-        </:value>
-      </RecordPage>
+      <IsoFrame>
+        <RecordPage
+          @mark='A C'
+          @title={{@model.cardTitle}}
+          @subtitle={{this.subtitle}}
+          @chips={{if
+            @model.activityType
+            (array (hash label=@model.activityType hue='slate'))
+          }}
+          @stats={{this.stats}}
+          @linked={{this.linked}}
+          @details={{this.details}}
+        >
+          <:main>
+            <h2 class='notes-h'>Notes</h2>
+            <div class='notes'><@fields.body /></div>
+          </:main>
+          <:value as |row|>
+            {{#if (eq row.value '@about')}}
+              <@fields.about @format='atom' @displayContainer={{false}} />
+            {{else if (eq row.value '@author')}}
+              <@fields.author @format='atom' @displayContainer={{false}} />
+            {{else}}{{row.value}}{{/if}}
+          </:value>
+        </RecordPage>
+      </IsoFrame>
       <style scoped>
         .notes-h {
           margin: 0;

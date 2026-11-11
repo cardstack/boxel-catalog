@@ -29,6 +29,7 @@ import {
 } from './record-views';
 import { createLinked } from './record-views';
 import { User } from './user';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
 const moduleURL: string = import.meta.url;
@@ -288,56 +289,58 @@ export class Account extends CardDef {
       return rows;
     }
     <template>
-      <RecordPage
-        @mark={{if @model.cardTitle @model.cardTitle ''}}
-        @title={{@model.cardTitle}}
-        @subtitle={{this.subtitle}}
-        @chips={{array
-          (hash
-            label=(if @model.isCustomer 'customer' 'prospect')
-            hue=(if @model.isCustomer 'green' 'slate')
-          )
-        }}
-        @stats={{this.stats}}
-        @linked={{if @model.owner (array (hash key='Owner' value='@owner'))}}
-        @details={{this.details}}
-      >
-        <:actions>
-          <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
-            activity</Button>
-          <Button @appearance='accent' {{on 'click' this.newDeal}}>New deal</Button>
-        </:actions>
-        <:main>
-          <RelatedList
-            @title='Deals'
-            @cards={{this.dealCards}}
-            @empty='No deals yet'
-            @meta={{this.dealMeta}}
-            @status={{this.dealStage}}
-            @amount={{this.dealAmount}}
-          />
-          <RelatedList
-            @title='Subscriptions'
-            @cards={{this.subCards}}
-            @empty='No subscriptions'
-            @meta={{this.subMeta}}
-            @status={{this.subStatus}}
-            @amount={{this.subAmount}}
-          />
-          <RelatedList
-            @title='Contacts'
-            @cards={{this.contactCards}}
-            @empty='No contacts'
-          />
-          <h2 class='h'>Billing address</h2>
-          <div class='addr'><@fields.billingAddress /></div>
-        </:main>
-        <:value as |row|>
-          {{#if (eq row.value '@owner')}}
-            <@fields.owner @format='atom' @displayContainer={{false}} />
-          {{else}}{{row.value}}{{/if}}
-        </:value>
-      </RecordPage>
+      <IsoFrame>
+        <RecordPage
+          @mark={{if @model.cardTitle @model.cardTitle ''}}
+          @title={{@model.cardTitle}}
+          @subtitle={{this.subtitle}}
+          @chips={{array
+            (hash
+              label=(if @model.isCustomer 'customer' 'prospect')
+              hue=(if @model.isCustomer 'green' 'slate')
+            )
+          }}
+          @stats={{this.stats}}
+          @linked={{if @model.owner (array (hash key='Owner' value='@owner'))}}
+          @details={{this.details}}
+        >
+          <:actions>
+            <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
+              activity</Button>
+            <Button @appearance='accent' {{on 'click' this.newDeal}}>New deal</Button>
+          </:actions>
+          <:main>
+            <RelatedList
+              @title='Deals'
+              @cards={{this.dealCards}}
+              @empty='No deals yet'
+              @meta={{this.dealMeta}}
+              @status={{this.dealStage}}
+              @amount={{this.dealAmount}}
+            />
+            <RelatedList
+              @title='Subscriptions'
+              @cards={{this.subCards}}
+              @empty='No subscriptions'
+              @meta={{this.subMeta}}
+              @status={{this.subStatus}}
+              @amount={{this.subAmount}}
+            />
+            <RelatedList
+              @title='Contacts'
+              @cards={{this.contactCards}}
+              @empty='No contacts'
+            />
+            <h2 class='h'>Billing address</h2>
+            <div class='addr'><@fields.billingAddress /></div>
+          </:main>
+          <:value as |row|>
+            {{#if (eq row.value '@owner')}}
+              <@fields.owner @format='atom' @displayContainer={{false}} />
+            {{else}}{{row.value}}{{/if}}
+          </:value>
+        </RecordPage>
+      </IsoFrame>
       <style scoped>
         .h {
           margin: 0;

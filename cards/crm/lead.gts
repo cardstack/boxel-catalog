@@ -29,6 +29,7 @@ import { relatedRealm } from './record-views';
 import { type Hue } from '@cardstack/catalog/components/state-pill';
 import { Campaign } from './campaign';
 import { hasNumber } from './utils';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const LEAD_STATUSES = [
   'new',
@@ -144,40 +145,42 @@ class LeadIsolated extends Component<typeof Lead> {
     return [m?.company, m?.source].filter(Boolean).join(' · ');
   }
   <template>
-    <RecordPage
-      @mark={{@model.name}}
-      @title={{@model.cardTitle}}
-      @subtitle={{this.subtitle}}
-      @chips={{array
-        (hash label=@model.status hue=(statusHue @model.status))
-        (hash label=(concat 'score ' @model.score))
-      }}
-      @stats={{this.stats}}
-      @linked={{if
-        @model.campaign
-        (array (hash key='Campaign' value='@campaign'))
-      }}
-      @details={{this.details}}
-    >
-      <:actions>
-        {{#if this.canConvert}}<Button
-            @appearance='accent'
-            @disabled={{this.converting}}
-            {{on 'click' this.convert}}
-          >Convert</Button>{{/if}}
-      </:actions>
-      <:main>
-        <StepList @steps={{this.steps}} />
-        {{#if this.error}}
-          <p class='action-error' role='alert'>{{this.error}}</p>
-        {{/if}}
-      </:main>
-      <:value as |row|>
-        {{#if (eq row.value '@campaign')}}
-          <@fields.campaign @format='atom' @displayContainer={{false}} />
-        {{else}}{{row.value}}{{/if}}
-      </:value>
-    </RecordPage>
+    <IsoFrame>
+      <RecordPage
+        @mark={{@model.name}}
+        @title={{@model.cardTitle}}
+        @subtitle={{this.subtitle}}
+        @chips={{array
+          (hash label=@model.status hue=(statusHue @model.status))
+          (hash label=(concat 'score ' @model.score))
+        }}
+        @stats={{this.stats}}
+        @linked={{if
+          @model.campaign
+          (array (hash key='Campaign' value='@campaign'))
+        }}
+        @details={{this.details}}
+      >
+        <:actions>
+          {{#if this.canConvert}}<Button
+              @appearance='accent'
+              @disabled={{this.converting}}
+              {{on 'click' this.convert}}
+            >Convert</Button>{{/if}}
+        </:actions>
+        <:main>
+          <StepList @steps={{this.steps}} />
+          {{#if this.error}}
+            <p class='action-error' role='alert'>{{this.error}}</p>
+          {{/if}}
+        </:main>
+        <:value as |row|>
+          {{#if (eq row.value '@campaign')}}
+            <@fields.campaign @format='atom' @displayContainer={{false}} />
+          {{else}}{{row.value}}{{/if}}
+        </:value>
+      </RecordPage>
+    </IsoFrame>
     <style scoped>
       .action-error {
         padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);

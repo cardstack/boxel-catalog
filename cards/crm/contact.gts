@@ -17,6 +17,7 @@ import { RecordEmbedded, RecordPage } from './record-views';
 import { RelatedList, relatedSearch, shortDate, usd } from './record-views';
 import { Account } from './account';
 import { PersonBase } from '../people/person-base';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
 const moduleURL: string = import.meta.url;
@@ -230,32 +231,34 @@ export class Contact extends PersonBase {
       return [m?.jobTitle, m?.account?.name].filter(Boolean).join(' · ');
     }
     <template>
-      <RecordPage
-        @mark={{if @model.cardTitle @model.cardTitle ''}}
-        @title={{@model.cardTitle}}
-        @subtitle={{this.subtitle}}
-        @chips={{if @model.role (array (hash label=@model.role hue='blue'))}}
-        @stats={{this.stats}}
-        @lead={{this.contactItems}}
-        @linked={{if
-          @model.account
-          (array (hash key='Account' value='@account'))
-        }}
-        @details={{this.details}}
-      >
-        <:main>
-          <RelatedList
-            @title='Recent activity'
-            @cards={{this.activityCards}}
-            @empty='No activity logged'
-          />
-        </:main>
-        <:value as |row|>
-          {{#if (eq row.value '@account')}}
-            <@fields.account @format='atom' @displayContainer={{false}} />
-          {{else}}{{row.value}}{{/if}}
-        </:value>
-      </RecordPage>
+      <IsoFrame>
+        <RecordPage
+          @mark={{if @model.cardTitle @model.cardTitle ''}}
+          @title={{@model.cardTitle}}
+          @subtitle={{this.subtitle}}
+          @chips={{if @model.role (array (hash label=@model.role hue='blue'))}}
+          @stats={{this.stats}}
+          @lead={{this.contactItems}}
+          @linked={{if
+            @model.account
+            (array (hash key='Account' value='@account'))
+          }}
+          @details={{this.details}}
+        >
+          <:main>
+            <RelatedList
+              @title='Recent activity'
+              @cards={{this.activityCards}}
+              @empty='No activity logged'
+            />
+          </:main>
+          <:value as |row|>
+            {{#if (eq row.value '@account')}}
+              <@fields.account @format='atom' @displayContainer={{false}} />
+            {{else}}{{row.value}}{{/if}}
+          </:value>
+        </RecordPage>
+      </IsoFrame>
     </template>
   };
 }
