@@ -12,6 +12,7 @@ import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
 import { Token } from '@cardstack/pretui/components/token';
 
 import { tokenStyle } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // A merge field this template's body uses reads in the primary ink; one it
 // does not use stays muted.
@@ -92,60 +93,62 @@ export class OfferLetterTemplate extends CardDef {
     }
 
     <template>
-      <article class='template-isolated'>
-        <header class='hero'>
-          <span class='avatar' aria-hidden='true'><FileTextIcon
-              class='avatar-icon'
-            /></span>
-          <div class='hero-text'>
-            <h1>{{@model.title}}</h1>
-            <p class='byline'>Offer letter template
-              {{#if @model.placeholderTally}}
-                <span class='sep-dot'>&middot;</span>
-                {{@model.placeholderTally}}
-                merge fields
+      <IsoFrame>
+        <article class='template-isolated'>
+          <header class='hero'>
+            <span class='avatar' aria-hidden='true'><FileTextIcon
+                class='avatar-icon'
+              /></span>
+            <div class='hero-text'>
+              <h1>{{@model.title}}</h1>
+              <p class='byline'>Offer letter template
+                {{#if @model.placeholderTally}}
+                  <span class='sep-dot'>&middot;</span>
+                  {{@model.placeholderTally}}
+                  merge fields
+                {{/if}}
+              </p>
+            </div>
+          </header>
+
+          <div class='body'>
+            <div class='main'>
+              <h2 class='panel-title'>Letter body</h2>
+              {{#if @model.body}}
+                <div class='letter'>
+                  <@fields.body />
+                </div>
+              {{else}}
+                <EmptyState
+                  @size='s'
+                  @texture={{false}}
+                  @title='No body yet'
+                  @message='Write the letter in markdown and drop in merge placeholders from the legend.'
+                />
               {{/if}}
-            </p>
-          </div>
-        </header>
+            </div>
 
-        <div class='body'>
-          <div class='main'>
-            <h2 class='panel-title'>Letter body</h2>
-            {{#if @model.body}}
-              <div class='letter'>
-                <@fields.body />
-              </div>
-            {{else}}
-              <EmptyState
-                @size='s'
-                @texture={{false}}
-                @title='No body yet'
-                @message='Write the letter in markdown and drop in merge placeholders from the legend.'
-              />
-            {{/if}}
+            <aside class='side'>
+              <h2 class='panel-title'>Merge fields</h2>
+              <p class='side-note'>Generate Offer Letter replaces these with the
+                offer's real values. Fields marked in use appear in this
+                template's body.</p>
+              <ul class='legend'>
+                {{#each this.mergeFields as |f|}}
+                  <li class='legend-row'>
+                    <Token
+                      class='legend-token'
+                      @value={{f.token}}
+                      style={{f.tokenStyle}}
+                    />
+                    <span class='legend-src'>{{f.source}}</span>
+                  </li>
+                {{/each}}
+              </ul>
+            </aside>
           </div>
-
-          <aside class='side'>
-            <h2 class='panel-title'>Merge fields</h2>
-            <p class='side-note'>Generate Offer Letter replaces these with the
-              offer's real values. Fields marked in use appear in this
-              template's body.</p>
-            <ul class='legend'>
-              {{#each this.mergeFields as |f|}}
-                <li class='legend-row'>
-                  <Token
-                    class='legend-token'
-                    @value={{f.token}}
-                    style={{f.tokenStyle}}
-                  />
-                  <span class='legend-src'>{{f.source}}</span>
-                </li>
-              {{/each}}
-            </ul>
-          </aside>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .template-isolated {
           container-type: inline-size;

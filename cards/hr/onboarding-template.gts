@@ -13,6 +13,7 @@ import ChecklistIcon from '@cardstack/boxel-icons/checklist';
 
 import { DurationField, durationLabel } from './duration-field';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // containsMany takes a FieldDef, never a CardDef: this type's data lives inline
 // on the OnboardingTemplate instance and it is never addressable on its own, so
@@ -98,31 +99,33 @@ export class OnboardingTemplate extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     <template>
-      <article class='template-isolated'>
-        <header class='header'>
-          <div class='header-content'>
-            <h1>{{@model.title}}</h1>
-            {{#if @model.description}}
-              <p class='description'>{{@model.description}}</p>
+      <IsoFrame>
+        <article class='template-isolated'>
+          <header class='header'>
+            <div class='header-content'>
+              <h1>{{@model.title}}</h1>
+              {{#if @model.description}}
+                <p class='description'>{{@model.description}}</p>
+              {{/if}}
+            </div>
+          </header>
+
+          <div class='body'>
+            <h2 class='section-title'>Tasks ({{@model.tasks.length}})</h2>
+            {{#if @model.tasks.length}}
+              <ul class='task-list'>
+                <@fields.tasks @format='embedded' />
+              </ul>
+            {{else}}
+              <EmptyState
+                @title='No tasks defined yet'
+                @texture={{false}}
+                @size='s'
+              />
             {{/if}}
           </div>
-        </header>
-
-        <div class='body'>
-          <h2 class='section-title'>Tasks ({{@model.tasks.length}})</h2>
-          {{#if @model.tasks.length}}
-            <ul class='task-list'>
-              <@fields.tasks @format='embedded' />
-            </ul>
-          {{else}}
-            <EmptyState
-              @title='No tasks defined yet'
-              @texture={{false}}
-              @size='s'
-            />
-          {{/if}}
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .template-isolated {
           height: 100%;
