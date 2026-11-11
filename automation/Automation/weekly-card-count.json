@@ -17,8 +17,7 @@
           "count": 52,
           "date": null,
           "time": null,
-          "webhookPath": null,
-          "params": []
+          "webhookPath": null
         },
         {
           "kind": "webhook",
@@ -30,8 +29,7 @@
           "count": null,
           "date": null,
           "time": null,
-          "webhookPath": "card-count",
-          "params": []
+          "webhookPath": "card-count"
         }
       ],
       "operations": [],

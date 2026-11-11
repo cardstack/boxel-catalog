@@ -17,8 +17,7 @@
           "count": null,
           "date": null,
           "time": null,
-          "webhookPath": null,
-          "params": []
+          "webhookPath": null
         },
         {
           "kind": "cron",
@@ -30,13 +29,7 @@
           "count": null,
           "date": null,
           "time": null,
-          "webhookPath": null,
-          "params": [
-            {
-              "name": "reportPath",
-              "value": "reports/release-week-issues.md"
-            }
-          ]
+          "webhookPath": null
         },
         {
           "kind": "once",
@@ -48,8 +41,7 @@
           "count": null,
           "date": "2030-11-18",
           "time": "09:00",
-          "webhookPath": null,
-          "params": []
+          "webhookPath": null
         }
       ],
       "operations": [

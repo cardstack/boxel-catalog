@@ -45,6 +45,7 @@ import ReadSourceTool from '@cardstack/boxel-host/tools/read-source';
 import WriteTextFileTool from '@cardstack/boxel-host/tools/write-text-file';
 import { FittedCard } from '@cardstack/boxel-ui/components';
 import { Button } from '@cardstack/pretui/components/button';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
 import { LoadingState } from '@cardstack/pretui/components/loading-state';
 import { Callout } from '@cardstack/pretui/components/callout';
 import { Chip } from '@cardstack/pretui/components/chip';
@@ -75,7 +76,9 @@ import { eq } from '@cardstack/pretui/helpers';
 import CalendarCheckIcon from '@cardstack/boxel-icons/calendar-check';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
 import PlugIcon from '@cardstack/boxel-icons/plug';
+import PlusIcon from '@cardstack/boxel-icons/plus';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
+import TrashIcon from '@cardstack/boxel-icons/trash-2';
 import ZapIcon from '@cardstack/boxel-icons/zap';
 import {
   cronProblem,
@@ -570,16 +573,8 @@ export class AutomationTrigger extends FieldDef {
   @field date = contains(DateField);
   @field time = contains(StringField);
   @field webhookPath = contains(StringField);
-  // Merged over the automation's own `params` for runs this trigger starts.
-  @field params = containsMany(AutomationParam);
 
   static embedded = class Embedded extends Component<typeof AutomationTrigger> {
-    get params() {
-      return (this.args.model.params ?? []).map((p) => ({
-        key: p.name ?? '',
-        value: p.value ?? '',
-      }));
-    }
     get kindLabel() {
       return (
         TRIGGER_KINDS.find((k) => k.value === this.args.model.kind)?.label ??
@@ -701,15 +696,6 @@ export class AutomationTrigger extends FieldDef {
               {{/if}}
             </div>
           {{/if}}
-          {{#if this.params.length}}
-            <div class='automation-trigger__detail automation-trigger__params'>
-              <p class='automation-trigger__sentence'>
-                Runs this trigger starts get these params, replacing any of the
-                automation’s own params with the same name:
-              </p>
-              <KeyValue @items={{this.params}} @divided={{true}} />
-            </div>
-          {{/if}}
         </:default>
       </Item>
       <style scoped>
@@ -731,9 +717,6 @@ export class AutomationTrigger extends FieldDef {
           gap: var(--boxel-sp-4xs);
           margin-top: var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-sm);
-        }
-        .automation-trigger__params {
-          margin-top: var(--boxel-sp);
         }
         .automation-trigger__list {
           margin: 0 0 var(--boxel-sp-4xs);
@@ -830,27 +813,6 @@ export class AutomationTrigger extends FieldDef {
     assign = (name: string, value: unknown) => {
       (this.args.model as Record<string, unknown>)[name] = value;
     };
-    // The trigger's own params, edited in place. Each change replaces the
-    // list so the card notices it.
-    setParam = (index: number, key: 'name' | 'value', value: string) => {
-      let params = [...(this.args.model.params ?? [])];
-      params[index][key] = value;
-      this.args.model.params = params;
-    };
-    addParam = () => {
-      this.args.model.params = [
-        ...(this.args.model.params ?? []),
-        new AutomationParam({ name: '', value: '' }),
-      ];
-    };
-    removeParam = (index: number) => {
-      this.args.model.params = (this.args.model.params ?? []).filter(
-        (_, i) => i !== index,
-      );
-    };
-    get paramsIssue() {
-      return paramsIssue(this.args.model.params, 'params');
-    }
     // Switching to a schedule or a one-time run brings a time zone along.
     setKind = (kind: string) => {
       this.assign('kind', kind);
@@ -1050,49 +1012,6 @@ export class AutomationTrigger extends FieldDef {
             </div>
           </Field>
         {{/if}}
-        <Fieldset
-          @legend='Params for this trigger'
-          @description='Merged over the automation’s own params when this trigger starts a run'
-          class='automation-trigger-edit__params'
-        >
-          {{#each @model.params as |param index|}}
-            <div class='automation-trigger-edit__param'>
-              <Input
-                @value={{param.name}}
-                @placeholder='Name'
-                aria-label='Param name'
-                @onInput={{fn this.setParam index 'name'}}
-              />
-              <Input
-                @value={{param.value}}
-                @placeholder='Value'
-                aria-label='Param value'
-                @onInput={{fn this.setParam index 'value'}}
-              />
-              <Button
-                @tone='neutral'
-                @appearance='plain'
-                @size='s'
-                aria-label='Remove this param'
-                {{on 'click' (fn this.removeParam index)}}
-              >Remove</Button>
-            </div>
-          {{/each}}
-          <div>
-            <Button
-              @tone='neutral'
-              @appearance='outlined'
-              @size='s'
-              {{on 'click' this.addParam}}
-            >Add a param</Button>
-          </div>
-          {{#if this.paramsIssue}}
-            <FieldError
-              @issue={{this.paramsIssue}}
-              data-test-automation-trigger-params-problem
-            />
-          {{/if}}
-        </Fieldset>
       </div>
       <style scoped>
         .automation-trigger-edit {
@@ -1145,12 +1064,6 @@ export class AutomationTrigger extends FieldDef {
         }
         .automation-trigger-edit__stops :deep(.pretui-time) {
           width: 100%;
-        }
-        .automation-trigger-edit__param {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
-          gap: var(--boxel-sp-xs);
-          align-items: center;
         }
         /* Pret UI's Input inherits its font, so a wrapper sets it. */
         .automation-trigger-edit__mono {
@@ -2288,6 +2201,7 @@ class AddOutsideService extends GlimmerComponent<{
     {{#if this.available}}
       <div>
         <Button
+          @icon={{PlusIcon}}
           @tone='neutral'
           @appearance='outlined'
           {{on 'click' this.choose}}
@@ -2451,10 +2365,16 @@ class Edit extends Component<typeof Automation> {
       (_, i) => i !== index,
     );
   };
+  // Each change replaces the list so the card notices it.
+  setParam = (index: number, key: 'name' | 'value', value: string) => {
+    let params = [...(this.args.model.params ?? [])];
+    params[index][key] = value;
+    this.args.model.params = params;
+  };
   addParam = () => {
     this.args.model.params = [
       ...(this.args.model.params ?? []),
-      new AutomationParam(),
+      new AutomationParam({ name: '', value: '' }),
     ];
   };
   removeParam = (index: number) => {
@@ -2543,6 +2463,7 @@ class Edit extends Component<typeof Automation> {
           >
             <Trigger />
             <Button
+              @icon={{TrashIcon}}
               @tone='neutral'
               @appearance='plain'
               @size='s'
@@ -2554,6 +2475,7 @@ class Edit extends Component<typeof Automation> {
         {{/each}}
         <div>
           <Button
+            @icon={{PlusIcon}}
             @tone='neutral'
             @appearance='outlined'
             {{on 'click' this.addTrigger}}
@@ -2638,13 +2560,15 @@ class Edit extends Component<typeof Automation> {
             {{#each @fields.operations as |Operation index|}}
               <div class='automation-edit__operation'>
                 <Operation @format='embedded' />
-                <Button
+                <IconButton
+                  @label='Remove this outside service'
+                  @icon={{TrashIcon}}
                   @tone='neutral'
                   @appearance='plain'
                   @size='s'
                   {{on 'click' (fn this.removeOperation index)}}
                   data-test-automation-remove-service
-                >Remove</Button>
+                />
               </div>
             {{/each}}
           </div>
@@ -2660,23 +2584,48 @@ class Edit extends Component<typeof Automation> {
         @title='Params'
         @description='Values handed to the script at the start of each run'
       >
-        {{#each @fields.params as |Param index|}}
-          <div
-            class='automation-edit__param'
-            data-test-automation-param={{index}}
-          >
-            <Param />
-            <Button
-              @tone='neutral'
-              @appearance='plain'
-              @size='s'
-              {{on 'click' (fn this.removeParam index)}}
-              data-test-automation-remove-param={{index}}
-            >Remove</Button>
+        {{#if @model.params.length}}
+          <div class='automation-edit__params'>
+            <span
+              class='automation-edit__param-head'
+              aria-hidden='true'
+            >Name</span>
+            <span
+              class='automation-edit__param-head'
+              aria-hidden='true'
+            >Value</span>
+            <span></span>
+            {{#each @model.params as |param index|}}
+              <div
+                class='automation-edit__param'
+                data-test-automation-param={{index}}
+              >
+                <Input
+                  @value={{param.name}}
+                  aria-label='Param name'
+                  @onInput={{fn this.setParam index 'name'}}
+                />
+                <Input
+                  @value={{param.value}}
+                  aria-label='Param value'
+                  @onInput={{fn this.setParam index 'value'}}
+                />
+                <IconButton
+                  @label='Remove this param'
+                  @icon={{TrashIcon}}
+                  @tone='neutral'
+                  @appearance='plain'
+                  @size='s'
+                  {{on 'click' (fn this.removeParam index)}}
+                  data-test-automation-remove-param={{index}}
+                />
+              </div>
+            {{/each}}
           </div>
-        {{/each}}
+        {{/if}}
         <div>
           <Button
+            @icon={{PlusIcon}}
             @tone='neutral'
             @appearance='outlined'
             {{on 'click' this.addParam}}
@@ -2716,23 +2665,39 @@ class Edit extends Component<typeof Automation> {
       .automation-edit__remove {
         justify-self: end;
       }
-      .automation-edit__param {
+      /* One grid for the whole list: Name and Value head it once, and each
+         row's inputs and remove button sit centered on one line. */
+      .automation-edit__params {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: end;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+        align-items: center;
         gap: var(--boxel-sp-xs);
+      }
+      .automation-edit__param {
+        display: contents;
+      }
+      .automation-edit__param-head {
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
       }
       .automation-edit__operations {
         display: grid;
         gap: var(--boxel-sp-xs);
       }
+      /* Each service is a full-width row, shaded like a trigger's panel, with
+         its remove button at the right edge, in line with the params'. */
       .automation-edit__operation {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-xs)
+          var(--boxel-sp-sm);
+        border-radius: var(--radius);
+        background-color: var(--muted);
       }
       .automation-edit__operation > :first-child {
-        flex: 1;
+        min-width: 0;
       }
       .automation-edit__script-pick {
         display: flex;

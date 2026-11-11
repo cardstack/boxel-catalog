@@ -3,8 +3,7 @@
 // automation surface's `realm` object. It reads a repository's open issues
 // through the automation's one declared outside call, groups them by label,
 // and writes the digest to a Markdown file in the workspace. Its params name
-// the repository card to read and the file to write; a trigger's params
-// override the automation's own.
+// the repository card to read and the file to write.
 
 await realm.plan(['Fetch open issues', 'Group by label', 'Write digest']);
 
