@@ -180,10 +180,9 @@ class LeadIsolated extends Component<typeof Lead> {
     </RecordPage>
     <style scoped>
       .action-error {
-        margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.75rem;
-        color: var(--destructive);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--destructive-ink);
       }
     </style>
   </template>
@@ -225,11 +224,11 @@ export class Lead extends CardDef {
       </span>
       <style scoped>
         .atom {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
+          gap: var(--boxel-sp-2xs);
           min-inline-size: 0;
         }
         .name {

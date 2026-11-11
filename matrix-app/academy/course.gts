@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -70,15 +71,17 @@ export function courseStatusLabel(v?: string | null): string {
   return COURSE_STATUSES.find((s) => s.value === v)?.label ?? 'Draft';
 }
 
-export const CourseStatusField = statusField({
-  displayName: 'Course Status',
-  options: COURSE_STATUSES,
-  transitions: {
-    draft: ['published'],
-    published: ['archived', 'draft'],
-    archived: ['published'],
-  },
-});
+export const CourseStatusField = markDefinition(
+  statusField({
+    displayName: 'Course Status',
+    options: COURSE_STATUSES,
+    transitions: {
+      draft: ['published'],
+      published: ['archived', 'draft'],
+      archived: ['published'],
+    },
+  }),
+);
 
 export const COURSE_LEVELS = [
   { value: 'intro', label: 'Introductory' },
@@ -86,10 +89,12 @@ export const COURSE_LEVELS = [
   { value: 'advanced', label: 'Advanced' },
 ];
 
-export const CourseLevelField = enumField(StringField, {
-  displayName: 'Course Level',
-  options: COURSE_LEVELS,
-});
+export const CourseLevelField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Course Level',
+    options: COURSE_LEVELS,
+  }),
+);
 
 function hueOf(m: any) {
   return statusHue(CourseStatusField, m?.status);
@@ -292,7 +297,7 @@ class CourseIsolated extends Component<typeof Course> {
             @size='xs'
             @tone='primary'
             @appearance='accent'
-            @loading={{this.busy}}
+            @busy={{this.busy}}
             @disabled={{this.busy}}
             {{on 'click' this.publish}}
           >Publish course</Button>

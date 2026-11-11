@@ -30,7 +30,6 @@ import {
 import { Table } from '@cardstack/pretui/components/table';
 import { Money } from '../crm/money';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 const OrderStatusField = enumField(StringField, {
   options: ['pending', 'paid', 'shipped', 'delivered', 'canceled'],
@@ -96,9 +95,9 @@ export class Order extends CardDef {
         .order-row {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .icon {
           width: 1.25rem;
@@ -110,7 +109,7 @@ export class Order extends CardDef {
           font-weight: 600;
         }
         .total {
-          margin-left: auto;
+          margin-inline-start: auto;
           font-weight: 600;
           font-variant-numeric: tabular-nums;
         }
@@ -128,9 +127,9 @@ export class Order extends CardDef {
         .order-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 600;
           color: var(--foreground);
         }
         .oa-icon {
@@ -256,26 +255,26 @@ export class Order extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           max-width: 100%;
         }
         .name-lg {
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .figure {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           white-space: nowrap;
         }
         .figure-lg {
-          font-size: 1.25rem;
+          font-size: var(--boxel-font-size-md);
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -288,14 +287,14 @@ export class Order extends CardDef {
         .row {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           min-width: 0;
         }
         .col,
         .info {
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
+          gap: var(--boxel-sp-4xs);
           min-width: 0;
           flex: 1;
         }
@@ -305,8 +304,8 @@ export class Order extends CardDef {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 0.375rem;
-            padding: 0.5rem;
+            gap: var(--boxel-sp-2xs);
+            padding: var(--boxel-sp-xs);
             text-align: center;
           }
         }
@@ -314,11 +313,11 @@ export class Order extends CardDef {
           .strip {
             display: flex;
             align-items: center;
-            gap: 0.625rem;
-            padding: 0.625rem 0.75rem;
+            gap: var(--boxel-sp-xs);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           }
           .strip .info {
-            gap: 0.125rem;
+            gap: var(--boxel-sp-6xs);
           }
           .strip .status {
             align-self: flex-start;
@@ -330,8 +329,8 @@ export class Order extends CardDef {
             flex-direction: column;
             align-items: flex-start;
             justify-content: center;
-            gap: 0.375rem;
-            padding: 0.875rem;
+            gap: var(--boxel-sp-2xs);
+            padding: var(--boxel-sp-sm);
           }
           .tile .row {
             width: 100%;
@@ -343,8 +342,8 @@ export class Order extends CardDef {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
-            padding: 1.25rem;
+            gap: var(--boxel-sp);
+            padding: var(--boxel-sp-lg);
           }
         }
       </style>
@@ -491,11 +490,7 @@ export class Order extends CardDef {
               </:value>
             </KeyValue>
           {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @texture={{false}}
-              @title='No items yet'
-            />
+            <EmptyState @size='s' @texture={{false}} @title='No items yet' />
           {{/if}}
         </section>
 
@@ -508,21 +503,21 @@ export class Order extends CardDef {
         .order-doc {
           max-width: 46rem;
           margin: 0 auto;
-          padding: 2rem 1.5rem;
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: var(--boxel-sp-lg);
         }
         .doc-head {
           display: flex;
           align-items: flex-end;
           justify-content: space-between;
-          gap: 1rem;
+          gap: var(--boxel-sp);
           border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: 1rem;
+          padding-bottom: var(--boxel-sp);
         }
         .doc-kind {
-          margin: 0 0 0.125rem;
+          margin: 0 0 var(--boxel-sp-6xs);
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -532,13 +527,12 @@ export class Order extends CardDef {
           color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
-          font-size: 1.75rem;
+          font-size: var(--boxel-font-size-xl);
           line-height: 1.1;
         }
         .status {
           flex-shrink: 0;
-          margin-bottom: 0.25rem;
+          margin-bottom: var(--boxel-sp-4xs);
         }
         /* Pret UI StepList, track variant. The knobs put every mark on a
            guaranteed pair with the page: the current step's number takes
@@ -555,7 +549,7 @@ export class Order extends CardDef {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          gap: 1.5rem;
+          gap: var(--boxel-sp-lg);
           flex-wrap: wrap;
         }
         .party {
@@ -572,25 +566,22 @@ export class Order extends CardDef {
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
           color: var(--muted-foreground);
-          margin-bottom: 0.375rem;
+          margin-bottom: var(--boxel-sp-2xs);
         }
-        /* Pret UI KeyValue at the document's text size */
+        /* Pret UI KeyValue facts, values set in the semibold weight */
         .facts {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1rem;
-          font-weight: 500;
+          font-weight: 600;
         }
         .items {
           display: flex;
           flex-direction: column;
-          gap: 0.75rem;
+          gap: var(--boxel-sp-sm);
         }
         .lines {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .t-num {
-          text-align: right;
+          text-align: end;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -600,20 +591,18 @@ export class Order extends CardDef {
         /* Pret UI KeyValue for the totals, right-aligned under the lines with
            the grand total set heavier above a rule. */
         .totals {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1.5rem;
+          --_order-bleed: var(--boxel-sp-lg);
           justify-content: end;
           font-variant-numeric: tabular-nums;
-          font-weight: 500;
+          font-weight: 600;
         }
         /* shortcut: KeyValue has no per-row emphasis knob, so the grand-total row's rule and weight reach its last dt/dd; drop once KeyValue exposes one. */
         .totals :deep(dt:last-of-type),
         .totals :deep(dd:last-of-type) {
-          padding-top: 0.5rem;
+          padding-top: var(--boxel-sp-xs);
           border-top: 0.125rem solid var(--foreground);
           color: var(--foreground);
-          font-size: 1.125rem;
+          font-size: var(--boxel-font-size);
           font-weight: 700;
         }
         /* The rule runs across both columns: both cells fill the row, and the
@@ -623,13 +612,13 @@ export class Order extends CardDef {
         }
         .totals :deep(dd:last-of-type) {
           align-self: stretch;
-          margin-inline-start: calc(-1 * var(--space-6));
-          padding-inline-start: var(--space-6);
+          margin-inline-start: calc(-1 * var(--_order-bleed));
+          padding-inline-start: var(--_order-bleed);
         }
         .ship {
           border: 1px solid var(--border);
           border-radius: 0.5rem;
-          padding: 1rem;
+          padding: var(--boxel-sp);
           background-color: var(--card);
           color: var(--card-foreground);
         }

@@ -38,9 +38,9 @@ export class User extends CardDef {
         .user-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 600;
           color: var(--foreground);
         }
         .ua-name {
@@ -71,21 +71,21 @@ export class User extends CardDef {
         .user {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.875rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
         .info {
           min-width: 0;
         }
         .name {
           font-weight: 600;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .meta {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>
@@ -121,10 +121,10 @@ export class User extends CardDef {
         .fitted {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
+          gap: var(--boxel-sp-xs);
           width: 100%;
           height: 100%;
-          padding: 0.625rem 0.75rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           box-sizing: border-box;
           overflow: hidden;
           color: var(--foreground);
@@ -138,18 +138,18 @@ export class User extends CardDef {
         .info {
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
           min-width: 0;
         }
         .name {
           font-weight: 600;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -168,7 +168,7 @@ export class User extends CardDef {
             flex-direction: column;
             align-items: flex-start;
             justify-content: center;
-            padding: 0.875rem;
+            padding: var(--boxel-sp-sm);
           }
           .fitted .avatar-sm {
             display: none;
@@ -202,7 +202,7 @@ export class User extends CardDef {
         {{#if @model.email}}
           <section class='panel'>
             <h2>Contact</h2>
-            <KeyValue class='details' @items={{this.contactRows}}>
+            <KeyValue @items={{this.contactRows}}>
               <:value><@fields.email /></:value>
             </KeyValue>
           </section>
@@ -212,20 +212,20 @@ export class User extends CardDef {
         .user-page {
           max-width: 40rem;
           margin: 0 auto;
-          padding: 2rem 1.5rem;
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: var(--boxel-sp-lg);
         }
         .uh {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: var(--boxel-sp);
           border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: 1.25rem;
+          padding-bottom: var(--boxel-sp-lg);
         }
         .doc-kind {
-          margin: 0 0 0.125rem;
+          margin: 0 0 var(--boxel-sp-6xs);
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -235,18 +235,18 @@ export class User extends CardDef {
           color: var(--muted-foreground);
         }
         h1 {
-          font-size: 1.625rem;
+          font-size: var(--boxel-font-size-lg);
           line-height: 1.1;
         }
         .panel {
           border: 1px solid var(--border);
           border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
+          padding: var(--boxel-sp) var(--boxel-sp-lg);
           background-color: var(--card);
           color: var(--card-foreground);
         }
         h2 {
-          margin: 0 0 0.75rem;
+          margin: 0 0 var(--boxel-sp-sm);
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -254,12 +254,6 @@ export class User extends CardDef {
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
           color: var(--muted-foreground);
-        }
-        /* Pret UI KeyValue at the panel's text size and column gap */
-        .details {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1.25rem;
         }
       </style>
     </template>

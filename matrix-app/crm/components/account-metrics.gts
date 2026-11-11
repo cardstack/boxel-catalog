@@ -129,7 +129,7 @@ export class AccountMetrics extends GlimmerComponent<AccountMetricsSignature> {
         border-block: 1px solid var(--border);
       }
       .metric {
-        padding: 0.5rem 0.625rem;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         background: var(--card);
         color: var(--card-foreground);
         box-shadow: -1px 0 0 var(--border);

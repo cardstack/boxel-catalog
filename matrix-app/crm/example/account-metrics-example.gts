@@ -66,7 +66,6 @@ export class AccountMetricsExample extends CardDef {
           gap: var(--boxel-sp);
         }
         h2 {
-          margin: 0;
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);

@@ -23,6 +23,11 @@
         "links": {
           "self": "../Invoice/inv-2026-114"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

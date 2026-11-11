@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   FieldDef,
@@ -48,13 +49,15 @@ export const FINDING_STATE_HUE: Record<string, Hue> = {
   closed: 'green',
 };
 
-export const FindingStateField = enumField(StringField, {
-  displayName: 'Finding State',
-  options: FINDING_STATES.map((value) => ({
-    value,
-    label: FINDING_STATE_LABELS[value],
-  })),
-});
+export const FindingStateField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Finding State',
+    options: FINDING_STATES.map((value) => ({
+      value,
+      label: FINDING_STATE_LABELS[value],
+    })),
+  }),
+);
 
 /**
  * A recorded gap between a rule and reality — where the risk lives, and the
@@ -249,19 +252,19 @@ export class FindingField extends FieldDef {
         }
         .required {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .observed {
           margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.5;
         }
         .foot {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .acceptance {
@@ -271,7 +274,7 @@ export class FindingField extends FieldDef {
            colour here would compete with severity for the eye. */
         .blocker {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           color: var(--foreground);
         }

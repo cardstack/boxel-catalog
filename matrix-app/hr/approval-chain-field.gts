@@ -174,23 +174,23 @@ export class ApprovalChainField extends FieldDef {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
-          gap: 0.25rem 0.75rem;
+          gap: var(--boxel-sp-4xs) var(--boxel-sp-sm);
           min-height: 1.75rem;
-          padding: 0.25rem 0.625rem;
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
           box-sizing: border-box;
           border-top: 1px solid var(--border);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
         .who {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
+          gap: var(--boxel-sp-2xs);
           font-weight: 700;
         }
         .meta {
           flex: 1 1 10rem;
           min-width: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {

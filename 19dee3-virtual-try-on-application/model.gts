@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { CardDef, Component, field, contains } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
@@ -5,13 +6,15 @@ import ImageSourceField from '@cardstack/catalog/fields/image-source/image-sourc
 
 // How much of the body is visible in a model photo, detected once when the
 // model is added. Unset = not yet detected.
-export const BodyVisibilityField = enumField(StringField, {
-  options: [
-    { value: 'full', label: 'Full body' },
-    { value: 'partial', label: 'Partial / cropped' },
-  ],
-  displayName: 'Body Visibility',
-});
+export const BodyVisibilityField = markDefinition(
+  enumField(StringField, {
+    options: [
+      { value: 'full', label: 'Full body' },
+      { value: 'partial', label: 'Partial / cropped' },
+    ],
+    displayName: 'Body Visibility',
+  }),
+);
 
 export class Model extends CardDef {
   static displayName = 'Model';

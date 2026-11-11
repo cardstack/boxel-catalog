@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AssetStatusField",
+        "module": "../maintenance-vocabulary"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Asset Status\n\nWhere an asset is in its service life: `in-service` → `out-of-service` / `under-maintenance` / `in-storage` / `on-loan` → `disposed`. Built on the catalog's `statusField()` rather than a bare `enumField`, so each value carries its own `label`, `hue` and `meaning`, and the field ships the legal transition graph — `canTransition()` is what refuses an illegal move (a disposed asset never returns to service) instead of every consumer re-deriving the rule.\n\n### Single writers\n\nNothing raw-patches `asset.status`. It moves only through the commands that own the corresponding event: **Raise / Complete Work Order** (into and out of `under-maintenance`), **Transfer Custody** (`on-loan`), and **Dispose Asset** (the terminal `disposed`).\n\n### What else lives in this module\n\n`maintenance-vocabulary.gts` is the single enum surface for the maintenance cards, so the vocabulary is defined once and every card, component and command imports from it rather than restating a status list. Alongside Asset Status it carries `WorkOrderStatusField` (requested → approved → scheduled → in-progress ⇄ on-hold → completed → closed, or cancelled) and `WorkOrderPriorityField` (catalog `priorityField`, P1–P4), plus the plain enums for work-order kind, hold reason, custody kind, warranty kind, meter kind, reading source, checklist item kind and result, plan kind and disposal method — and the `*_HUE` maps that keep a status's colour identical in a StatePill, a calendar chip and a chart mark.\n\n### Non-goals\n\nNot a work-order status (that is its own ladder on the Work Order card, with its own transition graph) and not a condition grade — physical condition is `ConditionGrade`, which is about wear, not availability.",
+      "cardInfo": {
+        "name": "Asset Status",
+        "summary": "Service-life status for an asset, with the legal transition graph the commands enforce."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Asset/ast-2026-0210"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Asset/ast-2026-0041"
+        }
+      }
+    }
+  }
+}

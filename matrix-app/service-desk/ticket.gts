@@ -517,13 +517,13 @@ export class Ticket extends CardDef {
           background: var(--card);
           color: var(--card-foreground);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
         .head {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
           flex-wrap: wrap;
         }
         .mark {
@@ -532,36 +532,38 @@ export class Ticket extends CardDef {
           inline-size: 1.75rem;
           block-size: 1.75rem;
           border: 1px solid var(--border);
-          font: 600 0.6875rem/1 var(--font-mono);
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          font-weight: 600;
+          line-height: 1;
           flex: none;
         }
         .id {
           flex: 1 1 12rem;
           min-inline-size: 0;
           display: grid;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
         }
         h1 {
-          margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           text-transform: none;
           letter-spacing: normal;
         }
         .meta,
         .dim {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-variant-numeric: tabular-nums;
         }
         .sts {
           display: flex;
-          gap: 0.75rem;
+          gap: var(--boxel-sp-sm);
         }
         .stats {
           --text-stat: 1.375rem;
@@ -570,7 +572,7 @@ export class Ticket extends CardDef {
           border-block-start: 1px solid var(--border);
         }
         .cell {
-          padding: 0.4375rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           min-inline-size: 0;
         }
         .cell + .cell {
@@ -592,14 +594,12 @@ export class Ticket extends CardDef {
           border-block-start: 1px solid var(--border);
         }
         .sh {
-          margin: 0;
-          padding: 0.4375rem 0.625rem;
-          font-size: 0.75rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .txt {
-          margin: 0;
-          padding: 0 0.625rem 0.4375rem;
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
         }
         .msgs {
           list-style: none;
@@ -610,13 +610,13 @@ export class Ticket extends CardDef {
           display: grid;
           grid-template-columns: minmax(0, 1fr) auto;
           align-items: center;
-          gap: 0.5rem;
-          padding: 0.3125rem 0.625rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
           border-block-start: 1px solid var(--border);
         }
         .lines {
           display: grid;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
           min-inline-size: 0;
         }
         .kv {
@@ -629,20 +629,23 @@ export class Ticket extends CardDef {
           display: flex;
           align-items: center;
           flex-wrap: wrap;
-          gap: 0.25rem;
+          gap: var(--boxel-sp-4xs);
           border-block-start: 1px solid var(--border);
           min-inline-size: 0;
           margin: 0;
         }
         dt {
-          padding-inline-start: 0.625rem;
-          font: 600 0.5625rem/1.3 var(--font-mono);
+          padding-inline-start: var(--boxel-sp-xs);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1.3;
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
         dd {
-          padding-inline-end: 0.625rem;
+          padding-inline-end: var(--boxel-sp-xs);
         }
         @container (width <= 44rem) {
           .body {
@@ -675,10 +678,10 @@ export class Ticket extends CardDef {
         .atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
           max-inline-size: 100%;
           min-inline-size: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
         .mark {
           flex: none;
@@ -687,13 +690,16 @@ export class Ticket extends CardDef {
           inline-size: 1rem;
           block-size: 1rem;
           border: 1px solid var(--border);
-          font: 600 0.5625rem/1 var(--font-mono);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1;
           color: var(--muted-foreground);
         }
         .ref {
           flex: none;
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-variant-numeric: tabular-nums;
           color: var(--muted-foreground);
         }
@@ -746,15 +752,15 @@ export class Ticket extends CardDef {
       <style scoped>
         .emb {
           display: grid;
-          gap: 0.375rem;
-          padding: 0.4375rem 0.625rem;
-          font-size: 0.75rem;
+          gap: var(--boxel-sp-2xs);
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
           color: var(--foreground);
         }
         .head {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           min-inline-size: 0;
         }
         .mark {
@@ -764,7 +770,10 @@ export class Ticket extends CardDef {
           inline-size: 1.25rem;
           block-size: 1.25rem;
           border: 1px solid var(--border);
-          font: 600 0.625rem/1 var(--font-mono);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1;
         }
         .titles {
           display: grid;
@@ -776,12 +785,12 @@ export class Ticket extends CardDef {
           white-space: nowrap;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .chips {
           display: flex;
-          gap: 0.75rem;
+          gap: var(--boxel-sp-sm);
         }
         .kv {
           margin: 0;
@@ -794,7 +803,10 @@ export class Ticket extends CardDef {
           border-block-start: 1px solid var(--border);
         }
         dt {
-          font: 600 0.5625rem/1.3 var(--font-mono);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1.3;
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);

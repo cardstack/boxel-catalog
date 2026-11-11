@@ -50,11 +50,11 @@ export class Territory extends CardDef {
       </span>
       <style scoped>
         .atom {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
           max-width: 100%;
           color: var(--foreground);
@@ -102,10 +102,8 @@ export class Territory extends CardDef {
       </article>
       <style scoped>
         .emb {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
-          --text-stat: 1.375rem;
-          --text-ui-xs: 0.6875rem;
           --boxel-sp-xs: 0.35rem;
           --boxel-sp-lg: 0.75rem;
           --pretui-kv-label-font-size: 0.5625rem;
@@ -120,39 +118,37 @@ export class Territory extends CardDef {
         header {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 0.625rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
         .id {
           flex: 1;
           min-width: 0;
         }
         h3 {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm, 0.8125rem);
+          font-size: var(--boxel-font-size-sm);
           font-weight: 600;
         }
         p {
-          margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .fact {
-          padding: 0 0.625rem 0.375rem;
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
         }
         .kv {
-          padding-inline: 0.625rem;
+          padding-inline: var(--boxel-sp-xs);
           border-top: 1px solid var(--border);
         }
         h3 {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .linked {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.375rem 0.625rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           border-top: 1px solid var(--border);
         }
         .cap {
@@ -270,10 +266,8 @@ export class Territory extends CardDef {
       </article>
       <style scoped>
         .page {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
-          --text-stat: 1.375rem;
-          --text-ui-xs: 0.6875rem;
           --boxel-sp-xs: 0.35rem;
           --boxel-sp-lg: 0.75rem;
           --pretui-kv-label-font-size: 0.5625rem;
@@ -290,8 +284,8 @@ export class Territory extends CardDef {
         header {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.75rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm);
           border-bottom: 1px solid var(--border);
         }
         .id {
@@ -300,20 +294,18 @@ export class Territory extends CardDef {
         }
         h1 {
           font-family: var(--font-sans);
-          margin: 0;
-          font-size: 1rem;
+          font-size: var(--boxel-font-size);
           font-weight: 700;
         }
         p {
-          margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .kv {
-          padding-inline: 0.625rem;
+          padding-inline: var(--boxel-sp-xs);
         }
         .stats > * {
-          padding: 0.4375rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         }
         .stats > * + * {
           border-inline-start: 1px solid var(--border);
@@ -324,17 +316,16 @@ export class Territory extends CardDef {
           border-bottom: 1px solid var(--border);
         }
         section h2 {
-          margin: 0;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.75rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           border-bottom: 1px solid var(--border);
         }
         .linked {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.25rem 0.625rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
         }
         .cap {
           font-family: var(--boxel-eyebrow-font-family);

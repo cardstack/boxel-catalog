@@ -22,6 +22,11 @@
         "links": {
           "self": "../Candidate/rejected-quinn"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

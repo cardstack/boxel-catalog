@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   FieldDef,
@@ -116,15 +117,17 @@ function longDate(date: DateLike): string {
     : '';
 }
 
-export const OnboardingChecklistStatusField = dotEnumField(
-  {
-    options: ONBOARDING_CHECKLIST_STATUSES.map((status) => ({
-      value: status,
-      label: ONBOARDING_CHECKLIST_STATUS_LABELS[status],
-    })),
-    displayName: 'Onboarding Checklist Status',
-  },
-  ONBOARDING_CHECKLIST_STATUS_HUES,
+export const OnboardingChecklistStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: ONBOARDING_CHECKLIST_STATUSES.map((status) => ({
+        value: status,
+        label: ONBOARDING_CHECKLIST_STATUS_LABELS[status],
+      })),
+      displayName: 'Onboarding Checklist Status',
+    },
+    ONBOARDING_CHECKLIST_STATUS_HUES,
+  ),
 );
 
 // One task in an OnboardingChecklist — tracking completion state for a
@@ -198,16 +201,16 @@ export class OnboardingChecklistTaskField extends FieldDef {
             gap: var(--boxel-sp-6xs);
           }
           .task-title {
-            font-size: 0.75rem;
+            font-size: var(--boxel-font-size-xs);
             font-weight: 700;
-            overflow-wrap: anywhere;
+            overflow-wrap: break-word;
           }
           .task-sub {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             gap: 0 var(--boxel-sp-4xs);
-            font-size: 0.6875rem;
+            font-size: var(--boxel-font-size-2xs);
             color: var(--muted-foreground);
           }
         }
@@ -619,7 +622,7 @@ export class OnboardingChecklist extends CardDef {
         .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
       </style>

@@ -29,6 +29,11 @@
         "links": {
           "self": "../Project/payroll-cutover"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

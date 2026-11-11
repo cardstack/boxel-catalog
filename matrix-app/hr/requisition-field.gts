@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { dotEnumField } from './dot-enum-field';
 
 import type { Hue, StateColor } from '@cardstack/catalog/components/state-pill';
@@ -43,10 +44,12 @@ export const REQUISITION_STATUS_HUES: Record<string, Hue> = {
 export const REQUISITION_STATUS_COLORS: Record<string, StateColor> =
   stateColorsOf(REQUISITION_STATUS_HUES);
 
-export const RequisitionStatusField = dotEnumField(
-  {
-    options: REQUISITION_STATUS_OPTIONS,
-    displayName: 'Requisition Status',
-  },
-  REQUISITION_STATUS_HUES,
+export const RequisitionStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: REQUISITION_STATUS_OPTIONS,
+      displayName: 'Requisition Status',
+    },
+    REQUISITION_STATUS_HUES,
+  ),
 );

@@ -23,6 +23,12 @@
         "name": "Spec"
       }
     },
-    "relationships": {}
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    }
   }
 }

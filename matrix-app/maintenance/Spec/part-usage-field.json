@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "PartUsageField",
+        "module": "../part-usage-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Part Usage\n\n`partId` / `partNumber` / `partName`, `quantity`, `unitCost` (snapshotted at use because list prices drift), `fromStock`. Computed `cost`. **Complete Work Order** decrements Inventory Stock for `fromStock` lines and rolls `cost` into the order's `partsCost`.\n\n### Use\n\nEmbed it as the `partsUsed` list on a Work Order. `partId` is the Spare Part's card id, stored as a string so a usage line survives the part being retired; `partNumber` and `partName` are snapshots for the same reason. Lines bought for one job set `fromStock` to false and leave inventory alone.",
+      "cardInfo": {
+        "name": "Part Usage",
+        "summary": "A spare part consumed by one job — part, quantity, unit cost snapshot, from stock or bought."
+      },
+      "containedExamples": [
+        {
+          "partNumber": "KF-4410",
+          "partName": "Inlet filter",
+          "quantity": 1,
+          "unitCost": {
+            "amount": 38.5,
+            "currency": {
+              "code": "USD"
+            }
+          },
+          "fromStock": true
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../part-usage-field",
+              "name": "PartUsageField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

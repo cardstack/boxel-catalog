@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "agencyId": "ny-dtf",
+      "name": "NY Taxation and Finance · NYS-45 (withholding, unemployment)",
+      "form": "NYS-45",
+      "frequency": "quarterly",
+      "liabilityAccount": "2320",
+      "taxes": ["ny-income", "ny-suta"],
+      "cardInfo": {
+        "name": "NY Taxation and Finance · NYS-45 (withholding, unemployment)"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PayrollAgency"
+      }
+    }
+  }
+}

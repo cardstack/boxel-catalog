@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -48,10 +49,12 @@ export const RECOMMENDATION_OPTIONS = RECOMMENDATIONS.map((value) => ({
   label: RECOMMENDATION_LABELS[value],
 }));
 
-export const RecommendationField = enumField(StringField, {
-  options: RECOMMENDATION_OPTIONS,
-  displayName: 'Recommendation',
-});
+export const RecommendationField = markDefinition(
+  enumField(StringField, {
+    options: RECOMMENDATION_OPTIONS,
+    displayName: 'Recommendation',
+  }),
+);
 
 export class ScorecardCriterionField extends FieldDef {
   static displayName = 'Scorecard Criterion';
@@ -170,7 +173,7 @@ export class ScorecardField extends FieldDef {
           </ul>
         {{else}}
           <EmptyState
-            class='empty'
+            @size='s'
             @texture={{false}}
             @title='No criteria scored yet'
           />
@@ -208,11 +211,6 @@ export class ScorecardField extends FieldDef {
           list-style: none;
           margin: 0;
           padding: 0;
-        }
-        .empty {
-          --space-9: var(--boxel-sp);
-          --space-6: var(--boxel-sp);
-          --text-heading: var(--boxel-font-size);
         }
         .overall-notes {
           margin: 0;
