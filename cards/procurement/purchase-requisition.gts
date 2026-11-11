@@ -336,10 +336,13 @@ export class PurchaseRequisition extends CardDef {
           container-type: inline-size;
           display: grid;
           gap: 0.5rem;
-          padding: 0.75rem;
+          padding: var(--boxel-sp-sm);
           font-size: 0.75rem;
           line-height: 1.25;
           color: var(--card-foreground);
+
+          background: var(--background);
+          min-height: 100%;
         }
         .card {
           min-inline-size: 0;

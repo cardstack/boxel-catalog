@@ -292,6 +292,9 @@ export class VendorQuote extends CardDef {
           --pretui-kv-label-font-family: var(--font-mono);
           --pretui-kv-label-font-weight: 600;
           --pretui-kv-label-letter-spacing: 0.13em;
+
+          background: var(--background);
+          min-height: 100%;
         }
         .card {
           border: 1px solid var(--border);

@@ -357,7 +357,7 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        padding: 0.75rem;
+        padding: var(--boxel-sp-sm);
         font-size: 0.75rem;
         line-height: 1.25;
         color: var(--card-foreground);
@@ -368,6 +368,9 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
         --pretui-kv-label-font-family: var(--font-mono);
         --pretui-kv-label-font-weight: 600;
         --pretui-kv-label-letter-spacing: 0.13em;
+
+        background: var(--background);
+        min-height: 100%;
       }
       /* the root scrolls; its blocks keep their own height instead of shrinking */
       .gr > * {

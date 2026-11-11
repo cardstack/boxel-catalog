@@ -490,7 +490,7 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         box-sizing: border-box;
         min-block-size: 100%;
         overflow-y: auto;
-        padding: 0.625rem;
+        padding: var(--boxel-sp-sm);
         display: grid;
         align-content: start;
         gap: 0.5rem;
@@ -498,8 +498,10 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         font-size: 0.75rem;
         line-height: 1.25;
         color: var(--card-foreground);
-        background: var(--muted);
+        background: var(--background);
         --text-stat: 1.375rem;
+
+        min-height: 100%;
       }
       .blk {
         min-inline-size: 0;

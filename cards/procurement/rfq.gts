@@ -453,6 +453,8 @@ class RfqIsolated extends Component<typeof Rfq> {
         line-height: 1.25;
         --text-stat: 1.375rem;
         --text-ui-xs: 0.6875rem;
+
+        min-height: 100%;
       }
       .card {
         background: var(--card);

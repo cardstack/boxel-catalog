@@ -667,10 +667,12 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        padding: 0.5rem;
+        padding: var(--boxel-sp-sm);
         box-sizing: border-box;
         min-block-size: 100%;
         background: var(--background);
+
+        min-height: 100%;
       }
       .card {
         background: var(--card);
