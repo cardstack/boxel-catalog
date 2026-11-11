@@ -971,10 +971,15 @@ class ScriptEditor extends GlimmerComponent<{
           @language='javascript'
           @label={{fileName @url}}
           @onInput={{this.setDraft}}
+          data-test-automation-script-editor
         />
         <div class='script-editor__actions'>
           {{#if this.dirty}}
-            <Chip @label='Unsaved changes' @tone='warning' />
+            <Chip
+              @label='Unsaved changes'
+              @tone='warning'
+              data-test-automation-script-unsaved
+            />
             <Button
               @tone='neutral'
               @appearance='plain'
@@ -987,6 +992,7 @@ class ScriptEditor extends GlimmerComponent<{
             @busy={{this.saving}}
             @disabled={{if this.dirty false true}}
             {{on 'click' this.save}}
+            data-test-automation-script-save
           >Save script</Button>
         </div>
         {{#if this.saveFailure}}
