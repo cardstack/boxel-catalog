@@ -126,7 +126,7 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         label: 'Utilisation',
         value: pct(m.utilizationPercent),
         hint: binsLine(m),
-        tone: bandTone(m),
+        tone: statTone(bandTone(m)),
       },
       {
         label: 'Zones',
@@ -137,7 +137,7 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         label: 'Free bins',
         value: freeBins(m),
         hint: m.capacityBand ? lower(m.capacityBand.label) : '—',
-        tone: bandTone(m),
+        tone: statTone(bandTone(m)),
       },
     ];
   }
@@ -599,6 +599,16 @@ function stockTone(state: string | undefined) {
       ? 'warn'
       : state === 'ok'
         ? 'ok'
+        : undefined;
+}
+
+function statTone(tone: string | undefined) {
+  return tone === 'bad'
+    ? 'danger'
+    : tone === 'warn'
+      ? 'warning'
+      : tone === 'ok'
+        ? 'success'
         : undefined;
 }
 
