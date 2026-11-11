@@ -7,7 +7,7 @@
         "summary": "A neutral theme in Pret UI's dense style for the Site Card and the site realm's home: zinc greys, near-black ink, Plus Jakarta Sans with IBM Plex Mono labels and Anton titles, light and dark."
       },
       "rootVariables": {
-        "background": "#ffffff",
+        "background": "var(--boxel-100, #f8f7fa)",
         "foreground": "#18181b",
         "card": "#ffffff",
         "cardForeground": "#18181b",
