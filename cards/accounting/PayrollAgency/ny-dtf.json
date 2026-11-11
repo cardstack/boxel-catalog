@@ -10,7 +10,8 @@
       "taxes": ["ny-income", "ny-suta"],
       "cardInfo": {
         "name": "NY Taxation and Finance · NYS-45 (withholding, unemployment)"
-      }
+      },
+      "filedThrough": "2026-12-31"
     },
     "relationships": {
       "cardInfo.theme": {

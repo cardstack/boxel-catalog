@@ -186,6 +186,13 @@ import {
 import { Form1099Report } from '../accounting/ledger-tax';
 import { PnlForecast } from '../accounting/ledger-forecast';
 import {
+  PayrollPage,
+  payrollPostGuard,
+  payrollPostSteps,
+  payrollUnwindSteps,
+  payrollTie,
+} from './payroll-page';
+import {
   Budget,
   BudgetVsActual,
   MarginReport,
@@ -866,10 +873,17 @@ const PAGES: PageDef[] = [
   },
   // Payroll
   {
+    id: 'payrun',
+    area: 'Payroll',
+    label: 'Run payroll',
+    blurb:
+      'Employees and their pay setup, running payroll for a pay date, each run with its paychecks, and the payroll tax liabilities and filings by agency and period.',
+  },
+  {
     id: 'payroll',
     journal: ['payroll'],
     area: 'Payroll',
-    label: 'Payroll runs',
+    label: 'Synced runs',
     blurb:
       'Each pay run synced from Gusto: wages, withholding, employer taxes, net pay.',
     module: '../accounting/ledger-cash',
@@ -1590,7 +1604,7 @@ const WORKSPACES: Workspace[] = [
     id: 'payroll',
     label: 'Payroll',
     icon: UsersIcon,
-    pages: ['payroll', 'quarters'],
+    pages: ['payrun', 'payroll', 'quarters'],
     launchers: [{ label: 'Profit and loss', page: 'r-pnl' }],
   },
   {
@@ -1696,7 +1710,8 @@ const TAB: Record<string, string> = {
   roasts: 'Roasts',
   landed: 'Landed cost',
   counts: 'Counts',
-  payroll: 'Runs',
+  payroll: 'Synced runs',
+  payrun: 'Run payroll',
   journalmonths: 'Months',
   pads: 'Pads',
   recurring: 'Recurring',
@@ -5546,6 +5561,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let recs = (((this.recData as any)?.instances ?? []) as any[]).filter(
       (r) => r && r.status === 'reconciled' && (r.differenceMinor ?? 0) !== 0,
     );
+    let payroll = payrollTie(this.journalMonths);
     let stuck = this.drafts.filter(
       (d) => this.asOfAll && String(d.date ?? '') <= this.asOfAll,
     );
@@ -5621,6 +5637,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         stuck.length ? `${stuck.length} can never post as dated` : '',
       ),
       this.taxGate(gate),
+      gate(
+        'payroll',
+        "Each payroll tax agency's account ties to what it's owed",
+        payroll.ok,
+        payroll.caption,
+      ),
     ];
   }
   // What the agencies were owed at the last close against 2200 in the closed months. Every agency's
@@ -6326,6 +6348,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               ? m.lastDay
               : today;
       let { unwound, ops } = this.unwindPlan(p);
+      ops.push(...payrollUnwindSteps(p));
       // A bank line matched to or added as this posting goes back for review with it.
       if (p.key)
         ops.push((b) =>
@@ -6620,6 +6643,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // What a draft must clear before it posts, beyond its own checks, read fresh from the lots: draws
   // priced from the lots as they are, and a roast's output lot not already taken.
   postGuard = async (c: any) => {
+    payrollPostGuard(c);
     if (
       (c instanceof Fulfillment || c instanceof CountAdjustment) &&
       (c.status ?? 'draft') === 'draft' &&
@@ -6769,6 +6793,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           )
           .markPaid({ paymentNo: c.docNo, amountMinor: c.amountMinor }),
       );
+    ops.push(...payrollPostSteps(c));
     return ops;
   };
   post = async () => {
@@ -7827,6 +7852,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @refRealms={{this.refRealms}}
                 @ledger={{@model.ledger}}
                 @kind={{this.def.report}}
+              />
+            {{else if (eq this.page 'payrun')}}
+              <PayrollPage
+                @ledger={{@model.ledger}}
+                @context={{@context}}
+                @realms={{this.refRealms}}
+                @viewCard={{@viewCard}}
+                @notify={{this.notify}}
               />
             {{else if this.def.report}}
               <section class='report' data-report-body>

@@ -147,6 +147,8 @@ export interface PaycheckData {
   hoursMilli: number | null;
   grossMinor: number;
   deductions: DeductionLine[];
+  deductionsMinor: number;
+  section125Minor: number;
   fitWagesMinor: number;
   fitMinor: number;
   ssWagesMinor: number;
@@ -154,6 +156,7 @@ export interface PaycheckData {
   medicareWagesMinor: number;
   medicareMinor: number;
   addlMedicareMinor: number;
+  addlMedicareWagesMinor: number;
   stateWagesMinor: number;
   stateMinor: number;
   sdiMinor: number;
@@ -318,10 +321,13 @@ export function calcPaycheck({
     hoursMilli: hourly ? (hoursMilli ?? 0) : null,
     grossMinor: gross,
     deductions,
+    deductionsMinor: deductions.reduce((n, d) => n + d.amountMinor, 0),
+    section125Minor: s125,
     fitWagesMinor: fitWages,
     ...p,
     ssWagesMinor: ssWages,
     medicareWagesMinor: ficaWages,
+    addlMedicareWagesMinor: addlWages,
     stateWagesMinor: fitWages,
     netMinor: net,
     erSsMinor: ppm(ssWages, ss.employerRatePpm),
@@ -381,4 +387,359 @@ export function ytdOf(
     }
   }
   return out;
+}
+
+// ── runs ─────────────────────────────────────────────────────────────────────
+/** The liability accounts payroll taxes wait in, and the agency each is owed to. */
+export const PAYROLL_LIABILITIES = {
+  federal: { account: '2310', agencyId: 'irs-941' },
+  futa: { account: '2315', agencyId: 'irs-940' },
+  state: { account: '2320', agencyId: 'ny-dtf' },
+  dblPfl: { account: '2330', agencyId: 'ny-dbl-pfl' },
+} as const;
+export const EMPLOYER_TAX_ACCOUNT = '6120';
+
+const isoDay = (t: number) => new Date(t).toISOString().slice(0, 10);
+const dayMs = 864e5;
+
+/** The days a paycheck on this date pays for: the period ends on the pay date. */
+export function periodFor(
+  schedule: string,
+  payDate: string,
+): { start: string; end: string } {
+  let t = Date.parse(`${payDate}T00:00:00Z`);
+  if (isNaN(t)) return { start: '', end: '' };
+  let [y, m, d] = payDate.split('-').map(Number);
+  let monthEnd = isoDay(Date.UTC(y, m, 0));
+  let first = `${payDate.slice(0, 7)}-01`;
+  switch (schedule) {
+    case 'weekly':
+      return { start: isoDay(t - 6 * dayMs), end: payDate };
+    case 'biweekly':
+      return { start: isoDay(t - 13 * dayMs), end: payDate };
+    case 'semimonthly':
+      return d <= 15
+        ? { start: first, end: `${payDate.slice(0, 7)}-15` }
+        : { start: `${payDate.slice(0, 7)}-16`, end: monthEnd };
+    default:
+      return { start: first, end: monthEnd };
+  }
+}
+
+const total = (
+  checks: Partial<PaycheckData>[],
+  f: (p: Partial<PaycheckData>) => number,
+) => checks.reduce((n, p) => n + f(p), 0);
+const deducted = (p: Partial<PaycheckData>) =>
+  (p.deductions ?? []).reduce((n, d) => n + (d?.amountMinor ?? 0), 0);
+
+/** A run's stored totals, each the sum of its paychecks. */
+export function runTotals(checks: Partial<PaycheckData>[]) {
+  let wages = new Map<
+    string,
+    { account: string; cls: string | null; amountMinor: number }
+  >();
+  for (let p of checks) {
+    let k = `${p.expenseAccount}|${p.cls ?? ''}`;
+    let w = wages.get(k) ?? {
+      account: p.expenseAccount ?? '',
+      cls: p.cls ?? null,
+      amountMinor: 0,
+    };
+    w.amountMinor += p.grossMinor ?? 0;
+    wages.set(k, w);
+  }
+  let n = (f: (p: Partial<PaycheckData>) => number) => total(checks, f);
+  return {
+    wages: [...wages.values()].map((w) => ({
+      account: w.account,
+      label: w.cls ? `Wages · ${w.cls}` : 'Wages',
+      amountMinor: w.amountMinor,
+      cls: w.cls,
+      loc: null,
+    })),
+    withholdingMinor: n(withheldOf),
+    deductionsMinor: n(deducted),
+    employerTaxMinor: n(employerTaxOf),
+    netMinor: n((p) => p.netMinor ?? 0),
+    fitMinor: n((p) => p.fitMinor ?? 0),
+    ssWagesMinor: n((p) => p.ssWagesMinor ?? 0),
+    ssTaxMinor: n((p) => (p.ssMinor ?? 0) + (p.erSsMinor ?? 0)),
+    medicareWagesMinor: n((p) => p.medicareWagesMinor ?? 0),
+    medicareTaxMinor: n(
+      (p) =>
+        (p.medicareMinor ?? 0) +
+        (p.erMedicareMinor ?? 0) +
+        (p.addlMedicareMinor ?? 0),
+    ),
+    stateWagesMinor: n((p) => p.stateWagesMinor ?? 0),
+    stateTaxMinor: n((p) => p.stateMinor ?? 0),
+    sdiPflMinor: n((p) => (p.sdiMinor ?? 0) + (p.pflMinor ?? 0)),
+    futaWagesMinor: n((p) => p.futaWagesMinor ?? 0),
+    futaMinor: n((p) => p.futaMinor ?? 0),
+    sutaWagesMinor: n((p) => p.sutaWagesMinor ?? 0),
+    sutaMinor: n((p) => p.sutaMinor ?? 0),
+    fitWagesMinor: n((p) => p.fitWagesMinor ?? 0),
+    addlMedicareWagesMinor: n((p) => p.addlMedicareWagesMinor ?? 0),
+    addlMedicareMinor: n((p) => p.addlMedicareMinor ?? 0),
+    section125Minor: n((p) => p.section125Minor ?? 0),
+    headcount: checks.length,
+  };
+}
+export type RunTotals = ReturnType<typeof runTotals>;
+
+interface Line {
+  account: string;
+  debitMinor: number;
+  creditMinor: number;
+  cls?: string;
+  party?: string;
+}
+/**
+ * What a run with paychecks posts: wages by expense account and class, employer taxes, each tax to
+ * the liability of the agency it's owed to, each deduction to its own liability, and net from the
+ * bank.
+ */
+type Num = number | null | undefined;
+type Str = string | null | undefined;
+export function paycheckPostings(run: {
+  bank?: Str;
+  employerTaxAccount?: Str;
+  wages?: ({ account?: Str; amountMinor?: Num; cls?: Str } | undefined)[];
+  employerTaxMinor?: Num;
+  fitMinor?: Num;
+  ssTaxMinor?: Num;
+  medicareTaxMinor?: Num;
+  futaMinor?: Num;
+  stateTaxMinor?: Num;
+  sutaMinor?: Num;
+  sdiPflMinor?: Num;
+  netMinor?: Num;
+  paychecks?: (
+    | {
+        expenseAccount?: Str;
+        cls?: Str;
+        grossMinor?: Num;
+        deductions?: ({ account?: Str; amountMinor?: Num } | undefined)[];
+      }
+    | undefined
+  )[];
+}): Line[] {
+  let L = PAYROLL_LIABILITIES;
+  let cr = (
+    { account, agencyId }: { account: string; agencyId: string },
+    minor: number,
+  ): Line => ({
+    account,
+    debitMinor: 0,
+    creditMinor: minor,
+    party: agencyId,
+  });
+  let byAccount = new Map<string, number>();
+  for (let p of run.paychecks ?? [])
+    for (let d of p?.deductions ?? [])
+      if (d)
+        byAccount.set(
+          d.account ?? '',
+          (byAccount.get(d.account ?? '') ?? 0) + (d.amountMinor ?? 0),
+        );
+  // Wages post where each paycheck says, whatever wage rows the run carries.
+  let wages = new Map<string, Line>();
+  for (let p of run.paychecks ?? []) {
+    if (!p) continue;
+    let k = `${p.expenseAccount ?? ''}|${p.cls ?? ''}`;
+    let w = wages.get(k) ?? {
+      account: p.expenseAccount ?? '',
+      debitMinor: 0,
+      creditMinor: 0,
+      ...(p.cls ? { cls: p.cls } : {}),
+    };
+    w.debitMinor += p.grossMinor ?? 0;
+    wages.set(k, w);
+  }
+  return [
+    ...wages.values(),
+    {
+      account: run.employerTaxAccount ?? EMPLOYER_TAX_ACCOUNT,
+      debitMinor: run.employerTaxMinor ?? 0,
+      creditMinor: 0,
+    },
+    cr(
+      L.federal,
+      (run.fitMinor ?? 0) + (run.ssTaxMinor ?? 0) + (run.medicareTaxMinor ?? 0),
+    ),
+    cr(L.futa, run.futaMinor ?? 0),
+    cr(L.state, (run.stateTaxMinor ?? 0) + (run.sutaMinor ?? 0)),
+    cr(L.dblPfl, run.sdiPflMinor ?? 0),
+    ...[...byAccount].map(([account, minor]) => ({
+      account,
+      debitMinor: 0,
+      creditMinor: minor,
+    })),
+    { account: run.bank ?? '', debitMinor: 0, creditMinor: run.netMinor ?? 0 },
+  ];
+}
+
+/** The runs that stand: posted, or journaled and not reversed in the journal. */
+export function standingRuns<T extends { status?: string; docNo?: string }>(
+  runs: (T | undefined)[],
+  journaledSources: Set<string>,
+): T[] {
+  return runs.filter(
+    (r): r is T =>
+      !!r &&
+      (r.status === 'posted' ||
+        (r.status === 'journaled' && journaledSources.has(r.docNo ?? ''))),
+  );
+}
+
+/** Hours an employee worked in a period, from their time activities, in thousandths. */
+export function hoursIn(
+  acts: (
+    | {
+        workerKind?: string;
+        worker?: string;
+        date?: string;
+        hours?: number;
+      }
+    | undefined
+  )[],
+  employeeId: string,
+  period: { start: string; end: string },
+): number | undefined {
+  let mine = acts.filter(
+    (t) =>
+      !!t &&
+      t.workerKind === 'employee' &&
+      t.worker === employeeId &&
+      (t.date ?? '') >= period.start &&
+      (t.date ?? '') <= period.end,
+  );
+  return mine.length
+    ? mine.reduce((n, t) => n + (t!.hours ?? 0), 0)
+    : undefined;
+}
+
+interface RunLike {
+  docNo?: string;
+  date?: string;
+  status?: string;
+  schedule?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  paychecks?: ({ employeeId?: string } | undefined)[];
+}
+/**
+ * Why a new run can't be drafted, or ''. Runs are drafted one at a time and in pay-date order, so
+ * each one's year to date includes every run before it; and no employee is paid twice for the same
+ * days, whatever schedule each run is on. `others` are the standing runs and the drafts.
+ */
+export function runBlocker(
+  run: {
+    schedule: string;
+    payDate: string;
+    start: string;
+    end: string;
+    employeeIds: string[];
+  },
+  others: (RunLike | undefined)[],
+): string {
+  let runs = others.filter((r): r is RunLike => !!r);
+  let draft = runs.find(
+    (r) => (r.status ?? 'draft') === 'draft' && (r.paychecks ?? []).length,
+  );
+  if (draft)
+    return `Run ${draft.docNo} is still a draft. Post it, or delete it, before drafting another, so each run's year to date counts the ones before it.`;
+  let ids = new Set(run.employeeIds);
+  let shared = (r: RunLike) =>
+    (r.paychecks ?? [])
+      .map((p) => p?.employeeId ?? '')
+      .filter((id) => ids.has(id));
+  let later = runs.find(
+    (r) => (r.date ?? '') > run.payDate && shared(r).length,
+  );
+  if (later)
+    return `Run ${later.docNo} already paid ${shared(later).join(', ')} on ${later.date}, after this pay date, and its year to date didn't count this run. Pay the missed days in a run dated after ${later.date}.`;
+  for (let r of runs) {
+    let again = shared(r);
+    if (
+      again.length &&
+      (r.periodStart ?? '') <= run.end &&
+      (r.periodEnd ?? '') >= run.start
+    )
+      return r.schedule === run.schedule
+        ? `Run ${r.docNo} already paid ${again.join(', ')} for ${r.periodStart} to ${r.periodEnd}, which overlaps this period.`
+        : `Run ${r.docNo} already paid ${again.join(', ')} through ${r.periodEnd} on the ${r.schedule} schedule, and this ${run.schedule} period from ${run.start} would pay those days again. Start them on the ${run.schedule} schedule from the first period after ${r.periodEnd}.`;
+  }
+  return '';
+}
+
+const COMPARED = [
+  'grossMinor',
+  'deductionsMinor',
+  'fitMinor',
+  'ssWagesMinor',
+  'ssMinor',
+  'medicareMinor',
+  'addlMedicareMinor',
+  'stateMinor',
+  'sdiMinor',
+  'pflMinor',
+  'netMinor',
+  'erSsMinor',
+  'erMedicareMinor',
+  'futaWagesMinor',
+  'futaMinor',
+  'sutaWagesMinor',
+  'sutaMinor',
+  'ytdGrossMinor',
+] as const;
+/**
+ * The employees whose paycheck in a draft run no longer matches what their pay setup, the tax
+ * tables and the runs before it now give: a run posted or reversed since, or a changed setup.
+ */
+export function staleEmployees(
+  run: {
+    docNo?: string;
+    date?: string;
+    paychecks?: (Partial<PaycheckData> | undefined)[];
+  },
+  setups: (PaySetupData | undefined)[],
+  tables: (TaxTableData | undefined)[],
+  before: Parameters<typeof ytdOf>[2],
+): string[] {
+  let date = run.date ?? '';
+  return (run.paychecks ?? [])
+    .filter((p): p is Partial<PaycheckData> => !!p)
+    .filter((p) => {
+      let setup = setups.find((s) => s?.employeeId === p.employeeId);
+      if (!setup) return true;
+      try {
+        let fresh = calcPaycheck({
+          setup,
+          payDate: date,
+          hoursMilli: p.hoursMilli ?? undefined,
+          ytd: ytdOf(p.employeeId ?? '', date, before, run.docNo),
+          tables,
+        });
+        let routed = (x: Partial<PaycheckData>) =>
+          JSON.stringify([
+            x.expenseAccount ?? '',
+            x.cls ?? null,
+            (x.deductions ?? []).map((d) => [
+              d?.label ?? '',
+              d?.kind ?? '',
+              d?.account ?? '',
+              d?.amountMinor ?? 0,
+            ]),
+          ]);
+        return (
+          COMPARED.some((k) => (fresh[k] ?? 0) !== (p[k] ?? 0)) ||
+          routed(fresh) !== routed(p)
+        );
+      } catch {
+        return true;
+      }
+    })
+    .map((p) => p.employeeId ?? '');
 }

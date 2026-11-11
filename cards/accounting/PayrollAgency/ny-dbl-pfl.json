@@ -10,7 +10,8 @@
       "taxes": ["ny-sdi", "ny-pfl"],
       "cardInfo": {
         "name": "NY disability and paid family leave carrier"
-      }
+      },
+      "filedThrough": "2026-12-31"
     },
     "relationships": {
       "cardInfo.theme": {
