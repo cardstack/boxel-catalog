@@ -496,9 +496,8 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
                   @active={{eq p.id this.panelId}}
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.navTo bar sec.id p.id}}
-                >
-                  <:icon><p.icon aria-hidden='true' /></:icon>
-                </SidebarItem>
+                  @icon={{p.icon}}
+                />
               {{/each}}
             </SidebarGroup>
           {{/each}}

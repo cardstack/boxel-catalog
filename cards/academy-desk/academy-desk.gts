@@ -458,9 +458,8 @@ class AcademyDeskIsolated extends Component<typeof AcademyDesk> {
                 @active={{eq t.id this.tab}}
                 @collapsed={{bar.collapsed}}
                 @onClick={{fn this.navTo bar t.id}}
-              >
-                <:icon><t.icon aria-hidden='true' /></:icon>
-              </SidebarItem>
+                @icon={{t.icon}}
+              />
             {{/each}}
           </SidebarGroup>
         </:nav>

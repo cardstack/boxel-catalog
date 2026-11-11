@@ -1190,9 +1190,8 @@ export class VendorOnboardingConsole extends Component<
                   @active={{item.active}}
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.setTab item.key}}
-                >
-                  <:icon><item.icon aria-hidden='true' /></:icon>
-                </SidebarItem>
+                  @icon={{item.icon}}
+                />
               {{/each}}
             </SidebarGroup>
             <SidebarGroup @label='Procurement' @hideLabel={{bar.collapsed}}>
@@ -1203,9 +1202,8 @@ export class VendorOnboardingConsole extends Component<
                   @active={{item.active}}
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.setTab item.key}}
-                >
-                  <:icon><item.icon aria-hidden='true' /></:icon>
-                </SidebarItem>
+                  @icon={{item.icon}}
+                />
               {{/each}}
             </SidebarGroup>
           </:nav>

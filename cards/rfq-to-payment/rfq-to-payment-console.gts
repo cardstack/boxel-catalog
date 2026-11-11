@@ -713,9 +713,8 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   @active={{item.active}}
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.setTab item.value}}
-                >
-                  <:icon><item.icon aria-hidden='true' /></:icon>
-                </SidebarItem>
+                  @icon={{item.icon}}
+                />
               {{/each}}
             </SidebarGroup>
             <SidebarGroup @label='Procure-to-Pay' @hideLabel={{bar.collapsed}}>
@@ -726,9 +725,8 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   @active={{item.active}}
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.setTab item.value}}
-                >
-                  <:icon><item.icon aria-hidden='true' /></:icon>
-                </SidebarItem>
+                  @icon={{item.icon}}
+                />
               {{/each}}
             </SidebarGroup>
           </:nav>

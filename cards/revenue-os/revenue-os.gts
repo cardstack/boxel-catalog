@@ -1136,9 +1136,8 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                   @active={{item.active}}
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.setTab item.value}}
-                >
-                  <:icon><item.icon aria-hidden='true' /></:icon>
-                </SidebarItem>
+                  @icon={{item.icon}}
+                />
               {{/each}}
             </SidebarGroup>
           </:nav>

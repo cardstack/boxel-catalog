@@ -805,9 +805,8 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                 @active={{eq this.activeTab 'dashboard'}}
                 @collapsed={{bar.collapsed}}
                 @onClick={{fn this.setTab 'dashboard'}}
-              >
-                <:icon><LayoutIcon aria-hidden='true' /></:icon>
-              </SidebarItem>
+                @icon={{LayoutIcon}}
+              />
             </SidebarGroup>
             <SidebarGroup @label='Club' @hideLabel={{bar.collapsed}}>
               {{#each this.navItems key='key' as |item|}}
@@ -817,9 +816,8 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                   @active={{item.active}}
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.setTab item.key}}
-                >
-                  <:icon><item.icon aria-hidden='true' /></:icon>
-                </SidebarItem>
+                  @icon={{item.icon}}
+                />
               {{/each}}
             </SidebarGroup>
           </:nav>

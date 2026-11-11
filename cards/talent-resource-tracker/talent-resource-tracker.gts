@@ -1161,11 +1161,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   @active={{eq item.tab this.activeTab}}
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.pickTab item.tab bar}}
-                >
-                  <:icon>{{#let item.icon as |Icon|}}<Icon
-                        aria-hidden='true'
-                      />{{/let}}</:icon>
-                </SidebarItem>
+                  @icon={{item.icon}}
+                />
               {{/each}}
             </SidebarGroup>
           {{/each}}
