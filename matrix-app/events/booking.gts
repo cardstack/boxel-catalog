@@ -226,7 +226,8 @@ class BookingIsolated extends Component<typeof Booking> {
         {{/if}}
         {{#if this.canCheckIn}}
           <Button
-            @variant='primary'
+            @tone='primary'
+            @appearance='accent'
             @size='s'
             @busy={{eq this.runningAction 'check-in'}}
             {{on 'click' this.checkIn}}
@@ -347,7 +348,7 @@ class BookingIsolated extends Component<typeof Booking> {
         background-color: var(--card);
         color: var(--card-foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         overflow: hidden;
       }
       .head {
@@ -366,7 +367,7 @@ class BookingIsolated extends Component<typeof Booking> {
         height: 2rem;
         border-radius: 0.375rem;
         background-color: var(--muted);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
       }
       .id {
@@ -376,12 +377,11 @@ class BookingIsolated extends Component<typeof Booking> {
       .name {
         margin: 0;
         font-family: var(--font-mono);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .meta {
-        margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .sts {
@@ -436,14 +436,14 @@ class BookingIsolated extends Component<typeof Booking> {
       .stat dt,
       .kv dt {
         font-family: var(--font-mono);
-        font-size: 0.5625rem;
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
       .num {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         line-height: 1.2;
         font-variant-numeric: tabular-nums;
@@ -452,7 +452,7 @@ class BookingIsolated extends Component<typeof Booking> {
         white-space: nowrap;
       }
       .sub {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .cols {
@@ -475,9 +475,8 @@ class BookingIsolated extends Component<typeof Booking> {
         border-top: 1px solid var(--border);
       }
       h2 {
-        margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .kv {
@@ -564,7 +563,7 @@ export class Booking extends CardDef {
           gap: var(--boxel-sp-4xs);
           max-width: 100%;
           min-width: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .mark {
@@ -575,7 +574,7 @@ export class Booking extends CardDef {
           height: 1.125rem;
           border-radius: 0.25rem;
           background-color: var(--muted);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .name {
@@ -652,7 +651,7 @@ export class Booking extends CardDef {
       </article>
       <style scoped>
         .emb {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .head {
@@ -670,7 +669,7 @@ export class Booking extends CardDef {
           height: 1.5rem;
           border-radius: 0.25rem;
           background-color: var(--muted);
-          font-size: 0.625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .id {
@@ -686,11 +685,11 @@ export class Booking extends CardDef {
         }
         .name {
           font-family: var(--font-mono);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .sts {
@@ -743,7 +742,7 @@ export class Booking extends CardDef {
         }
         .kv dt {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -794,7 +793,7 @@ export class Booking extends CardDef {
           height: 1.5rem;
           border-radius: 0.25rem;
           background-color: var(--muted);
-          font-size: 0.625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .ref {
@@ -804,7 +803,7 @@ export class Booking extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: var(--boxel-sp-5xs);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           white-space: nowrap;
         }

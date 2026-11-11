@@ -218,7 +218,7 @@ export class Workflow extends CardDef {
           background: var(--card);
           color: var(--card-foreground);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
         }
         .eh {
@@ -235,7 +235,7 @@ export class Workflow extends CardDef {
         .name {
           margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .name,
@@ -247,7 +247,7 @@ export class Workflow extends CardDef {
         .meta,
         .fact {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .fact {
@@ -278,7 +278,7 @@ export class Workflow extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -294,7 +294,7 @@ export class Workflow extends CardDef {
           background: var(--muted);
           color: var(--card-foreground);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
       </style>
@@ -316,7 +316,7 @@ export class Workflow extends CardDef {
           max-width: 100%;
           vertical-align: middle;
           font-family: var(--font-sans);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           color: var(--card-foreground);
         }
@@ -329,7 +329,7 @@ export class Workflow extends CardDef {
           border-radius: calc(var(--radius) / 2);
           background: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.5rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .name {
@@ -377,7 +377,8 @@ export class Workflow extends CardDef {
           </span>
           {{#if @editCard}}
             <Button
-              @variant='outline'
+              @tone='neutral'
+              @appearance='outlined'
               @size='s'
               @icon={{PencilIcon}}
               {{on 'click' this.edit}}
@@ -464,7 +465,7 @@ export class Workflow extends CardDef {
           background: var(--card);
           color: var(--card-foreground);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           --text-stat: 1.375rem;
         }
@@ -488,12 +489,12 @@ export class Workflow extends CardDef {
         .name {
           margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .sts {
@@ -529,9 +530,8 @@ export class Workflow extends CardDef {
           border-top: 1px solid var(--border);
         }
         h2 {
-          margin: 0;
           padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .row {
@@ -575,7 +575,7 @@ export class Workflow extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -588,7 +588,7 @@ export class Workflow extends CardDef {
           border-radius: calc(var(--radius) / 2);
           background: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         @container (max-width: 40rem) {
@@ -662,12 +662,12 @@ export class Workflow extends CardDef {
           background: var(--muted);
           color: var(--card-foreground);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           line-height: 1.2;
           letter-spacing: 0.13em;
@@ -678,7 +678,7 @@ export class Workflow extends CardDef {
         .fr {
           display: grid;
           margin: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .fr-r {

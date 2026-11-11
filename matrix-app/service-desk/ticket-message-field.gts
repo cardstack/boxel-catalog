@@ -139,7 +139,8 @@ export class TicketMessageField extends FieldDef {
           padding: var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           line-height: 1.6;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
+          min-width: 0;
         }
       </style>
     </template>
@@ -157,8 +158,8 @@ export class TicketMessageField extends FieldDef {
         .msg-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.3rem;
-          font-size: 0.8125rem;
+          gap: var(--boxel-sp-3xs);
+          font-size: var(--boxel-font-size-xs);
         }
         .msg-atom-author {
           font-weight: 600;

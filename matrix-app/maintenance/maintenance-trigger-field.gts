@@ -74,7 +74,12 @@ export class MaintenanceTriggerField extends FieldDef {
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <div class='trigger'>
-        <RepeatIcon class='trigger-icon' />
+        <RepeatIcon
+          class='trigger-icon'
+          width='16'
+          height='16'
+          aria-hidden='true'
+        />
         <span class='trigger-summary'>{{@model.summary}}</span>
       </div>
       <style scoped>
@@ -88,8 +93,6 @@ export class MaintenanceTriggerField extends FieldDef {
         }
         .trigger-icon {
           flex: none;
-          width: 1rem;
-          height: 1rem;
           color: var(--muted-foreground);
         }
         .trigger-summary {

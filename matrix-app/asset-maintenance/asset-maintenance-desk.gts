@@ -38,6 +38,7 @@ import {
   SidebarTrigger,
 } from '@cardstack/pretui/components/sidebar';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { Table } from '@cardstack/pretui/components/table';
 import { Wizard, type WizardStep } from '@cardstack/pretui/components/wizard';
 
 import HomeIcon from '@cardstack/boxel-icons/home';
@@ -943,8 +944,8 @@ export class AssetMaintenanceDesk extends Component<
                   </LayoutControl>
                 </div>
                 <div class='tbl-wrap'>
-                  <table class='tbl'>
-                    <thead>
+                  <Table class='tbl' @framed={{false}} @striped={{false}}>
+                    <:head>
                       <tr>
                         <th>ID</th>
                         <th class='wide'>Work · Asset</th>
@@ -953,8 +954,8 @@ export class AssetMaintenanceDesk extends Component<
                         <th class='num'>Est. cost</th>
                         <th class='num'>Due</th>
                       </tr>
-                    </thead>
-                    <tbody>
+                    </:head>
+                    <:body>
                       {{#each this.homeRows key='id' as |wo|}}
                         <tr>
                           <td class='strong'>
@@ -999,8 +1000,8 @@ export class AssetMaintenanceDesk extends Component<
                           </td>
                         </tr>
                       {{/each}}
-                    </tbody>
-                  </table>
+                    </:body>
+                  </Table>
                 </div>
               </section>
 
@@ -1051,8 +1052,8 @@ export class AssetMaintenanceDesk extends Component<
                   </LayoutControl>
                 </div>
                 <div class='tbl-wrap'>
-                  <table class='tbl'>
-                    <thead>
+                  <Table class='tbl' @framed={{false}} @striped={{false}}>
+                    <:head>
                       <tr>
                         <th>ID</th>
                         <th class='wide'>Asset</th>
@@ -1061,8 +1062,8 @@ export class AssetMaintenanceDesk extends Component<
                         <th>Status</th>
                         <th>Next due</th>
                       </tr>
-                    </thead>
-                    <tbody>
+                    </:head>
+                    <:body>
                       {{#each this.assetRows key='id' as |a|}}
                         <tr>
                           <td class='strong'>{{if a.tag a.tag '—'}}</td>
@@ -1106,8 +1107,8 @@ export class AssetMaintenanceDesk extends Component<
                           </td>
                         </tr>
                       {{/each}}
-                    </tbody>
-                  </table>
+                    </:body>
+                  </Table>
                 </div>
               </section>
 
@@ -1297,16 +1298,16 @@ export class AssetMaintenanceDesk extends Component<
                 </div>
                 <div class='tbl-wrap'>
                   {{#if (eq this.collection 'plans')}}
-                    <table class='tbl'>
-                      <thead>
+                    <Table class='tbl' @framed={{false}} @striped={{false}}>
+                      <:head>
                         <tr>
                           <th>Plan</th>
                           <th>Asset</th>
                           <th class='wide'>Next due</th>
                           <th>Status</th>
                         </tr>
-                      </thead>
-                      <tbody>
+                      </:head>
+                      <:body>
                         {{#each this.planRows key='id' as |p|}}
                           <tr>
                             <td><Button
@@ -1344,19 +1345,19 @@ export class AssetMaintenanceDesk extends Component<
                                 @title='No maintenance plans match'
                               /></td></tr>
                         {{/each}}
-                      </tbody>
-                    </table>
+                      </:body>
+                    </Table>
                   {{else}}
-                    <table class='tbl'>
-                      <thead>
+                    <Table class='tbl' @framed={{false}} @striped={{false}}>
+                      <:head>
                         <tr>
                           <th>Part #</th>
                           <th class='wide'>Name</th>
                           <th class='num'>On hand</th>
                           <th>Stock</th>
                         </tr>
-                      </thead>
-                      <tbody>
+                      </:head>
+                      <:body>
                         {{#each this.partRows key='id' as |p|}}
                           <tr>
                             <td class='strong'>{{p.partNumber}}</td>
@@ -1384,8 +1385,8 @@ export class AssetMaintenanceDesk extends Component<
                                 @title='No spare parts match'
                               /></td></tr>
                         {{/each}}
-                      </tbody>
-                    </table>
+                      </:body>
+                    </Table>
                   {{/if}}
                 </div>
               </section>
@@ -1610,7 +1611,7 @@ export class AssetMaintenanceDesk extends Component<
         border: 1px solid var(--border);
         border-radius: var(--radius);
         font-family: var(--font-mono);
-        font-size: 0.5625rem;
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         line-height: 1;
       }
@@ -1761,10 +1762,6 @@ export class AssetMaintenanceDesk extends Component<
       /* ruled table: equal rows, one hairline between, mono caps head */
       .tbl-wrap {
         overflow-x: auto;
-      }
-      .tbl {
-        inline-size: 100%;
-        border-collapse: collapse;
       }
       .tbl th {
         padding: var(--boxel-sp-5xs) var(--boxel-sp-sm);
@@ -1921,7 +1918,10 @@ export class AssetMaintenanceDesk extends Component<
         border: 0;
         background: none;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: start;
       }
       @media (hover: hover) {

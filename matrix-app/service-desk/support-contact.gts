@@ -233,7 +233,7 @@ export class SupportContact extends PersonBase {
       </RecCard>
       <style scoped>
         .dim {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
       </style>
@@ -281,10 +281,10 @@ export class SupportContact extends PersonBase {
         .atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
           min-inline-size: 0;
           max-inline-size: 100%;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
         .mark {
           flex: none;
@@ -293,7 +293,10 @@ export class SupportContact extends PersonBase {
           inline-size: 1rem;
           block-size: 1rem;
           border: 1px solid var(--border);
-          font: 600 0.5625rem/1 var(--font-mono);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1;
           color: var(--muted-foreground);
         }
         .nm {
