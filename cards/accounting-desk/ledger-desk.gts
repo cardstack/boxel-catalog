@@ -231,6 +231,7 @@ import {
   taxLinesFact,
 } from '../accounting/ledger-tax-codes';
 import { money, toneFor, Lines, AccordMark } from '../accounting/record-kit';
+import { AllCards, searchAll } from '../accounting/all-cards';
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
 const here: string = import.meta.url;
@@ -1969,26 +1970,26 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
-  closeData = this.args.context?.getCards(
+  closeData = new AllCards(
+    this.args.context,
     this,
     () =>
       ({
         filter: {
           type: codeRef(here, '../accounting/ledger-close', 'MonthClose'),
         },
-        page: { size: 100 },
       }) as never,
     () => this.realms,
     { isLive: true },
   );
-  accountData = this.args.context?.getCards(
+  accountData = new AllCards(
+    this.args.context,
     this,
     () =>
       ({
         filter: {
           type: codeRef(here, '../accounting/ledger-cards', 'LedgerAccount'),
         },
-        page: { size: 100 },
       }) as never,
     () => this.refRealms,
     { isLive: true },
@@ -2022,7 +2023,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let m = this.journalMonths.find((j) => j.status === 'open')?.month;
     return m ? `${m}-01` : '';
   }
-  openDocsData = this.args.context?.getCards(
+  openDocsData = new AllCards(
+    this.args.context,
     this,
     () => {
       let from = this.openFrom;
@@ -2041,7 +2043,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             posted('../accounting/ledger-cards', 'Bill'),
           ],
         },
-        page: { size: 500 },
       } as never;
     },
     () => this.realms,
@@ -2095,7 +2096,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               },
             ],
           },
-          page: { size: 500 },
         } as never)
       : undefined;
   };
@@ -2123,25 +2123,29 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
-  bookedInvoices = this.args.context?.getCards(
+  bookedInvoices = new AllCards(
+    this.args.context,
     this,
     this.bookedQuery(Invoice, ['quote', 'sourceInvoice']),
     () => this.realms,
     { isLive: true },
   );
-  bookedBills = this.args.context?.getCards(
+  bookedBills = new AllCards(
+    this.args.context,
     this,
     this.bookedQuery(Bill, ['purchaseOrder', 'sourceInvoice']),
     () => this.realms,
     { isLive: true },
   );
-  bookedCustomerPayments = this.args.context?.getCards(
+  bookedCustomerPayments = new AllCards(
+    this.args.context,
     this,
     this.bookedQuery(CustomerPayment, ['sourcePayment']),
     () => this.realms,
     { isLive: true },
   );
-  bookedBillPayments = this.args.context?.getCards(
+  bookedBillPayments = new AllCards(
+    this.args.context,
     this,
     this.bookedQuery(BillPayment, ['sourcePayment']),
     () => this.realms,
@@ -2270,6 +2274,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
   postToBooks = async (row: StatementRow) => {
     if (this.busy || this.isPending(row.key)) return;
+    if (
+      [
+        this.bookedInvoices,
+        this.bookedBills,
+        this.bookedCustomerPayments,
+        this.bookedBillPayments,
+      ].some((r) => !r.isComplete)
+    ) {
+      this.error =
+        "The desk hasn't read everything already in the books yet, so it can't tell whether this is. Try again in a moment.";
+      return;
+    }
     let card = [
       this.opsQuotes,
       this.opsInvoices,
@@ -2323,46 +2339,38 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
-  customerData = this.args.context?.getCards(
+  customerData = new AllCards(
+    this.args.context,
     this,
     () =>
       ({
         filter: {
           type: codeRef(here, '../accounting/ledger-sales', 'Customer'),
         },
-        page: { size: 100 },
       }) as never,
     () => this.refRealms,
     { isLive: true },
   );
   // The documents that stay cards (invoices, bills, the opening balances), for the account registers;
   // the journal months are already loaded. Each register filters these in memory by account.
-  docQuery =
-    (module: string, type: string, page = 0) =>
-    () =>
-      ({
-        filter: { type: codeRef(here, module, type) },
-        page: { size: 100, number: page },
-      }) as never;
-  regInvoices = this.args.context?.getCards(
+  docQuery = (module: string, type: string) => () =>
+    ({ filter: { type: codeRef(here, module, type) } }) as never;
+  regInvoices = new AllCards(
+    this.args.context,
     this,
     this.docQuery('../accounting/ledger-sales', 'Invoice'),
     () => this.realms,
     { isLive: true },
   );
-  regBills0 = this.args.context?.getCards(
+  regBills = new AllCards(
+    this.args.context,
     this,
-    this.docQuery('../accounting/ledger-cards', 'Bill', 0),
+    this.docQuery('../accounting/ledger-cards', 'Bill'),
     () => this.realms,
     { isLive: true },
   );
-  regBills1 = this.args.context?.getCards(
-    this,
-    this.docQuery('../accounting/ledger-cards', 'Bill', 1),
-    () => this.realms,
-    { isLive: true },
-  );
-  regOpenings = this.args.context?.getCards(
+  regOpenings = new AllCards(
+    this.args.context,
     this,
     this.docQuery('../accounting/ledger-opening', 'OpeningBalances'),
     () => this.realms,
@@ -2371,8 +2379,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get regDocs(): any[] {
     return [
       this.regInvoices,
-      this.regBills0,
-      this.regBills1,
+      this.regBills,
       this.regOpenings,
     ].flatMap((d) =>
       (((d as any)?.instances ?? []) as any[]).filter(
@@ -2416,21 +2423,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           { on: codeRef(here, module, name), eq: { status: 'posted' } },
         ],
       },
-      page: { size: 1000 },
     }) as never;
-  postedBillData = this.args.context?.getCards(
+  postedBillData = new AllCards(
+    this.args.context,
     this,
     this.postedDocQuery('../accounting/ledger-cards', 'Bill'),
     () => this.realms,
     { isLive: true },
   );
-  postedInvoiceData = this.args.context?.getCards(
+  postedInvoiceData = new AllCards(
+    this.args.context,
     this,
     this.postedDocQuery('../accounting/ledger-sales', 'Invoice'),
     () => this.realms,
     { isLive: true },
   );
-  openingData = this.args.context?.getCards(
+  openingData = new AllCards(
+    this.args.context,
     this,
     this.postedDocQuery('../accounting/ledger-opening', 'OpeningBalances'),
     () => this.realms,
@@ -2454,14 +2463,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     { isLive: true },
   );
 
-  journalData = this.args.context?.getCards(
+  journalData = new AllCards(
+    this.args.context,
     this,
     () =>
       ({
         filter: {
           type: codeRef(here, '../accounting/ledger-journal', 'JournalMonth'),
         },
-        page: { size: 100 },
       }) as never,
     () => this.realms,
     { isLive: true },
@@ -2561,7 +2570,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   );
   // The open reconciliation's account's matched and added lines in its statement period: the ticks start
   // from them.
-  bankLineData = this.args.context?.getCards(
+  bankLineData = new AllCards(
+    this.args.context,
     this,
     () => {
       let r = this.selRec,
@@ -2591,15 +2601,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             },
           ],
         },
-        page: { size: BANK_LINE_PAGE },
       } as never;
     },
     () => this.realms,
-    { isLive: true },
+    { isLive: true, limit: BANK_LINE_PAGE },
   );
   // Lines on the selected line's account already matched or added near its date: the postings they
   // name aren't offered again, whichever page of the feed they're on.
-  takenData = this.args.context?.getCards(
+  takenData = new AllCards(
+    this.args.context,
     this,
     () => {
       let c = this.selBank,
@@ -2623,11 +2633,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             },
           ],
         },
-        page: { size: TAKEN_PAGE },
       } as never;
     },
     () => this.realms,
-    { isLive: true },
+    { isLive: true, limit: TAKEN_PAGE },
   );
   get bankRules(): BankRule[] {
     return (((this.rulesData as any)?.instances ?? []) as BankRule[]).filter(
@@ -2760,7 +2769,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get importIds(): string[] {
     return (this.parsedStatement?.lines ?? []).map((l) => l.externalId);
   }
-  knownData = this.args.context?.getCards(
+  knownData = new AllCards(
+    this.args.context,
     this,
     () => {
       let ids = this.importIds,
@@ -2780,7 +2790,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   },
                 ],
               },
-              page: { size: Math.min(ids.length, MAX_PAGE) },
             }
           : {
               filter: {
@@ -2791,7 +2800,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       ) as never;
     },
     () => this.realms,
-    { isLive: true },
+    { isLive: true, limit: MAX_PAGE },
   );
   // Only lines of this account and this file count, so a result left over from the previous file or
   // account never stands in for this one's.
@@ -3039,7 +3048,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // posting that's already matched.
   get takenFull() {
     return (
-      (((this.takenData as any)?.instances ?? []) as any[]).length >= TAKEN_PAGE
+      this.takenData.incomplete
     );
   }
   // What's already in the books this line could be: a posting on its account (so a transfer or payout
@@ -3204,7 +3213,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     );
   }
   get recFeedFull() {
-    return instancesOf(this.bankLineData).length >= BANK_LINE_PAGE;
+    return this.bankLineData.incomplete;
   }
   get recItems(): {
     key: string;
@@ -3748,7 +3757,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
 
   // ── time worked: entering it, and invoicing what's billable ──
   // Billable time not yet billed: what an invoice from time reads.
-  timeData = this.args.context?.getCards(
+  timeData = new AllCards(
+    this.args.context,
     this,
     () => {
       let ref = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
@@ -3756,11 +3766,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         filter: {
           every: [{ type: ref }, { on: ref, eq: { billedInvoice: null } }],
         },
-        page: { size: LOT_PAGE },
       } as never;
     },
     () => this.refRealms,
-    { isLive: true },
+    { isLive: true, limit: LOT_PAGE },
   );
   get isTime() {
     return this.page === 'time';
@@ -3773,14 +3782,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     return by;
   }
   get timeCapped() {
-    return instancesOf(this.timeData).length >= LOT_PAGE;
+    return this.timeData.incomplete;
   }
   // A customer's unbilled time, read fresh from the realm, so the invoice bills all of it.
   searchUnbilled = async (customerId: string): Promise<any[]> => {
     let store = this.args.context?.store;
     if (!store) throw new Error("The desk can't read the time here.");
     let ref = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
-    let found = (await store.search(
+    let found = await searchAll(
+      store,
       {
         filter: {
           every: [
@@ -3788,14 +3798,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             { on: ref, eq: { customerId, billedInvoice: null } },
           ],
         },
-        page: { size: LOT_PAGE },
-      } as never,
+      },
       this.refRealms,
-    )) as any[];
-    if (found.length >= LOT_PAGE)
-      throw new Error(
-        `${customerId} has more than ${LOT_PAGE} unbilled activities, more than one invoice takes at once.`,
-      );
+      LOT_PAGE,
+      `${customerId} has more than ${LOT_PAGE} unbilled activities, more than one invoice takes at once.`,
+    );
     return found.filter(
       (t) => t instanceof TimeActivity && t.billable !== false,
     );
@@ -4077,18 +4084,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     );
   }
   // The bundles a draft can take, read while one is open.
-  bundleData = this.args.context?.getCards(
+  bundleData = new AllCards(
+    this.args.context,
     this,
     () => {
       if (!this.bundleDraft) return undefined as never;
       let ref = codeRef(here, '../accounting/ledger-cards', 'Item');
       return {
         filter: { every: [{ type: ref }, { on: ref, eq: { isBundle: true } }] },
-        page: { size: LOT_PAGE },
       } as never;
     },
     () => this.refRealms,
-    { isLive: true },
+    { isLive: true, limit: LOT_PAGE },
   );
   get bundleOptions() {
     return instancesOf(this.bundleData)
@@ -4147,7 +4154,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     if (!skus.length) return [];
     let ref = codeRef(here, '../accounting/ledger-cards', 'Item');
     return (
-      (await store.search(
+      await searchAll(
+        store,
         {
           filter: {
             every: [
@@ -4155,10 +4163,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               { any: skus.map((sku) => ({ on: ref, eq: { sku } })) },
             ],
           },
-          page: { size: LOT_PAGE },
-        } as never,
+        },
         this.refRealms,
-      )) as any[]
+        LOT_PAGE,
+      )
     ).filter(Boolean);
   };
 
@@ -5377,17 +5385,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       { key: 'lines', label: 'Lines', value: String(lines.length) },
     ];
   }
-  // A full last page means documents past it are missing, so the running balance is short.
+  // A source not read whole leaves documents out, so the running balance is short.
   get regTruncated() {
-    return [this.regInvoices, this.regBills1, this.regOpenings].some(
-      (d) => ((d as any)?.instances?.length ?? 0) >= 100,
+    return [this.regInvoices, this.regBills, this.regOpenings].some(
+      (d) => !d.isLoading && !d.isComplete,
     );
   }
   get regLoading() {
     return [
       this.regInvoices,
-      this.regBills0,
-      this.regBills1,
+      this.regBills,
       this.regOpenings,
     ].some((d) => (d as any)?.isLoading);
   }
@@ -7055,7 +7062,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
   // ── stock drafts: first in, first out from the lots ──
   // Lots with stock left, for the products a new draft can draw and Low stock's quantities.
-  lotData = this.args.context?.getCards(
+  lotData = new AllCards(
+    this.args.context,
     this,
     () => {
       if (!this.newIsStock && this.def.id !== 'lowstock')
@@ -7069,14 +7077,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           ],
         },
         sort: [{ by: 'received', on: ref, direction: 'desc' }],
-        page: { size: LOT_PAGE },
       } as never;
     },
     () => this.realms,
-    { isLive: true },
+    { isLive: true, limit: LOT_PAGE },
   );
   // The lots of the products the open draft draws, so a draft whose lots changed offers a reprice.
-  selLotData = this.args.context?.getCards(
+  selLotData = new AllCards(
+    this.args.context,
     this,
     () => {
       let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot'),
@@ -7101,7 +7109,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   { on: ref, range: { remainingQty: { gt: 0 } } },
                 ],
               },
-              page: { size: LOT_PAGE },
             }
           : {
               filter: {
@@ -7112,7 +7119,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       ) as never;
     },
     () => this.realms,
-    { isLive: true },
+    { isLive: true, limit: LOT_PAGE },
   );
   // Lots matching any of `match` (with stock left, unless `withStock` is false), read fresh from the
   // realm: what a draft is priced from and checked against when it posts.
@@ -7123,7 +7130,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let store = this.args.context?.store;
     if (!store) throw new Error("The desk can't read the stock lots here.");
     let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot');
-    let found = (await store.search(
+    let found = await searchAll(
+      store,
       {
         filter: {
           every: [
@@ -7134,18 +7142,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               : []),
           ],
         },
-        page: { size: LOT_PAGE },
-      } as never,
+      },
       this.realms,
-    )) as any[];
-    if (found.length >= LOT_PAGE)
-      throw new Error(
-        `More than ${LOT_PAGE} lots of ${match.map((m) => m.sku).join(', ')} have stock left, more than the desk reads at once.`,
-      );
+      LOT_PAGE,
+      `More than ${LOT_PAGE} lots of ${match.map((m) => m.sku).join(', ')} have stock left, more than the desk reads at once.`,
+    );
     return found.filter((l) => l instanceof StockLot);
   };
   // The warehouses' stock rows for the products on the Low stock page, in one search.
-  warehouseData = this.args.context?.getCards(
+  warehouseData = new AllCards(
+    this.args.context,
     this,
     () => {
       let skus =
@@ -7169,17 +7175,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             { any: skus.map((sku) => ({ on: ref, eq: { sku } })) },
           ],
         },
-        page: { size: LOT_PAGE },
       } as never;
     },
     () => this.realms,
-    { isLive: true },
+    { isLive: true, limit: LOT_PAGE },
   );
   get newIsStock() {
     return this.newKind === 'fulfillment' || this.newKind === 'count';
   }
   get lotsCapped() {
-    return instancesOf(this.lotData).length >= LOT_PAGE;
+    return this.lotData.incomplete;
   }
   get liveLots(): any[] {
     return instancesOf(this.lotData)
@@ -7241,7 +7246,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       !(c instanceof Fulfillment || c instanceof CountAdjustment) ||
       (c.status ?? 'draft') !== 'draft' ||
       (this.selLotData as any)?.isLoading !== false ||
-      instancesOf(this.selLotData).length >= LOT_PAGE
+      this.selLotData.incomplete
     )
       return false;
     let draws = ((c.draws ?? []) as any[]).filter(Boolean);
