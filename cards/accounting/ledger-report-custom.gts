@@ -1081,11 +1081,7 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
           data-report-capped
         >{{this.capNote}}</Callout>{{/if}}
       {{#if this.periodError}}
-        <EmptyState
-          @size='s'
-          @title='Choose a period'
-          @message={{this.periodError}}
-        />
+        <EmptyState @size='s' @title='Set the period' />
       {{else if this.loading}}
         <div class='skeletons'><Skeleton @height='2rem' /><Skeleton
             @height='2rem'
@@ -1116,10 +1112,6 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         flex-wrap: wrap;
         justify-content: space-between;
         gap: var(--boxel-sp-sm);
-      }
-      h2 {
-        font-family: var(--font-serif);
-        font-size: var(--boxel-font-size-lg);
       }
       .runner-actions {
         display: flex;
