@@ -1655,8 +1655,13 @@ export class VendorOnboardingConsole extends Component<
         min-inline-size: 0;
         max-inline-size: 100%;
       }
-      /* Button's label is a plain inline span, so the Avatar + name row
-         brings its own flex layout and lets the name truncate */
+      /* Button's label is a flex item with min-width: auto, so it can't shrink
+         below the name's full width; lowering that lets the name truncate
+         (a default Pret UI Button should ship, then this goes) */
+      .who :deep(.pretui-btn-label) {
+        min-inline-size: 0;
+      }
+      /* the Avatar + name row brings its own flex layout */
       .who-in {
         display: flex;
         align-items: center;
