@@ -81,7 +81,9 @@ const isAgency = (col: unknown) => (col as { key?: string })?.key === 'agency';
 const isAction = (col: unknown) => (col as { key?: string })?.key === 'action';
 const isStatus = (col: unknown) => (col as { key?: string })?.key === 'status';
 const SETUP_PAGE = 200,
+  TABLE_PAGE = 200,
   RUN_PAGE = 500,
+  MONTH_PAGE = 100,
   TIME_PAGE = 500;
 const plural = (n: number, one: string, many = `${one}s`) =>
   `${n} ${n === 1 ? one : many}`;
@@ -296,7 +298,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
   );
   tableData = this.args.context?.getCards(
     this,
-    this.query('../accounting/ledger-payroll', 'PayrollTaxTable'),
+    this.query('../accounting/ledger-payroll', 'PayrollTaxTable', TABLE_PAGE),
     () => this.args.realms,
     { isLive: true },
   );
@@ -308,7 +310,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
   );
   monthData = this.args.context?.getCards(
     this,
-    this.query('../accounting/ledger-journal', 'JournalMonth', 100),
+    this.query('../accounting/ledger-journal', 'JournalMonth', MONTH_PAGE),
     () => this.args.realms,
     { isLive: true },
   );
@@ -383,15 +385,24 @@ export class PayrollPage extends Component<PayrollPageSignature> {
     ].some((r) => (r as any)?.isLoading !== false);
   }
   // A read that comes back full may have left records out, so the page says so.
+  // A read that failed, or came back full and may have left records out, would draft or post a run
+  // from incomplete history, so both wait until every read is whole.
   get capNotes() {
-    return [
+    let reads: [unknown, number, string][] = [
       [this.setupData, SETUP_PAGE, 'pay setups'],
+      [this.tableData, TABLE_PAGE, 'tax tables'],
       [this.runData, RUN_PAGE, 'payroll runs'],
+      [this.monthData, MONTH_PAGE, 'journal months'],
       [this.timeData, TIME_PAGE, 'time activities in this period'],
-    ]
-      .filter(([r, size]) => instancesOf(r).length >= (size as number))
-      .map(([, size, noun]) => `Only the first ${size} ${noun} are read.`)
-      .join(' ');
+    ];
+    return [
+      ...reads
+        .filter(([r]) => ((r as any)?.errors ?? []).length)
+        .map(([, , noun]) => `The ${noun} couldn't be read.`),
+      ...reads
+        .filter(([r, size]) => instancesOf(r).length >= size)
+        .map(([, size, noun]) => `There are more than ${size} ${noun}.`),
+    ].join(' ');
   }
   // The runs that stand: a reversed run's paychecks no longer count toward anyone's year.
   get standing() {
@@ -540,6 +551,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
     return (
       !this.busy &&
       !this.loading &&
+      !this.capNotes &&
       !this.blocker &&
       !this.preview.error &&
       this.preview.checks.length > 0
@@ -587,16 +599,17 @@ export class PayrollPage extends Component<PayrollPageSignature> {
   get postHint() {
     return this.canPost || this.busy
       ? ''
-      : 'Waiting for the pay setups and tax tables to load.';
+      : this.capNotes
+        ? 'Posting waits until every read is whole.'
+        : 'Waiting for the pay setups, tax tables, time and runs to load.';
   }
   deleteTitle = (run: any) => `Delete draft run ${run.docNo}?`;
   deleteLabel = (run: any) => `delete:${run.docNo}`;
+  get readsWhole() {
+    return !this.loading && !this.capNotes;
+  }
   get canPost() {
-    return (
-      !this.busy &&
-      (this.setupData as any)?.isLoading === false &&
-      (this.tableData as any)?.isLoading === false
-    );
+    return !this.busy && this.readsWhole;
   }
   deleteRun = async (run: any) => {
     this.busy = true;
@@ -621,13 +634,10 @@ export class PayrollPage extends Component<PayrollPageSignature> {
     this.busyKey = run.docNo;
     this.error = '';
     try {
-      if (
-        (run.paychecks ?? []).length &&
-        ((this.setupData as any)?.isLoading !== false ||
-          (this.tableData as any)?.isLoading !== false)
-      )
+      if ((run.paychecks ?? []).length && !this.readsWhole)
         throw new Error(
-          'The pay setups and tax tables are still loading. Try again in a moment.',
+          this.capNotes ||
+            'The pay setups, tax tables, time and runs are still loading. Try again in a moment.',
         );
       let month = String(run.date ?? '').slice(0, 7);
       if (!this.months.some((m) => m.month === month && m.status === 'open'))
@@ -913,7 +923,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         >{{this.error}}</Callout>{{/if}}
       {{#if this.capNotes}}<Callout
           @tone='warning'
-          @title='Some records may be left out'
+          @title="Payroll can't be drafted or posted from this"
         >{{this.capNotes}}</Callout>{{/if}}
 
       <section class='block' aria-labelledby='payroll-run-h'>

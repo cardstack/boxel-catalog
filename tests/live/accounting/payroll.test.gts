@@ -597,6 +597,21 @@ export function runTests() {
       );
     });
 
+    test('wages post where the paychecks say, whatever wage rows the run carries', function (assert) {
+      let checks = runChecks();
+      let lines = paycheckPostings({
+        ...runAttrs(checks),
+        bank: '1000',
+        wages: [{ account: '6999', amountMinor: 1, cls: 'Elsewhere' }],
+      });
+      assert.strictEqual(net(lines, '6999'), 0, 'the supplied row is ignored');
+      assert.strictEqual(
+        net(lines, '6100'),
+        checks[0].grossMinor + checks[1].grossMinor,
+      );
+      assert.strictEqual(unbalanced(lines), 0);
+    });
+
     test("a run's entry balances and owes each tax to its agency's liability", function (assert) {
       let checks = runChecks(),
         t = runTotals(checks);
@@ -796,6 +811,33 @@ export function runTests() {
         staleEmployees(draft, [DANA], TABLES, [earlier]),
         ['dana-kim'],
         'a run posted before it since',
+      );
+      assert.deepEqual(
+        staleEmployees(
+          draft,
+          [{ ...DANA, expenseAccount: '6110' }],
+          TABLES,
+          [],
+        ),
+        ['dana-kim'],
+        'a changed expense account, with every amount the same',
+      );
+      assert.deepEqual(
+        staleEmployees(
+          draft,
+          [
+            {
+              ...DANA,
+              deductions: DANA.deductions!.map((d) =>
+                d?.account === '2350' ? { ...d, account: '2351' } : d,
+              ),
+            },
+          ],
+          TABLES,
+          [],
+        ),
+        ['dana-kim'],
+        'a deduction routed to another liability',
       );
       assert.deepEqual(
         staleEmployees(
