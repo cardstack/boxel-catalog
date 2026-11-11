@@ -13,10 +13,7 @@ import {
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Token } from '@cardstack/pretui/components/token';
-import {
-  COMPACT_EMPTY_STYLE,
-  ID_TOKEN_STYLE,
-} from '@cardstack/catalog/components/pretui-helpers';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Structural, not the Document class: importing the card here would close a
 // module cycle (the card's isolated view renders this component). Same
@@ -114,7 +111,7 @@ export class DocumentPreview extends GlimmerComponent<Signature> {
             @title='No file attached'
             @message='The record exists, the artefact does not.'
             @texture={{false}}
-            style={{COMPACT_EMPTY_STYLE}}
+            @size='s'
           />
         {{/if}}
       </div>
@@ -159,7 +156,7 @@ export class DocumentPreview extends GlimmerComponent<Signature> {
         flex-wrap: wrap;
         align-items: center;
         gap: var(--boxel-sp-xs);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
     </style>

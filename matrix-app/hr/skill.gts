@@ -79,7 +79,8 @@ export class Skill extends CardDef {
           flex-direction: column;
           align-items: flex-start;
           gap: var(--boxel-sp-sm);
-          background: var(--canvas);
+          background: var(--card);
+          color: var(--card-foreground);
         }
         .icon-chip {
           width: 3rem;
@@ -96,7 +97,6 @@ export class Skill extends CardDef {
           height: 1.5rem;
         }
         h1 {
-          margin: 0;
           font-weight: 800;
           font-size: var(--boxel-font-size-xl);
           letter-spacing: -0.02em;
@@ -122,7 +122,7 @@ export class Skill extends CardDef {
       <span class='skill-atom'>{{@model.title}}</span>
       <style scoped>
         .skill-atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 500;
         }
       </style>
@@ -143,7 +143,7 @@ export class Skill extends CardDef {
           height: 100%;
           display: flex;
           align-items: center;
-          padding: 0.25rem 0.5rem;
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
           overflow: hidden;
         }
       </style>

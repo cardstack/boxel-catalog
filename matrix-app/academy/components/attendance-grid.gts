@@ -214,7 +214,10 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
                             style={{htmlSafeStyle (this.style m)}}
                             aria-label='{{e.learnerName}}, {{l.cardTitle}}: {{this.label
                               m
-                            }}. Click to change.'
+                            }}{{if
+                              (this.isDirty e l)
+                              ", unsaved"
+                            }}. Select to change.'
                             title={{this.label m}}
                             {{on 'click' (fn this.cycle e l)}}
                           >{{this.short m}}</button>
@@ -388,8 +391,10 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
         background: transparent;
         border-color: var(--border);
       }
-      .m:hover {
-        border-color: var(--primary-ink);
+      @media (hover: hover) {
+        .m:hover {
+          border-color: var(--primary-ink);
+        }
       }
       .m:focus-visible {
         outline: 2px solid var(--ring);
@@ -437,7 +442,7 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
       }
       .mini {
         display: block;
-        margin: 0.125rem auto;
+        margin: var(--boxel-sp-6xs) auto;
       }
       .legend {
         display: flex;
@@ -448,7 +453,7 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
       }
       .lg {
         display: inline-flex;
-        gap: 0.25rem;
+        gap: var(--boxel-sp-4xs);
         align-items: center;
       }
       .lg i {

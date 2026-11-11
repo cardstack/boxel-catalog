@@ -24,6 +24,11 @@
         "links": {
           "self": "../GoodsReceipt/gr-po-2026-0038"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -189,14 +189,14 @@ export const Mark: TemplateOnlyComponent<{
       border-radius: calc(var(--radius) * 0.4);
       background-color: var(--muted);
       font-family: var(--font-mono);
-      font-size: 0.5rem;
+      font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
       font-weight: 700;
       color: var(--foreground);
     }
     .mt-mark[data-size='md'] {
       width: 1.375rem;
       height: 1.375rem;
-      font-size: 0.5625rem;
+      font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
     }
     .mt-mark[data-size='lg'] {
       width: 2rem;

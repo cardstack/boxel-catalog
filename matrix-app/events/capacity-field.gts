@@ -244,6 +244,7 @@ export default class CapacityField extends FieldDef {
         {{else}}
           <EmptyState
             class='cap-empty'
+            @size='s'
             @title='No capacity set'
             @texture={{false}}
           />
@@ -278,7 +279,7 @@ export default class CapacityField extends FieldDef {
         .cap-bar {
           display: flex;
           height: 0.5rem;
-          border-radius: 999px;
+          border-radius: var(--boxel-border-radius-pill);
           overflow: hidden;
           background-color: var(--muted);
         }
@@ -303,7 +304,7 @@ export default class CapacityField extends FieldDef {
           padding: 0;
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
         }
         .cap-row {
           display: flex;
@@ -329,13 +330,6 @@ export default class CapacityField extends FieldDef {
         }
         .cap-row-rest .cap-name {
           color: var(--muted-foreground);
-        }
-        /* Pret UI EmptyState, tuned through its spacing and title knobs to
-           a single quiet line inside the field. */
-        .cap-empty {
-          --space-9: 0.75rem;
-          --space-6: 0.75rem;
-          --text-heading: var(--boxel-font-size-sm);
         }
       </style>
     </template>

@@ -24,6 +24,11 @@
         "links": {
           "self": "../Application/devon-park"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

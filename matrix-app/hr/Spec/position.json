@@ -29,6 +29,11 @@
         "links": {
           "self": "../Position/frontend-engineer"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

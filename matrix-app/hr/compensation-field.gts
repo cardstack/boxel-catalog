@@ -85,15 +85,15 @@ export class CompensationField extends FieldDef {
         .comp {
           display: grid;
           gap: var(--boxel-sp-5xs);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .base {
-          font-size: 1.125rem;
+          font-size: var(--boxel-font-size-md);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }
         .period {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 400;
           color: var(--muted-foreground);
         }
@@ -112,7 +112,7 @@ export class CompensationField extends FieldDef {
       <span class='comp-atom'>{{@model.summary}}</span>
       <style scoped>
         .comp-atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
         }
       </style>

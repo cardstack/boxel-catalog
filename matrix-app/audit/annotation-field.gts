@@ -103,12 +103,12 @@ export class AnnotationField extends FieldDef {
           gap: var(--boxel-sp-xs);
         }
         .who {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .text {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.5;
           color: var(--foreground);
         }

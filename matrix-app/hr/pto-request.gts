@@ -346,7 +346,7 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
                 {{on 'click' (fn this.decideApprovalStep 'approved')}}
               >Approve step</Button>
               <Button
-                @tone='neutral'
+                @tone='danger'
                 @appearance='link'
                 @size='xs'
                 @disabled={{this.approvalBusy}}
@@ -584,13 +584,15 @@ export class PtoRequest extends CardDef {
         .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-          font: 500 0.6875rem var(--font-mono);
+          font-weight: 500;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
       </style>

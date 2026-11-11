@@ -283,12 +283,14 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
             {{on 'drop' (fn this.drop d.date undefined)}}
           >
             {{#if @onSelectDay}}
-              <button
-                type='button'
+              <Button
                 class='num'
+                @tone='neutral'
+                @appearance='plain'
+                @size='s'
                 aria-label='{{d.num}}, add a work order on {{d.key}}'
                 {{on 'click' (fn @onSelectDay d.date)}}
-              >{{d.num}}</button>
+              >{{d.num}}</Button>
             {{else}}
               <span class='num'>{{d.num}}</span>
             {{/if}}
@@ -405,10 +407,6 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
       }
       .num {
         justify-self: start;
-        border: 0;
-        background: none;
-        padding: 0;
-        font: inherit;
         font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         color: var(--card-foreground);
@@ -426,7 +424,10 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
         border: 0;
         background: none;
         text-align: start;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         color: inherit;
         min-width: 0;
         cursor: pointer;
