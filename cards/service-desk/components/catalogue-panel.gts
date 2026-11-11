@@ -60,7 +60,7 @@ interface Signature {
 
 const F = (...forms: [string, number][]) =>
   forms.map(([name, minWidth]) => ({ name, minWidth }));
-const SEARCH_FORMS = F(['field', 12], ['field-s', 8], ['icon', 2], ['menu', 0]);
+const SEARCH_FORMS = F(['field', 12], ['field-s', 8], ['collapsed', 2]);
 const VIEW_FORMS = F(['text', 14], ['icon', 7], ['menu', 0]);
 const ADD_FORMS = F(['label', 8], ['icon', 2]);
 const VIEWS = [
@@ -239,8 +239,10 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
             @priority={{1}}
             @forms={{SEARCH_FORMS}}
             @label='Search'
+            as |form|
           >
             <div class='sbox'><SearchInput
+                @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
                 @value={{this.search}}
                 @onInput={{this.setSearch}}
                 @placeholder={{if

@@ -79,7 +79,7 @@ const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const SEARCH_FORMS = [
   { name: 'full', minWidth: 14 },
-  { name: 'menu', minWidth: 0 },
+  { name: 'collapsed', minWidth: 1.75 },
 ];
 const FILTER_FORMS = [
   { name: 'full', minWidth: 12 },
@@ -841,10 +841,12 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                   @priority={{2}}
                   @forms={{this.SEARCH_FORMS}}
                   @label='Search'
+                  as |form|
                 >
                   <label class='search'>
                     <VisuallyHidden>Search {{this.tab.noun}}</VisuallyHidden>
                     <SearchInput
+                      @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
                       @placeholder='Search {{this.tab.noun}}…'
                       @value={{this.searchText}}
                       @onInput={{this.setSearch}}

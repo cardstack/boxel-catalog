@@ -1277,8 +1277,14 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                     @priority={{2}}
                     @forms={{SEARCH_FORMS}}
                     @label='Search'
+                    as |form|
                   >
                     <div class='of-search'><SearchInput
+                        @display={{if
+                          (eq form 'collapsed')
+                          'collapsed'
+                          'field'
+                        }}
                         @value={{this.searchSpec.value}}
                         @placeholder={{this.searchSpec.placeholder}}
                         @onInput={{this.searchSpec.set}}

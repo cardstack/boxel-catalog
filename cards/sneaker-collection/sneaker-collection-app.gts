@@ -177,7 +177,7 @@ const VIEW_OPTIONS = [
 // LayoutControl forms: `minWidth` in rem, richest first.
 const F = (...forms: [string, number][]) =>
   forms.map(([name, minWidth]) => ({ name, minWidth }));
-const SEARCH_FORMS = F(['field', 14], ['menu', 0]);
+const SEARCH_FORMS = F(['field', 14], ['collapsed', 1.75]);
 const CHIP_FORMS = F(['full', 12], ['menu', 0]);
 const VIEW_FORMS = F(['full', 12], ['menu', 0]);
 const ADD_FORMS = F(['label', 7], ['icon', 2]);
@@ -929,8 +929,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                         @priority={{2}}
                         @forms={{SEARCH_FORMS}}
                         @label='Search'
+                        as |form|
                       >
                         <div class='sc-search'><SearchInput
+                            @display={{if
+                              (eq form 'collapsed')
+                              'collapsed'
+                              'field'
+                            }}
                             @value={{this.search}}
                             @placeholder='Search your collection…'
                             @onInput={{this.setSearch}}
@@ -1042,8 +1048,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       @priority={{1}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='sc-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.search}}
                           @placeholder='Search sets…'
                           @onInput={{this.setSearch}}
@@ -1159,8 +1171,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       @priority={{2}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='sc-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.search}}
                           @placeholder='Search active listings…'
                           @onInput={{this.setSearch}}
@@ -1251,8 +1269,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                         @priority={{1}}
                         @forms={{SEARCH_FORMS}}
                         @label='Search'
+                        as |form|
                       >
                         <div class='sc-search'><SearchInput
+                            @display={{if
+                              (eq form 'collapsed')
+                              'collapsed'
+                              'field'
+                            }}
                             @value={{this.search}}
                             @placeholder='Search orders…'
                             @onInput={{this.setSearch}}
@@ -1375,8 +1399,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       @priority={{1}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='sc-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.search}}
                           @placeholder='Search certificates…'
                           @onInput={{this.setSearch}}

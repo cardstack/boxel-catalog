@@ -55,7 +55,7 @@ const STALE_DAYS = 30;
 // LayoutControl forms: `minWidth` in rem, richest first.
 const F = (...forms: [string, number][]) =>
   forms.map(([name, minWidth]) => ({ name, minWidth }));
-const SEARCH_FORMS = F(['field', 14], ['menu', 0]);
+const SEARCH_FORMS = F(['field', 14], ['collapsed', 1.75]);
 const SELECT_FORMS = F(['full', 8], ['menu', 0]);
 const ADD_FORMS = F(['label', 7], ['icon', 2]);
 
@@ -453,8 +453,14 @@ class PropertyMarketplaceIsolated extends Component<
                     @priority={{2}}
                     @forms={{SEARCH_FORMS}}
                     @label='Search'
+                    as |form|
                   >
                     <div class='pm-search'><SearchInput
+                        @display={{if
+                          (eq form 'collapsed')
+                          'collapsed'
+                          'field'
+                        }}
                         @value={{this.search}}
                         @placeholder='Search title, neighbourhood or city'
                         @onInput={{this.setSearch}}

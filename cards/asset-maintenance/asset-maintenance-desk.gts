@@ -903,8 +903,14 @@ export class AssetMaintenanceDesk extends Component<
                       @priority={{2}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='am-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.homeSearch}}
                           @placeholder='Search work orders'
                           @onInput={{this.setHomeSearch}}
@@ -1024,8 +1030,14 @@ export class AssetMaintenanceDesk extends Component<
                       @priority={{2}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='am-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.assetSearch}}
                           @placeholder='Search assets'
                           @onInput={{this.setAssetSearch}}
@@ -1215,8 +1227,14 @@ export class AssetMaintenanceDesk extends Component<
                       @priority={{2}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='am-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.planSearch}}
                           @placeholder={{if
                             (eq this.collection 'plans')

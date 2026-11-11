@@ -141,7 +141,7 @@ export interface DeskColumn {
 
 const SEARCH_FORMS = [
   { name: 'field', minWidth: 14 },
-  { name: 'menu', minWidth: 0 },
+  { name: 'collapsed', minWidth: 1.75 },
 ];
 const CHIP_FORMS = [
   { name: 'chips', minWidth: 16 },
@@ -207,8 +207,10 @@ export class DeskList extends GlimmerComponent<ListSignature> {
         @priority={{2}}
         @forms={{SEARCH_FORMS}}
         @label='Search'
+        as |form|
       >
         <div class='search'><SearchInput
+            @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
             @value={{@search}}
             @placeholder='Search {{@noun}}…'
             @onInput={{@onSearch}}

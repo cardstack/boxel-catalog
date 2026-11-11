@@ -18,6 +18,7 @@ import type { Subscription } from '../../commerce/subscription';
 import type { Contact } from '../../crm/contact';
 import type { Activity } from '../../crm/activity';
 import type { RevenueOsConsole } from '../revenue-os';
+import { eq } from '@cardstack/boxel-ui/helpers';
 
 interface Signature {
   Args: {
@@ -89,7 +90,7 @@ export class AccountsPane extends Component<Signature> {
 
   FORMS = [
     { name: 'full', minWidth: 14 },
-    { name: 'icon', minWidth: 2.5 },
+    { name: 'collapsed', minWidth: 1.75 },
   ];
   PRIMARY_FORMS = [{ name: 'full', minWidth: 8 }];
 
@@ -136,10 +137,12 @@ export class AccountsPane extends Component<Signature> {
           @priority={{1}}
           @forms={{this.FORMS}}
           @label='Search'
+          as |form|
         >
           <label>
             <VisuallyHidden>Search accounts</VisuallyHidden>
             <SearchInput
+              @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
               @placeholder='Search name, domain, contact email…'
               @value={{@console.accountQuery}}
               @onInput={{@console.setAccountQuery}}

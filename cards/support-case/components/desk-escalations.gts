@@ -140,8 +140,10 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
           @priority={{2}}
           @forms={{SEARCH_FORMS}}
           @label='Search'
+          as |form|
         >
           <div class='desk-search'><SearchInput
+              @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
               @value={{this.escSearch}}
               @placeholder='Search subject, reason, level or who raised it'
               @onInput={{this.setEscSearch}}

@@ -1010,7 +1010,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
   }
   SEARCH_FORMS = [
     { name: 'full', minWidth: 14 },
-    { name: 'menu', minWidth: 0 },
+    { name: 'collapsed', minWidth: 1.75 },
   ];
   matches = <T extends CardDef>(list: readonly T[]): T[] => {
     let q = this.listQuery.trim().toLowerCase();
@@ -1298,10 +1298,16 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                       @priority={{1}}
                       @forms={{this.SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <label>
                         <VisuallyHidden>Search leads</VisuallyHidden>
                         <SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @placeholder='Search leads'
                           @value={{this.listQuery}}
                           @onInput={{this.setListQuery}}
@@ -1367,10 +1373,16 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                       @priority={{1}}
                       @forms={{this.SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <label>
                         <VisuallyHidden>Search territories</VisuallyHidden>
                         <SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @placeholder='Search territories'
                           @value={{this.listQuery}}
                           @onInput={{this.setListQuery}}
@@ -1399,10 +1411,16 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                       @priority={{1}}
                       @forms={{this.SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <label>
                         <VisuallyHidden>Search proposals</VisuallyHidden>
                         <SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @placeholder='Search proposals'
                           @value={{this.listQuery}}
                           @onInput={{this.setListQuery}}
@@ -1431,10 +1449,16 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                       @priority={{1}}
                       @forms={{this.SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <label>
                         <VisuallyHidden>Search quotes</VisuallyHidden>
                         <SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @placeholder='Search quotes'
                           @value={{this.listQuery}}
                           @onInput={{this.setListQuery}}

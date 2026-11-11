@@ -1553,8 +1553,14 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                     @priority={{2}}
                     @forms={{SEARCH_FORMS}}
                     @label='Search'
+                    as |form|
                   >
                     <div class='desk-search'><SearchInput
+                        @display={{if
+                          (eq form 'collapsed')
+                          'collapsed'
+                          'field'
+                        }}
                         @value={{this.queueSearch}}
                         @placeholder='Search case id, subject, owner or team'
                         @onInput={{this.setQueueSearch}}
@@ -1592,8 +1598,14 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                     @priority={{2}}
                     @forms={{SEARCH_FORMS}}
                     @label='Search'
+                    as |form|
                   >
                     <div class='desk-search'><SearchInput
+                        @display={{if
+                          (eq form 'collapsed')
+                          'collapsed'
+                          'field'
+                        }}
                         @value={{this.caseSearch}}
                         @placeholder='Search case id, subject or owner'
                         @onInput={{this.setCaseSearch}}
@@ -1631,8 +1643,14 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                     @priority={{2}}
                     @forms={{SEARCH_FORMS}}
                     @label='Search'
+                    as |form|
                   >
                     <div class='desk-search'><SearchInput
+                        @display={{if
+                          (eq form 'collapsed')
+                          'collapsed'
+                          'field'
+                        }}
                         @value={{this.agentSearch}}
                         @placeholder='Search agents'
                         @onInput={{this.setAgentSearch}}
