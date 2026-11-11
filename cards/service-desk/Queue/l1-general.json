@@ -3,11 +3,11 @@
     "type": "card",
     "attributes": {
       "name": "L1 General",
-      "description": "Front line — password resets, access, how-do-I questions.",
+      "description": "Front line \u2014 password resets, access, how-do-I questions.",
       "tier": "L1",
       "cardInfo": {
         "name": "L1 General",
-        "summary": "Where everything lands first. Goal is to resolve 70–80% here."
+        "summary": "Where everything lands first. Goal is to resolve 70\u201380% here."
       }
     },
     "relationships": {
@@ -19,6 +19,11 @@
       "defaultPolicy": {
         "links": {
           "self": "../SlaPolicy/standard-support"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

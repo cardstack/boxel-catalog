@@ -14,6 +14,11 @@
         "links": {
           "self": "../Queue/l2-technical"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

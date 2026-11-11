@@ -22,6 +22,11 @@
         "links": {
           "self": "../Subscriber/acme-industries"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

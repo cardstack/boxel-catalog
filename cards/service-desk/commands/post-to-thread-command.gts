@@ -12,7 +12,7 @@ import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
 
 import { Thread, PostField } from '../thread';
-import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
+import { PersonBase } from '../../people/person-base';
 
 export class PostToThreadInput extends CardDef {
   @field thread = linksTo(() => Thread, { searchable: true });

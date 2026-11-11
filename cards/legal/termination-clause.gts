@@ -7,14 +7,8 @@ import {
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 
-import {
-  Clause,
-  CLAUSE_EDIT_SECTIONS,
-  ClauseEditSections,
-} from '@cardstack/catalog/cards/legal/clause';
+import { Clause } from './clause';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 // A termination clause as a typed library entry. Extends the shared Clause
 // additively with the exit mechanics a reviewer compares: notice period,
@@ -36,67 +30,6 @@ export class TerminationClause extends Clause {
   @field earlyExitFeeText = contains(StringField, {
     description: 'e.g. "3 months of remaining fees", "none"',
   });
-
-  /**
-   * Edit — a Clause plus the typed termination terms.
-   * Grouped by task, not schema order; SectionedEdit gives it the
-   * section rail.
-   */
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      ...CLAUSE_EDIT_SECTIONS,
-      { id: 'termination', label: 'Termination terms' },
-    ];
-
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Termination Clause sections'
-        as |e|
-      >
-        <ClauseEditSections @section={{e.Section}} @fields={{@fields}} />
-        <e.Section @id='termination' @title='Termination terms'>
-          <div class='row cols-3'>
-            <FieldContainer @label='Notice (days)' @vertical={{true}}>
-              <@fields.noticeDays />
-            </FieldContainer>
-            <FieldContainer @label='For convenience' @vertical={{true}}>
-              <@fields.forConvenience />
-            </FieldContainer>
-            <FieldContainer @label='Cure period (days)' @vertical={{true}}>
-              <@fields.curePeriodDays />
-            </FieldContainer>
-          </div>
-          <FieldContainer @label='Early exit fee' @vertical={{true}}>
-            <@fields.earlyExitFeeText />
-          </FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-      <style scoped>
-        .row {
-          display: grid;
-          gap: var(--boxel-sp-sm);
-          align-items: start;
-        }
-        .row.cols-2 {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-        .row.cols-3 {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-        .row.cols-4 {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-        @container edit (width < 640px) {
-          .row.cols-2,
-          .row.cols-3,
-          .row.cols-4 {
-            grid-template-columns: 1fr;
-          }
-        }
-      </style>
-    </template>
-  };
 
   static embedded = class Embedded extends Component<typeof this> {
     get termsLabel() {
@@ -133,15 +66,15 @@ export class TerminationClause extends Clause {
         .who {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: var(--boxel-sp-6xs);
           min-width: 0;
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .meta {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }

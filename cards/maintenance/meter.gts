@@ -5,24 +5,47 @@ import {
   containsMany,
   field,
   linksTo,
+  realmURL,
   StringField,
 } from '@cardstack/base/card-api';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { identifyCard, type getCards } from '@cardstack/runtime-common';
+import type Owner from '@ember/owner';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import NumberField from '@cardstack/base/number';
 import DateTimeField from '@cardstack/base/datetime';
 import QuantityField from '@cardstack/catalog/fields/quantity/quantity';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { Button } from '@cardstack/pretui/components/button';
 import { Input } from '@cardstack/pretui/components/input';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
 import GaugeIcon from '@cardstack/boxel-icons/gauge';
 
 import MeterReadingField from './meter-reading-field';
 import { MeterKindField } from './maintenance-vocabulary';
 import { Asset } from './asset';
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
-import { absoluteStamp } from './utils/relative-time';
+// Cyclic (a plan links to Asset); read only in the constructor.
+import { MaintenancePlan } from './maintenance-plan';
 import RecordMeterReadingCommand from './commands/record-meter-reading-command';
+import { FitTile } from '../shared/fit-tile';
+import {
+  Chip,
+  Brief,
+  Dot,
+  Fact,
+  Head,
+  Mark,
+  Row,
+  Section,
+  Sheet,
+  dash,
+  join,
+  num,
+  shortDate,
+  type KvItem,
+} from './card-ui';
 
 function sorted(readings: MeterReadingField[] | null | undefined) {
   return (readings ?? [])
@@ -35,7 +58,93 @@ function sorted(readings: MeterReadingField[] | null | undefined) {
     });
 }
 
-class MeterIsolated extends Component<typeof Meter> {
+// What every format reads: readings newest first with their change, and the
+// meter-triggered plan on the same asset (for "to service" and Linked).
+class MeterView extends Component<typeof Meter> {
+  private planQuery: ReturnType<getCards> | undefined;
+
+  constructor(owner: Owner, args: any) {
+    super(owner, args);
+    this.planQuery = this.args.context?.getCards(
+      this,
+      () => {
+        let ref = identifyCard(MaintenancePlan);
+        let id = this.args.model?.asset?.id;
+        return ref && id
+          ? { filter: { on: ref, every: [{ eq: { 'asset.id': id } }] } }
+          : undefined;
+      },
+      () => {
+        let url = (this.args.model as any)?.[realmURL];
+        return url ? [url.href] : undefined;
+      },
+      { isLive: true },
+    );
+  }
+
+  get plan(): MaintenancePlan | undefined {
+    let plans = (this.planQuery?.instances ?? []).filter(
+      Boolean,
+    ) as MaintenancePlan[];
+    return plans.find((p) => p.trigger?.meterThreshold) ?? plans[0];
+  }
+
+  get rows() {
+    let s = sorted(this.args.model.readings);
+    let unit = this.args.model.unit;
+    return s
+      .map((r, i) => {
+        let prev = i > 0 ? s[i - 1].value : undefined;
+        let delta =
+          prev != null && r.value != null ? r.value - prev : undefined;
+        return {
+          value: num(r.value, unit),
+          meta: join(
+            shortDate(r.readAt),
+            r.readByName,
+            delta ? `${delta > 0 ? '+' : ''}${num(delta, unit)}` : null,
+          ),
+          source: r.source ?? 'manual',
+        };
+      })
+      .reverse();
+  }
+
+  get last() {
+    let s = sorted(this.args.model.readings);
+    return s[s.length - 1];
+  }
+
+  get sinceLabel() {
+    let s = sorted(this.args.model.readings).slice(-8);
+    return s.length > 1 ? `average since ${shortDate(s[0].readAt)}` : '—';
+  }
+
+  get toService(): number | undefined {
+    let due = this.plan?.nextDueMeter;
+    let c = this.args.model.current;
+    return due != null && c != null ? Math.round(due - c) : undefined;
+  }
+
+  get details(): KvItem[] {
+    let m = this.args.model;
+    let u = m.unit;
+    return [
+      { key: 'Current', value: num(m.current, u) },
+      {
+        key: 'Last change',
+        value: m.lastDelta != null ? `+${num(m.lastDelta, u)}` : '—',
+      },
+      { key: 'Per week', value: num(m.averagePerWeek, u) },
+      { key: 'Warn above', value: num(m.warnAbove, u) },
+      { key: 'Next service', value: num(this.plan?.nextDueMeter, u) },
+      { key: 'Readings', value: String(sorted(m.readings).length) },
+      { key: 'Kind', value: capital(m.kind) },
+    ];
+  }
+}
+
+class MeterIsolated extends MeterView {
   // Commands need the host; a card rendered without one cannot act.
   private get commandContext() {
     let context = this.args.context?.commandContext;
@@ -46,29 +155,23 @@ class MeterIsolated extends Component<typeof Meter> {
   }
 
   @tracked newValue = '';
-  @tracked newNote = '';
   @tracked recordError: string | undefined;
 
-  get rows() {
-    return sorted(this.args.model.readings).slice().reverse();
-  }
-  get when() {
-    return absoluteStamp(this.args.model.lastReadAt ?? undefined);
-  }
-
-  get canRecord() {
-    return this.newValue.trim() !== '' && !isNaN(Number(this.newValue));
-  }
-
   get recordDisabled() {
-    return !this.canRecord;
+    return this.newValue.trim() === '' || isNaN(Number(this.newValue));
+  }
+
+  get thresholds(): KvItem[] {
+    let m = this.args.model;
+    return [
+      { key: 'Warn above', value: num(m.warnAbove, m.unit) },
+      { key: 'Warn below', value: num(m.warnBelow, m.unit) },
+      { key: 'Unit', value: dash(m.unit) },
+    ];
   }
 
   setNewValue = (v: string) => {
     this.newValue = v;
-  };
-  setNewNote = (v: string) => {
-    this.newNote = v;
   };
 
   recordReading = async (event?: Event) => {
@@ -83,232 +186,120 @@ class MeterIsolated extends Component<typeof Meter> {
       await new RecordMeterReadingCommand(this.commandContext).execute({
         meter: this.args.model,
         value,
-        note: this.newNote || undefined,
       } as any);
       this.newValue = '';
-      this.newNote = '';
     } catch (e: any) {
       this.recordError = e?.message ?? 'Could not record this reading.';
     }
   };
+
   <template>
-    <article class='iso'>
-      <header class='hero'>
-        <div>
-          <p class='eyebrow'>Meter ·
-            {{@model.kind}}{{#if @model.assetTag}}
-              ·
-              <code>{{@model.assetTag}}</code>{{/if}}</p>
-          <h1 class='title'>{{@model.name}}</h1>
-          {{#if @model.asset}}<div class='sub'><@fields.asset
-                @format='atom'
-              /></div>{{/if}}
-        </div>
-        <div class='big {{if @model.isWarning "big--warn"}}'>
-          <span class='big-v'>{{@model.currentLabel}}</span>
-          <span class='big-l'>{{#if this.when}}read {{this.when}}{{else}}no
-              readings yet{{/if}}</span>
-        </div>
-      </header>
-      <section class='stats'>
-        <div><span class='s-l'>Average / week</span><span class='s-v'>{{if
-              @model.averagePerWeek
-              @model.averagePerWeek
-              '—'
-            }}
-            {{@model.unit}}</span></div>
-        <div><span class='s-l'>Last delta</span><span class='s-v'>{{if
-              @model.lastDelta
-              @model.lastDelta
-              '—'
-            }}
-            {{@model.unit}}</span></div>
-        <div><span class='s-l'>Warn above</span><span class='s-v'>{{if
-              @model.warnAbove
-              @model.warnAbove
-              '—'
-            }}</span></div>
-        <div><span class='s-l'>Warn below</span><span class='s-v'>{{if
-              @model.warnBelow
-              @model.warnBelow
-              '—'
-            }}</span></div>
-      </section>
-      <section class='panel'>
-        <div class='panel-head'>
-          <h2>Readings (newest first)</h2>
-          <form class='record-form' {{on 'submit' this.recordReading}}>
-            <label class='sr-only' for='meter-new-value'>Reading value</label>
-            <Input
-              class='record-input'
-              id='meter-new-value'
-              @value={{this.newValue}}
-              @onInput={{this.setNewValue}}
-              @placeholder='Value'
-              @type='number'
-            />
-            <label class='sr-only' for='meter-new-note'>Note</label>
-            <Input
-              class='record-input'
-              id='meter-new-note'
-              @value={{this.newNote}}
-              @onInput={{this.setNewNote}}
-              @placeholder='Note (optional)'
-            />
-            <Button
-              @tone='primary'
-              @appearance='accent'
-              @size='l'
-              @disabled={{this.recordDisabled}}
-              type='submit'
-            >Record reading</Button>
-          </form>
-        </div>
+    <Sheet>
+      <:head>
+        <Head @mark='Me' @title={{@model.name}} @meta={{metaLine @model}}>
+          <:status><MeterDots @model={{@model}} /></:status>
+          <:actions>
+            <form class='log' {{on 'submit' this.recordReading}}>
+              <Input
+                class='log-input'
+                aria-label='Reading value'
+                @value={{this.newValue}}
+                @onInput={{this.setNewValue}}
+                @placeholder={{if @model.unit @model.unit 'Value'}}
+                @type='number'
+              />
+              <Button
+                class='log-btn'
+                @size='s'
+                @disabled={{this.recordDisabled}}
+                type='submit'
+              >Log reading</Button>
+            </form>
+          </:actions>
+        </Head>
         {{#if this.recordError}}
-          <p class='record-error' role='alert'>{{this.recordError}}</p>
+          <p class='log-error' role='alert'>{{this.recordError}}</p>
         {{/if}}
-        {{#if this.rows.length}}
-          <ul class='list'>
-            {{#each @fields.readings as |Reading|}}
-              <li><Reading @format='embedded' /></li>
-            {{/each}}
-          </ul>
-        {{else}}
-          <p class='empty'>No readings recorded — use Record Meter Reading.</p>
-        {{/if}}
-      </section>
-    </article>
+      </:head>
+      <:stats>
+        <Stat
+          @label='Current'
+          @value={{num @model.current @model.unit}}
+          @hint={{if
+            this.last
+            (concat 'read ' (shortDate this.last.readAt))
+            'no readings yet'
+          }}
+          @roll={{false}}
+        />
+        <Stat
+          @label='Per week'
+          @value={{num @model.averagePerWeek @model.unit}}
+          @hint={{this.sinceLabel}}
+          @roll={{false}}
+        />
+        <Stat
+          @label='To service'
+          @value={{num this.toService @model.unit}}
+          @hint={{if
+            this.plan.nextDueMeter
+            (concat 'due at ' (num this.plan.nextDueMeter @model.unit))
+            'no meter plan'
+          }}
+          @roll={{false}}
+        />
+      </:stats>
+      <:main>
+        <Section @title='Readings'>
+          {{#each this.rows as |r|}}
+            <Row @title={{r.value}} @meta={{r.meta}} @state={{r.source}} />
+          {{else}}
+            <Row @title='No readings recorded yet' />
+          {{/each}}
+        </Section>
+        <Section @title='Thresholds'>
+          <KeyValue
+            @items={{this.thresholds}}
+            @labelStyle='eyebrow'
+            @divided={{true}}
+          />
+        </Section>
+      </:main>
+      <:side>
+        <Section @title='Linked'>
+          <MeterLinks
+            @model={{@model}}
+            @fields={{@fields}}
+            @plan={{this.plan}}
+          />
+        </Section>
+        <Section @title='Details'>
+          <KeyValue
+            @items={{this.details}}
+            @labelStyle='eyebrow'
+            @divided={{true}}
+          />
+        </Section>
+      </:side>
+    </Sheet>
     <style scoped>
-      .iso {
-        container-type: inline-size;
-        padding: var(--boxel-sp-lg);
-        display: grid;
-        gap: var(--boxel-sp);
-        color: var(--foreground);
-        background: var(--card);
+      .log-btn {
+        flex: none;
       }
-      .hero {
-        display: flex;
-        justify-content: space-between;
-        gap: var(--boxel-sp);
-        align-items: flex-start;
-        flex-wrap: wrap;
-      }
-      .eyebrow {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground);
-      }
-      .eyebrow code {
-        font-family: var(--font-mono);
-        text-transform: none;
-      }
-      .title {
-        margin: 0;
-        font-size: var(--boxel-font-size-xl);
-        font-weight: 700;
-      }
-      .sub {
-        margin-top: var(--boxel-sp-4xs);
-      }
-      .big {
-        text-align: right;
-      }
-      .big-v {
-        display: block;
-        font-size: 2.5rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        line-height: 1;
-      }
-      .big--warn .big-v {
-        color: var(--destructive-ink);
-      }
-      .big-l {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
-        gap: 1px;
-        background: var(--border);
-        border: 1px solid var(--border);
-        border-radius: 0.375rem;
-        overflow: hidden;
-      }
-      .stats > div {
-        background: var(--card);
-        padding: var(--boxel-sp-xs) var(--boxel-sp);
-        display: grid;
-        gap: 2px;
-      }
-      .s-l {
-        font-size: var(--boxel-font-size-xs);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--muted-foreground);
-      }
-      .s-v {
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
-      }
-      .panel {
-        border: 1px solid var(--border);
-        border-radius: 0.375rem;
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-      }
-      .panel h2 {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .panel-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: var(--boxel-sp);
-        flex-wrap: wrap;
-      }
-      .record-form {
+      .log {
+        flex: none;
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .record-input {
-        min-width: 8rem;
-      }
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-      }
-      .record-error {
         margin: 0;
+      }
+      .log-input {
+        inline-size: 6rem;
+      }
+      .log-error {
+        padding: 0 var(--boxel-sp-sm) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-2xs);
         color: var(--destructive-ink);
-        font-size: var(--boxel-font-size-xs);
-      }
-      .list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: var(--boxel-sp-xs);
-      }
-      .empty {
-        margin: 0;
-        color: var(--muted-foreground);
-        font-style: italic;
       }
     </style>
   </template>
@@ -412,170 +403,119 @@ export class Meter extends CardDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='m-atom'><GaugeIcon class='m-ico' />{{@model.name}}
-        <strong>{{@model.currentLabel}}</strong></span>
-      <style scoped>
-        .m-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-4xs);
-          font-size: var(--boxel-font-size-xs);
-          color: var(--foreground);
-        }
-        .m-ico {
-          width: 0.85rem;
-          height: 0.85rem;
-          color: var(--muted-foreground);
-        }
-        strong {
-          font-variant-numeric: tabular-nums;
-        }
-      </style>
+      <Chip
+        @bare={{true}}
+        @mark='Me'
+        @name={{join @model.assetName @model.name}}
+        @tone={{if @model.isWarning 'warn' 'info'}}
+        @meta={{if @model.current @model.currentLabel}}
+      />
     </template>
   };
 
-  static embedded = class Embedded extends Component<typeof this> {
-    get when() {
-      return absoluteStamp(this.args.model.lastReadAt ?? undefined);
-    }
+  static embedded = class Embedded extends MeterView {
     <template>
-      <div class='m {{if @model.isWarning "m--warn"}}'>
-        <span class='m-disc'><GaugeIcon class='m-ico' /></span>
-        <div class='m-body'>
-          <div class='m-name'>{{@model.name}}
-            <span class='m-kind'>{{@model.kind}}</span></div>
-          <div class='m-meta'>{{#if this.when}}read {{this.when}}{{/if}}
-            {{#if @model.averagePerWeek}}·
-              {{@model.averagePerWeek}}
-              {{@model.unit}}/wk{{/if}}
-            {{#if @model.isWarning}}·
-              <strong>warning
-                {{@model.isWarning}}
-                threshold</strong>{{/if}}</div>
-        </div>
-        <span class='m-value'>{{@model.currentLabel}}</span>
-      </div>
-      <style scoped>
-        .m {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          min-width: 0;
-          color: var(--foreground);
-        }
-        .m-disc {
-          flex: none;
-          width: 2rem;
-          height: 2rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          background: var(--muted);
-          color: var(--muted-foreground);
-        }
-        .m--warn .m-disc {
-          color: var(--destructive-ink);
-        }
-        .m-ico {
-          width: 1rem;
-          height: 1rem;
-        }
-        .m-body {
-          flex: 1;
-          min-width: 0;
-        }
-        .m-name {
-          font-weight: 600;
-        }
-        .m-kind,
-        .m-meta {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .m-value {
-          font-variant-numeric: tabular-nums;
-          font-weight: 700;
-          font-size: var(--boxel-font-size);
-          white-space: nowrap;
-        }
-      </style>
+      <Brief @mark='Me' @title={{@model.name}} @meta={{metaLine @model}}>
+        <:status><MeterDots @model={{@model}} /></:status>
+        <:fact><Fact
+            @lead='Last read'
+            @strong={{shortDate this.last.readAt}}
+            @rest={{this.last.readByName}}
+          /></:fact>
+        <:default>
+          <KeyValue
+            @items={{this.details}}
+            @labelStyle='eyebrow'
+            @divided={{true}}
+          />
+          <MeterLinks
+            @model={{@model}}
+            @fields={{@fields}}
+            @plan={{this.plan}}
+          />
+        </:default>
+      </Brief>
     </template>
   };
 
-  static fitted = class Fitted extends Component<typeof this> {
+  static fitted = class Fitted extends MeterView {
     <template>
-      <FittedCard class='fit' @titleTag='h3'>
-        <:eyebrow>{{@model.name}}</:eyebrow>
-        <:title><span class='value'>{{@model.currentLabel}}</span></:title>
-        <:subtitle>{{@model.assetTag}} {{@model.assetName}}</:subtitle>
-        <:meta>{{#if @model.averagePerWeek}}{{@model.averagePerWeek}}
-            {{@model.unit}}/wk{{/if}}{{#if @model.lastDelta}}
-            · +{{@model.lastDelta}}
-            last{{/if}}</:meta>
-      </FittedCard>
-      <style scoped>
-        .fit {
-          --fc-title-font-size: var(--boxel-font-size-lg);
-          --fc-subtitle-font-size: var(--boxel-font-size-xs);
-        }
-        .value {
-          font-variant-numeric: tabular-nums;
-        }
-      </style>
+      <FitTile>
+        <:avatar><Mark @text='Me' @size='lg' /></:avatar>
+        <:title>{{@model.name}}</:title>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><MeterDots @model={{@model}} /></:status>
+        <:fact><Fact
+            @lead='Last read'
+            @strong={{shortDate this.last.readAt}}
+            @rest={{this.last.readByName}}
+          /></:fact>
+        <:relations>
+          {{#if @model.asset}}<@fields.asset @format='atom' />{{/if}}
+        </:relations>
+      </FitTile>
     </template>
   };
 
   static isolated = MeterIsolated;
+}
 
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'alarms', label: 'Alarms' },
-      { id: 'readings', label: 'Readings' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Meter sections'
-        as |e|
-      >
-        <e.Section @id='identity' @title='Identity' @cols={{2}}>
-          <FieldContainer @label='Asset' @vertical={{true}}><@fields.asset
-            /></FieldContainer>
-          <FieldContainer @label='Name' @vertical={{true}}><@fields.name
-            /></FieldContainer>
-          <FieldContainer @label='Kind' @vertical={{true}}><@fields.kind
-            /></FieldContainer>
-          <FieldContainer @label='Unit' @vertical={{true}}><@fields.unit
-            /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='alarms'
-          @title='Alarms'
-          @hint='gauge thresholds — a reading outside them flags the meter'
-          @cols={{2}}
-        >
-          <FieldContainer
-            @label='Warn above'
-            @vertical={{true}}
-          ><@fields.warnAbove /></FieldContainer>
-          <FieldContainer
-            @label='Warn below'
-            @vertical={{true}}
-          ><@fields.warnBelow /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='readings'
-          @title='Readings'
-          @hint='append with Record Meter Reading; edit here only to correct an import'
-          @cols={{1}}
-        >
-          <@fields.readings />
-        </e.Section>
-      </SectionedEdit>
-    </template>
-  };
+function concat(...parts: unknown[]) {
+  return parts.join('');
+}
+
+function capital(s?: string | null) {
+  return s ? s[0].toUpperCase() + s.slice(1) : '—';
+}
+
+function metaLine(m: Partial<Meter>) {
+  return join(m.assetTag, m.assetName, m.kind);
+}
+
+const MeterDots: TemplateOnlyComponent<{ Args: { model: Partial<Meter> } }> =
+  <template>
+    <Dot
+      @tone={{if @model.isWarning 'warn' 'info'}}
+      @label={{@model.currentLabel}}
+    />
+    {{#if @model.warnAbove}}
+      <Dot @label='warn at {{num @model.warnAbove}}' />
+    {{else if @model.warnBelow}}
+      <Dot @label='warn under {{num @model.warnBelow}}' />
+    {{/if}}
+  </template>;
+
+const LINKS: KvItem[] = [
+  { key: 'Asset', value: '' },
+  { key: 'Read by', value: '' },
+  { key: 'Plan', value: '' },
+];
+
+const MeterLinks: TemplateOnlyComponent<{
+  Args: { model: Partial<Meter>; fields: any; plan?: MaintenancePlan };
+}> = <template>
+  <KeyValue @items={{LINKS}} @labelStyle='eyebrow' @divided={{true}}>
+    <:value as |item|>
+      {{#if (eq item.key 'Asset')}}
+        {{#if @model.asset}}<@fields.asset @format='atom' />{{else}}—{{/if}}
+      {{else if (eq item.key 'Read by')}}
+        {{dash (lastReader @model)}}
+      {{else if @plan}}
+        <Chip
+          @bare={{true}}
+          @mark='Pl'
+          @name={{@plan.name}}
+          @tone={{if @plan.active 'ok'}}
+          @meta={{if @plan.active 'active' 'paused'}}
+        />
+      {{else}}—{{/if}}
+    </:value>
+  </KeyValue>
+</template>;
+
+function lastReader(m: Partial<Meter>) {
+  let s = sorted(m.readings);
+  return s[s.length - 1]?.readByName;
 }
 
 export default Meter;

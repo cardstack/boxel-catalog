@@ -79,6 +79,23 @@
         "module": "../case",
         "name": "Case"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      },
+      "owner": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "duplicateOf": {
+        "links": {
+          "self": "../Case/case-2026-0139"
+        }
+      }
     }
   }
 }

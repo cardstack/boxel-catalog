@@ -1,18 +1,39 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq, gt } from '@cardstack/boxel-ui/helpers';
+import { gt } from '@cardstack/pretui/helpers';
 import type { CardDef } from '@cardstack/base/card-api';
 import { Button } from '@cardstack/pretui/components/button';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
-import { StatePill } from '../../../components/state-pill';
-import { Table, type TableColumn } from '../../../components/table';
-import { ExportButton, type ExportColumn } from '../../../components/export';
-import { ImportButton, type ImportColumn } from '../../../components/import';
+import PlusIcon from '@cardstack/boxel-icons/plus';
+import { Table } from '@cardstack/pretui/components/table';
+import { StatusChip } from '@cardstack/pretui/components/status-chip';
+import { LayoutControl } from '@cardstack/pretui/components/layout-control';
+import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
+import { PageHead } from './page-head';
+import { StatStrip } from './stat-strip';
+
+interface TableColumn {
+  key: string;
+  label: string;
+  align?: string;
+  custom?: boolean;
+  sortable?: boolean;
+  value: (item: CardDef) => unknown;
+  sortValue?: (item: CardDef) => unknown;
+}
+import {
+  ExportButton,
+  type ExportColumn,
+} from '@cardstack/catalog/components/export';
+import {
+  ImportButton,
+  type ImportColumn,
+} from '@cardstack/catalog/components/import';
 import {
   formatDay,
   toDate,
-} from '../../../fields/effective-period/effective-period-field';
+} from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { Invoice } from '../../commerce/invoice';
 import {
   formatMoney,
@@ -25,10 +46,8 @@ import {
   INVOICE_IMPORT_STATUSES,
   OPEN_INVOICE_STATUSES,
   asCalendarDay,
-  invoiceHue,
   invoiceStatus,
   isBaseInvoice,
-  stopThen,
 } from '../revenue-os-data';
 import type { RevenueOsConsole } from '../revenue-os';
 
@@ -210,205 +229,247 @@ export class InvoicesPane extends Component<Signature> {
   };
   balanceDisplay = (item: CardDef) => {
     let { code } = sumLineItems((item as Invoice).lineItems);
-    return formatMoney(this.balanceOf(item), code);
+    return formatMoney(this.balanceOf(item), code).replace(/\.00$/, '');
   };
+
+  invoiceTone = (item: CardDef) => {
+    let s = invoiceStatus(item);
+    return s === 'overdue'
+      ? 'danger'
+      : s === 'paid'
+        ? 'success'
+        : s === 'partial'
+          ? 'warning'
+          : s === 'sent' || s === 'viewed'
+            ? 'info'
+            : 'neutral';
+  };
+  amountOf = (item: CardDef) => {
+    let { total, code } = sumLineItems((item as Invoice).lineItems);
+    return total ? formatMoney(total, code).replace(/\.00$/, '') : '';
+  };
+  dueOf = (item: CardDef) => {
+    let d = (item as Invoice).dueDate;
+    return d ? formatDay(d) : '';
+  };
+  FORMS = [
+    { name: 'full', minWidth: 9 },
+    { name: 'menu', minWidth: 0 },
+  ];
+  PRIMARY_FORMS = [{ name: 'full', minWidth: 8 }];
+
+  get unpaidCount() {
+    return this.stats[0]?.value;
+  }
+  get stats() {
+    let all = this.args.console.invoices;
+    let open = all.filter((i) =>
+      OPEN_INVOICE_STATUSES.includes(i.status ?? ''),
+    );
+    let balance = open
+      .filter((i) => isBaseInvoice(i))
+      .reduce((a, i) => a + outstandingBalance(i.lineItems, i.payments), 0);
+    return [
+      {
+        label: 'Unpaid',
+        value: open.length,
+        hint: 'sent, viewed or part paid',
+        tone: 'warning',
+      },
+      {
+        label: 'Outstanding',
+        value: formatMoney(balance, BASE_CURRENCY),
+        hint: 'balance still due',
+        tone: 'danger',
+      },
+      {
+        label: 'Invoices',
+        value: all.length,
+        hint: 'on file',
+        tone: 'neutral',
+      },
+    ];
+  }
+
+  get agingStats() {
+    let tones: Record<string, string> = {
+      ok: 'success',
+      warn: 'warning',
+      late: 'danger',
+      zero: 'neutral',
+    };
+    return this.aging.map((b) => ({
+      label: b.label,
+      value: b.value,
+      tone: tones[b.tone],
+    }));
+  }
 
   <template>
     <section class='pane'>
-      <div class='pane-head'>
-        <h2>Invoices</h2>
-        <span class='row-actions'>
-          {{#if @console.realm}}
-            <ImportButton
-              @cardType={{this.invoiceType}}
-              @columns={{this.importColumns}}
-              @commandContext={{@console.commandContext}}
-              @realm={{@console.realm}}
-              @onComplete={{@console.reportImport}}
-            />
-          {{/if}}
-          <ExportButton
-            @rows={{this.filteredInvoices}}
-            @columns={{this.exportColumns}}
-            @filename={{this.exportFilename}}
-          />
-          <Button
-            @appearance='outlined'
-            @size='sm'
-            {{on 'click' @console.newInvoice}}
-          >New invoice</Button>
-        </span>
-      </div>
+      <PageHead
+        @title='Invoices'
+        @subtitle='{{this.unpaidCount}} unpaid invoices'
+      />
       {{#if @console.queriesSettled}}
-        <div class='aging-strip'>
-          {{#each this.aging as |bucket|}}
-            <div class='metric metric-flat'>
-              <span class='m-label'>{{bucket.label}}</span>
-              <span class='m-value tone-{{bucket.tone}}'>{{bucket.value}}</span>
-            </div>
-          {{/each}}
+        <StatStrip @stats={{this.stats}} @label='Invoice totals' />
+        <StatStrip @stats={{this.agingStats}} @label='Aging' />
+        <LayoutControl @label='Invoice filters and actions' as |lc|>
+          <lc.Slot
+            @id='filter'
+            @priority={{2}}
+            @forms={{this.FORMS}}
+            @label='Show'
+          >
+            <SegmentedControl
+              @label='Invoice filter'
+              @options={{INVOICE_FILTERS}}
+              @value={{@console.invoiceFilter}}
+              @onValueChange={{@console.setInvoiceFilter}}
+            />
+          </lc.Slot>
+          <span class='spacer'></span>
+          {{#if @console.realm}}
+            <lc.Slot
+              @id='import'
+              @priority={{1}}
+              @forms={{this.FORMS}}
+              @label='Import'
+            >
+              <ImportButton
+                @cardType={{this.invoiceType}}
+                @columns={{this.importColumns}}
+                @commandContext={{@console.commandContext}}
+                @realm={{@console.realm}}
+                @onComplete={{@console.reportImport}}
+              />
+            </lc.Slot>
+          {{/if}}
+          <lc.Slot
+            @id='export'
+            @priority={{1}}
+            @forms={{this.FORMS}}
+            @label='Export'
+          >
+            <ExportButton
+              @rows={{this.filteredInvoices}}
+              @columns={{this.exportColumns}}
+              @filename={{this.exportFilename}}
+            />
+          </lc.Slot>
+          <lc.Slot
+            @id='new'
+            @priority={{0}}
+            @pinned={{true}}
+            @forms={{this.PRIMARY_FORMS}}
+            @label='New invoice'
+          >
+            <Button
+              @icon={{PlusIcon}}
+              @appearance='accent'
+              {{on 'click' @console.newInvoice}}
+            >New invoice</Button>
+          </lc.Slot>
+        </LayoutControl>
+        <div class='block'>
+          <Table @label='Invoices' @framed={{false}}>
+            <:head>
+              <tr>
+                <th scope='col'>Invoice #</th>
+                <th scope='col'>Account</th>
+                <th scope='col' class='num'>Amount</th>
+                <th scope='col'>Status</th>
+                <th scope='col'>Due</th>
+                <th scope='col'><VisuallyHidden>Actions</VisuallyHidden></th>
+              </tr>
+            </:head>
+            <:body>
+              {{#each this.filteredInvoices key='id' as |item|}}
+                <tr>
+                  <td class='mono'>
+                    <Button
+                      @appearance='plain'
+                      {{on 'click' (fn @console.openCard item)}}
+                    >{{item.invoiceNumber}}</Button>
+                  </td>
+                  <td>
+                    {{#let (this.accountOf item) as |account|}}
+                      {{#if account}}
+                        <Button
+                          @appearance='plain'
+                          title='Open {{account.name}} in Accounts'
+                          {{on 'click' (fn @console.openAccountFor item)}}
+                        >{{account.name}}</Button>
+                      {{/if}}
+                    {{/let}}
+                  </td>
+                  <td class='num mono'>{{this.amountOf item}}</td>
+                  <td><StatusChip
+                      @value={{invoiceStatus item}}
+                      @tone={{this.invoiceTone item}}
+                      @appearance='plain'
+                    /></td>
+                  <td class='mono'>{{this.dueOf item}}</td>
+                  <td>
+                    <span class='row-actions'>
+                      {{#if (gt (this.balanceOf item) 0)}}
+                        <Button
+                          @appearance='outlined'
+                          @disabled={{@console.busy}}
+                          {{on 'click' (fn @console.recordBalancePayment item)}}
+                        >Record {{this.balanceDisplay item}}</Button>
+                      {{/if}}
+                      <Button
+                        @appearance='plain'
+                        @disabled={{@console.busy}}
+                        {{on 'click' (fn @console.duplicateCard item)}}
+                      >Duplicate</Button>
+                    </span>
+                  </td>
+                </tr>
+              {{else}}
+                <tr><td colspan='6' class='empty'>No invoices match this filter</td></tr>
+              {{/each}}
+            </:body>
+          </Table>
         </div>
-        <SegmentedControl
-          class='filters'
-          @label='Invoice filter'
-          @options={{INVOICE_FILTERS}}
-          @value={{@console.invoiceFilter}}
-          @onValueChange={{@console.setInvoiceFilter}}
-        />
-        <Table
-          @items={{this.filteredInvoices}}
-          @columns={{this.invoiceColumns}}
-          @onRowClick={{@console.openCard}}
-          @emptyMessage='No invoices match this filter'
-        >
-          <:cell as |item column|>
-            {{#if (eq column.key 'status')}}
-              {{#let (invoiceStatus item) as |status|}}
-                <StatePill @label={{status}} @hue={{invoiceHue status}} />
-              {{/let}}
-            {{else if (eq column.key 'account')}}
-              {{#let (this.accountOf item) as |account|}}
-                {{#if account}}
-                  <Button
-                    class='cell-account'
-                    @appearance='plain'
-                    @size='sm'
-                    title='Open {{account.name}} in Accounts'
-                    {{on 'click' (stopThen (fn @console.openAccountFor item))}}
-                  >{{account.name}}</Button>
-                {{/if}}
-              {{/let}}
-            {{else if (eq column.key 'actions')}}
-              <span class='row-actions'>
-                {{#if (gt (this.balanceOf item) 0)}}
-                  <Button
-                    @appearance='outlined'
-                    @size='sm'
-                    @disabled={{@console.busy}}
-                    {{on
-                      'click'
-                      (stopThen (fn @console.recordBalancePayment item))
-                    }}
-                  >Record
-                    {{this.balanceDisplay item}}</Button>
-                {{/if}}
-                {{#let (@console.booksStateOf item) as |books|}}
-                  {{#if (eq books 'booked')}}
-                    <span class='in-books'>In the books</span>
-                  {{else if (eq books 'drafted')}}
-                    <span class='in-books'>Drafted in the books</span>
-                  {{else if (eq books 'post')}}
-                    <Button
-                      @appearance='outlined'
-                      @size='sm'
-                      @disabled={{@console.busy}}
-                      {{on 'click' (stopThen (fn @console.postToBooks item))}}
-                    >Post to the books</Button>
-                  {{else if (eq books 'payments')}}
-                    <Button
-                      @appearance='outlined'
-                      @size='sm'
-                      @disabled={{@console.busy}}
-                      {{on 'click' (stopThen (fn @console.postToBooks item))}}
-                    >Post payments to the books</Button>
-                  {{/if}}
-                {{/let}}
-                <Button
-                  @appearance='plain'
-                  @size='sm'
-                  @disabled={{@console.busy}}
-                  {{on 'click' (stopThen (fn @console.duplicateCard item))}}
-                >Duplicate</Button>
-              </span>
-            {{/if}}
-          </:cell>
-        </Table>
       {{else}}
         <p class='loading' role='status'>Loading invoices…</p>
       {{/if}}
     </section>
     <style scoped>
-      .in-books {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .loading {
-        margin: 0;
-        color: var(--muted-foreground);
-      }
       .pane {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: var(--boxel-sp-sm);
       }
-      .pane-head {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 1rem;
-        flex-wrap: wrap;
-      }
-      h2 {
-        margin: 0;
-        font-size: 1.0625rem;
-        font-family: var(--font-sans);
-      }
-      .aging-strip {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-        gap: 0.75rem;
-      }
-      .metric {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
+      .block {
         border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 0.875rem 1rem;
+        border-radius: var(--radius);
         background: var(--card);
+        overflow-x: auto;
       }
-      .metric-flat {
-        border: none;
-        background: var(--muted);
+      .spacer {
+        flex: 1;
       }
-      .tone-warn {
-        color: var(--warning-ink);
+      .num {
+        text-align: end;
       }
-      .tone-late {
-        color: var(--destructive-ink);
+      .mono {
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        white-space: nowrap;
       }
-      .tone-zero {
-        color: var(--muted-foreground);
-      }
-      /* the account atom is wider than the bare name it replaced; cap it so
-         the row action stays in view instead of scrolling off */
       .row-actions {
         display: inline-flex;
-        gap: 0.25rem;
         align-items: center;
-        justify-content: flex-end;
+        gap: var(--boxel-sp-xs);
+        white-space: nowrap;
       }
-      .cell-account {
-        display: inline-flex;
-        max-width: 11rem;
-      }
-      .m-label {
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
+      .empty,
+      .loading {
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
-      }
-      .m-value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        line-height: 1.1;
-      }
-      .filters {
-        display: flex;
-        gap: 0.375rem;
-        flex-wrap: wrap;
       }
     </style>
   </template>

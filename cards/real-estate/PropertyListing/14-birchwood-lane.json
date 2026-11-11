@@ -58,15 +58,17 @@
         }
       },
       "heroIndex": 1,
-      "photoCaptions": [
-        "",
-        ""
-      ]
+      "photoCaptions": ["", ""]
     },
     "relationships": {
       "agent": {
         "links": {
           "self": "../../hr/Employee/mara-lindqvist"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

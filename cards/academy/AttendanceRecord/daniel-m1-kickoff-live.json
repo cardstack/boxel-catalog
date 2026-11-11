@@ -28,6 +28,11 @@
         "links": {
           "self": "../../hr/Employee/sofia-reyes"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

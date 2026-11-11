@@ -4,7 +4,7 @@
     "attributes": {
       "operatorName": "Dana Kim",
       "cardInfo": {
-        "name": "Case desk — payments and platform cases",
+        "name": "Case desk \u2014 payments and platform cases",
         "summary": "Every case desk block over the same five cases, their SLA, escalations and workflow",
         "notes": null,
         "cardThumbnailURL": null
@@ -64,6 +64,11 @@
       "workflow": {
         "links": {
           "self": "../../Workflow/support-case-flow"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/site-tools"
         }
       }
     },

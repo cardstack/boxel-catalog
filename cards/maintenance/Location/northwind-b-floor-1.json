@@ -17,6 +17,11 @@
         "links": {
           "self": "../Location/northwind-building-b"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

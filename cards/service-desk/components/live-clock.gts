@@ -2,8 +2,8 @@ import GlimmerComponent from '@glimmer/component';
 import type Owner from '@ember/owner';
 import { registerDestructor } from '@ember/destroyable';
 
-import { timerSnapshot } from '@cardstack/catalog/cards/service-desk/utils/sla';
-import { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock';
+import { timerSnapshot } from '../utils/sla';
+import { slaClock } from '../utils/sla-clock';
 
 interface Signature {
   Args: {

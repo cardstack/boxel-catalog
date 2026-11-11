@@ -11,12 +11,12 @@
     "relationships": {
       "authority": {
         "links": {
-          "self": "../CertificationAuthority/meridian-assurance"
+          "self": "../../audit/CertificationAuthority/meridian-assurance"
         }
       },
       "cardInfo.theme": {
         "links": {
-          "self": "../../../Theme/ledger"
+          "self": "../../Theme/site-tools"
         }
       }
     },

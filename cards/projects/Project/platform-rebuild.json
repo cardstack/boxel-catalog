@@ -24,6 +24,11 @@
         "links": {
           "self": "../../hr/Team/engineering"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

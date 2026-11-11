@@ -15,7 +15,7 @@ import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search
 
 import { Contract } from '../contract';
 import { ContractVersion } from '../contract-version';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../../hr/employee';
 import {
   verifyCeremony,
   ceremonyIsClean,

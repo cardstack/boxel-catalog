@@ -48,7 +48,6 @@ export class AuditTimelineExample extends CardDef {
           max-width: 44rem;
         }
         h2 {
-          margin: 0;
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -81,7 +80,7 @@ export class AuditTimelineExample extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
       </style>
     </template>
@@ -104,10 +103,10 @@ export class AuditTimelineExample extends CardDef {
         }
         .fit-name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .fit-sub {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>

@@ -31,6 +31,13 @@
         "module": "../legal-entity",
         "name": "LegalEntity"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

@@ -11,7 +11,7 @@
       "kind": "preventive",
       "priority": "P2",
       "status": "scheduled",
-      "title": "Monthly load test — Standby generator",
+      "title": "Monthly load test \u2014 Standby generator",
       "requestedByName": "Generate PM Work Orders",
       "requestedAt": "2026-08-31T01:00:00.000Z",
       "scheduledFor": "2026-09-05",
@@ -36,7 +36,7 @@
             "tolerance": 20
           },
           {
-            "label": "Start on load — transfer within 10 s",
+            "label": "Start on load \u2014 transfer within 10 s",
             "kind": "check",
             "required": true,
             "result": "pending"
@@ -53,7 +53,7 @@
             "required": true,
             "result": "pending",
             "expectedValue": 85,
-            "unit": "°C",
+            "unit": "\u00b0C",
             "tolerance": 10
           },
           {
@@ -75,6 +75,11 @@
       "plan": {
         "links": {
           "self": "../MaintenancePlan/ast-0330-monthly-test"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

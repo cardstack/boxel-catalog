@@ -118,7 +118,7 @@ export class OfferLetterTemplate extends CardDef {
               </div>
             {{else}}
               <EmptyState
-                class='empty'
+                @size='s'
                 @texture={{false}}
                 @title='No body yet'
                 @message='Write the letter in markdown and drop in merge placeholders from the legend.'
@@ -159,6 +159,8 @@ export class OfferLetterTemplate extends CardDef {
             var(--primary) 45%,
             var(--foreground)
           );
+          background: var(--card);
+          color: var(--card-foreground);
         }
         .hero {
           flex: none;
@@ -187,12 +189,11 @@ export class OfferLetterTemplate extends CardDef {
           min-width: 0;
         }
         h1 {
-          margin: 0;
           font-size: var(--boxel-font-size-xl);
           font-weight: 750;
           letter-spacing: -0.02em;
           line-height: 1.2;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
         }
         .byline {
           margin: var(--boxel-sp-5xs) 0 0;
@@ -200,7 +201,7 @@ export class OfferLetterTemplate extends CardDef {
           color: var(--muted-foreground);
         }
         .sep-dot {
-          margin: 0 0.25rem;
+          margin: 0 var(--boxel-sp-4xs);
         }
         .body {
           display: grid;
@@ -249,7 +250,7 @@ export class OfferLetterTemplate extends CardDef {
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp-3xs);
-          padding: 0.4rem 0;
+          padding: var(--boxel-sp-2xs) 0;
           border-bottom: 1px solid var(--border);
         }
         .legend-row:last-child {
@@ -262,11 +263,6 @@ export class OfferLetterTemplate extends CardDef {
         .legend-src {
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
-        }
-        .empty {
-          --space-9: var(--boxel-sp);
-          --space-6: var(--boxel-sp);
-          --text-heading: var(--boxel-font-size);
         }
         @container iso (max-width: 40rem) {
           .body {
@@ -302,18 +298,15 @@ export class OfferLetterTemplate extends CardDef {
         .template-embedded {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.75rem;
-          font-size: 0.8125rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
         }
         /* EntityDisplay's thumbnail dress holds the type icon; the name and
            secondary line keep the row's sizes. */
         .entity {
           flex: 1;
           --pretui-entity-visual-size: 1.75rem;
-          --text-ui-md: 0.8125rem;
-          --text-ui-sm: 0.6875rem;
-          --space-3: 0.625rem;
         }
         .entity-icon {
           width: 0.875rem;
@@ -334,8 +327,8 @@ export class OfferLetterTemplate extends CardDef {
         .template-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 500;
           color: var(--foreground);
         }
@@ -397,8 +390,8 @@ export class OfferLetterTemplate extends CardDef {
           height: 100%;
           display: flex;
           flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
+          gap: var(--boxel-sp-3xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
           overflow: hidden;
           background-color: var(--card);
           color: var(--card-foreground);
@@ -418,7 +411,7 @@ export class OfferLetterTemplate extends CardDef {
           flex: none;
           display: flex;
           align-items: flex-start;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
           flex-wrap: wrap;
         }
         .avatar {
@@ -472,7 +465,7 @@ export class OfferLetterTemplate extends CardDef {
           display: none;
           margin: 0;
           margin-top: auto;
-          padding-top: 0.3rem;
+          padding-top: var(--boxel-sp-3xs);
           border-top: 1px dashed var(--border);
           font-size: var(--fit-small);
           line-height: 1.4;

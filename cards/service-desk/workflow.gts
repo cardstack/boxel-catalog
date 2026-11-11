@@ -10,21 +10,17 @@ import {
 } from '@cardstack/base/card-api';
 import enumField from '@cardstack/base/enum';
 import RouteIcon from '@cardstack/boxel-icons/route';
-
-import {
-  WorkflowStateField,
-  workflowKindColor,
-} from '@cardstack/catalog/fields/workflow-state/workflow-state-field';
-import { tracked } from '@glimmer/tracking';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { WorkflowStateField } from '@cardstack/catalog/fields/workflow-state/workflow-state-field';
 import { Token } from '@cardstack/pretui/components/token';
-import {
-  COMPACT_EMPTY_STYLE,
-  tokenStyle,
-} from '@cardstack/catalog/components/pretui-helpers';
+import { tokenStyle } from '@cardstack/catalog/components/pretui-helpers';
+import PencilIcon from '@cardstack/boxel-icons/pencil';
+import { on } from '@ember/modifier';
+import { Button } from '@cardstack/pretui/components/button';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { FitTile } from '../shared/fit-tile';
+import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 
 export const TRANSITION_GUARDS = [
   'none',
@@ -67,119 +63,89 @@ export class TransitionField extends FieldDef {
   };
 }
 
-class WorkflowEdit extends Component<typeof Workflow> {
-  @tracked activeSection = 'identity';
+const KIND_TONES: Record<string, PretuiToneArg> = {
+  initial: 'primary',
+  working: 'primary',
+  waiting: 'warning',
+  terminal: 'success',
+};
 
-  sections = [
-    { id: 'identity', label: 'Workflow' },
-    { id: 'process', label: 'States & transitions' },
+function plural(n: number, word: string) {
+  return `${n} ${word}${n === 1 ? '' : 's'}`;
+}
+function guardText(g?: string | null, role?: string | null) {
+  if (!g || g === 'none') return 'none';
+  let text = g.replace('-', ' ');
+  return g === 'requires-role' && role ? `${text} · ${role}` : text;
+}
+
+/** The strings every SupportWorkflow format shows, read once from the model. */
+function wfView(m?: Partial<Workflow>) {
+  let states = m?.states ?? [];
+  let transitions = m?.transitions ?? [];
+  let label = (key?: string | null) =>
+    states.find((s) => s.key === key)?.label ?? key ?? '';
+  let guarded = transitions.filter((t) => t.guard && t.guard !== 'none');
+  let paused = states.filter((s) => s.pausesSlaClock);
+  let roleGuard = transitions.find((t) => t.guard === 'requires-role');
+  let noteGuard = transitions.find((t) => t.guard === 'requires-note');
+  let initial = states.find((s) => s.kind === 'initial');
+  let terminal = states.find((s) => s.kind === 'terminal');
+  let version = m?.version ?? '';
+  let applies = m?.appliesTo ?? '';
+  let dash = (v?: string | null) => v || '—';
+  let guardedText = guarded.length ? plural(guarded.length, 'transition') : '—';
+  let pausesText = paused.length ? paused.map((s) => s.label).join(', ') : '—';
+  let facts: KeyValueItem[] = [
+    { key: 'Applies to', value: dash(applies) },
+    { key: 'Version', value: dash(version) },
+    { key: 'States', value: String(states.length) },
+    { key: 'Transitions', value: String(transitions.length) },
+    { key: 'Pauses clock', value: pausesText },
+    { key: 'Guarded', value: guardedText },
+    { key: 'Initial', value: dash(initial?.label) },
+    { key: 'Terminal', value: dash(terminal?.label) },
+    { key: 'Role guard', value: dash(roleGuard?.guardRoleName) },
+    {
+      key: 'Note guard',
+      value: noteGuard
+        ? `${label(noteGuard.from)} → ${label(noteGuard.to)}`
+        : '—',
+    },
   ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.wf-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  let flow = states.map((s) => s.label);
+  return {
+    name: m?.name ?? 'Workflow',
+    version,
+    statesLabel: plural(states.length, 'state'),
+    subline: [applies ? `Applies to ${applies}` : undefined, version]
+      .filter(Boolean)
+      .join(' · '),
+    flowHead: flow.slice(0, -1).join(' → '),
+    flowLast: flow.length > 1 ? flow[flow.length - 1] : undefined,
+    flowOnly: flow.length === 1 ? flow[0] : undefined,
+    facts,
+    embFacts: facts.slice(0, 6),
+    statesCount: states.length,
+    transitionsCount: transitions.length,
+    guardedCount: guarded.length,
+    pausedCount: paused.length,
+    stateRows: states.map((s) => ({
+      label: s.label,
+      kind: s.kind ?? '—',
+      tone: KIND_TONES[s.kind ?? ''] ?? 'neutral',
+      detail: [s.kind, s.pausesSlaClock ? 'pauses the SLA clock' : undefined]
+        .filter(Boolean)
+        .join(' · '),
+    })),
+    transitionRows: transitions.map((t) => ({
+      route: `${t.from} → ${t.to}`,
+      guard: guardText(t.guard, t.guardRoleName),
+      tone: (t.guard && t.guard !== 'none'
+        ? 'warning'
+        : 'neutral') as PretuiToneArg,
+    })),
   };
-
-  <template>
-    <div class='wf-edit'>
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "identity") "focused"}}'
-            data-sect='identity'
-          >
-            <h3>Workflow
-              <span class='sect-hint'>bump the version when states change — keys
-                are never renamed</span></h3>
-            <FieldContainer @label='Name' @vertical={{true}}>
-              <@fields.name />
-            </FieldContainer>
-            <FieldContainer @label='Applies to' @vertical={{true}}>
-              <@fields.appliesTo />
-            </FieldContainer>
-            <FieldContainer @label='Version' @vertical={{true}}>
-              <@fields.version />
-            </FieldContainer>
-          </section>
-          <section
-            class='sect {{if (eq this.activeSection "process") "focused"}}'
-            data-sect='process'
-          >
-            <h3>States & transitions
-              <span class='sect-hint'>waiting-kind states pause SLA clocks</span></h3>
-            <FieldContainer @label='States (in order)' @vertical={{true}}>
-              <@fields.states />
-            </FieldContainer>
-            <FieldContainer @label='Transitions' @vertical={{true}}>
-              <@fields.transitions />
-            </FieldContainer>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .wf-edit {
-        container-type: inline-size;
-        padding: var(--boxel-sp);
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 10rem 1fr;
-        gap: var(--boxel-sp);
-        align-items: start;
-      }
-      @container (width < 34rem) {
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-      }
-      .sects {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-sm);
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--card);
-        color: var(--card-foreground);
-        padding: var(--boxel-sp);
-        scroll-margin-top: var(--boxel-sp);
-      }
-      .sect.focused {
-        border-color: var(--ring);
-      }
-      .sect h3 {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-5xs);
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: 0;
-        font-weight: 400;
-        font-style: italic;
-      }
-    </style>
-  </template>
 }
 
 /**
@@ -220,115 +186,116 @@ export class Workflow extends CardDef {
     return (this.states ?? []).find((s) => s.key === key);
   }
 
-  static isolated = class Isolated extends Component<typeof this> {
+  static embedded = class Embedded extends Component<typeof this> {
+    get v() {
+      return wfView(this.args.model);
+    }
     <template>
-      <article class='wf-page'>
-        <header>
-          <h1><@fields.title /></h1>
-          {{#if @model.appliesTo}}
-            <p class='wf-applies'>for {{@model.appliesTo}} records</p>
-          {{/if}}
+      <article class='emb'>
+        <header class='eh'>
+          <span class='mark' aria-hidden='true'>Wf</span>
+          <div class='t'>
+            <h3 class='name'>{{this.v.name}}</h3>
+            <p class='meta'>{{this.v.subline}}</p>
+          </div>
         </header>
-        <section>
-          <h2>States (in order)</h2>
-          <div class='wf-states'><@fields.states /></div>
-        </section>
-        <section>
-          <h2>Allowed transitions</h2>
-          {{#if @model.transitions.length}}
-            <ul class='wf-transitions'>
-              {{#each @model.transitions as |t|}}
-                <li><Token
-                    class='wf-transition'
-                    @value={{t.title}}
-                    style={{tokenStyle
-                      '--boxel-font-size-sm'
-                      'var(--muted-foreground)'
-                    }}
-                  /></li>
-              {{/each}}
-            </ul>
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @title='No transitions defined'
-              @message='Every move will be refused until some are.'
-              @texture={{false}}
-            />
-          {{/if}}
-        </section>
+        {{#if this.v.statesCount}}<p class='fact'>{{this.v.flowHead}}{{#if
+              this.v.flowLast
+            }}
+              →
+              <b>{{this.v.flowLast}}</b>{{else}}<b
+              >{{this.v.flowOnly}}</b>{{/if}}</p>{{/if}}
+        <dl class='kv'>
+          {{#each this.v.embFacts as |f|}}
+            <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+              >{{f.value}}</dd></div>
+          {{/each}}
+        </dl>
       </article>
       <style scoped>
-        .wf-page {
+        .emb {
           container-type: inline-size;
-          padding: var(--boxel-sp-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-        }
-        h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-lg);
-        }
-        .wf-applies {
-          margin: var(--boxel-sp-4xs) 0 0;
-          color: var(--muted-foreground);
-          font-size: var(--boxel-font-size-sm);
-        }
-        h2 {
-          margin: 0 0 var(--boxel-sp-xs);
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
           font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
+          line-height: 1.4;
+        }
+        .eh {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+        }
+        .t {
+          display: grid;
+          flex: 1;
+          min-width: 0;
+        }
+        .name {
+          margin: 0;
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .name,
+        .meta {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .meta,
+        .fact {
+          margin: 0;
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
+        }
+        .fact {
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        .fact b {
+          font-weight: 700;
+        }
+        .kv {
+          margin: 0;
+          padding: 0 var(--boxel-sp-xs);
+        }
+        .kv-r {
+          display: grid;
+          grid-template-columns: 6.25rem minmax(0, 1fr);
+          column-gap: var(--boxel-sp-xs);
+          align-items: center;
+          min-block-size: 1.75rem;
+          border-top: 1px solid var(--border);
+        }
+        .kv-r dd {
+          margin: 0;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .wf-states {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-xs);
-        }
-        .wf-states :deep(.containsMany-field) {
-          display: contents;
-        }
-        .wf-transitions {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-        }
-        /* a long guarded transition wraps instead of overflowing the list */
-        .wf-transitions .wf-transition {
-          margin-inline: 0;
-          white-space: normal;
-          overflow-wrap: anywhere;
-        }
-      </style>
-    </template>
-  };
-
-  static embedded = class Embedded extends Component<typeof this> {
-    <template>
-      <div class='wf-embedded'>
-        <span class='wf-name'>{{@model.title}}</span>
-        <span class='wf-meta'>{{@model.states.length}}
-          states ·
-          {{@model.transitions.length}}
-          transitions</span>
-      </div>
-      <style scoped>
-        .wf-embedded {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-        }
-        .wf-name {
-          font-weight: 600;
-        }
-        .wf-meta {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          flex: none;
+          inline-size: 1.375rem;
+          block-size: 1.375rem;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          color: var(--card-foreground);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 700;
         }
       </style>
     </template>
@@ -336,92 +303,454 @@ export class Workflow extends CardDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='wf-atom'>{{@model.title}}</span>
+      <span class='atom'>
+        <span class='mark' aria-hidden='true'>Wf</span>
+        <span class='name'>{{if @model.name @model.name 'Workflow'}}</span>
+      </span>
       <style scoped>
-        .wf-atom {
+        .atom {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-4xs);
+          min-width: 0;
+          max-width: 100%;
+          vertical-align: middle;
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-2xs);
+          font-weight: 600;
+          color: var(--card-foreground);
+        }
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          flex: none;
+          inline-size: 1.125rem;
+          block-size: 1.125rem;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 700;
+        }
+        .name {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      </style>
+    </template>
+  };
+
+  static isolated = class Isolated extends Component<typeof this> {
+    get v() {
+      return wfView(this.args.model);
+    }
+    get pausesHint() {
+      return `${this.v.pausedCount} pauses the clock`;
+    }
+    get guardedHint() {
+      return `${this.v.guardedCount} guarded`;
+    }
+    edit = () => {
+      this.args.editCard?.(this.args.model as Workflow);
+    };
+    <template>
+      <article class='iso'>
+        <header class='ih'>
+          <span class='mark' aria-hidden='true'>Wf</span>
+          <div class='t'>
+            <h1 class='name'>{{this.v.name}}</h1>
+            <p class='meta'>{{this.v.subline}}</p>
+          </div>
+          <span class='sts'>
+            {{#if this.v.version}}<Chip
+                @label={{this.v.version}}
+                @tone='neutral'
+                @appearance='plain'
+              />{{/if}}
+            <Chip
+              @label={{this.v.statesLabel}}
+              @tone='neutral'
+              @appearance='plain'
+            />
+          </span>
+          {{#if @editCard}}
+            <Button
+              @tone='neutral'
+              @appearance='outlined'
+              @size='s'
+              @icon={{PencilIcon}}
+              {{on 'click' this.edit}}
+            >Edit</Button>
+          {{/if}}
+        </header>
+        <div class='stats'>
+          <Stat
+            @label='States'
+            @tone='neutral'
+            @value={{this.v.statesCount}}
+            @hint={{this.pausesHint}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Transitions'
+            @tone='primary'
+            @value={{this.v.transitionsCount}}
+            @hint={{this.guardedHint}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Version'
+            @tone='neutral'
+            @value={{if this.v.version this.v.version '—'}}
+            @hint={{if @model.appliesTo @model.appliesTo '—'}}
+            @roll={{false}}
+          />
+        </div>
+        <div class='cols'>
+          <div class='main'>
+            <section>
+              <h2>States</h2>
+              {{#each this.v.stateRows as |s|}}
+                <div class='row'>
+                  <span class='row-id'>
+                    <span class='row-name'>{{s.label}}</span>
+                    <span class='meta'>{{s.detail}}</span>
+                  </span>
+                  <Chip
+                    @label={{s.kind}}
+                    @tone={{s.tone}}
+                    @appearance='plain'
+                  />
+                </div>
+              {{else}}
+                <p class='row meta'>No states yet</p>
+              {{/each}}
+            </section>
+            <section>
+              <h2>Transitions</h2>
+              {{#each this.v.transitionRows as |t|}}
+                <div class='row'>
+                  <span class='row-name'>{{t.route}}</span>
+                  <Chip
+                    @label={{t.guard}}
+                    @tone={{t.tone}}
+                    @appearance='plain'
+                  />
+                </div>
+              {{else}}
+                <p class='row meta'>No transitions yet</p>
+              {{/each}}
+            </section>
+          </div>
+          <aside class='side'>
+            <section>
+              <h2>Details</h2>
+              <dl class='kv'>
+                {{#each this.v.facts as |f|}}
+                  <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+                    >{{f.value}}</dd></div>
+                {{/each}}
+              </dl>
+            </section>
+          </aside>
+        </div>
+      </article>
+      <style scoped>
+        .iso {
+          container-type: inline-size;
+          min-block-size: 100%;
+          box-sizing: border-box;
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
           font-size: var(--boxel-font-size-xs);
+          line-height: 1.4;
+          --text-stat: 1.375rem;
+        }
+        .ih {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
+          border-bottom: 1px solid var(--border);
+        }
+        .ih > .mark {
+          inline-size: 1.75rem;
+          block-size: 1.75rem;
+        }
+        .t {
+          display: grid;
+          flex: 1 1 12rem;
+          min-width: 0;
+        }
+        .name {
+          margin: 0;
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .meta {
+          margin: 0;
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
+        }
+        .sts {
+          display: inline-flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
+          font-weight: 600;
+        }
+        .stats {
+          display: grid;
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(0, 1fr);
+          border-bottom: 1px solid var(--border);
+        }
+        .stats > * {
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+        }
+        .stats > * + * {
+          border-inline-start: 1px solid var(--border);
+        }
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        }
+        .main,
+        .side {
+          min-width: 0;
+        }
+        .side {
+          border-inline-start: 1px solid var(--border);
+        }
+        section + section {
+          border-top: 1px solid var(--border);
+        }
+        h2 {
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--boxel-sp-xs);
+          min-block-size: 1.75rem;
+          margin: 0;
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        .row-id {
+          display: grid;
+          min-width: 0;
+        }
+        .row-name {
+          font-weight: 700;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .kv {
+          margin: 0;
+        }
+        .kv-r {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          column-gap: var(--boxel-sp-xs);
+          align-items: center;
+          min-block-size: 1.75rem;
+          padding-inline: var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        .kv-r dd {
+          margin: 0;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          flex: none;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 700;
+        }
+        @container (max-width: 40rem) {
+          .stats {
+            grid-auto-flow: row;
+          }
+          .stats > * + * {
+            border-inline-start: 0;
+            border-top: 1px solid var(--border);
+          }
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .side {
+            border-inline-start: 0;
+            border-top: 1px solid var(--border);
+          }
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get firstStateColor() {
-      let first = (this.args.model.states ?? [])[0];
-      let c = workflowKindColor(first?.kind);
-      return `--wf-accent: ${c.ring};`;
+    get v() {
+      return wfView(this.args.model);
     }
     <template>
-      <div class='wf-fitted' style={{this.firstStateColor}}>
-        <RouteIcon class='wf-icon' aria-hidden='true' />
-        <div class='wf-fitted-body'>
-          <span class='wf-fitted-title'>{{@model.title}}</span>
-          <span class='wf-fitted-meta'>{{@model.states.length}}
-            states ·
-            {{@model.transitions.length}}
-            transitions</span>
-          <div class='wf-fitted-states'><@fields.states /></div>
-        </div>
-      </div>
+      <FitTile>
+        <:avatar>
+          {{! the record's type mark, not a person: a square, not an Avatar }}
+          <span class='mark' aria-hidden='true'>Wf</span>
+        </:avatar>
+        <:title><span
+            class='ell'
+            role='heading'
+            aria-level='3'
+          >{{this.v.name}}</span></:title>
+        <:subtitle>{{this.v.subline}}</:subtitle>
+        <:status>{{#if this.v.version}}<Chip
+              @label={{this.v.version}}
+              @tone='neutral'
+              @appearance='plain'
+            />{{else}}<Chip
+              @label={{this.v.statesLabel}}
+              @tone='neutral'
+              @appearance='plain'
+            />{{/if}}</:status>
+        <:fact>
+          {{! rows ranked by priority; container queries drop whole rows }}
+          <dl class='fr'>
+            {{#each this.v.facts as |f|}}
+              <div class='fr-r'><dt class='cap'>{{f.key}}</dt><dd
+                >{{f.value}}</dd></div>
+            {{/each}}
+          </dl>
+        </:fact>
+      </FitTile>
       <style scoped>
-        .wf-fitted {
-          --wf-accent: var(--primary-ink);
-          height: 100%;
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .wf-icon {
-          flex: none;
-          width: 1.25rem;
-          height: 1.25rem;
-          color: var(--wf-accent);
-        }
-        .wf-fitted-body {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          min-width: 0;
-        }
-        .wf-fitted-title {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
+        .ell {
+          display: block;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .wf-fitted-meta {
-          font-size: var(--boxel-font-size-xs);
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          inline-size: 1.375rem;
+          block-size: 1.375rem;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          color: var(--card-foreground);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 700;
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1.2;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          white-space: normal;
           color: var(--muted-foreground);
         }
-        .wf-fitted-states {
+        .fr {
+          display: grid;
+          margin: 0;
+          font-size: var(--boxel-font-size-xs);
+          color: var(--card-foreground);
+        }
+        .fr-r {
+          display: grid;
+          grid-template-columns: 5rem minmax(0, 1fr);
+          column-gap: var(--boxel-sp-2xs);
+          align-items: center;
+          block-size: 1.75rem;
+          border-top: 1px solid var(--border);
+          overflow: hidden;
+        }
+        .fr-r dd {
+          margin: 0;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .fr-r:nth-child(n + 13) {
           display: none;
         }
-        @container fitted-card (height > 170px) {
-          .wf-fitted-states {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-5xs);
-            margin-top: var(--boxel-sp-4xs);
+        @container fitted-card (width < 250px) {
+          .fr-r {
+            grid-template-columns: minmax(0, 1fr);
           }
-          .wf-fitted-states :deep(.containsMany-field) {
-            display: contents;
+          .fr-r dt {
+            display: none;
           }
         }
-        @container fitted-card (height <= 80px) {
-          .wf-fitted {
-            align-items: center;
+        @container fitted-card (width >= 400px) {
+          .fr-r {
+            grid-template-columns: 6.75rem minmax(0, 1fr);
           }
-          .wf-fitted-meta {
+        }
+        @container fitted-card (height < 445px) and (width < 400px) {
+          .fr-r:nth-child(n + 7) {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 445px) and (width >= 400px) {
+          .fr-r:nth-child(n + 8) {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 275px) {
+          .fr-r:nth-child(n + 6) {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 250px) and (width < 400px) {
+          .fr-r:nth-child(n + 3) {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 250px) and (width >= 400px) {
+          .fr-r:nth-child(n + 4) {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 170px) and (width < 400px) {
+          .fr {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 170px) and (width >= 400px) {
+          .fr-r:nth-child(n + 2) {
             display: none;
           }
         }
       </style>
     </template>
   };
-  static edit = WorkflowEdit;
 }
 
 export default Workflow;

@@ -18,12 +18,17 @@
       },
       "subscriptions.0": {
         "links": {
-          "self": "../Subscription/acme-workspace-pro"
+          "self": "../Subscription/workspace-pro-annual"
         }
       },
       "subscriptions.1": {
         "links": {
           "self": "../Subscription/acme-data-addon"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

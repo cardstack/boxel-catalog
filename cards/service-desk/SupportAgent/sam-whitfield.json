@@ -20,6 +20,13 @@
         "module": "../support-agent",
         "name": "SupportAgent"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

@@ -1,70 +1,34 @@
 import GlimmerComponent from '@glimmer/component';
 import { cached } from '@glimmer/tracking';
 import { Stat } from '@cardstack/pretui/components/stat';
-import type Owner from '@ember/owner';
-import {
-  identifyCard,
-  realmURL,
-  type getCards,
-} from '@cardstack/runtime-common';
-import type { Account } from '@cardstack/catalog/cards/crm/account';
-import {
-  Invoice,
-  invoiceAmounts,
-} from '@cardstack/catalog/cards/commerce/invoice';
-import { Subscription } from '@cardstack/catalog/cards/commerce/subscription';
+import type { Account } from '../account';
+import { Invoice, invoiceAmounts } from '../../commerce/invoice';
+import { Subscription } from '../../commerce/subscription';
 
 const OPEN_STATUSES = ['sent', 'viewed', 'partial'];
 
 interface AccountMetricsSignature {
   Args: {
     account: Account | undefined;
-    context?: any;
+    invoices?: readonly Invoice[];
+    subscriptions?: readonly Subscription[];
   };
   Element: HTMLElement;
 }
 
 export class AccountMetrics extends GlimmerComponent<AccountMetricsSignature> {
-  private invoiceList: ReturnType<getCards> | undefined;
-  private subscriptionList: ReturnType<getCards> | undefined;
-
-  constructor(owner: Owner, args: AccountMetricsSignature['Args']) {
-    super(owner, args);
-    // The account is matched in the query: a search result's links load only
-    // after it renders.
-    let byAccount = (type: typeof Invoice | typeof Subscription) => () => {
-      let ref = identifyCard(type);
-      let id = this.args.account?.id;
-      return ref && id
-        ? { filter: { on: ref, eq: { 'account.id': id } } }
-        : undefined;
-    };
-    this.invoiceList = this.args.context?.getCards(
-      this,
-      byAccount(Invoice),
-      () => this.realms,
-      { isLive: true },
-    );
-    this.subscriptionList = this.args.context?.getCards(
-      this,
-      byAccount(Subscription),
-      () => this.realms,
-      { isLive: true },
-    );
-  }
-
-  private get realms(): string[] | undefined {
-    let url = (this.args.account as any)?.[realmURL];
-    return url ? [url.href] : undefined;
-  }
-
+  // The caller already holds every invoice and subscription: filter them here
+  // instead of opening two live searches per selected account (a search created
+  // during render re-set its realms after they were read and crashed the tab).
   private get invoices(): Invoice[] {
-    return ((this.invoiceList?.instances ?? []) as Invoice[]).filter(Boolean);
+    let id = this.args.account?.id;
+    return (this.args.invoices ?? []).filter((i) => id && i.account?.id === id);
   }
 
   private get subscriptions(): Subscription[] {
-    return ((this.subscriptionList?.instances ?? []) as Subscription[]).filter(
-      Boolean,
+    let id = this.args.account?.id;
+    return (this.args.subscriptions ?? []).filter(
+      (s) => id && s.account?.id === id,
     );
   }
 
@@ -160,16 +124,15 @@ export class AccountMetrics extends GlimmerComponent<AccountMetricsSignature> {
     <style scoped>
       .metrics {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-        gap: var(--boxel-sp-sm);
+        grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
         width: 100%;
+        border-block: 1px solid var(--border);
       }
       .metric {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp-sm) var(--boxel-sp);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         background: var(--card);
         color: var(--card-foreground);
+        box-shadow: -1px 0 0 var(--border);
       }
     </style>
   </template>

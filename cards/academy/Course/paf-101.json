@@ -66,6 +66,11 @@
         "links": {
           "self": "../Module/m3-experimentation"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -8,7 +8,7 @@
       "status": "sent",
       "lineItems": [
         {
-          "description": "Enterprise plan — annual",
+          "description": "Enterprise plan \u2014 annual",
           "quantity": 1,
           "unitPrice": {
             "amount": 58000,
@@ -20,7 +20,7 @@
       ],
       "taxBreakdown": {
         "taxableAmount": 58000,
-        "taxAmount": 4205.0,
+        "taxAmount": 4205,
         "rateApplied": 7.25
       },
       "cardInfo": {
@@ -58,7 +58,12 @@
       },
       "quote": {
         "links": {
-          "self": "../Quote/acme-enterprise-renewal-q2"
+          "self": "../Quote/acme-enterprise-renewal-v2"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },
@@ -66,7 +71,8 @@
       "adoptsFrom": {
         "module": "../invoice",
         "name": "Invoice"
-      }
+      },
+      "_touched": 1793798666603
     }
   }
 }

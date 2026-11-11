@@ -24,12 +24,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
-        }
-      },
-      "cardInfo.cardThumbnail": {
-        "links": {
-          "self": null
+          "self": "../../Theme/site-tools"
         }
       }
     },

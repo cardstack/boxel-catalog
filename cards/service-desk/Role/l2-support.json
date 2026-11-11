@@ -8,7 +8,10 @@
         "resolve-case"
       ],
       "cardInfo": {
-        "name": "L2 Support"
+        "name": "L2 Support",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
       }
     },
     "meta": {
@@ -28,9 +31,29 @@
           "self": "../../hr/Employee/leo-park"
         }
       },
+      "members.2": {
+        "links": {
+          "self": "../../hr/Employee/124fd97a-4f35-4af9-a68f-74ee6a2020a0"
+        }
+      },
+      "members.3": {
+        "links": {
+          "self": "../../hr/Employee/37b7de71-f79b-4a10-beba-0657aa47ee2b"
+        }
+      },
+      "members.4": {
+        "links": {
+          "self": "../../hr/Employee/mara-lindqvist"
+        }
+      },
       "onDuty": {
         "links": {
           "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     }

@@ -22,6 +22,11 @@
         "links": {
           "self": "../Clause/payment-terms-net-30"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

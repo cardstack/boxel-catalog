@@ -12,13 +12,13 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import enumField from '@cardstack/base/enum';
 import SignatureIcon from '@cardstack/boxel-icons/signature';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Field } from '@cardstack/pretui/components/field';
 
 import { Signatory } from './signatory';
 import { LegalPartyRoleField } from './legal-party-role-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { formatMoney } from '../commerce/line-item-totals';
+import type { Hue } from './compact-card';
 import { Token } from '@cardstack/pretui/components/token';
 import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
@@ -165,7 +165,7 @@ export class SignatureBlockField extends FieldDef {
         .sb-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
           font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
@@ -287,8 +287,8 @@ export class SignatureBlockField extends FieldDef {
         .sb {
           display: flex;
           flex-direction: column;
-          gap: 0.3rem;
-          padding: 0.6rem 0.75rem;
+          gap: var(--boxel-sp-3xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           background-color: var(--card);
@@ -302,9 +302,9 @@ export class SignatureBlockField extends FieldDef {
         .sb-head {
           display: flex;
           align-items: baseline;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
           font-weight: var(--boxel-eyebrow-font-weight);
           line-height: var(--boxel-eyebrow-line-height);
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
@@ -325,8 +325,7 @@ export class SignatureBlockField extends FieldDef {
         }
         .sb-signer {
           font-family: var(--boxel-heading-font-family);
-          margin: 0;
-          font-size: 1.05rem;
+          font-size: var(--boxel-font-size);
           line-height: 1.3;
         }
         .sb-name {
@@ -339,7 +338,7 @@ export class SignatureBlockField extends FieldDef {
           display: flex;
           align-items: center;
           flex-wrap: wrap;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
@@ -373,45 +372,39 @@ SignatureBlockField.edit = class Edit extends Component<
 > {
   <template>
     <div class='sb-edit'>
-      <FieldContainer @label='Party (entity + capacity)' @vertical={{true}}>
+      <Field @label='Party (entity + capacity)'>
         <@fields.party />
-      </FieldContainer>
+      </Field>
       <div class='sb-who'>
-        <FieldContainer
-          @label='Our signatory (authority is checked)'
-          @vertical={{true}}
-        >
+        <Field @label='Our signatory (authority is checked)'>
           <@fields.signatory />
-        </FieldContainer>
+        </Field>
         <div class='sb-ext'>
-          <FieldContainer @label='Counterparty signer' @vertical={{true}}>
+          <Field @label='Counterparty signer'>
             <@fields.signerName />
-          </FieldContainer>
-          <FieldContainer @label='Their title' @vertical={{true}}>
+          </Field>
+          <Field @label='Their title'>
             <@fields.signerTitle />
-          </FieldContainer>
+          </Field>
         </div>
       </div>
       <div class='sb-book'>
-        <FieldContainer @label='Order' @vertical={{true}}>
+        <Field @label='Order'>
           <@fields.signingOrder />
-        </FieldContainer>
-        <FieldContainer @label='Status' @vertical={{true}}>
+        </Field>
+        <Field @label='Status'>
           <@fields.lineStatus />
-        </FieldContainer>
-        <FieldContainer @label='Requested' @vertical={{true}}>
+        </Field>
+        <Field @label='Requested'>
           <@fields.requestedAt />
-        </FieldContainer>
-        <FieldContainer @label='Signed' @vertical={{true}}>
+        </Field>
+        <Field @label='Signed'>
           <@fields.signedAt />
-        </FieldContainer>
+        </Field>
       </div>
-      <FieldContainer
-        @label='Signature reference (envelope id or checksum)'
-        @vertical={{true}}
-      >
+      <Field @label='Signature reference (envelope id or checksum)'>
         <@fields.signatureRef />
-      </FieldContainer>
+      </Field>
       <p class='sb-hint'>Fill either our signatory or the counterparty's name —
         not both. Order, status and dates are normally written by Request
         Signature and the provider; edit only to correct.</p>
@@ -444,8 +437,7 @@ SignatureBlockField.edit = class Edit extends Component<
         align-items: start;
       }
       .sb-hint {
-        margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       @container (max-width: 560px) {

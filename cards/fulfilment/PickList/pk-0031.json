@@ -15,7 +15,9 @@
           "quantity": 4,
           "pickedQuantity": 4,
           "isShort": false,
-          "orderNumbers": ["ORD-2026-0997"]
+          "orderNumbers": [
+            "ORD-2026-0997"
+          ]
         },
         {
           "sku": "PC-100",
@@ -25,7 +27,9 @@
           "quantity": 2,
           "pickedQuantity": 0,
           "isShort": false,
-          "orderNumbers": ["ORD-2026-0998"]
+          "orderNumbers": [
+            "ORD-2026-0998"
+          ]
         },
         {
           "sku": "CT-330",
@@ -35,7 +39,9 @@
           "quantity": 1,
           "pickedQuantity": 0,
           "isShort": false,
-          "orderNumbers": ["ORD-2026-0997"]
+          "orderNumbers": [
+            "ORD-2026-0997"
+          ]
         }
       ],
       "cardInfo": {
@@ -56,6 +62,11 @@
       "orders.1": {
         "links": {
           "self": "../FulfilmentOrder/ord-0998"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

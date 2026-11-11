@@ -19,7 +19,12 @@
     "relationships": {
       "holder": {
         "links": {
-          "self": "../Contact/priya-shah"
+          "self": "../../crm/Contact/priya-shah"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

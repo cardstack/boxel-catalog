@@ -108,7 +108,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../../Theme/site-tools"
         }
       },
       "approvalChain.steps.0.approver": {

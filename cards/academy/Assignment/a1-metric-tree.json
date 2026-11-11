@@ -24,6 +24,11 @@
         "links": {
           "self": "../Module/m1-foundations"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

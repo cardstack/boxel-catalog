@@ -6,8 +6,8 @@ import {
   linksTo,
   NumberField,
 } from '@cardstack/base/card-api';
-import { TaxJurisdiction } from '@cardstack/catalog/cards/commerce/tax-jurisdiction';
-import { Money } from '@cardstack/catalog/cards/crm/money';
+import { TaxJurisdiction } from './tax-jurisdiction';
+import { Money } from '../crm/money';
 
 // Tax Breakdown — a compound field capturing the taxable amount, the tax
 // amount, and the rate ACTUALLY APPLIED at calculation time.
@@ -37,7 +37,7 @@ export class TaxBreakdownField extends FieldDef {
       {{/if}}
       <style scoped>
         .tax-breakdown {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>

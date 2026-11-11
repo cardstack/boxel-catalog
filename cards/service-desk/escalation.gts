@@ -11,29 +11,23 @@ import DateTimeField from '@cardstack/base/datetime';
 import TextAreaField from '@cardstack/base/text-area';
 import enumField from '@cardstack/base/enum';
 import TrendingUpIcon from '@cardstack/boxel-icons/trending-up';
-
-import { eq } from '@cardstack/boxel-ui/helpers';
-
-import {
-  EscalationLevelField,
-  levelColor,
-  levelHue,
-} from '@cardstack/catalog/fields/escalation-level/escalation-level-field';
+import { EscalationLevelField } from '@cardstack/catalog/fields/escalation-level/escalation-level-field';
 import {
   stateColor,
-  stateColorOf,
   type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { relativeStamp } from '@cardstack/catalog/fields/created-at/created-at';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { tracked } from '@glimmer/tracking';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { FitTile } from '../shared/fit-tile';
 import {
   KeyValue,
   type KeyValueItem,
 } from '@cardstack/pretui/components/key-value';
+import { Panel } from '@cardstack/pretui/components/panel';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { FitRows, TypeMark, lowercase } from './components/fit-rows';
+import { eq } from '@cardstack/boxel-ui/helpers';
 
 export const ESCALATION_REASONS = [
   'sla-risk',
@@ -81,143 +75,6 @@ export function escalationStatusHue(status?: string | null): Hue {
   return ESCALATION_STATUS_HUES[status ?? 'open'] ?? 'slate';
 }
 
-/** "2h ago by Dana", leaving out whichever half is missing. */
-function stampBy(stamp?: string, name?: string | null): string {
-  return [stamp, name ? `by ${name}` : ''].filter(Boolean).join(' ');
-}
-
-class EscalationEdit extends Component<typeof Escalation> {
-  @tracked activeSection = 'ladder';
-
-  sections = [
-    { id: 'ladder', label: 'Ladder' },
-    { id: 'facts', label: 'Facts' },
-    { id: 'lifecycle', label: 'Lifecycle' },
-  ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.esc-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
-
-  <template>
-    <div class='esc-edit'>
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "ladder") "focused"}}'
-            data-sect='ladder'
-          >
-            <h3>Ladder
-              <span class='sect-hint'>levels are set when the escalation is
-                raised</span></h3>
-            <FieldContainer @label='From level' @vertical={{true}}>
-              <@fields.fromLevel />
-            </FieldContainer>
-            <FieldContainer @label='To level' @vertical={{true}}>
-              <@fields.toLevel />
-            </FieldContainer>
-          </section>
-          <section
-            class='sect {{if (eq this.activeSection "facts") "focused"}}'
-            data-sect='facts'
-          >
-            <h3>Facts</h3>
-            <FieldContainer @label='Reason' @vertical={{true}}>
-              <@fields.reason />
-            </FieldContainer>
-            <FieldContainer @label='Note' @vertical={{true}}>
-              <@fields.note />
-            </FieldContainer>
-            <FieldContainer @label='Raised by' @vertical={{true}}>
-              <@fields.raisedByName />
-            </FieldContainer>
-          </section>
-          <section
-            class='sect {{if (eq this.activeSection "lifecycle") "focused"}}'
-            data-sect='lifecycle'
-          >
-            <h3>Lifecycle
-              <span class='sect-hint'>acknowledge from My Desk; cancel via the
-                Cancel action so the reason is recorded</span></h3>
-            <FieldContainer @label='Status' @vertical={{true}}>
-              <@fields.status />
-            </FieldContainer>
-            <FieldContainer @label='Acknowledged by' @vertical={{true}}>
-              <@fields.acknowledgedByName />
-            </FieldContainer>
-            <FieldContainer @label='Cancelled reason' @vertical={{true}}>
-              <@fields.cancelledReason />
-            </FieldContainer>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .esc-edit {
-        container-type: inline-size;
-        padding: var(--boxel-sp);
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 10rem 1fr;
-        gap: var(--boxel-sp);
-        align-items: start;
-      }
-      @container (width < 34rem) {
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-      }
-      .sects {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-sm);
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--card);
-        color: var(--card-foreground);
-        padding: var(--boxel-sp);
-        scroll-margin-top: var(--boxel-sp);
-      }
-      .sect.focused {
-        border-color: var(--ring);
-      }
-      .sect h3 {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-5xs);
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: 0;
-        font-weight: 400;
-        font-style: italic;
-      }
-    </style>
-  </template>
-}
-
 /**
  * One rung-climb on the ladder, as a RECORD — "escalated twice last quarter"
  * must be a query, not an anecdote.
@@ -230,6 +87,241 @@ class EscalationEdit extends Component<typeof Escalation> {
  *
  * `subject` is `linksTo(CardDef)` — the ladder works for any record type.
  */
+const STATUS_TONES: Record<string, PretuiToneArg> = {
+  open: 'warning',
+  acknowledged: 'success',
+  resolved: 'success',
+  cancelled: 'neutral',
+};
+const MINUTE_MS = 60_000;
+const SEVERITY_TONES: Record<string, PretuiToneArg> = {
+  low: 'neutral',
+  medium: 'neutral',
+  high: 'warning',
+  critical: 'danger',
+};
+
+function sentence(value?: string | null) {
+  return value ? value[0]!.toUpperCase() + value.slice(1) : '';
+}
+/** "sla-risk" -> "SLA risk" (the one acronym this enum carries). */
+function reasonLabel(value?: string | null) {
+  if (!value) return '';
+  return sentence(value.replace(/-/g, ' ')).replace(/^Sla /, 'SLA ');
+}
+/** "sla-risk" -> "Sla-Risk", the tag chip's wording. */
+function reasonTag(value?: string | null) {
+  return (value ?? '')
+    .split('-')
+    .map((w) => sentence(w))
+    .join('-');
+}
+const STAMP = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
+function stamp(value?: Date | null) {
+  return value ? STAMP.format(new Date(value)) : undefined;
+}
+function short(value?: Date | null) {
+  return value
+    ? new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(new Date(value))
+    : '';
+}
+// Values set in the mono face: timestamps.
+const MONO_KEYS = new Set(['Raised', 'Acknowledged']);
+const isMono = (key: string) => MONO_KEYS.has(key);
+function clock(value?: Date | null) {
+  return value
+    ? new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(new Date(value))
+    : '';
+}
+
+/** The strings every SupportEscalation format shows, read once from the model. */
+function escView(m: Partial<Escalation> | undefined) {
+  let from = m?.fromLevel?.key ?? '?';
+  let to = m?.toLevel?.key ?? '?';
+  let caseId = (m?.subject as any)?.caseId?.value ?? m?.subjectTitle;
+  let status = m?.status ?? 'open';
+  let target = m?.toLevel?.ackTargetMinutes;
+  let ackMin =
+    m?.raisedAt && m?.acknowledgedAt
+      ? Math.max(
+          0,
+          Math.round(
+            (new Date(m.acknowledgedAt).getTime() -
+              new Date(m.raisedAt).getTime()) /
+              MINUTE_MS,
+          ),
+        )
+      : undefined;
+  let raisedBy = m?.raisedByName;
+  let fact: string | undefined;
+  if (status === 'cancelled') {
+    fact = `Cancelled${m?.cancelledReason ? `: ${m.cancelledReason}` : ''}`;
+  } else if (m?.acknowledgedAt) {
+    fact = [
+      `Acked${m.acknowledgedByName ? ` by ${m.acknowledgedByName}` : ''}${
+        ackMin !== undefined ? ` in ${ackMin} min` : ''
+      }`,
+      target ? `target ${target} min` : undefined,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  } else {
+    fact = [
+      m?.ackOverdue === 'yes' ? 'Ack overdue' : 'Awaiting ack',
+      target ? `target ${target} min` : undefined,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  }
+  let facts: KeyValueItem[] = [
+    { key: 'From', value: from },
+    {
+      key: 'To',
+      value: [to, m?.toLevel?.targetRoleName].filter(Boolean).join(' · '),
+    },
+    { key: 'Reason', value: reasonLabel(m?.reason) || '—' },
+    { key: 'Raised', value: stamp(m?.raisedAt) ?? '—' },
+    { key: 'Acknowledged', value: stamp(m?.acknowledgedAt) ?? '—' },
+    { key: 'Ack target', value: target ? `${target} min` : '—' },
+  ];
+  let progress =
+    ackMin !== undefined && target
+      ? {
+          label: 'Ack time',
+          value: Math.min(100, Math.round((ackMin / target) * 100)),
+          valueText: `${ackMin} of ${target} min`,
+        }
+      : undefined;
+  let subj = m?.subject as any;
+  let subjSeverity = sentence(subj?.severity);
+  return {
+    subject: subj
+      ? {
+          title: m?.subjectTitle,
+          severity: subjSeverity,
+          tone: SEVERITY_TONES[subj?.severity ?? 'low'] ?? 'neutral',
+        }
+      : undefined,
+    title: `Escalation ${from}→${to}${caseId ? ` · ${caseId}` : ''}`,
+    subline: [
+      reasonLabel(m?.reason),
+      raisedBy ? `raised by ${raisedBy}` : undefined,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    statusLabel: sentence(status),
+    statusTone: STATUS_TONES[status] ?? 'neutral',
+    levelLabel: `${from} → ${to}`,
+    shortTitle: `Escalation ${from}→${to}`,
+    // fitted keeps the facts the mockup keeps at each height: status before the
+    // ack time, the note last
+    fitFacts: [
+      facts[0]!,
+      facts[1]!,
+      facts[2]!,
+      facts[3]!,
+      facts[5]!,
+      { key: 'Status', value: sentence(status) },
+      facts[4]!,
+      ...(m?.note ? [{ key: 'Note', value: m.note }] : []),
+    ] as KeyValueItem[],
+    reasonTag: reasonTag(m?.reason),
+    reasonKey: m?.reason ?? '',
+    reasonTone: (m?.reason === 'breach'
+      ? 'danger'
+      : m?.reason
+        ? 'warning'
+        : 'neutral') as PretuiToneArg,
+    statusKey: status,
+    shortLevel: `${from}→${to}`,
+    hasSubject: Boolean(subj),
+    // fitted rows, highest priority first; a row the tile can't hold drops
+    fitRows: [
+      { key: 'Level', value: `${from} → ${to}` },
+      ...(m?.reason ? [{ key: 'Reason', value: reasonLabel(m.reason) }] : []),
+      ...(ackMin !== undefined
+        ? [
+            {
+              key: 'Ack time',
+              value: [`${ackMin} min`, target ? `target ${target}` : undefined]
+                .filter(Boolean)
+                .join(' · '),
+            },
+          ]
+        : []),
+      ...(subj ? [{ key: 'Subject', value: m?.subjectTitle ?? '' }] : []),
+      ...(m?.raisedAt ? [{ key: 'Raised', value: short(m.raisedAt) }] : []),
+      ...(m?.acknowledgedAt
+        ? [{ key: 'Acknowledged', value: short(m.acknowledgedAt) }]
+        : []),
+      ...(target ? [{ key: 'Ack target', value: `${target} min` }] : []),
+      ...(m?.note ? [{ key: 'Note', value: m.note }] : []),
+    ] as KeyValueItem[],
+    reasonText: reasonLabel(m?.reason) || '—',
+    fact,
+    facts,
+    detailFacts: [
+      ...facts,
+      ...(m?.note ? [{ key: 'Note', value: m.note }] : []),
+      { key: 'Status', value: sentence(status) },
+    ] as KeyValueItem[],
+    note: m?.note,
+    ackText: ackMin !== undefined ? `${ackMin} min` : '—',
+    targetText: target ? `target ${target} min` : undefined,
+    levelRole: m?.toLevel?.targetRoleName,
+    progress,
+    stats: [
+      { key: 'Level', value: `${from} → ${to}` },
+      ...(ackMin !== undefined
+        ? [{ key: 'Ack time', value: `${ackMin} min` }]
+        : []),
+      { key: 'Reason', value: reasonLabel(m?.reason) || '—' },
+    ],
+    history: [
+      m?.raisedAt
+        ? {
+            at: clock(m.raisedAt),
+            title: `Raised ${from} → ${to}`,
+            detail: [raisedBy, reasonLabel(m?.reason)]
+              .filter(Boolean)
+              .join(' · '),
+          }
+        : undefined,
+      m?.acknowledgedAt
+        ? {
+            at: clock(m.acknowledgedAt),
+            title: 'Acknowledged',
+            detail: [
+              m.acknowledgedByName,
+              ackMin !== undefined
+                ? `${ackMin} min${target ? `, ${ackMin <= target ? 'inside' : 'past'} the ${target} min target` : ''}`
+                : undefined,
+            ]
+              .filter(Boolean)
+              .join(' · '),
+          }
+        : undefined,
+    ].filter(Boolean) as { at: string; title: string; detail: string }[],
+  };
+}
+
 export class Escalation extends CardDef {
   static displayName = 'Escalation';
   static icon = TrendingUpIcon;
@@ -280,326 +372,393 @@ export class Escalation extends CardDef {
     },
   });
 
-  static isolated = class Isolated extends Component<typeof this> {
-    get statusHue() {
-      return escalationStatusHue(this.args.model.status);
+  static embedded = class Embedded extends Component<typeof this> {
+    get v() {
+      return escView(this.args.model);
     }
-    get statusColor() {
-      let c = stateColorOf(ESCALATION_STATUS_COLORS, this.args.model.status);
-      return `--esc-fg: ${c.fg}; --esc-bg: ${c.bg};`;
-    }
-    get raisedLabel() {
-      return relativeStamp(this.args.model.raisedAt ?? undefined);
-    }
-    get ackLabel() {
-      return relativeStamp(this.args.model.acknowledgedAt ?? undefined);
-    }
-    // The two rungs render their level field in the KeyValue value block,
-    // so their rows carry no value text of their own.
-    ladder: KeyValueItem[] = [
-      { key: 'From', value: '' },
-      { key: 'To', value: '' },
-    ];
-    get facts(): KeyValueItem[] {
-      let m = this.args.model;
-      let rows: KeyValueItem[] = [
-        { key: 'Reason', value: m.reason ?? '' },
-        { key: 'Raised', value: stampBy(this.raisedLabel, m.raisedByName) },
+    get rows(): KeyValueItem[] {
+      return [
+        ...this.v.facts,
+        ...(this.v.hasSubject ? [{ key: 'Subject', value: '' }] : []),
       ];
-      if (m.acknowledgedAt) {
-        rows.push({
-          key: 'Acknowledged',
-          value: stampBy(this.ackLabel, m.acknowledgedByName),
-        });
-      }
-      if (m.cancelledReason) {
-        rows.push({ key: 'Cancelled', value: m.cancelledReason });
-      }
-      return rows;
     }
     <template>
-      <article class='esc-page' style={{this.statusColor}}>
-        <header class='esc-head'>
-          <h1><@fields.title /></h1>
-          <StatePill @label={{@model.status}} @hue={{this.statusHue}} />
+      <article class='emb'>
+        <header class='emb-head'>
+          <TypeMark @label='Es' />
+          <div class='emb-id'>
+            <h3 class='emb-title'>{{this.v.title}}</h3>
+            <p class='emb-sub'>{{this.v.subline}}</p>
+          </div>
         </header>
-        <p class='esc-subject'>on <@fields.subject @format='atom' /></p>
-        <section class='esc-ladder'>
-          <KeyValue class='esc-kv' @items={{this.ladder}}>
-            <:value as |row|>
-              {{#if (eq row.key 'From')}}
-                <@fields.fromLevel @format='embedded' />
-              {{else}}
-                <@fields.toLevel @format='embedded' />
-                {{#if @model.toLevel.ackTargetMinutes}}
-                  <span class='esc-ack-target'>ack target
-                    {{@model.toLevel.ackTargetMinutes}}m</span>
-                {{/if}}
-              {{/if}}
-            </:value>
-          </KeyValue>
-        </section>
-        <section class='esc-facts'>
-          <KeyValue class='esc-kv' @items={{this.facts}} />
-          {{#unless @model.acknowledgedAt}}
-            {{#if @model.toLevel.ackTargetMinutes}}
-              <div class='esc-await'>Awaiting acknowledgement{{#if
-                  (eq @model.ackOverdue 'yes')
-                }} — OVERDUE{{/if}}</div>
+        {{#if this.v.fact}}<p class='emb-fact'>{{this.v.fact}}</p>{{/if}}
+        <KeyValue
+          class='emb-kv'
+          @items={{this.rows}}
+          @labelStyle='eyebrow'
+          @divided={{true}}
+        >
+          <:value as |item|>
+            {{#if (eq item.key 'Subject')}}
+              <span class='cell'><@fields.subject
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></span>
+            {{else}}
+              <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
             {{/if}}
-          {{/unless}}
-          {{#if @model.note}}<p class='esc-note'>{{@model.note}}</p>{{/if}}
-        </section>
+          </:value>
+        </KeyValue>
       </article>
       <style scoped>
-        .esc-page {
-          container-type: inline-size;
-          padding: var(--boxel-sp-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-        }
-        .esc-head {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          flex-wrap: wrap;
-        }
-        h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-lg);
-        }
-        .esc-subject {
-          margin: 0;
-          color: var(--muted-foreground);
-          font-size: var(--boxel-font-size-sm);
-        }
-        .esc-ladder {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          padding: var(--boxel-sp-sm);
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        /* Pret UI KeyValue at the card's text sizes: keys at the extra-small
-           label size, values at the facts' small size. */
-        .esc-kv {
-          --text-ui: var(--boxel-font-size-xs);
-          --text-ui-md: var(--boxel-font-size-sm);
-          --space-6: var(--boxel-sp);
-        }
-        .esc-kv :deep(dd) {
-          min-width: 0;
-          flex-wrap: wrap;
-          overflow-wrap: anywhere;
-        }
-        .esc-ack-target {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .esc-facts {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-        }
-        .esc-await {
-          color: var(--esc-fg);
-          font-weight: 500;
-        }
-        .esc-note {
-          margin: 0;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border-left: 0.1875rem solid var(--border);
-          color: var(--muted-foreground);
-        }
-      </style>
-    </template>
-  };
-
-  static embedded = class Embedded extends Component<typeof this> {
-    get statusHue() {
-      return escalationStatusHue(this.args.model.status);
-    }
-    get levelHue() {
-      return levelHue(this.args.model.toLevel?.key);
-    }
-    get raisedLabel() {
-      return relativeStamp(this.args.model.raisedAt ?? undefined);
-    }
-    <template>
-      <div class='esc-row'>
-        <StatePill @hue={{this.levelHue}}>
-          <span class='esc-level-key'>{{if
-              @model.toLevel.key
-              @model.toLevel.key
-              '?'
-            }}</span>
-        </StatePill>
-        <span class='esc-body'>
-          <span class='esc-title'>{{@model.title}} · {{@model.reason}}</span>
-          <span class='esc-meta'>{{this.raisedLabel}}
-            by
-            {{@model.raisedByName}}
-            {{#if (eq @model.ackOverdue 'yes')}}<b class='esc-overdue'>ack
-                overdue</b>{{/if}}
-          </span>
-        </span>
-        <StatePill @label={{@model.status}} @hue={{this.statusHue}} />
-      </div>
-      <style scoped>
-        .esc-row {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-          width: 100%;
-        }
-        .esc-level-key {
-          font-family: var(--font-mono);
-          font-weight: 600;
-        }
-        .esc-body {
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-          flex: 1;
-        }
-        .esc-title {
-          font-weight: 500;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .esc-meta {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .esc-overdue {
-          color: var(--destructive-ink);
-          margin-left: var(--boxel-sp-4xs);
+        @layer PretComponent {
+          .emb {
+            display: grid;
+            align-content: start;
+            background: var(--card);
+            color: var(--card-foreground);
+          }
+          .emb-head {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+            border-bottom: 1px solid var(--border);
+          }
+          .emb-id {
+            min-width: 0;
+          }
+          .emb-title {
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .emb-sub,
+          .emb-fact {
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .emb-fact {
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm) 0;
+          }
+          .emb-kv {
+            padding: var(--boxel-sp-4xs) var(--boxel-sp-sm) var(--boxel-sp-xs);
+            font-size: var(--boxel-font-size-sm);
+          }
+          .cell {
+            display: flex;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+          }
+          .mono {
+            font-family: var(--font-mono);
+            font-size: var(--boxel-font-size-xs);
+          }
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
+    get v() {
+      return escView(this.args.model);
+    }
     <template>
-      <span class='esc-atom'>{{@model.title}} · {{@model.status}}</span>
+      <span class='atom'>
+        <TypeMark @label='Es' @size='sm' />
+        <span class='atom-name'>{{this.v.title}}</span>
+      </span>
       <style scoped>
-        .esc-atom {
-          font-size: var(--boxel-font-size-xs);
+        @layer PretComponent {
+          .atom {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            max-width: 100%;
+            min-width: 0;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--card-foreground);
+          }
+          .atom-name {
+            min-width: 0;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      </style>
+    </template>
+  };
+
+  static isolated = class Isolated extends Component<typeof this> {
+    get v() {
+      return escView(this.args.model);
+    }
+    get subjectRows(): KeyValueItem[] {
+      return this.v.hasSubject ? [{ key: 'Subject', value: '' }] : [];
+    }
+    <template>
+      <article class='iso'>
+        <Panel>
+          <div class='iso-head-row'>
+            <TypeMark @label='Es' />
+            <div class='iso-id'>
+              <h1 class='iso-title'>{{this.v.title}}</h1>
+              <p class='iso-sub'>{{this.v.subline}}</p>
+            </div>
+            <span class='iso-state'>
+              <Chip
+                @tone={{this.v.statusTone}}
+                @appearance='plain'
+              >{{this.v.statusKey}}</Chip>
+              <Chip @appearance='plain'>{{this.v.shortLevel}}</Chip>
+              {{#if this.v.reasonKey}}<Chip
+                  @tone={{this.v.reasonTone}}
+                  @appearance='plain'
+                >{{this.v.reasonKey}}</Chip>{{/if}}
+            </span>
+          </div>
+        </Panel>
+        <Panel>
+          <div class='iso-stats'>
+            <Stat
+              @label='Level'
+              @value={{this.v.levelLabel}}
+              @hint={{this.v.levelRole}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Ack time'
+              @tone={{this.v.statusTone}}
+              @value={{this.v.ackText}}
+              @hint={{this.v.targetText}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Reason'
+              @tone={{this.v.reasonTone}}
+              @value={{this.v.reasonText}}
+              @hint={{this.v.note}}
+              @roll={{false}}
+            />
+          </div>
+        </Panel>
+        <div class='iso-grid'>
+          <div class='iso-col'>
+            {{#if this.v.note}}
+              <Panel @title='Note' @variant='inspector'>
+                <p class='iso-text'>{{this.v.note}}</p>
+              </Panel>
+            {{/if}}
+            {{#if this.v.history.length}}
+              <Panel @title='History' @variant='inspector'>
+                <ul class='iso-rows'>
+                  {{#each this.v.history as |h|}}
+                    <li class='iso-row'>
+                      <span class='iso-row-title'>{{h.at}}</span>
+                      <span class='iso-row-meta'>{{h.title}}{{#if h.detail}}
+                          ·
+                          {{h.detail}}{{/if}}</span>
+                    </li>
+                  {{/each}}
+                </ul>
+              </Panel>
+            {{/if}}
+          </div>
+          <div class='iso-col'>
+            {{#if this.v.hasSubject}}
+              <Panel @title='Linked' @variant='inspector'>
+                <KeyValue
+                  @items={{this.subjectRows}}
+                  @labelStyle='eyebrow'
+                  @divided={{true}}
+                >
+                  <:value><span class='cell'><@fields.subject
+                        @format='atom'
+                      /></span></:value>
+                </KeyValue>
+              </Panel>
+            {{/if}}
+            <Panel @title='Details' @variant='inspector'>
+              <KeyValue
+                @items={{this.v.detailFacts}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              >
+                <:value as |item|>
+                  <span
+                    class={{if (isMono item.key) 'mono'}}
+                  >{{item.value}}</span>
+                </:value>
+              </KeyValue>
+            </Panel>
+          </div>
+        </div>
+      </article>
+      <style scoped>
+        @layer PretComponent {
+          .iso {
+            container-type: inline-size;
+            display: grid;
+            align-content: start;
+            gap: var(--boxel-sp-xs);
+            min-height: 100%;
+            padding: var(--boxel-sp-xs);
+            background: var(--muted);
+            color: var(--card-foreground);
+            font-size: var(--boxel-font-size-sm);
+          }
+          .iso-head-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+          }
+          .iso-id {
+            min-width: 0;
+          }
+          .iso-title {
+            margin: 0;
+            font-family: var(--font-sans);
+            font-size: var(--boxel-font-size);
+            font-weight: 700;
+            line-height: 1.3;
+          }
+          .iso-sub {
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .iso-state {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--boxel-sp-sm);
+          }
+          .iso-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+          }
+          .iso-stats > * {
+            padding-inline: var(--boxel-sp-sm);
+          }
+          .iso-stats > * + * {
+            border-inline-start: 1px solid var(--border);
+          }
+          .iso-stats > :first-child {
+            padding-inline-start: 0;
+          }
+          .iso-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+            gap: var(--boxel-sp-xs);
+            align-items: start;
+          }
+          .iso-col {
+            display: grid;
+            gap: var(--boxel-sp-xs);
+            min-width: 0;
+          }
+          .iso-text {
+            margin: 0;
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+            white-space: pre-wrap;
+          }
+          .iso-rows {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+          }
+          .iso-row {
+            display: grid;
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          }
+          .iso-row + .iso-row {
+            border-top: 1px solid var(--border);
+          }
+          .iso-row-title {
+            font-weight: 600;
+          }
+          .iso-row-meta {
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .cell {
+            display: flex;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+          }
+          .mono {
+            font-family: var(--font-mono);
+            font-size: var(--boxel-font-size-xs);
+          }
+          @container (width < 40rem) {
+            .iso-head-row {
+              grid-template-columns: auto minmax(0, 1fr);
+            }
+            .iso-state {
+              grid-column: 1 / -1;
+            }
+            .iso-grid {
+              grid-template-columns: minmax(0, 1fr);
+            }
+          }
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get toColor() {
-      let c = levelColor(this.args.model.toLevel?.key);
-      return `--esc-fg: ${c.fg}; --esc-bg: ${c.bg};`;
+    get v() {
+      return escView(this.args.model);
     }
     <template>
-      <div class='esc-fitted' style={{this.toColor}}>
-        <span class='esc-badge'>{{if
-            @model.toLevel.key
-            @model.toLevel.key
-            '?'
-          }}</span>
-        <div class='esc-fitted-body'>
-          <span class='esc-fitted-title'>{{@model.title}}</span>
-          <span class='esc-fitted-meta'>{{@model.reason}}
-            ·
-            {{@model.status}}</span>
-          <div class='esc-fitted-more'>
-            <span>raised by {{@model.raisedByName}}</span>
-            {{#if @model.toLevel.ackTargetMinutes}}
-              <span>ack target
-                {{@model.toLevel.ackTargetMinutes}}m{{#if
-                  @model.acknowledgedByName
-                }} · ack by {{@model.acknowledgedByName}}{{/if}}</span>
-            {{/if}}
-            {{#if @model.note}}<span
-                class='esc-fitted-note'
-              >{{@model.note}}</span>{{/if}}
-          </div>
-        </div>
-      </div>
+      <FitRows @items={{this.v.fitRows}}>
+        <:tile>
+          <FitTile>
+            <:avatar><TypeMark @label='Es' /></:avatar>
+            <:title><span
+                class='fit-title'
+                role='heading'
+                aria-level='3'
+              >{{this.v.title}}</span></:title>
+            <:subtitle>{{this.v.subline}}</:subtitle>
+            <:status>
+              <Chip @tone={{this.v.statusTone}} @appearance='plain'>{{lowercase
+                  this.v.statusLabel
+                }}</Chip>
+            </:status>
+          </FitTile>
+        </:tile>
+        <:row as |item|>
+          {{#if (eq item.key 'Subject')}}
+            <@fields.subject @format='atom' @displayContainer={{false}} />
+          {{else}}
+            <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
+          {{/if}}
+        </:row>
+      </FitRows>
       <style scoped>
-        .esc-fitted {
-          height: 100%;
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .esc-badge {
-          flex: none;
-          font-family: var(--font-mono);
-          font-weight: 700;
-          font-size: var(--boxel-font-size);
-          padding: 0.25rem 0.5rem;
-          border-radius: var(--boxel-border-radius-sm);
-          background-color: var(--esc-bg);
-          color: var(--esc-fg);
-        }
-        .esc-fitted-body {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          min-width: 0;
-        }
-        .esc-fitted-title {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .esc-fitted-meta {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .esc-fitted-more {
-          display: none;
-        }
-        @container fitted-card (height > 170px) {
-          .esc-fitted-more {
-            display: flex;
-            flex-direction: column;
-            gap: var(--boxel-sp-5xs);
-            margin-top: var(--boxel-sp-4xs);
-            font-size: var(--boxel-font-size-xs);
-            color: var(--muted-foreground);
-          }
-          .esc-fitted-note {
-            font-style: italic;
+        @layer PretComponent {
+          .fit-title {
+            display: block;
             overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
-        }
-        @container fitted-card (height <= 80px) {
-          .esc-fitted {
-            align-items: center;
-          }
-          .esc-fitted-meta {
-            display: none;
+          .mono {
+            font-family: var(--font-mono);
           }
         }
       </style>
     </template>
   };
-  static edit = EscalationEdit;
 }
-
-export default Escalation;

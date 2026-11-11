@@ -2,23 +2,26 @@ import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
+import { fn, uniqueId } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
-import { Input } from '@cardstack/pretui/components/input';
 import { Item } from '@cardstack/pretui/components/item';
-import { List } from '@cardstack/pretui/components/list';
-import { or } from '@cardstack/boxel-ui/helpers';
+import { Input } from '@cardstack/pretui/components/input';
+import { or } from '@cardstack/pretui/helpers';
 import { Contract } from '../../legal/contract';
 import { ContractClause } from '../../legal/contract-clause';
 import { ContractVersion } from '../../legal/contract-version';
+import {
+  SIGNATURE_BLOCK_STATUS_LABELS,
+  SIGNATURE_BLOCK_STATUS_HUE,
+} from '../../legal/signature-block-field';
 import { formatMoney } from '../../commerce/line-item-totals';
-import { StatePill } from '../../../components/state-pill';
-import { ContractWorkspace } from '../../legal/components/contract-workspace';
-import { SignatureBlockView } from '../../legal/components/signature-block-view';
 import RequestSignatureCommand from '../../legal/commands/request-signature-command';
 import VerifySignatureCommand from '../../legal/commands/verify-signature-command';
 import ExecuteContractCommand from '../../legal/commands/execute-contract-command';
 import GenerateDocumentCommand from '../../legal/commands/generate-document-command';
+import { formatDay, hueTone, type Tone } from '../../shared/compact-format';
+import { CeTable, Dot, Note, SubHead, type Col } from '../components';
+
 interface Signature {
   Args: { app: ContractExecutionView };
 }
@@ -125,7 +128,7 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
     if (!contract) return;
     if (!ctx) {
       this.args.app.ceremonyProblem =
-        'No command context in this host — open the app interactively.';
+        "This host can't run signing steps. Open the app in the interactive host and try again.";
       return;
     }
     this.args.app.ceremonyBusy = true;
@@ -135,257 +138,398 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
     try {
       this.args.app.ceremonyNote = await fn(ctx, contract);
     } catch (error: any) {
-      this.args.app.ceremonyProblem = `${label} refused — ${error?.message ?? 'unknown error'}`;
+      this.args.app.ceremonyProblem = `${label} didn't run: ${
+        error?.message ?? 'the host gave no reason'
+      }. Fix that, then try ${label} again.`;
     } finally {
       this.args.app.ceremonyBusy = false;
     }
   }
 
-  contractKey = (c: any): string => c?.id;
+  clauseTone = (u: any): Tone =>
+    !u?.isDeviation
+      ? 'success'
+      : u?.deviationSeverity === 'minor'
+        ? 'warning'
+        : 'danger';
 
-  contractLabel = (c: any): string => c?.cardTitle ?? 'Contract';
+  clauseState = (u: any): string =>
+    u?.isDeviation ? (u?.deviationSeverity ?? 'deviation') : 'on playbook';
 
-  get selectedKeys(): string[] {
-    let id = this.args.app.workspaceLive?.id;
-    return id ? [id] : [];
+  get sortedClauses() {
+    return [...this.workspaceClauses];
   }
 
-  pickContract = (_keys: unknown, rows: any[]) => {
-    if (rows[0]) {
-      this.args.app.openInWorkspace(rows[0]);
-    }
+  get signatories(): any[] {
+    return (this.args.app.signatoryQuery?.instances ?? []).filter(Boolean);
+  }
+
+  authorityOf = (b: any): string => {
+    let c: any = this.args.app.workspaceLive;
+    let name = b?.signerName ?? b?.displayName;
+    let sg = this.signatories.find(
+      (s: any) => s?.person?.cardTitle === name || s?.cardTitle === name,
+    );
+    let cap = sg?.signatureAuthority?.amount;
+    if (typeof cap !== 'number') return '—';
+    let code = sg.signatureAuthority?.currency?.code;
+    let value = c?.value?.amount;
+    let label = formatMoney(cap, code);
+    if (typeof value !== 'number') return label;
+    return cap >= value
+      ? `${label} · covers ${formatMoney(value, c?.value?.currency?.code)}`
+      : `${label} · below ${formatMoney(value, c?.value?.currency?.code)}`;
   };
 
+  blockColumns: Col[] = [
+    {
+      label: 'Order',
+      kind: 'mono',
+      align: 'end',
+      value: (b) => b.signingOrder ?? '—',
+    },
+    {
+      label: 'Signer',
+      value: (b) =>
+        [b.signerName ?? b.displayName, b.signerTitle]
+          .filter(Boolean)
+          .join(', ') || '—',
+    },
+    {
+      label: 'Side',
+      value: (b) => (b.isInternal ? 'Us' : (b.entityName ?? '—')),
+    },
+    { label: 'Authority', value: (b) => this.authorityOf(b) },
+    {
+      label: 'Status',
+      kind: 'dot',
+      value: (b) => {
+        let st = b.lineStatus ?? 'pending';
+        let label = SIGNATURE_BLOCK_STATUS_LABELS[st] ?? st;
+        return st === 'signed' && b.signedAt
+          ? `${label} ${formatDay(b.signedAt)}`
+          : label;
+      },
+      tone: (b) => {
+        let st = b.lineStatus ?? 'pending';
+        return st === 'pending'
+          ? 'warning'
+          : hueTone(SIGNATURE_BLOCK_STATUS_HUE[st]);
+      },
+    },
+  ];
+
+  get sortedBlocks() {
+    return [...this.workspaceBlocks]
+      .filter(Boolean)
+      .sort((a: any, b: any) => (a.signingOrder ?? 0) - (b.signingOrder ?? 0));
+  }
+
+  isCurrent = (c: any): boolean => c?.id === this.args.app.workspaceLive?.id;
+
   <template>
-    {{#if @app.workspaceLive}}
-      {{#let @app.workspaceLive as |c|}}
-        <section class='cx-sec cx-ws' aria-label='Contract workspace'>
-          {{! the switcher stays visible, so the reader always sees the other
-              contracts }}
-          <List
-            class='cx-ws-switch'
-            @label='Switch contract'
-            @size='xs'
-            @items={{@app.contracts}}
-            @key={{this.contractKey}}
-            @selectionMode='single'
-            @selected={{this.selectedKeys}}
-            @onSelectionChange={{this.pickContract}}
-            @rowLabel={{this.contractLabel}}
-          >
-            <:item as |other|>
-              <Item @title={{other.cardTitle}}>
-                <:trailing>
-                  <StatePill
-                    @label={{@app.statusLabelOf other.status}}
-                    @hue={{@app.statusHueOf other.status}}
-                    @dot={{true}}
-                  />
-                </:trailing>
-              </Item>
-            </:item>
-          </List>
-          <div class='cx-ws-head'>
-            <div class='cx-ws-id'>
-              <h2 class='cx-h'>{{c.cardTitle}}</h2>
-              <p class='cx-note'>{{@app.statusLabelOf c.status}}
-                {{#if c.contractNumber}}· {{c.contractNumber}}{{/if}}
+    <div class='ws'>
+      <div class='ws-main'>
+        {{#if @app.workspaceLive}}
+          {{#let @app.workspaceLive as |c|}}
+            <header class='ws-head'>
+              <h2 class='ws-title'>{{c.cardTitle}}</h2>
+              {{#if c.contractNumber}}<span
+                  class='ws-mono'
+                >{{c.contractNumber}}</span>{{/if}}
+              <span class='ws-meta'>{{@app.statusLabelOf c.status}}
                 {{#if c.value.amount}}·
                   {{formatMoney
                     c.value.amount
                     c.value.currency.code
-                  }}{{/if}}</p>
-            </div>
-            <div class='cx-ws-actions'>
-              <Button
-                @tone='primary'
-                @appearance='accent'
-                {{on 'click' (fn @app.openCard c)}}
-              >Open card</Button>
-              <Button
-                @appearance='outlined'
-                {{on 'click' this.clearWorkspace}}
-              >Pick another</Button>
-            </div>
-          </div>
+                  }}{{/if}}</span>
+              <span class='ws-links'>
+                <Button
+                  @tone='neutral'
+                  @appearance='plain'
+                  @size='xs'
+                  {{on 'click' (fn @app.openCard c)}}
+                >Open card</Button>
+                <Button
+                  @tone='neutral'
+                  @appearance='plain'
+                  @size='xs'
+                  {{on 'click' this.clearWorkspace}}
+                >Pick another</Button>
+              </span>
+            </header>
 
-          <ContractWorkspace
-            @contract={{c}}
-            @context={{@app.context}}
-            @onOpen={{@app.openCard}}
-          />
+            <SubHead
+              @label='Clauses, against the playbook'
+              @count={{this.sortedClauses.length}}
+            />
+            {{#if this.sortedClauses.length}}
+              <ul class='ws-clauses'>
+                {{#each this.sortedClauses as |u|}}
+                  <li>
+                    <Item @description={{u.cardDescription}}>
+                      <:title>
+                        <Button
+                          @tone='neutral'
+                          @appearance='plain'
+                          @size='xs'
+                          {{on 'click' (fn @app.openCard u)}}
+                        >{{u.cardTitle}}</Button>
+                      </:title>
+                      <:trailing>
+                        <Dot
+                          @tone={{this.clauseTone u}}
+                          @label={{this.clauseState u}}
+                        />
+                      </:trailing>
+                    </Item>
+                  </li>
+                {{/each}}
+              </ul>
+            {{else}}
+              <p class='ws-empty'>{{if
+                  this.workspaceDataLoading
+                  'Loading clauses…'
+                  'No clauses recorded on this contract.'
+                }}</p>
+            {{/if}}
 
-          <SignatureBlockView
-            @blocks={{this.workspaceBlocks}}
-            @contractValue={{c.value.amount}}
-            @contractCurrency={{c.value.currency.code}}
-            @contractType={{c.contractType}}
-          />
-
-          <div class='cx-ceremony-bar'>
-            <label class='cx-provider'>
-              <span>Provider</span>
-              <Input
-                @value={{@app.signatureProvider}}
-                @onInput={{this.setProviderValue}}
+            <SubHead
+              @label='Signature blocks'
+              @sub='Signing order, with each signer’s authority checked against the contract value'
+            />
+            {{#if this.sortedBlocks.length}}
+              <CeTable
+                @label='Signature blocks'
+                @columns={{this.blockColumns}}
+                @rows={{this.sortedBlocks}}
               />
-            </label>
-            <Button
-              @tone='primary'
-              @appearance='accent'
-              @disabled={{@app.ceremonyBusy}}
-              title='approved → out for signature; sends the next line in signing order after re-checking authority'
-              {{on 'click' this.requestSignature}}
-            >Request signature</Button>
-            <Button
-              @appearance='outlined'
-              @disabled={{@app.ceremonyBusy}}
-              title='Re-derive every authority and order check from current data; writes nothing'
-              {{on 'click' this.verifySignatures}}
-            >Verify signatures</Button>
-            <Button
-              @tone='success'
-              @appearance='accent'
-              @disabled={{or @app.ceremonyBusy this.workspaceDataLoading}}
-              title='out for signature → signed; refuses unless every line is signed and verification is clean; snapshots a version'
-              {{on 'click' this.executeContract}}
-            >Execute contract</Button>
-            <Button
-              @appearance='outlined'
-              @disabled={{or @app.ceremonyBusy this.workspaceDataLoading}}
-              title='Assemble the full agreement markdown into fullText'
-              {{on 'click' this.generateDocument}}
-            >Generate document</Button>
-          </div>
-          {{#if @app.ceremonyProblem}}
-            <p
-              class='cx-submit-msg is-err'
-              role='alert'
-            >{{@app.ceremonyProblem}}</p>
-          {{else if @app.ceremonyNote}}
-            <p
-              class='cx-submit-msg is-ok'
-              role='status'
-            >{{@app.ceremonyNote}}</p>
-          {{/if}}
-          {{#if @app.ceremonyFindings.length}}
-            <ul class='cx-findings'>
-              {{#each @app.ceremonyFindings as |f|}}<li>{{f}}</li>{{/each}}
-            </ul>
-          {{/if}}
+            {{else}}
+              <p class='ws-empty'>No signature blocks yet.</p>
+            {{/if}}
+
+            <div class='ws-provider'>
+              {{#let (uniqueId) as |providerId|}}
+                <label class='ws-cap' for={{providerId}}>Provider</label>
+                <Input
+                  id={{providerId}}
+                  @value={{@app.signatureProvider}}
+                  @onInput={{this.setProviderValue}}
+                />
+              {{/let}}
+            </div>
+            {{#let
+              (uniqueId) (uniqueId) (uniqueId) (uniqueId)
+              as |requestHint verifyHint executeHint generateHint|
+            }}
+              <div class='ws-ceremony'>
+                <Button
+                  @size='xs'
+                  @tone='primary'
+                  @appearance='accent'
+                  @disabled={{@app.ceremonyBusy}}
+                  aria-describedby={{requestHint}}
+                  {{on 'click' this.requestSignature}}
+                >Request signature</Button>
+                <Button
+                  @size='xs'
+                  @appearance='outlined'
+                  @disabled={{@app.ceremonyBusy}}
+                  aria-describedby={{verifyHint}}
+                  {{on 'click' this.verifySignatures}}
+                >Verify signatures</Button>
+                <Button
+                  @size='xs'
+                  @appearance='outlined'
+                  @disabled={{or @app.ceremonyBusy this.workspaceDataLoading}}
+                  aria-describedby={{executeHint}}
+                  {{on 'click' this.executeContract}}
+                >Execute contract</Button>
+                <Button
+                  @size='xs'
+                  @appearance='outlined'
+                  @disabled={{or @app.ceremonyBusy this.workspaceDataLoading}}
+                  aria-describedby={{generateHint}}
+                  {{on 'click' this.generateDocument}}
+                >Generate document</Button>
+              </div>
+              <ul class='ws-hints'>
+                <li id={{requestHint}}><strong>Request signature</strong>
+                  moves an approved contract out for signature and sends the
+                  next line in signing order, after re-checking authority.</li>
+                <li id={{verifyHint}}><strong>Verify signatures</strong>
+                  re-checks every authority and signing-order rule against
+                  current data. It changes nothing.</li>
+                <li id={{executeHint}}><strong>Execute contract</strong>
+                  marks the contract signed and saves a version. It runs only
+                  when every line is signed and verification is clean.</li>
+                <li id={{generateHint}}><strong>Generate document</strong>
+                  assembles the full agreement text.</li>
+              </ul>
+            {{/let}}
+            {{#if @app.ceremonyProblem}}
+              <Note
+                @tone='danger'
+                @lead='Refused.'
+                @text={{@app.ceremonyProblem}}
+              />
+            {{else if @app.ceremonyNote}}
+              <Note
+                @tone={{if @app.ceremonyFindings.length 'warning' 'success'}}
+                @lead={{@app.ceremonyNote}}
+              />
+            {{/if}}
+            {{#each @app.ceremonyFindings as |f|}}
+              <p class='ws-finding'>{{f}}</p>
+            {{/each}}
+          {{/let}}
+        {{else}}
+          <header class='ws-head'>
+            <h2 class='ws-title'>Pick a contract</h2>
+          </header>
+          <p class='ws-empty'>Pick a contract on the right to review it clause
+            by clause and run its signature ceremony. Legal Home and the
+            Repository also land here.</p>
+        {{/if}}
+      </div>
+
+      {{#let (uniqueId) as |switchHeadId|}}
+        <section class='ws-side' aria-labelledby={{switchHeadId}}>
+          <h2 class='ws-title ws-side-head' id={{switchHeadId}}>Switch contract</h2>
+          <ul class='ws-switch'>
+            {{#each @app.contracts as |other|}}
+              <li>
+                <Item aria-current={{if (this.isCurrent other) 'true'}}>
+                  <:title>
+                    <Button
+                      @tone='neutral'
+                      @appearance='plain'
+                      @size='xs'
+                      {{on 'click' (fn @app.openInWorkspace other)}}
+                    >{{other.cardTitle}}</Button>
+                  </:title>
+                  <:trailing>
+                    <Dot
+                      @tone={{@app.statusToneOf other.status}}
+                      @label={{@app.statusLabelOf other.status}}
+                    />
+                  </:trailing>
+                </Item>
+              </li>
+            {{else}}
+              <li class='ws-empty'>No contracts yet.</li>
+            {{/each}}
+          </ul>
         </section>
       {{/let}}
-    {{else}}
-      <section class='cx-sec' aria-label='Pick a contract'>
-        <h2 class='cx-h'>Workspace</h2>
-        <p class='cx-note'>Pick a contract to review it clause by clause and run
-          its signature ceremony. Legal Home and the repository also land here.</p>
-        <List
-          @label='Contracts'
-          @items={{@app.contracts}}
-          @key={{this.contractKey}}
-          @loading={{@app.isLoading}}
-          @onActivate={{@app.openInWorkspace}}
-          @rowLabel={{this.contractLabel}}
-          @emptyTitle='No contracts yet'
-          @emptyMessage='No contracts in this realm yet.'
-        >
-          <:item as |row|>
-            <Item class='cx-pick-row' @title={{row.cardTitle}}>
-              <:trailing>
-                <StatePill
-                  @label={{@app.statusLabelOf row.status}}
-                  @hue={{@app.statusHueOf row.status}}
-                  @dot={{true}}
-                />
-              </:trailing>
-            </Item>
-          </:item>
-        </List>
-      </section>
-    {{/if}}
-
+    </div>
     <style scoped>
-      .cx-sec {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp);
-      }
-      .cx-h {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-2xs);
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
-      }
-
-      .cx-note {
-        margin: 0 0 var(--boxel-sp);
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.55;
-        color: var(--muted-foreground);
-        max-width: var(--_cx-measure);
-      }
-      .cx-submit-msg {
-        margin: 0 0 var(--boxel-sp-xs);
-        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-        border-radius: var(--radius);
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.5;
-        max-width: var(--_cx-measure);
-      }
-      .cx-submit-msg.is-err {
-        background: color-mix(in oklch, var(--destructive) 10%, transparent);
-        border-left: 3px solid var(--destructive);
-      }
-      .cx-submit-msg.is-ok {
-        background: color-mix(in oklch, var(--success) 10%, transparent);
-        border-left: 3px solid var(--success);
-      }
-      .cx-ws {
+      .ws {
         display: grid;
-        gap: var(--boxel-sp);
+        grid-template-columns: minmax(0, 1fr) minmax(16rem, 19rem);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius);
+        overflow: hidden;
       }
-      .cx-ws-switch {
-        max-height: 12rem;
-        overflow-y: auto;
+      .ws-main {
+        min-inline-size: 0;
       }
-      .cx-ws-head {
+      .ws-head {
         display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: var(--boxel-sp);
         flex-wrap: wrap;
+        align-items: baseline;
+        gap: var(--boxel-sp-2xs);
+        padding: var(--boxel-sp-xs);
+        border-bottom: 1px solid var(--border);
       }
-      .cx-ws-id {
-        min-width: 0;
+      .ws-title {
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
       }
-      .cx-ws-actions,
-      .cx-ceremony-bar {
+      .ws-mono {
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+      }
+      .ws-meta {
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+      }
+      .ws-links {
         display: flex;
-        align-items: center;
         gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
+        margin-inline-start: auto;
       }
-      .cx-ceremony-bar {
-        padding-top: var(--boxel-sp-xs);
+      .ws-clauses,
+      .ws-switch {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .ws-clauses li,
+      .ws-switch li {
+        border-bottom: 1px solid var(--border);
+      }
+      .ws-switch [aria-current='true'] {
+        background: var(--muted);
+      }
+      .ws-cap {
+        font-family: var(--font-mono);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .ws-provider {
+        display: grid;
+        gap: var(--boxel-sp-4xs);
+        padding: var(--boxel-sp-xs);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+      }
+      .ws-ceremony {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+        gap: var(--boxel-sp-2xs);
+        padding: var(--boxel-sp-xs);
+        border-bottom: 1px solid var(--border);
+      }
+      .ws-hints {
+        display: grid;
+        gap: var(--boxel-sp-4xs);
+        margin: 0;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-xs)
+          var(--boxel-sp-lg);
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+      }
+      .ws-finding {
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
       }
-      .cx-provider {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--boxel-sp-2xs);
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-        margin-right: auto;
+      .ws-side {
+        border-inline-start: 1px solid var(--border);
       }
-      .cx-findings {
+      .ws-side-head {
+        padding: var(--boxel-sp-xs);
+        border-bottom: 1px solid var(--border);
+      }
+      .ws-empty {
         margin: 0;
-        padding-left: 1.2rem;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.5;
-        color: var(--foreground);
+        padding: var(--boxel-sp-xs);
+        color: var(--muted-foreground);
+      }
+      @container cx-app (width < 52rem) {
+        .ws {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .ws-side {
+          border-inline-start: 0;
+          border-top: 1px solid var(--border);
+        }
       }
     </style>
   </template>

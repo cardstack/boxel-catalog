@@ -12,16 +12,13 @@ import MarkdownField from '@cardstack/base/markdown';
 import NumberField from '@cardstack/base/number';
 import enumField from '@cardstack/base/enum';
 import BookIcon from '@cardstack/boxel-icons/book';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
-import { on } from '@ember/modifier';
+import type Owner from '@ember/owner';
 import { tracked } from '@glimmer/tracking';
+import { on } from '@ember/modifier';
 
-import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Alert } from '@cardstack/pretui/components/alert';
 
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 import PublishCourseCommand from './commands/publish-course-command';
 
 import {
@@ -29,17 +26,24 @@ import {
   statusHue,
   type StatusOption,
 } from '@cardstack/catalog/fields/status/status';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { CreditHoursField, formatCreditHours } from './credit-hours-field';
-import {
-  CompletionRuleField,
-  describeCompletionRule,
-} from './completion-rule-field';
+import { CompletionRuleField } from './completion-rule-field';
 import { LatePolicyField, shortLatePolicy } from './late-policy-field';
-import { GradeScaleField, scaleSummary } from './grade-scale-field';
+import { GradeScaleField, sortedBands } from './grade-scale-field';
 import { Module, minutesLabel } from './course-module';
 import { Employee } from '../hr/employee';
-import { CourseOutline } from './components/course-outline';
+import {
+  AtomChip,
+  Dot,
+  Embed,
+  Kv,
+  Mark,
+  Section,
+  Sheet,
+  Stat,
+} from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
+import { DeskRow, KvList, cardsLinkedTo } from './components/desk-status';
 
 export const COURSE_STATUSES: StatusOption[] = [
   {
@@ -92,6 +96,105 @@ export const CourseLevelField = markDefinition(
   }),
 );
 
+function hueOf(m: any) {
+  return statusHue(CourseStatusField, m?.status);
+}
+
+function metaLine(m: any): string {
+  return [
+    m?.code,
+    m?.levelLabel,
+    m?.creditHours ? formatCreditHours(m.creditHours) : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function factLine(m: any): string {
+  return `${m?.moduleCount ?? 0} modules · ${m?.lessonCount ?? 0} lessons · ${minutesLabel(m?.totalMinutes)}`;
+}
+
+function courseItems(m: any) {
+  return [
+    { key: 'Code', value: m?.code },
+    { key: 'Level', value: m?.levelLabel },
+    {
+      key: 'Credit',
+      value: formatCreditHours(m?.creditHours, { short: true }),
+    },
+    { key: 'Modules', value: String(m?.moduleCount ?? 0) },
+    { key: 'Lessons', value: String(m?.lessonCount ?? 0) },
+    { key: 'Owner', value: m?.ownerName },
+    { key: 'Late penalty', value: shortLatePolicy(m?.latePolicy) },
+  ];
+}
+
+function moduleMeta(mod: any): string {
+  return [
+    `${mod?.lessonCount ?? 0} lessons`,
+    minutesLabel(mod?.totalMinutes),
+    mod?.summary,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function pctText(n?: number | null) {
+  return n != null ? `${n}%` : '';
+}
+
+function ruleItems(r: any) {
+  return [
+    { key: 'Min attendance', value: pctText(r?.minAttendancePct) },
+    {
+      key: 'Assignments',
+      value: r?.requireAllRequiredAssignments ? 'all required' : '',
+    },
+    {
+      key: 'Quizzes passed',
+      value: r?.minQuizPassCount ? `at least ${r.minQuizPassCount}` : '',
+    },
+    { key: 'Minimum grade', value: r?.minGradeLetter },
+  ];
+}
+
+function lateItems(p: any) {
+  return [
+    {
+      key: 'Penalty',
+      value:
+        p?.penaltyPctPerDay != null ? `${p.penaltyPctPerDay}% per day` : '',
+    },
+    { key: 'Cap', value: pctText(p?.capPct) },
+    {
+      key: 'Grace',
+      value: p?.graceHours != null ? `${p.graceHours} hours` : '',
+    },
+    {
+      key: 'Hard close',
+      value:
+        p?.hardCloseDays != null ? `${p.hardCloseDays} days after due` : '',
+    },
+  ];
+}
+
+function bandsLine(scale: any): string {
+  return sortedBands(scale)
+    .map((b: any) => `${b.letter} ≥ ${b.minPct ?? 0}%`)
+    .join('  ');
+}
+
+// Cohort imports Course, so the search names it by module, not class.
+const COHORT_REF = {
+  // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
+  module: new URL('./cohort', import.meta.url).href,
+  name: 'Cohort',
+};
+
+function cohortHue(status?: string | null) {
+  return status === 'running' || status === 'closed' ? 'green' : undefined;
+}
+
 /**
  * The reusable curriculum: what is taught, in what order, and what "done"
  * means. A Course is run many times; each run is a Cohort. Everything a run
@@ -99,30 +202,61 @@ export const CourseLevelField = markDefinition(
  * once. Publish Course is the single writer of `status`.
  */
 class CourseIsolated extends Component<typeof Course> {
-  get hue() {
-    return statusHue(CourseStatusField, this.args.model?.status);
+  private cohortsQ: ReturnType<typeof cardsLinkedTo>;
+
+  constructor(owner: Owner, args: any) {
+    super(owner, args);
+    this.cohortsQ = cardsLinkedTo(
+      this,
+      this.args.context,
+      this.args.model,
+      COHORT_REF,
+      'course.id',
+    );
+  }
+
+  get cohorts(): any[] {
+    return ((this.cohortsQ?.instances ?? []) as any[]).filter(Boolean);
+  }
+  get cohortHint() {
+    let by = (s: string) => this.cohorts.filter((c) => c.status === s).length;
+    return `${by('running')} running, ${by('planned')} planned`;
   }
   get statusLabel() {
     return courseStatusLabel(this.args.model?.status);
   }
-  get ruleLines() {
-    return describeCompletionRule(this.args.model?.completionRule);
+  get moduleLabel() {
+    let n = this.args.model?.moduleCount ?? 0;
+    return `${n} module${n === 1 ? '' : 's'}`;
   }
-  get facts() {
+  get stats(): {
+    label: string;
+    value?: string | null;
+    hint?: string | null;
+  }[] {
     let m = this.args.model;
-    let items = [
+    return [
       {
-        key: 'Credit',
-        value: formatCreditHours(m?.creditHours, { short: true }),
+        label: 'Modules',
+        value: String(m?.moduleCount ?? 0),
+        hint: `${m?.lessonCount ?? 0} lessons`,
       },
-      { key: 'Modules', value: String(m?.moduleCount ?? 0) },
-      { key: 'Lessons', value: String(m?.lessonCount ?? 0) },
-      { key: 'Time', value: minutesLabel(m?.totalMinutes) },
+      {
+        label: 'Material',
+        value: minutesLabel(m?.totalMinutes),
+        hint: 'total time',
+      },
+      {
+        label: 'Credit',
+        value: formatCreditHours(m?.creditHours, { short: true }),
+        hint: m?.levelLabel,
+      },
+      {
+        label: 'Cohorts',
+        value: String(this.cohorts.length),
+        hint: this.cohortHint,
+      },
     ];
-    if (m?.ownerName) {
-      items.push({ key: 'Owner', value: m.ownerName });
-    }
-    return items;
   }
   @tracked busy = false;
   @tracked error: string | undefined;
@@ -151,170 +285,84 @@ class CourseIsolated extends Component<typeof Course> {
     }
   };
   <template>
-    <article class='course'>
-      {{#if this.canPublish}}
-        <div class='actions'>
+    <Sheet @mark='Co' @title={{@model.cardTitle}} @meta={{metaLine @model}}>
+      <:status>
+        <Dot @hue={{hueOf @model}}>{{this.statusLabel}}</Dot>
+        <Dot>{{this.moduleLabel}}</Dot>
+      </:status>
+      <:actions>
+        {{#if this.canPublish}}
           <Button
+            type='button'
+            @size='xs'
             @tone='primary'
             @appearance='accent'
             @busy={{this.busy}}
-            @busyLabel='Publishing'
             @disabled={{this.busy}}
             {{on 'click' this.publish}}
           >Publish course</Button>
-          <span class='act-hint'>Checks modules, lessons and the completion rule
-            before opening the course to cohorts.</span>
-        </div>
-      {{/if}}
-      {{#if this.error}}
-        <Alert @tone='danger' @title='Not published'>{{this.error}}</Alert>
-      {{/if}}
-      {{#if this.notice}}
-        <Alert @tone='success'>{{this.notice}}</Alert>
-      {{/if}}
-      <header class='hero'>
-        <div class='hero-text'>
-          <span class='eyebrow'>
-            {{#if @model.code}}<span class='code'>{{@model.code}}</span>{{/if}}
-            {{#if @model.levelLabel}}<span>{{@model.levelLabel}}</span>{{/if}}
-            <StatePill
-              @label={{this.statusLabel}}
-              @hue={{this.hue}}
-              @dot={{true}}
-            />
-          </span>
-          <h1>{{@model.cardTitle}}</h1>
-          {{#if @model.summary}}<div class='summary'><@fields.summary
-              /></div>{{/if}}
-        </div>
-        <KeyValue class='facts' @items={{this.facts}} />
-      </header>
+        {{/if}}
+      </:actions>
+      <:stats>{{#each this.stats as |st|}}<Stat
+            @label={{st.label}}
+            @value={{st.value}}
+            @sub={{st.hint}}
+          />{{/each}}</:stats>
+      <:main>
+        {{#if this.error}}
+          <Alert @tone='danger' @title='Not published'>{{this.error}}</Alert>
+        {{/if}}
+        {{#if this.notice}}<Alert @tone='success'>{{this.notice}}</Alert>{{/if}}
 
-      <section class='outline'>
-        <h2>Outline</h2>
-        <CourseOutline @modules={{@model.modules}} />
-      </section>
-
-      <section class='rules'>
-        <div class='rule-card'>
-          <h2>Completion</h2>
-          {{#if this.ruleLines.length}}
-            <ul>{{#each this.ruleLines as |line|}}<li
-                >{{line}}</li>{{/each}}</ul>
+        {{#if @model.summary}}
+          <Section @title='Summary'><div class='summary'><@fields.summary
+              /></div></Section>
+        {{/if}}
+        <Section @title='Outline'>
+          {{#each @model.modules as |mod|}}
+            <DeskRow @title={{mod.cardTitle}} @meta={{moduleMeta mod}}>
+              <Dot @hue='blue'>{{mod.releaseLabel}}</Dot>
+            </DeskRow>
           {{else}}
-            <EmptyState
-              @size='s'
-              @title='No completion rule'
-              @message='Every enrolment completes when its cohort closes.'
-            />
-          {{/if}}
-        </div>
-        <div class='rule-card'>
-          <h2>Late work</h2>
-          <p>{{shortLatePolicy @model.latePolicy}}</p>
-        </div>
-        <div class='rule-card'>
-          <h2>Grade scale</h2>
-          <p>{{scaleSummary @model.gradeScale}}</p>
-        </div>
-      </section>
-    </article>
+            <DeskRow @title='No modules yet' @meta='Add modules to publish.' />
+          {{/each}}
+        </Section>
+        <Section @title='Completion rule'><KvList
+            @items={{ruleItems @model.completionRule}}
+          /></Section>
+        <Section @title='Late policy'><KvList
+            @items={{lateItems @model.latePolicy}}
+          /></Section>
+        <Section @title='Grade scale'><p class='bands'>{{bandsLine
+              @model.gradeScale
+            }}</p></Section>
+      </:main>
+      <:side>
+        <Section @title='Linked'>
+          <Kv @label='Owner'>{{#if @model.owner}}<@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+          {{#each this.cohorts as |c|}}
+            <Kv @label='Cohort'><AtomChip @mark='Ch' @title={{c.cardTitle}}><Dot
+                  @hue={{cohortHue c.status}}
+                >{{c.status}}</Dot></AtomChip></Kv>
+          {{/each}}
+        </Section>
+        <Section @title='Details'>
+          <KvList @items={{courseItems @model}} /></Section>
+      </:side></Sheet>
     <style scoped>
-      .course {
-        max-width: 60rem;
-        margin: 0 auto;
-        container-type: inline-size;
-        padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
-        display: grid;
-        gap: var(--boxel-sp-xl);
-        color: var(--foreground);
-        background: var(--background);
-      }
-      .hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: var(--boxel-sp-lg);
-        align-items: start;
-      }
-      .eyebrow {
-        display: inline-flex;
-        gap: var(--boxel-sp-xs);
-        align-items: center;
+      .summary,
+      .bands {
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs) var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-xs);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--muted-foreground);
       }
-      .code {
+      .bands {
+        padding-block-start: var(--boxel-sp-xs);
+        border-top: 1px solid var(--border);
         font-family: var(--font-mono);
-        font-weight: 700;
-        color: var(--primary-ink);
-      }
-      h1 {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-2xl);
-        font-weight: 700;
-        line-height: 1.1;
-        letter-spacing: -0.015em;
-      }
-      .summary {
-        margin-top: var(--boxel-sp-sm);
-        max-width: 40rem;
-        color: var(--muted-foreground);
-        line-height: 1.55;
-      }
-      .facts {
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-      }
-      h2 {
-        margin: 0 0 var(--boxel-sp-xs);
-        font-size: var(--boxel-font-size-sm);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--muted-foreground);
-      }
-      .actions {
-        display: flex;
-        gap: var(--boxel-sp-sm);
-        align-items: center;
-        flex-wrap: wrap;
-        padding: var(--boxel-sp-sm) var(--boxel-sp);
-        border: 1px solid var(--border);
-        border-left: 0.25rem solid var(--primary);
-        border-radius: var(--radius);
-        background: var(--card);
-      }
-      .act-hint {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .rules {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-        gap: var(--boxel-sp-sm);
-      }
-      .rule-card {
-        padding: var(--boxel-sp);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-      }
-      .rule-card ul {
-        margin: 0;
-        padding-left: var(--boxel-sp);
-        font-size: var(--boxel-font-size-sm);
-      }
-      .rule-card p {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-      }
-      @container (width <= 43.75rem) {
-        .hero {
-          grid-template-columns: 1fr;
-        }
+        white-space: pre-wrap;
       }
     </style>
   </template>
@@ -378,196 +426,48 @@ export class Course extends CardDef {
   static isolated = CourseIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get hue() {
-      return statusHue(CourseStatusField, this.args.model?.status);
-    }
     <template>
-      <div class='row'>
-        <span class='code'>{{if @model.code @model.code 'C'}}</span>
-        <div class='text'>
-          <span class='title'>{{@model.cardTitle}}</span>
-          <span class='sub'>{{@model.moduleCount}}
-            modules ·
-            {{@model.lessonCount}}
-            lessons ·
-            {{formatCreditHours @model.creditHours short=true}}</span>
-        </div>
-        <StatePill
-          @label={{courseStatusLabel @model.status}}
-          @hue={{this.hue}}
-        />
-      </div>
-      <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: auto 1fr auto;
-          gap: var(--boxel-sp-xs);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        }
-        .code {
-          min-width: 2.25rem;
-          height: 2.25rem;
-          padding: 0 var(--boxel-sp-4xs);
-          display: grid;
-          place-items: center;
-          border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          font-family: var(--font-mono);
-        }
-        .text {
-          display: grid;
-          min-width: 0;
-        }
-        .title {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        @container (width < 18rem) {
-          .row {
-            grid-template-columns: minmax(0, 1fr) auto;
-          }
-          .code {
-            display: none;
-          }
-        }
-      </style>
+      <Embed @mark='Co' @title={{@model.cardTitle}} @meta={{metaLine @model}}>
+        <:status><Dot @hue={{hueOf @model}}>{{courseStatusLabel
+              @model.status
+            }}</Dot></:status>
+        <:fact>{{factLine @model}}</:fact>
+        <:default>
+          <KvList @items={{courseItems @model}} />
+          {{#if @model.owner}}
+            <Kv @label='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></Kv>
+          {{/if}}
+        </:default>
+      </Embed>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom'>{{#if @model.code}}<span
-            class='code'
-          >{{@model.code}}</span>
-        {{/if}}{{@model.cardTitle}}</span>
-      <style scoped>
-        .atom {
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-        .code {
-          font-family: var(--font-mono);
-          color: var(--primary-ink);
-          font-weight: 700;
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'summary', label: 'Summary' },
-      { id: 'rules', label: 'Rules' },
-      { id: 'curriculum', label: 'Curriculum' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Course sections'
-        as |e|
-      >
-        <e.Section @id='identity' @title='Identity' @cols={{2}}>
-          <FieldContainer @label='Title' @vertical={{true}}><@fields.title
-            /></FieldContainer>
-          <FieldContainer @label='Code' @vertical={{true}}><@fields.code
-            /></FieldContainer>
-          <FieldContainer @label='Level' @vertical={{true}}><@fields.level
-            /></FieldContainer>
-          <FieldContainer @label='Status' @vertical={{true}}>
-            <@fields.status @format='atom' />
-            <p class='status-note'>Publish Course sets the status.</p>
-          </FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='summary'
-          @title='Summary'
-          @hint='what a learner reads first'
-          @cols={{1}}
-        >
-          <FieldContainer @label='Summary' @vertical={{true}}><@fields.summary
-            /></FieldContainer>
-          <FieldContainer
-            @label='Credit hours'
-            @vertical={{true}}
-          ><@fields.creditHours /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='rules'
-          @title='Rules'
-          @hint='inherited by every cohort'
-          @cols={{1}}
-        >
-          <FieldContainer
-            @label='Completion rule'
-            @vertical={{true}}
-          ><@fields.completionRule /></FieldContainer>
-          <FieldContainer
-            @label='Late policy'
-            @vertical={{true}}
-          ><@fields.latePolicy /></FieldContainer>
-          <FieldContainer
-            @label='Grade scale'
-            @vertical={{true}}
-          ><@fields.gradeScale /></FieldContainer>
-        </e.Section>
-        <e.Section @id='curriculum' @title='Curriculum' @cols={{1}}>
-          <FieldContainer
-            @label='Modules (in order)'
-            @vertical={{true}}
-          ><@fields.modules /></FieldContainer>
-          <FieldContainer @label='Owner' @vertical={{true}}><@fields.owner
-            /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-      <style scoped>
-        .status-note {
-          margin-top: var(--boxel-sp-4xs);
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-      </style>
+      <AtomChip @mark='Co' @title={{@model.cardTitle}}><Dot
+          @hue={{hueOf @model}}
+        >{{courseStatusLabel @model.status}}</Dot></AtomChip>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get hue() {
-      return statusHue(CourseStatusField, this.args.model?.status);
-    }
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>{{#if @model.code}}<span class='code'>{{@model.code}}</span>
-            ·
-          {{/if}}{{@model.levelLabel}}</:eyebrow>
+      <FitTile>
+        <:avatar><Mark @text='Co' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>{{@model.moduleCount}}
-          modules ·
-          {{@model.lessonCount}}
-          lessons ·
-          {{minutesLabel @model.totalMinutes}}</:subtitle>
-        <:badgeRight><StatePill
-            @label={{courseStatusLabel @model.status}}
-            @hue={{this.hue}}
-          /></:badgeRight>
-        <:footer>{{formatCreditHours @model.creditHours short=true}}
-          {{#if @model.ownerName}}· {{@model.ownerName}}{{/if}}</:footer>
-      </FittedCard>
-      <style scoped>
-        .code {
-          font-family: var(--font-mono);
-          font-weight: 700;
-          color: var(--primary-ink);
-        }
-      </style>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><Dot @hue={{hueOf @model}}>{{courseStatusLabel
+              @model.status
+            }}</Dot></:status>
+        <:fact>{{factLine @model}}</:fact>
+        <:relations>{{#if @model.owner}}<@fields.owner
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
     </template>
   };
 }

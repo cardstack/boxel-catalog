@@ -11,7 +11,7 @@ import BooleanField from '@cardstack/base/boolean';
 import DateTimeField from '@cardstack/base/datetime';
 import SquareFunctionIcon from '@cardstack/boxel-icons/square-function';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 import { ValidationRuleField } from './validation-rule-field';
 import {
   EvaluationStatusField,
@@ -21,12 +21,11 @@ import { FindingField } from './finding-field';
 import { ProofField } from './proof-field';
 import { AuditMetadataField } from './audit-metadata-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severity-badge';
+import { SeverityBadge } from './components/severity-badge';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { AuditFacts } from './audit-ui';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 /**
  * One rule, one subject, one verdict — the atom an audit is made of.
@@ -143,7 +142,7 @@ export class AuditResult extends CardDef {
             @title='No evidence attached'
             @message='A rule that requires proof reads unproven rather than pass.'
             @texture={{false}}
-            style={{COMPACT_EMPTY_STYLE}}
+            @size='s'
           />
         {{/if}}
 
@@ -173,8 +172,7 @@ export class AuditResult extends CardDef {
           color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
@@ -191,14 +189,14 @@ export class AuditResult extends CardDef {
           flex-wrap: wrap;
           align-items: center;
           gap: var(--boxel-sp-xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
         }
         .meta {
           color: var(--muted-foreground);
         }
         .mono {
           font-family: var(--font-mono);
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
         }
         .trail {
           border-top: 1px solid var(--border);
@@ -246,13 +244,13 @@ export class AuditResult extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .sub {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -270,7 +268,7 @@ export class AuditResult extends CardDef {
       <span class='atom'>{{@model.cardTitle}}</span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
       </style>
@@ -300,7 +298,7 @@ export class AuditResult extends CardDef {
         }
         .fit-name {
           font-weight: 600;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.2;
           overflow: hidden;
           display: -webkit-box;
@@ -309,7 +307,7 @@ export class AuditResult extends CardDef {
         }
         .fit-sub,
         .row {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
@@ -321,7 +319,7 @@ export class AuditResult extends CardDef {
         .tier-tile {
           display: none;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
           margin-top: auto;
           padding-top: var(--boxel-sp-5xs);
           border-top: 1px solid var(--border);

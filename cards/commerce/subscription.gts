@@ -1,3 +1,4 @@
+import { eq } from '@cardstack/boxel-ui/helpers';
 import {
   CardDef,
   Component,
@@ -10,16 +11,16 @@ import DateField from '@cardstack/base/date';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import enumField from '@cardstack/base/enum';
 import RefreshIcon from '@cardstack/boxel-icons/refresh';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import {
-  KeyValue,
-  type KeyValueItem,
-} from '@cardstack/pretui/components/key-value';
-import { Account } from '@cardstack/catalog/cards/crm/account';
-import { Contract } from '@cardstack/catalog/cards/legal/contract';
-import { Money } from '@cardstack/catalog/cards/crm/money';
-import { hasNumber } from '@cardstack/catalog/cards/crm/utils';
-import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { StatusChip } from '@cardstack/pretui/components/status-chip';
+import { FitTile } from '../shared/fit-tile';
+import { Account } from '../crm/account';
+import { Contract } from '../legal/contract';
+import { Money } from '../crm/money';
+import { hasNumber } from '../crm/utils';
+import { orEmpty } from './compact-parts';
 
 const BillingCycleField = enumField(StringField, {
   options: ['monthly', 'yearly'],
@@ -30,17 +31,6 @@ const SubscriptionStatusField = enumField(StringField, {
   options: ['trial', 'active', 'paused', 'canceled'],
   displayName: 'Subscription Status',
 });
-
-const STATUS_HUE: Record<string, Hue> = {
-  trial: 'blue',
-  active: 'green',
-  paused: 'amber',
-  canceled: 'red',
-};
-
-function statusHue(status: string | null | undefined): Hue {
-  return (status && STATUS_HUE[status]) || 'slate';
-}
 
 export class Subscription extends CardDef {
   static displayName = 'Subscription';
@@ -97,425 +87,414 @@ export class Subscription extends CardDef {
     },
   });
 
-  static embedded = class Embedded extends Component<typeof Subscription> {
+  static atom = class Atom extends Component<typeof Subscription> {
     <template>
-      <div class='subscription'>
-        <RefreshIcon class='icon' />
-        <span class='plan'>{{@model.cardTitle}}</span>
-        {{#if @model.status}}
-          <StatePill
-            @label={{@model.status}}
-            @hue={{statusHue @model.status}}
-            @dot={{true}}
-          />
-        {{/if}}
-        <span class='price'><Money
-            @amount={{@model.price.amount}}
-            @code={{@model.price.currency.code}}
-          />
-          /
-          {{@model.billingCycle}}</span>
-      </div>
+      <span class='atom'>
+        <Avatar @name='Subscription' @shape='square' @size={{16}} />
+        <span class='name'>{{@model.cardTitle}}</span>
+      </span>
       <style scoped>
-        .subscription {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
-        }
-        .icon {
-          width: 1.25rem;
-          height: 1.25rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .plan {
+        .atom {
+          font-size: 0.6875rem;
           font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          min-width: 0;
+          max-width: 100%;
+          color: var(--foreground);
         }
-        .price {
-          margin-left: auto;
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
+        .name {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
   };
 
-  static atom = class Atom extends Component<typeof Subscription> {
+  static embedded = class Embedded extends Component<typeof Subscription> {
+    get rows() {
+      return subRows(this.args.model as Subscription);
+    }
     <template>
-      <span class='subscription-atom'>
-        <RefreshIcon class='sa-icon' />
-        <span class='sa-name'>{{@model.cardTitle}}</span>
-      </span>
+      <article class='emb'>
+        <header>
+          <Avatar @name='Subscription' @shape='square' @size={{28}} />
+          <div class='id'>
+            <h3>{{@model.cardTitle}}</h3>
+            <p>{{@model.account.cardTitle}} · {{@model.billingCycle}}</p>
+          </div>
+          {{#if @model.status}}<StatusChip
+              @value={{@model.status}}
+              @appearance='plain'
+            />{{/if}}
+        </header>
+        <KeyValue
+          @items={{this.rows}}
+          @labelStyle='eyebrow'
+          @divided={{true}}
+        />
+        {{#if @model.account}}
+          <div class='linked'>
+            <span class='cap'>Account</span>
+            <@fields.account @format='atom' @displayContainer={{false}} />
+          </div>
+        {{/if}}
+      </article>
       <style scoped>
-        .subscription-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+        .emb {
+          font-size: 0.75rem;
+          line-height: 1.4;
+          --text-stat: 1.375rem;
+          --text-ui-xs: 0.6875rem;
+          --boxel-sp-xs: 0.35rem;
+          --boxel-sp-lg: 0.75rem;
+          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-color: var(--muted-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
           color: var(--foreground);
         }
-        .sa-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
+        header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 0.625rem;
         }
-        .sa-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        .id {
+          flex: 1;
+          min-width: 0;
+        }
+        h3 {
+          margin: 0;
+          font-size: var(--boxel-font-size-sm, 0.8125rem);
+          font-weight: 600;
+        }
+        p {
+          margin: 0;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .linked {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.375rem 0.625rem;
+          border-top: 1px solid var(--border);
+        }
+        .cap {
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+          min-width: 5rem;
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof Subscription> {
-    get hasPrice() {
-      return hasNumber(this.args.model?.price?.amount);
-    }
     <template>
-      <div class='fitted'>
-        <div class='fmt badge'>
-          <RefreshIcon class='doc-icon' />
-          <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.status}}
-            <StatePill
-              class='status'
-              @label={{@model.status}}
-              @hue={{statusHue @model.status}}
-            />
-          {{/if}}
-        </div>
-        <div class='fmt strip'>
-          <RefreshIcon class='doc-icon' />
-          <div class='info'>
-            <span class='name'>{{@model.cardTitle}}</span>
-            {{#if @model.status}}
-              <StatePill
-                class='status'
-                @label={{@model.status}}
-                @hue={{statusHue @model.status}}
-              />
-            {{/if}}
-          </div>
-          <span class='figure'>{{#if this.hasPrice}}<Money
-                @amount={{@model.price.amount}}
-                @code={{@model.price.currency.code}}
-              />{{#if @model.billingCycle}}
-                /
-                {{@model.billingCycle}}{{/if}}{{else}}—{{/if}}</span>
-        </div>
-        <div class='fmt tile'>
-          <div class='row'>
-            <RefreshIcon class='doc-icon' />
-            {{#if @model.status}}
-              <StatePill
-                class='status'
-                @label={{@model.status}}
-                @hue={{statusHue @model.status}}
-              />
-            {{/if}}
-          </div>
-          <span class='name'>{{@model.cardTitle}}</span>
-          <span class='figure figure-lg'>{{#if this.hasPrice}}<Money
-                @amount={{@model.price.amount}}
-                @code={{@model.price.currency.code}}
-              />{{#if @model.billingCycle}}
-                /
-                {{@model.billingCycle}}{{/if}}{{else}}—{{/if}}</span>
-          {{#if @model.startDate}}
-            <span class='meta'>Since <@fields.startDate /></span>
-          {{/if}}
-        </div>
-        <div class='fmt card'>
-          <div class='col'>
-            <div class='row'>
-              <RefreshIcon class='doc-icon' />
-              <span class='name name-lg'>{{@model.cardTitle}}</span>
-              {{#if @model.status}}
-                <StatePill
-                  class='status'
-                  @label={{@model.status}}
-                  @hue={{statusHue @model.status}}
-                />
-              {{/if}}
-            </div>
-            {{#if @model.account.name}}
-              <span class='meta'>{{@model.account.name}}</span>
-            {{/if}}
-            {{#if @model.startDate}}
-              <span class='meta'>Since <@fields.startDate /></span>
-            {{/if}}
-            {{#if @model.renewalDate}}
-              <span class='meta'>Renews <@fields.renewalDate /></span>
-            {{/if}}
-          </div>
-          <span class='figure figure-lg'>{{#if this.hasPrice}}<Money
-                @amount={{@model.price.amount}}
-                @code={{@model.price.currency.code}}
-              />{{#if @model.billingCycle}}
-                /
-                {{@model.billingCycle}}{{/if}}{{else}}—{{/if}}</span>
-        </div>
-      </div>
-      <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          color: var(--foreground);
-        }
-        .fmt {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-        .doc-icon {
-          width: 1.25rem;
-          height: 1.25rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .name {
-          font-weight: 600;
-          font-size: 0.8125rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .name-lg {
-          font-size: 0.9375rem;
-        }
-        .figure {
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          font-size: 0.875rem;
-          white-space: nowrap;
-        }
-        .figure-lg {
-          font-size: 1.125rem;
-        }
-        .meta {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .status {
-          flex-shrink: 0;
-        }
-        .row {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          min-width: 0;
-        }
-        .col,
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-          min-width: 0;
-          flex: 1;
-        }
-        @container fitted-card (max-width: 150px) and (max-height: 169px) {
-          .badge {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.375rem;
-            padding: 0.5rem;
-            text-align: center;
-          }
-        }
-        @container fitted-card (min-width: 151px) and (max-height: 169px) {
-          .strip {
-            display: flex;
-            align-items: center;
-            gap: 0.625rem;
-            padding: 0.625rem 0.75rem;
-          }
-          .strip .info {
-            gap: 0.125rem;
-          }
-          .strip .status {
-            align-self: flex-start;
-          }
-        }
-        @container fitted-card (max-width: 399px) and (min-height: 170px) {
-          .tile {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 0.375rem;
-            padding: 0.875rem;
-          }
-          .tile .row {
-            width: 100%;
-            justify-content: space-between;
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            padding: 1.25rem;
-          }
-        }
-      </style>
+      <FitTile>
+        <:avatar><Avatar
+            @name='Subscription'
+            @shape='square'
+            @size={{32}}
+          /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{@model.account.cardTitle}}
+          ·
+          {{@model.billingCycle}}</:subtitle>
+        <:status>{{#if @model.status}}<StatusChip
+              @value={{@model.status}}
+              @appearance='plain'
+            />{{/if}}</:status>
+        <:fact><Money
+            @amount={{@model.price.amount}}
+            @code={{@model.price.currency.code}}
+          />
+          /
+          {{@model.billingCycle}}</:fact>
+        <:relations>{{#if @model.account}}<@fields.account
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
     </template>
   };
 
   static isolated = class Isolated extends Component<typeof Subscription> {
-    get facts(): KeyValueItem[] {
+    get statuses() {
+      let cur = this.args.model?.status;
+      return ['trial', 'active', 'past_due', 'canceled'].map((label) => ({
+        label,
+        current: label === cur ? 'true' : undefined,
+      }));
+    }
+    get planRows() {
+      let m = this.args.model as Subscription;
+      return [
+        { key: 'Plan', value: m?.planName ?? '—' },
+        {
+          key: 'Price',
+          value:
+            m?.price?.amount != null
+              ? `$${Number(m.price.amount).toLocaleString('en-US')}`
+              : '—',
+        },
+        { key: 'Billing cycle', value: m?.billingCycle ?? '—' },
+        { key: 'Start date', value: fmtDate(m?.startDate) || '—' },
+        { key: 'Renewal date', value: fmtDate(m?.renewalDate) || '—' },
+      ];
+    }
+    get rows() {
+      return subRows(this.args.model as Subscription);
+    }
+    get mrr() {
       let m = this.args.model;
-      let rows: KeyValueItem[] = [];
-      if (m?.startDate) rows.push({ key: 'Started', value: 'startDate' });
-      if (m?.renewalDate) rows.push({ key: 'Renews', value: 'renewalDate' });
-      if (m?.account) rows.push({ key: 'Account', value: 'account' });
-      return rows;
+      let a = m?.price?.amount;
+      return hasNumber(a)
+        ? Math.round(
+            m.billingCycle === 'yearly' ? (a as number) / 12 : (a as number),
+          )
+        : undefined;
     }
     <template>
-      <article class='sub-page'>
-        <header class='doc-head'>
-          <div>
-            <p class='doc-kind'>Subscription</p>
+      <article class='page'>
+        <header>
+          <Avatar @name='Subscription' @shape='square' @size={{32}} />
+          <div class='id'>
             <h1>{{@model.cardTitle}}</h1>
+            <p>{{@model.account.cardTitle}} · {{@model.billingCycle}}</p>
           </div>
-          {{#if @model.status}}
-            <StatePill
-              class='status'
-              @label={{@model.status}}
-              @hue={{statusHue @model.status}}
-              @dot={{true}}
-            />
-          {{/if}}
+          {{#if @model.status}}<StatusChip
+              @value={{@model.status}}
+              @appearance='plain'
+            />{{/if}}
         </header>
-
-        <section class='price-hero'>
-          <Money
-            class='ph-amount'
-            @amount={{@model.price.amount}}
-            @code={{@model.price.currency.code}}
+        <div class='stats'>
+          <Stat
+            @label='Price'
+            @tone='neutral'
+            @value={{orEmpty @model.price.amount}}
+            @style='currency'
+            @maximumFractionDigits={{0}}
+            @currency={{@model.price.currency.code}}
+            @hint={{if
+              (eq @model.billingCycle 'yearly')
+              'per year'
+              'per month'
+            }}
+            @roll={{false}}
           />
-          {{#if @model.billingCycle}}
-            <span class='ph-cycle'>/ {{@model.billingCycle}}</span>
-          {{/if}}
-        </section>
-
-        {{#if this.facts.length}}
-          <section class='facts-panel'>
-            <KeyValue class='facts' @items={{this.facts}}>
-              <:value as |row|>
-                {{#if (eq row.value 'startDate')}}
-                  <@fields.startDate />
-                {{else if (eq row.value 'renewalDate')}}
-                  <@fields.renewalDate />
-                {{else}}
-                  <div class='cust'><@fields.account @format='embedded' /></div>
-                {{/if}}
-              </:value>
-            </KeyValue>
-          </section>
-        {{/if}}
+          <Stat
+            @label='MRR'
+            @tone='neutral'
+            @value={{orEmpty this.mrr}}
+            @style='currency'
+            @maximumFractionDigits={{0}}
+            @currency={{@model.price.currency.code}}
+            @hint='counts toward the dashboard'
+            @roll={{false}}
+          />
+          <Stat
+            @label='Renews'
+            @tone='neutral'
+            @value={{fmtDate @model.renewalDate}}
+            @roll={{false}}
+          />
+        </div>
+        <div class='cols'>
+          <div class='main'>
+            <section>
+              <h2>Status</h2>
+              <div class='steps'>
+                {{#each this.statuses as |st|}}
+                  <span class='step' data-current={{st.current}}><StatusChip
+                      @value={{st.label}}
+                      @appearance='plain'
+                    /></span>
+                {{/each}}
+              </div>
+            </section>
+            <section>
+              <h2>Plan</h2>
+              <KeyValue
+                @items={{this.planRows}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+                class='kv'
+              />
+            </section>
+          </div>
+          <div class='side'>
+            <section>
+              <h2>Linked</h2>
+              <div class='linked'><span class='cap'>Account</span>
+                <@fields.account
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></div>
+              <div class='linked'><span class='cap'>Contract</span>
+                <@fields.contract
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></div>
+            </section>
+            <section>
+              <h2>Details</h2>
+              <KeyValue
+                @items={{this.rows}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              />
+            </section>
+          </div>
+        </div>
       </article>
       <style scoped>
-        /* A linked card sizes to its content. The card container's base
-           height: 100% would otherwise fill a stretched grid panel and spill
-           past the heading above it. */
-        .sub-page :deep(.field-component-card.embedded-format) {
-          height: auto;
+        .stats > * {
+          padding: 0.4375rem 0.625rem;
         }
-        .sub-page {
-          max-width: 40rem;
-          margin: 0 auto;
-          padding: 2rem 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
+        .stats > * + * {
+          border-inline-start: 1px solid var(--border);
         }
-        .doc-head {
-          display: flex;
-          align-items: flex-end;
-          justify-content: space-between;
-          gap: 1rem;
-          border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: 1rem;
+        .kv {
+          padding-inline: 0.625rem;
         }
-        .doc-kind {
-          margin: 0 0 0.125rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        .linked .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        h1 {
-          margin: 0;
-          font-size: 1.75rem;
-          line-height: 1.1;
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 3fr) minmax(16rem, 2fr);
+          align-items: stretch;
         }
-        .status {
-          flex-shrink: 0;
-          margin-bottom: 0.25rem;
+        .main,
+        .side {
+          min-inline-size: 0;
         }
-        .price-hero {
+        .side {
+          border-inline-start: 1px solid var(--border);
+        }
+        .steps {
           display: flex;
-          align-items: baseline;
-          justify-content: center;
-          gap: 0.5rem;
-          padding: 2rem 1.5rem;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          border: 1px solid var(--border);
-          border-radius: 0.75rem;
-          box-shadow: var(--shadow-xs);
-        }
-        .ph-amount {
-          font-size: 2.5rem;
-          font-weight: 700;
-          line-height: 1;
-          font-variant-numeric: tabular-nums;
-          font-family: var(--boxel-heading-font-family);
-        }
-        .ph-cycle {
-          font-size: 1rem;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+          padding: 0.4375rem 0.625rem;
           color: var(--muted-foreground);
         }
-        .facts-panel {
+        .step[data-current] {
+          color: var(--foreground);
+          font-weight: 700;
+        }
+        .kv {
+          padding-inline: 0.625rem;
+        }
+        .page {
+          font-size: 0.75rem;
+          line-height: 1.4;
+          --text-stat: 1.375rem;
+          --text-ui-xs: 0.6875rem;
+          --boxel-sp-xs: 0.35rem;
+          --boxel-sp-lg: 0.75rem;
+          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-color: var(--muted-foreground);
           border: 1px solid var(--border);
-          border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
-          background-color: var(--card);
-          color: var(--card-foreground);
+          border-radius: var(--radius);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          background: var(--card);
+          color: var(--foreground);
         }
-        /* Pret UI KeyValue at the panel's text size and column gap */
-        .facts {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1.25rem;
+        header {
+          display: flex;
+          align-items: center;
+          gap: 0.625rem;
+          padding: 0.75rem;
+          border-bottom: 1px solid var(--border);
         }
-        .cust {
+        .id {
           flex: 1;
           min-width: 0;
         }
-        .cust :deep(.account) {
-          padding: 0;
+        h1 {
+          font-family: var(--font-sans);
+          margin: 0;
+          font-size: 1rem;
+          font-weight: 700;
+        }
+        p {
+          margin: 0;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+          border-bottom: 1px solid var(--border);
+        }
+        section h2 {
+          margin: 0;
+          padding: 0.5rem 0.75rem;
+          font-size: 0.75rem;
+          font-weight: 700;
+          border-bottom: 1px solid var(--border);
+        }
+        .linked {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.375rem 0.75rem;
+          border-bottom: 1px solid var(--border);
+        }
+        .cap {
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+          min-width: 5rem;
         }
       </style>
     </template>
   };
+}
+
+function fmtDate(d?: Date | string | null) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function subRows(s: Subscription) {
+  let rows = [];
+  if (hasNumber(s?.price?.amount))
+    rows.push({
+      key: 'Price',
+      value:
+        `${s.price.currency?.code ?? ''} ${s.price.amount.toLocaleString('en-US')} / ${s.billingCycle ?? ''}`.trim(),
+    });
+  if (s?.billingCycle)
+    rows.push({ key: 'Billing cycle', value: s.billingCycle });
+  if (s?.startDate)
+    rows.push({ key: 'Start date', value: fmtDate(s.startDate) });
+  if (s?.renewalDate)
+    rows.push({ key: 'Renewal', value: fmtDate(s.renewalDate) });
+  if (s?.status) rows.push({ key: 'Status', value: s.status });
+  return rows;
 }

@@ -3,7 +3,6 @@ import { StringField } from '@cardstack/base/card-api';
 import enumField from '@cardstack/base/enum';
 import { statusField } from '@cardstack/catalog/fields/status/status';
 import { priorityField } from '@cardstack/catalog/fields/priority/priority';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
 
 /**
  * Vocabulary for the maintenance cards — every enum their cards,
@@ -14,6 +13,21 @@ import type { Hue } from '@cardstack/catalog/components/state-pill';
  * hues) and the priority is a catalog `priorityField()` — consume, don't
  * rebuild.
  */
+
+/** The status hues the maintenance vocabulary paints with. */
+export type Hue =
+  | 'green'
+  | 'red'
+  | 'amber'
+  | 'attention'
+  | 'orange'
+  | 'teal'
+  | 'purple'
+  | 'blue'
+  | 'pink'
+  | 'slate'
+  | 'gold'
+  | 'bronze';
 
 // ---------------------------------------------------------------- Asset Status
 export const ASSET_STATUS_HUE: Record<string, Hue> = {
@@ -149,7 +163,7 @@ export const WorkOrderStatusField = markDefinition(
       },
       {
         value: 'cancelled',
-        label: 'Cancelled',
+        label: 'Canceled',
         hue: 'slate',
         terminal: true,
         meaning: 'Withdrawn with a reason',

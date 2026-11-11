@@ -5,7 +5,6 @@ import {
   field,
 } from 'https://cardstack.com/base/card-api';
 import NumberField from 'https://cardstack.com/base/number';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import BoxIcon from '@cardstack/boxel-icons/box';
@@ -140,7 +139,7 @@ export class ParcelDimensionsField extends FieldDef {
           align-items: center;
           flex-wrap: wrap;
           gap: var(--boxel-sp-2xs);
-          font-size: 0.85rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
         }
         .pd-size {
@@ -164,83 +163,8 @@ export class ParcelDimensionsField extends FieldDef {
         .pd .pd-billable {
           --pretui-chip-mix: 14%;
           --pretui-ink-mix: 62%;
-          --text-ui-xs: 0.75rem;
+          --pretui-chip-font-size: var(--boxel-font-size-xs);
           font-weight: 600;
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof ParcelDimensionsField> {
-    <template>
-      <fieldset class='pd-edit'>
-        <legend class='pd-legend'>Measured at the packing station</legend>
-        <div class='pd-grid'>
-          <FieldContainer @label='Length (cm)' @vertical={{true}}>
-            <@fields.length />
-          </FieldContainer>
-          <FieldContainer @label='Width (cm)' @vertical={{true}}>
-            <@fields.width />
-          </FieldContainer>
-          <FieldContainer @label='Height (cm)' @vertical={{true}}>
-            <@fields.height />
-          </FieldContainer>
-          <FieldContainer @label='Weight (kg)' @vertical={{true}}>
-            <@fields.weight />
-          </FieldContainer>
-        </div>
-
-        {{#if @model.billableWeight}}
-          <p class='pd-readout'>
-            Billable weight
-            <strong><FormatNumber
-                @value={{@model.billableWeight}}
-                @style='unit'
-                @unit='kilogram'
-              /></strong>
-            {{#if @model.isVolumetric}}
-              — volumetric, from
-              {{@model.volume}}
-              cm³. A smaller box would lower this.
-            {{else}}
-              — actual weight.
-            {{/if}}
-          </p>
-        {{/if}}
-      </fieldset>
-
-      <style scoped>
-        .pd-edit {
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          padding: var(--boxel-sp-sm);
-          margin: 0;
-          background-color: var(--card);
-        }
-        .pd-legend {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-          padding: 0 var(--boxel-sp-2xs);
-        }
-        .pd-grid {
-          display: grid;
-          gap: var(--boxel-sp-xs);
-          grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
-        }
-        .pd-readout {
-          margin: var(--boxel-sp-sm) 0 0;
-          font-size: 0.8rem;
-          color: var(--muted-foreground);
-        }
-        .pd-readout strong {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          color: var(--foreground);
         }
       </style>
     </template>

@@ -4,13 +4,23 @@
     "attributes": {
       "name": "Talent & Resource Tracker",
       "cardInfo": {
-        "name": "Talent & Resource Tracker"
+        "name": "Talent & Resource Tracker",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
       }
     },
     "meta": {
       "adoptsFrom": {
         "module": "../talent-resource-tracker",
         "name": "TalentResourceTracker"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

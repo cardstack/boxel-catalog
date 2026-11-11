@@ -14,7 +14,13 @@
       "liveSessionAt": null,
       "meetingUrl": null
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "../lesson",

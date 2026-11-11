@@ -71,6 +71,17 @@ class ExtractResumeResult extends CardDef {
   @field summary = contains(StringField);
 }
 
+// A `yyyy-MM-dd` string as that day in local time. `new Date('2020-01-15')` is
+// UTC midnight, which DateField saves as the day before west of UTC. Anything
+// else the model returns ("Present", "Spring 2019") is left unset.
+function localDay(value: unknown): Date | undefined {
+  let m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value ?? '').trim());
+  if (!m) return undefined;
+  let [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  let date = new Date(y, mo - 1, d);
+  return date.getMonth() === mo - 1 && date.getDate() === d ? date : undefined;
+}
+
 export class ExtractResumeCommand extends Command<
   typeof ExtractResumeInput,
   typeof ExtractResumeResult
@@ -126,10 +137,8 @@ export class ExtractResumeCommand extends Command<
             new WorkHistoryEntryField({
               company: entry.company ?? undefined,
               title: entry.title ?? undefined,
-              startDate: entry.startDate
-                ? new Date(entry.startDate)
-                : undefined,
-              endDate: entry.endDate ? new Date(entry.endDate) : undefined,
+              startDate: localDay(entry.startDate),
+              endDate: localDay(entry.endDate),
             }),
         );
     }

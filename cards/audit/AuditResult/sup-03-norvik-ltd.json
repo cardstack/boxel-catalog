@@ -8,7 +8,7 @@
         "regime": {
           "regime": "ISO 9001:2015",
           "version": "2015",
-          "clause": "§8.4.2",
+          "clause": "\u00a78.4.2",
           "clauseTitle": "Type and extent of control"
         },
         "kind": "predicate",
@@ -30,7 +30,7 @@
         "sourceVersion": "supplier-controls v1"
       },
       "cardInfo": {
-        "name": "SUP-03 · norvik-ltd",
+        "name": "SUP-03 \u00b7 norvik-ltd",
         "summary": "approved is not one of onboarded, active.",
         "notes": null,
         "cardThumbnailURL": null
@@ -43,7 +43,7 @@
           "regime": {
             "regime": "ISO 9001:2015",
             "version": "2015",
-            "clause": "§8.4.2",
+            "clause": "\u00a78.4.2",
             "clauseTitle": "Type and extent of control"
           },
           "kind": "predicate",
@@ -89,11 +89,16 @@
         "links": {
           "self": "../../procurement/VendorProfile/norvik-ltd"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/catalog/cards/audit/audit-result",
+        "module": "../audit-result",
         "name": "AuditResult"
       }
     }

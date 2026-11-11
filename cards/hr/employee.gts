@@ -6,32 +6,45 @@ import {
   containsMany,
   linksTo,
   StringField,
+  type BaseDef,
 } from 'https://cardstack.com/base/card-api';
 import DateField from 'https://cardstack.com/base/date';
 import NumberField from 'https://cardstack.com/base/number';
 import enumField from 'https://cardstack.com/base/enum';
+import { dotEnumField } from './dot-enum-field';
 import BriefcaseIcon from '@cardstack/boxel-icons/briefcase';
-import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { tracked } from '@glimmer/tracking';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
-import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
-import { Stat } from '@cardstack/pretui/components/stat';
+import {
+  EmbCard,
+  FitCard,
+  FitRow,
+  IsoHead,
+  IsoPage,
+  Kv,
+  Panel,
+  SheetLine,
+  StatStrip,
+  type StripItem,
+} from './compact-sheet';
+import type { DescriptionsItem } from '@cardstack/pretui/components/descriptions';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 
-import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
+import { PersonBase } from '../people/person-base';
 import { DurationField } from './duration-field';
 import {
-  StatePill,
   stateColor,
-  stateColorOf,
   type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { normalizedDuration } from './duration-field';
-import { daysBetween } from './utils';
-import { FactList, QUIET_AVATAR_HUE, hueOf } from './hr-ui';
+import { daysBetween, formatMoney } from './utils';
 import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
+import { codeRef, realmURL } from '@cardstack/runtime-common';
+import type { PtoRequest } from './pto-request';
+import type { PerformanceReview } from './performance-review';
+import type { Team } from './team';
 
 export const EMPLOYEE_STATUSES = ['onboarding', 'active', 'offboarded'];
 
@@ -67,13 +80,16 @@ export const EMPLOYEE_STATUS_COLORS: Record<string, StateColor> =
   );
 
 export const EmployeeStatusField = markDefinition(
-  enumField(StringField, {
-    options: EMPLOYEE_STATUSES.map((status) => ({
-      value: status,
-      label: status,
-    })),
-    displayName: 'Employee Status',
-  }),
+  dotEnumField(
+    {
+      options: EMPLOYEE_STATUSES.map((status) => ({
+        value: status,
+        label: statusLabel(status),
+      })),
+      displayName: 'Employee Status',
+    },
+    EMPLOYEE_STATUS_HUES,
+  ),
 );
 
 export const EmployeeEmploymentTypeField = markDefinition(
@@ -96,262 +112,400 @@ export const OnboardingStatusField = markDefinition(
   }),
 );
 
+// The status chip's tone, on the theme's tone axis: active work is success,
+// a person still onboarding is warning (the org chart's amber pill), and an
+// offboarded record is neutral.
+export const EMPLOYEE_STATUS_TONES: Record<string, PretuiToneArg> = {
+  onboarding: 'warning',
+  active: 'success',
+  offboarded: 'neutral',
+};
+
+function statusLabel(status?: string | null): string {
+  return status ? status.charAt(0).toUpperCase() + status.slice(1) : '';
+}
+
+function roleText(m?: Partial<Employee>): string {
+  return m?.role || 'Role not recorded';
+}
+
+function roleLine(m?: Partial<Employee>): string {
+  let role = roleText(m);
+  return m?.department ? `${role} · ${m.department}` : role;
+}
+
+const TENURE_SHORT: Record<string, string> = {
+  years: 'yrs',
+  months: 'mos',
+  weeks: 'wks',
+  days: 'days',
+};
+
+function tenureShort(m?: Partial<Employee>): string {
+  let t = m?.tenure;
+  return t?.value != null
+    ? `${t.value} ${TENURE_SHORT[t.unit ?? ''] ?? t.unit}`
+    : '';
+}
+
+function startYear(m?: Partial<Employee>): string | undefined {
+  return m?.startDate ? String(new Date(m.startDate).getFullYear()) : undefined;
+}
+
+function daysLabel(n?: number | null): string {
+  return n == null ? '—' : `${n} days`;
+}
+
+function salaryShort(m?: Partial<Employee>): string {
+  return formatMoney(m?.salary, { compact: true }) ?? '—';
+}
+
+// The facts every format draws from, in the mockup's order; isolated shows
+// them all, embedded the first six.
+function employeeFacts(m?: Partial<Employee>): DescriptionsItem[] {
+  return [
+    { label: 'Start date', value: m?.startDate ? formatDay(m.startDate) : '—' },
+    { label: 'Tenure', value: m?.tenure?.label || '—' },
+    { label: 'Department', value: m?.department || '—' },
+    { label: 'PTO allowance', value: daysLabel(m?.ptoAllowanceDays) },
+    { label: 'Salary', value: formatMoney(m?.salary) ?? '—' },
+    { label: 'Email', value: m?.email || '—' },
+    { label: 'Phone', value: m?.phone || '—' },
+    { label: 'Status', value: statusLabel(m?.status) || '—' },
+  ];
+}
+
+// Related cards are read by live query rather than stored on Employee, the same
+// way the balance math reads PtoRequest. The refs are strings, so this module
+// does not import the related classes at runtime (they import Employee back).
+// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+const employeeIsoHere: string = import.meta.url;
+const ptoRequestRef = codeRef(employeeIsoHere, './pto-request', 'PtoRequest');
+const reviewRef = codeRef(
+  employeeIsoHere,
+  './performance-review',
+  'PerformanceReview',
+);
+const teamRef = codeRef(employeeIsoHere, './team', 'Team');
+
 // Hoisted out of `static isolated = class {…}`: decorators are not valid in a
 // class expression under the catalog type-check.
 class EmployeeIsolated extends Component<typeof Employee> {
-  @tracked selectedTab: 'overview' | 'team' = 'overview';
-
-  setTab = (tab: 'overview' | 'team') => {
-    this.selectedTab = tab;
-  };
-
-  get statusHue() {
-    return hueOf(EMPLOYEE_STATUS_HUES, this.args.model?.status);
-  }
-
-  get tenureInRoleLabel(): string | undefined {
-    let label = this.args.model?.tenure?.label;
-    return label ? `${label} in role` : undefined;
-  }
-
-  // The Employment facts as Pret UI `KeyValue` rows; the two date rows render
-  // their fields through the `<:value>` block.
-  get employmentFacts(): KeyValueItem[] {
+  get contactFacts(): DescriptionsItem[] {
     let m = this.args.model;
-    let rows: KeyValueItem[] = [
-      { key: 'Role', value: m?.role || '—' },
-      { key: 'Department', value: m?.department || '—' },
-      { key: 'Started', value: m?.startDate ? 'startDate' : '—' },
-      { key: 'Tenure', value: m?.tenure?.label || '—' },
-      { key: 'Employment', value: m?.employmentType || '—' },
-      { key: 'PTO balance', value: this.ptoBalanceLabel },
-      { key: 'Onboarding', value: m?.onboardingStatus || '—' },
+    return [
+      { label: 'Email', value: m?.email || '—' },
+      { label: 'Phone', value: m?.phone || '—' },
+    ];
+  }
+
+  get employmentFacts(): DescriptionsItem[] {
+    let m = this.args.model;
+    let rows: DescriptionsItem[] = [
+      { label: 'Role', value: m?.role || '—' },
+      { label: 'Department', value: m?.department || '—' },
+      {
+        label: 'Start date',
+        value: m?.startDate ? formatDay(m.startDate) : '—',
+      },
+      { label: 'Tenure', value: m?.tenure?.label || '—' },
+      { label: 'Salary', value: formatMoney(m?.salary) ?? '—' },
+      { label: 'PTO allowance', value: daysLabel(m?.ptoAllowanceDays) },
     ];
     if (m?.status === 'offboarded') {
       rows.push({
-        key: 'Left on',
-        value: m?.terminationDate ? 'terminationDate' : '—',
+        label: 'Left on',
+        value: m?.terminationDate ? formatDay(m.terminationDate) : '—',
       });
     }
     return rows;
   }
 
-  get ptoBalanceLabel(): string {
-    let n = this.args.model?.ptoBalance;
-    if (n == null) {
-      return '—';
-    }
-    return n === 0 ? '0 days · exhausted' : `${n} days`;
+  get detailFacts(): DescriptionsItem[] {
+    return employeeFacts(this.args.model);
   }
 
-  get capacityLabel(): string | undefined {
-    let h = this.args.model?.weeklyInterviewCapacityHours;
-    return typeof h === 'number' ? `${h} h/week interview capacity` : undefined;
+  linkedFacts: DescriptionsItem[] = [
+    { label: 'Manager' },
+    { label: 'Team' },
+    { label: 'Review' },
+  ];
+
+  ptoQuery = this.args.context?.getCards(
+    this,
+    () => ({
+      filter: {
+        on: ptoRequestRef,
+        eq: { 'employee.id': this.args.model?.id ?? '' },
+      },
+    }),
+    () => this.realms,
+    { isLive: true },
+  );
+
+  reviewQuery = this.args.context?.getCards(
+    this,
+    () => ({
+      filter: {
+        on: reviewRef,
+        eq: { 'employee.id': this.args.model?.id ?? '' },
+      },
+    }),
+    () => this.realms,
+    { isLive: true },
+  );
+
+  teamQuery = this.args.context?.getCards(
+    this,
+    () => ({
+      filter: { on: teamRef, eq: { 'members.id': this.args.model?.id ?? '' } },
+    }),
+    () => this.realms,
+    { isLive: true },
+  );
+
+  get realms(): string[] {
+    let url = this.args.model?.[realmURL]?.href;
+    return url ? [url] : [];
+  }
+
+  get ptoItems(): PtoRequest[] {
+    return (this.ptoQuery?.instances ?? []) as PtoRequest[];
+  }
+
+  get latestReview(): PerformanceReview | undefined {
+    return (this.reviewQuery?.instances ?? [])[0] as
+      | PerformanceReview
+      | undefined;
+  }
+
+  get lastReviewValue(): string {
+    return this.latestReview?.scoreLabel || '—';
+  }
+
+  get lastReviewHint(): string | undefined {
+    return this.latestReview?.cycleName || undefined;
+  }
+
+  get reviewLabel(): string {
+    return this.latestReview?.cardTitle || '—';
+  }
+
+  get teamName(): string {
+    let team = (this.teamQuery?.instances ?? [])[0] as Team | undefined;
+    return team?.name || '—';
+  }
+
+  get sinceLabel(): string | undefined {
+    let d = this.args.model?.startDate;
+    return d ? `since ${formatDay(d)}` : undefined;
+  }
+
+  get ptoLeftLabel(): string {
+    return daysLabel(this.args.model?.ptoBalance);
+  }
+
+  get ptoAllowanceLabel(): string | undefined {
+    let n = this.args.model?.ptoAllowanceDays;
+    return n == null ? undefined : `of ${n} allowance`;
+  }
+
+  get summaryFacts(): DescriptionsItem[] {
+    let m = this.args.model;
+    return [
+      {
+        label: 'Tenure',
+        value: [m?.tenure?.label || '—', this.sinceLabel]
+          .filter(Boolean)
+          .join(' · '),
+      },
+      {
+        label: 'PTO left',
+        value: [this.ptoLeftLabel, this.ptoAllowanceLabel]
+          .filter(Boolean)
+          .join(' '),
+      },
+      {
+        label: 'Last review',
+        value: [this.lastReviewValue, this.lastReviewHint]
+          .filter(Boolean)
+          .join(' · '),
+      },
+      { label: 'Salary', value: `${salaryShort(m)} base` },
+    ];
+  }
+
+  get stripItems(): StripItem[] {
+    let m = this.args.model;
+    return [
+      {
+        label: 'Tenure',
+        value: tenureShort(m) || null,
+        hint: this.sinceLabel,
+        tone: 'success',
+      },
+      {
+        label: 'PTO left',
+        value: this.ptoLeftLabel,
+        hint: this.ptoAllowanceLabel,
+        tone: 'info',
+      },
+      {
+        label: 'Last review',
+        value: this.lastReviewValue,
+        hint: this.lastReviewHint,
+        tone: 'success',
+      },
+      { label: 'Salary', value: salaryShort(m), hint: 'base', tone: 'neutral' },
+    ];
+  }
+
+  get nextPto(): PtoRequest | undefined {
+    return this.ptoItems[0];
+  }
+
+  get employmentKv() {
+    return this.employmentFacts.map((f) => ({
+      key: String(f.label),
+      value: f.value as string,
+    }));
+  }
+  get contactKv() {
+    return this.contactFacts.map((f) => ({
+      key: String(f.label),
+      value: f.value as string,
+    }));
+  }
+  get detailKv() {
+    return this.detailFacts.map((f) => ({
+      key: String(f.label),
+      value: f.value as string,
+    }));
+  }
+  linkedKv = [
+    { key: 'Manager', value: '' },
+    { key: 'Team', value: '' },
+    { key: 'Review', value: '' },
+  ];
+
+  get team(): Team | undefined {
+    return (this.teamQuery?.instances ?? [])[0] as Team | undefined;
   }
 
   <template>
-    <article class='employee-isolated'>
-      <header class='hero'>
-        <Avatar
-          @name={{if @model.title @model.title '?'}}
-          @src={{@model.photo.resolvedUrl}}
-          @hue={{AVATAR_HUE}}
-          @size={{52}}
-          aria-hidden='true'
-        />
-        <div class='hero-text'>
-          <h1>{{@model.title}}</h1>
-          <p class='byline'>
-            {{if @model.role @model.role 'Role not recorded'}}
-            {{#if @model.department}}
-              <span class='sep-dot'>&middot;</span>
-              {{@model.department}}
-            {{/if}}
-          </p>
-          <div class='pill-row'>
-            <StatePill
-              @label={{@model.status}}
-              @hue={{this.statusHue}}
-              @dot={{true}}
-            />
-            <StatePill @label={{@model.employmentType}} />
-            <StatePill @label={{this.tenureInRoleLabel}} />
-          </div>
-        </div>
-        {{#if @model.tenure.label}}
-          <div class='hero-money'>
-            <Stat
-              class='money'
-              @label='Tenure'
-              @value={{@model.tenure.label}}
-              @roll={{false}}
-            />
-          </div>
-        {{/if}}
-      </header>
-
-      <div class='body'>
-        <div class='main'>
-          <h2 class='panel-title'>Employment</h2>
-          <FactList @items={{this.employmentFacts}}>
-            <:value as |row|>
-              {{#if (eq row.value 'startDate')}}
-                <@fields.startDate />
-              {{else if (eq row.value 'terminationDate')}}
-                <@fields.terminationDate />
-              {{else}}
-                {{row.value}}
+    <IsoPage>
+      <:head>
+        <IsoHead @title={{@model.title}} @meta={{roleLine @model}}>
+          <:mark><Avatar
+              @name={{if @model.title @model.title '?'}}
+              @src={{@model.photo.resolvedUrl}}
+              @hue={{AVATAR_HUE}}
+              @size={{36}}
+              aria-hidden='true'
+            /></:mark>
+          <:aside>
+            {{#if @model.status}}<@fields.status
+                @format='atom'
+                @displayContainer={{false}}
+              />{{/if}}
+            {{#if this.nextPto.startDate}}<span class='muted'>PTO
+                {{formatDay this.nextPto.startDate}}</span>{{/if}}
+          </:aside>
+          <:stats><StatStrip @items={{this.stripItems}} /></:stats>
+        </IsoHead>
+      </:head>
+      <:main>
+        <Panel @title='Employment'><Kv @items={{this.employmentKv}} /></Panel>
+        <Panel @title='Time off'>
+          {{#each this.ptoItems as |request|}}
+            <SheetLine>
+              <span class='grow'>{{request.cardTitle}}</span>
+              {{#if request.startDate}}<span class='mono'>{{formatDay
+                    request.startDate
+                  }}{{#if request.endDate}}
+                    –
+                    {{formatDay request.endDate}}{{/if}}</span>{{/if}}
+              {{#if request.status}}<span
+                  class='st'
+                >{{request.status}}</span>{{/if}}
+            </SheetLine>
+          {{else}}
+            <SheetLine><span class='muted'>No time-off requests.</span></SheetLine>
+          {{/each}}
+        </Panel>
+        <Panel @title='Contact'><Kv @items={{this.contactKv}} /></Panel>
+      </:main>
+      <:aside>
+        <Panel @title='Linked'>
+          <Kv @items={{this.linkedKv}}>
+            <:value as |item|>
+              {{#if (eq item.key 'Manager')}}
+                {{#if @model.manager}}
+                  <@fields.manager @format='atom' @displayContainer={{false}} />
+                {{else}}
+                  <span class='muted'>— top of the org</span>
+                {{/if}}
+              {{else if (eq item.key 'Team')}}
+                {{#let (cardComponent this.team) as |TeamAtom|}}
+                  {{#if TeamAtom}}<TeamAtom
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}
+                {{/let}}
+              {{else if (eq item.key 'Review')}}
+                {{#let (cardComponent this.latestReview) as |ReviewAtom|}}
+                  {{#if ReviewAtom}}<ReviewAtom
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}
+                {{/let}}
               {{/if}}
             </:value>
-          </FactList>
-        </div>
-
-        <aside class='side'>
-          <h2 class='panel-title'>Org position</h2>
-          <dl class='stacked'>
-            <dt>Reports to</dt>
-            <dd>{{#if @model.manager}}<@fields.manager
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}&mdash; top of the org{{/if}}</dd>
-            <dt>Status</dt>
-            <dd>{{if @model.status @model.status '—'}}</dd>
-          </dl>
-
-          {{#if this.capacityLabel}}
-            <h2 class='panel-title spaced'>Interviewing</h2>
-            <p class='side-note'>{{this.capacityLabel}}. The Dashboard flags
-              this person once booked hours pass that ceiling.</p>
-          {{/if}}
-        </aside>
-      </div>
-    </article>
+          </Kv>
+        </Panel>
+        <Panel @title='Details'>
+          <Kv @items={{this.detailKv}}>
+            <:value as |item|>{{#if (eq item.key 'Status')}}{{#if
+                  @model.status
+                }}<@fields.status
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}{{else}}{{if
+                  item.value
+                  item.value
+                  '—'
+                }}{{/if}}</:value>
+          </Kv>
+        </Panel>
+      </:aside>
+    </IsoPage>
     <style scoped>
-      .employee-isolated {
-        container-type: inline-size;
-        container-name: iso;
-        height: 100%;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-      }
-      .side-note {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.6;
+      .muted {
         color: var(--muted-foreground);
+        font-size: 0.6875rem;
       }
-      .hero {
-        flex: none;
-        display: flex;
-        align-items: flex-start;
-        gap: var(--boxel-sp);
-        padding: var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border);
-      }
-      .hero-text {
-        flex: 1;
+      .grow {
+        flex: 1 1 8rem;
         min-width: 0;
-      }
-      h1 {
-        margin: 0;
-        font-size: var(--boxel-font-size-xl);
-        font-weight: 750;
-        letter-spacing: -0.02em;
-        line-height: 1.2;
-        overflow-wrap: anywhere;
-      }
-      .byline {
-        margin: var(--boxel-sp-5xs) 0 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
-      }
-      .sep-dot {
-        margin: 0 0.25rem;
-      }
-      .pill-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-        margin-top: var(--boxel-sp-xs);
-      }
-      .hero-money {
-        flex: none;
-        text-align: right;
-      }
-      .money {
-        --text-stat: 1.5rem;
-        justify-items: end;
-      }
-      .body {
-        display: grid;
-        grid-template-columns: 1fr 17rem;
-        /* Fill whatever height is left so the aside's surface reaches the
-           bottom edge. Without this the grid is only as tall as its content
-           and the panel stops mid-card, reading as a cut-off seam. */
-        flex: 1;
-        min-height: 0;
-        align-content: start;
-      }
-      .main {
-        padding: var(--boxel-sp-lg);
-        min-width: 0;
-      }
-      .side {
-        padding: var(--boxel-sp-lg);
-        border-left: 1px solid var(--border);
-        background-color: var(--muted);
-        color: var(--foreground);
-      }
-      .panel-title {
-        margin: 0 0 var(--boxel-sp-xs);
-        font-size: var(--boxel-font-size-sm);
         font-weight: 700;
       }
-      .panel-title.spaced {
-        margin-top: var(--boxel-sp-lg);
-      }
-      .stacked {
-        margin: 0;
-        display: grid;
-      }
-      .stacked dt {
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
+      .mono {
+        font: 500 0.6875rem var(--font-mono);
         color: var(--muted-foreground);
-        padding-top: 0.45rem;
+        font-variant-numeric: tabular-nums;
       }
-      .stacked dd {
-        margin: 0;
-        padding: 0.1rem 0 0.45rem;
-        font-size: var(--boxel-font-size-sm);
-        border-bottom: 1px solid var(--border);
-        overflow-wrap: anywhere;
-      }
-      @container iso (max-width: 40rem) {
-        .body {
-          grid-template-columns: 1fr;
-        }
-        .side {
-          border-left: 0;
-          border-top: 1px solid var(--border);
-        }
-        .hero {
-          flex-wrap: wrap;
-        }
-        .hero-money {
-          text-align: left;
-        }
-        .money {
-          justify-items: start;
-        }
+      .st {
+        font-weight: 600;
       }
     </style>
   </template>
+}
+
+// A linked card's own component, so it renders in its atom format.
+function cardComponent(card: BaseDef | undefined) {
+  return card
+    ? (card.constructor as typeof BaseDef).getComponent(card)
+    : undefined;
 }
 
 export class Employee extends PersonBase {
@@ -413,58 +567,77 @@ export class Employee extends PersonBase {
 
   static isolated = EmployeeIsolated;
 
-  static embedded = class Embedded extends Component<typeof this> {
-    get statusHue() {
-      return hueOf(EMPLOYEE_STATUS_HUES, this.args.model?.status);
-    }
-    get roleLine() {
+  // Extends the isolated class for its Team / Review / PTO live queries.
+  static embedded = class Embedded extends EmployeeIsolated {
+    get kv() {
       let m = this.args.model;
-      let role = m?.role || '—';
-      return m?.department ? `${role} · ${m.department}` : role;
+      let tenure = [m?.tenure?.label, startYear(m) && `since ${startYear(m)}`]
+        .filter(Boolean)
+        .join(' · ');
+      return [
+        {
+          key: 'Start date',
+          value: m?.startDate ? formatDay(m.startDate) : '—',
+        },
+        { key: 'Tenure', value: tenure || '—' },
+        { key: 'Department', value: m?.department || '—' },
+        { key: 'PTO allowance', value: daysLabel(m?.ptoAllowanceDays) },
+        { key: 'Salary', value: formatMoney(m?.salary) ?? '—' },
+        { key: 'Email', value: m?.email || '—' },
+        { key: 'Manager', value: '' },
+        { key: 'Team', value: '' },
+        { key: 'Review', value: '' },
+      ];
     }
     <template>
-      <div class='employee-embedded'>
-        <EntityDisplay
-          class='entity'
-          @title={{if @model.name @model.name 'Unnamed'}}
-          @subtitle={{this.roleLine}}
-          @center={{true}}
-        >
-          <:visual>
-            <Avatar
-              @name={{if @model.name @model.name '?'}}
-              @src={{@model.photo.resolvedUrl}}
-              @hue={{QUIET_AVATAR_HUE}}
-              @size={{30}}
-              aria-hidden='true'
-            />
-          </:visual>
-        </EntityDisplay>
-        <StatePill
-          class='ee-status'
-          @label={{@model.status}}
-          @hue={{this.statusHue}}
-        />
-      </div>
+      <EmbCard @title={{@model.title}} @meta={{roleLine @model}}>
+        <:mark><Avatar
+            @name={{if @model.title @model.title '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{24}}
+            aria-hidden='true'
+          /></:mark>
+        <:aside>{{#if @model.status}}<@fields.status
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:aside>
+        <:default>
+          <Kv @items={{this.kv}}>
+            <:value as |item|>{{#if (eq item.key 'Manager')}}{{#if
+                  @model.manager
+                }}<@fields.manager
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}{{else if (eq item.key 'Team')}}{{#let
+                  (cardComponent this.team)
+                  as |TeamAtom|
+                }}{{#if TeamAtom}}<TeamAtom
+                      @format='atom'
+                      @displayContainer={{false}}
+                    /><span
+                      class='mono'
+                    >{{this.team.members.length}}</span>{{else}}—{{/if}}{{/let}}{{else if
+                (eq item.key 'Review')
+              }}{{#let (cardComponent this.latestReview) as |ReviewAtom|}}{{#if
+                    ReviewAtom
+                  }}<ReviewAtom
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{#if this.latestReview.status}}<span
+                        class='muted'
+                      >{{this.latestReview.status}}</span>{{/if}}{{else}}—{{/if}}{{/let}}{{else}}{{item.value}}{{/if}}</:value>
+          </Kv>
+        </:default>
+      </EmbCard>
       <style scoped>
-        .employee-embedded {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.75rem;
-          font-size: 0.8125rem;
+        .mono {
+          font: 0.6875rem var(--font-mono);
+          font-variant-numeric: tabular-nums;
         }
-        /* EntityDisplay's name and secondary line keep the row's sizes. */
-        .entity {
-          flex: 1;
-          --pretui-entity-visual-size: 1.875rem;
-          --text-ui-md: 0.8125rem;
-          --text-ui-sm: 0.6875rem;
-          --space-3: 0.625rem;
-        }
-        .ee-status {
-          flex-shrink: 0;
-          text-transform: capitalize;
+        .muted {
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -473,281 +646,140 @@ export class Employee extends PersonBase {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='employee-atom'>
-        <BriefcaseIcon class='employee-atom-icon' />
-        <span class='employee-atom-name'>{{@model.title}}</span>
+        <Avatar
+          @name={{if @model.title @model.title '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue={{AVATAR_HUE}}
+          aria-hidden='true'
+        />
+        <span class='name'>{{@model.title}}</span>
       </span>
       <style scoped>
-        .employee-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .employee-atom-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .employee-atom-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        @layer PretComponent {
+          .employee-atom {
+            /* knob: a table can show a larger avatar */
+            --pretui-avatar-size: var(--employee-atom-avatar-size, 1.25rem);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            max-width: 100%;
+            min-width: 0;
+            block-size: 1.375rem;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
+            line-height: 1.375rem;
+            white-space: nowrap;
+            color: var(--foreground);
+          }
+          .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
       </style>
     </template>
   };
 
-  static fitted = class Fitted extends Component<typeof this> {
-    get statusHue() {
-      return hueOf(EMPLOYEE_STATUS_HUES, this.args.model?.status);
+  // Rows in priority order (kit fitted rule): who + state, role, next PTO,
+  // tenure, manager, the stat strip, then the remaining facts and links.
+  // FitCard shows a row whole or not at all. Extends the isolated class for
+  // its Team / Review / PTO live queries.
+  static fitted = class Fitted extends EmployeeIsolated {
+    get strip(): StripItem[] {
+      let m = this.args.model;
+      return [
+        { label: 'Tenure', value: tenureShort(m) || null },
+        { label: 'PTO left', value: daysLabel(m?.ptoBalance) },
+        { label: 'Review', value: this.lastReviewValue },
+      ];
     }
-
-    // The status ring sits on a wrapper: Avatar writes its own inline style,
-    // and a caller's `style` would replace it.
-    get avatarRingStyle() {
-      let ring = stateColorOf(EMPLOYEE_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`--status-ring: ${ring.ring}`);
-    }
-
-    get startYear(): string | undefined {
-      let date = this.args.model?.startDate;
-      if (!date) {
-        return undefined;
-      }
-      return new Date(date).getFullYear().toString();
-    }
-
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='avatar-ring' style={{this.avatarRingStyle}}>
-            <Avatar
-              @name={{if @model.title @model.title '?'}}
-              @src={{@model.photo.resolvedUrl}}
-              @hue={{AVATAR_HUE}}
-              @size={{26}}
-              aria-hidden='true'
-            />
-          </span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
-            {{#if @model.role}}
-              <span class='fit-eb'>{{@model.role}}{{#if @model.department}}
-                  &middot;
-                  {{@model.department}}{{/if}}</span>
-            {{/if}}
-          </div>
-          {{! Status pill survives every tier. }}
-          <StatePill
-            class='fit-pill'
-            @label={{@model.status}}
-            @hue={{this.statusHue}}
-            @dot={{true}}
-          />
-        </div>
-
-        <div class='fit-mid'>
-          {{#if @model.tenure.label}}
-            <span class='money'>{{@model.tenure.label}}</span>
+      <FitCard @title={{@model.title}}>
+        <:mark><Avatar
+            @name={{if @model.title @model.title '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{20}}
+            aria-hidden='true'
+          /></:mark>
+        <:status>{{#if @model.status}}<@fields.status
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:status>
+        <:default>
+          <FitRow @left={{true}}><span class='meta'>{{roleLine
+                @model
+              }}</span></FitRow>
+          <FitRow @label='PTO'><span class='mono'>{{if
+                this.nextPto.startDate
+                (formatDay this.nextPto.startDate)
+                '—'
+              }}</span></FitRow>
+          <FitRow @label='Tenure'><span class='mono'>{{if
+                @model.tenure.label
+                @model.tenure.label
+                '—'
+              }}{{#if (startYear @model)}}
+                · since
+                {{startYear @model}}{{/if}}</span></FitRow>
+          {{#if @model.manager}}
+            <FitRow @label='Manager' @left={{true}}><@fields.manager
+                @format='atom'
+                @displayContainer={{false}}
+              /></FitRow>
           {{/if}}
-          {{#if this.startYear}}
-            <span class='fit-sub'>since
-              {{this.startYear}}{{#if @model.employmentType}}
-                &middot;
-                {{@model.employmentType}}{{/if}}</span>
-          {{/if}}
-        </div>
-
-        <dl class='fit-add'>
-          {{#if @model.managerName}}
-            <div><dt>Reports to</dt><dd>{{@model.managerName}}</dd></div>
-          {{/if}}
-          {{#if @model.department}}
-            <div><dt>Dept</dt><dd>{{@model.department}}</dd></div>
-          {{/if}}
-          {{#if @model.onboardingStatus}}
-            <div><dt>Onboard</dt><dd>{{@model.onboardingStatus}}</dd></div>
-          {{/if}}
-          {{#if @model.employmentType}}
-            <div><dt>Type</dt><dd>{{@model.employmentType}}</dd></div>
-          {{/if}}
-        </dl>
-      </article>
+          <StatStrip @compact={{true}} @items={{this.strip}} />
+          <FitRow @label='Start date'><span class='mono'>{{if
+                @model.startDate
+                (formatDay @model.startDate)
+                '—'
+              }}</span></FitRow>
+          <FitRow @label='Department'>{{if
+              @model.department
+              @model.department
+              '—'
+            }}</FitRow>
+          {{#let (cardComponent this.team) as |TeamAtom|}}{{#if TeamAtom}}
+              <FitRow @label='Team' @left={{true}}><TeamAtom
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></FitRow>
+            {{/if}}{{/let}}
+          {{#let (cardComponent this.latestReview) as |ReviewAtom|}}{{#if
+              ReviewAtom
+            }}
+              <FitRow @label='Review' @left={{true}}><ReviewAtom
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></FitRow>
+            {{/if}}{{/let}}
+          <FitRow @label='PTO allowance'><span class='mono'>{{daysLabel
+                @model.ptoAllowanceDays
+              }}</span></FitRow>
+          <FitRow @label='Salary'><span class='mono'>{{formatMoney
+                @model.salary
+              }}</span></FitRow>
+          <FitRow @label='Email'><span
+              class='mono'
+            >{{@model.email}}</span></FitRow>
+          <FitRow @label='Phone'><span
+              class='mono'
+            >{{@model.phone}}</span></FitRow>
+        </:default>
+      </FitCard>
       <style scoped>
-        /* Four tiers, each ADDING fields. 11px floor. Status never hidden. */
-        .fit {
-          height: 100%;
-          /* Flex, not a three-row grid: with `minmax(0, 1fr)` in the middle
-             a taller bottom block squeezed the middle row and clipped its
-             text. Here the middle keeps its natural height and the extras
-             block is pushed to the bottom by `margin-top: auto`. */
-          display: flex;
-          flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
-          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
-        }
-        .avatar-ring {
-          flex: none;
-          display: inline-flex;
-          border-radius: 50%;
-          box-shadow:
-            0 0 0 0.125rem var(--background),
-            0 0 0 0.1875rem var(--status-ring);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.4rem;
-          flex-wrap: wrap;
-          /* The photo avatar's ring (box-shadow, painted outside its own
-             box) was being clipped along its top edge by the inherited
-             `.fit > * { overflow: hidden }` rule — the ring bled above
-             this row's flex-start-aligned top edge with no padding to
-             absorb it, reading as a cropped circle. */
-          overflow: visible;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          display: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
+        .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-        .fit-pill {
-          flex: none;
-          align-self: flex-start;
-        }
-        .fit-mid {
-          flex: none;
-          display: none;
-          flex-direction: column;
-          gap: 0.0625rem;
-        }
-        .money {
-          font-size: calc(var(--fit-name) * 1.15);
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-sub {
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          margin-top: auto;
-          padding-top: 0.3rem;
-          border-top: 1px dashed var(--border);
-          grid-template-columns: 1fr 1fr;
-          gap: 0.125rem 0.5rem;
-        }
-        .fit-add > div {
-          display: flex;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .fit-add dt {
-          flex: none;
-          font-size: var(--fit-small);
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
-        .fit-add dd {
-          margin: 0;
-          font-size: var(--fit-small);
-          font-weight: 600;
-          white-space: nowrap;
+        .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-variant-numeric: tabular-nums;
-        }
-
-        /* TIER 2 — add the secondary line. Container queries have no `or`,
-           so this is reached either by height (tile) or width (strip). */
-        @container fitted-card (height > 80px) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        @container fitted-card (width > 240px) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        /* TIER 3 — add the headline figure block. */
-        @container fitted-card (height > 130px) and (width > 180px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        /* TIER 4 — width-driven extra facts. Previously absent entirely,
-           which is why a 500x400 tile showed the same as a 200x140 one. */
-        @container fitted-card (height > 150px) and (width > 180px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-        }
-        @container fitted-card (width > 340px) and (height > 130px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        /* Short strip: horizontal, single-line name. */
-        @container fitted-card (height <= 90px) {
-          .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
-          }
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
-          }
-          .fit-pill {
-            align-self: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        /* Smallest tier: secondary line goes, the status pill stays. */
-        @container fitted-card (height <= 50px) {
-          .fit-eb {
-            display: none;
-          }
+          font: 500 0.6875rem var(--font-mono);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

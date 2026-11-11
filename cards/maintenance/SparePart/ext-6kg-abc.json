@@ -37,6 +37,11 @@
         "links": {
           "self": "../Asset/ast-2026-0301"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

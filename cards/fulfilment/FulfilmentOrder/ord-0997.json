@@ -80,6 +80,11 @@
         "links": {
           "self": "../Warehouse/wh-main"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

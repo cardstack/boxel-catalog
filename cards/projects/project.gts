@@ -5,28 +5,41 @@ import {
   field,
   contains,
   linksTo,
+  realmURL,
   StringField,
 } from '@cardstack/base/card-api';
 import DateField from '@cardstack/base/date';
-import enumField from '@cardstack/base/enum';
+import { dotEnumField } from '../hr/dot-enum-field';
 import FolderKanbanIcon from '@cardstack/boxel-icons/folder-kanban';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import {
-  KeyValue,
-  type KeyValueItem,
-} from '@cardstack/pretui/components/key-value';
-import {
-  StepList,
-  type StepItem,
-} from '@cardstack/pretui/components/step-list';
+  EmbCard,
+  FitCard,
+  FitRow,
+  IsoHead,
+  IsoPage,
+  Kv,
+  Panel,
+  SheetLine,
+  StatStrip,
+  type StripItem,
+} from '../hr/compact-sheet';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
+import { formatDate } from '@cardstack/pretui/internal/reading-format';
 
-import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { Team } from '@cardstack/catalog/cards/hr/team';
-import { Vendor } from '../procurement/vendor';
-import { durationInDays } from '@cardstack/catalog/cards/hr/duration-field';
+import { DurationField } from '../hr/duration-field';
+import { Employee } from '../hr/employee';
+import { Team } from '../hr/team';
+import { RecordAtom, Vendor, mediumDate } from '../procurement/vendor';
+import { durationInDays } from '../hr/duration-field';
 import {
-  StatePill,
+  identifyCard,
+  rri,
+  type ResolvedCodeRef,
+} from '@cardstack/runtime-common';
+import {
   stateColor,
   type Hue,
   type StateColor,
@@ -80,18 +93,108 @@ export const PROJECT_STATUS_COLORS: Record<string, StateColor> =
     Object.entries(PROJECT_STATUS_HUES).map(([k, hue]) => [k, stateColor(hue)]),
   );
 
-function statusHueOf(status?: string | null): Hue {
-  return (status && PROJECT_STATUS_HUES[status]) || 'slate';
+// Only active reads as success; planned has not started, so it stays
+// neutral, and done reads as information rather than health.
+export const PROJECT_STATUS_TONES: Record<string, PretuiToneArg> = {
+  planned: 'neutral',
+  active: 'success',
+  done: 'info',
+};
+
+function statusTone(status?: string | null): PretuiToneArg {
+  return (status && PROJECT_STATUS_TONES[status]) || 'neutral';
+}
+
+// Contractors link to their project, never the other way round, so a
+// project finds them live. The ref is resolved beside this module rather
+// than imported: contractor.gts imports this module.
+function contractorRef(): ResolvedCodeRef | undefined {
+  let project = identifyCard(Project);
+  return project && 'module' in project
+    ? {
+        module: rri(new URL('../hr/contractor', project.module).href),
+        name: 'Contractor',
+      }
+    : undefined;
+}
+
+interface ContractorLike extends CardDef {
+  vendorName?: string | null;
+}
+
+function projectContractors(owner: Component<typeof Project>) {
+  return owner.args.context?.getCards(
+    owner,
+    () => {
+      let id = owner.args.model?.id;
+      let on = contractorRef();
+      return id && on
+        ? { filter: { on, every: [{ eq: { 'project.id': id } }] } }
+        : undefined;
+    },
+    () => {
+      let url = owner.args.model?.[realmURL]?.href;
+      return url ? [url] : [];
+    },
+    { isLive: true },
+  );
+}
+
+const SHORT_DATE = { month: 'short', day: 'numeric' } as const;
+
+function effortLabel(effort?: { value?: number | null; unit?: string | null }) {
+  if (effort?.value == null || !effort.unit) {
+    return undefined;
+  }
+  let unit = effort.value === 1 ? effort.unit.replace(/s$/, '') : effort.unit;
+  return `${effort.value} ${unit}`;
+}
+
+function capitalize(value?: string | null): string | undefined {
+  return value ? value[0].toUpperCase() + value.slice(1) : undefined;
+}
+
+// Every format reads the same labels, so a tile and the isolated view can
+// never word the same project differently.
+function projectView(m?: Partial<Project>, contractors: ContractorLike[] = []) {
+  let { start, end } = scheduleFacts(m ?? {});
+  let startLabel = mediumDate(start);
+  let endShort = end ? formatDate(end, 'en-US', SHORT_DATE) : undefined;
+  let lead = m?.lead?.name || m?.leadName || undefined;
+  let team = m?.team?.name || m?.teamName || undefined;
+  let vendor = m?.vendor?.name || m?.vendorName || undefined;
+  let vendors = [
+    ...new Set(contractors.map((c) => c.vendorName).filter(Boolean)),
+  ].join(', ');
+  return {
+    startLabel,
+    endShort,
+    effort: effortLabel(m?.estimatedEffort ?? undefined),
+    statusLabel: capitalize(m?.status),
+    statusTone: statusTone(m?.status),
+    lead,
+    team,
+    vendor,
+    contractorCount: String(contractors.length),
+    contractorVendors: vendors || undefined,
+  };
+}
+
+function orDash(value?: string) {
+  return value || '—';
 }
 
 export const ProjectStatusField = markDefinition(
-  enumField(StringField, {
-    options: PROJECT_STATUSES.map((status) => ({
-      value: status,
-      label: status,
-    })),
-    displayName: 'Project Status',
-  }),
+  dotEnumField(
+    {
+      options: PROJECT_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Project Status',
+    },
+    PROJECT_STATUS_HUES,
+  ),
 );
 
 export class Project extends CardDef {
@@ -133,612 +236,284 @@ export class Project extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get schedule() {
-      return scheduleFacts(this.args.model ?? {});
+    contractorsQuery = projectContractors(this);
+
+    get contractors(): ContractorLike[] {
+      return (this.contractorsQuery?.instances ?? []).filter(Boolean);
     }
 
-    // Done is the last stage, so a finished project shows every step
-    // complete rather than one still current.
-    get statusSteps(): StepItem[] {
+    get v() {
+      return projectView(this.args.model, this.contractors);
+    }
+
+    get statuses() {
       let current = this.args.model?.status;
-      let index = PROJECT_STATUSES.indexOf(current ?? '');
-      let finished = current === 'done';
-      return PROJECT_STATUSES.map((label, i) => ({
-        label,
-        state:
-          index < 0 || i > index
-            ? 'upcoming'
-            : i < index || finished
-              ? 'complete'
-              : 'current',
+      return PROJECT_STATUSES.map((status) => ({
+        status,
+        tone: (status === current ? 'info' : 'neutral') as PretuiToneArg,
       }));
     }
 
-    get statusHue() {
-      return statusHueOf(this.args.model?.status);
+    get scheduleItems(): KeyValueItem[] {
+      return [
+        { key: 'Start date', value: orDash(this.v.startLabel) },
+        { key: 'Estimated effort', value: orDash(this.v.effort) },
+      ];
     }
 
-    get endLabel() {
-      let { end } = this.schedule;
-      return end ? end.toISOString().slice(0, 10) : undefined;
+    get linkedItems(): KeyValueItem[] {
+      return [
+        { key: 'Lead', value: '— none' },
+        { key: 'Team', value: '— none' },
+        { key: 'Vendor', value: '— none' },
+      ];
     }
 
-    // Elapsed share of the estimate. Derived, never stored — so it cannot
-    // drift away from startDate + estimatedEffort.
-    get elapsedLabel() {
-      let { pct } = this.schedule;
-      return pct == null ? undefined : `${pct}% of estimate elapsed`;
+    get detailItems(): KeyValueItem[] {
+      let v = this.v;
+      return [
+        { key: 'Start', value: orDash(v.startLabel) },
+        { key: 'Effort', value: orDash(v.effort) },
+        { key: 'Lead', value: orDash(v.lead) },
+        { key: 'Team', value: orDash(v.team) },
+        { key: 'Vendor', value: orDash(v.vendor) },
+        { key: 'Contractors', value: v.contractorCount },
+      ];
     }
 
-    scheduleRows: KeyValueItem[] = [
-      { key: 'Starts', value: 'start' },
-      { key: 'Estimate', value: 'estimate' },
-      { key: 'Projected end', value: 'end' },
-      { key: 'Elapsed', value: 'elapsed' },
-    ];
-
-    ownershipRows: KeyValueItem[] = [
-      { key: 'Lead', value: 'lead' },
-      { key: 'Team', value: 'team' },
-      { key: 'Vendor', value: 'vendor' },
-    ];
+    get strip(): StripItem[] {
+      let v = this.v;
+      return [
+        {
+          label: 'Status',
+          value: v.statusLabel,
+          hint: v.startLabel ? 'starts ' + v.startLabel : undefined,
+        },
+        { label: 'Effort', value: v.effort, hint: 'estimate', tone: 'info' },
+        {
+          label: 'Contractors',
+          value: String(this.contractors.length),
+          hint: v.contractorVendors,
+          tone: 'success',
+        },
+      ];
+    }
 
     <template>
-      <article class='project-isolated'>
-        <header class='hero'>
-          <div class='hero-text'>
-            <h1>{{@model.title}}</h1>
-            <p class='byline'>
-              {{#if @model.startDate}}from <@fields.startDate />{{/if}}
-              {{#if @model.estimatedEffort.label}}
-                <span class='sep-dot'>&middot;</span>
-                {{@model.estimatedEffort.label}}
-                estimated
-              {{/if}}
-            </p>
-            <div class='pill-row'>
-              {{#if @model.status}}
-                <StatePill
-                  @label={{@model.status}}
-                  @hue={{this.statusHue}}
-                  @dot={{true}}
-                />
-              {{/if}}
-              {{#if @model.teamName}}
-                <StatePill @label={{@model.teamName}} @hue='slate' />
-              {{/if}}
-              {{#if this.elapsedLabel}}
-                <StatePill @label={{this.elapsedLabel}} @hue='slate' />
-              {{/if}}
-            </div>
-          </div>
-          <StepList
-            class='hero-track'
-            @steps={{this.statusSteps}}
-            @variant='track'
-            @label='Project status'
-          />
-        </header>
-
-        <div class='body'>
-          <div class='main'>
-            {{#if @model.description}}
-              <h2 class='panel-title'>Brief</h2>
-              <p class='prose'>{{@model.description}}</p>
-            {{/if}}
-            <h2 class='panel-title spaced'>Schedule</h2>
-            <KeyValue @items={{this.scheduleRows}} @labelStyle='eyebrow'>
+      <IsoPage>
+        <:head>
+          <IsoHead @title={{@model.title}} @meta={{@model.description}}>
+            <:mark><Avatar
+                @name={{if @model.title @model.title ''}}
+                @hue='var(--muted)'
+                @shape='rounded'
+                @size={{36}}
+                aria-hidden='true'
+              /></:mark>
+            <:aside>{{#if @model.status}}<@fields.status
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{/if}}</:aside>
+            <:stats><StatStrip @items={{this.strip}} /></:stats>
+          </IsoHead>
+        </:head>
+        <:main>
+          {{#if @model.description}}
+            <Panel @title='Description'><SheetLine
+              >{{@model.description}}</SheetLine></Panel>
+          {{/if}}
+          <Panel @title='Status'>
+            <SheetLine>
+              {{#each this.statuses as |s|}}
+                <span
+                  class='step'
+                  data-on={{if (eq s.tone 'info') 'true'}}
+                >{{s.status}}</span>
+              {{/each}}
+            </SheetLine>
+          </Panel>
+          <Panel @title='Schedule'><Kv @items={{this.scheduleItems}} /></Panel>
+        </:main>
+        <:aside>
+          <Panel @title='Linked'>
+            <Kv @items={{this.linkedItems}}>
               <:value as |row|>
-                {{#if (eq row.value 'start')}}
-                  {{#if @model.startDate}}<@fields.startDate
-                    />{{else}}&mdash;{{/if}}
-                {{else if (eq row.value 'estimate')}}
-                  {{if
-                    @model.estimatedEffort.label
-                    @model.estimatedEffort.label
-                    '—'
-                  }}
-                {{else if (eq row.value 'end')}}
-                  {{if this.endLabel this.endLabel '—'}}
-                {{else}}
-                  {{if this.elapsedLabel this.elapsedLabel '—'}}
-                {{/if}}
-              </:value>
-            </KeyValue>
-          </div>
-
-          <aside class='side'>
-            <h2 class='panel-title'>Ownership</h2>
-            <KeyValue
-              @items={{this.ownershipRows}}
-              @layout='stacked'
-              @labelStyle='eyebrow'
-            >
-              <:value as |row|>
-                {{#if (eq row.value 'lead')}}
+                {{#if (eq row.key 'Lead')}}
                   {{#if @model.lead}}<@fields.lead
                       @format='atom'
                       @displayContainer={{false}}
-                    />{{else}}&mdash;{{/if}}
-                {{else if (eq row.value 'team')}}
+                    />{{else}}{{row.value}}{{/if}}
+                {{else if (eq row.key 'Team')}}
                   {{#if @model.team}}<@fields.team
                       @format='atom'
                       @displayContainer={{false}}
-                    />{{else}}&mdash;{{/if}}
-                {{else}}
+                    />{{else}}{{row.value}}{{/if}}
+                {{else if (eq row.key 'Vendor')}}
                   {{#if @model.vendor}}<@fields.vendor
                       @format='atom'
                       @displayContainer={{false}}
-                    />{{else}}&mdash; internal only{{/if}}
-                {{/if}}
+                    />{{else}}{{row.value}}{{/if}}
+                {{else}}{{row.value}}{{/if}}
               </:value>
-            </KeyValue>
-          </aside>
-        </div>
-      </article>
+            </Kv>
+          </Panel>
+          <Panel @title='Details'><Kv @items={{this.detailItems}} /></Panel>
+        </:aside>
+      </IsoPage>
       <style scoped>
-        .project-isolated {
-          container-type: inline-size;
-          container-name: iso;
-          height: 100%;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          background: var(--background);
-          color: var(--foreground);
-          font-family: var(--font-sans);
-        }
-        .hero {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp);
-          padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border);
-        }
-        .hero-text {
-          flex: 1;
-          min-width: 0;
-        }
-        h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 750;
-          letter-spacing: -0.02em;
-          line-height: 1.2;
-          overflow-wrap: anywhere;
-        }
-        .byline {
-          margin: var(--boxel-sp-5xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
+        .step {
           color: var(--muted-foreground);
         }
-        .sep-dot {
-          margin: 0 0.25rem;
-        }
-        .pill-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-5xs);
-          margin-top: var(--boxel-sp-xs);
-        }
-        /* Wider than StepList's 24rem fold, so the track stays one row. */
-        .hero-track {
-          flex: none;
-          width: 25rem;
-        }
-        .body {
-          display: grid;
-          grid-template-columns: 1fr 17rem;
-          /* Fill whatever height is left so the aside's surface reaches the
-             bottom edge. Without this the grid is only as tall as its content
-             and the panel stops mid-card, reading as a cut-off seam. */
-          flex: 1;
-          min-height: 0;
-          align-content: start;
-        }
-        .main {
-          padding: var(--boxel-sp-lg);
-          min-width: 0;
-        }
-        .side {
-          padding: var(--boxel-sp-lg);
-          border-left: 1px solid var(--border);
-          background: var(--muted);
-        }
-        .panel-title {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
+        .step[data-on] {
           font-weight: 700;
-        }
-        .panel-title.spaced {
-          margin-top: var(--boxel-sp-lg);
-        }
-        .prose {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.65;
-          max-width: 56ch;
-        }
-        @container iso (max-width: 50rem) {
-          .body {
-            grid-template-columns: 1fr;
-          }
-          .side {
-            border-left: 0;
-            border-top: 1px solid var(--border);
-          }
-          .hero {
-            flex-wrap: wrap;
-          }
-          .hero-track {
-            width: 100%;
-          }
+          color: var(--foreground);
         }
       </style>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusHue() {
-      return statusHueOf(this.args.model?.status);
+    contractorsQuery = projectContractors(this);
+
+    get contractors(): ContractorLike[] {
+      return (this.contractorsQuery?.instances ?? []).filter(Boolean);
     }
 
-    get rows(): KeyValueItem[] {
-      let m = this.args.model;
-      let rows: KeyValueItem[] = [
-        { key: 'Start', value: 'start' },
-        { key: 'Effort', value: 'effort' },
+    get v() {
+      return projectView(this.args.model, this.contractors);
+    }
+
+    get kvItems() {
+      let v = this.v;
+      return [
+        { label: 'Start', value: v.startLabel },
+        { label: 'Effort', value: v.effort },
+        { label: 'Lead', value: v.lead },
+        { label: 'Team', value: v.team },
+        { label: 'Vendor', value: v.vendor },
+        { label: 'Contractors', value: v.contractorCount },
       ];
-      if (m?.lead) rows.push({ key: 'Lead', value: 'lead' });
-      if (m?.vendor) rows.push({ key: 'Vendor', value: 'vendor' });
-      return rows;
     }
 
+    get rows() {
+      return [
+        ...this.kvItems.map((i: { label: string; value?: string }) => ({
+          key: i.label,
+          value: i.value ?? '—',
+        })),
+      ];
+    }
     <template>
-      <div class='project-embedded'>
-        <header>
-          <h3>{{@model.title}}</h3>
-          {{#if @model.status}}
-            <StatePill @label={{@model.status}} @hue={{this.statusHue}} />
-          {{/if}}
-        </header>
-        {{#if @model.description}}
-          <p class='description'>{{@model.description}}</p>
-        {{/if}}
-        <KeyValue
-          class='facts'
-          @items={{this.rows}}
-          @layout='inline'
-          @labelStyle='eyebrow'
-        >
-          <:value as |row|>
-            {{#if (eq row.value 'start')}}
-              <@fields.startDate />
-            {{else if (eq row.value 'effort')}}
-              <@fields.estimatedEffort />
-            {{else if (eq row.value 'lead')}}
-              <@fields.lead @format='atom' @displayContainer={{false}} />
-            {{else}}
-              <@fields.vendor @format='atom' @displayContainer={{false}} />
-            {{/if}}
-          </:value>
-        </KeyValue>
-      </div>
-      <style scoped>
-        .project-embedded {
-          padding: var(--boxel-sp);
-          background: var(--card);
-          color: var(--foreground);
-          font-family: var(--font-sans);
-          transition: box-shadow 0.15s ease-out;
-        }
-        header {
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-        }
-        h3 {
-          margin: 0;
-          font-size: var(--boxel-font-size);
-        }
-        .description {
-          margin: var(--boxel-sp-xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .facts {
-          margin-top: var(--boxel-sp-xs);
-        }
-      </style>
+      <EmbCard @title={{@model.title}} @meta={{@model.description}}>
+        <:mark><Avatar
+            @name={{if @model.title @model.title ''}}
+            @hue='var(--muted)'
+            @shape='rounded'
+            @size={{24}}
+            aria-hidden='true'
+          /></:mark>
+        <:aside>{{#if @model.status}}<@fields.status
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:aside>
+        <:default>
+          <Kv @items={{this.rows}}>
+            <:value as |row|>
+              {{#if (eq row.key 'Lead')}}
+                {{#if @model.lead}}<@fields.lead
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}{{row.value}}{{/if}}
+              {{else if (eq row.key 'Team')}}
+                {{#if @model.team}}<@fields.team
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}{{row.value}}{{/if}}
+              {{else if (eq row.key 'Vendor')}}
+                {{#if @model.vendor}}<@fields.vendor
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}{{row.value}}{{/if}}
+              {{else}}{{row.value}}{{/if}}
+            </:value>
+          </Kv>
+        </:default>
+      </EmbCard>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
-    <template>
-      <span class='project-atom'>
-        <FolderKanbanIcon class='project-atom-icon' />
-        <span class='project-atom-name'>{{@model.title}}</span>
-      </span>
-      <style scoped>
-        .project-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .project-atom-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .project-atom-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-      </style>
-    </template>
+    <template><RecordAtom @name={{@model.title}} /></template>
   };
 
+  // Attribute-first: names come from the project's own denormalized
+  // attributes; the relations render the linked cards as their own atoms.
   static fitted = class Fitted extends Component<typeof this> {
-    get schedule() {
-      return scheduleFacts(this.args.model ?? {});
+    get v() {
+      return projectView(this.args.model);
     }
 
-    get statusHue() {
-      return statusHueOf(this.args.model?.status);
+    get strip(): StripItem[] {
+      let v = this.v;
+      return [
+        { label: 'Effort', value: v.effort ?? '—' },
+        { label: 'Status', value: v.statusLabel ?? '—' },
+      ];
     }
-
-    get steps() {
-      let current = this.args.model?.status;
-      let idx = PROJECT_STATUSES.indexOf(current ?? '');
-      return PROJECT_STATUSES.map((status, i) => ({
-        status,
-        on: idx >= 0 && i <= idx,
-      }));
-    }
-
-    get pctLabel() {
-      let { pct } = this.schedule;
-      return pct == null ? undefined : `${pct}% elapsed`;
-    }
-
-    get startShort() {
-      let { start } = this.schedule;
-      return start ? start.toISOString().slice(0, 7) : undefined;
-    }
-
-    get endShort() {
-      let { end } = this.schedule;
-      return end ? end.toISOString().slice(0, 7) : undefined;
-    }
-
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
-            {{#if @model.leadName}}
-              <span class='fit-eb'>{{@model.leadName}}{{#if @model.teamName}}
-                  &middot;
-                  {{@model.teamName}}{{/if}}</span>
-            {{/if}}
-          </div>
-          {{! Status is the last thing dropped — never hidden at any tier. }}
-          {{#if @model.status}}
-            <StatePill
-              class='fit-pill'
-              @label={{@model.status}}
-              @hue={{this.statusHue}}
-              @dot={{true}}
-            />
-          {{/if}}
-        </div>
-
-        <div class='fit-track'>
-          <div class='steps'>
-            {{#each this.steps as |s|}}
-              <i class='{{if s.on "on"}}'></i>
-            {{/each}}
-          </div>
-          {{#if this.pctLabel}}
-            <span class='track-label'>{{this.pctLabel}}</span>
-          {{/if}}
-        </div>
-
-        {{#if @model.description}}
-          <p class='fit-prose'>{{@model.description}}</p>
-        {{/if}}
-
-        <dl class='fit-add'>
-          {{#if this.startShort}}
-            <div><dt>From</dt><dd>{{this.startShort}}</dd></div>
-          {{/if}}
-          {{#if @model.estimatedEffort.label}}
-            <div><dt>Est</dt><dd>{{@model.estimatedEffort.label}}</dd></div>
-          {{/if}}
-          {{#if this.endShort}}
-            <div><dt>Until</dt><dd>{{this.endShort}}</dd></div>
-          {{/if}}
-          {{#if @model.vendorName}}
-            <div><dt>Vendor</dt><dd>{{@model.vendorName}}</dd></div>
-          {{/if}}
-        </dl>
-      </article>
+      <FitCard @title={{@model.title}}>
+        <:mark><Avatar
+            @name={{if @model.title @model.title ''}}
+            @hue='var(--muted)'
+            @shape='rounded'
+            @size={{20}}
+            aria-hidden='true'
+          /></:mark>
+        <:status>{{#if @model.status}}<@fields.status
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:status>
+        <:default>
+          {{#if @model.description}}<FitRow @left={{true}}><span
+                class='meta'
+              >{{@model.description}}</span></FitRow>{{/if}}
+          <FitRow @label='Effort'>{{orDash this.v.effort}}</FitRow>
+          <FitRow @label='Starts'><span class='mono'>{{orDash
+                this.v.startLabel
+              }}</span></FitRow>
+          <FitRow @label='Lead'>{{orDash this.v.lead}}</FitRow>
+          <FitRow @label='Team'>{{orDash this.v.team}}</FitRow>
+          <StatStrip
+            class='fit-strip'
+            @compact={{true}}
+            @items={{this.strip}}
+          />
+          <FitRow @label='Vendor'>{{orDash this.v.vendor}}</FitRow>
+        </:default>
+      </FitCard>
       <style scoped>
-        /* Four tiers; each larger one ADDS fields. 0.6875rem floor throughout. */
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background: var(--card);
-          color: var(--card-foreground);
-          font-family: var(--font-sans);
-          --proj-id: var(--primary);
-          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
-          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.4rem;
-          flex-wrap: wrap;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          display: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
+        .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-        .fit-pill {
-          flex: none;
-          align-self: flex-start;
-        }
-        .fit-track {
-          flex: none;
-          display: none;
-        }
-        .steps {
-          display: flex;
-          gap: 0.1875rem;
-        }
-        .steps i {
-          height: 0.25rem;
-          flex: 1;
-          border-radius: 2px;
-          background: var(--border);
-        }
-        .steps i.on {
-          background: var(--proj-id);
-        }
-        .track-label {
-          display: block;
-          margin-top: 0.15rem;
-          font-size: var(--fit-small);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
-        .fit-prose {
-          display: none;
-          margin: 0;
-          font-size: var(--fit-small);
-          line-height: 1.5;
-          color: var(--muted-foreground);
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          margin-top: auto;
-          padding-top: 0.3rem;
-          border-top: 1px dashed var(--border);
-          grid-template-columns: 1fr 1fr;
-          gap: 0.05rem 0.5rem;
-        }
-        .fit-add > div {
-          display: flex;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .fit-add dt {
-          flex: none;
-          font-size: var(--fit-small);
+        .mono {
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 500;
           color: var(--muted-foreground);
         }
-        .fit-add dd {
-          margin: 0;
-          font-size: var(--fit-small);
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-variant-numeric: tabular-nums;
+        .fit-strip {
+          border-top: 1px solid var(--border);
         }
-
-        /* TIER 2 — add lead + team. No `or` in container queries, so two rules. */
-        @container fitted-card (height > 5rem) {
-          .fit-eb {
-            display: block;
+        @container fitted-card (width < 25rem) {
+          .fit-strip :deep(.strip-cell:nth-child(3)) {
+            display: none;
           }
         }
-        @container fitted-card (width > 15rem) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        /* TIER 3 — add the progress track and elapsed share. */
-        @container fitted-card (height > 8.125rem) and (width > 11.25rem) {
-          .fit-track {
-            display: block;
-          }
-          .fit-prose {
-            display: -webkit-box;
-          }
-        }
-        /* TIER 4 — width-driven facts. */
-        @container fitted-card (height > 9.375rem) and (width > 11.25rem) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-        }
-        @container fitted-card (width > 21.25rem) and (height > 8.125rem) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        /* Short strip. */
-        @container fitted-card (height <= 5.625rem) {
-          .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
-          }
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
-          }
-          .fit-pill {
-            align-self: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        /* Smallest — the status pill stays. */
-        @container fitted-card (height <= 3.125rem) {
-          .fit-eb {
+        @container fitted-card (width < 15.625rem) or (height < 15.625rem) {
+          .fit-strip {
             display: none;
           }
         }

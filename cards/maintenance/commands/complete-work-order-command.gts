@@ -29,7 +29,7 @@ export class CompleteWorkOrderInput extends CardDef {
       'Required to complete with an unresolved required checklist item.',
   });
   @field noLabourReason = contains(StringField, {
-    description: 'Required to complete with zero labour entries logged.',
+    description: 'Required to complete with zero labor entries logged.',
   });
 }
 
@@ -40,7 +40,7 @@ export class CompleteWorkOrderResult extends CardDef {
 /**
  * Closes the work loop on a job: refuses to mark `completed` while a
  * required checklist item is unresolved (unless the caller gives an
- * override reason) and while no labour was logged (unless the caller gives
+ * override reason) and while no labor was logged (unless the caller gives
  * `noLabourReason`) — "complete" always means the same thing everywhere,
  * because this is the only place that writes it. `isComplete` is computed
  * by the SAME `checklistStats` the Checklist Runner UI uses, so the UI and
@@ -88,7 +88,7 @@ export default class CompleteWorkOrderCommand extends Command<
       let hasLabour = (workOrder.labour ?? []).length > 0;
       if (!hasLabour && !input.noLabourReason?.trim()) {
         throw new Error(
-          'Refused: no labour logged. Pass noLabourReason or log labour first.',
+          'Refused: no labor logged. Pass noLabourReason or log labor first.',
         );
       }
       if (!hasLabour) {

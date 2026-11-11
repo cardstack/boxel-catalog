@@ -23,6 +23,11 @@
         "links": {
           "self": "../Opportunity/acme-support-renewal"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

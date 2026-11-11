@@ -93,7 +93,7 @@ export default class ResolveVarianceCommand extends Command<
     }
     if (!actionsFor(row.state).includes(action ?? '')) {
       throw new Error(
-        `A ${row.state} cannot be short-paid: there is no PO price in the invoice's currency to pay instead`,
+        `A ${row.state} line cannot take "${action}" (allowed: ${actionsFor(row.state).join(', ') || 'none'})`,
       );
     }
     let existing = (invoice.varianceResolutions ?? []).filter(Boolean);

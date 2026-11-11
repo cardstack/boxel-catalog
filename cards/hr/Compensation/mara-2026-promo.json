@@ -12,13 +12,18 @@
       "reason": "promotion",
       "notes": "Promotion to Staff Engineer after leading the indexing rewrite.",
       "cardInfo": {
-        "name": "Mara Lindqvist \u00b7 Jul 2026"
+        "name": "Mara Lindqvist · Jul 2026"
       }
     },
     "relationships": {
       "employee": {
         "links": {
           "self": "../Employee/mara-lindqvist"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

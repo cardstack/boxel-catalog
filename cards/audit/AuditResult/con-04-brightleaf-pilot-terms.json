@@ -8,7 +8,7 @@
         "regime": {
           "regime": "Contract Policy",
           "version": "2026",
-          "clause": "§5.3",
+          "clause": "\u00a75.3",
           "clauseTitle": "Governing law"
         },
         "kind": "predicate",
@@ -22,7 +22,7 @@
       "status": {
         "status": "not-applicable"
       },
-      "observedValue": "—",
+      "observedValue": "\u2014",
       "evaluatedAt": "2026-09-21T09:00:00.000Z",
       "meta": {
         "createdAt": "2026-09-21T09:00:00.000Z",
@@ -30,7 +30,7 @@
         "sourceVersion": "contract-controls v1"
       },
       "cardInfo": {
-        "name": "CON-04 · brightleaf-pilot-terms",
+        "name": "CON-04 \u00b7 brightleaf-pilot-terms",
         "summary": "governingLaw.jurisdiction holds no value to compare.",
         "notes": null,
         "cardThumbnailURL": null
@@ -50,6 +50,11 @@
       "evaluatedBy": {
         "links": {
           "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

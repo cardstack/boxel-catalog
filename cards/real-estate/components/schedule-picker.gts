@@ -7,7 +7,6 @@ import {
   RadioGroup,
   type RadioOption,
 } from '@cardstack/pretui/components/radio-group';
-import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Schedule Picker — "publish now" or "publish later". Render-only: the
 // consumer holds the chosen ISO string (or undefined for now) and gets it
@@ -92,7 +91,6 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
     <fieldset class='schedule' ...attributes>
       <legend class='legend' id={{this.legendId}}>When to publish</legend>
       <RadioGroup
-        class='modes'
         @options={{this.modeOptions}}
         @value={{this.mode}}
         @onValueChange={{this.chooseMode}}
@@ -114,8 +112,8 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
         />
       </div>
       {{#if this.pastWarning}}
-        <Alert @tone='warning' style={{ALERT_STYLE.attention}}>That time has
-          passed — choose a future moment, or publish now.</Alert>
+        <Alert @tone='warning'>That time has passed — choose a future moment, or
+          publish now.</Alert>
       {{/if}}
     </fieldset>
     <style scoped>
@@ -126,21 +124,18 @@ export class SchedulePicker extends GlimmerComponent<Signature> {
         display: grid;
         gap: var(--boxel-sp-xs);
         margin: 0;
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--foreground);
       }
       .legend {
         font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* 9px ladder label: no token */
         font-weight: var(--boxel-eyebrow-font-weight);
         line-height: var(--boxel-eyebrow-line-height);
         letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
         padding: 0 var(--boxel-sp-5xs);
-      }
-      .modes {
-        --text-ui-md: 0.8125rem;
       }
       /* the date and time sit under "Schedule for later", in line with its
          label */

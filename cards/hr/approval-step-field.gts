@@ -13,8 +13,9 @@ import TextAreaField from 'https://cardstack.com/base/text-area';
 import enumField from 'https://cardstack.com/base/enum';
 
 import { Employee } from './employee';
-import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { type Hue } from '@cardstack/catalog/components/state-pill';
 import { hueOf } from './hr-ui';
+import { DotLabel } from './dot-enum-field';
 
 export const APPROVAL_DECISIONS = ['pending', 'approved', 'rejected'];
 
@@ -158,11 +159,10 @@ export class ApprovalStepField extends FieldDef {
           {{else}}
             <span class='row-empty'>No approver set</span>
           {{/if}}
-          <StatePill
+          <DotLabel
             class='decision'
             @label={{this.decisionLabel}}
             @hue={{this.decisionHue}}
-            @dot={{true}}
           />
         </div>
         {{#if @model.decidedAt}}

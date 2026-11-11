@@ -4,7 +4,7 @@
     "attributes": {
       "lineItems": [
         {
-          "description": "Implementation services — September",
+          "description": "Implementation services \u2014 September",
           "quantity": 32,
           "unitPrice": {
             "amount": 165,
@@ -41,7 +41,13 @@
         "cardThumbnailURL": null
       }
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "../invoice-editor-example",

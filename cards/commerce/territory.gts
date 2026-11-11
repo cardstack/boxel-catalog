@@ -1,3 +1,4 @@
+import { array, hash } from '@ember/helper';
 import {
   CardDef,
   Component,
@@ -7,12 +8,12 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import {
-  KeyValue,
-  type KeyValueItem,
-} from '@cardstack/pretui/components/key-value';
-import { User } from '@cardstack/catalog/cards/crm/user';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { CompactFitted, CompactRow, orEmpty } from './compact-parts';
+import { User } from '../crm/user';
 
 // Territory — a named sales region or account segment with an owning rep.
 // Deals/Opportunities and forecasts are scoped to a Territory, not to an
@@ -39,26 +40,26 @@ export class Territory extends CardDef {
 
   static atom = class Atom extends Component<typeof Territory> {
     <template>
-      <span class='territory-atom'>
-        <MapPinIcon class='ta-icon' />
-        <span class='ta-name'>{{@model.cardTitle}}</span>
+      <span class='atom'>
+        <Avatar
+          @name={{orEmpty @model.cardTitle}}
+          @shape='square'
+          @size={{16}}
+        />
+        <span class='name'>{{@model.cardTitle}}</span>
       </span>
       <style scoped>
-        .territory-atom {
+        .atom {
+          font-size: var(--boxel-font-size-2xs);
+          font-weight: 600;
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: var(--boxel-sp-2xs);
+          min-width: 0;
+          max-width: 100%;
           color: var(--foreground);
         }
-        .ta-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .ta-name {
+        .name {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -69,279 +70,280 @@ export class Territory extends CardDef {
 
   static embedded = class Embedded extends Component<typeof Territory> {
     <template>
-      <div class='territory-row'>
-        <MapPinIcon class='icon' />
-        <div class='info'>
-          <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.region}}
-            <span class='meta'>{{@model.region}}</span>
-          {{/if}}
-        </div>
+      <article class='emb'>
+        <header>
+          <Avatar
+            @name={{orEmpty @model.cardTitle}}
+            @shape='square'
+            @size={{28}}
+          />
+          <div class='id'>
+            <h3>{{@model.cardTitle}}</h3>
+            <p>{{@model.region}} · {{@model.owner.name}}</p>
+          </div>
+          {{#if @model.region}}<Chip
+              @label={{@model.region}}
+              @appearance='plain'
+            />{{/if}}
+        </header>
+        <p class='fact'>{{@model.region}} · owner {{@model.owner.name}}</p>
+        <KeyValue
+          @items={{this.rows}}
+          @labelStyle='eyebrow'
+          @divided={{true}}
+          class='kv'
+        />
         {{#if @model.owner}}
-          <@fields.owner @format='atom' />
+          <div class='linked'>
+            <span class='cap'>Owner</span>
+            <@fields.owner @format='atom' @displayContainer={{false}} />
+          </div>
         {{/if}}
-      </div>
+      </article>
       <style scoped>
-        .territory-row {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
-        }
-        .icon {
-          width: 1.25rem;
-          height: 1.25rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .info {
-          min-width: 0;
-          flex: 1;
+        .emb {
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.4;
+          --boxel-sp-xs: 0.35rem;
+          --boxel-sp-lg: 0.75rem;
+          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-color: var(--muted-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          color: var(--foreground);
         }
-        .name {
+        header {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
+        }
+        .id {
+          flex: 1;
+          min-width: 0;
+        }
+        h3 {
+          font-size: var(--boxel-font-size-sm);
           font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
         }
-        .meta {
-          font-size: 0.75rem;
+        p {
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
+        }
+        .fact {
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
+        }
+        .kv {
+          padding-inline: var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        h3 {
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .linked {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+          min-width: 5rem;
         }
       </style>
     </template>
+    get rows() {
+      return rowsOf(this.args.model as Territory);
+    }
   };
 
   static fitted = class Fitted extends Component<typeof Territory> {
     <template>
-      <div class='fitted'>
-        <div class='fmt badge'>
-          <MapPinIcon class='doc-icon' />
-          <span class='name'>{{@model.cardTitle}}</span>
-        </div>
-        <div class='fmt strip'>
-          <MapPinIcon class='doc-icon' />
-          <div class='info'>
-            <span class='name'>{{@model.cardTitle}}</span>
-            {{#if @model.region}}
-              <span class='meta'>{{@model.region}}</span>
-            {{/if}}
-          </div>
-        </div>
-        <div class='fmt tile'>
-          <MapPinIcon class='doc-icon' />
-          <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.region}}
-            <span class='meta'>{{@model.region}}</span>
-          {{/if}}
-          {{#if @model.owner.name}}
-            <span class='meta'>{{@model.owner.name}}</span>
-          {{/if}}
-        </div>
-        <div class='fmt card'>
-          <div class='col'>
-            <div class='row'>
-              <MapPinIcon class='doc-icon' />
-              <span class='name name-lg'>{{@model.cardTitle}}</span>
-            </div>
-            {{#if @model.region}}
-              <span class='meta'>{{@model.region}}</span>
-            {{/if}}
-            {{#if @model.owner.name}}
-              <span class='meta'>Owner: {{@model.owner.name}}</span>
-            {{/if}}
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          color: var(--foreground);
-        }
-        .fmt {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-        .doc-icon {
-          width: 1.25rem;
-          height: 1.25rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .name {
-          font-weight: 600;
-          font-size: 0.8125rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .name-lg {
-          font-size: 0.9375rem;
-        }
-        .meta {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .row {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          min-width: 0;
-        }
-        .col,
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-          min-width: 0;
-          flex: 1;
-        }
-        @container fitted-card (max-width: 150px) and (max-height: 169px) {
-          .badge {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.375rem;
-            padding: 0.5rem;
-            text-align: center;
-          }
-        }
-        @container fitted-card (min-width: 151px) and (max-height: 169px) {
-          .strip {
-            display: flex;
-            align-items: center;
-            gap: 0.625rem;
-            padding: 0.625rem 0.75rem;
-          }
-        }
-        @container fitted-card (max-width: 399px) and (min-height: 170px) {
-          .tile {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 0.375rem;
-            padding: 0.875rem;
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .card {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1.25rem;
-          }
-        }
-      </style>
+      <CompactFitted
+        @mark='Territory'
+        @title={{@model.cardTitle}}
+        @sub='{{@model.region}} · {{@model.owner.name}}'
+        @fact='{{@model.region}} · owner {{@model.owner.name}}'
+        @tags={{if @model.region (array (hash label=@model.region))}}
+      >
+        <:rows>
+          {{#if @model.region}}<CompactRow
+              @k='Region'
+              @v={{@model.region}}
+            />{{/if}}
+          {{#if @model.owner}}<CompactRow
+              @k='Owner'
+              @v={{@model.owner.name}}
+            />{{/if}}
+          {{#if @model.owner}}<CompactRow @k='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></CompactRow>{{/if}}
+        </:rows>
+      </CompactFitted>
     </template>
   };
 
   static isolated = class Isolated extends Component<typeof Territory> {
-    get details(): KeyValueItem[] {
-      let m = this.args.model;
-      let rows: KeyValueItem[] = [];
-      if (m?.region) rows.push({ key: 'Region', value: m.region });
-      if (m?.owner) rows.push({ key: 'Owner', value: 'owner' });
-      return rows;
+    get rows() {
+      return rowsOf(this.args.model as Territory);
+    }
+    get nameRows() {
+      return this.rows.filter((r) => r.key !== 'Owner');
+    }
+    get detailRows() {
+      return this.rows.filter((r) => r.key !== 'Name');
     }
     <template>
-      <article class='territory-page'>
-        <header class='th'>
-          <MapPinIcon class='avatar-icon' />
-          <div class='th-id'>
-            <p class='doc-kind'>Territory</p>
+      <article class='page'>
+        <header>
+          <Avatar
+            @name={{orEmpty @model.cardTitle}}
+            @shape='square'
+            @size={{32}}
+          />
+          <div class='id'>
             <h1>{{@model.cardTitle}}</h1>
+            <p>{{@model.region}} · {{@model.owner.name}}</p>
           </div>
+          {{#if @model.region}}<Chip
+              @label={{@model.region}}
+              @appearance='plain'
+            />{{/if}}
         </header>
-        {{#if this.details.length}}
-          <section class='panel'>
-            <h2>Details</h2>
-            <KeyValue class='details' @items={{this.details}}>
-              <:value as |row|>
-                {{#if (eq row.key 'Owner')}}
-                  <@fields.owner @format='atom' />
-                {{else}}
-                  {{row.value}}
-                {{/if}}
-              </:value>
-            </KeyValue>
+        <div class='stats'>
+          <Stat
+            @label='Region'
+            @tone='neutral'
+            @value={{if @model.region @model.region '—'}}
+            @hint='territory'
+            @roll={{false}}
+          />
+          <Stat
+            @label='Owner'
+            @tone='neutral'
+            @value={{if @model.owner.name @model.owner.name '—'}}
+            @roll={{false}}
+          />
+        </div>
+        <section>
+          <h2>Territory</h2>
+          <KeyValue
+            @items={{this.nameRows}}
+            @labelStyle='eyebrow'
+            @divided={{true}}
+            class='kv'
+          />
+        </section>
+        {{#if @model.owner}}
+          <section>
+            <h2>Linked</h2>
+            <div class='linked'>
+              <span class='cap'>Owner</span>
+              <@fields.owner @format='atom' />
+            </div>
           </section>
         {{/if}}
+        <section>
+          <h2>Details</h2>
+          <KeyValue
+            @items={{this.detailRows}}
+            @labelStyle='eyebrow'
+            @divided={{true}}
+            class='kv'
+          />
+        </section>
       </article>
       <style scoped>
-        .territory-page {
-          max-width: 40rem;
-          margin: 0 auto;
-          padding: 2rem 1.5rem;
+        .page {
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.4;
+          --boxel-sp-xs: 0.35rem;
+          --boxel-sp-lg: 0.75rem;
+          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-color: var(--muted-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          background: var(--card);
+          color: var(--foreground);
+          container-type: inline-size;
         }
-        .th {
+        header {
           display: flex;
           align-items: center;
-          gap: 1rem;
-          border-bottom: 2px solid var(--foreground);
-          padding-bottom: 1.25rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm);
+          border-bottom: 1px solid var(--border);
         }
-        .avatar-icon {
-          width: 2.5rem;
-          height: 2.5rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .doc-kind {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          margin: 0 0 0.125rem;
-          color: var(--muted-foreground);
+        .id {
+          flex: 1;
+          min-width: 0;
         }
         h1 {
-          margin: 0;
-          font-size: 1.625rem;
-          line-height: 1.1;
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size);
+          font-weight: 700;
         }
-        .panel {
-          border: 1px solid var(--border);
-          border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
-          background: var(--card);
-        }
-        h2 {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          margin: 0 0 0.75rem;
+        p {
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
-        /* Pret UI KeyValue at the panel's text size and column gap */
-        .details {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1.25rem;
+        .kv {
+          padding-inline: var(--boxel-sp-xs);
+        }
+        .stats > * {
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        }
+        .stats > * + * {
+          border-inline-start: 1px solid var(--border);
+        }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+          border-bottom: 1px solid var(--border);
+        }
+        section h2 {
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+          border-bottom: 1px solid var(--border);
+        }
+        .linked {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+        }
+        .cap {
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+          min-width: 5rem;
         }
       </style>
     </template>
   };
+}
+
+function rowsOf(m: Territory) {
+  let rows = [];
+  if (m?.name) rows.push({ key: 'Name', value: m.name });
+  if (m?.region) rows.push({ key: 'Region', value: m.region });
+  if (m?.owner?.name) rows.push({ key: 'Owner', value: m.owner.name });
+  return rows;
 }

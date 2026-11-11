@@ -13,11 +13,11 @@
         "issuedAt": "2026-09-04T08:00:00.000Z"
       },
       "ownership": {
-        "ownerId": "../../hr/Employee/dana-kim",
-        "ownerName": "Dana Kim",
+        "ownerId": "@cardstack/catalog/cards/hr/Employee/124fd97a-4f35-4af9-a68f-74ee6a2020a0",
+        "ownerName": "Tom\u00e1s Ribeiro",
         "teamName": "Payments",
-        "since": "2026-09-07T10:19:29.337Z",
-        "how": "escalation",
+        "since": "2026-10-28T08:14:00.764Z",
+        "how": "round-robin",
         "previousOwnerName": "Leo Park"
       },
       "relationships": {
@@ -78,6 +78,23 @@
       "adoptsFrom": {
         "module": "../case",
         "name": "Case"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      },
+      "owner": {
+        "links": {
+          "self": "../../hr/Employee/124fd97a-4f35-4af9-a68f-74ee6a2020a0"
+        }
+      },
+      "duplicateOf": {
+        "links": {
+          "self": "./case-2026-0139"
+        }
       }
     }
   }

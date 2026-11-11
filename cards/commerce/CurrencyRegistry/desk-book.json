@@ -33,6 +33,13 @@
         "module": "../currency-registry",
         "name": "CurrencyRegistry"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

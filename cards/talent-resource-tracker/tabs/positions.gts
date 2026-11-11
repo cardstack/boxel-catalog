@@ -1,21 +1,40 @@
+import type { ComponentLike } from '@glint/template';
 import GlimmerComponent from '@glimmer/component';
+import { PositionStatusField } from '../../hr/position';
+import type { RenderableSearchEntryLike } from '@cardstack/runtime-common';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
-import ListIcon from '@cardstack/boxel-icons/list';
-import TableIcon from '@cardstack/boxel-icons/table';
-import { htmlSafe } from '@ember/template';
-import { Button } from '@cardstack/pretui/components/button';
-import { IconButton } from '@cardstack/pretui/components/icon-button';
-import { Input } from '@cardstack/pretui/components/input';
-import { Position, POSITION_STATUS_HUES } from '../../hr/position';
-import { stateColorsOf } from '../../hr/hr-ui';
-
-const POSITION_STATUS_COLORS = stateColorsOf(POSITION_STATUS_HUES);
+import { eq } from '@cardstack/pretui/helpers';
+import {
+  DataTable,
+  type DataColumn,
+} from '@cardstack/pretui/components/data-table';
+import { LoadingState } from '@cardstack/pretui/components/loading-state';
+import { Grid } from '@cardstack/pretui/components/grid';
+import { Position } from '../../hr/position';
 import { daysBetween, toLocalDate } from '../dates';
-import { stateColorOf } from '../../../components/state-pill';
 import type { TrackerView } from '../talent-resource-tracker';
+import {
+  ColumnFit,
+  getComponent,
+  TrackerSection,
+  RowOpen,
+  ListToolbar,
+  TrackerEmpty,
+  TrackerPage,
+  StatusDot,
+} from '../shared';
+
+interface PositionRow {
+  position: Position;
+  openDays: number | null;
+  applicantCount: number;
+  weeklyNew: number;
+  interviewingCount: number;
+  trendPoints: string;
+  stalled: boolean;
+  tone: 'red' | 'green' | 'mute';
+}
 
 interface Signature {
   Args: {
@@ -25,9 +44,59 @@ interface Signature {
 }
 
 export class PositionsTab extends GlimmerComponent<Signature> {
-  setPositionsView = (view: 'grid' | 'strip' | 'table') => {
-    this.args.tracker.positionsView = view;
+  // the status column renders the field's own format: dot + label
+  StatusAtom = PositionStatusField.atom as unknown as ComponentLike<{
+    Args: { model: string | undefined };
+  }>;
+  asEntries = (entries: unknown) => entries as RenderableSearchEntryLike[];
+
+  setPositionsView = (view: string) => {
+    this.args.tracker.positionsView = view as 'grid' | 'strip' | 'table';
   };
+
+  viewOptions = [
+    { value: 'grid', label: 'Grid' },
+    { value: 'strip', label: 'List' },
+    { value: 'table', label: 'Table' },
+  ];
+
+  get subtitle(): string {
+    return 'Requisitions open across the org';
+  }
+
+  // Only the queries this tab counts from; one slow unrelated query must
+  // not blank the whole table.
+  get isLoading(): boolean {
+    let t = this.args.tracker;
+    return [t.positionsQuery, t.applicationsQuery, t.candidatesQuery].some(
+      (q) => q?.isLoading,
+    );
+  }
+
+  get panelMeta(): string {
+    let n = this.args.tracker.positions.length;
+    return this.isLoading ? '—' : `${n} ${n === 1 ? 'position' : 'positions'}`;
+  }
+
+  // rows wrap the card; the table hands back the wrapper
+
+  columns: DataColumn<PositionRow>[] = [
+    { key: 'position', label: 'Position', value: (r) => r.position.jobTitle },
+    {
+      key: 'department',
+      label: 'Department',
+      value: (r) => r.position.department,
+    },
+    { key: 'openDays', label: 'Days open', align: 'end' },
+    { key: 'applicantCount', label: 'Applicants', align: 'end' },
+    { key: 'weeklyNew', label: 'This week', align: 'end' },
+    { key: 'trend', label: '28-day trend', sortable: false },
+    { key: 'interviewingCount', label: 'Interviewing', align: 'end' },
+    { key: 'status', label: 'Status', value: (r) => r.position.status },
+    { key: 'signal', label: 'Signal', sortable: false },
+  ];
+
+  rowKey = (r: PositionRow) => r.position.id ?? r.position.jobTitle ?? '';
 
   setPositionsSearch = (value: string) => {
     this.args.tracker.debouncedSetPositionsSearch(value);
@@ -48,16 +117,7 @@ export class PositionsTab extends GlimmerComponent<Signature> {
   // Positions need horizontal comparison, not a card grid — which is open
   // longest, which has gone quiet. "Stalled" is computed, not a status
   // anyone sets by hand: open 30+ days with zero new applicants this week.
-  get positionsTableRows(): Array<{
-    position: Position;
-    openDays: number | null;
-    applicantCount: number;
-    weeklyNew: number;
-    interviewingCount: number;
-    trendPoints: string;
-    stalled: boolean;
-    tone: 'red' | 'green' | 'mute';
-  }> {
+  get positionsTableRows(): PositionRow[] {
     let now = new Date();
     return this.args.tracker.positions.map((position) => {
       let apps = this.args.tracker.applications.filter(
@@ -106,377 +166,170 @@ export class PositionsTab extends GlimmerComponent<Signature> {
     });
   }
 
-  positionStatusStyle = (status: string | undefined) => {
-    let color = stateColorOf(POSITION_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
+  fit = new ColumnFit();
+  get visibleColumns(): string[] {
+    return this.fit.pick(this.columns.map((c) => c.key));
+  }
+  get notTable(): boolean {
+    return this.args.tracker.positionsView !== 'table';
+  }
 
   <template>
-    <div class='tab-section'>
-      <div class='sec-head'>
-        <div class='htext'>
-          <h2>Open Positions</h2>
-          <p class='byline'>Requisitions open across the org</p>
-        </div>
-        {{#if @tracker.canCreate}}
-          <Button
-            type='button'
-            @tone='primary'
-            @appearance='accent'
-            class='btn-review'
-            @loading={{@tracker.addCard.isRunning}}
-            {{on 'click' (fn @tracker.addNew Position)}}
-          >+ Add position</Button>
-        {{/if}}
-      </div>
-      <div class='list-toolbar'>
-        <div class='list-search'>
-          <Input
-            @type='search'
-            @value={{@tracker.positionsSearch}}
-            @placeholder='Search positions…'
-            @onInput={{this.setPositionsSearch}}
-            aria-label='Search positions'
-          />
-        </div>
-        <div class='view-toggle' role='group' aria-label='View'>
-          <IconButton
-            type='button'
-            class='view-btn'
-            @variant={{if (eq @tracker.positionsView 'grid') 'primary' 'ghost'}}
-            aria-pressed={{if
-              (eq @tracker.positionsView 'grid')
-              'true'
-              'false'
-            }}
-            @label='Grid view'
-            {{on 'click' (fn this.setPositionsView 'grid')}}
-          ><LayoutGridIcon
-              class='view-icon'
-              width='16'
-              height='16'
-            /></IconButton>
-          <IconButton
-            type='button'
-            class='view-btn'
-            @variant={{if
-              (eq @tracker.positionsView 'strip')
-              'primary'
-              'ghost'
-            }}
-            aria-pressed={{if
-              (eq @tracker.positionsView 'strip')
-              'true'
-              'false'
-            }}
-            @label='List view'
-            {{on 'click' (fn this.setPositionsView 'strip')}}
-          ><ListIcon class='view-icon' width='16' height='16' /></IconButton>
-          <IconButton
-            type='button'
-            class='view-btn'
-            @variant={{if
-              (eq @tracker.positionsView 'table')
-              'primary'
-              'ghost'
-            }}
-            aria-pressed={{if
-              (eq @tracker.positionsView 'table')
-              'true'
-              'false'
-            }}
-            @label='Table view'
-            {{on 'click' (fn this.setPositionsView 'table')}}
-          ><TableIcon class='view-icon' width='16' height='16' /></IconButton>
-        </div>
-      </div>
-      {{#if (eq @tracker.positionsView 'table')}}
-        {{#if this.filteredPositions.length}}
-          <div class='data-table-wrap'>
-            <table class='data-table'>
-              <thead>
-                <tr>
-                  <th>Position</th>
-                  <th>Department</th>
-                  <th>Days Open</th>
-                  <th>Applicants</th>
-                  <th>This Week</th>
-                  <th>28-Day Trend</th>
-                  <th>Interviewing</th>
-                  <th>Status</th>
-                  <th>Signal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {{#each this.positionsTableRows as |row|}}
-                  <tr>
-                    <td>{{row.position.jobTitle}}</td>
-                    <td>{{row.position.department}}</td>
-                    <td>{{if row.openDays row.openDays '—'}}</td>
-                    <td>{{if @tracker.isLoading '—' row.applicantCount}}</td>
-                    <td>{{row.weeklyNew}}</td>
-                    <td>
-                      <svg
-                        viewBox='0 0 80 20'
-                        width='80'
-                        height='20'
-                        role='img'
-                        aria-label='28-day applicant trend'
-                      >
-                        <polyline
-                          points={{row.trendPoints}}
-                          fill='none'
-                          class='trend trend-{{row.tone}}'
-                          stroke-width='1.6'
-                        />
-                      </svg>
-                    </td>
-                    <td>{{if @tracker.isLoading '—' row.interviewingCount}}</td>
-                    <td>
-                      <span
-                        class='status-pill'
-                        style={{this.positionStatusStyle row.position.status}}
-                      >{{row.position.status}}</span>
-                    </td>
-                    <td>
-                      {{#if row.stalled}}
-                        <span class='status-pill pill-red'>Stalled</span>
-                      {{else if (eq row.position.status 'open')}}
-                        <span class='status-pill pill-green'>Healthy</span>
-                      {{/if}}
-                    </td>
-                  </tr>
-                {{/each}}
-              </tbody>
-            </table>
-          </div>
-        {{else if @tracker.positionsQuery.isLoading}}
-          <p class='empty-note' role='status'>Loading…</p>
-        {{else}}
-          <p class='empty-note' role='status'>No open positions yet</p>
-        {{/if}}
-      {{else}}
-        {{#let (component @context.searchResultsComponent) as |Search|}}
-          <Search
-            @query={{@tracker.positionsSearchQuery}}
-            @mode='none'
-            as |results|
-          >
-            <div
-              class='tile-grid
-                {{if (eq @tracker.positionsView "strip") "strip-view"}}'
+    <TrackerPage
+      @group='Hiring'
+      @title='Open Positions'
+      @subtitle={{this.subtitle}}
+    >
+      <:default>
+        <ListToolbar
+          @label='Positions'
+          @searchValue={{@tracker.positionsSearch}}
+          @searchPlaceholder='Search positions…'
+          @onSearch={{this.setPositionsSearch}}
+          @viewOptions={{this.viewOptions}}
+          @view={{@tracker.positionsView}}
+          @onView={{this.setPositionsView}}
+          as |bar|
+        >
+          {{#if @tracker.canCreate}}
+            <bar.Action
+              @id='add-position'
+              @label='Add position'
+              @primary={{true}}
+              @loading={{@tracker.addCard.isRunning}}
+              @onClick={{fn @tracker.addNew Position}}
+            />
+          {{/if}}
+        </ListToolbar>
+        <TrackerSection
+          {{this.fit.measure}}
+          @title='Positions'
+          @meta={{this.panelMeta}}
+          @padded={{this.notTable}}
+        >
+          {{#if (eq @tracker.positionsView 'table')}}
+            <DataTable
+              @visibleColumns={{this.visibleColumns}}
+              @loading={{@tracker.positionsQuery.isLoading}}
+              @columns={{this.columns}}
+              @rows={{this.positionsTableRows}}
+              @key={{this.rowKey}}
+              @label='Open positions'
+              @columnMenu={{false}}
+              @sortable={{false}}
+              @striped={{false}}
+              @flush={{true}}
             >
-              {{#each results.entries key='id' as |entry|}}
-                <div
-                  class='tile
-                    {{if (eq @tracker.positionsView "strip") "strip-tile"}}'
-                  role={{if @tracker.cardCrudFunctions.viewCard 'button'}}
-                  tabindex={{if @tracker.cardCrudFunctions.viewCard '0'}}
-                  {{on 'click' (fn @tracker.viewEntry entry.id)}}
-                  {{on 'keydown' (fn @tracker.viewEntryOnKeydown entry.id)}}
-                >
-                  <entry.component />
-                </div>
-              {{else}}
-                {{#if results.isLoading}}
-                  <p class='empty-note' role='status'>Loading…</p>
+              <:empty>{{#if @tracker.positionsQuery.isLoading}}<LoadingState
+                    @label='Loading'
+                  />{{else}}<TrackerEmpty>No open positions yet</TrackerEmpty>{{/if}}</:empty>
+              <:cell as |text row col|>
+                {{#if (eq col.key 'position')}}
+                  <RowOpen
+                    @onOpen={{fn @tracker.openRowCard row.position}}
+                  >{{#let (getComponent row.position) as |Atom|}}{{#if
+                        Atom
+                      }}<Atom
+                          @format='atom'
+                          @displayContainer={{false}}
+                        />{{else}}{{if text text '—'}}{{/if}}{{/let}}</RowOpen>
+                {{else if (eq col.key 'applicantCount')}}
+                  {{if this.isLoading '—' row.applicantCount}}
+                {{else if (eq col.key 'interviewingCount')}}
+                  {{if this.isLoading '—' row.interviewingCount}}
+                {{else if (eq col.key 'openDays')}}
+                  {{if row.openDays row.openDays '—'}}
+                {{else if (eq col.key 'trend')}}
+                  <svg
+                    viewBox='0 0 80 20'
+                    width='80'
+                    height='20'
+                    role='img'
+                    aria-label='28-day applicant trend'
+                  >
+                    <polyline
+                      points={{row.trendPoints}}
+                      fill='none'
+                      class='trend trend-{{row.tone}}'
+                      stroke-linecap='round'
+                      stroke-linejoin='round'
+                      stroke-width='1.6'
+                    />
+                  </svg>
+                {{else if (eq col.key 'status')}}
+                  <this.StatusAtom @model={{row.position.status}} />
+                {{else if (eq col.key 'signal')}}
+                  {{#if row.stalled}}
+                    <StatusDot @tone='danger' @label='Stalled' />
+                  {{else if (eq row.position.status 'open')}}
+                    <StatusDot @tone='success' @label='Healthy' />
+                  {{/if}}
                 {{else}}
-                  <p class='empty-note' role='status'>No open positions yet</p>
+                  {{text}}
                 {{/if}}
-              {{/each}}
-            </div>
-          </Search>
-        {{/let}}
-      {{/if}}
-    </div>
+              </:cell>
+            </DataTable>
+          {{else}}
+            {{#let (component @context.searchResultsComponent) as |Search|}}
+              <Search
+                @query={{@tracker.positionsSearchQuery}}
+                @mode='none'
+                as |results|
+              >
+                {{#if results.entries.length}}
+                  <Grid
+                    @items={{this.asEntries results.entries}}
+                    @size={{if
+                      (eq @tracker.positionsView 'strip')
+                      'double-wide-strip'
+                      'regular-tile'
+                    }}
+                    as |entry Item|
+                  >
+                    <Item>
+                      <div
+                        class='tile'
+                        role={{if @tracker.cardCrudFunctions.viewCard 'button'}}
+                        tabindex={{if @tracker.cardCrudFunctions.viewCard '0'}}
+                        {{on 'click' (fn @tracker.viewEntry entry.id)}}
+                        {{on
+                          'keydown'
+                          (fn @tracker.viewEntryOnKeydown entry.id)
+                        }}
+                      >
+                        <entry.component />
+                      </div>
+                    </Item>
+                  </Grid>
+                {{else}}
+                  {{#if results.isLoading}}<LoadingState
+                      @label='Loading'
+                    />{{else}}<TrackerEmpty>No open positions yet</TrackerEmpty>{{/if}}
+                {{/if}}
+              </Search>
+            {{/let}}
+          {{/if}}
+        </TrackerSection>
+      </:default>
+    </TrackerPage>
     <style scoped>
-      .sec-head {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp);
-        padding-bottom: var(--boxel-sp);
-        border-bottom: 0.125rem solid var(--card-foreground);
-        margin: 0 0 var(--boxel-sp-lg);
-      }
-      .sec-head .htext {
-        margin-right: auto;
-      }
-      .sec-head .htext h2 {
-        font-family: var(--font-sans);
-        font-weight: 700;
-        font-size: 1.25rem;
-        margin: 0 0 0.1875rem;
-      }
-      .sec-head .htext .byline {
-        font-family: var(--font-mono);
-        font-size: 0.7188rem;
-        letter-spacing: 0.02em;
-        color: var(--muted-foreground);
-        margin: 0;
-      }
-      .tab-section {
-        animation: tracker-tab-fade-in 0.2s ease-out;
-      }
-      @keyframes tracker-tab-fade-in {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tab-section {
-          animation: none;
-        }
-      }
-      .data-table {
-        margin-top: 0;
-      }
-      .pill-red {
-        background: color-mix(in oklch, var(--destructive) 14%, var(--card));
-        color: color-mix(
-          in oklch,
-          var(--destructive) 38%,
-          var(--card-foreground)
-        );
-      }
-      .pill-green {
-        background: color-mix(in oklch, var(--success) 14%, var(--card));
-        color: color-mix(in oklch, var(--success) 38%, var(--card-foreground));
-      }
-      .btn-review {
-        margin-bottom: var(--boxel-sp-5xs);
-      }
-      .empty-note {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        color: var(--muted-foreground);
-      }
-      .tile-grid {
-        margin-top: var(--boxel-sp);
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-        gap: var(--boxel-sp);
-      }
-      .data-table-wrap {
-        margin-top: var(--boxel-sp);
-        overflow-x: auto;
-        border: 1px solid var(--border);
-        border-radius: 1rem;
-        background: var(--card);
-        box-shadow: var(--shadow-xs);
-      }
-      .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .data-table th {
-        text-align: left;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-family: var(--font-mono);
-        font-size: 0.6875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--muted-foreground);
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;
-      }
-      .data-table td {
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;
-      }
-      .data-table tbody tr:last-child td {
-        border-bottom: none;
-      }
-      .data-table tbody tr:hover {
-        background: var(--muted);
-      }
-      .status-pill {
-        display: inline-block;
-        padding: 0.125rem 0.5rem;
-        border-radius: 62.4375rem;
-        font-size: 0.6875rem;
-        text-transform: capitalize;
-        white-space: nowrap;
-      }
+      /* the host's card container draws the frame and the hover ring;
+         the tile adds only sizing, so there is one hover affordance */
       .tile {
-        border: 1px solid var(--border);
-        border-radius: 1.25rem;
-        overflow: hidden;
-
-        height: 13.5rem;
-        background: var(--card);
-        box-shadow: var(--shadow-xs);
-        transition:
-          border-color 0.15s ease-out,
-          box-shadow 0.15s ease-out;
-      }
-      .tile:hover {
-        border-color: var(--primary-ink);
-        box-shadow: var(--shadow-sm);
-      }
-      .tile:focus-within {
-        border-color: var(--primary-ink);
+        height: 100%;
       }
       .tile[role='button'] {
         cursor: pointer;
       }
       .tile[role='button']:focus-visible {
-        outline: 0.125rem solid var(--primary);
+        outline: 0.125rem solid var(--ring);
         outline-offset: 0.125rem;
       }
-      @media (prefers-reduced-motion: reduce) {
-        .tile {
-          transition: none;
-        }
-      }
-      .tile-grid.strip-view {
-        grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-        gap: var(--boxel-sp-xs);
-      }
-      .tile.strip-tile {
-        height: 4rem;
-      }
-      .list-toolbar {
-        margin-top: var(--boxel-sp-lg);
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--boxel-sp);
-        margin-bottom: var(--boxel-sp);
-      }
-      .list-search {
-        flex: 1;
-        min-width: 12rem;
-        max-width: 20rem;
-      }
-      .view-toggle {
-        display: flex;
-        margin-left: auto;
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius);
-        overflow: hidden;
-        flex: none;
-      }
-      .sec-head {
-        flex: none;
-      }
       .trend {
-        stroke: var(--border);
+        stroke: var(--primary);
       }
-      @keyframes action-busy-pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.55;
-        }
+      .trend-red {
+        stroke: var(--destructive);
       }
     </style>
   </template>

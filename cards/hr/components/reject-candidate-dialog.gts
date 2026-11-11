@@ -7,7 +7,7 @@ import { Dialog } from '@cardstack/pretui/components/dialog';
 import { RadioGroup } from '@cardstack/pretui/components/radio-group';
 import { Textarea } from '@cardstack/pretui/components/textarea';
 
-import { REJECTION_REASON_OPTIONS } from '@cardstack/catalog/cards/hr/rejection-reason-field';
+import { REJECTION_REASON_OPTIONS } from '../rejection-reason-field';
 
 interface RejectCandidateDialogSignature {
   Args: {
@@ -117,9 +117,14 @@ export class RejectCandidateDialog extends GlimmerComponent<RejectCandidateDialo
         </div>
       </:default>
       <:footer>
-        <Button @variant='secondary' {{on 'click' this.cancel}}>Cancel</Button>
         <Button
-          @variant='destructive'
+          @tone='neutral'
+          @appearance='outlined'
+          {{on 'click' this.cancel}}
+        >Cancel</Button>
+        <Button
+          @tone='danger'
+          @appearance='accent'
           @disabled={{not this.canConfirm}}
           {{on 'click' this.confirm}}
         >Confirm rejection</Button>

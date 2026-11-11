@@ -44,6 +44,11 @@
         "links": {
           "self": "../Employee/dana-kim"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

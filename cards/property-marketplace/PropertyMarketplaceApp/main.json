@@ -15,7 +15,7 @@
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": "../Theme/harbour-navy"
+          "self": "../../Theme/site-tools"
         }
       }
     }

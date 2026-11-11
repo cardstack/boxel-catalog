@@ -43,6 +43,11 @@
         "links": {
           "self": "../Schedule/around-the-clock"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

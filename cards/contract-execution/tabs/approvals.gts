@@ -2,11 +2,11 @@ import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
 import { CardDef } from '@cardstack/base/card-api';
 import { on } from '@ember/modifier';
-import { fn, get } from '@ember/helper';
+import { fn, get, uniqueId } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
 import { NativeSelect } from '@cardstack/pretui/components/native-select';
 import { Textarea } from '@cardstack/pretui/components/textarea';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/pretui/helpers';
 import { identifyCard } from '@cardstack/runtime-common';
 import { Contract } from '../../legal/contract';
 import { evaluateRules } from '../../legal/approval-rule';
@@ -15,18 +15,15 @@ import { ContractVersion } from '../../legal/contract-version';
 import { VersionDiff } from '../../legal/components/version-diff';
 import { Employee } from '../../hr/employee';
 import { formatMoney } from '../../commerce/line-item-totals';
-import { StatePill } from '../../../components/state-pill';
-import { Table } from '../../../components/table';
 import {
   personLabelOrUndefined,
   personLabel,
-  humanise,
-  formatStamp,
   openStep,
   openStepIndex,
-  APPROVAL_COLUMNS,
-  asAny,
 } from '../contract-execution-data';
+import { formatStamp, humanise, type Tone } from '../../shared/compact-format';
+import { Block, CeTable, Dot, Note, SubHead, type Col } from '../components';
+
 interface Signature {
   Args: { app: ContractExecutionView };
 }
@@ -93,8 +90,6 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
       this.args.app.assignBusy = false;
     }
   };
-
-  approvalRowClass = (c: CardDef): string => this.args.app.contractSeverity(c);
 
   /**
    * The approval chain rendered for the approver: "step 2 of 4, Finance is
@@ -178,8 +173,6 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
 
   reject = () => this.recordDecision('rejected');
 
-  delegate = () => this.recordDecision('delegated');
-
   hold = () => this.recordDecision('on_hold');
 
   /** Can a decision be recorded at all here? */
@@ -232,7 +225,7 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
    */
   recordDecision = async (action: string, withConditions = false) => {
     let make = this.args.app.args.createCard;
-    let realm = this.args.app.realmList[0];
+    let realm = this.args.app.realmURLValue;
     let ref = identifyCard(AuditEntry);
     let subject: any = this.leadApproval;
     if (!make || !realm || !ref || !subject) {
@@ -253,7 +246,12 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
       let name =
         personLabelOrUndefined(step?.delegatedTo) ??
         personLabelOrUndefined(step?.approver);
-      this.args.app.decisionProblem = `This step is waiting on ${name}. Switch "Acting as" to them, or use Delegate to hand it over.`;
+      this.args.app.decisionProblem = `This step is waiting on ${name}. Switch "Acting as" to them.`;
+      return;
+    }
+    if (action === 'rejected' && !this.args.app.decisionNote.trim()) {
+      this.args.app.decisionProblem =
+        'Say why in the decision note, then reject again.';
       return;
     }
     if (withConditions && !this.args.app.decisionNote.trim()) {
@@ -273,8 +271,8 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         this.args.app.decisionNote.trim(),
       );
       try {
-        await make(ref, new URL(realm), {
-          realmURL: new URL(realm),
+        await make(ref, realm, {
+          realmURL: realm,
           // Keeps new entries beside the app's own records.
           localDir: this.args.app.localDirFor('AuditEntry'),
           doc: {
@@ -298,12 +296,18 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
                 },
                 // `subject` is a linksTo, so it goes in relationships.
                 subject: { links: { self: subject.id } },
+                ...this.args.app.themeRelationship,
               },
             },
           },
         } as any);
       } catch (error) {
-        await rollback?.();
+        try {
+          await rollback?.();
+        } catch {
+          // the original failure is the one to report; a failed restore must
+          // not replace it
+        }
         throw error;
       }
       this.args.app.lastDecision = auditActionLabel(action);
@@ -350,11 +354,6 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
     let steps = (contract?.approvalChain?.steps ?? []).filter(Boolean);
     let idx = openStepIndex(contract);
     if (!store || !contract?.id || idx < 0 || idx >= steps.length) {
-      return undefined;
-    }
-    // `delegated` needs a hand-over target the tray does not collect yet; it
-    // is recorded in the audit log only (see the Delegate button's title).
-    if (action === 'delegated') {
       return undefined;
     }
     let now = new Date().toISOString();
@@ -457,122 +456,147 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
     };
   };
 
+  columns: Col[] = [
+    { label: 'Contract', kind: 'title', value: (c) => c.cardTitle },
+    {
+      label: 'Step',
+      kind: 'dot',
+      value: (c) => {
+        let steps = (c.approvalChain?.steps ?? []).filter(Boolean);
+        return `Step ${openStepIndex(c) + 1} of ${steps.length}`;
+      },
+      tone: () => 'info',
+    },
+    {
+      label: 'With',
+      value: (c) => {
+        let s = openStep(c);
+        return (
+          personLabelOrUndefined(s?.delegatedTo) ??
+          personLabelOrUndefined(s?.approver) ??
+          'Unassigned'
+        );
+      },
+    },
+    {
+      label: 'Waiting',
+      kind: 'mono',
+      align: 'end',
+      value: (c) => {
+        let d = openStep(c)?.waitingDays;
+        return typeof d === 'number' ? `${d}d` : '—';
+      },
+    },
+    {
+      label: 'Risk',
+      kind: 'dot',
+      value: (c) => this.args.app.riskLabelOf(c.riskGrade),
+      tone: (c) => this.args.app.riskToneOf(c.riskGrade),
+    },
+  ];
+
+  get rows() {
+    return this.args.app.search(this.args.app.approvalRows, (c: any) => [
+      c.cardTitle,
+      c.contractNumber,
+    ]);
+  }
+
+  stepTone = (state: string): Tone =>
+    state === 'done' ? 'success' : state === 'now' ? 'warning' : 'neutral';
+
   <template>
-    <section class='cx-sec cx-ap-split' aria-label='Approval queue'>
-      <div class='cx-ap-list'>
-        <h2 class='cx-h'>Waiting on an approver
-          <span class='cx-h-sub'>{{@app.approvalRows.length}}</span></h2>
-        <p class='cx-note'>Pick a contract to review it. Longest waiting first.</p>
-        <Table
-          @columns={{APPROVAL_COLUMNS}}
-          @items={{@app.approvalRows}}
-          @onRowClick={{this.selectApproval}}
-          @caption='Open approval steps, longest waiting first'
-          @emptyMessage='No contract is waiting on an approval.'
-          @rowClass={{this.approvalRowClass}}
-        >
-          <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-              {{#if (eq column.key 'cardTitle')}}
-                <span
-                  class='cx-ap-name
-                    {{if (this.isSelectedApproval row) "is-picked"}}'
-                  aria-current={{if (this.isSelectedApproval row) 'true'}}
-                >{{row.cardTitle}}</span>
-              {{else if (eq column.key 'step')}}
-                <StatePill
-                  @label={{this.stepLabelOf row}}
-                  @hue='blue'
-                  @dot={{true}}
-                />
-              {{else if (eq column.key 'riskGrade')}}
-                <StatePill
-                  @label={{@app.riskLabelOf row.riskGrade}}
-                  @hue={{@app.riskHueOf row.riskGrade}}
-                  @dot={{true}}
-                />
-              {{/if}}
-            {{/let}}</:cell>
-        </Table>
-      </div>
+    <div class='ap'>
+      <Block
+        @flat={{true}}
+        @title='Waiting on an approver'
+        @count={{this.rows.length}}
+        @sub='Pick a contract to review it. Longest waiting first.'
+      >
+        {{#if this.rows.length}}
+          <CeTable
+            @label='Approval queue'
+            @columns={{this.columns}}
+            @rows={{this.rows}}
+            @onOpen={{this.selectApproval}}
+            @isSelected={{this.isSelectedApproval}}
+          />
+        {{else}}
+          <p class='ap-empty'>Nothing is waiting on an approver. Submit a
+            contract from the Repository to start its chain.</p>
+        {{/if}}
+      </Block>
 
-      <div class='cx-ap-detail'>
-        {{#if this.leadApproval}}
-          <article class='cx-ap'>
-            <header
-              class='cx-ap-head'
-              aria-label='Contract awaiting your approval'
-            >
-              <div class='cx-ap-id'>
-                <h2 class='cx-ap-t'>{{this.leadApproval.cardTitle}}</h2>
-                <p class='cx-ap-m'>
-                  {{this.leadApproval.contractNumber}}
-                  {{#if this.leadApproval.account}}
-                    ·
-                    {{this.leadApproval.account.cardTitle}}
-                  {{/if}}
-                </p>
-              </div>
-              <p class='cx-ap-amt'>{{this.leadValueLabel}}</p>
-            </header>
-
-            <ol class='cx-chain' aria-label='Approval chain'>
+      {{#if this.leadApproval}}
+        {{#let this.leadApproval as |c|}}
+          <Block
+            class='ap-side'
+            @flat={{true}}
+            @title={{c.cardTitle}}
+            @count={{this.leadValueLabel}}
+            @sub='{{c.contractNumber}} · {{c.account.cardTitle}}'
+          >
+            <SubHead @label='Approval chain' />
+            <ol class='ap-chain'>
               {{#each this.leadChain as |st|}}
-                <li class='cx-step is-{{st.state}}'>
-                  <span class='cx-step-bar'></span>
-                  <span class='cx-step-n'>Step
-                    {{st.index}}
-                    of
-                    {{st.total}}
-                    ·
-                    {{st.state}}</span>
-                  {{#if st.needsApprover}}
-                    <div class='cx-assign'>
-                      <label
-                        class='cx-assign-l'
-                        for='cx-assign-{{st.index}}'
-                      >Assign approver</label>
-                      <NativeSelect
-                        class='cx-assign-sel'
-                        id='cx-assign-{{st.index}}'
-                        @disabled={{@app.assignBusy}}
-                        {{on 'change' (fn this.assignApprover st.zeroIndex)}}
-                      >
-                        <option value=''>Unassigned — pick someone</option>
-                        {{#each this.employees as |who|}}
-                          <option value={{who.id}}>
-                            {{this.employeeLabel who}}
-                          </option>
-                        {{/each}}
-                      </NativeSelect>
-                    </div>
-                  {{else}}
-                    <span class='cx-step-who'>{{st.who}}</span>
-                  {{/if}}
-                  <span class='cx-step-w'>{{st.role}}
-                    {{#if st.when}}· {{st.when}}{{/if}}</span>
+                <li class='ap-step'>
+                  <Dot @tone={{this.stepTone st.state}} @label={{st.state}} />
+                  <div class='ap-step-body'>
+                    {{#if st.needsApprover}}
+                      <span class='ap-step-meta'>Step
+                        {{st.index}}
+                        of
+                        {{st.total}}
+                        · waiting</span>
+                      {{#let (uniqueId) as |assignId|}}
+                        <label class='ap-label' for={{assignId}}>Assign approver</label>
+                        <NativeSelect
+                          id={{assignId}}
+                          @disabled={{@app.assignBusy}}
+                          {{on 'change' (fn this.assignApprover st.zeroIndex)}}
+                        >
+                          <option value=''>Unassigned — pick someone</option>
+                          {{#each this.employees as |who|}}
+                            <option value={{who.id}}>{{this.employeeLabel
+                                who
+                              }}</option>
+                          {{/each}}
+                        </NativeSelect>
+                      {{/let}}
+                    {{else}}
+                      <strong>{{st.who}}</strong>
+                      <span class='ap-step-meta'>Step
+                        {{st.index}}
+                        of
+                        {{st.total}}
+                        ·
+                        {{st.state}}
+                        {{#if st.role}}· {{st.role}}{{/if}}
+                        {{#if st.when}}· {{st.when}}{{/if}}</span>
+                    {{/if}}
+                  </div>
                 </li>
               {{/each}}
             </ol>
+            {{#if @app.assignProblem}}
+              <Note
+                @tone='danger'
+                @lead='Not assigned'
+                @text={{@app.assignProblem}}
+              />
+            {{/if}}
 
-            <section class='cx-tray' aria-label='Record a decision'>
-              <h3 class='cx-h'>Your decision</h3>
+            <SubHead @label='Your decision' />
+            <div class='ap-tray'>
               {{#if this.canDecide}}
-                <div class='cx-tray-who'>
-                  <label class='cx-tray-l' for='cx-acting'>Acting as</label>
+                {{#let (uniqueId) (uniqueId) as |actingId noteId|}}
+                  <label class='ap-label' for={{actingId}}>Acting as</label>
                   {{#if this.expectedApproverName}}
-                    <span class='cx-tray-expect'>this step is
+                    <span class='ap-step-meta'>this step is
                       {{this.expectedApproverName}}'s</span>
                   {{/if}}
-                  {{! A native select, not BoxelSelect.
-                  ember-power-select mounts its dropdown through a
-                  wormhole into the host document; inside a card's
-                  isolated template that left the whole app wedged —
-                  after opening Approvals, even tab switching stopped
-                  responding. A native select needs no portal, is
-                  keyboard-accessible for free, and this list is short. }}
                   <NativeSelect
-                    class='cx-acting'
-                    id='cx-acting'
+                    id={{actingId}}
                     {{on 'change' this.setActingAsFromEvent}}
                   >
                     <option value=''>Choose who is deciding</option>
@@ -580,343 +604,171 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
                       <option
                         value={{who.id}}
                         selected={{eq who.id @app.actingAs.id}}
-                      >
-                        {{this.employeeLabel who}}
-                      </option>
+                      >{{this.employeeLabel who}}</option>
                     {{/each}}
                   </NativeSelect>
-                </div>
-
-                <Textarea
-                  class='cx-tray-note'
-                  aria-label='Decision note'
-                  @value={{@app.decisionNote}}
-                  @onInput={{this.setDecisionNote}}
-                  @placeholder='Reason, or the condition that must be met'
-                />
-                <div class='cx-tray-row'>
-                  <Button
-                    @tone='primary'
-                    @appearance='accent'
-                    @disabled={{@app.decisionBusy}}
-                    {{on 'click' this.approve}}
-                  >Approve</Button>
-                  <Button
-                    @appearance='outlined'
-                    @disabled={{@app.decisionBusy}}
-                    {{on 'click' this.approveWithConditions}}
-                  >Approve with conditions</Button>
-                  <Button
-                    @appearance='outlined'
-                    @disabled={{@app.decisionBusy}}
-                    title='Recorded in the audit log only — the tray has no hand-over target yet'
-                    {{on 'click' this.delegate}}
-                  >Delegate</Button>
-                  <Button
-                    @appearance='outlined'
-                    @disabled={{@app.decisionBusy}}
-                    {{on 'click' this.hold}}
-                  >Put on hold</Button>
-                  <Button
-                    @tone='danger'
-                    @appearance='outlined'
-                    @disabled={{@app.decisionBusy}}
-                    {{on 'click' this.reject}}
-                  >Reject</Button>
-                </div>
-
-                {{#if @app.decisionProblem}}
-                  <p
-                    class='cx-tray-err'
-                    role='alert'
-                  >{{@app.decisionProblem}}</p>
-                {{else if @app.lastDecision}}
-                  <p class='cx-tray-ok' role='status'>Recorded:
-                    {{@app.lastDecision}}. It appears in the Audit tab.</p>
-                {{/if}}
-
-                <p class='cx-tray-scope'>Delegate and hold are recorded without
-                  moving the contract forward.</p>
+                  <label class='ap-label' for={{noteId}}>Decision note</label>
+                  <Textarea
+                    id={{noteId}}
+                    @value={{@app.decisionNote}}
+                    @onInput={{this.setDecisionNote}}
+                    @placeholder='Reason, or the condition that must be met'
+                  />
+                  <div class='ap-actions'>
+                    <Button
+                      @size='xs'
+                      @tone='primary'
+                      @appearance='accent'
+                      @disabled={{@app.decisionBusy}}
+                      {{on 'click' this.approve}}
+                    >Approve</Button>
+                    <Button
+                      @size='xs'
+                      @appearance='outlined'
+                      @disabled={{@app.decisionBusy}}
+                      {{on 'click' this.approveWithConditions}}
+                    >Approve with conditions</Button>
+                    <Button
+                      @size='xs'
+                      @appearance='outlined'
+                      @disabled={{true}}
+                    >Delegate</Button>
+                    <Button
+                      @size='xs'
+                      @appearance='outlined'
+                      @disabled={{@app.decisionBusy}}
+                      {{on 'click' this.hold}}
+                    >Put on hold</Button>
+                    <Button
+                      @size='xs'
+                      @tone='danger'
+                      @appearance='outlined'
+                      @disabled={{@app.decisionBusy}}
+                      {{on 'click' this.reject}}
+                    >Reject</Button>
+                  </div>
+                  {{#if @app.decisionProblem}}
+                    <Note @tone='danger' @lead={{@app.decisionProblem}} />
+                  {{/if}}
+                  <p class='ap-msg' role='status'>
+                    {{#if @app.lastDecision}}
+                      {{#unless @app.decisionProblem}}
+                        Recorded:
+                        {{@app.lastDecision}}
+                      {{/unless}}
+                    {{/if}}
+                  </p>
+                {{/let}}
               {{else}}
-                <p class='cx-tray-scope'>Open this card in the app to record a
-                  decision.</p>
+                <p class='ap-step-meta'>Decisions need write access — open the
+                  app in the interactive host.</p>
               {{/if}}
-            </section>
+            </div>
+            <p class='ap-foot'>Hold is recorded without moving the contract
+              forward. Reject needs a reason in the decision note. Delegate
+              stays off until the tray can name who the step goes to.</p>
 
-            {{#if this.leadVersionPair}}
-              <section
-                class='cx-diff'
-                aria-label='What the last amendment changed'
-              >
-                <h3 class='cx-h'>What changed in the last amendment</h3>
-                <VersionDiff
-                  @before={{get this.leadVersionPair 0}}
-                  @after={{get this.leadVersionPair 1}}
-                />
-              </section>
+            {{#if this.leadVersionPair.length}}
+              <SubHead @label='What changed in the last amendment' />
+              <VersionDiff
+                @before={{get this.leadVersionPair 0}}
+                @after={{get this.leadVersionPair 1}}
+              />
             {{/if}}
-
             {{#if this.leadWhy}}
-              <p class='cx-why'>
-                <span class='cx-why-l'>Why this needs approval</span>
-                Approval is required because
-                {{this.leadWhy}}.
-              </p>
+              <Note
+                class='ap-why'
+                @tone='info'
+                @lead='Why this needs approval.'
+                @text={{this.leadWhy}}
+              />
+            {{else if @app.rulesUnconfigured}}
+              <Note
+                class='ap-why'
+                @tone='warning'
+                @lead='No approval rules.'
+                @text='Every contract goes to the default reviewer until rules are configured.'
+              />
             {{/if}}
-          </article>
-        {{/if}}
-
-      </div>
-    </section>
-
+          </Block>
+        {{/let}}
+      {{/if}}
+    </div>
     <style scoped>
-      .cx-sec {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp);
+      .ap {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+        align-items: stretch;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius);
+        overflow: hidden;
       }
-      .cx-h {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-2xs);
+      .ap-side {
+        border-inline-start: 1px solid var(--border);
+      }
+      .ap-chain {
         margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
+        padding: 0;
+        list-style: none;
       }
-      .cx-h-sub {
-        margin-left: var(--boxel-sp-2xs);
-        font-family: var(--font-mono);
+      .ap-step {
+        display: flex;
+        align-items: baseline;
+        gap: var(--boxel-sp-2xs);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        border-bottom: 1px solid var(--border);
+      }
+      .ap-step-body {
+        display: grid;
+        gap: var(--boxel-sp-5xs);
+        flex: 1;
+        min-inline-size: 0;
+      }
+      .ap-step-meta {
         font-size: var(--boxel-font-size-2xs);
-        font-weight: 400;
         color: var(--muted-foreground);
       }
-
-      .cx-tray {
-        margin-top: var(--boxel-sp);
-        padding-top: var(--boxel-sp);
+      .ap-label {
+        font-family: var(--font-mono);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .ap-tray {
+        display: grid;
+        gap: var(--boxel-sp-2xs);
+        padding: var(--boxel-sp-xs);
+        border-bottom: 1px solid var(--border);
+      }
+      .ap-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--boxel-sp-2xs);
+      }
+      .ap-msg {
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+      }
+      .ap-foot,
+      .ap-empty {
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+      }
+      .ap-why {
         border-top: 1px solid var(--border);
       }
-      .cx-tray-who {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        margin-bottom: var(--boxel-sp-xs);
-      }
-      .cx-tray-expect {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .cx-tray-l {
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-
-      .cx-tray-note {
-        margin: var(--boxel-sp-xs) 0;
-        max-width: var(--_cx-measure);
-      }
-      .cx-tray-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-xs);
-      }
-      .cx-tray-err {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--destructive-ink);
-      }
-      .cx-tray-ok {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--success-ink);
-      }
-      .cx-tray-scope {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-xs);
-        line-height: 1.5;
-        color: var(--muted-foreground);
-        max-width: var(--_cx-measure);
-      }
-      .cx-diff {
-        margin-top: var(--boxel-sp);
-      }
-
-      .cx-note {
-        margin: 0 0 var(--boxel-sp);
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.55;
-        color: var(--muted-foreground);
-        max-width: var(--_cx-measure);
-      }
-      .cx-ap-split {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
-        gap: var(--boxel-sp-lg);
-        align-items: start;
-      }
-      .cx-ap-list,
-      .cx-ap-detail {
-        min-width: 0;
-      }
-      /* The picked approval is marked in its own title cell: an accent bar and
-         heavier type, so the selection reads without styling Table's rows. */
-      .cx-ap-name.is-picked {
-        padding-left: var(--boxel-sp-xs);
-        box-shadow: inset 0.1875rem 0 0 var(--primary);
-        font-weight: 650;
-      }
-      .cx-ap-detail {
-        position: sticky;
-        top: 0;
-      }
-
-      @container cx-app (width < 56.25rem) {
-        .cx-ap-split {
+      @container cx-app (width < 52rem) {
+        .ap {
           grid-template-columns: minmax(0, 1fr);
         }
-        .cx-ap-detail {
-          position: static;
-        }
-      }
-
-      .cx-ap {
-        padding: var(--boxel-sp) 0 var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border);
-        margin-bottom: var(--boxel-sp);
-      }
-      .cx-ap-head {
-        display: flex;
-        align-items: flex-start;
-        gap: var(--boxel-sp-lg);
-        flex-wrap: wrap;
-      }
-      .cx-ap-id {
-        min-width: 0;
-      }
-      .cx-ap-t {
-        margin: 0;
-        font-size: var(--boxel-font-size);
-        font-weight: 620;
-        letter-spacing: -0.01em;
-      }
-      .cx-ap-m {
-        margin: var(--boxel-sp-6xs) 0 0;
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .cx-ap-amt {
-        margin: 0 0 0 auto;
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
-        font-size: 1.4rem;
-        font-weight: 600;
-        letter-spacing: -0.01em;
-        white-space: nowrap;
-      }
-
-      .cx-chain {
-        list-style: none;
-        margin: var(--boxel-sp) 0 0;
-        padding: 0;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-        gap: var(--boxel-sp-xs) var(--boxel-sp);
-      }
-      .cx-step {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-6xs);
-        min-width: 0;
-      }
-      .cx-step-bar {
-        height: 0.25rem;
-        border-radius: var(--boxel-border-radius-xs);
-        background: var(--border);
-        margin-bottom: var(--boxel-sp-3xs);
-      }
-      .cx-step.is-done .cx-step-bar {
-        background: var(--success);
-      }
-      .cx-step.is-now .cx-step-bar {
-        background: var(--primary);
-      }
-      .cx-step-n {
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
-        letter-spacing: 0.09em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .cx-step.is-now .cx-step-n {
-        color: var(--foreground);
-      }
-      .cx-assign {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-5xs);
-        margin: var(--boxel-sp-6xs) 0 var(--boxel-sp-4xs);
-      }
-      .cx-assign-l {
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--foreground);
-      }
-
-      .cx-step-who {
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 560;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .cx-step.is-now .cx-step-who {
-        color: var(--foreground);
-        font-weight: 650;
-      }
-      .cx-step-w {
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
-        color: var(--muted-foreground);
-      }
-
-      .cx-why {
-        margin: var(--boxel-sp) 0 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp);
-        background: var(
-          --_cx-sunk,
-          color-mix(in oklch, currentColor 4%, transparent)
-        );
-        color: var(--foreground);
-        border-left: 3px solid var(--muted-foreground);
-        border-radius: 0 var(--radius) var(--radius) 0;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.55;
-        max-width: var(--_cx-measure);
-      }
-      .cx-why-l {
-        display: block;
-        margin-bottom: var(--boxel-sp-4xs);
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-
-      @container cx-app (width < 35rem) {
-        .cx-ap-amt {
-          margin-left: 0;
-          font-size: 1.2rem;
-        }
-        .cx-chain {
-          grid-template-columns: 1fr;
+        .ap-side {
+          border-inline-start: 0;
+          border-top: 1px solid var(--border);
         }
       }
     </style>

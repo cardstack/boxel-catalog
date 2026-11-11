@@ -3,20 +3,16 @@ import type { ContractExecutionView } from '../contract-execution-app';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
-import { eq } from '@cardstack/boxel-ui/helpers';
-
-import { Contract } from '../../legal/contract';
 import { evaluateRules } from '../../legal/approval-rule';
-
-import { CollectionPanel } from '../../../components/collection-panel';
-import { StatePill } from '../../../components/state-pill';
+import { contractTypeLabel } from '../../legal/contract-type';
 import {
   DEFAULT_REVIEWER,
-  CONTRACT_COLUMNS,
   openStep,
   openStepIndex,
-  asAny,
 } from '../contract-execution-data';
+import { formatDay } from '../../shared/compact-format';
+import { Block, CeTable, Note, type Col } from '../components';
+
 interface Signature {
   Args: { app: ContractExecutionView };
 }
@@ -138,88 +134,106 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
     return Boolean(this.args.app.ruleQuery?.isLoading);
   }
 
+  columns: Col[] = [
+    { label: 'Number', kind: 'mono', value: (c) => c.contractNumber ?? '—' },
+    { label: 'Contract', kind: 'title', value: (c) => c.cardTitle },
+    {
+      label: 'Type',
+      value: (c) => (c.contractType ? contractTypeLabel(c.contractType) : '—'),
+    },
+    {
+      label: 'Status',
+      kind: 'dot',
+      value: (c) => this.args.app.statusLabelOf(c.status),
+      tone: (c) => this.args.app.statusToneOf(c.status),
+    },
+    {
+      label: 'Risk',
+      kind: 'dot',
+      value: (c) => this.args.app.riskLabelOf(c.riskGrade),
+      tone: (c) => this.args.app.riskToneOf(c.riskGrade),
+    },
+    {
+      label: 'Expires',
+      kind: 'mono',
+      align: 'end',
+      value: (c) => formatDay(c.endDate),
+    },
+    { label: 'Next step', kind: 'custom', align: 'end' },
+  ];
+
+  get rows() {
+    return this.args.app.search(this.args.app.contracts, (c: any) => [
+      c.cardTitle,
+      c.contractNumber,
+      c.account?.cardTitle,
+    ]);
+  }
+
   <template>
     {{#if @app.submitProblem}}
-      <p class='cx-submit-msg is-err' role='alert'>{{@app.submitProblem}}</p>
+      <Note
+        class='repo-note'
+        @tone='danger'
+        @lead='Not submitted'
+        @text={{@app.submitProblem}}
+      />
     {{else if @app.submitNote}}
-      <p class='cx-submit-msg is-ok' role='status'>{{@app.submitNote}}</p>
+      <Note
+        class='repo-note'
+        @tone='success'
+        @lead='Submitted'
+        @text={{@app.submitNote}}
+      />
     {{/if}}
-    <CollectionPanel
-      @cardClass={{Contract}}
-      @context={{@app.context}}
-      @realms={{@app.realmList}}
-      @columns={{CONTRACT_COLUMNS}}
-      @label='Contracts'
-      @searchPlaceholder='Search contracts…'
-      @newLabel='contract'
-      @defaultView='table'
-      @rowFilter={{@app.activeViewTest}}
-    >
-      <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-          {{#if (eq column.key 'submit')}}
-            {{#if (this.needsSubmission row)}}
+    <Block @title='Contracts' @count={{this.rows.length}}>
+      {{#if this.rows.length}}
+        <CeTable
+          @label='Contracts'
+          @columns={{this.columns}}
+          @rows={{this.rows}}
+          @onOpen={{@app.openCard}}
+        >
+          <:cell as |c|>
+            {{#if (this.needsSubmission c)}}
               <Button
-                @tone='primary'
-                @appearance='accent'
+                @size='xs'
+                @tone='neutral'
+                @appearance='plain'
                 @disabled={{this.submitDisabled}}
-                title={{if
-                  this.rulesLoading
-                  'Approval rules are still loading'
-                  'Build the approval chain from the rules that match this contract'
-                }}
-                {{on 'click' (fn this.submitForApproval row)}}
-              >{{if
-                  this.rulesLoading
-                  'Loading rules…'
-                  'Submit for approval'
-                }}</Button>
-            {{else if (this.isInFlight row)}}
-              <span class='cx-none'>in approval</span>
-            {{else if (this.isSignable row)}}
+                {{on 'click' (fn this.submitForApproval c)}}
+              >Submit for approval</Button>
+            {{else if (this.isSignable c)}}
               <Button
-                @tone='success'
-                @appearance='accent'
-                {{on 'click' (fn @app.openInWorkspace row)}}
+                @size='xs'
+                @tone='neutral'
+                @appearance='plain'
+                {{on 'click' (fn @app.openInWorkspace c)}}
               >Sign in workspace</Button>
+            {{else if (this.isInFlight c)}}
+              <span class='repo-muted'>in approval</span>
             {{else}}
-              <span class='cx-none'>{{@app.statusLabelOf row.status}}</span>
+              <span class='repo-muted'>{{@app.statusLabelOf c.status}}</span>
             {{/if}}
-          {{else if (eq column.key 'status')}}
-            <StatePill
-              @label={{@app.statusLabelOf row.status}}
-              @hue={{@app.statusHueOf row.status}}
-              @dot={{true}}
-            />
-          {{else if (eq column.key 'riskGrade')}}
-            <StatePill
-              @label={{@app.riskLabelOf row.riskGrade}}
-              @hue={{@app.riskHueOf row.riskGrade}}
-              @dot={{true}}
-            />
-          {{/if}}
-        {{/let}}</:cell>
-    </CollectionPanel>
-
+          </:cell>
+        </CeTable>
+      {{else}}
+        <p class='repo-empty'>No contracts match this view.</p>
+      {{/if}}
+    </Block>
     <style scoped>
-      .cx-submit-msg {
-        margin: 0 0 var(--boxel-sp-xs);
-        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-        border-radius: var(--radius);
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.5;
-        max-width: var(--_cx-measure);
+      .repo-note {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius);
       }
-      .cx-submit-msg.is-err {
-        background: color-mix(in oklch, var(--destructive) 10%, transparent);
-        border-left: 3px solid var(--destructive);
-      }
-      .cx-submit-msg.is-ok {
-        background: color-mix(in oklch, var(--success) 10%, transparent);
-        border-left: 3px solid var(--success);
-      }
-      .cx-none {
+      .repo-muted {
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
-        font-size: var(--boxel-font-size-sm);
+      }
+      .repo-empty {
+        padding: var(--boxel-sp-xs);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

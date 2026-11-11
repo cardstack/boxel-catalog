@@ -8,7 +8,7 @@
         "regime": {
           "regime": "ISO 9001:2015",
           "version": "2015",
-          "clause": "§8.4.1",
+          "clause": "\u00a78.4.1",
           "clauseTitle": "General"
         },
         "kind": "presence",
@@ -30,7 +30,7 @@
         "sourceVersion": "supplier-controls v1"
       },
       "cardInfo": {
-        "name": "SUP-01 · norvik-ltd",
+        "name": "SUP-01 \u00b7 norvik-ltd",
         "summary": "A tax identifier is on file.",
         "notes": null,
         "cardThumbnailURL": null
@@ -51,11 +51,16 @@
         "links": {
           "self": "../../hr/Employee/dana-kim"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "@cardstack/catalog/cards/audit/audit-result",
+        "module": "../audit-result",
         "name": "AuditResult"
       }
     }

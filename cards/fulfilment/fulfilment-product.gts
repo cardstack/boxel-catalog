@@ -8,11 +8,6 @@ import {
 import BooleanField from 'https://cardstack.com/base/boolean';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
 import PackageIcon from '@cardstack/boxel-icons/package';
-import Barcode from '@cardstack/boxel-icons/barcode';
-import Boxes from '@cardstack/boxel-icons/boxes';
-import Building from '@cardstack/boxel-icons/building';
-import Ruler from '@cardstack/boxel-icons/ruler';
-import { eq } from '@cardstack/boxel-ui/helpers';
 // The catalog's image field rather than a bare url string: it accepts either a
 // pasted URL or a file uploaded into the realm and resolves both to one
 // `resolvedUrl`, so a consumer never has to know which way the photo arrived.
@@ -23,19 +18,8 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // tolerate because the binding is only read inside the constructor, never at
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
-import { LoadingRows, amountText } from './fulfilment-ui';
-import {
-  ALERT_STYLE,
-  COMPACT_EMPTY_STYLE,
-} from '@cardstack/catalog/components/pretui-helpers';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { Alert } from '@cardstack/pretui/components/alert';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
-import { KeyValue } from '@cardstack/pretui/components/key-value';
-import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import { Stat } from '@cardstack/pretui/components/stat';
-import { Token } from '@cardstack/pretui/components/token';
+import { money } from './fulfilment-format';
+import { FitTile } from '../shared/fit-tile';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import { Product } from '../commerce/product';
 import { realmURL } from 'https://cardstack.com/base/card-api';
@@ -44,11 +28,6 @@ import type Owner from '@ember/owner';
 // A Product as fulfilment sees it: the base Product's SKU and name, plus the
 // things you need to *move* an item (weight, box size, barcode, who supplies
 // it), not the things you need to sell it.
-const IDENTIFIER_FACTS = [
-  { key: 'Barcode', value: 'barcode' },
-  { key: 'Vendor SKU', value: 'vendorSku' },
-];
-
 export class FulfilmentProduct extends Product {
   static displayName = 'Product';
   static icon = PackageIcon;
@@ -148,380 +127,308 @@ export class FulfilmentProduct extends Product {
       return this.stockRows.reduce((n, r) => n + (r.quantityAvailable ?? 0), 0);
     }
 
+    get stats() {
+      return productStats(this.args.model as FulfilmentProduct);
+    }
+    get pricingRows() {
+      return pricingRows(this.args.model as FulfilmentProduct);
+    }
+    get parcelRows() {
+      return parcelRows(this.args.model as FulfilmentProduct);
+    }
+    get idRows() {
+      return idRows(this.args.model as FulfilmentProduct);
+    }
+
     <template>
       <article class='prod'>
-        <header class='hd'>
-          {{#if @model.image.resolvedUrl}}
-            <img class='hero' src={{@model.image.resolvedUrl}} alt='' />
-          {{/if}}
-          <div class='hd-id'>
-            {{#if @model.sku}}<Token class='sku' @value={{@model.sku}} />{{/if}}
-            <h1 class='name'>{{@model.productName}}</h1>
-            {{#if @model.category}}
-              <p class='cat'>{{@model.category}}</p>
+        <header class='ihead'>
+          <div class='who'>
+            {{#if @model.image.resolvedUrl}}
+              <img class='mark' src={{@model.image.resolvedUrl}} alt='' />
+            {{else}}
+              <span class='mark' aria-hidden='true'>Pr</span>
             {{/if}}
-
-            {{! Measured: this column was 529.3px wide holding 69px of content
-                beside a 212px hero — a fill ratio of 0.33 and 143.1px of dead
-                height. The three numbers used to sit in a full-width band below,
-                which was 757.4px wide to show 200.6px of content: 74% of that
-                row was empty. One pool of dead space filled with the other, and
-                a whole horizontal band deleted. They also belong here on the
-                merits — cost, price and margin are what identifies a product
-                commercially, so they read with its name rather than after it. }}
-            <div class='stats'>
-              {{! `money` rather than the field atom: the atom drops trailing
-                  zeros, so £11.50 rendered as "£ 11.5" — not a price. }}
-              <Stat
-                class='stat'
-                @label='Cost'
-                @value={{amountText
-                  @model.cost.amount
-                  @model.cost.currency.code
-                }}
-                @roll={{false}}
-              />
-              <Stat
-                class='stat'
-                @label='Price'
-                @value={{amountText
-                  @model.price.amount
-                  @model.price.currency.code
-                }}
-                @roll={{false}}
-              />
-              <div class='q-ratio'>
-                <Stat
-                  class='stat stat-ratio'
-                  @label='Margin'
-                  @value={{if
-                    @model.marginPercent
-                    (percentText @model.marginPercent)
-                    ''
-                  }}
-                  @roll={{false}}
-                />
-                {{! Margin is the one figure here that IS a proportion — 0–100%
-                    of the price — so it gets a length as well as a number. Cost
-                    and price are absolute amounts with nothing to be a
-                    proportion OF, which is why they stay figures. The Pret UI
-                    ProgressBar is hidden from assistive tech: the figure above
-                    already says it, and a margin is not task progress. }}
-                {{#if @model.marginPercent}}
-                  <ProgressBar
-                    class='m-rail'
-                    @value={{@model.marginPercent}}
-                    @hue='var(--muted-foreground)'
-                    aria-hidden='true'
-                  />
-                {{/if}}
-              </div>
+            <div class='id'>
+              <h1 class='name'>{{@model.cardTitle}}</h1>
+              <p class='meta'>{{metaLine @model}}</p>
             </div>
           </div>
-          {{#if @model.isDropship}}
-            <StatePill @label='Dropship — no stock held' @hue='teal' />
-          {{/if}}
+          <div class='bar'>
+            <span class='st' data-tone={{if @model.isActive 'ok'}}><span
+                class='dot'
+              ></span>{{if @model.isActive 'active' 'inactive'}}</span>
+            {{#if @model.isDropship}}
+              <span class='st'><span class='dot'></span>dropship</span>
+            {{/if}}
+            <span class='st'><span class='dot'></span>{{money
+                @model.price.amount
+                @model.price.currency.code
+              }}</span>
+          </div>
         </header>
 
-        <div class='cols'>
-          <section class='sec'>
-            <h2><Ruler class='sec-icon' aria-hidden='true' />Shipping profile</h2>
-            <@fields.shippingProfile @format='embedded' />
-            <p class='hint'>Pre-fills the packing station when this item is the
-              only thing in the box.</p>
-          </section>
-
-          <section class='sec'>
-            <h2><Barcode class='sec-icon' aria-hidden='true' />Identifiers</h2>
-            <KeyValue class='kv' @items={{IDENTIFIER_FACTS}}>
-              <:value as |item|>
-                {{#if (eq item.value 'barcode')}}
-                  {{#if @model.barcode}}<Token
-                      @value={{@model.barcode}}
-                    />{{else}}—{{/if}}
-                {{else}}
-                  {{#if @model.vendorSku}}<Token
-                      @value={{@model.vendorSku}}
-                    />{{else}}—{{/if}}
-                {{/if}}
-              </:value>
-            </KeyValue>
-          </section>
+        <div class='stats'>
+          {{#each this.stats as |s|}}
+            <div class='stat'>
+              <span class='st cap' data-tone={{s.tone}}><span
+                  class='dot'
+                ></span>{{s.label}}</span>
+              <span class='num'>{{s.value}}</span>
+              <span class='meta'>{{s.meta}}</span>
+            </div>
+          {{/each}}
         </div>
 
-        <section class='sec'>
-          <h2><Boxes class='sec-icon' aria-hidden='true' />Stock</h2>
+        <section class='blk'>
+          <h2>Pricing</h2>
+          <dl class='kv'>
+            {{#each this.pricingRows as |r|}}
+              <dt class='cap'>{{r.k}}</dt>
+              <dd>{{r.v}}</dd>
+            {{/each}}
+          </dl>
+        </section>
+
+        <section class='blk'>
+          <h2>Shipping profile</h2>
+          <dl class='kv'>
+            {{#each this.parcelRows as |r|}}
+              <dt class='cap'>{{r.k}}</dt>
+              <dd>{{r.v}}</dd>
+            {{/each}}
+          </dl>
+        </section>
+
+        <section class='blk'>
+          <h2>Identifiers</h2>
+          <dl class='kv'>
+            {{#each this.idRows as |r|}}
+              <dt class='cap'>{{r.k}}</dt>
+              <dd>{{r.v}}</dd>
+            {{/each}}
+          </dl>
+        </section>
+
+        <section class='blk'>
+          <h2>Stock</h2>
           {{#if this.queryError}}
-            <Alert
-              @tone='danger'
-              @title='Could not read stock for this product.'
-              style={{ALERT_STYLE.danger}}
-            >{{this.queryError}}</Alert>
-            {{! Loading is not empty. Space is reserved so the section does not
-              jump when the query lands. }}
+            <p class='row' role='alert'><span class='st' data-tone='bad'><span
+                  class='dot'
+                ></span>Could not read stock:
+                {{this.queryError}}</span></p>
           {{else if this.isQueryLoading}}
-            <LoadingRows />
-          {{else if this.stockRows.length}}
-            <p class='stock-total'>
-              <strong>{{this.totalAvailable}}</strong>
-              available across
-              {{this.stockRows.length}}
-              {{if (eq this.stockRows.length 1) 'location' 'locations'}}
-            </p>
-            <ul class='stock-list'>
-              {{#each this.stockRows as |row|}}
-                <li class='stock-row'>
-                  <span class='st-wh'>{{if
+            <p class='row meta'>Loading stock…</p>
+          {{else}}
+            {{#each this.stockRows as |row|}}
+              <div class='row'>
+                <span class='lead'>
+                  <span class='strong'>{{if
                       row.warehouseCode
                       row.warehouseCode
                       '—'
                     }}</span>
-                  <span class='st-bin'>{{if
+                  <span class='mono'>{{if
                       row.binLocation
                       row.binLocation
-                      ''
+                      '—'
                     }}</span>
-                  <span class='st-qty'>{{row.quantityAvailable}}</span>
-                  <span class='st-state'><StatePill
-                      @label={{row.stockStateLabel}}
-                      @hue={{row.stockStateHue}}
-                    /></span>
-                </li>
-              {{/each}}
-            </ul>
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @texture={{false}}
-              @title='No stock rows reference this product yet'
-              @message='Add one from the Inventory tab to start tracking it.'
-            />
+                </span>
+                <span class='st' data-tone={{stockTone row}}><span
+                    class='dot'
+                  ></span>{{row.quantityAvailable}}
+                  available</span>
+              </div>
+            {{else}}
+              <p class='row meta'>No stock rows reference this product yet.</p>
+            {{/each}}
           {{/if}}
         </section>
 
-        {{#if @model.vendor}}
-          <section class='sec'>
-            <h2><Building class='sec-icon' aria-hidden='true' />Supplied by</h2>
-            {{! The section already IS the surface — it has a ground and an inset.
-                Letting the host draw its bordered card boundary in here as well
-                put a pill inside a panel: two nested containers for one vendor,
-                the inner one stretched full width. Passing displayContainer as
-                false drops the boundary and keeps the content. }}
-            <@fields.vendor @format='embedded' @displayContainer={{false}} />
-          </section>
-        {{/if}}
+        <section class='blk'>
+          <h2>Linked</h2>
+          <dl class='kv'>
+            <dt class='cap'>Vendor</dt>
+            <dd>{{#if @model.vendor}}<@fields.vendor
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd>
+          </dl>
+        </section>
       </article>
 
       <style scoped>
         .prod {
-          /* Isolated gets NO container from the host — every ancestor up to the
-             panel is `container-type: normal`, so an `@container` rule here is
-             inert until this declares its own. `inline-size`, not `size`: the
-             card scrolls, and `size` needs a definite block size. */
           container-type: inline-size;
-          container-name: card-iso;
-
-          /* ONE panel primitive. Every full-width tinted block on this card —
-             section, note, alert, callout — takes its ground and inset
-             from here, because a background makes spacing VISIBLE: while
-             sections were separated by whitespace alone, a note padded
-             `sp-sm` and a section padded `sp-lg` looked the same. Tint them
-             both and their text edges no longer line up down the page, and
-             every gap between them reads as a mis-registration rather than a
-             rhythm. The inset is the thing that must agree; the tint only
-             exposed it. */
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-          --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --ful-rule: color-mix(in oklch, var(--foreground) 12%, transparent);
-
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xl);
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp-lg);
-        }
-        .hd {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp);
-          justify-content: space-between;
-          align-items: flex-start;
-          padding-bottom: var(--boxel-sp);
-          border-bottom: 0.125rem solid var(--ful-rule);
-        }
-        .hero {
-          /* Was a 132px thumbnail inside a 150px header — the most identifying
-             thing on the card rendered smaller than the title. */
-          width: min(15rem, 28%);
-          height: auto;
-          aspect-ratio: 1;
-          flex: 0 0 auto;
-          object-fit: cover;
-          border-radius: 0.375rem;
-          border: 1px solid var(--ful-rule);
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 6%,
-            transparent
-          );
-        }
-        .hd-id {
-          flex: 1 1 14rem;
-          min-width: 0;
-          /* The column carries the stats now, so it owns its own rhythm and
-             stretches to the hero's height — `align-self` beats the parent's
-             `align-items: flex-start`, and `margin-top: auto` on the stats then
-             seats the figures on the image's bottom edge instead of leaving them
-             floating mid-column above 143px of nothing. */
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          align-self: stretch;
-        }
-        .hd-id .stats {
-          margin-top: auto;
-          padding-top: var(--boxel-sp-xs);
-          border-top: 1px solid var(--ful-rule);
-        }
-        /* Pret UI Token for the SKU, on the muted ink at the extra-small size. */
-        .hd-id .sku {
-          --pretui-token-hue: var(--muted-foreground);
-          --pretui-token-font-size: var(--boxel-font-size-xs);
-          align-self: flex-start;
-          margin-inline: 0;
-        }
-        .name {
-          margin: 0.1rem 0 0;
-          font-size: var(--boxel-font-size-xl);
-          line-height: 1.05;
-        }
-        .cat {
-          margin: 0.25rem 0 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        /* Inside the header column now, so the gap tightens: `sp-xl` was spacing
-           for a 757px band and here it would push Margin off the end. */
-        .stats {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-lg);
-        }
-        /* Pret UI Stat: the knob keeps the figures at the old large size. A
-           ratio is not an amount, so the margin is one step quieter and muted
-           so the two money figures read as the pair they are. */
-        .stat {
-          --text-stat: var(--boxel-font-size-lg);
-        }
-        .stat-ratio {
-          --text-stat: var(--boxel-font-size);
-          color: var(--muted-foreground);
-        }
-        /* Deliberately quiet: a second reading of a number already printed,
-           so the fill is the muted ink rather than the primary. */
-        .m-rail {
-          margin-top: 0.25rem;
-        }
-        .stock-total {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size);
-        }
-        .stock-total strong {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 800;
-        }
-        .stock-list {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-          display: grid;
-          gap: 0.125rem;
-        }
-        .stock-row {
-          display: grid;
-          grid-template-columns: 6rem minmax(0, 1fr) 4rem 5rem;
-          align-items: baseline;
-          gap: var(--boxel-sp-xs);
-          padding: 0.375rem 0;
-          border-top: 1px solid var(--ful-rule);
-          font-size: var(--boxel-font-size-sm);
-        }
-        .st-wh,
-        .st-bin,
-        .st-qty {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-        }
-        .st-bin {
-          color: var(--muted-foreground);
-        }
-        .st-qty {
-          text-align: right;
-          font-weight: 700;
-        }
-        .st-state {
-          text-align: right;
-        }
-        .cols {
-          display: grid;
-          gap: var(--boxel-sp-lg);
-          /* `auto-fit` with a max keeps a two-line column from being handed the
-             same 368px as a paragraph one. */
-          grid-template-columns: repeat(auto-fit, minmax(15rem, max-content));
-        }
-        .sec {
-          /* A surface, not just a gap. Sections were told apart only by spacing,
-             and their headings were 12px uppercase muted — pixel-identical to
-             every table column label on the card, so "where does a section
-             start" had no answer. The ground is mixed toward --foreground so it
-             follows the theme in both modes rather than being a grey. */
-          padding: var(--panel-pad);
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
+          border: 1px solid var(--border);
           border-radius: var(--radius);
-          background-color: var(--panel-bg);
+          overflow: hidden;
         }
-        .sec h2 {
-          /* The section heading is now the loudest uppercase thing on the card:
-             --foreground against the column labels' --muted-foreground. Weight
-             alone (500 vs 400) was not a readable difference. */
+        .ihead {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs);
+        }
+        .who {
           display: flex;
           align-items: center;
-          gap: 0.4375rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--foreground);
+          gap: var(--boxel-sp-xs);
+          min-width: 0;
         }
-        .hint {
-          margin: var(--boxel-sp-xs) 0 0;
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1.375rem;
+          height: 1.375rem;
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
+          object-fit: cover;
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 700;
+        }
+        .id {
+          min-width: 0;
+        }
+        .name {
+          margin: 0;
+          font-family: var(--font-sans);
           font-size: var(--boxel-font-size-xs);
+          font-weight: 600;
+          letter-spacing: normal;
+          text-transform: none;
+        }
+        .meta {
+          margin: 0;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
-        /* Pret UI KeyValue: label and value sizes and the column gap. */
+        .bar {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        }
+        .st {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          font-weight: 600;
+          --tone: var(--muted-foreground);
+        }
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
+        }
+        .st[data-tone='warn'] {
+          --tone: var(--warning);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
+        }
+        .dot {
+          flex: none;
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--tone);
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          border-top: 1px solid var(--border);
+          overflow: hidden;
+        }
+        .stat {
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-6xs);
+          padding: var(--boxel-sp-xs);
+          border-right: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
+          margin-bottom: -1px;
+        }
+        .num {
+          font-size: var(--boxel-font-size-lg);
+          font-weight: 700;
+          line-height: 1.15;
+          font-variant-numeric: tabular-nums;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .blk {
+          border-top: 1px solid var(--border);
+        }
+        .blk h2 {
+          margin: 0;
+          padding: var(--boxel-sp-sm) var(--boxel-sp-xs) var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--boxel-sp-sm);
+          min-height: 1.75rem;
+          margin: 0;
+          padding: 0 var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        .lead {
+          display: flex;
+          align-items: baseline;
+          gap: var(--boxel-sp-xs);
+          min-width: 0;
+        }
+        .strong {
+          font-weight: 600;
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
+        }
         .kv {
-          --text-ui: var(--boxel-font-size-xs);
-          --text-ui-md: var(--boxel-font-size-sm);
-          --space-6: 1.25rem;
+          display: grid;
+          grid-template-columns: minmax(7rem, 9.5rem) minmax(0, 1fr);
+          margin: 0;
         }
-        /* Section icons: one size, one muted colour, everywhere. They make the
-           card scannable by shape; they must never compete with the heading. */
-        h2 .sec-icon {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          flex: 0 0 auto;
-          color: var(--muted-foreground);
+        .kv dt,
+        .kv dd {
+          display: flex;
+          align-items: center;
+          min-height: 1.75rem;
+          margin: 0;
+          border-top: 1px solid var(--border);
         }
-
-        /* One collapse stop. The card is rendered in a resizable stack panel, so
-           this fires when a second card opens beside it — not only on a phone. */
-        @container card-iso (width < 720px) {
-          .cols {
-            grid-template-columns: 1fr;
+        .kv dt {
+          padding-left: var(--boxel-sp-xs);
+        }
+        .kv dd {
+          padding: 0 var(--boxel-sp-xs);
+          min-width: 0;
+        }
+        @container (width < 480px) {
+          .stats {
+            grid-template-columns: minmax(0, 1fr);
           }
         }
       </style>
@@ -529,86 +436,122 @@ export class FulfilmentProduct extends Product {
   };
 
   static embedded = class Embedded extends Component<typeof FulfilmentProduct> {
+    get rows() {
+      return embRows(this.args.model as FulfilmentProduct);
+    }
     <template>
-      <div class='p-emb'>
-        {{! Pret UI EntityDisplay: the photo in the thumbnail slot, the name as
-            the title and the SKU as a Token on the meta line. With no photo
-            there is no visual block, so no empty gutter is reserved. }}
-        {{#if @model.image.resolvedUrl}}
-          <EntityDisplay
-            class='p-entity'
-            @variant='thumbnail'
-            @title={{@model.productName}}
-            @center={{true}}
-          >
-            <:visual><img
-                class='p-thumb'
-                src={{@model.image.resolvedUrl}}
-                alt=''
-              /></:visual>
-            <:meta>{{#if @model.sku}}<Token
-                  class='p-sku'
-                  @value={{@model.sku}}
-                />{{/if}}</:meta>
-          </EntityDisplay>
-        {{else}}
-          <EntityDisplay
-            class='p-entity'
-            @title={{@model.productName}}
-            @center={{true}}
-          >
-            <:meta>{{#if @model.sku}}<Token
-                  class='p-sku'
-                  @value={{@model.sku}}
-                />{{/if}}</:meta>
-          </EntityDisplay>
-        {{/if}}
-        <span class='p-slot'>{{#if @model.price.amount}}<@fields.price
-              @format='atom'
-            />{{else}}—{{/if}}</span>
-      </div>
-
+      <article class='emb'>
+        <header>
+          {{#if @model.image.resolvedUrl}}
+            <img class='mark' src={{@model.image.resolvedUrl}} alt='' />
+          {{else}}
+            <span class='mark' aria-hidden='true'>Pr</span>
+          {{/if}}
+          <div class='id'>
+            <h3>{{@model.cardTitle}}</h3>
+            <p class='meta'>{{metaLine @model}}</p>
+          </div>
+          <span class='st' data-tone={{if @model.isActive 'ok'}}><span
+              class='dot'
+            ></span>{{if @model.isActive 'active' 'inactive'}}</span>
+        </header>
+        <dl class='kv'>
+          {{#each this.rows as |r|}}
+            <dt>{{r.k}}</dt>
+            <dd>{{r.v}}</dd>
+          {{/each}}
+          <dt>Vendor</dt>
+          <dd>{{#if @model.vendor}}<@fields.vendor
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+        </dl>
+      </article>
       <style scoped>
-        /* A CardDef's embedded template must supply its OWN inset. The host wraps
-           a linksTo render in a CardContainer that draws a rounded boundary and
-           deliberately adds no padding — field-component.gts:513 says so in as
-           many words, because padding there would move the container-query
-           breakpoints the card reasons about. With none on either side the text
-           sits flush against the pill, which is what "Northline Supply" looked
-           like inside Supplied by. FieldDef embeddeds get no boundary and so
-           never showed this. */
-        .p-emb {
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 5.5rem;
+        .emb {
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
+        }
+        header {
+          display: flex;
           align-items: center;
           gap: var(--boxel-sp-xs);
-          font-size: 0.9rem;
+          padding: var(--boxel-sp-xs);
         }
-        /* Pret UI EntityDisplay knobs: the old thumbnail size, gap and title
-           size. */
-        .p-entity {
-          --pretui-entity-visual-size: 2.125rem;
-          --space-3: var(--boxel-sp-xs);
-          --text-ui-md: 0.9rem;
-        }
-        .p-thumb {
-          width: 100%;
-          height: 100%;
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1.375rem;
+          height: 1.375rem;
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
           object-fit: cover;
-        }
-        /* Pret UI Token for the SKU, on the muted ink. */
-        .p-entity .p-sku {
-          --pretui-token-hue: var(--muted-foreground);
-          --pretui-token-font-size: 0.72rem;
-          margin-inline: 0;
-        }
-        .p-slot {
-          text-align: right;
           font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
-          color: var(--foreground);
+        }
+        .id {
+          flex: 1;
+          min-width: 0;
+        }
+        h3 {
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .meta {
+          margin: 0;
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .st {
+          flex: none;
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          font-weight: 600;
+          --tone: var(--muted-foreground);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
+        }
+        .dot {
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--tone);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          margin: 0;
+        }
+        .kv dt,
+        .kv dd {
+          display: flex;
+          align-items: center;
+          min-height: 1.75rem;
+          margin: 0;
+          border-top: 1px solid var(--border);
+        }
+        .kv dt {
+          padding-left: var(--boxel-sp-xs);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .kv dd {
+          padding: 0 var(--boxel-sp-xs);
+          min-width: 0;
         }
       </style>
     </template>
@@ -616,260 +559,115 @@ export class FulfilmentProduct extends Product {
 
   static atom = class Atom extends Component<typeof FulfilmentProduct> {
     <template>
-      <span class='p-atom'>{{if
-          @model.sku
-          @model.sku
-          @model.productName
-        }}</span>
+      <span class='atom'>
+        {{#if @model.image.resolvedUrl}}
+          <img class='mark' src={{@model.image.resolvedUrl}} alt='' />
+        {{else}}
+          <span class='mark' aria-hidden='true'>Pr</span>
+        {{/if}}
+        <span class='name'>{{@model.cardTitle}}</span>
+      </span>
       <style scoped>
-        .p-atom {
+        .atom {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          min-width: 0;
+          max-width: 100%;
+          font-size: var(--boxel-font-size-2xs);
+          font-weight: 600;
+          color: var(--card-foreground);
+        }
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1rem;
+          height: 1rem;
+          border-radius: calc(var(--radius) * 0.5);
+          background-color: var(--muted);
+          object-fit: cover;
           font-family: var(--font-mono);
-          font-size: 0.85em;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
-          letter-spacing: 0.05em;
+        }
+        .name {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
   };
 
-  // The pick card. A picker reads the SKU first and the name second, so the
-  // SKU is what survives to badge size — the reverse of a normal card, and the
-  // reason this fitted is hand-rolled rather than a FittedCard.
   static fitted = class Fitted extends Component<typeof FulfilmentProduct> {
     <template>
-      <article class='fit {{if @model.image.resolvedUrl "has-photo"}}'>
-        <div class='r-head'>
-          <div class='eyebrow'>
-            <PackageIcon class='glyph' />
-          </div>
-          <span class='sku'>{{@model.sku}}</span>
-          <h3 class='headline'>{{@model.productName}}</h3>
-        </div>
-        <div class='r-body'>
-          {{#if @model.image.resolvedUrl}}
-            {{! Rule 2's first choice: a real photo outranks the drawn glyph.
-                The bars stay as the no-photo state so a product without one is
-                still anchored rather than showing an empty grey tile. }}
-            <img
-              class='photo'
+      <FitTile>
+        <:avatar>{{#if @model.image.resolvedUrl}}<img
+              class='mark'
               src={{@model.image.resolvedUrl}}
               alt=''
-              loading='lazy'
-            />
-          {{else}}
-            <div class='bars' aria-hidden='true'>
-              <span></span><span></span><span></span><span></span><span></span>
-              <span></span><span></span><span></span><span></span><span></span>
-            </div>
-          {{/if}}
-          {{#if @model.barcode}}
-            <p class='barcode'>{{@model.barcode}}</p>
-          {{/if}}
-        </div>
-        <div class='r-meta'>
-          <span class='cat'>{{if @model.category @model.category '—'}}</span>
-          {{#if @model.price.amount}}
-            <span class='price'><@fields.price @format='atom' /></span>
-          {{/if}}
-        </div>
-      </article>
-
+            />{{else}}<span
+              class='mark'
+              aria-hidden='true'
+            >Pr</span>{{/if}}</:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><span class='st' data-tone={{if @model.isActive 'ok'}}><span
+              class='dot'
+            ></span><span class='st-text'>{{if
+                @model.isActive
+                'active'
+                'inactive'
+              }}</span></span></:status>
+        <:fact>{{money @model.price.amount @model.price.currency.code}}
+          ·
+          {{marginText @model}}
+          margin</:fact>
+        <:relations>{{#if @model.vendor}}<@fields.vendor
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
       <style scoped>
-        .fit {
-          --type-ratio: 1.22;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          /* The block-axis budget. `--type-base` is driven mostly by `cqi`, which
-             is huge in a wide, short cell (a 691x105 strip gave 15px, and the
-             25px number it produced needed a 30px line box in a row that only
-             had 22px — a 12px shear straight through the digits). Capping the
-             SCALE against `cqb` fixes every role at once, where capping each
-             display role individually did not: in a tall cell the cqi term still
-             governs, so tiles are unchanged. */
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            1.0625rem
-          );
-          --meta-size: max(
-            0.6875rem,
-            calc(var(--type-base) / var(--type-ratio))
-          );
-          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
-          /* The identifier is a VALUE, so it must render in full. It is capped
-             against the inline axis as well as the block axis so a real order /
-             RMA / SKU always fits its box — the ellipsis below is a safety net
-             for a pathological identifier, not a truncation strategy. */
-          --sku-size: max(
-            0.625rem,
-            min(
-              calc(var(--type-base) * pow(var(--type-ratio), 2)),
-              26cqb,
-              7.5cqi
-            )
-          );
-          --headline-size: max(0.5625rem, var(--type-base));
-          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
-
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.125rem;
-          padding: var(--pad);
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        /* The card's own icon, the same one its isolated view uses — the
-           fitted's visual anchor. It sits on the quiet eyebrow row so it can
-           never compete with the headline, and it is the first thing dropped
-           at the badge quantum. */
-        .eyebrow {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .glyph {
-          flex: none;
-          width: var(--glyph-size);
-          height: var(--glyph-size);
-          color: var(--muted-foreground);
-        }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-meta {
-          display: flex;
-          gap: 0.5rem;
-          justify-content: space-between;
-          align-items: baseline;
-          font-size: var(--meta-size);
-          color: var(--muted-foreground);
-        }
-        /* SKU is the headline here, so it takes the display size. */
-        .sku {
-          display: block;
-          font-family: var(--font-mono);
-          font-size: var(--sku-size);
-          font-weight: 800;
-          letter-spacing: 0.04em;
-          line-height: 1.2;
-          color: var(--card-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .headline {
-          margin: 0.0625rem 0 0;
-          font-size: var(--headline-size);
-          font-weight: 500;
-          line-height: 1.2;
-          color: var(--muted-foreground);
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-          overflow: hidden;
-        }
-        /* The photo fills whatever the body row was given rather than claiming a
-           fixed height, so it grows with the tile and never pushes the SKU or
-           the price out of their rows. */
-        .photo {
-          display: block;
-          width: 100%;
-          height: 100%;
-          min-height: 0;
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          width: 2rem;
+          height: 2rem;
+          margin-right: var(--boxel-sp-xs);
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
           object-fit: cover;
-          border-radius: 0.25rem;
-          background-color: color-mix(
-            in oklch,
-            var(--card-foreground) 8%,
-            transparent
-          );
-        }
-        .has-photo .r-body {
-          display: grid;
-          grid-template-rows: minmax(0, 1fr) auto;
-          gap: 0.25rem;
-          margin-top: 0.3125rem;
-        }
-        .bars {
-          display: flex;
-          align-items: stretch;
-          gap: 0.125rem;
-          height: 1.125rem;
-          margin-top: 0.375rem;
-        }
-        .bars span {
-          display: block;
-          background-color: color-mix(
-            in oklch,
-            var(--card-foreground) 70%,
-            transparent
-          );
-        }
-        .bars span:nth-child(odd) {
-          width: 0.125rem;
-        }
-        .bars span:nth-child(even) {
-          width: 0.25rem;
-          opacity: 0.55;
-        }
-        .barcode {
-          margin: 0.1875rem 0 0;
           font-family: var(--font-mono);
-          font-size: var(--meta-size);
-          letter-spacing: 0.18em;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-        }
-        .price {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           color: var(--card-foreground);
         }
-        .cat {
+        .st {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          min-width: 0;
+          max-width: 100%;
+          font-weight: 600;
+          white-space: nowrap;
+          --tone: var(--muted-foreground);
+        }
+        .st-text {
+          min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
         }
-
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: auto;
-          }
-          .r-body,
-          .r-meta,
-          .headline {
-            display: none;
-          }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
         }
-        @container fitted-card (50px < height <= 80px) {
-          .r-body {
-            display: none;
-          }
-          .headline {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (80px < height <= 130px) {
-          .barcode {
-            display: none;
-          }
-          .bars {
-            height: 0.75rem;
-          }
-        }
-        @container fitted-card (width <= 140px) {
-          .cat {
-            display: none;
-          }
+        .dot {
+          width: 0.4375rem;
+          height: 0.4375rem;
+          flex-shrink: 0;
+          border-radius: 50%;
+          background-color: var(--tone);
         }
       </style>
     </template>
@@ -878,6 +676,109 @@ export class FulfilmentProduct extends Product {
 
 export default FulfilmentProduct;
 
-function percentText(pct: number | undefined) {
-  return `${pct}%`;
+// ── format helpers (tokens for tone, plain strings for text) ─────────────
+function metaLine(m: Partial<FulfilmentProduct>) {
+  return [m.sku, m.category].filter(Boolean).join(' · ') || '—';
+}
+
+function dash(v: unknown) {
+  return v == null || v === '' ? '—' : String(v);
+}
+
+function kg(n: number | null | undefined) {
+  return n == null ? '—' : `${Math.round(n * 100) / 100} kg`;
+}
+
+function marginAmount(m: Partial<FulfilmentProduct>) {
+  if (m.marginPercent == null) return '—';
+  return money(
+    (m.price?.amount ?? 0) - (m.cost?.amount ?? 0),
+    m.price?.currency?.code,
+  );
+}
+
+function marginText(m: Partial<FulfilmentProduct>) {
+  return m.marginPercent == null ? '—' : `${m.marginPercent}%`;
+}
+
+function stockTone(row: InventoryStock) {
+  if (row.isOutOfStock) return 'bad';
+  if (row.isLowStock) return 'warn';
+  return 'ok';
+}
+
+function productStats(m: FulfilmentProduct) {
+  let p = m.shippingProfile;
+  return [
+    {
+      label: 'Price',
+      tone: '',
+      value: money(m.price?.amount, m.price?.currency?.code),
+      meta: `cost ${money(m.cost?.amount, m.cost?.currency?.code)}`,
+    },
+    {
+      label: 'Margin',
+      tone: m.marginPercent == null ? '' : m.marginPercent > 0 ? 'ok' : 'bad',
+      value: marginText(m),
+      meta: m.marginPercent == null ? '—' : `${marginAmount(m)} per unit`,
+    },
+    {
+      label: 'Billable',
+      tone: '',
+      value: kg(p?.billableWeight),
+      meta: p?.isVolumetric
+        ? `volumetric${p.dimDivisor ? `, ÷ ${p.dimDivisor}` : ''}`
+        : 'actual weight',
+    },
+  ];
+}
+
+function pricingRows(m: FulfilmentProduct) {
+  return [
+    { k: 'Price', v: money(m.price?.amount, m.price?.currency?.code) },
+    { k: 'Cost', v: money(m.cost?.amount, m.cost?.currency?.code) },
+    {
+      k: 'Margin',
+      v:
+        m.marginPercent == null ? '—' : `${marginAmount(m)} (${marginText(m)})`,
+    },
+    { k: 'Dropship', v: m.isDropship ? 'Yes' : 'No' },
+  ];
+}
+
+function parcelRows(m: FulfilmentProduct) {
+  let p = m.shippingProfile;
+  return [
+    { k: 'Dimensions', v: p?.sizeLabel ?? '—' },
+    { k: 'Weight', v: kg(p?.weight) },
+    { k: 'Volumetric weight', v: kg(p?.volumetricWeight) },
+    { k: 'Billable weight', v: kg(p?.billableWeight) },
+  ];
+}
+
+function idRows(m: FulfilmentProduct) {
+  return [
+    { k: 'SKU', v: dash(m.sku) },
+    { k: 'Barcode', v: dash(m.barcode) },
+    { k: 'Vendor SKU', v: dash(m.vendorSku) },
+    { k: 'Category', v: dash(m.category) },
+  ];
+}
+
+function embRows(m: FulfilmentProduct) {
+  let p = m.shippingProfile;
+  return [
+    { k: 'Price', v: money(m.price?.amount, m.price?.currency?.code) },
+    { k: 'Cost', v: money(m.cost?.amount, m.cost?.currency?.code) },
+    {
+      k: 'Margin',
+      v:
+        m.marginPercent == null ? '—' : `${marginAmount(m)} · ${marginText(m)}`,
+    },
+    { k: 'Barcode', v: dash(m.barcode) },
+    { k: 'Vendor SKU', v: dash(m.vendorSku) },
+    { k: 'Parcel', v: p?.sizeLabel ?? '—' },
+    { k: 'Weight', v: kg(p?.weight) },
+    { k: 'Billable', v: kg(p?.billableWeight) },
+  ];
 }

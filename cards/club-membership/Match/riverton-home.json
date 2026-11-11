@@ -44,7 +44,12 @@
     "relationships": {
       "venue": {
         "links": {
-          "self": "../Location/meridian-park-stadium"
+          "self": "../../events/Location/meridian-park-stadium"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },
@@ -52,8 +57,7 @@
       "adoptsFrom": {
         "module": "../match",
         "name": "Match"
-      },
-      "_touched": 1787195057910
+      }
     }
   }
 }

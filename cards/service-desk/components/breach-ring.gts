@@ -5,12 +5,9 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { tracked } from '@glimmer/tracking';
 import { registerDestructor } from '@ember/destroyable';
 
-import {
-  timerSnapshot,
-  TIMER_HUE,
-} from '@cardstack/catalog/cards/service-desk/utils/sla';
+import { timerSnapshot, TIMER_HUE } from '../utils/sla';
 import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
-import { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock';
+import { slaClock } from '../utils/sla-clock';
 
 interface Signature {
   Args: {

@@ -11,8 +11,8 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
-import { Candidate } from '@cardstack/catalog/cards/hr/candidate';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Candidate } from '../candidate';
+import { Employee } from '../employee';
 
 // Hire Candidate — the single writer for the candidate → employee
 // transition: the moment the pipeline resolves into the permanent record.

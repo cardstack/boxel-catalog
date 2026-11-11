@@ -12,9 +12,9 @@ import {
 } from '@cardstack/base/card-api';
 import { consume } from 'ember-provide-consume-context';
 import { tracked } from '@glimmer/tracking';
-import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { on } from '@ember/modifier';
+import { eq } from '@cardstack/pretui/helpers';
 import { debounce } from 'lodash-es';
 import {
   identifyCard,
@@ -28,6 +28,13 @@ import {
   type SearchEntryWireQuery,
 } from '@cardstack/runtime-common';
 import UsersRoundIcon from '@cardstack/boxel-icons/users-round';
+import {
+  Sidebar,
+  SidebarGroup,
+  SidebarItem,
+  SidebarTrigger,
+} from '@cardstack/pretui/components/sidebar';
+import { Button } from '@cardstack/pretui/components/button';
 import { restartableTask } from 'ember-concurrency';
 import { Employee } from '../hr/employee';
 import { Candidate } from '../hr/candidate';
@@ -40,9 +47,22 @@ import { PtoRequest } from '../hr/pto-request';
 import { PerformanceReview } from '../hr/performance-review';
 import { JobRequisition } from '../hr/job-requisition';
 import { OnboardingChecklist } from '../hr/onboarding-checklist';
-import { type CalendarEvent } from '../../components/calendar';
-import { FittedCard } from '@cardstack/boxel-ui/components';
-import { Button } from '@cardstack/pretui/components/button';
+import { type CalendarEvent } from '@cardstack/catalog/components/calendar';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import BriefcaseBusinessIcon from '@cardstack/boxel-icons/briefcase-business';
+import CalendarIcon from '@cardstack/boxel-icons/calendar';
+import CalendarDaysIcon from '@cardstack/boxel-icons/calendar-days';
+import ContactIcon from '@cardstack/boxel-icons/contact';
+import FileTextIcon from '@cardstack/boxel-icons/file-text';
+import KanbanIcon from '@cardstack/boxel-icons/kanban';
+import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
+import MailIcon from '@cardstack/boxel-icons/mail';
+import NetworkIcon from '@cardstack/boxel-icons/network';
+import RocketIcon from '@cardstack/boxel-icons/rocket';
+import SignatureIcon from '@cardstack/boxel-icons/signature';
+import StarIcon from '@cardstack/boxel-icons/star';
+import UsersIcon from '@cardstack/boxel-icons/users';
+import { FitTile } from '../shared/fit-tile';
 import { Position } from '../hr/position';
 import { Application } from '../hr/application';
 import { Offer } from '../hr/offer';
@@ -74,14 +94,63 @@ import { CalendarTab } from './tabs/calendar';
 import { OrgChartTab } from './tabs/org-chart';
 import { toLocalDate } from './dates';
 
+const TAB_ICONS: Record<Tab, typeof UsersRoundIcon> = {
+  Dashboard: LayoutGridIcon,
+  Requisitions: FileTextIcon,
+  Positions: BriefcaseBusinessIcon,
+  Applications: MailIcon,
+  Pipeline: KanbanIcon,
+  Offers: SignatureIcon,
+  Onboarding: RocketIcon,
+  Directory: UsersIcon,
+  'Org Chart': NetworkIcon,
+  PTO: CalendarDaysIcon,
+  Reviews: StarIcon,
+  Contractors: ContactIcon,
+  Calendar: CalendarIcon,
+};
+type NavEntry = { tab: Tab; badge?: string; icon: typeof UsersRoundIcon };
+
 class Isolated extends Component<typeof TalentResourceTracker> {
+  // in the drawer, picking a section also closes it
+  pickTab = (tab: Tab, bar: { mobile: boolean; toggle: () => void }) => {
+    this.setTab(tab);
+    if (bar.mobile) {
+      bar.toggle();
+    }
+  };
+  clearRange = () => {
+    this.dashboardRange = { start: undefined, end: undefined };
+    this.dashboardCustomPicked = false;
+  };
+
+  get rangeLabel(): string {
+    let { start, end } = this.dashboardRange;
+    if (!start && !end) {
+      return 'All time';
+    }
+    let fmt = (d?: Date) =>
+      d
+        ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        : '…';
+    return `${fmt(start)} – ${fmt(end)}`;
+  }
+  openRange = () => {
+    this.setTab('Dashboard');
+    this.dashboardFilterOpen = true;
+  };
+
   tabs = TABS;
 
   // Rail IA: same 13 destinations, grouped. Labels only regroup — the tab
   // keys stay identical so deep-links from dashboard chips keep working.
-  // Dashboard rides in an unlabeled first group.
-  get railGroups(): { label?: string; tabs: Tab[] }[] {
-    return [
+  // Dashboard rides in an unlabeled first group. Each item carries its live
+  // count as the sidebar badge.
+  get railGroups(): {
+    label?: string;
+    items: NavEntry[];
+  }[] {
+    let groups: { label?: string; tabs: Tab[] }[] = [
       { tabs: ['Dashboard'] },
       {
         label: 'Hiring',
@@ -98,6 +167,50 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       { label: 'Resources', tabs: ['Contractors'] },
       { label: 'Planning', tabs: ['Calendar'] },
     ];
+    return groups.map((group) => ({
+      label: group.label,
+      items: group.tabs.map((tab) => ({
+        tab,
+        badge: this.badgeFor(tab),
+        icon: TAB_ICONS[tab],
+      })),
+    }));
+  }
+
+  // A zero count shows no badge.
+  private badgeFor(tab: Tab): string | undefined {
+    let count = (() => {
+      switch (tab) {
+        case 'Requisitions':
+          return this.requisitionsQuery?.instances?.length ?? 0;
+        case 'Positions':
+          return this.positions.length;
+        case 'Applications':
+          return this.applications.length;
+        case 'Pipeline':
+          return this.candidates.filter(
+            (c) => c.status !== 'hired' && c.status !== 'rejected',
+          ).length;
+        case 'Offers':
+          return this.offers.length;
+        case 'Onboarding':
+          return (this.onboardingChecklistsQuery?.instances ?? []).filter(
+            (c) => (c as OnboardingChecklist).status !== 'complete',
+          ).length;
+        case 'Directory':
+          return this.employees.length;
+        case 'PTO':
+          return this.ptoRequests.filter((r) => r.status === 'in-progress')
+            .length;
+        case 'Reviews':
+          return this.performanceReviews.length;
+        case 'Contractors':
+          return this.contractors.length;
+        default:
+          return 0;
+      }
+    })();
+    return count ? String(count) : undefined;
   }
 
   @tracked activeTab: Tab = 'Dashboard';
@@ -125,7 +238,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
 
   @tracked applicationsSearch = '';
 
-  @tracked applicationsView: 'grid' | 'strip' | 'table' = 'grid';
+  @tracked applicationsView: 'grid' | 'strip' | 'table' = 'table';
 
   @tracked offersSearch = '';
 
@@ -135,31 +248,31 @@ class Isolated extends Component<typeof TalentResourceTracker> {
 
   @tracked requisitionsStatusFilter = 'all';
 
-  @tracked requisitionsView: 'grid' | 'strip' | 'table' = 'grid';
+  @tracked requisitionsView: 'grid' | 'strip' | 'table' = 'table';
 
   @tracked onboardingSearch = '';
 
   @tracked onboardingStatusFilter = 'all';
 
-  @tracked onboardingView: 'grid' | 'strip' | 'table' = 'grid';
+  @tracked onboardingView: 'grid' | 'strip' | 'table' = 'table';
 
   @tracked contractorSearch = '';
 
   @tracked contractorStatusFilter = 'all';
 
-  @tracked contractorsView: 'grid' | 'strip' | 'table' = 'grid';
+  @tracked contractorsView: 'grid' | 'strip' | 'table' = 'table';
 
   @tracked ptoSearch = '';
 
   @tracked ptoStatusFilter = 'all';
 
-  @tracked ptoView: 'grid' | 'strip' | 'table' = 'grid';
+  @tracked ptoView: 'grid' | 'strip' | 'table' = 'table';
 
   @tracked reviewsSearch = '';
 
   @tracked reviewStatusFilter = 'all';
 
-  @tracked reviewsView: 'grid' | 'strip' | 'table' = 'grid';
+  @tracked reviewsView: 'grid' | 'strip' | 'table' = 'table';
 
   @tracked reviewMode = false;
 
@@ -172,6 +285,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
   // before this filter existed.
   @tracked dashboardRange: { start: Date | undefined; end: Date | undefined } =
     { start: undefined, end: undefined };
+  // the Dashboard range menu shows Custom while this is set
+  @tracked dashboardCustomPicked = false;
 
   @tracked dashboardFilterOpen = false;
 
@@ -703,6 +818,10 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     viewCard(card ?? new URL(id), format);
   };
 
+  // DataTable's @onRowActivate passes (row, index); openCard's second
+  // parameter is a Format, so the index must not reach it.
+  openRowCard = (row: { id?: string } | undefined) => this.openCard(row);
+
   private cardById(id: string) {
     let pools = [
       this.candidates,
@@ -716,6 +835,9 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       this.offers,
       this.ptoRequests,
       this.performanceReviews,
+      this.contractors,
+      this.requisitionsQuery?.instances ?? [],
+      this.onboardingChecklistsQuery?.instances ?? [],
     ];
     for (let pool of pools) {
       let hit = (pool as any[]).find((c) => c?.id === id);
@@ -995,250 +1117,273 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       />
     {{/if}}
     <section class='tracker'>
-      <div class='shell'>
-        <aside class='rail'>
-          <div class='rail-kicker'>Personnel Registry</div>
-          <h1 class='rail-title'>{{@model.cardTitle}}</h1>
-          <div class='rail-sub'>Posted through {{this.todayLabel}}</div>
-          <nav class='rail-nav'>
-            <ul class='rail-list'>
-              {{#each this.railGroups as |group|}}
-                {{#if group.label}}
-                  <li class='rail-group'>{{group.label}}</li>
-                {{/if}}
-                {{#each group.tabs as |tab|}}
-                  <li class='rail-item'>
-                    <Button
-                      type='button'
-                      @tone='neutral'
-                      @appearance='plain'
-                      class='rail-link {{if (eq tab this.activeTab) "current"}}'
-                      {{on 'click' (fn this.setTab tab)}}
-                    >
-                      <span class='t'>{{tab}}</span>
-                    </Button>
-                    {{#if (eq tab 'Positions')}}
-                      <ul class='rail-sublist'>
-                        {{#each this.positions as |position|}}
-                          <li>
-                            <Button
-                              type='button'
-                              @tone='neutral'
-                              @appearance='plain'
-                              @size='s'
-                              class='rail-sublink'
-                              {{on 'click' (fn this.openCard position)}}
-                            >{{position.cardTitle}}</Button>
-                          </li>
-                        {{/each}}
-                      </ul>
-                    {{/if}}
-                  </li>
-                {{/each}}
+      <Sidebar
+        class='trt-shell'
+        @label='Tracker sections'
+        @collapsible='rail'
+        @railBreakpoint={{1100}}
+        @mobileBreakpoint={{720}}
+        @bordered={{true}}
+        @scroll='content'
+        @resizable={{true}}
+      >
+        <:header as |bar|>
+          {{#unless bar.collapsed}}
+            <div class='trt-brand'>
+              <p class='trt-cap'>Personnel registry</p>
+              <p class='trt-title'>{{@model.cardTitle}}</p>
+              <span class='trt-bar' aria-hidden='true'></span>
+              <p class='trt-cap trt-viewing-cap'>Viewing</p>
+              <div class='trt-viewing'>
+                <Button
+                  @tone='neutral'
+                  @appearance='plain'
+                  @size='s'
+                  {{on 'click' this.openRange}}
+                >{{this.rangeLabel}}</Button>
+                <Button
+                  @tone='neutral'
+                  @appearance='plain'
+                  @size='s'
+                  {{on 'click' this.clearRange}}
+                >Reset</Button>
+              </div>
+            </div>
+          {{/unless}}
+        </:header>
+        <:nav as |bar|>
+          {{#each this.railGroups as |group|}}
+            <SidebarGroup @label={{group.label}} @hideLabel={{bar.collapsed}}>
+              {{#each group.items as |item|}}
+                <SidebarItem
+                  @label={{item.tab}}
+                  @badge={{unless bar.collapsed item.badge}}
+                  @active={{eq item.tab this.activeTab}}
+                  @collapsed={{bar.collapsed}}
+                  @onClick={{fn this.pickTab item.tab bar}}
+                >
+                  <:icon>{{#let item.icon as |Icon|}}<Icon
+                        aria-hidden='true'
+                      />{{/let}}</:icon>
+                </SidebarItem>
               {{/each}}
-            </ul>
-          </nav>
-        </aside>
-
-        <div class='page'>
-          {{#if this.actionError}}
-            <p class='error' role='alert'>{{this.actionError}}</p>
-          {{/if}}
-
-          {{#if (eq this.activeTab 'Dashboard')}}
-            <DashboardTab @tracker={{this}} />
-          {{/if}}
-
+            </SidebarGroup>
+          {{/each}}
           {{#if (eq this.activeTab 'Positions')}}
-            <PositionsTab @tracker={{this}} @context={{@context}} />
+            {{#unless bar.collapsed}}
+              <SidebarGroup @label='Open positions'>
+                {{#each this.positions as |position|}}
+                  <SidebarItem
+                    @label={{position.cardTitle}}
+                    @onClick={{fn this.openCard position}}
+                  />
+                {{/each}}
+              </SidebarGroup>
+            {{/unless}}
           {{/if}}
+        </:nav>
+        <:default as |bar|>
+          <div class='trt-pane'>
+            {{#if bar.mobile}}
+              {{! under 720px the rail is a drawer; this bar opens it }}
+              <header class='trt-topbar'>
+                <SidebarTrigger
+                  @open={{bar.open}}
+                  @onToggle={{bar.toggle}}
+                  @controls={{bar.controls}}
+                  @label='tracker sections'
+                />
+                <span class='trt-topbar-who'>
+                  <span class='trt-cap'>Talent tracker</span>
+                  <strong>{{this.activeTab}}</strong>
+                </span>
+              </header>
+            {{/if}}
+            <main class='trt-main'>
+              {{#if this.actionError}}
+                <p class='error' role='alert'>{{this.actionError}}</p>
+              {{/if}}
 
-          {{#if (eq this.activeTab 'Applications')}}
-            <ApplicationsTab @tracker={{this}} @context={{@context}} />
-          {{/if}}
+              {{#if (eq this.activeTab 'Dashboard')}}
+                <DashboardTab @tracker={{this}} />
+              {{/if}}
 
-          {{#if (eq this.activeTab 'Directory')}}
-            <DirectoryTab @tracker={{this}} @context={{@context}} />
-          {{/if}}
+              {{#if (eq this.activeTab 'Positions')}}
+                <PositionsTab @tracker={{this}} @context={{@context}} />
+              {{/if}}
 
-          {{#if (eq this.activeTab 'Pipeline')}}
-            <PipelineTab @tracker={{this}} />
-          {{/if}}
+              {{#if (eq this.activeTab 'Applications')}}
+                <ApplicationsTab @tracker={{this}} @context={{@context}} />
+              {{/if}}
 
-          {{#if (eq this.activeTab 'Requisitions')}}
-            <RequisitionsTab @tracker={{this}} @context={{@context}} />
-          {{/if}}
+              {{#if (eq this.activeTab 'Directory')}}
+                <DirectoryTab @tracker={{this}} @context={{@context}} />
+              {{/if}}
 
-          {{#if (eq this.activeTab 'Onboarding')}}
-            <OnboardingTab @tracker={{this}} @context={{@context}} />
-          {{/if}}
+              {{#if (eq this.activeTab 'Pipeline')}}
+                <PipelineTab @tracker={{this}} />
+              {{/if}}
 
-          {{#if (eq this.activeTab 'Contractors')}}
-            <ContractorsTab @tracker={{this}} @context={{@context}} />
-          {{/if}}
+              {{#if (eq this.activeTab 'Requisitions')}}
+                <RequisitionsTab @tracker={{this}} @context={{@context}} />
+              {{/if}}
 
-          {{#if (eq this.activeTab 'PTO')}}
-            <PtoTab @tracker={{this}} @context={{@context}} />
-          {{/if}}
+              {{#if (eq this.activeTab 'Onboarding')}}
+                <OnboardingTab @tracker={{this}} @context={{@context}} />
+              {{/if}}
 
-          {{#if (eq this.activeTab 'Reviews')}}
-            <ReviewsTab @tracker={{this}} @context={{@context}} />
-          {{/if}}
+              {{#if (eq this.activeTab 'Contractors')}}
+                <ContractorsTab @tracker={{this}} @context={{@context}} />
+              {{/if}}
 
-          {{#if (eq this.activeTab 'Offers')}}
-            <OffersTab @tracker={{this}} @context={{@context}} />
-          {{/if}}
+              {{#if (eq this.activeTab 'PTO')}}
+                <PtoTab @tracker={{this}} @context={{@context}} />
+              {{/if}}
 
-          {{#if (eq this.activeTab 'Calendar')}}
-            <CalendarTab @tracker={{this}} />
-          {{/if}}
+              {{#if (eq this.activeTab 'Reviews')}}
+                <ReviewsTab @tracker={{this}} @context={{@context}} />
+              {{/if}}
 
-          {{#if (eq this.activeTab 'Org Chart')}}
-            <OrgChartTab @tracker={{this}} />
-          {{/if}}
-        </div>
-      </div>
+              {{#if (eq this.activeTab 'Offers')}}
+                <OffersTab @tracker={{this}} @context={{@context}} />
+              {{/if}}
+
+              {{#if (eq this.activeTab 'Calendar')}}
+                <CalendarTab @tracker={{this}} />
+              {{/if}}
+
+              {{#if (eq this.activeTab 'Org Chart')}}
+                <OrgChartTab @tracker={{this}} />
+              {{/if}}
+            </main>
+          </div>
+        </:default>
+      </Sidebar>
     </section>
     <style scoped>
       .tracker {
-        --_warn-soft: color-mix(in oklch, var(--warning) 12%, var(--card));
         container-type: inline-size;
         container-name: tracker;
 
+        /* the compact mock's density through the kit's knobs, set once here */
+        /* the mock's Compact preset: 12px body, 26px controls, 10/7 padding */
+        --control-height: 1.625rem;
+        --pretui-size-m: var(--boxel-font-size-sm);
+        --pretui-page-stat-border: 1px solid var(--border);
+        --pretui-page-stat-shadow: none;
+        --pretui-shadow-card: none;
+        --pretui-panel-pad-inline: var(--boxel-sp-xs);
+        --pretui-panel-pad-block: var(--boxel-sp-2xs);
+
+        /* one scroll model: the shell fills the card and only the page column
+           scrolls; position contains absolutely placed descendants, which
+           otherwise overflow the card container and leave a white band */
+        position: relative;
         height: 100%;
         overflow: hidden;
-        background: var(--muted);
+        background: var(--card);
         color: var(--card-foreground);
-
         font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-xs);
       }
-      .shell {
-        display: grid;
-
-        grid-template-columns: 14.375rem minmax(0, 1fr);
-
-        height: 100%;
-      }
-      .rail {
-        background: var(--muted);
-        border-right: 1px solid var(--border);
-        padding: var(--boxel-sp-lg) var(--boxel-sp-lg);
-
-        height: 100%;
-        overflow-y: auto;
-        box-sizing: border-box;
-      }
-      @container tracker (max-width: 40rem) {
-        .shell {
-          grid-template-columns: minmax(0, 1fr);
-          height: 100%;
-          overflow-y: auto;
-        }
-        .rail {
-          height: auto;
-          overflow-y: visible;
-          border-right: none;
-          border-bottom: 1px solid var(--border);
-        }
-        .page {
-          height: auto;
-          overflow-y: visible;
-        }
-      }
-      .rail-kicker {
-        font-family: var(--font-mono);
-        font-size: 0.625rem;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--primary-ink);
-        margin-bottom: var(--boxel-sp-5xs);
-      }
-      .rail-title {
-        font-family: var(--font-sans);
-        font-weight: 700;
-        font-size: 1.1875rem;
-        line-height: 1.25;
-        letter-spacing: -0.01em;
-        margin: 0 0 var(--boxel-sp-5xs);
-      }
-      .rail-sub {
-        font-family: var(--font-mono);
-        font-size: 0.6562rem;
-        letter-spacing: 0.03em;
-        color: var(--muted-foreground);
-        margin-bottom: var(--boxel-sp-xl);
-      }
-      .rail-nav {
+      .tracker {
         display: flex;
         flex-direction: column;
-        gap: 0.1875rem;
+        line-height: 1.25;
       }
-      .rail-list {
-        list-style: none;
+      /* the mock's Compact preset; one spacing scale at every width */
+      .trt-pane {
+        --trt-fs: var(--boxel-font-size-xs);
+        --trt-gap: var(--boxel-sp-xs);
+        --trt-px: var(--boxel-sp-xs);
+        --trt-py: var(--boxel-sp-2xs);
+        --trt-rowh: 1.75rem;
+        --trt-pad: var(--boxel-sp-lg);
+        --pretui-barlist-row-height: var(--trt-rowh);
+        --pretui-barlist-gap: var(--boxel-sp-6xs);
+      }
+      .trt-pane {
+        background: var(--background);
+        display: flex;
+        flex-direction: column;
+        block-size: 100%;
+      }
+      @container tracker (width < 760px) {
+        .trt-pane {
+          --trt-fs: calc(var(--boxel-font-size-xs) * 0.94);
+          --trt-rowh: 1.625rem;
+        }
+      }
+      .trt-brand {
+        padding: 0 var(--boxel-sp-xs) var(--boxel-sp-sm);
+        margin-bottom: var(--boxel-sp-2xs);
+        border-bottom: 1px solid var(--sidebar-border);
+      }
+      .trt-cap {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--subtle-foreground);
+      }
+      .trt-title {
+        margin: var(--boxel-sp-6xs) 0 0;
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .trt-bar {
+        display: block;
+        inline-size: 2.5rem;
+        block-size: 0.1875rem;
+        margin-top: var(--boxel-sp-2xs);
+        border-radius: var(--boxel-border-radius-xs);
+        background: var(--primary);
+      }
+      .trt-viewing-cap {
+        margin-top: var(--boxel-sp-sm);
+      }
+      .trt-viewing {
+        display: flex;
+        align-items: baseline;
+        gap: var(--boxel-sp-2xs);
+        margin-top: var(--boxel-sp-6xs);
+      }
+      .trt-range,
+      .trt-today {
         margin: 0;
         padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.1875rem;
-      }
-      .rail-item {
-        display: flex;
-        flex-direction: column;
-      }
-      .rail-group {
-        font-family: var(--font-mono);
-        font-size: 0.625rem;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        padding: var(--boxel-sp-sm) var(--boxel-sp-xs) var(--boxel-sp-5xs)
-          calc(var(--boxel-sp-xs) + 0.25rem);
-      }
-      .rail-sublist {
-        list-style: none;
-        margin: 0;
-        padding: 0 0 0 var(--boxel-sp);
-      }
-      .rail-sublink {
-        width: 100%;
-        justify-content: flex-start;
-      }
-      .rail-link {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        width: 100%;
-        transition:
-          color 0.15s ease-out,
-          border-color 0.15s ease-out,
-          background-color 0.15s ease-out;
-      }
-      .rail-link:focus-visible {
-        outline: 0.125rem solid var(--primary);
-        outline-offset: 0.125rem;
-      }
-      .rail-link .t {
-        font-size: 0.8125rem;
-        font-weight: 500;
-      }
-      .rail-link.current .t {
+        border: 0;
+        background: none;
         color: var(--primary-ink);
+        font: inherit;
         font-weight: 700;
+        cursor: pointer;
       }
-      .page {
-        background: var(--card);
-        padding: var(--boxel-sp-xl) var(--boxel-sp-2xl) var(--boxel-sp-3xl);
+      .trt-today {
+        margin-inline-start: auto;
+        font-weight: 600;
+        font-size: var(--boxel-font-size-2xs);
+      }
+      .trt-shell {
+        block-size: 100%;
+        min-block-size: 0;
+        --pretui-sidebar-width: 13.5rem;
+        --pretui-sidebar-rail-width: 3.5rem;
+        --pretui-sidebar-bg: var(--sidebar);
+        --pretui-selected: var(--sidebar-primary);
+        --pretui-primary-ink: var(--sidebar-primary-foreground);
+      }
+      .trt-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
         min-width: 0;
-
-        height: 100%;
-        overflow-y: auto;
-        box-sizing: border-box;
-      }
-      .rail-link:focus-visible {
-        outline: 0.125rem solid var(--primary);
-        outline-offset: 0.125rem;
+        min-height: 0;
       }
       @keyframes tracker-tab-fade-in {
         from {
@@ -1253,7 +1398,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         border-radius: var(--radius);
         background: var(--primary-ink);
         color: var(--card);
-        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-sm);
         margin: 0 0 var(--boxel-sp);
       }
@@ -1283,6 +1427,53 @@ export class TalentResourceTracker extends CardDef {
 
   static isolated = Isolated;
 
+  static embedded = class Embedded extends Component<
+    typeof TalentResourceTracker
+  > {
+    <template>
+      <div class='trt-emb'>
+        <Avatar
+          @name={{if @model.cardTitle @model.cardTitle ''}}
+          @hue='var(--primary)'
+          @size={{32}}
+          aria-hidden='true'
+        />
+        <span class='trt-emb-who'>
+          <strong class='trt-emb-name'>{{@model.cardTitle}}</strong>
+          <span class='trt-emb-sub'>Recruiting pipeline, directory &amp;
+            analytics</span>
+        </span>
+      </div>
+      <style scoped>
+        .trt-emb {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          min-width: 0;
+        }
+        .trt-emb-who {
+          flex: 1;
+          display: grid;
+          min-width: 0;
+        }
+        .trt-emb-name,
+        .trt-emb-sub {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .trt-emb-name {
+          font-weight: 600;
+        }
+        .trt-emb-sub {
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground);
+        }
+      </style>
+    </template>
+  };
+
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='trt-atom'>
@@ -1298,9 +1489,8 @@ export class TalentResourceTracker extends CardDef {
         .trt-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: var(--boxel-sp-4xs);
+          font-weight: 600;
           color: var(--foreground);
         }
         .trt-atom-icon {
@@ -1316,23 +1506,20 @@ export class TalentResourceTracker extends CardDef {
     </template>
   };
 
-  static fitted = class Fitted extends Component<typeof this> {
+  static fitted = class Fitted extends Component<typeof TalentResourceTracker> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:placeholder><UsersRoundIcon
-            width='24'
-            height='24'
+      <FitTile>
+        <:avatar><Avatar
+            @name={{if @model.cardTitle @model.cardTitle ''}}
+            @hue='var(--primary)'
+            @size={{32}}
             aria-hidden='true'
-          /></:placeholder>
-        <:eyebrow><span class='fit-eyebrow'>Applicant tracking &amp; people ops</span></:eyebrow>
+          /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Recruiting pipeline, directory &amp; analytics</:subtitle>
-      </FittedCard>
-      <style scoped>
-        .fit-eyebrow {
-          color: var(--primary-ink);
-        }
-      </style>
+        <:fact>13 views · Dashboard, Pipeline, Directory, Org chart, PTO,
+          Reviews…</:fact>
+      </FitTile>
     </template>
   };
 }

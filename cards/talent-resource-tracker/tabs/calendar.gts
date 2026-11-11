@@ -1,12 +1,27 @@
 import GlimmerComponent from '@glimmer/component';
-import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import { Meeting, MEETING_TYPE_COLORS } from '../../hr/meeting';
-import { Calendar, type CalendarEvent } from '../../../components/calendar';
-import { Button } from '@cardstack/pretui/components/button';
+import { Meeting } from '../../hr/meeting';
+import {
+  Calendar,
+  type CalendarEvent,
+} from '@cardstack/catalog/components/calendar';
+import type { StateColor } from '@cardstack/catalog/components/state-pill';
 import type { TrackerView } from '../talent-resource-tracker';
 import { toLocalDate } from '../dates';
+import { UpcomingList } from '../upcoming-list';
+import { TrackerPage, TrackerSection, StatusDot } from '../shared';
+
+// Each kind's accent bar on the month grid, from the theme's tone inks.
+function kindColor(ink: string): StateColor {
+  return { bg: 'transparent', fg: `var(--${ink})`, ring: `var(--${ink})` };
+}
+const KIND_COLORS: Record<string, StateColor> = {
+  interview: kindColor('primary'),
+  standup: kindColor('primary'),
+  'one-on-one': kindColor('success-ink'),
+  'vendor-review': kindColor('warning-ink'),
+};
 
 interface Signature {
   Args: {
@@ -54,120 +69,146 @@ export class CalendarTab extends GlimmerComponent<Signature> {
     void this.args.tracker.addMeetingTask.perform(date);
   };
 
+  kindColors = KIND_COLORS;
+
+  timeOf = (event: CalendarEvent): string =>
+    event.date
+      ? new Date(event.date).toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : '';
+
+  loadTone = (
+    tone: 'red' | 'amber' | 'green',
+  ): 'danger' | 'warning' | 'success' =>
+    tone === 'red' ? 'danger' : tone === 'amber' ? 'warning' : 'success';
+
   <template>
-    <section class='tab-section'>
-      <div class='sec-head'>
-        <div class='htext'>
-          <h2>Calendar</h2>
-          <p class='byline'>Interview activity this cycle</p>
-        </div>
+    <TrackerPage
+      @group='Planning'
+      @title='Calendar'
+      @subtitle='Interview activity this cycle'
+    >
+      <:actions as |bar|>
         {{#if @tracker.canCreate}}
-          <Button
-            type='button'
-            @tone='primary'
-            @appearance='accent'
-            class='btn-review'
+          <bar.Action
+            @id='add'
+            @label='Add meeting'
+            @primary={{true}}
             @loading={{@tracker.addCard.isRunning}}
-            {{on 'click' (fn @tracker.addNew Meeting)}}
-          >+ Add meeting</Button>
+            @onClick={{fn @tracker.addNew Meeting}}
+          />
         {{/if}}
-      </div>
-      {{#if @tracker.interviewerLoad.length}}
+      </:actions>
+      <:default>
         <div class='capacity-row'>
           <span class='capacity-label'>Interviewer load this week</span>
-          {{#each @tracker.interviewerLoad as |row|}}
-            <span class='turn-chip turn-{{row.tone}}'>
-              {{row.employee.name}}
-              {{row.hours}}h /
-              {{row.capacityHours}}h
-            </span>
-          {{/each}}
+          {{#if @tracker.interviewerLoad.length}}
+            <ul class='load-row'>
+              {{#each @tracker.interviewerLoad as |row|}}
+                <li>
+                  <StatusDot
+                    @tone={{this.loadTone row.tone}}
+                    @label='{{row.employee.name}} {{row.hours}}h / {{row.capacityHours}}h'
+                  />
+                </li>
+              {{/each}}
+            </ul>
+          {{else if @tracker.isLoading}}
+            <span class='capacity-empty'>—</span>
+          {{else}}
+            <span class='capacity-empty'>No interviews this week</span>
+          {{/if}}
         </div>
-      {{/if}}
-      <Calendar
-        @events={{@tracker.calendarEvents}}
-        @kindColors={{MEETING_TYPE_COLORS}}
-        @onSelectEvent={{this.openEvent}}
-        @onRescheduleEvent={{this.rescheduleEvent}}
-        @onAddEvent={{this.addMeeting}}
-        @addingDate={{@tracker.addingMeetingOn}}
-      />
-    </section>
+        <TrackerSection @title='Schedule' @meta='this month' @padded={{true}}>
+          <Calendar
+            @events={{@tracker.calendarEvents}}
+            @kindColors={{this.kindColors}}
+            @onSelectEvent={{this.openEvent}}
+            @onRescheduleEvent={{this.rescheduleEvent}}
+            @onAddEvent={{this.addMeeting}}
+            @addingDate={{@tracker.addingMeetingOn}}
+          >
+            <:chip as |event|>
+              <span class='ev'><span
+                  class='ev-dot'
+                  aria-hidden='true'
+                ></span><span class='ev-time'>{{this.timeOf event}}</span><span
+                  class='ev-title'
+                >{{event.title}}</span></span>
+            </:chip>
+          </Calendar>
+        </TrackerSection>
+        <TrackerSection @title='Upcoming'>
+          <UpcomingList
+            @meetings={{@tracker.meetings}}
+            @loading={{@tracker.isLoading}}
+            @onOpen={{@tracker.openCard}}
+          />
+        </TrackerSection>
+      </:default>
+    </TrackerPage>
     <style scoped>
-      .sec-head {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp);
-        padding-bottom: var(--boxel-sp);
-        border-bottom: 0.125rem solid var(--card-foreground);
-        margin: 0 0 var(--boxel-sp-lg);
-      }
-      .sec-head .htext {
-        margin-right: auto;
-      }
-      .sec-head .htext h2 {
-        font-family: var(--font-sans);
-        font-weight: 700;
-        font-size: 1.25rem;
-        margin: 0 0 0.1875rem;
-      }
-      .sec-head .htext .byline {
-        font-family: var(--font-mono);
-        font-size: 0.7188rem;
-        letter-spacing: 0.02em;
-        color: var(--muted-foreground);
-        margin: 0;
-      }
-      .turn-chip {
-        font-family: var(--font-mono);
-        font-size: 0.625rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        padding: 0.125rem 0.4375rem;
-        border-radius: 62.4375rem;
-      }
-      .capacity-row {
+      /* an event: dot + mono time + title, one 12px line; the Calendar's
+         flat appearance makes the whole chip the hover/focus target */
+      .ev {
         display: flex;
         align-items: center;
-        gap: var(--boxel-sp-xs);
+        gap: var(--boxel-sp-3xs);
+        min-width: 0;
+        font-size: var(--boxel-font-size-xs);
+      }
+      .ev-dot {
+        flex: none;
+        inline-size: 0.4375rem;
+        block-size: 0.4375rem;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .ev-time {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-variant-numeric: tabular-nums;
+        color: var(--muted-foreground);
+      }
+      .ev-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--foreground);
+        font-weight: 600;
+      }
+      /* one hairline line, like the Dashboard's needs-attention line */
+      .capacity-row {
+        display: flex;
         flex-wrap: wrap;
-        margin-bottom: var(--boxel-sp);
+        align-items: center;
+        gap: var(--boxel-sp-4xs) var(--boxel-sp-lg);
+        padding: var(--trt-py) 0;
+        border-block: 1px solid var(--border);
       }
       .capacity-label {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: 0.5625rem;
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--subtle-foreground);
+      }
+      .capacity-empty {
         color: var(--muted-foreground);
       }
-      .tab-section {
-        animation: tracker-tab-fade-in 0.2s ease-out;
-      }
-      @keyframes tracker-tab-fade-in {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tab-section {
-          animation: none;
-        }
-      }
-      .btn-review {
-        margin-bottom: var(--boxel-sp-5xs);
-      }
-      .sec-head {
-        flex: none;
-      }
-      @keyframes action-busy-pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.55;
-        }
+      .load-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-4xs) var(--boxel-sp-lg);
+        margin: 0;
+        padding: 0;
+        list-style: none;
       }
     </style>
   </template>

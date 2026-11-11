@@ -8,13 +8,46 @@
       "appliedDate": "2026-06-20",
       "status": "offer",
       "cardInfo": {
-        "name": "Jon Ferreira"
+        "name": "Jon Ferreira",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "decisionDate": null,
+      "resumeText": null,
+      "linkedInUrl": null,
+      "portfolioUrl": null,
+      "noticePeriodDays": null,
+      "interviewFeedback": [],
+      "workHistory": [],
+      "education": [],
+      "overallScore": null,
+      "backgroundCheck": {
+        "status": null,
+        "provider": null,
+        "requestedDate": null,
+        "completedDate": null,
+        "notes": null
+      },
+      "rejectionReason": null,
+      "rejectionNote": null,
+      "offerState": null,
+      "boardOrder": 2,
+      "phone": null,
+      "photo": {
+        "url": null,
+        "sourceMode": null
       }
     },
     "relationships": {
       "offer": {
         "links": {
           "self": "../Offer/jon-ferreira-offer"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

@@ -12,32 +12,197 @@ import DateTimeField from 'https://cardstack.com/base/datetime';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import enumField from 'https://cardstack.com/base/enum';
 import CalendarIcon from '@cardstack/boxel-icons/calendar';
-import GlimmerComponent from '@glimmer/component';
-import { FormatDate } from '@cardstack/pretui/components/format-date';
-import { htmlSafe } from '@ember/template';
-import { Avatar } from '@cardstack/pretui/components/avatar';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
-import { Stat } from '@cardstack/pretui/components/stat';
-import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { DotLabel } from './dot-enum-field';
+import { type DescriptionsItem } from '@cardstack/pretui/components/descriptions';
+import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
+import type { PretuiTone } from '@cardstack/pretui/pretui-primitives';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
 import { DurationField } from './duration-field';
-import { InterviewRoundField } from './interview-round-field';
-import { ScorecardField } from './scorecard-field';
+import {
+  InterviewRoundField,
+  INTERVIEW_ROUND_LABELS,
+} from './interview-round-field';
+import { ScorecardField, RECOMMENDATION_LABELS } from './scorecard-field';
 import { Employee } from './employee';
 import { Candidate } from './candidate';
 import {
-  StatePill,
   stateColor,
-  stateColorOf,
   type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { UnsetMarker } from '@cardstack/catalog/components/unset-marker';
 import { liveCount } from './utils';
-import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
-import { hueOf } from './hr-ui';
+import {
+  EmbCard,
+  FitCard,
+  FitRow,
+  IsoHead,
+  IsoPage,
+  Kv,
+  kv,
+  Panel,
+  SheetEmpty,
+  SheetLine,
+  StatStrip,
+  type StripItem,
+} from './compact-sheet';
+
+// ── Shared reads ─────────────────────────────────────────────────────────
+// Every format shows the same chips, byline and facts, so they are derived
+// once here from the model rather than per format.
+
+type MeetingModel = Partial<Meeting> | undefined;
+
+// A recommendation is a verdict, so it reads the status tones: both votes to
+// hire are success, the votes against warning and danger.
+const RECOMMENDATION_TONES: Record<string, PretuiTone> = {
+  'strong-hire': 'success',
+  hire: 'success',
+  'no-hire': 'warning',
+  'strong-no-hire': 'danger',
+};
+
+const outOfFive = (value: number) => `${value} / 5`;
+
+function formatWhen(date: Date, options: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat('en-US', options).format(date);
+}
+
+function scoreStateOf(model: MeetingModel): ScoreState {
+  if (typeof model?.interviewScore === 'number') {
+    return 'scored';
+  }
+  let date = parseMeetingDate(model?.date);
+  return date && date.getTime() < Date.now() ? 'awaiting' : 'upcoming';
+}
+
+// Over and unscored means the ball is in our court; that is the one state a
+// scheduling card can surface on its own, from date + interviewScore.
+// Only interviews are scored ('' for a standup or 1:1); an untyped meeting
+// counts as an interview, as the seed data has one.
+function scoreLabelOf(model: MeetingModel): string {
+  if (model?.meetingType && model.meetingType !== 'interview') {
+    return '';
+  }
+  let score = model?.interviewScore;
+  if (typeof score === 'number') {
+    return outOfFive(score);
+  }
+  return scoreStateOf(model) === 'awaiting'
+    ? 'Score overdue'
+    : 'Not yet scored';
+}
+
+function scoreToneOf(model: MeetingModel): PretuiTone {
+  let score = model?.interviewScore;
+  if (typeof score === 'number') {
+    return score >= 4 ? 'success' : score >= 3 ? 'warning' : 'danger';
+  }
+  return scoreStateOf(model) === 'awaiting' ? 'danger' : 'neutral';
+}
+
+function recommendationToneOf(model: MeetingModel): PretuiTone {
+  let value = model?.scorecard?.recommendation;
+  return (value && RECOMMENDATION_TONES[value]) || 'neutral';
+}
+
+function recommendationOf(model: MeetingModel): string | undefined {
+  let value = model?.scorecard?.recommendation;
+  return value ? (RECOMMENDATION_LABELS[value] ?? value) : undefined;
+}
+
+// An unset duration is still a DurationField whose label is the '—'
+// placeholder, so it counts only when it has a value.
+function durationOf(model: MeetingModel): string | undefined {
+  let duration = model?.duration;
+  return duration?.value != null ? duration.label : undefined;
+}
+
+function roundOf(model: MeetingModel): string | undefined {
+  let round = model?.roundType;
+  return round ? (INTERVIEW_ROUND_LABELS[round] ?? round) : undefined;
+}
+
+// "Aug 4, 2026 · 10:00 AM · 60 min", only the parts that are set.
+function bylineOf(model: MeetingModel): string {
+  let date = parseMeetingDate(model?.date);
+  return [
+    date &&
+      formatWhen(date, { month: 'short', day: 'numeric', year: 'numeric' }),
+    date &&
+      formatWhen(date, {
+        hour: 'numeric',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }),
+    durationOf(model),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function factsOf(model: MeetingModel): DescriptionsItem[] {
+  let date = parseMeetingDate(model?.date);
+  let score = model?.interviewScore;
+  let items: DescriptionsItem[] = [];
+  let add = (label: string, value: string | undefined) => {
+    if (value) {
+      items.push({ label, value });
+    }
+  };
+  add(
+    'Date',
+    date &&
+      formatWhen(date, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }),
+  );
+  add('Duration', durationOf(model));
+  add('Round', roundOf(model));
+  add('Score', typeof score === 'number' ? outOfFive(score) : undefined);
+  for (let criterion of model?.scorecard?.criteria ?? []) {
+    add(
+      criterion?.name ?? '',
+      typeof criterion?.score === 'number'
+        ? outOfFive(criterion.score)
+        : undefined,
+    );
+  }
+  add('Interviewers', model?.interviewerTally || undefined);
+  add('Type', model?.meetingType ?? undefined);
+  return items;
+}
+
+// The record's type mark (a square, not a person): same one in every format.
+const MeetingMark: TemplateOnlyComponent<{ Element: HTMLSpanElement }> =
+  <template>
+    <span class='meeting-mark' aria-hidden='true' ...attributes>Mt</span>
+    <style scoped>
+      @layer PretComponent {
+        .meeting-mark {
+          display: inline-grid;
+          flex: none;
+          place-items: center;
+          inline-size: var(--meeting-mark-size, 2rem);
+          block-size: var(--meeting-mark-size, 2rem);
+          border-radius: calc(var(--radius) - 2px);
+          background: var(--card);
+          box-shadow: inset 0 0 0 1px var(--border);
+          color: var(--primary-ink);
+          font-size: var(--meeting-mark-font-size, var(--boxel-font-size-xs));
+          font-weight: 600;
+          line-height: 1;
+        }
+      }
+    </style>
+  </template>;
 
 export const MEETING_TYPES = [
   'interview',
@@ -67,14 +232,6 @@ export const MEETING_TYPE_COLORS: Record<string, StateColor> =
 
 type ScoreState = 'scored' | 'awaiting' | 'upcoming';
 
-// Score state carries status meaning, kept apart from the type hue so "whose
-// court is the ball in" never competes with "what kind of meeting is this".
-const SCORE_STATE_HUES: Record<ScoreState, Hue> = {
-  scored: 'green',
-  awaiting: 'red',
-  upcoming: 'slate',
-};
-
 export const MeetingTypeField = markDefinition(
   enumField(StringField, {
     options: MEETING_TYPES.map((type) => ({ value: type, label: type })),
@@ -92,26 +249,6 @@ function parseMeetingDate(
   }
   let date = new Date(value);
   return isNaN(date.getTime()) ? undefined : date;
-}
-
-// The clock time a meeting starts at, as the header and the tile show it
-// ("9:30 AM"). en-US like the date tile beside it. Renders nothing when the
-// meeting has no date.
-class MeetingTime extends GlimmerComponent<{
-  Args: { date?: Date };
-  Element: HTMLTimeElement;
-}> {
-  <template>
-    {{#if @date}}
-      <FormatDate
-        @date={{@date}}
-        @locale='en-US'
-        @hour='numeric'
-        @minute='2-digit'
-        ...attributes
-      />
-    {{/if}}
-  </template>
 }
 
 export class Meeting extends CardDef {
@@ -191,850 +328,412 @@ export class Meeting extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get typeHue() {
-      return hueOf(MEETING_TYPE_HUES, this.args.model?.meetingType);
+    get byline() {
+      return bylineOf(this.args.model);
+    }
+    get scoreLabel() {
+      return scoreLabelOf(this.args.model);
+    }
+    get recommendationHint() {
+      let recommendation = recommendationOf(this.args.model);
+      return recommendation ? `recommend ${recommendation.toLowerCase()}` : '';
+    }
+    get durationLabel() {
+      return durationOf(this.args.model) ?? '—';
+    }
+    get dateHint() {
+      let date = parseMeetingDate(this.args.model?.date);
+      return date
+        ? formatWhen(date, {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hourCycle: 'h23',
+          })
+        : 'no date set';
+    }
+    get panelSize() {
+      return this.args.model?.interviewerTally || '0';
+    }
+    get criteriaRows() {
+      return (this.args.model?.scorecard?.criteria ?? [])
+        .filter((c) => c?.name)
+        .map((c) => ({ name: c.name ?? '', value: c.score ?? 0 }));
+    }
+    get recommendation() {
+      return recommendationOf(this.args.model)?.toLowerCase() ?? '';
+    }
+    get keyValues(): KeyValueItem[] {
+      return factsOf(this.args.model).map(({ label, value }) => ({
+        key: label,
+        value: String(value),
+      }));
+    }
+    get hasAttendees() {
+      return Boolean(
+        this.args.model?.candidate || this.args.model?.interviewers?.length,
+      );
     }
 
-    get scoreHue(): Hue {
-      return SCORE_STATE_HUES[this.scoreState];
-    }
-
-    get dateObj(): Date | undefined {
-      return parseMeetingDate(this.args.model?.date);
-    }
-
-    // The byline shows only the parts that are set, with the dot only
-    // between two shown parts.
-    get hasByline(): boolean {
-      return Boolean(this.dateObj || this.args.model?.duration?.label);
-    }
-
-    get durationNeedsSeparator(): boolean {
-      return this.dateObj !== undefined;
-    }
-
-    // Derived: the meeting is over and nobody recorded a score. This is the
-    // one state a scheduling card can genuinely surface — "the ball is in our
-    // court" — and it comes free from date + interviewScore.
-    get scoreState(): ScoreState {
-      let d = this.dateObj;
-      let scored = typeof this.args.model?.interviewScore === 'number';
-      if (scored) {
-        return 'scored';
-      }
-      if (d && d.getTime() < Date.now()) {
-        return 'awaiting';
-      }
-      return 'upcoming';
-    }
-
-    get scoreLabel(): string {
-      let v = this.args.model?.interviewScore;
-      if (typeof v === 'number') {
-        return `${v} / 5`;
-      }
-      return this.scoreState === 'awaiting'
-        ? 'Score overdue'
-        : 'Not yet scored';
-    }
-
-    get attendees(): Array<{
-      role: string;
-      title: string;
-      photoUrl?: string | null;
-    }> {
-      let list = [];
-      let candidate = this.args.model?.candidate;
-      if (candidate) {
-        list.push({
-          role: 'Candidate',
-          title: candidate.title ?? '',
-          photoUrl: candidate.photo?.resolvedUrl,
+    get strip(): StripItem[] {
+      let items: StripItem[] = [];
+      if (this.scoreLabel) {
+        items.push({
+          label: 'Score',
+          value: this.scoreLabel,
+          hint: this.recommendationHint,
+          tone: 'success',
         });
       }
-      for (let interviewer of this.args.model?.interviewers ?? []) {
-        if (interviewer) {
-          list.push({
-            role: 'Interviewer',
-            title: interviewer.title ?? '',
-            photoUrl: interviewer.photo?.resolvedUrl,
-          });
-        }
+      items.push(
+        { label: 'Duration', value: this.durationLabel, hint: this.dateHint },
+        {
+          label: 'Panel',
+          value: this.panelSize,
+          hint: 'interviewers',
+          tone: 'info',
+        },
+      );
+      return items;
+    }
+    get linkedRows() {
+      let rows: { key: string; value: string }[] = [];
+      if (this.args.model?.candidate) {
+        rows.push({ key: 'Candidate', value: '' });
       }
-      return list;
+      return rows;
     }
 
     <template>
-      <article class='meeting-isolated'>
-        <header class='hero'>
-          {{! A meeting's first question is always "when", so the date gets a
-              block of its own rather than a line in the subtitle. }}
-          <div class='datebox'>
-            {{#if this.dateObj}}
-              <FormatDate
-                class='db-month'
-                @date={{@model.date}}
-                @locale='en-US'
-                @month='short'
-              />
-              <FormatDate
-                class='db-day'
-                @date={{@model.date}}
-                @locale='en-US'
-                @day='numeric'
-              />
-              <FormatDate
-                class='db-weekday'
-                @date={{@model.date}}
-                @locale='en-US'
-                @weekday='short'
-              />
-            {{else}}
-              <UnsetMarker class='db-day' @label='No date' />
-            {{/if}}
-          </div>
-          <div class='hero-text'>
-            <h1>{{@model.title}}</h1>
-            {{#if this.hasByline}}
-              <p class='byline'>
-                <MeetingTime @date={{this.dateObj}} />
-                {{#if @model.duration.label}}
-                  {{#if this.durationNeedsSeparator}}
-                    <span class='sep-dot'>&middot;</span>
-                  {{/if}}
-                  {{@model.duration.label}}
-                {{/if}}
-              </p>
-            {{/if}}
-            <div class='pill-row'>
-              <StatePill
-                @label={{@model.meetingType}}
-                @hue={{this.typeHue}}
-                @dot={{true}}
-              />
-              <StatePill
-                @label={{this.scoreLabel}}
-                @hue={{this.scoreHue}}
-                @dot={{true}}
-              />
-            </div>
-          </div>
-        </header>
-
-        <div class='body'>
-          <div class='main'>
-            <h2 class='panel-title'>Attendees</h2>
-            {{#if this.attendees.length}}
-              <ul class='attendees'>
-                {{#each this.attendees as |a|}}
-                  <li>
-                    <EntityDisplay
-                      class='attendee'
-                      @title={{a.title}}
-                      @subtitle={{a.role}}
-                      @center={{true}}
-                    >
-                      <:visual>
-                        <Avatar
-                          @name={{if a.title a.title '?'}}
-                          @src={{a.photoUrl}}
-                          @hue={{AVATAR_HUE}}
-                          @size={{28}}
-                          aria-hidden='true'
-                        />
-                      </:visual>
-                    </EntityDisplay>
-                  </li>
-                {{/each}}
-              </ul>
-            {{else}}
-              <EmptyState
-                class='empty'
-                @texture={{false}}
-                @title='No attendees linked yet'
-              />
-            {{/if}}
-
-            <h2 class='panel-title spaced'>Notes</h2>
+      <IsoPage>
+        <:head>
+          <IsoHead @title={{@model.title}} @meta={{this.byline}}>
+            <:mark><MeetingMark /></:mark>
+            <:aside><span class='status'>{{#if (roundOf @model)}}<DotLabel
+                    @label={{roundOf @model}}
+                    @hue='blue'
+                  />{{/if}}{{#if this.recommendation}}<DotLabel
+                    @label={{this.recommendation}}
+                    @hue='green'
+                  />{{/if}}{{#if this.scoreLabel}}<span
+                    class='num'
+                  >{{this.scoreLabel}}</span>{{/if}}</span></:aside>
+            <:stats><StatStrip @items={{this.strip}} /></:stats>
+          </IsoHead>
+        </:head>
+        <:main>
+          {{#if this.criteriaRows.length}}
+            <Panel @title='Scorecard'>
+              {{#each this.criteriaRows as |row|}}
+                <SheetLine class='crit'><span
+                    class='crit-name'
+                  >{{row.name}}</span><ProgressBar
+                    class='crit-bar'
+                    @value={{row.value}}
+                    @max={{5}}
+                    @steps={{false}}
+                    @hue='var(--foreground)'
+                    aria-label={{row.name}}
+                  /><span class='num'>{{row.value}} / 5</span></SheetLine>
+              {{/each}}
+            </Panel>
+          {{/if}}
+          {{#if @model.scorecard.overallNotes}}
+            <Panel @title='Overall notes'><SheetLine
+              >{{@model.scorecard.overallNotes}}</SheetLine></Panel>
+          {{/if}}
+          <Panel @title='Notes'>
             {{#if @model.notes}}
-              <div class='notes'><@fields.notes /></div>
+              <SheetLine><div class='text'><@fields.notes /></div></SheetLine>
             {{else}}
-              <EmptyState
-                class='empty'
-                @texture={{false}}
-                @title='No notes recorded for this meeting'
-              />
+              <SheetEmpty @title='No notes recorded for this meeting' />
             {{/if}}
+          </Panel>
 
-            {{#if @model.scorecard.criteria.length}}
-              <h2 class='panel-title spaced'>Scorecard</h2>
-              <div class='scorecard-wrap'><@fields.scorecard /></div>
+        </:main>
+        <:aside>
+          <Panel @title='Linked'>
+            {{#if @model.candidate}}
+              <SheetLine class='lk'><span
+                  class='k'
+                >Candidate</span><@fields.candidate
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></SheetLine>
             {{/if}}
-
-            {{#if @model.interviewPlanRound}}
-              <h2 class='panel-title spaced'>Interview questions (this round)</h2>
-              <div class='markdown'><@fields.interviewPlanRound /></div>
-            {{/if}}
-          </div>
-
-          <aside class='side'>
-            <h2 class='panel-title'>Score</h2>
-            <div class='score-block'>
-              <Stat
-                class='score-num'
-                @label='Interview score'
-                @value={{this.scoreLabel}}
-                @roll={{false}}
-              />
-              {{#if @model.interviewScore}}
-                <span class='score-sub'><@fields.interviewScore /></span>
-              {{/if}}
-            </div>
-
-            <h2 class='panel-title spaced'>Details</h2>
-            <dl class='stacked'>
-              <dt>Type</dt>
-              <dd>{{if @model.meetingType @model.meetingType '—'}}</dd>
-              <dt>Round</dt>
-              <dd>{{#if @model.roundType}}<@fields.roundType
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>Duration</dt>
-              <dd>{{#if
-                  @model.duration.label
-                }}{{@model.duration.label}}{{else}}&mdash;{{/if}}</dd>
-              <dt>Candidate</dt>
-              <dd>{{#if @model.candidate}}<@fields.candidate
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>Interviewers</dt>
-              <dd>{{if
-                  @model.interviewerTally
-                  @model.interviewerTally
-                  '0'
-                }}</dd>
-            </dl>
-          </aside>
-        </div>
-      </article>
+            {{#each @fields.interviewers as |Interviewer|}}
+              <SheetLine class='lk'><span
+                  class='k'
+                >Interviewer</span><Interviewer
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></SheetLine>
+            {{/each}}
+            {{#unless this.hasAttendees}}
+              <SheetEmpty @title='No attendees linked yet' />
+            {{/unless}}
+          </Panel>
+          <Panel @title='Details'><Kv @items={{this.keyValues}} /></Panel>
+        </:aside>
+      </IsoPage>
       <style scoped>
-        .meeting-isolated {
-          container-type: inline-size;
-          container-name: iso;
-          height: 100%;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          --meet-strong: color-mix(
-            in oklch,
-            var(--primary) 45%,
-            var(--foreground)
-          );
+        .status {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-sm);
+          font-weight: 600;
         }
-        .hero {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp);
-          padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border);
-        }
-        .datebox {
-          flex: none;
-          min-width: 4rem;
-          text-align: center;
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          padding: 0.4rem 0.7rem;
-          background-color: var(--muted);
-          color: var(--foreground);
-        }
-        .db-month {
-          display: block;
-          text-transform: uppercase;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
-          font-weight: 700;
-          color: var(--meet-strong);
-        }
-        .db-day {
-          display: block;
-          font-size: 1.7rem;
-          font-weight: 800;
-          line-height: 1;
-          letter-spacing: -0.02em;
+        .num {
+          font-weight: 400;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
-        }
-        .db-weekday {
-          display: block;
-          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
+          white-space: nowrap;
         }
-        .hero-text {
+        .crit {
+          flex-wrap: nowrap;
+        }
+        .crit-name {
+          inline-size: 7.5rem;
+          flex: none;
+        }
+        .crit-bar {
           flex: 1;
           min-width: 0;
         }
-        h1 {
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 750;
-          letter-spacing: -0.02em;
-          line-height: 1.2;
-          overflow-wrap: anywhere;
+        .text {
+          min-width: 0;
+          overflow-wrap: break-word;
         }
-        .byline {
-          margin: var(--boxel-sp-5xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .sep-dot {
-          margin: 0 0.25rem;
-        }
-        .pill-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-          margin-top: var(--boxel-sp-xs);
-        }
-        .body {
-          display: grid;
-          grid-template-columns: 1fr 17rem;
-          /* Fill whatever height is left so the aside's surface reaches the
-             bottom edge. Without this the grid is only as tall as its content
-             and the panel stops mid-card, reading as a cut-off seam. */
-          flex: 1;
-          min-height: 0;
-          align-content: start;
-        }
-        .main {
-          padding: var(--boxel-sp-lg);
+        .lk {
+          flex-wrap: nowrap;
           min-width: 0;
         }
-        .side {
-          padding: var(--boxel-sp-lg);
-          border-left: 1px solid var(--border);
-          background-color: var(--muted);
-          color: var(--foreground);
-        }
-        .panel-title {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-        }
-        .panel-title.spaced {
-          margin-top: var(--boxel-sp-lg);
-        }
-        .attendees {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: grid;
-          gap: var(--boxel-sp-xs);
-        }
-        /* EntityDisplay's name at the small body size and its role at the extra-small size, with a 1.75rem avatar, so each attendee reads as a compact row. */
-        .attendee {
-          --pretui-entity-visual-size: 1.75rem;
-          --text-ui-md: var(--boxel-font-size-sm);
-          --text-ui-sm: var(--boxel-font-size-xs);
-          --space-3: var(--boxel-sp-xs);
-        }
-        .notes {
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.65;
-          max-height: 18rem;
-          overflow-y: auto;
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius-sm);
-          padding: var(--boxel-sp-xs);
-        }
-        .markdown {
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.65;
-          max-height: 20rem;
-          overflow-y: auto;
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius-sm);
-          padding: var(--boxel-sp-xs);
-        }
-        .empty {
-          --space-9: var(--boxel-sp);
-          --space-6: var(--boxel-sp);
-          --text-heading: var(--boxel-font-size);
-        }
-        .scorecard-wrap {
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius-sm);
-          padding: var(--boxel-sp-xs);
-        }
-        .score-block {
-          padding: var(--boxel-sp-xs) 0;
-        }
-        .score-num {
-          --text-stat: 1.5rem;
-        }
-        .score-sub {
-          display: block;
-          margin-top: 0.15rem;
-        }
-        .stacked {
-          margin: 0;
-          display: grid;
-        }
-        .stacked dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        .k {
+          flex: none;
+          inline-size: 5.5rem;
+          font-weight: 600;
+          font-size: 0.5625rem; /* 9px ladder label: no token */
+          line-height: 1.3;
+          font-family: var(--font-mono);
+          letter-spacing: 0.13em;
           text-transform: uppercase;
-          color: var(--muted-foreground);
-          padding-top: 0.4rem;
-        }
-        .stacked dd {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          overflow-wrap: anywhere;
-        }
-        @container iso (max-width: 40rem) {
-          .body {
-            grid-template-columns: 1fr;
-          }
-          .side {
-            border-left: 0;
-            border-top: 1px solid var(--border);
-          }
+          color: var(--subtle-foreground);
         }
       </style>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get typeHue() {
-      return hueOf(MEETING_TYPE_HUES, this.args.model?.meetingType);
+    get byline() {
+      return bylineOf(this.args.model);
+    }
+    get recommendation() {
+      return recommendationOf(this.args.model);
+    }
+    get recommendationLower() {
+      return this.recommendation?.toLowerCase();
+    }
+    get overall(): string | undefined {
+      return this.args.model?.scorecard?.overallNotes || undefined;
+    }
+    // The six facts that fit two rows at full width; isolated has the rest.
+    get facts() {
+      return factsOf(this.args.model).slice(0, 6);
     }
 
-    get accentBorderStyle() {
-      let c = stateColorOf(MEETING_TYPE_COLORS, this.args.model?.meetingType);
-      return htmlSafe(`border-left-color: ${c.ring};`);
+    get rows() {
+      return kv(factsOf(this.args.model).slice(0, 6));
     }
-
     <template>
-      <div class='meeting-embedded' style={{this.accentBorderStyle}}>
-        <header>
-          <h3>{{@model.title}}</h3>
-          <StatePill
-            class='type'
-            @label={{@model.meetingType}}
-            @hue={{this.typeHue}}
-          />
-        </header>
-        <dl class='meta-list'>
-          <div><dt>When</dt><dd><@fields.date /></dd></div>
-          <div><dt>Duration</dt><dd><@fields.duration
+      <EmbCard @title={{@model.title}} @meta={{this.byline}}>
+        <:mark><MeetingMark /></:mark>
+        <:aside>{{#if (roundOf @model)}}<DotLabel
+              @label={{roundOf @model}}
+              @hue='blue'
+            />{{/if}}</:aside>
+        <:default>
+          {{#if this.recommendation}}
+            <SheetLine class='lk'><span class='k'>Summary</span><span>Recommend
+                <strong>{{this.recommendationLower}}</strong>{{#if
+                  this.overall
+                }} · {{this.overall}}{{/if}}</span></SheetLine>
+          {{/if}}
+          <Kv @items={{this.rows}} />
+          {{#if @model.candidate}}
+            <SheetLine class='lk'><span
+                class='k'
+              >Candidate</span><@fields.candidate
                 @format='atom'
                 @displayContainer={{false}}
-              /></dd>
-          </div>
-          {{#if @model.candidate}}
-            <div>
-              <dt>Candidate</dt>
-              <dd><@fields.candidate
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></dd>
-            </div>
+              /></SheetLine>
           {{/if}}
-          {{#if @model.interviewScore}}
-            <div><dt>Score</dt><dd><@fields.interviewScore /></dd></div>
-          {{/if}}
-        </dl>
-      </div>
+          {{#each @fields.interviewers as |Interviewer|}}
+            <SheetLine class='lk'><span class='k'>Interviewer</span><Interviewer
+                @format='atom'
+                @displayContainer={{false}}
+              /></SheetLine>
+          {{/each}}
+        </:default>
+      </EmbCard>
       <style scoped>
-        .meeting-embedded {
-          padding: var(--boxel-sp);
-          background-color: var(--card);
-          color: var(--card-foreground);
-          border-left: 0.1875rem solid;
-          transition: box-shadow 0.15s ease-out;
-        }
-        header {
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-        }
-        h3 {
-          font-size: var(--boxel-font-size);
-        }
-        .type {
-          text-transform: capitalize;
-        }
-        .meta-list {
-          margin: var(--boxel-sp-xs) 0 0;
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp);
-        }
-        .meta-list > div {
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-2xs);
-        }
-        .meta-list dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        .k {
+          inline-size: 7.5rem;
+          font-weight: 600;
+          font-size: 0.5625rem; /* 9px ladder label: no token */
+          line-height: 1.3;
+          font-family: var(--font-mono);
+          letter-spacing: 0.13em;
           text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .meta-list dd {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
+          color: var(--subtle-foreground);
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
+    get scored() {
+      return typeof this.args.model?.interviewScore === 'number';
+    }
+    get scoreLabel() {
+      return scoreLabelOf(this.args.model);
+    }
+    get scoreTone() {
+      return scoreToneOf(this.args.model);
+    }
+
     <template>
       <span class='meeting-atom'>
-        <CalendarIcon class='meeting-atom-icon' />
+        <MeetingMark class='type-mark' />
         <span class='meeting-atom-name'>{{@model.title}}</span>
       </span>
       <style scoped>
-        .meeting-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .meeting-atom-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .meeting-atom-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        @layer PretComponent {
+          .meeting-atom {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            max-width: 100%;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--foreground);
+            white-space: nowrap;
+          }
+          .type-mark {
+            --meeting-mark-size: 1.25rem;
+            --meeting-mark-font-size: var(--boxel-font-size-2xs);
+          }
+          .meeting-atom-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get scoreHue(): Hue {
-      return SCORE_STATE_HUES[this.scoreState];
+    get recommendation() {
+      return recommendationOf(this.args.model);
+    }
+    get scoreLabel() {
+      return scoreLabelOf(this.args.model);
+    }
+    get scoreTone() {
+      return scoreToneOf(this.args.model);
+    }
+    get recommendationTone() {
+      return recommendationToneOf(this.args.model);
+    }
+    // The first chip: the interview round, or the meeting type when it has none.
+    get lead(): string | undefined {
+      return (
+        roundOf(this.args.model) ?? this.args.model?.meetingType ?? undefined
+      );
+    }
+    get byline() {
+      return bylineOf(this.args.model);
+    }
+    get recommendationLower() {
+      return this.recommendation?.toLowerCase();
+    }
+    get overall(): string | undefined {
+      return this.args.model?.scorecard?.overallNotes || undefined;
+    }
+    get durationLabel() {
+      return durationOf(this.args.model) ?? '—';
+    }
+    get panelSize() {
+      return this.args.model?.interviewerTally || '0';
+    }
+    get facts() {
+      return factsOf(this.args.model);
     }
 
-    get dateObj(): Date | undefined {
-      return parseMeetingDate(this.args.model?.date);
+    get strip(): StripItem[] {
+      return [
+        { label: 'Score', value: this.scoreLabel || '—' },
+        { label: 'Duration', value: this.durationLabel },
+        { label: 'Panel', value: this.panelSize },
+      ];
     }
-
-    // Same derivation as isolated: over and unscored means we owe an action.
-    get scoreState(): ScoreState {
-      let d = this.dateObj;
-      if (typeof this.args.model?.interviewScore === 'number') {
-        return 'scored';
-      }
-      return d && d.getTime() < Date.now() ? 'awaiting' : 'upcoming';
-    }
-
-    get scoreShort(): string {
-      let v = this.args.model?.interviewScore;
-      if (typeof v === 'number') {
-        return `★ ${v}/5`;
-      }
-      return this.scoreState === 'awaiting' ? 'Unscored' : 'Upcoming';
-    }
-
-    // The tier-2 line: type and duration, whichever are set. An unset
-    // duration is still a DurationField whose label is the '—' placeholder,
-    // so the duration counts only when it has a value.
-    get eyebrow(): string | undefined {
-      let duration = this.args.model?.duration;
-      let parts = [
-        this.args.model?.meetingType,
-        duration?.value != null ? duration.label : undefined,
-      ].filter(Boolean);
-      return parts.length ? parts.join(' · ') : undefined;
-    }
-
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          {{! The weekday and the time line come and go with the card's size,
-              so the tile's parts and the time line are all hidden from
-              assistive tech. One visually hidden date and time after the
-              title stands in for them at every tier. }}
-          <div class='datebox'>
-            {{#if this.dateObj}}
-              <FormatDate
-                class='db-month'
-                @date={{@model.date}}
-                @locale='en-US'
-                @month='short'
-                aria-hidden='true'
-              />
-              <FormatDate
-                class='db-day'
-                @date={{@model.date}}
-                @locale='en-US'
-                @day='numeric'
-                aria-hidden='true'
-              />
-              <FormatDate
-                class='db-weekday'
-                @date={{@model.date}}
-                @locale='en-US'
-                @weekday='short'
-                aria-hidden='true'
-              />
-            {{else}}
-              <UnsetMarker class='db-day' @label='No date' />
-            {{/if}}
-          </div>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
-            {{#if this.dateObj}}
-              <VisuallyHidden><FormatDate
-                  @date={{@model.date}}
-                  @locale='en-US'
-                  @weekday='long'
-                  @month='long'
-                  @day='numeric'
-                  @year='numeric'
-                  @hour='numeric'
-                  @minute='2-digit'
-                /></VisuallyHidden>
-            {{/if}}
-            {{#if this.eyebrow}}
-              <span class='fit-eb'>{{this.eyebrow}}</span>
-            {{/if}}
-          </div>
-          {{! Score state survives to the smallest tier — it is the only
-              signal that says whether this meeting still needs something. }}
-          <StatePill
-            class='fit-pill'
-            @label={{this.scoreShort}}
-            @hue={{this.scoreHue}}
-            @dot={{true}}
-          />
-        </div>
-
-        <div class='fit-mid'>
-          <MeetingTime
-            class='fit-time'
-            @date={{this.dateObj}}
-            aria-hidden='true'
-          />
-          {{#if @model.candidateName}}
-            <span class='fit-who'>{{@model.candidateName}}</span>
+      <FitCard @title={{@model.title}}>
+        <:mark><MeetingMark /></:mark>
+        <:status>{{#if (roundOf @model)}}<DotLabel
+              @label={{roundOf @model}}
+              @hue='blue'
+            />{{/if}}</:status>
+        <:default>
+          <FitRow @left={{true}}><span
+              class='meta'
+            >{{this.byline}}</span></FitRow>
+          {{#if this.scoreLabel}}
+            <FitRow @label='Score'>{{this.scoreLabel}}{{#if
+                this.recommendationLower
+              }}
+                ·
+                {{this.recommendationLower}}{{/if}}</FitRow>
           {{/if}}
-        </div>
-
-        <dl class='fit-add'>
-          {{#if @model.interviewerTally}}
-            <div><dt>Panel</dt><dd>{{@model.interviewerTally}}</dd></div>
+          {{#if @model.candidate}}
+            <FitRow @label='Candidate' @left={{true}}><@fields.candidate
+                @format='atom'
+                @displayContainer={{false}}
+              /></FitRow>
           {{/if}}
-          {{#if @model.duration.label}}
-            <div><dt>Length</dt><dd>{{@model.duration.label}}</dd></div>
-          {{/if}}
-          {{#if @model.meetingType}}
-            <div><dt>Type</dt><dd>{{@model.meetingType}}</dd></div>
-          {{/if}}
-          <div><dt>Score</dt><dd>{{this.scoreShort}}</dd></div>
-        </dl>
-      </article>
+          <StatStrip @compact={{true}} @items={{this.strip}} />
+          {{#each @fields.interviewers as |Interviewer|}}
+            <FitRow @label='Interviewer' @left={{true}}><Interviewer
+                @format='atom'
+                @displayContainer={{false}}
+              /></FitRow>
+          {{/each}}
+          {{#each this.facts as |f|}}
+            <FitRow @label={{f.label}}><span
+                class='mono'
+              >{{f.value}}</span></FitRow>
+          {{/each}}
+        </:default>
+      </FitCard>
       <style scoped>
-        /* Four tiers, each ADDING fields. 11px floor. Pill never hidden. */
-        .fit {
-          height: 100%;
-          /* Flex, not a three-row grid: with `minmax(0, 1fr)` in the middle
-             a taller bottom block squeezed the middle row and clipped its
-             text. Here the middle keeps its natural height and the extras
-             block is pushed to the bottom by `margin-top: auto`. */
-          display: flex;
-          flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --meet-strong: color-mix(
-            in oklch,
-            var(--primary) 45%,
-            var(--foreground)
-          );
-          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
-          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.4rem;
-          flex-wrap: wrap;
-        }
-        .datebox {
-          flex: none;
-          min-width: 2.3rem;
-          text-align: center;
-        }
-        .db-month {
-          display: block;
-          text-transform: uppercase;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          color: var(--meet-strong);
-        }
-        .db-day {
-          display: block;
-          font-size: calc(var(--fit-name) * 1.2);
-          font-weight: 800;
-          line-height: 1;
-          font-variant-numeric: tabular-nums;
-        }
-        .db-weekday {
-          display: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          display: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
+        .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-        .fit-pill {
-          flex: none;
-          align-self: flex-start;
-        }
-        .fit-mid {
-          flex: none;
-          display: none;
-          flex-direction: column;
-          gap: 0.0625rem;
-        }
-        .fit-time {
-          font-size: var(--fit-small);
-          font-weight: 600;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-who {
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          margin-top: auto;
-          padding-top: 0.3rem;
-          border-top: 1px dashed var(--border);
-          grid-template-columns: 1fr 1fr;
-          gap: 0.125rem 0.5rem;
-        }
-        .fit-add > div {
-          display: flex;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .fit-add dt {
-          flex: none;
-          font-size: var(--fit-small);
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
-        .fit-add dd {
-          margin: 0;
-          font-size: var(--fit-small);
-          font-weight: 600;
-          white-space: nowrap;
+        .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-
-        /* TIER 2 — add meeting type + duration. No `or` in CQ, so two rules. */
-        @container fitted-card (height > 80px) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        @container fitted-card (width > 240px) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        /* TIER 3 — add weekday, time and who it is with. */
-        @container fitted-card (height > 130px) and (width > 180px) {
-          .db-weekday {
-            display: block;
-          }
-          .fit-mid {
-            display: flex;
-          }
-        }
-        /* TIER 4 — width-driven facts. Previously absent entirely. */
-        @container fitted-card (height > 150px) and (width > 180px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-        }
-        @container fitted-card (width > 340px) and (height > 130px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        @container fitted-card (height <= 90px) {
-          .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
-          }
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
-          }
-          .fit-pill {
-            align-self: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height <= 50px) {
-          .fit-eb {
-            display: none;
-          }
+          font-weight: 400;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

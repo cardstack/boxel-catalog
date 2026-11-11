@@ -8,12 +8,12 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import { Command } from '@cardstack/runtime-common';
-import { displayTitle } from '@cardstack/catalog/cards/service-desk/record-helpers';
+import { displayTitle } from '../record-helpers';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { Workflow } from '@cardstack/catalog/cards/service-desk/workflow';
-import AssignOwnerCommand from '@cardstack/catalog/cards/service-desk/commands/assign-owner-command';
-import RunWorkflowCommand from '@cardstack/catalog/cards/service-desk/commands/run-workflow-command';
+import { Employee } from '../../hr/employee';
+import { Workflow } from '../workflow';
+import AssignOwnerCommand from './assign-owner-command';
+import RunWorkflowCommand from './run-workflow-command';
 import ArchiveRecordCommand from '@cardstack/catalog/fields/record-status/commands/archive-record';
 
 export const BATCH_OPERATIONS = [

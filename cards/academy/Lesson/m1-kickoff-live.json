@@ -14,7 +14,13 @@
       "liveSessionAt": "2026-08-27T10:00:00.000Z",
       "meetingUrl": "https://meet.northwind.example/paf-101"
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "../lesson",

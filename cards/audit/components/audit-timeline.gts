@@ -7,8 +7,6 @@ import {
   type TimelineEvent,
 } from '@cardstack/pretui/components/timeline';
 
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 // Labels and hues from the vocabulary module, not from the AuditEntry card:
 // the timeline renders inside cards the entry module may itself reach, and a
@@ -206,7 +204,7 @@ export class AuditTimeline extends GlimmerComponent<Signature> {
             'Nothing recorded yet. The trail fills as decisions are made.'
           }}
           @texture={{false}}
-          style={{COMPACT_EMPTY_STYLE}}
+          @size='s'
         />
       {{/if}}
     </div>

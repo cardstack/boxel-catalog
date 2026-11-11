@@ -63,6 +63,11 @@
         "links": {
           "self": "../Location/northwind-b-f1-dock"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

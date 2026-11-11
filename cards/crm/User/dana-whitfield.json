@@ -14,7 +14,7 @@
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../../Theme/site-tools"
         }
       },
       "cardInfo.cardThumbnail": {

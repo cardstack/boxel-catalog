@@ -1,10 +1,6 @@
 import type { OrderFulfilmentApp } from './order-fulfilment-app';
-import { BoardPanel } from './board-panel';
-import { InventoryPanel } from './inventory-panel';
-import { ShipDeskPanel } from './ship-desk-panel';
-import { TransitPanel } from './transit-panel';
-import { ReturnsPanel } from './returns-panel';
 import { CardDef, Component, realmURL } from '@cardstack/base/card-api';
+import CardList from '@cardstack/base/components/card-list';
 import {
   identifyCard,
   type getCards,
@@ -12,12 +8,37 @@ import {
   type Filter,
   type Query,
 } from '@cardstack/runtime-common';
-import { type TableColumn } from '../../components/table';
+import { Board } from '@cardstack/catalog/components/board';
+import { MapRender } from '@cardstack/catalog/components/map-render';
+import { type Coordinate } from '@cardstack/catalog/components/map-render';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { FilterChips } from '@cardstack/pretui/components/filter-chips';
+import { LayoutControl } from '@cardstack/pretui/components/layout-control';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { SearchInput } from '@cardstack/pretui/components/search-input';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import {
+  Sidebar,
+  SidebarGroup,
+  SidebarItem,
+  SidebarTrigger,
+} from '@cardstack/pretui/components/sidebar';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Table } from '@cardstack/pretui/components/table';
+import { on } from '@ember/modifier';
+import { fn, get } from '@ember/helper';
 import { action } from '@ember/object';
 import { cached, tracked } from '@glimmer/tracking';
 import { debounce } from 'lodash-es';
 import type Owner from '@ember/owner';
-import TriangleAlert from '@cardstack/boxel-icons/triangle-alert';
+import KanbanIcon from '@cardstack/boxel-icons/kanban';
+import PackageIcon from '@cardstack/boxel-icons/package';
+import PlusIcon from '@cardstack/boxel-icons/plus';
+import RouteIcon from '@cardstack/boxel-icons/route';
+import TruckIcon from '@cardstack/boxel-icons/truck';
+import Undo2Icon from '@cardstack/boxel-icons/undo-2';
 import { FulfilmentOrder } from '../fulfilment/fulfilment-order';
 import { Shipment } from '../fulfilment/shipment';
 import { InventoryStock } from '../fulfilment/inventory-stock';
@@ -25,21 +46,39 @@ import { Warehouse } from '../fulfilment/warehouse';
 import { Carrier, quoteService } from '../fulfilment/carrier';
 import { ProductReturn } from '../fulfilment/product-return';
 import { PickList } from '../fulfilment/pick-list';
-import { ORDER_STATUSES } from '../fulfilment/order-status';
 import { isShipmentException } from '../fulfilment/shipment-status';
-import { type Coordinate } from '../../components/map-render';
-import StatusChip from '../fulfilment/fulfilment-status-chip';
-import { money } from '../fulfilment/fulfilment-format';
-import { Tabs } from '@cardstack/pretui/components/tabs';
+import { money, stamp } from '../fulfilment/fulfilment-format';
 import {
   TABS,
   chipOptions,
   BOARD_COLUMNS,
   TRANSIT_PAGE,
   VIEW_OPTION,
+  VIEW_OPTIONS,
+  SEARCH_FORMS,
+  CHIP_FORMS,
+  VIEW_FORMS,
+  ADD_FORMS,
+  asOrder,
   byType,
   eq,
+  hue,
+  isNumber,
+  lt,
+  plural,
+  shipmentProgress,
+  stockHue,
 } from './order-fulfilment-helpers';
+
+const NAV_ICONS: Record<string, any> = {
+  board: KanbanIcon,
+  inventory: PackageIcon,
+  ship: TruckIcon,
+  transit: RouteIcon,
+  returns: Undo2Icon,
+};
+
+type StatTile = { label: string; value: number; hint: string; tone?: string };
 
 export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
   @tracked tab = 'board';
@@ -52,13 +91,12 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
   @tracked transitSearch = '';
   @tracked inventoryStatus: 'all' | 'low' | 'out' = 'all';
   @tracked returnsStatus: 'all' | 'open' | 'closed' = 'all';
-  @tracked transitStatus: 'transit' | 'delivered' | 'attention' | 'all' =
-    'transit';
+  @tracked transitStatus: 'transit' | 'delivered' | 'attention' | 'all' = 'all';
   // Inventory defaults to the table: a stock row is six numeric columns, and
   // that is what a table is for. Returns defaults to the grid — an RMA reads as
   // a card. Both offer the other view; neither is forced into the wrong shape.
   @tracked inventoryView = 'table';
-  @tracked returnsView = 'grid';
+  @tracked returnsView = 'table';
   @tracked transitLimit = TRANSIT_PAGE;
   @tracked selectedShipmentId: string | undefined = undefined;
 
@@ -721,83 +759,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     );
   }
 
-  inventoryColumns: TableColumn[] = [
-    { key: 'sku', label: 'SKU', value: (r: any) => r.sku },
-    { key: 'product', label: 'Product', value: (r: any) => r.productName },
-    {
-      key: 'warehouse',
-      label: 'Warehouse',
-      value: (r: any) => r.warehouseCode,
-    },
-    { key: 'bin', label: 'Bin', value: (r: any) => r.binLocation },
-    {
-      key: 'onHand',
-      label: 'On hand',
-      align: 'right',
-      value: (r: any) => r.quantityOnHand,
-    },
-    {
-      key: 'reserved',
-      label: 'Reserved',
-      align: 'right',
-      value: (r: any) => r.quantityReserved,
-    },
-    {
-      key: 'available',
-      label: 'Available',
-      align: 'right',
-      value: (r: any) => r.quantityAvailable,
-    },
-    {
-      key: 'incoming',
-      label: 'Incoming',
-      align: 'right',
-      value: (r: any) => r.quantityIncoming,
-    },
-    // Custom so the cell can render the status chip. `sortValue` sorts by the
-    // indexed state rather than by the chip's label, which is what a reader
-    // means by "sort by status".
-    {
-      key: 'state',
-      label: 'State',
-      custom: true,
-      value: (r: any) => r.stockState,
-      sortValue: (r: any) => r.stockState,
-    },
-  ];
-
-  returnsColumns: TableColumn[] = [
-    { key: 'rma', label: 'RMA', value: (r: any) => r.rmaNumber },
-    { key: 'customer', label: 'Customer', value: (r: any) => r.customerName },
-    { key: 'order', label: 'Order', value: (r: any) => r.order?.orderNumber },
-    { key: 'reason', label: 'Reason', value: (r: any) => r.reason },
-    {
-      key: 'items',
-      label: 'Items',
-      align: 'right',
-      value: (r: any) => r.itemCount,
-    },
-    // Money renders through `money` for one format across the card, but sorts on
-    // the raw amount — sorting the formatted string would put £9.00 after £10.00.
-    {
-      key: 'refund',
-      label: 'Refund',
-      align: 'right',
-      value: (r: any) =>
-        r.refundAmount?.amount == null
-          ? null
-          : money(r.refundAmount.amount, r.refundAmount.currency?.code),
-      sortValue: (r: any) => r.refundAmount?.amount,
-    },
-    {
-      key: 'state',
-      label: 'State',
-      custom: true,
-      value: (r: any) => r.status,
-      sortValue: (r: any) => r.lifecycleState,
-    },
-  ];
-
   @action setInventoryStatus(value: 'all' | 'low' | 'out') {
     this.inventoryStatus = value;
   }
@@ -995,7 +956,231 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     this.tab = key;
   }
 
-  tabOptions = TABS.map((t) => ({ value: t.key, label: t.label }));
+  get currentTab() {
+    return TABS.find((t) => t.key === this.tab) ?? TABS[0];
+  }
+
+  get navItems() {
+    let badge: Record<string, string> = {
+      board: String(this.boardOrders.length),
+      inventory: `${this.outOfStock.length} out`,
+      ship: String(this.ordersAwaitingShipment.length),
+      transit: String(this.inTransit.length),
+      returns: String(this.openReturns.length),
+    };
+    return TABS.map((t) => ({
+      ...t,
+      icon: NAV_ICONS[t.key],
+      badge: badge[t.key],
+    }));
+  }
+
+  get activeCarriers() {
+    return this.carriers.filter((c) => c.isActive !== false);
+  }
+
+  get stats(): StatTile[] {
+    switch (this.tab) {
+      case 'inventory':
+        return [
+          {
+            label: 'Stock rows',
+            value: this.stock.length,
+            hint: 'across all warehouses',
+          },
+          {
+            label: 'Low stock',
+            value: this.lowStock.length,
+            hint: 'flagged low',
+            tone: 'warning',
+          },
+          {
+            label: 'Out of stock',
+            value: this.outOfStock.length,
+            hint: 'SKUs at zero available',
+            tone: 'destructive',
+          },
+          {
+            label: 'Warehouses',
+            value: this.warehouses.length,
+            hint: 'on file',
+          },
+        ];
+      case 'ship':
+        return [
+          {
+            label: 'Awaiting parcel',
+            value: this.ordersAwaitingShipment.length,
+            hint: 'packed, no shipment yet',
+            tone: 'warning',
+          },
+          {
+            label: 'Labelled',
+            value: this.shipDeskQueue.length,
+            hint: 'ready to rate and dispatch',
+          },
+          {
+            label: 'Carriers',
+            value: this.activeCarriers.length,
+            hint: 'active on the desk',
+          },
+        ];
+      case 'transit':
+        return [
+          {
+            label: 'On the road',
+            value: this.inTransit.length,
+            hint: 'in transit or out for delivery',
+            tone: 'info',
+          },
+          {
+            label: 'Delivered',
+            value: this.deliveredShipments.length,
+            hint: 'landed',
+            tone: 'success',
+          },
+          {
+            label: 'Needs attention',
+            value: this.needsAttention.length,
+            hint: 'exception or past window',
+            tone: 'destructive',
+          },
+          {
+            label: 'Late',
+            value: this.lateShipments.length,
+            hint: 'past promised window',
+            tone: 'warning',
+          },
+        ];
+      case 'returns':
+        return [
+          {
+            label: 'Open',
+            value: this.openReturns.length,
+            hint: 'awaiting resolution',
+            tone: 'warning',
+          },
+          {
+            label: 'Closed',
+            value: this.closedReturns,
+            hint: 'resolved',
+            tone: 'success',
+          },
+          { label: 'All returns', value: this.returns.length, hint: 'on file' },
+        ];
+      default:
+        return [
+          {
+            label: 'To fulfil',
+            value: this.todayCount,
+            hint: 'pending to packing',
+          },
+          {
+            label: 'Express',
+            value: this.expressCount,
+            hint: 'ship first',
+            tone: 'warning',
+          },
+          {
+            label: 'In transit',
+            value: this.inTransit.length,
+            hint: `across ${plural(this.activeCarriers.length, 'carrier')}`,
+          },
+          {
+            label: 'Needs attention',
+            value: this.needsAttention.length,
+            hint: 'carrier exceptions',
+            tone: 'destructive',
+          },
+          {
+            label: 'Out of stock',
+            value: this.outOfStock.length,
+            hint: 'SKUs at zero available',
+            tone: 'destructive',
+          },
+        ];
+    }
+  }
+
+  get primaryAction() {
+    switch (this.tab) {
+      case 'board':
+        return { label: 'Add order', run: this.createOrder };
+      case 'inventory':
+        return { label: 'Add stock row', run: this.createStockRow };
+      case 'returns':
+        return { label: 'Add return', run: this.createReturn };
+      default:
+        return undefined;
+    }
+  }
+
+  get searchSpec() {
+    switch (this.tab) {
+      case 'board':
+        return {
+          value: this.boardSearch,
+          set: this.setBoardSearch,
+          placeholder: 'Search order number, customer or SKU',
+        };
+      case 'inventory':
+        return {
+          value: this.inventorySearch,
+          set: this.setInventorySearch,
+          placeholder: 'Search SKU, product, bin or warehouse',
+        };
+      case 'transit':
+        return {
+          value: this.transitSearch,
+          set: this.setTransitSearch,
+          placeholder: 'Search shipment, order, carrier or tracking number',
+        };
+      case 'returns':
+        return {
+          value: this.returnsSearch,
+          set: this.setReturnsSearch,
+          placeholder: 'Search RMA, customer, reason or order',
+        };
+      default:
+        return undefined;
+    }
+  }
+
+  get chipSpec() {
+    switch (this.tab) {
+      case 'inventory':
+        return {
+          options: this.inventoryChipOptions,
+          value: this.inventoryStatus,
+          set: this.chooseInventoryStatus,
+        };
+      case 'transit':
+        return {
+          options: this.transitChipOptions,
+          value: this.transitStatus,
+          set: this.chooseTransitStatus,
+        };
+      case 'returns':
+        return {
+          options: this.returnsChipOptions,
+          value: this.returnsStatus,
+          set: this.chooseReturnsStatus,
+        };
+      default:
+        return undefined;
+    }
+  }
+
+  get viewSpec() {
+    switch (this.tab) {
+      case 'inventory':
+        return { value: this.inventoryView, set: this.setInventoryView };
+      case 'returns':
+        return { value: this.returnsView, set: this.setReturnsView };
+      default:
+        return undefined;
+    }
+  }
 
   get inventoryChipOptions() {
     return chipOptions(this.inventoryBadges);
@@ -1023,244 +1208,1152 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     );
   }
 
-  get statusLegend() {
-    return ORDER_STATUSES.filter((s) =>
-      BOARD_COLUMNS.some((c) => c.key === s.value),
-    );
-  }
-
   <template>
-    <div class='app'>
-      <header class='masthead'>
-        <div class='brand'>
-          <span class='brand-mark' aria-hidden='true'>
-            <span></span><span></span><span></span><span></span><span></span>
-          </span>
-          <div>
-            <h1 class='brand-name'>{{@model.operationName}}</h1>
-            <p class='brand-sub'>Order fulfilment · {{@model.cardTitle}}</p>
-          </div>
+    <Sidebar
+      class='of-shell'
+      @label='Order Fulfilment'
+      @collapsible='rail'
+      @railBreakpoint={{1100}}
+      @mobileBreakpoint={{720}}
+      @scroll='content'
+      @resizable={{true}}
+      @width='13.5rem'
+      @shortcut={{false}}
+    >
+      <:header as |bar|>
+        <div class='of-brand'>
+          <span class='of-mark' aria-hidden='true'>OF</span>
+          {{#unless bar.collapsed}}
+            <p class='of-brand-text'>
+              Order Fulfilment
+              <small>{{@model.operationName}}</small>
+            </p>
+          {{/unless}}
         </div>
+      </:header>
+      <:nav as |bar|>
+        <SidebarGroup @label='Fulfilment'>
+          {{#each this.navItems as |item|}}
+            <SidebarItem
+              @label={{item.label}}
+              @icon={{item.icon}}
+              @badge={{unless bar.collapsed item.badge}}
+              @active={{eq this.tab item.key}}
+              @collapsed={{bar.collapsed}}
+              @onClick={{fn this.setTab item.key}}
+            />
+          {{/each}}
+        </SidebarGroup>
+      </:nav>
+      <:default as |bar|>
+        <div
+          class='of-layout
+            {{if (eq this.tab "ship") (if this.selectedShipment "has-aside")}}'
+        >
+          <main class='of-main'>
+            {{#if bar.mobile}}
+              <SidebarTrigger
+                @open={{bar.open}}
+                @onToggle={{bar.toggle}}
+                @controls={{bar.controls}}
+                @label='navigation'
+              />
+            {{/if}}
+            <header class='of-head'>
+              <p class='eyebrow'>Order Fulfilment · Fulfilment</p>
+              <h1 class='of-h1'>{{this.currentTab.label}}</h1>
+              <p class='of-sub'>{{this.currentTab.sub}}</p>
+            </header>
 
-        <dl class='counters'>
-          <div>
-            <dt>To fulfil</dt>
-            <dd>{{if this.ordersLoading '—' this.todayCount}}</dd>
-          </div>
-          <div>
-            <dt>Express</dt>
-            <dd>{{if this.ordersLoading '—' this.expressCount}}</dd>
-          </div>
-          <div>
-            <dt>In transit</dt>
-            <dd>{{if this.shipmentsLoading '—' this.inTransit.length}}</dd>
-          </div>
-          <div class='{{if this.needsAttention.length "alarm"}}'>
-            <dt>{{#if this.needsAttention.length}}<TriangleAlert
-                  class='dt-alarm'
-                  width='11'
-                  height='11'
-                  role='presentation'
-                />{{/if}}Needs attention</dt>
-            <dd>{{if this.shipmentsLoading '—' this.needsAttention.length}}</dd>
-          </div>
-          <div class='{{if this.outOfStock.length "alarm"}}'>
-            <dt>{{#if this.outOfStock.length}}<TriangleAlert
-                  class='dt-alarm'
-                  width='11'
-                  height='11'
-                  role='presentation'
-                />{{/if}}Out of stock</dt>
-            <dd>{{if this.stockLoading '—' this.outOfStock.length}}</dd>
-          </div>
-        </dl>
-      </header>
-      <Tabs
-        class='tabs'
-        @options={{this.tabOptions}}
-        @value={{this.tab}}
-        @onValueChange={{this.setTab}}
-        aria-label='Fulfilment sections'
-      />
+            {{#if this.isInteractive}}
+              {{#if this.searchSpec}}
+                <LayoutControl
+                  @label='{{this.currentTab.label}} tools'
+                  @controlHeight='1.625rem'
+                  as |lc|
+                >
+                  <lc.Slot
+                    @id='search'
+                    @priority={{2}}
+                    @forms={{SEARCH_FORMS}}
+                    @label='Search'
+                  >
+                    <div class='of-search'><SearchInput
+                        @value={{this.searchSpec.value}}
+                        @placeholder={{this.searchSpec.placeholder}}
+                        @onInput={{this.searchSpec.set}}
+                      /></div>
+                  </lc.Slot>
+                  {{#if this.chipSpec}}
+                    <lc.Slot
+                      @id='status'
+                      @priority={{3}}
+                      @forms={{CHIP_FORMS}}
+                      @label='Show'
+                    >
+                      <FilterChips
+                        @options={{this.chipSpec.options}}
+                        @value={{this.chipSpec.value}}
+                        @onValueChange={{this.chipSpec.set}}
+                        @label='Show'
+                      />
+                    </lc.Slot>
+                  {{/if}}
+                  {{#if this.viewSpec}}
+                    <lc.Slot
+                      @id='view'
+                      @priority={{1}}
+                      @forms={{VIEW_FORMS}}
+                      @label='View'
+                    >
+                      <SegmentedControl
+                        class='of-push'
+                        @label='View'
+                        @options={{VIEW_OPTIONS}}
+                        @value={{this.viewSpec.value}}
+                        @onValueChange={{this.viewSpec.set}}
+                      />
+                    </lc.Slot>
+                  {{/if}}
+                  {{#if this.primaryAction}}
+                    <lc.Slot
+                      @id='add'
+                      @priority={{0}}
+                      @pinned={{true}}
+                      @forms={{ADD_FORMS}}
+                      @label={{this.primaryAction.label}}
+                      as |form|
+                    >
+                      <Button
+                        class={{unless this.viewSpec 'of-push'}}
+                        @icon={{PlusIcon}}
+                        @tone='primary'
+                        @size='s'
+                        @display={{if (eq form 'icon') 'icon' 'label'}}
+                        @label={{this.primaryAction.label}}
+                        {{on 'click' this.primaryAction.run}}
+                      >{{this.primaryAction.label}}</Button>
+                    </lc.Slot>
+                  {{/if}}
+                </LayoutControl>
+              {{/if}}
 
-      {{#if this.isInteractive}}
-        <section class='panel' aria-label='Fulfilment section'>
-          {{#if (eq this.tab 'board')}}
-            <BoardPanel @desk={{this}} />
-          {{/if}}
-          {{#if (eq this.tab 'inventory')}}
-            <InventoryPanel @desk={{this}} />
-          {{/if}}
+              <section
+                class='of-stats'
+                aria-label='{{this.currentTab.label}} totals'
+              >
+                <div class='of-stat-cells' data-count={{this.stats.length}}>
+                  {{#each this.stats as |st|}}
+                    <div class='of-stat'>
+                      <Stat
+                        @label={{st.label}}
+                        @value={{st.value}}
+                        @tone={{st.tone}}
+                        @hint={{st.hint}}
+                        @roll={{false}}
+                      />
+                    </div>
+                  {{/each}}
+                </div>
+              </section>
+
+              {{#if (eq this.tab 'board')}}
+                <section class='block'>
+                  <div class='block-head'>
+                    <h2>Order fulfilment board</h2>
+                    <p class='block-meta'>{{this.boardOrders.length}}
+                      open orders</p>
+                  </div>
+                  <Board
+                    class='of-board'
+                    @items={{this.boardOrders}}
+                    @columns={{this.boardColumns}}
+                    @columnKeyFor={{this.columnKeyFor}}
+                    @onMove={{this.moveOrder}}
+                    @onOpen={{this.openCard}}
+                    @cardSize='regular-tile'
+                    @boardLabel='Order fulfilment board'
+                    @emptyMessage={{this.boardEmptyMessage}}
+                  >
+                    <:card as |card|>
+                      {{#let (asOrder card) as |order|}}
+                        <div class='bc'>
+                          <p class='bc-top'>
+                            <span
+                              class='mono muted'
+                            >{{order.orderNumber}}</span>
+                            {{#if order.isExpress}}
+                              <span class='status'><span
+                                  class='dot'
+                                  style={{hue 'var(--warning)'}}
+                                ></span>Express</span>
+                            {{/if}}
+                            <span class='mono bc-total'>{{money
+                                order.total.amount
+                                order.currencyCode
+                              }}</span>
+                          </p>
+                          <p class='strong'>{{order.customerName}}</p>
+                          {{#let (get order.lineItems 0) as |line|}}
+                            {{#if line}}
+                              <p class='bc-line'>{{line.productName}}
+                                ·
+                                {{line.sku}}</p>
+                            {{/if}}
+                          {{/let}}
+                          <p class='muted'>{{plural order.itemCount 'item'}}
+                            {{#if order.warehouseCode}}
+                              ·
+                              {{order.warehouseCode}}{{/if}}</p>
+                        </div>
+                      {{/let}}
+                    </:card>
+                  </Board>
+                </section>
+
+                {{#if this.pickLists.length}}
+                  <section class='block'>
+                    <div class='block-head'>
+                      <h2>Pick lists on the floor</h2>
+                      <p class='block-meta'>{{this.pickLists.length}}
+                        active</p>
+                    </div>
+                    <div class='tbl-wrap'>
+                      <Table class='tbl' @framed={{false}} @striped={{false}}>
+                        <:head><tr>
+                            <th>Pick list</th>
+                            <th>Assigned to</th>
+                            <th>Next pick</th>
+                            <th class='num'>Picked</th>
+                          </tr></:head>
+                        <:body>
+                          {{#each this.pickLists as |pl|}}
+                            <tr>
+                              <td><Button
+                                  class='link mono'
+                                  @tone='neutral'
+                                  @appearance='link'
+                                  @size='s'
+                                  {{on 'click' (fn this.openCard pl)}}
+                                >{{pl.pickListNumber}}</Button></td>
+                              <td>
+                                {{#if pl.assignedTo}}
+                                  <span class='unit'><Avatar
+                                      @name={{pl.assignedTo}}
+                                      @size={{18}}
+                                    />{{pl.assignedTo}}</span>
+                                {{else}}—{{/if}}
+                              </td>
+                              <td>
+                                {{#if pl.nextItem}}
+                                  <span
+                                    class='strong'
+                                  >{{pl.nextItem.productName}}</span>
+                                  <span
+                                    class='mono muted'
+                                  >{{pl.nextItem.sku}}</span>
+                                {{else}}—{{/if}}
+                              </td>
+                              <td class='num mono'>{{pl.doneCount}}
+                                /
+                                {{pl.route.length}}</td>
+                            </tr>
+                          {{/each}}
+                        </:body>
+                      </Table>
+                    </div>
+                  </section>
+                {{/if}}
+              {{/if}}
+
+              {{#if (eq this.tab 'inventory')}}
+                <section class='block'>
+                  <div class='block-head'><h2>Warehouses</h2></div>
+                  {{#if this.hasWarehouseMap}}
+                    <div class='of-map'>
+                      <MapRender
+                        @coordinates={{this.warehousePoints}}
+                        @mapConfig={{this.mapConfig}}
+                      />
+                    </div>
+                  {{/if}}
+                  <div class='tbl-wrap'>
+                    <Table class='tbl' @framed={{false}} @striped={{false}}>
+                      <:body>
+                        {{#each this.warehouseSummary as |w|}}
+                          <tr>
+                            <td class='mono muted'>{{w.warehouse.code}}</td>
+                            <td><Button
+                                class='link strong'
+                                @tone='neutral'
+                                @appearance='link'
+                                @size='s'
+                                {{on 'click' (fn this.openCard w.warehouse)}}
+                              >{{w.warehouse.warehouseName}}</Button></td>
+                            <td class='muted'>{{plural w.skuCount 'SKU'}}
+                              {{#if (isNumber w.value)}}
+                                ·
+                                {{money w.value w.currency}}
+                              {{/if}}</td>
+                            <td class='of-util'>
+                              {{#if w.isVirtual}}
+                                <span class='muted'>Virtual, supplier ships
+                                  direct</span>
+                              {{else if w.utilization}}
+                                <ProgressBar
+                                  @value={{w.utilization}}
+                                  @label='{{w.utilization}}% of bins filled'
+                                />
+                              {{else}}—{{/if}}
+                            </td>
+                          </tr>
+                        {{/each}}
+                      </:body>
+                    </Table>
+                  </div>
+                </section>
+
+                <section class='block'>
+                  <div class='block-head'>
+                    <h2>Stock rows</h2>
+                    <p class='block-meta'>{{this.inventoryRows.length}}</p>
+                  </div>
+                  {{#if this.inventoryQuery}}
+                    {{#if (this.isCardListView this.inventoryView)}}
+                      <div class='block-body'><CardList
+                          @context={{@context}}
+                          @query={{this.inventoryQuery}}
+                          @realms={{this.realmList}}
+                          @format='fitted'
+                          @isLive={{true}}
+                          @viewOption={{this.viewOptionFor this.inventoryView}}
+                        /></div>
+                    {{else}}
+                      <div class='tbl-wrap'>
+                        <Table class='tbl' @framed={{false}} @striped={{false}}>
+                          <:head><tr>
+                              <th>SKU</th>
+                              <th>Product</th>
+                              <th>Warehouse</th>
+                              <th>Bin</th>
+                              <th class='num'>On hand</th>
+                              <th class='num'>Reserved</th>
+                              <th class='num'>Available</th>
+                              <th class='num'>Incoming</th>
+                              <th>State</th>
+                            </tr></:head>
+                          <:body>
+                            {{#each this.inventoryRows as |row|}}
+                              <tr>
+                                <td><Button
+                                    class='link mono'
+                                    @tone='neutral'
+                                    @appearance='link'
+                                    @size='s'
+                                    {{on 'click' (fn this.openCard row)}}
+                                  >{{row.sku}}</Button></td>
+                                <td class='strong'>{{row.productName}}</td>
+                                <td
+                                  class='mono muted'
+                                >{{row.warehouseCode}}</td>
+                                <td class='mono muted'>{{row.binLocation}}</td>
+                                <td class='num mono'>{{row.quantityOnHand}}</td>
+                                <td
+                                  class='num mono'
+                                >{{row.quantityReserved}}</td>
+                                <td
+                                  class='num mono'
+                                >{{row.quantityAvailable}}</td>
+                                <td
+                                  class='num mono'
+                                >{{row.quantityIncoming}}</td>
+                                <td><span class='status'><span
+                                      class='dot'
+                                      style={{stockHue row}}
+                                    ></span>{{row.stockStateLabel}}</span></td>
+                              </tr>
+                            {{/each}}
+                          </:body>
+                        </Table>
+                      </div>
+                      {{#unless this.inventoryRows.length}}
+                        <EmptyState
+                          @size='s'
+                          @texture={{false}}
+                          @title={{if
+                            this.inventoryLoading
+                            'Loading stock…'
+                            'No stock rows match this filter'
+                          }}
+                          @message='Add a stock row, or clear the search and filter.'
+                        />
+                      {{/unless}}
+                    {{/if}}
+                  {{/if}}
+                </section>
+              {{/if}}
+
+              {{#if (eq this.tab 'ship')}}
+                <section class='block'>
+                  <div class='block-head'>
+                    <h2>Step 1 · Packed, needs a parcel</h2>
+                    <p class='block-meta'>Create a parcel for each packed order.</p>
+                  </div>
+                  {{#if this.ordersAwaitingShipment.length}}
+                    <div class='tbl-wrap'>
+                      <Table class='tbl' @framed={{false}} @striped={{false}}>
+                        <:body>
+                          {{#each this.ordersAwaitingShipment as |o|}}
+                            <tr>
+                              <td><Button
+                                  class='link mono'
+                                  @tone='neutral'
+                                  @appearance='link'
+                                  @size='s'
+                                  {{on 'click' (fn this.openCard o)}}
+                                >{{o.orderNumber}}</Button></td>
+                              <td><span class='unit'><Avatar
+                                    @name={{o.customerName}}
+                                    @size={{18}}
+                                  />{{o.customerName}}</span></td>
+                              <td class='muted'>{{plural
+                                  o.itemCount
+                                  'item'
+                                }}</td>
+                              <td class='num mono'>{{money
+                                  o.total.amount
+                                  o.currencyCode
+                                }}</td>
+                              <td class='num'><Button
+                                  @size='s'
+                                  @appearance='plain'
+                                  {{on 'click' (fn this.createShipmentFor o)}}
+                                >Create parcel</Button></td>
+                            </tr>
+                          {{/each}}
+                        </:body>
+                      </Table>
+                    </div>
+                  {{else}}
+                    <EmptyState
+                      @size='s'
+                      @texture={{false}}
+                      @title={{if
+                        this.ordersLoading
+                        'Loading orders…'
+                        'No packed order is waiting'
+                      }}
+                      @message='Move an order to Packing on the board and it appears here.'
+                    />
+                  {{/if}}
+                </section>
+
+                <section class='block'>
+                  <div class='block-head'>
+                    <h2>Step 2 · Labelled, ready to dispatch</h2>
+                    <p class='block-meta'>Select a parcel to rate it.</p>
+                  </div>
+                  {{#if this.shipDeskQueue.length}}
+                    <ul class='rows'>
+                      {{#each this.shipDeskQueue as |s|}}
+                        <li><button
+                            type='button'
+                            class='row-pick mono'
+                            aria-pressed={{if
+                              (eq s.id this.selectedShipment.id)
+                              'true'
+                              'false'
+                            }}
+                            {{on 'click' (fn this.selectShipment s.id)}}
+                          >{{s.shipmentNumber}}</button></li>
+                      {{/each}}
+                    </ul>
+                  {{else}}
+                    <EmptyState
+                      @size='s'
+                      @texture={{false}}
+                      @title={{if
+                        this.shipmentsLoading
+                        'Loading shipments…'
+                        'Nothing has a label yet'
+                      }}
+                      @message='Create a parcel above and it arrives here for rating and dispatch.'
+                    />
+                  {{/if}}
+                </section>
+              {{/if}}
+
+              {{#if (eq this.tab 'transit')}}
+                {{#if this.showAttentionBanner}}
+                  <section class='block'>
+                    <div class='block-head'>
+                      <h2>Needs attention</h2>
+                      <p class='block-meta'>{{this.needsAttention.length}}</p>
+                    </div>
+                    <div class='tbl-wrap'>
+                      <Table class='tbl' @framed={{false}} @striped={{false}}>
+                        <:body>
+                          {{#each this.needsAttention as |s|}}
+                            <tr>
+                              <td><Button
+                                  class='link mono'
+                                  @tone='neutral'
+                                  @appearance='link'
+                                  @size='s'
+                                  {{on 'click' (fn this.openCard s)}}
+                                >{{s.shipmentNumber}}</Button></td>
+                              <td class='wide'><span class='status'><span
+                                    class='dot'
+                                    style={{hue 'var(--destructive)'}}
+                                  ></span>{{if
+                                    s.latestEvent.statusDescription
+                                    s.latestEvent.statusDescription
+                                    'Past promised window'
+                                  }}</span></td>
+                              <td
+                                class='num muted'
+                              >{{s.latestEvent.location}}</td>
+                            </tr>
+                          {{/each}}
+                        </:body>
+                      </Table>
+                    </div>
+                  </section>
+                {{/if}}
+
+                <section class='block'>
+                  <div class='block-head'>
+                    <h2>Shipments</h2>
+                    <p class='block-meta'>{{this.transitShipments.length}}</p>
+                  </div>
+                  {{#if this.transitVisible.length}}
+                    <div class='tbl-wrap'>
+                      <Table class='tbl' @framed={{false}} @striped={{false}}>
+                        <:head><tr>
+                            <th>Shipment</th>
+                            <th>Carrier</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                            <th>Last event</th>
+                          </tr></:head>
+                        <:body>
+                          {{#each this.transitVisible as |s|}}
+                            <tr>
+                              <td><Button
+                                  class='link mono'
+                                  @tone='neutral'
+                                  @appearance='link'
+                                  @size='s'
+                                  {{on 'click' (fn this.openCard s)}}
+                                >{{s.shipmentNumber}}</Button></td>
+                              <td class='strong'>{{s.carrierLabel}}
+                                {{s.serviceLevel}}</td>
+                              <td><span class='status'><span
+                                    class='dot'
+                                    style={{hue s.statusStyle.hue}}
+                                  ></span>{{s.statusStyle.label}}</span></td>
+                              <td class='of-progress'><ProgressBar
+                                  @value={{shipmentProgress s.status}}
+                                  aria-label='{{s.statusStyle.label}} progress'
+                                /></td>
+                              <td
+                                class='muted'
+                              >{{s.latestEvent.statusDescription}}
+                                {{#if s.latestEvent.occurredAt}}
+                                  ·
+                                  {{stamp s.latestEvent.occurredAt}}
+                                {{/if}}</td>
+                            </tr>
+                            {{#if (eq s.status 'delivered')}}
+                              <tr class='tbl-detail'>
+                                <td colspan='5'>
+                                  <dl class='kv-row'>
+                                    <div><dt class='eyebrow'>Delivered</dt>
+                                      <dd>{{stamp s.deliveredAt}}</dd></div>
+                                    <div><dt class='eyebrow'>Against promise</dt>
+                                      <dd>{{#if s.deliveryWindow.latest}}{{if
+                                            s.isLate
+                                            'Late'
+                                            'On time'
+                                          }}{{else}}No promised window{{/if}}</dd></div>
+                                    <div><dt class='eyebrow'>Proof of delivery</dt>
+                                      <dd>{{if
+                                          s.proofOfDelivery
+                                          s.proofOfDelivery
+                                          'Not recorded'
+                                        }}</dd></div>
+                                  </dl>
+                                </td>
+                              </tr>
+                            {{/if}}
+                          {{/each}}
+                        </:body>
+                      </Table>
+                    </div>
+                    {{#if this.transitHiddenCount}}
+                      <div class='block-foot'><Button
+                          @size='s'
+                          @appearance='plain'
+                          {{on 'click' this.showMoreTransit}}
+                        >Show {{this.transitHiddenCount}} more</Button></div>
+                    {{/if}}
+                  {{else}}
+                    <EmptyState
+                      @size='s'
+                      @texture={{false}}
+                      @title={{if
+                        this.shipmentsLoading
+                        'Loading shipments…'
+                        'Nothing to show'
+                      }}
+                      @message={{this.transitEmptyMessage}}
+                    />
+                  {{/if}}
+                </section>
+              {{/if}}
+
+              {{#if (eq this.tab 'returns')}}
+                <section class='block'>
+                  <div class='block-head'>
+                    <h2>Returns</h2>
+                    <p class='block-meta'>{{this.returnsRows.length}}</p>
+                  </div>
+                  {{#if this.returnsQuery}}
+                    {{#if (this.isCardListView this.returnsView)}}
+                      <div class='block-body'><CardList
+                          @context={{@context}}
+                          @query={{this.returnsQuery}}
+                          @realms={{this.realmList}}
+                          @format='fitted'
+                          @isLive={{true}}
+                          @viewOption={{this.viewOptionFor this.returnsView}}
+                        /></div>
+                    {{else if this.returnsRows.length}}
+                      <div class='tbl-wrap'>
+                        <Table class='tbl' @framed={{false}} @striped={{false}}>
+                          <:head><tr>
+                              <th>RMA</th>
+                              <th>Status</th>
+                              <th>Customer · order</th>
+                              <th>Reason</th>
+                              <th class='num'>Items</th>
+                              <th class='num'>Value</th>
+                            </tr></:head>
+                          <:body>
+                            {{#each this.returnsRows as |rma|}}
+                              <tr>
+                                <td><Button
+                                    class='link mono'
+                                    @tone='neutral'
+                                    @appearance='link'
+                                    @size='s'
+                                    {{on 'click' (fn this.openCard rma)}}
+                                  >{{rma.rmaNumber}}</Button></td>
+                                <td><span class='status'><span
+                                      class='dot'
+                                      style={{hue rma.statusStyle.hue}}
+                                    ></span>{{rma.statusStyle.label}}</span></td>
+                                <td><span
+                                    class='strong'
+                                  >{{rma.customerName}}</span>
+                                  {{#if rma.orderNumber}}
+                                    <span class='muted'>Order
+                                      {{rma.orderNumber}}</span>
+                                  {{/if}}</td>
+                                <td class='muted'>{{rma.reasonLabel}}</td>
+                                <td class='num mono'>{{plural
+                                    rma.itemCount
+                                    'item'
+                                  }}</td>
+                                <td class='num mono'>{{#if
+                                    (isNumber rma.refundAmount.amount)
+                                  }}{{money
+                                      rma.refundAmount.amount
+                                      rma.refundAmount.currency.code
+                                    }}{{else}}—{{/if}}</td>
+                              </tr>
+                            {{/each}}
+                          </:body>
+                        </Table>
+                      </div>
+                    {{else}}
+                      <EmptyState
+                        @size='s'
+                        @texture={{false}}
+                        @title={{if
+                          this.returnsLoading
+                          'Loading returns…'
+                          'No returns match this filter'
+                        }}
+                        @message='Add a return, or clear the search and filter.'
+                      />
+                    {{/if}}
+                  {{/if}}
+                </section>
+              {{/if}}
+            {{else}}
+              <p class='of-sub'>Board, inventory, ship desk, tracking and
+                returns load when this app is opened in the workspace.</p>
+            {{/if}}
+          </main>
+
           {{#if (eq this.tab 'ship')}}
-            <ShipDeskPanel @desk={{this}} />
+            {{#if this.selectedShipment}}
+              <aside class='of-aside' aria-label='Parcel'>
+                <section class='aside-block'>
+                  <div class='aside-head'>
+                    <h2>Parcel</h2>
+                    <p
+                      class='strong'
+                    >{{this.selectedShipment.shipmentNumber}}</p>
+                    <p class='muted'>Order
+                      {{this.selectedShipment.orderNumber}}
+                      · from
+                      {{this.selectedShipment.originCode}}</p>
+                  </div>
+                  <dl class='kv'>
+                    <div><dt class='eyebrow'>Measured</dt>
+                      <dd>{{this.selectedShipment.parcel.sizeLabel}}</dd></div>
+                    <div><dt class='eyebrow'>Weight</dt>
+                      <dd>{{#if
+                          this.selectedShipment.parcel.weight
+                        }}{{this.selectedShipment.parcel.weight}}
+                          kg{{else}}—{{/if}}</dd></div>
+                    <div><dt class='eyebrow'>Customer paid</dt>
+                      <dd>{{money
+                          this.selectedShipment.customerPaid.amount
+                          this.selectedShipment.customerPaid.currency.code
+                        }}</dd></div>
+                  </dl>
+                  <div class='aside-action'><Button
+                      @tone='primary'
+                      @size='s'
+                      {{on 'click' (fn this.openCard this.selectedShipment)}}
+                    >Open shipment to dispatch</Button></div>
+                </section>
+                <section class='aside-block'>
+                  <div class='aside-head'>
+                    <h2>Rate comparison</h2>
+                    <p class='muted'>Priced from the services configured on your
+                      carrier cards, against this parcel's billable weight. No
+                      carrier API is called.</p>
+                  </div>
+                  <ul class='rows'>
+                    {{#each this.rateOptions as |opt|}}
+                      <li class='rate'>
+                        <div>
+                          <p class='strong'>{{opt.carrierName}}
+                            {{opt.serviceName}}</p>
+                          <p class='muted'>{{opt.speed}}
+                            ·
+                            {{opt.billable}}
+                            kg billable</p>
+                          {{#if (eq opt.key this.cheapestOption.key)}}
+                            <span class='status'><span
+                                class='dot'
+                                style={{hue 'var(--success)'}}
+                              ></span>Cheapest</span>
+                          {{else if (eq opt.key this.fastestOption.key)}}
+                            <span class='status'><span
+                                class='dot'
+                                style={{hue 'var(--info)'}}
+                              ></span>Fastest</span>
+                          {{/if}}
+                        </div>
+                        <div class='rate-nums'>
+                          <p class='mono strong'>{{money
+                              opt.cost
+                              opt.currency
+                            }}</p>
+                          {{#if (isNumber opt.margin)}}
+                            <p
+                              class='muted {{if (lt opt.margin 0) "neg"}}'
+                            >{{money opt.margin opt.currency}} margin</p>
+                          {{/if}}
+                        </div>
+                      </li>
+                    {{else}}
+                      <li class='muted'>No carrier has a priced service yet. Add
+                        one on a Carrier card and it appears here.</li>
+                    {{/each}}
+                  </ul>
+                </section>
+              </aside>
+            {{/if}}
           {{/if}}
-          {{#if (eq this.tab 'transit')}}
-            <TransitPanel @desk={{this}} />
-          {{/if}}
-          {{#if (eq this.tab 'returns')}}
-            <ReturnsPanel @desk={{this}} />
-          {{/if}}
-        </section>
-      {{else}}
-        <section class='panel static'>
-          <p class='shell-note'>
-            Fulfilment board, inventory, ship desk, tracking and returns load
-            when this app is opened in the workspace.
-          </p>
-          <ul class='legend'>
-            {{#each this.statusLegend as |s|}}
-              <li><StatusChip @label={{s.label}} @hue={{s.hue}} /></li>
-            {{/each}}
-          </ul>
-        </section>
-      {{/if}}
-    </div>
+        </div>
+      </:default>
+    </Sidebar>
 
     <style scoped>
-      .app {
-        --_rule: color-mix(in oklch, var(--foreground) 12%, transparent);
-        --_perf: color-mix(in oklch, var(--foreground) 22%, transparent);
-        --_sunk: color-mix(in oklch, var(--foreground) 3%, transparent);
-
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        min-height: 0;
-        overflow: hidden;
+      .of-shell {
+        container-type: inline-size;
+        block-size: 100%;
+        min-block-size: 0;
         background: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
-      }
-      .masthead {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp);
-        align-items: flex-end;
-        justify-content: space-between;
-        padding: var(--boxel-sp-lg) var(--boxel-sp-lg) var(--boxel-sp);
-        border-bottom: 2px solid var(--_perf);
-      }
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-sm);
-        min-width: 0;
-      }
-      .brand-mark {
-        display: flex;
-        align-items: stretch;
-        gap: 0.125rem;
-        height: 2.125rem;
-      }
-      .brand-mark span {
-        display: block;
-        background: color-mix(in oklch, var(--foreground) 75%, transparent);
-      }
-      .brand-mark span:nth-child(odd) {
-        width: 0.1875rem;
-      }
-      .brand-mark span:nth-child(even) {
-        width: 0.3125rem;
-        opacity: 0.5;
-      }
-      .brand-name {
-        margin: 0;
-        font-size: var(--boxel-font-size-lg);
-        line-height: 1.05;
-      }
-      .brand-sub {
-        margin: 0.125rem 0 0;
         font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
       }
-      .counters {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-lg);
-        margin: 0;
+      p {
       }
-      .counters div {
-        display: flex;
-        flex-direction: column;
-        gap: 0.125rem;
-      }
-      .counters dt {
+      .of-brand {
         display: flex;
         align-items: center;
-        gap: 0.25rem;
-        font-size: var(--boxel-font-size-2xs);
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
+        gap: var(--boxel-sp-xs);
       }
-      .counters dd {
-        margin: 0;
+      .of-mark {
+        display: grid;
+        place-items: center;
+        flex: none;
+        inline-size: 1.75rem;
+        block-size: 1.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
-        font-size: var(--boxel-font-size-xl);
-        font-weight: 800;
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: 600;
         line-height: 1;
       }
-      .counters .alarm dd {
-        color: var(--destructive-ink);
+      .of-brand-text {
+        display: grid;
+        min-inline-size: 0;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      .of-brand-text small {
+        font-weight: 600;
+        color: var(--muted-foreground);
+      }
+      .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
       }
 
-      .tabs {
-        display: flex;
-        gap: 0.125rem;
-        padding: 0 var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border);
-        overflow-x: auto;
+      /* main column + a parcel panel docked flush to the right edge */
+      .of-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        min-block-size: 100%;
       }
-
-      .panel:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: -2px;
+      .of-layout.has-aside {
+        grid-template-columns: minmax(0, 1fr) 22.5rem;
       }
-      .panel {
-        container-type: inline-size;
-        container-name: ful-panel;
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        padding: var(--boxel-sp-lg);
+      .of-main {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp);
+        gap: var(--boxel-sp-xs);
+        min-inline-size: 0;
+        padding: var(--boxel-sp-lg) var(--boxel-sp-lg) var(--boxel-sp-xl);
       }
-      @keyframes sk-pulse {
-        50% {
-          opacity: 0.45;
+      .of-aside {
+        min-inline-size: 0;
+        border-inline-start: 1px solid var(--border);
+        background: var(--card);
+        color: var(--card-foreground);
+      }
+      @container (width < 60rem) {
+        .of-layout.has-aside {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .of-aside {
+          border-inline-start: 0;
+          border-block-start: 1px solid var(--border);
         }
       }
-      .static {
-        gap: var(--boxel-sp);
+
+      .of-head {
+        display: grid;
+        gap: var(--boxel-sp-4xs);
       }
-      .shell-note {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
+      .of-h1 {
+        font-family: var(--boxel-heading-font-family, var(--font-sans));
+        font-weight: 400;
+        font-size: 2.5rem; /* ladder 40px page title: no Boxel display token */
+        line-height: 1;
+        text-transform: uppercase;
+      }
+      .of-sub {
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
-        max-width: 60ch;
       }
-      .legend {
+      .of-search {
+        inline-size: 17.5rem;
+      }
+      .of-push {
+        margin-inline-start: auto;
+      }
+
+      /* stat strip: every cell draws its right and bottom line and the frame
+         clips the overhang, so a wrapped row keeps all its dividers */
+      .of-stats {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        overflow: hidden;
+      }
+      .of-stat-cells {
+        --text-stat: 1.375rem;
+        display: grid;
+        grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr));
+        margin: 0 -1px -1px 0;
+      }
+      .of-stat-cells[data-count='3'] {
+        --cols: 3;
+      }
+      .of-stat-cells[data-count='4'] {
+        --cols: 4;
+      }
+      .of-stat {
+        min-inline-size: 0;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        box-shadow:
+          1px 0 0 var(--border),
+          0 1px 0 var(--border);
+      }
+      @container (width <= 48rem) {
+        .of-stat-cells {
+          --cols: 3;
+        }
+      }
+      @container (width <= 30rem) {
+        .of-stat-cells[data-count] {
+          --cols: 2;
+        }
+      }
+
+      /* one flat block: radius on the outside only, hairline sections inside */
+      .block {
+        min-inline-size: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        color: var(--card-foreground);
+        overflow: hidden;
+      }
+      .block-head {
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.375rem;
+        align-items: baseline;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border-block-end: 1px solid var(--border);
+      }
+      .block-head h2,
+      .aside-head h2 {
+        margin: 0;
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
+      }
+      .block-meta {
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+      }
+      .block-body {
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      .block-foot {
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
+        border-block-start: 1px solid var(--border);
+      }
+      .of-board {
+        min-block-size: 22rem;
+      }
+      .of-map {
+        block-size: 10rem;
+        border-block-end: 1px solid var(--border);
+      }
+
+      /* ruled table: equal 28px rows, one hairline between, mono caps head */
+      .tbl-wrap {
+        overflow-x: auto;
+      }
+      .tbl th {
+        padding: var(--boxel-sp-5xs) var(--boxel-sp-sm);
+        text-align: start;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .tbl td {
+        block-size: 1.75rem;
+        padding: 0 var(--boxel-sp-sm);
+        white-space: nowrap;
+      }
+      .tbl .num {
+        text-align: end;
+      }
+      .tbl .wide {
+        inline-size: 100%;
+      }
+      .tbl-detail td {
+        padding-block: var(--boxel-sp-4xs);
+        background: var(--muted);
+      }
+      .of-util {
+        inline-size: 30%;
+      }
+      .of-progress {
+        inline-size: 6.5rem;
+      }
+
+      .mono {
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-variant-numeric: tabular-nums;
+      }
+      .strong {
+        font-weight: 600;
+      }
+      .muted {
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+      }
+      .neg {
+        color: var(--destructive-ink);
+      }
+      .unit {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-4xs);
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-5xs);
+        font-weight: 600;
+      }
+      .dot {
+        flex: none;
+        inline-size: 0.375rem;
+        block-size: 0.375rem;
+        border-radius: 50%;
+        background: var(--dot);
+      }
+      .link {
+        color: inherit;
+        text-align: start;
+      }
+      .link.mono {
+        color: var(--muted-foreground);
+      }
+      @media (hover: hover) {
+        .link:hover {
+          text-decoration: underline;
+        }
+      }
+      .link:focus-visible,
+      .row-pick:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 1px;
+      }
+
+      /* board card face */
+      .bc {
+        display: grid;
+        align-content: start;
+        gap: var(--boxel-sp-5xs);
+        block-size: 100%;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border-block-end: 1px solid var(--border);
+        background: var(--card);
+        color: var(--card-foreground);
+        cursor: pointer;
+      }
+      .bc-top {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .bc-total {
+        margin-inline-start: auto;
+      }
+      .bc-line {
+        font-size: var(--boxel-font-size-2xs);
+      }
+
+      .rows {
+        display: grid;
         margin: 0;
         padding: 0;
         list-style: none;
       }
+      .rows > li + li {
+        border-block-start: 1px solid var(--border);
+      }
+      .row-pick {
+        display: block;
+        inline-size: 100%;
+        block-size: 1.75rem;
+        padding: 0 var(--boxel-sp-sm);
+        border: 0;
+        border-inline-start: 2px solid transparent;
+        background: none;
+        color: var(--muted-foreground);
+        text-align: start;
+      }
+      .row-pick[aria-pressed='true'] {
+        border-inline-start-color: var(--foreground);
+        background: var(--muted);
+        color: var(--foreground);
+      }
 
-      @media (width <= 40rem) {
-        .masthead,
-        .panel {
-          padding: var(--boxel-sp);
-        }
-        .counters {
-          gap: var(--boxel-sp);
-        }
+      /* docked parcel panel */
+      .aside-block + .aside-block {
+        border-block-start: 1px solid var(--border);
+      }
+      .aside-head {
+        display: grid;
+        gap: var(--boxel-sp-5xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      .aside-action {
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      .kv {
+        margin: 0;
+        border-block: 1px solid var(--border);
+      }
+      .kv > div {
+        display: grid;
+        grid-template-columns: 7.5rem minmax(0, 1fr);
+        align-items: center;
+        block-size: 1.75rem;
+        padding: 0 var(--boxel-sp-sm);
+      }
+      .kv > div + div {
+        border-block-start: 1px solid var(--border);
+      }
+      .kv dd,
+      .kv-row dd {
+        margin: 0;
+      }
+      .kv-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--boxel-sp-sm);
+        margin: 0;
+      }
+      .rate {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--boxel-sp-sm);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      .rate-nums {
+        text-align: end;
+      }
+      .aside-block .rows {
+        border-block-start: 1px solid var(--border);
       }
     </style>
   </template>

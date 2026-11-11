@@ -14,12 +14,11 @@ import UrlField from '@cardstack/base/url';
 import enumField from '@cardstack/base/enum';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import BookOpenIcon from '@cardstack/boxel-icons/book-open';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { AtomChip, Dot, Mark } from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
-
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 import { DurationField } from '../hr/duration-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
@@ -180,7 +179,7 @@ export class Lesson extends CardDef {
           border-radius: var(--radius);
           background: var(--muted);
           color: var(--primary-ink);
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
         }
         .eyebrow {
           display: flex;
@@ -288,67 +287,7 @@ export class Lesson extends CardDef {
   };
 
   static atom = class Atom extends Component<typeof this> {
-    <template>
-      <span class='atom'>{{glyphFor @model.kind}} {{@model.cardTitle}}</span>
-      <style scoped>
-        .atom {
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'content', label: 'Content' },
-      { id: 'live', label: 'Live session' },
-      { id: 'materials', label: 'Materials' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Lesson sections'
-        as |e|
-      >
-        <e.Section @id='identity' @title='Identity' @cols={{2}}>
-          <FieldContainer @label='Title' @vertical={{true}}><@fields.title
-            /></FieldContainer>
-          <FieldContainer @label='Kind' @vertical={{true}}><@fields.kind
-            /></FieldContainer>
-          <FieldContainer @label='Order' @vertical={{true}}><@fields.order
-            /></FieldContainer>
-          <FieldContainer @label='Duration' @vertical={{true}}><@fields.duration
-            /></FieldContainer>
-        </e.Section>
-        <e.Section @id='content' @title='Content' @cols={{1}}>
-          <FieldContainer @label='Summary' @vertical={{true}}><@fields.summary
-            /></FieldContainer>
-          <FieldContainer @label='Content' @vertical={{true}}><@fields.content
-            /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='live'
-          @title='Live session'
-          @hint='live lessons only'
-          @cols={{2}}
-        >
-          <FieldContainer
-            @label='Session time'
-            @vertical={{true}}
-          ><@fields.liveSessionAt /></FieldContainer>
-          <FieldContainer
-            @label='Meeting URL'
-            @vertical={{true}}
-          ><@fields.meetingUrl /></FieldContainer>
-        </e.Section>
-        <e.Section @id='materials' @title='Materials' @cols={{1}}>
-          <FieldContainer @label='Files' @vertical={{true}}><@fields.media
-            /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-    </template>
+    <template><AtomChip @mark='Ls' @title={{@model.cardTitle}} /></template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
@@ -356,20 +295,14 @@ export class Lesson extends CardDef {
       return LESSON_KIND_HUES[this.args.model?.kind ?? ''] ?? 'slate';
     }
     <template>
-      <FittedCard @titleTag='h3'>
-        <:placeholder><span class='glyph' aria-hidden='true'>{{glyphFor
-              @model.kind
-            }}</span></:placeholder>
-        <:eyebrow>{{@model.kindLabel}}{{#if @model.durationLabel}}
-            ·
-            {{@model.durationLabel}}{{/if}}</:eyebrow>
+      <FitTile>
+        <:avatar><Mark @text='Ls' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>{{@model.summary}}</:subtitle>
-        <:badgeRight><StatePill
-            @label={{@model.kindLabel}}
-            @hue={{this.hue}}
-          /></:badgeRight>
-        <:footer>{{#if @model.liveSessionAt}}Live
+        <:subtitle>{{@model.kindLabel}}{{#if @model.durationLabel}}
+            ·
+            {{@model.durationLabel}}{{/if}}</:subtitle>
+        <:status><Dot @hue={{this.hue}}>{{@model.kindLabel}}</Dot></:status>
+        <:fact>{{#if @model.liveSessionAt}}Live
             <FormatDate
               @date={{@model.liveSessionAt}}
               @weekday='short'
@@ -377,14 +310,8 @@ export class Lesson extends CardDef {
               @day='numeric'
               @hour='numeric'
               @minute='2-digit'
-            />{{/if}}</:footer>
-      </FittedCard>
-      <style scoped>
-        .glyph {
-          font-size: var(--boxel-font-size-lg);
-          color: var(--primary-ink);
-        }
-      </style>
+            />{{/if}}</:fact>
+      </FitTile>
     </template>
   };
 }

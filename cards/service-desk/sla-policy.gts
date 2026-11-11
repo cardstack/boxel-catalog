@@ -12,21 +12,26 @@ import NumberField from 'https://cardstack.com/base/number';
 import BooleanField from 'https://cardstack.com/base/boolean';
 import enumField from 'https://cardstack.com/base/enum';
 import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
-import TargetIcon from '@cardstack/boxel-icons/target';
-import ClockIcon from '@cardstack/boxel-icons/clock';
-import SirenIcon from '@cardstack/boxel-icons/siren';
-import { guidFor } from '@ember/object/internals';
-import { Table } from '@cardstack/pretui/components/table';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { DataTable } from '@cardstack/pretui/components/data-table';
 
-import {
-  COMPACT_EMPTY_STYLE,
-  labelledBy,
-} from '@cardstack/catalog/components/pretui-helpers';
 import { Schedule } from './schedule';
 import { TicketPriorityField, ticketPriorityFactor } from './ticket-taxonomy';
 import { formatMinutes, ALWAYS_ON, type BusinessSchedule } from './utils/sla';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
+import { FitTile } from '../shared/fit-tile';
+import { FittedExtras } from '../procurement/vendor';
+import {
+  RecCard,
+  RecHead,
+  RecStats,
+  RecBody,
+  RecBlock,
+  RecRow,
+  RecLine,
+  RecText,
+} from './components/record';
 
 export const CONDITION_OPERATORS = ['is', 'is not', 'contains'] as const;
 
@@ -93,7 +98,7 @@ export class PolicyConditionField extends FieldDef {
           display: inline-flex;
           padding: 0.1em 0.5em;
           border: 1px solid var(--border);
-          border-radius: 999px;
+          border-radius: var(--boxel-border-radius-pill);
           background-color: var(--muted);
           color: var(--foreground);
           font-size: var(--boxel-font-size-xs);
@@ -164,11 +169,6 @@ export class SlaTargetField extends FieldDef {
       </style>
     </template>
   };
-}
-
-interface MatrixRow {
-  priority: string;
-  cells: string[];
 }
 
 /**
@@ -262,221 +262,170 @@ export class SlaPolicy extends CardDef {
   }
 
   static isolated = class Isolated extends Component<typeof this> {
-    targetsId = `sla-targets-${guidFor(this)}`;
-
-    get matrix(): MatrixRow[] {
-      let model = this.args.model;
-      let metrics = ['First response', 'Resolution'];
-      return ['P1', 'P2', 'P3', 'P4'].map((priority) => ({
-        priority,
-        cells: metrics.map((metric) => {
-          let minutes = model?.targetFor?.(metric, priority);
-          return minutes == null ? '—' : formatMinutes(minutes);
-        }),
-      }));
+    private base(metric: string): number | undefined {
+      return (
+        (this.args.model?.targets ?? []).find((x) => x?.metric === metric)
+          ?.baseMinutes ?? undefined
+      );
     }
-
+    get matrixColumns() {
+      return [
+        { key: 'priority', label: 'Priority' },
+        { key: 'first', label: 'First response', mono: true },
+        { key: 'resolution', label: 'Resolution', mono: true },
+        { key: 'next', label: 'Next response', mono: true },
+      ];
+    }
+    get matrix() {
+      let at = (metric: string, factor: number) => {
+        let b = this.base(metric);
+        return b == null ? undefined : formatMinutes(Math.round(b * factor));
+      };
+      return (TicketPriorityField as any).priorityOptions.map((o: any) => {
+        let f = ticketPriorityFactor(o.value);
+        return {
+          id: o.value,
+          priority: o.label,
+          first: at('First response', f),
+          resolution: at('Resolution', f),
+          next: at('Next response', f),
+        };
+      });
+    }
+    p1 = (metric: string) => {
+      let b = this.base(metric);
+      return b == null
+        ? 'base'
+        : `base · P1 ${formatMinutes(Math.round(b * ticketPriorityFactor('P1')))}`;
+    };
+    rowKey = (r: { id: string }) => r.id;
+    get actions() {
+      return (this.args.model?.breachActions ?? [])
+        .filter(Boolean)
+        .map((a, i) => ({ text: a, n: i + 1 }));
+    }
+    target = (metric: string) => {
+      let t = (this.args.model?.targets ?? []).find(
+        (x) => x?.metric === metric,
+      );
+      let m = t?.baseMinutes;
+      if (m == null) return '—';
+      return m % 60 === 0
+        ? `${m / 60}h`
+        : m > 60
+          ? `${Math.floor(m / 60)}h ${m % 60}m`
+          : `${m}m`;
+    };
     <template>
-      <article class='iso'>
-        <header class='iso-head'>
-          <div>
-            <h1>{{@model.title}}</h1>
-            <p class='iso-sub'>{{@model.conditionSummary}}</p>
-          </div>
-          {{#if @model.isDefault}}
-            <StatePill @label='Fallback policy' @hue='slate' />
-          {{/if}}
-        </header>
-
-        <section class='sect'>
-          <h2><TargetIcon class='sec-icon' role='presentation' />Applies when</h2>
-          {{#if @model.conditions.length}}
-            <div class='chips'>
-              {{#each @fields.conditions as |Condition|}}
-                <Condition />
+      <RecCard @inset={{true}}>
+        <RecHead
+          @mark='SL'
+          @title={{@model.title}}
+          @sub={{@model.conditionSummary}}
+        >
+          <:status>{{#if @model.isDefault}}<Chip
+                @appearance='plain'
+                @tone='info'
+              >default</Chip>{{/if}}{{#if @model.businessHoursSummary}}<Chip
+                @appearance='plain'
+                @tone='info'
+              >{{@model.businessHoursSummary}}</Chip>{{/if}}<Chip
+              @appearance='plain'
+            >{{this.actions.length}} breach actions</Chip></:status>
+        </RecHead>
+        <RecStats>
+          <Stat
+            @label='First response'
+            @tone='neutral'
+            @value={{this.target 'First response'}}
+            @hint={{this.p1 'First response'}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Resolution'
+            @tone='neutral'
+            @value={{this.target 'Resolution'}}
+            @hint={{this.p1 'Resolution'}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Next response'
+            @tone='neutral'
+            @value={{this.target 'Next response'}}
+            @hint={{this.p1 'Next response'}}
+            @roll={{false}}
+          />
+        </RecStats>
+        <RecBody>
+          <:main>
+            <RecBlock @title='Applies when'>
+              <RecText>{{if
+                  @model.conditionSummary
+                  @model.conditionSummary
+                  'Every ticket'
+                }}</RecText>
+            </RecBlock>
+            <RecBlock @title='Targets by priority'>
+              <div class='dt'>
+                <DataTable
+                  @columns={{this.matrixColumns}}
+                  @rows={{this.matrix}}
+                  @key={{this.rowKey}}
+                  @label='Targets by priority'
+                  @flush={{true}}
+                  @striped={{false}}
+                  @size='s'
+                  @sortable={{false}}
+                  @columnMenu={{false}}
+                />
+              </div>
+            </RecBlock>
+            <RecBlock @title='On breach'>
+              {{#each this.actions as |a|}}
+                <RecLine><:default>{{a.text}}</:default><:end><span
+                      class='mono'
+                    >{{a.n}}</span></:end></RecLine>
+              {{else}}
+                <RecLine>—</RecLine>
               {{/each}}
-            </div>
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @title='No conditions'
-              @message='This policy matches every ticket. Only one policy should be this permissive, and it should be the fallback.'
-              @texture={{false}}
-            />
-          {{/if}}
-        </section>
-
-        <section class='sect'>
-          <h2 id={{this.targetsId}}><TargetIcon
-              class='sec-icon'
-              role='presentation'
-            />Targets</h2>
-          <Table class='matrix' {{labelledBy this.targetsId}}>
-            <:head>
-              <tr>
-                <th scope='col'>Priority</th>
-                <th scope='col'>First response</th>
-                <th scope='col'>Resolution</th>
-              </tr>
-            </:head>
-            <:body>
-              {{#each this.matrix as |row|}}
-                <tr>
-                  <th scope='row'>{{row.priority}}</th>
-                  {{#each row.cells as |cell|}}
-                    <td>{{cell}}</td>
-                  {{/each}}
-                </tr>
-              {{/each}}
-            </:body>
-          </Table>
-          <p class='note'>One target per metric, scaled by each priority's
-            factor. Stating all four by hand is how a P3 ends up resolving
-            faster than a P2.</p>
-        </section>
-
-        <section class='sect'>
-          <h2><ClockIcon class='sec-icon' role='presentation' />Clock runs on</h2>
-          {{#if @model.businessHours}}
-            <@fields.businessHours @format='embedded' />
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @title='No schedule linked'
-              @message='The clock ticks around the clock, including weekends and holidays.'
-              @texture={{false}}
-            />
-          {{/if}}
-        </section>
-
-        <section class='sect'>
-          <h2><SirenIcon class='sec-icon' role='presentation' />On breach</h2>
-          {{#if @model.breachActions.length}}
-            <ol class='actions'>
-              {{! Not `as |action|`: in a strict-mode template `action`
-                  resolves as the classic action helper, which does not exist
-                  there — it fails the prerender outright and renders an empty
-                  list in the live view. }}
-              {{#each @model.breachActions as |breachAction|}}
-                <li>{{breachAction}}</li>
-              {{/each}}
-            </ol>
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @title='Nothing happens on breach'
-              @message='The target is a measurement, not a commitment, until something acts on it.'
-              @texture={{false}}
-            />
-          {{/if}}
-        </section>
-      </article>
-
+            </RecBlock>
+          </:main>
+          <:side>
+            <RecBlock @title='Linked'>
+              <RecRow @label='Hours'>{{#if
+                  @model.businessHours
+                }}<@fields.businessHours
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</RecRow>
+            </RecBlock>
+            <RecBlock @title='Details'>
+              <RecRow @label='Targets'>{{if
+                  @model.targetSummary
+                  @model.targetSummary
+                  '—'
+                }}</RecRow>
+              <RecRow @label='Hours'>{{if
+                  @model.businessHoursSummary
+                  @model.businessHoursSummary
+                  '—'
+                }}</RecRow>
+              <RecRow @label='Default'>{{if
+                  @model.isDefault
+                  'Yes'
+                  'No'
+                }}</RecRow>
+            </RecBlock>
+          </:side>
+        </RecBody>
+      </RecCard>
       <style scoped>
-        .iso {
-          container-name: iso;
-          container-type: inline-size;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-lg);
-          padding: var(--boxel-sp-lg);
-          min-height: 100%;
+        .dt {
+          padding-inline: var(--boxel-sp-2xs);
         }
-        .iso-head {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp);
-          align-items: flex-start;
-          padding-bottom: var(--boxel-sp);
-          border-bottom: 1px solid var(--border);
-        }
-        .iso-head h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-        .iso-sub {
-          margin: 0;
-          color: var(--muted-foreground);
-          font-size: var(--boxel-font-size-sm);
-        }
-        .sect {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-        }
-        .sect h2 {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          margin: 0;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        /* Rule 5: one icon per section header, quiet by design — muted colour and
-           ~1em with a px floor, so it identifies the section without competing
-           with it. Same size in every header, which is what makes the card
-           scannable by shape on a second visit. */
-        .sec-icon {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          flex: 0 0 auto;
-          color: var(--muted-foreground);
-        }
-        .chips {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-xs);
-        }
-        /* Pret UI Table: its header band, zebra rows and hover. The matrix
-           sizes to its content and its numbers stay tabular.
-           The P1–P4 row headers are th cells, and Table's header-band rule
-           targets every th, so it would make them sticky, mono and uppercase.
-           The rules below reverse that property by property, restyle them as
-           bold body cells, and give them the body rows' zebra and hover
-           fills. They undo only the properties listed here: Table's
-           white-space, text-align and z-index still apply, and any property
-           Table later adds to its th rule lands on these cells too. */
-        .matrix {
-          align-self: flex-start;
-          font-variant-numeric: tabular-nums;
-        }
-        .matrix :deep(tbody th) {
-          position: static;
-          height: auto;
-          padding: 0.5rem 0.625rem;
-          font-family: inherit;
-          font-size: inherit;
-          font-weight: 700;
-          letter-spacing: normal;
-          text-transform: none;
-          color: var(--foreground);
-          background-color: transparent;
-          box-shadow: inset 0 -1px 0 var(--border);
-        }
-        .matrix :deep(tbody tr:nth-child(even) th) {
-          background-color: var(--stripe);
-        }
-        .matrix :deep(tbody tr:hover th) {
-          background-color: var(--hover);
-        }
-        .actions {
-          margin: 0;
-          padding-left: 1.2rem;
-          font-size: var(--boxel-font-size-sm);
-        }
-        .note {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          max-width: 62ch;
-          line-height: 1.6;
+        .mono {
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
         }
       </style>
     </template>
@@ -484,253 +433,120 @@ export class SlaPolicy extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <div class='emb'>
-        <span class='emb-name'>{{@model.title}}</span>
-        <span class='emb-cond'>{{@model.conditionSummary}}</span>
-        <span class='emb-tgt'>{{@model.targetSummary}}</span>
-      </div>
-      <style scoped>
-        .emb {
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        .emb-name {
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-        }
-        .emb-cond {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .emb-tgt {
-          font-size: var(--boxel-font-size-xs);
-          font-variant-numeric: tabular-nums;
-          font-weight: 600;
-        }
-      </style>
+      <RecCard>
+        <RecHead
+          @mark='SL'
+          @title={{@model.title}}
+          @sub={{@model.conditionSummary}}
+        >
+          <:status>{{#if @model.isDefault}}<Chip
+                @appearance='plain'
+                @tone='info'
+              >default</Chip>{{/if}}</:status>
+        </RecHead>
+        <RecRow @label='Targets'>{{if
+            @model.targetSummary
+            @model.targetSummary
+            '—'
+          }}</RecRow>
+        <RecRow @label='Hours'>{{if
+            @model.businessHoursSummary
+            @model.businessHoursSummary
+            '—'
+          }}</RecRow>
+        <RecRow @label='On breach'>{{if
+            @model.breachActionSummary
+            @model.breachActionSummary
+            '—'
+          }}</RecRow>
+      </RecCard>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom'>{{@model.title}}
-        <span class='atom-tgt'>{{@model.targetSummary}}</span></span>
+      <span class='atom'>
+        <span class='mark' aria-hidden='true'>SL</span>
+        <span class='nm'>{{@model.title}}</span>
+        {{#if @model.isDefault}}<Chip
+            @appearance='plain'
+            @tone='info'
+          >default</Chip>{{/if}}
+      </span>
       <style scoped>
         .atom {
           display: inline-flex;
-          gap: 0.3rem;
-          align-items: baseline;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          align-items: center;
+          gap: var(--boxel-sp-3xs);
+          min-inline-size: 0;
+          max-inline-size: 100%;
+          font-size: var(--boxel-font-size-xs);
         }
-        .atom-tgt {
-          font-size: 0.6875rem;
+        .mark {
+          flex: none;
+          display: grid;
+          place-items: center;
+          inline-size: 1rem;
+          block-size: 1rem;
+          border: 1px solid var(--border);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1;
           color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
+        }
+        .nm {
+          min-inline-size: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    get facts() {
+      let m = this.args.model;
+      return [
+        {
+          key: 'Applies when',
+          value: String(m?.conditionSummary ?? '') || '—',
+        },
+        {
+          key: 'Targets',
+          value: String(m?.targetSummary ?? '') || '—',
+        },
+        {
+          key: 'Hours',
+          value: String(m?.businessHoursSummary ?? '') || '—',
+        },
+        {
+          key: 'On breach',
+          value: String(m?.breachActionSummary ?? '') || '—',
+        },
+      ];
+    }
     <template>
-      <article class='fit'>
-        <header class='r-head'>
-          <ShieldCheckIcon class='fit-glyph' role='presentation' />
-          <h3 class='title'>{{@model.title}}</h3>
-          <span class='badge'>{{@model.targetSummary}}</span>
-        </header>
-        {{! Every slot here used to be filled with whatever computed was handy,
-            so measured against a real instance 14 of the 16 sizes printed two
-            values twice: targetSummary in both the badge and the footer, and
-            conditionSummary in both .line and .blurb. Each slot now carries a
-            DISTINCT value — condition, prose, breach actions, hours — so no
-            quantum repeats itself. }}
-        <div class='r-body'>
-          <span class='line'>{{@model.conditionSummary}}</span>
-          <p class='blurb'>{{@model.cardInfo.summary}}</p>
-          <span class='tail'>{{@model.breachActionSummary}}</span>
-        </div>
-        <footer class='r-meta'>{{@model.businessHoursSummary}}</footer>
-      </article>
-      <style scoped>
-        /* Same skeleton as ticket.gts: one `.fit` grid, no container declared
-           here (the host provides `fitted-card`), one continuous type scale,
-           and tiers that ADD a row rather than un-crop one. */
-        .fit {
-          width: 100%;
-          height: 100%;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          grid-template-areas: 'head' 'body' 'meta';
-          gap: 0.125rem;
-          padding: 0.4375rem 0.5625rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
-          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
-        }
-        .fit > * {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-head {
-          grid-area: head;
-          display: flex;
-          align-items: baseline;
-          gap: 0.3125rem;
-          min-width: 0;
-        }
-        /* fitted-card Rule 2: the anchor. Without it these cells were a title at
-           weight 600 plus a badge — no image, no glyph, and 600 is not the
-           "decisively loud" type the rule accepts as a substitute, so all 16
-           sizes read as bare text. This is the card's OWN icon, the same one its
-           isolated section headers use, which is what makes it identity rather
-           than decoration.
-
-           Sized in em with a px floor so it never shrinks to a dot; `align-self`
-           because the head is a baseline row and an SVG has no baseline; muted so
-           the title stays the loudest thing in the cell. */
-        .fit-glyph {
-          flex: none;
-          align-self: center;
-          width: max(0.6875rem, 1.1em);
-          height: max(0.6875rem, 1.1em);
-          color: var(--muted-foreground);
-        }
-        .title {
-          flex: 1;
-          min-width: 0;
-          margin: 0;
-          font-size: var(--type-title);
-          font-weight: 600;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .badge {
-          flex: none;
-          margin-left: auto;
-          font-family: var(--font-mono);
-          font-size: var(--type-base);
-          font-weight: 600;
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-        .r-body {
-          grid-area: body;
-          display: none;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
-        }
-        .line {
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .blurb {
-          display: none;
-          margin: 0;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .tail {
-          display: none;
-          margin-top: auto;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .r-meta {
-          grid-area: meta;
-          display: none;
-          align-items: center;
-          gap: 0.375rem;
-          min-width: 0;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-        }
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 50px) {
-          .r-meta {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 50px) and (height <= 105px) {
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 80px) {
-          .r-body {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 160px) {
-          .blurb {
-            display: -webkit-box;
-          }
-        }
-        @container fitted-card (height > 240px) {
-          .blurb {
-            -webkit-line-clamp: 4;
-          }
-          .tail {
-            display: block;
-          }
-        }
-        @container fitted-card (width > 300px) and (height <= 130px) {
-          .fit {
-            grid-template-columns: minmax(12.5rem, 1fr) auto;
-            grid-template-areas: 'head meta' 'body meta';
-            align-items: center;
-          }
-          .r-meta {
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.0625rem;
-          }
-        }
-        @container fitted-card (width <= 170px) {
-          .fit-glyph {
-            display: none;
-          }
-          /* The glyph is dropped just above, so from here down the anchor is
-             type alone — and fitted-card Rule 2's typographic path wants real
-             weight. Weight only, never size: at 150px the title is one word from
-             wrapping and Rule 1 (nothing clipped) outranks Rule 2. */
-          .title {
-            font-weight: 700;
-          }
-        }
-      </style>
+      <FittedExtras @facts={{this.facts}}>
+        <:default>
+          <FitTile>
+            <:avatar><PretAvatar
+                @name='SL'
+                @shape='square'
+                @size={{32}}
+              /></:avatar>
+            <:title>{{@model.title}}</:title>
+            <:subtitle>{{@model.conditionSummary}}</:subtitle>
+            <:status>{{#if @model.isDefault}}<Chip
+                  @appearance='plain'
+                  @tone='info'
+                >default</Chip>{{/if}}</:status>
+            <:fact>{{@model.targetSummary}}</:fact>
+          </FitTile>
+        </:default>
+      </FittedExtras>
     </template>
   };
 }

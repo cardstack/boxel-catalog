@@ -74,6 +74,11 @@
         "links": {
           "self": "../../hr/Employee/mara-lindqvist"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

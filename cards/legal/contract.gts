@@ -10,16 +10,10 @@ import {
 } from '@cardstack/base/card-api';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
+import { concat, fn } from '@ember/helper';
+import { htmlSafe } from '@ember/template';
 import { and, eq } from '@cardstack/boxel-ui/helpers';
-import { tracked } from '@glimmer/tracking';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { Alert } from '@cardstack/pretui/components/alert';
-import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
-import { Stat } from '@cardstack/pretui/components/stat';
-import { Token } from '@cardstack/pretui/components/token';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { EditSectionNav } from '../../components/edit-section-nav';
 import { codeRef, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import StringField from '@cardstack/base/string';
@@ -32,14 +26,13 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import MarkdownField from '@cardstack/base/markdown';
 import ContractIcon from '@cardstack/boxel-icons/contract';
 import Theme from '@cardstack/base/theme';
-import { Account } from '@cardstack/catalog/cards/crm/account';
-import { Opportunity } from '@cardstack/catalog/cards/crm/opportunity';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { ApprovalChainField } from '@cardstack/catalog/cards/hr/approval-chain-field';
+import { Account } from '../crm/account';
+import { Opportunity } from '../crm/opportunity';
+import { formatMoney } from '../commerce/line-item-totals';
+import { Employee } from '../hr/employee';
+import { ApprovalChainField } from '../hr/approval-chain-field';
 import { ContractStatusField, contractStatusLabel } from './contract-status';
-import { statusHue } from '@cardstack/catalog/fields/status/status';
-import { RiskRatingField } from './contract-risk';
+import { RiskRatingField, riskGradeLabel } from './contract-risk';
 import { LegalPartyRoleField } from './legal-party-role-field';
 import { SignatureBlockField } from './signature-block-field';
 import {
@@ -48,12 +41,7 @@ import {
   toDate,
 } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { GoverningLawField } from './governing-law-field';
-import { SignatureBlockView } from './components/signature-block-view';
-import { LegalFacts } from './legal-ui';
-import {
-  ALERT_STYLE,
-  ID_TOKEN_STYLE,
-} from '@cardstack/catalog/components/pretui-helpers';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import { ContractTypeField, contractTypeLabel } from './contract-type';
 
@@ -113,6 +101,71 @@ export const SignatureStatusField = markDefinition(
 );
 
 /** The status's hue from the contract lifecycle table; slate when unknown. */
+
+// ---- Display helpers shared by the four formats ------------------------------
+
+/** "May 15", or "May 15, 2027" with the year; '' for no or a bad date. */
+function shortDate(v: unknown, withYear = false): string {
+  let d = toDate(v as any);
+  if (!d) return '';
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    ...(withYear ? { year: 'numeric' } : {}),
+  });
+}
+function yearOf(v: unknown): string {
+  let d = toDate(v as any);
+  return d ? `${d.getFullYear()}` : '';
+}
+/** "$5,880": the stat strip's whole-unit figure. */
+function moneyShort(m: any): string {
+  let amount = m?.value?.amount;
+  if (typeof amount !== 'number') return '';
+  try {
+    return amount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: m?.value?.currency?.code || 'USD',
+      maximumFractionDigits: 0,
+    });
+  } catch {
+    return `${amount}`;
+  }
+}
+/** "MSA-2026-0117 · Customer · Acme Industries". */
+function contractMeta(m: any): string {
+  return [
+    m?.contractNumber,
+    contractTypeLabel(m?.contractType),
+    m?.account?.cardTitle,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+function statusTone(status?: string | null): string {
+  switch (status) {
+    case 'signed':
+    case 'active':
+      return 'ok';
+    case 'terminated':
+    case 'expired':
+      return 'bad';
+    default:
+      return 'info';
+  }
+}
+const inc = (i: number) => i + 1;
+/** First present value: boxel-ui's `or` returns a boolean, not the value. */
+function pick<T>(...xs: T[]) {
+  return xs.find((x) => x !== undefined && x !== null && x !== '');
+}
+/** The terms as one plain paragraph: the compact view drops markdown headings. */
+function plainTerms(md?: string | null): string {
+  return (md ?? '')
+    .split('\n')
+    .filter((l) => l.trim() && !l.trim().startsWith('#'))
+    .join(' ');
+}
 
 class ContractIsolated extends Component<typeof Contract> {
   // Clauses and obligations link UP to their contract; there is no link array
@@ -216,661 +269,494 @@ class ContractIsolated extends Component<typeof Contract> {
       this.args.model?.value?.currency?.code,
     );
   }
-  /** The Agreement panel's rows; each row that holds a field renders it in the `value` block. */
-  get agreementFacts(): KeyValueItem[] {
+  get riskRows() {
+    return (this.args.model?.risk?.criteria ?? [])
+      .filter((c: any) => c?.name)
+      .map((c: any) => {
+        let s = typeof c.score === 'number' ? c.score : 0;
+        return {
+          name: c.name,
+          score: typeof c.score === 'number' ? c.score : '—',
+          style: htmlSafe(`--fill: ${Math.max(0, Math.min(5, s)) * 20}%`),
+        };
+      });
+  }
+  get steps() {
+    return (this.args.model?.approvalChain?.steps ?? []).filter(Boolean);
+  }
+  get approvalSummary(): string {
+    let s = this.steps;
+    if (!s.length) return '';
+    let done = s.filter((x: any) => x.decision === 'approved').length;
+    return `${done} of ${s.length} approved`;
+  }
+  get firstSignatory(): any {
+    return (this.args.model?.signatureBlocks ?? []).find(
+      (b: any) => b?.signatory,
+    )?.signatory;
+  }
+  get termRange(): string {
     let m = this.args.model;
-    let rows: [string, unknown][] = [
-      ['Reference', m?.contractNumber],
-      ['Type', m?.contractType],
-      ['Account', m?.account],
-      ['Deal', m?.deal],
-      ['Term begins', m?.startDate],
-      ['Term ends', m?.endDate],
-      ['Notice by', m?.noticeBy],
-      ['Owner', m?.owner],
-      ['Governing law', m?.governingLaw?.label],
-      ['Executed copy', m?.documentUrl],
-    ];
-    return rows.filter(([, v]) => v).map(([key]) => ({ key, value: '' }));
+    let a = shortDate(m?.startDate, true);
+    let b = shortDate(m?.endDate, true);
+    return a || b ? `${a || '—'} – ${b || '—'}` : '';
   }
   <template>
     <article class='contract-page'>
       <header class='ch'>
+        <span class='mark' aria-hidden='true'>Ct</span>
         <div class='ch-id'>
-          <p class='doc-kind'>Contract</p>
           <h1>{{@model.cardTitle}}</h1>
-          {{#if @model.isSigned}}
-            <p class='status-line signed'>Signed
-              <@fields.signedAt /></p>
-          {{else}}
-            <p class='status-line'>{{if
-                @model.status
-                @model.status
-                'Not yet signed'
-              }}</p>
-          {{/if}}
+          <p class='meta'>{{contractMeta @model}}</p>
         </div>
-        {{#if this.valueDisplay}}
-          <Stat
-            class='ch-value'
-            @label='Contract value'
-            @value={{this.valueDisplay}}
-            @roll={{false}}
-          />
-        {{/if}}
+        <ul class='ch-state'>
+          {{#if @model.status}}
+            <li
+              class='dot'
+              data-tone={{statusTone @model.status}}
+            >{{contractStatusLabel @model.status}}</li>
+          {{/if}}
+          {{#if @model.riskGrade}}
+            <li class='dot' data-tone='warn'>{{@model.riskGrade}} risk</li>
+          {{/if}}
+          {{#if @model.autoRenews}}
+            <li class='dot'>auto-renews</li>
+          {{/if}}
+        </ul>
       </header>
 
-      <section class='panel'>
-        <h2>Agreement</h2>
-        <LegalFacts @items={{this.agreementFacts}}>
-          <:value as |row|>
-            {{#if (eq row.key 'Reference')}}
-              <Token
-                @value={{@model.contractNumber}}
-                style={{ID_TOKEN_STYLE.sm}}
-              />
-            {{else if (eq row.key 'Type')}}
-              <@fields.contractType @format='atom' />
-            {{else if (eq row.key 'Account')}}
-              <@fields.account @format='embedded' />
-            {{else if (eq row.key 'Deal')}}
-              <@fields.deal @format='atom' />
-            {{else if (eq row.key 'Term begins')}}
-              <@fields.startDate />
-            {{else if (eq row.key 'Term ends')}}
-              <@fields.endDate />
-              {{#if @model.daysToExpiry}}
-                <span class='hint'>{{@model.daysToExpiry}} days left</span>
-              {{/if}}
-            {{else if (eq row.key 'Notice by')}}
-              <span class='mono'>{{@model.noticeBy}}</span>
-              {{#if @model.daysToNotice}}
-                <span class='hint'>{{@model.daysToNotice}} days to act</span>
-              {{/if}}
-            {{else if (eq row.key 'Owner')}}
-              <@fields.owner @format='atom' />
-            {{else if (eq row.key 'Governing law')}}
-              <@fields.governingLaw @format='atom' />
-            {{else if (eq row.key 'Executed copy')}}
-              <@fields.documentUrl />
-            {{/if}}
-          </:value>
-        </LegalFacts>
-        {{#if this.hasEffectivePeriod}}
-          <div class='period'>
-            <@fields.effectivePeriod @format='embedded' />
-          </div>
-        {{/if}}
+      <section class='stats' aria-label='Key numbers'>
+        <div class='stat'>
+          <span class='cap dot' data-tone='ok'>Value</span>
+          <strong>{{pick (moneyShort @model) '—'}}</strong>
+          <span class='sub'>{{if @model.value.amount 'per year' ''}}</span>
+        </div>
+        <div class='stat'>
+          <span class='cap dot' data-tone='info'>Notice by</span>
+          <strong>{{pick (shortDate @model.noticeBy) '—'}}</strong>
+          <span class='sub'>{{yearOf @model.noticeBy}}{{#if
+              @model.daysToNotice
+            }} · {{@model.daysToNotice}} days left{{/if}}</span>
+        </div>
+        <div class='stat'>
+          <span class='cap dot' data-tone='warn'>Risk</span>
+          <strong>{{if
+              @model.risk.score
+              (concat @model.risk.score ' / 100')
+              '—'
+            }}</strong>
+          <span class='sub'>{{riskGradeLabel @model.riskGrade}}
+            ·
+            {{this.riskRows.length}}
+            criteria</span>
+        </div>
+        <div class='stat'>
+          <span class='cap dot' data-tone='ok'>Signed</span>
+          <strong>{{pick (shortDate @model.signedAt) '—'}}</strong>
+          <span class='sub'>{{yearOf @model.signedAt}}{{#if
+              @model.signatureProvider
+            }} · {{@model.signatureProvider}}{{/if}}</span>
+        </div>
       </section>
 
-      {{#if @model.parties.length}}
-        <section class='panel'>
-          <h2>Parties</h2>
-          <ul class='parties'>
-            {{#each @fields.parties as |Party|}}
-              <li><Party @format='embedded' /></li>
-            {{/each}}
-          </ul>
-        </section>
-      {{/if}}
+      <div class='cols'>
+        <div class='col'>
+          {{#if @model.terms}}
+            <section class='blk'>
+              <h2>Terms</h2>
+              <p class='terms'>{{plainTerms @model.terms}}</p>
+            </section>
+          {{/if}}
 
-      {{#if @model.signatureBlocks.length}}
-        <SignatureBlockView
-          @blocks={{@model.signatureBlocks}}
-          @contractValue={{@model.value.amount}}
-          @contractCurrency={{@model.value.currency.code}}
-          @contractType={{@model.contractType}}
-        />
-      {{/if}}
+          {{#if this.steps.length}}
+            <section class='blk'>
+              <h2>Approval chain</h2>
+              <ol class='rows'>
+                {{#each this.steps as |s i|}}
+                  <li class='row'>
+                    <span class='num'>{{inc i}}</span>
+                    <strong>{{pick s.approver.cardTitle 'Unassigned'}}</strong>
+                    <span class='muted'>{{shortDate
+                        (pick s.decidedAt s.openedAt)
+                        true
+                      }}{{#if s.comment}} · {{s.comment}}{{/if}}
+                      {{s.decision}}</span>
+                  </li>
+                {{/each}}
+              </ol>
+            </section>
+          {{/if}}
 
-      {{#if @model.riskGrade}}
-        <section class='panel'>
-          <h2>Risk</h2>
-          <@fields.risk @format='embedded' />
-        </section>
-      {{/if}}
+          {{#if this.riskRows.length}}
+            <section class='blk'>
+              <h2>Risk scorecard</h2>
+              <ul class='rows'>
+                {{#each this.riskRows as |r|}}
+                  <li class='row risk'>
+                    <span>{{r.name}}</span>
+                    <span class='bar' style={{r.style}}></span>
+                    <span class='mono'>{{r.score}} / 5</span>
+                  </li>
+                {{/each}}
+              </ul>
+            </section>
+          {{/if}}
 
-      {{#if @model.approvalChain.steps.length}}
-        <section class='panel'>
-          <h2>Approval</h2>
-          <@fields.approvalChain @format='embedded' />
-        </section>
-      {{/if}}
+          {{#if @model.signatureBlocks.length}}
+            <section class='blk'>
+              <h2>Signature blocks</h2>
+              <ul class='rows'>
+                {{#each @model.signatureBlocks as |b|}}
+                  <li class='row sig'>
+                    <div>
+                      <strong>{{b.signingOrder}}
+                        ·
+                        {{pick
+                          b.signerName
+                          b.signatory.cardTitle
+                          'Signer'
+                        }}{{#if b.signerTitle}},
+                          {{b.signerTitle}}{{/if}}</strong>
+                      <span class='muted'>{{b.party.definedTerm}}{{#if
+                          b.party.entity.cardTitle
+                        }} · {{b.party.entity.cardTitle}}{{/if}}{{#if
+                          b.signedAt
+                        }} · {{shortDate b.signedAt true}}{{/if}}</span>
+                    </div>
+                    <span
+                      class='dot'
+                      data-tone={{if (eq b.lineStatus 'signed') 'ok'}}
+                    >{{b.lineStatus}}</span>
+                  </li>
+                {{/each}}
+              </ul>
+            </section>
+          {{/if}}
 
-      {{#if this.queryFailed}}
-        <Alert
-          @tone='danger'
-          @title="Could not load this contract's clauses and obligations"
-          style={{ALERT_STYLE.danger}}
-        >
-          <:default>This is a failed lookup, not an empty record — reload before
-            concluding there are none.</:default>
-        </Alert>
-      {{else if (and this.isClmManaged this.isLoadingLinked)}}
-        <section class='panel'>
-          <p class='qnote' role='status'>Loading clauses and obligations…</p>
-        </section>
-      {{else}}
-        {{#if this.clauses.length}}
-          <section class='panel'>
-            <h2>Clauses
-              {{#if this.deviations.length}}
-                <StatePill @label={{this.deviationLabel}} @hue='red' />
+          {{#if @model.governingLaw.jurisdiction}}
+            <section class='blk'>
+              <h2>Governing law</h2>
+              <dl class='kv'>
+                <dt>Jurisdiction</dt><dd
+                >{{@model.governingLaw.jurisdiction}}</dd>
+                <dt>Venue</dt><dd>{{pick @model.governingLaw.venue '—'}}</dd>
+              </dl>
+            </section>
+          {{/if}}
+
+          {{#if this.queryFailed}}
+            <Alert
+              @tone='danger'
+              @title="Could not load this contract's clauses and obligations"
+              style={{ALERT_STYLE.danger}}
+            >
+              <:default>This is a failed lookup, not an empty record — reload
+                before concluding there are none.</:default>
+            </Alert>
+          {{/if}}
+        </div>
+
+        <div class='col'>
+          <section class='blk'>
+            <h2>Linked</h2>
+            <dl class='kv'>
+              <dt>Owner</dt>
+              <dd>{{#if @model.owner}}<@fields.owner
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</dd>
+              <dt>Account</dt>
+              <dd>{{#if @model.account}}<@fields.account
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</dd>
+              {{#if @model.deal}}
+                <dt>Deal</dt>
+                <dd><@fields.deal
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></dd>
               {{/if}}
-            </h2>
-            <ul class='linked'>
-              {{#each this.clauses as |c|}}
-                <li>
-                  <button
+              <dt>Signatory</dt>
+              <dd>{{pick this.firstSignatory.cardTitle '—'}}</dd>
+              {{#if (and this.isClmManaged this.isLoadingLinked)}}
+                <dt>Clauses</dt>
+                <dd class='muted' role='status'>Loading…</dd>
+              {{/if}}
+              {{#each this.deviations as |c|}}
+                <dt>Deviation</dt>
+                <dd><button
                     type='button'
-                    class='linked-row'
+                    class='link'
                     {{on 'click' (fn this.openCard c)}}
-                  >{{c.cardTitle}}<span
-                      class='linked-meta'
-                    >{{c.cardDescription}}</span></button>
-                </li>
+                  >{{c.cardTitle}}</button></dd>
               {{/each}}
-            </ul>
-          </section>
-        {{/if}}
-
-        {{#if this.obligations.length}}
-          <section class='panel'>
-            <h2>Obligations
-              {{#if this.overdue.length}}
-                <StatePill @label={{this.overdueLabel}} @hue='red' />
-              {{/if}}
-            </h2>
-            <ul class='linked'>
               {{#each this.obligations as |o|}}
-                <li>
-                  <button
+                <dt>Obligation</dt>
+                <dd><button
                     type='button'
-                    class='linked-row'
+                    class='link'
                     {{on 'click' (fn this.openCard o)}}
-                  >{{o.cardTitle}}<span
-                      class='linked-meta'
-                    >{{o.cardDescription}}
-                      {{#if o.nextDueDate}}· due
-                        {{o.nextDueDate}}{{/if}}</span>
-                  </button>
-                </li>
+                  >{{o.cardTitle}}</button></dd>
               {{/each}}
-            </ul>
-          </section>
-        {{/if}}
-      {{/if}}
-
-      {{#if @model.terms}}
-        <section class='panel'>
-          <h2>Terms</h2>
-          <div class='terms'><@fields.terms /></div>
-        </section>
-      {{/if}}
-    </article>
-    <style scoped>
-      .mono {
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
-      }
-      .qnote {
-        margin: 0;
-        font-size: 0.85rem;
-        color: var(--muted-foreground);
-      }
-      .linked {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-      }
-      .linked-row {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.1rem;
-        width: 100%;
-        text-align: left;
-        font: inherit;
-        cursor: pointer;
-        padding: 0.4rem 0.55rem;
-        border: 1px solid var(--border);
-        border-radius: 0.25rem;
-        background-color: var(--card);
-        color: inherit;
-      }
-      .linked-row:hover {
-        border-color: var(--foreground);
-      }
-      .linked-meta {
-        font-size: 0.75rem;
-        color: var(--muted-foreground);
-      }
-      .contract-page {
-        /* An isolated card gets NO container from the host — every ancestor
-           up to the stack panel is `container-type: normal`, so an
-           `@container` rule here is inert until this declares its own.
-           `inline-size`, not `size`: the card scrolls, and `size` needs a
-           definite block size and would collapse the column. */
-        container-type: inline-size;
-        container-name: contract-page;
-        max-width: 46rem;
-        margin: 0 auto;
-        padding: 2rem 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1.25rem;
-      }
-      .ch {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1rem;
-        border-bottom: 0.125rem solid var(--foreground);
-        padding-bottom: 1.25rem;
-      }
-      .doc-kind {
-        margin: 0 0 0.125rem;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      h1 {
-        margin: 0;
-        font-size: 1.625rem;
-      }
-      .status-line {
-        margin: 0.25rem 0 0;
-        font-size: 0.8125rem;
-        color: var(--muted-foreground);
-        text-transform: capitalize;
-      }
-      .status-line.signed {
-        color: var(--success-ink);
-        font-weight: 600;
-      }
-      .ch-value {
-        flex: none;
-        white-space: nowrap;
-      }
-      .panel {
-        border: 1px solid var(--border);
-        border-radius: 0.5rem;
-        padding: 1rem 1.125rem;
-        background-color: var(--card);
-      }
-      .period {
-        margin-top: 0.9rem;
-        padding-top: 0.9rem;
-        border-top: 1px solid var(--border);
-      }
-      .parties {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
-        gap: 1rem;
-      }
-      h2 {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin: 0 0 0.75rem;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .hint {
-        margin-left: 0.5rem;
-        font-size: 0.75rem;
-        color: var(--muted-foreground);
-      }
-      .terms {
-        font-size: 0.875rem;
-        line-height: 1.6;
-      }
-
-      /* Below this the two-up rows stop being side-by-side; the panel gets
-         narrow whenever a second card opens beside this one. */
-      @container contract-page (width < 620px) {
-        .ch {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-      }
-    </style>
-  </template>
-}
-
-class ContractEdit extends Component<typeof Contract> {
-  @tracked activeSection = 'identity';
-
-  sections = [
-    { id: 'identity', label: 'Identity' },
-    { id: 'parties', label: 'Parties & Law' },
-    { id: 'term', label: 'Term' },
-    { id: 'value', label: 'Value & Risk' },
-    { id: 'signature', label: 'Signature' },
-    { id: 'approval', label: 'Approval' },
-    { id: 'text', label: 'Text' },
-  ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.contract-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
-
-  <template>
-    <div class='contract-edit'>
-      {{! root is the container + only scroller; the responsive grid lives
-          on this inner wrapper }}
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "identity") "focused"}}'
-            data-sect='identity'
-          >
-            <h3>Identity</h3>
-            <FieldContainer @label='Title' @vertical={{true}}>
-              <@fields.title />
-            </FieldContainer>
-            <div class='row identity'>
-              <FieldContainer @label='Reference' @vertical={{true}}>
-                <@fields.contractNumber />
-              </FieldContainer>
-              <FieldContainer @label='Type' @vertical={{true}}>
-                <@fields.contractType />
-              </FieldContainer>
-              <FieldContainer @label='Status' @vertical={{true}}>
-                <@fields.status />
-                <p class='hint'>Request Signature and Execute Contract move
-                  this; edit only to correct.</p>
-              </FieldContainer>
-            </div>
-            <div class='row'>
-              <FieldContainer @label='Account' @vertical={{true}}>
-                <@fields.account />
-              </FieldContainer>
-              <FieldContainer @label='Deal' @vertical={{true}}>
-                <@fields.deal />
-              </FieldContainer>
-              <FieldContainer @label='Owner' @vertical={{true}}>
-                <@fields.owner />
-              </FieldContainer>
-            </div>
-            <FieldContainer
-              @label='Parent contract (for SOWs and renewals)'
-              @vertical={{true}}
-            >
-              <@fields.parentContract />
-            </FieldContainer>
+            </dl>
           </section>
 
-          <section
-            class='sect {{if (eq this.activeSection "parties") "focused"}}'
-            data-sect='parties'
-          >
-            <h3>Parties &amp; Law
-              <span class='sect-hint'>the legal persons bound, and whose law
-                reads the words</span></h3>
-            <FieldContainer
-              @label='Parties (entity + capacity)'
-              @vertical={{true}}
-            >
-              <@fields.parties />
-            </FieldContainer>
-            <FieldContainer @label='Governing law and venue' @vertical={{true}}>
-              <@fields.governingLaw />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "term") "focused"}}'
-            data-sect='term'
-          >
-            <h3>Term
-              <span class='sect-hint'>the notice deadline is computed from the
-                period — that is the date that matters</span></h3>
-            <FieldContainer @label='Effective period' @vertical={{true}}>
-              <@fields.effectivePeriod />
-            </FieldContainer>
-            <details class='legacy'>
-              <summary>Flat term fields (read when no effective period is set)</summary>
-              <div class='row'>
-                <FieldContainer @label='Start date' @vertical={{true}}>
-                  <@fields.startDate />
-                </FieldContainer>
-                <FieldContainer @label='End date' @vertical={{true}}>
-                  <@fields.endDate />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Renewal notice (days)'
-                  @vertical={{true}}
-                >
-                  <@fields.renewalNoticeDays />
-                </FieldContainer>
-              </div>
-              <FieldContainer @label='Auto-renews' @vertical={{true}}>
-                <@fields.autoRenews />
-              </FieldContainer>
-            </details>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "value") "focused"}}'
-            data-sect='value'
-          >
-            <h3>Value &amp; Risk</h3>
-            <div class='row value'>
-              <FieldContainer @label='Contract value' @vertical={{true}}>
-                <@fields.value />
-              </FieldContainer>
-              <FieldContainer
-                @label='Handles sensitive data'
-                @vertical={{true}}
-              >
-                <@fields.handlesSensitiveData />
-              </FieldContainer>
-            </div>
-            <FieldContainer @label='Risk assessment' @vertical={{true}}>
-              <@fields.risk />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "signature") "focused"}}'
-            data-sect='signature'
-          >
-            <h3>Signature
-              <span class='sect-hint'>one block per signer, in signing order;
-                our side links a Signatory</span></h3>
-            <FieldContainer @label='Signature blocks' @vertical={{true}}>
-              <@fields.signatureBlocks />
-            </FieldContainer>
-            <div class='row'>
-              <FieldContainer @label='Envelope status' @vertical={{true}}>
-                <@fields.signatureStatus />
-                <p class='hint'>command-owned — Request / Execute write it</p>
-              </FieldContainer>
-              <FieldContainer @label='Provider' @vertical={{true}}>
-                <@fields.signatureProvider />
-              </FieldContainer>
-              <FieldContainer @label='Requested on' @vertical={{true}}>
-                <@fields.signatureRequestedAt />
-              </FieldContainer>
-            </div>
-            <div class='row'>
-              <FieldContainer @label='Signed on' @vertical={{true}}>
-                <@fields.signedAt />
-                <p class='hint'>stamped by Execute Contract</p>
-              </FieldContainer>
-              <FieldContainer @label='Executed copy URL' @vertical={{true}}>
-                <@fields.executedCopyUrl />
-              </FieldContainer>
-              <FieldContainer @label='Working document URL' @vertical={{true}}>
-                <@fields.documentUrl />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "approval") "focused"}}'
-            data-sect='approval'
-          >
-            <h3>Approval
-              <span class='sect-hint'>built from the approval rules; decisions
-                are recorded on the app's Approvals tab</span></h3>
-            <FieldContainer @label='Approval chain' @vertical={{true}}>
-              <@fields.approvalChain />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "text") "focused"}}'
-            data-sect='text'
-          >
-            <h3>Text</h3>
-            <FieldContainer @label='Key terms (summary)' @vertical={{true}}>
-              <@fields.terms />
-            </FieldContainer>
-            <FieldContainer @label='Full agreement text' @vertical={{true}}>
-              <@fields.fullText />
-              <p class='hint'>Generate Document assembles this from the clauses,
-                parties, term and signature blocks; edit only to correct.</p>
-            </FieldContainer>
+          <section class='blk'>
+            <h2>Details</h2>
+            <dl class='kv'>
+              <dt>Value</dt><dd>{{pick this.valueDisplay '—'}}</dd>
+              <dt>Term</dt><dd>{{pick this.termRange '—'}}</dd>
+              <dt>Notice</dt><dd class='mono'>{{if
+                  @model.renewalNoticeDays
+                  (concat @model.renewalNoticeDays ' days')
+                  '—'
+                }}</dd>
+              <dt>Risk</dt><dd>{{pick @model.risk.summary '—'}}</dd>
+              <dt>Signed</dt><dd class='mono'>{{pick
+                  (shortDate @model.signedAt true)
+                  '—'
+                }}</dd>
+              <dt>Provider</dt><dd>{{pick @model.signatureProvider '—'}}</dd>
+              <dt>Governing law</dt><dd>{{pick
+                  @model.governingLaw.jurisdiction
+                  '—'
+                }}</dd>
+              <dt>Approval</dt><dd>{{pick this.approvalSummary '—'}}</dd>
+            </dl>
           </section>
         </div>
       </div>
-    </div>
+    </article>
     <style scoped>
-      .contract-edit {
+      .contract-page {
         container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background-color: var(--background);
+        container-name: contract-page;
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
         color: var(--foreground);
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-      }
-      /* the root is the scroller, so sticky pins the nav to its top; the
-         legal family asserts no brand ink, so the rail keeps its default
-         fg/bg inversion */
-      .sect-nav {
-        position: sticky;
-        top: 0;
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      .sect.focused {
-        outline-color: var(--foreground);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--foreground) 12%, transparent);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
+        padding: 1rem;
         display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .ch,
+      .stats,
+      .blk {
+        background-color: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius, 0.5rem);
+      }
+      .ch {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem 0.625rem;
         flex-wrap: wrap;
       }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
+      .ch {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
       }
-      .hint {
-        margin: 0.25rem 0 0;
-        font-size: 0.75rem;
+      .stats {
+        margin-top: -0.5rem;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        overflow: hidden;
+      }
+      .mark {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        inline-size: 2rem;
+        block-size: 2rem;
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+        background-color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+      }
+      .ch-id {
+        flex: 1;
+        min-width: 10rem;
+      }
+      h1 {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 0.8125rem;
+        font-weight: 700;
+      }
+      .meta,
+      .muted,
+      .sub {
+        margin: 0;
+        font-size: 0.6875rem;
         color: var(--muted-foreground);
       }
-      .row {
+      .ch-state {
+        display: flex;
+        gap: 0.75rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .dot {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        white-space: nowrap;
+        text-transform: lowercase;
+      }
+      .dot::before {
+        content: '';
+        inline-size: 0.4375rem;
+        block-size: 0.4375rem;
+        border-radius: 50%;
+        background-color: var(--muted-foreground);
+      }
+      .dot[data-tone='ok']::before {
+        background-color: var(--success);
+      }
+      .dot[data-tone='warn']::before {
+        background-color: var(--warning);
+      }
+      .dot[data-tone='info']::before {
+        background-color: var(--info);
+      }
+      .dot[data-tone='bad']::before {
+        background-color: var(--destructive);
+      }
+      .stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        padding: 0.5rem 0.625rem;
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        margin: 0 -1px -1px 0;
+      }
+      .stat strong {
+        font-size: 1.375rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
+      }
+      .cap,
+      dt {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .cols {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 0.5rem;
         align-items: start;
       }
-      .row.value {
-        grid-template-columns: 2fr 1fr;
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 0;
       }
-      .legacy {
-        border-top: 1px dashed var(--border);
-        padding-top: var(--boxel-sp-xs);
+      .blk {
+        padding: 0.4375rem 0.625rem;
       }
-      .legacy summary {
-        cursor: pointer;
+      h2 {
+        margin: 0 0 0.25rem;
+        padding-bottom: 0.25rem;
+        border-bottom: 1px solid var(--border);
         font-size: 0.75rem;
-        color: var(--muted-foreground);
-        margin-bottom: var(--boxel-sp-xs);
+        font-weight: 700;
       }
-      .legacy[open] summary {
-        margin-bottom: var(--boxel-sp-sm);
+      .terms {
+        margin: 0.25rem 0;
+        font-size: 0.75rem;
+        line-height: 1.5;
       }
-      @container edit (width < 640px) {
-        .row,
-        .row.value,
-        .identity {
-          grid-template-columns: 1fr;
+      .rows {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        min-block-size: 1.75rem;
+        border-top: 1px solid var(--border);
+      }
+      .row:first-child {
+        border-top: 0;
+      }
+      .row.risk {
+        display: grid;
+        grid-template-columns: 7rem 1fr auto;
+      }
+      .row.sig {
+        justify-content: space-between;
+        padding-block: 0.25rem;
+      }
+      .row.sig div {
+        display: flex;
+        flex-direction: column;
+      }
+      .num,
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .bar {
+        block-size: 0.1875rem;
+        border-radius: 0.125rem;
+        background:
+          linear-gradient(var(--foreground), var(--foreground)) 0 0 /
+            var(--fill) 100% no-repeat,
+          var(--muted);
+      }
+      .kv {
+        display: grid;
+        grid-template-columns: 8rem minmax(0, 1fr);
+        margin: 0;
+      }
+      .kv dt,
+      .kv dd {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        min-block-size: 1.75rem;
+        border-top: 1px solid var(--border);
+        min-width: 0;
+      }
+      .kv dt:first-of-type,
+      .kv dt:first-of-type + dd {
+        border-top: 0;
+      }
+      .link {
+        all: unset;
+        cursor: pointer;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .link:hover,
+      .link:focus-visible {
+        text-decoration: underline;
+      }
+      @container contract-page (width < 44rem) {
+        .cols {
+          grid-template-columns: minmax(0, 1fr);
         }
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
     </style>
@@ -1088,23 +974,11 @@ export class Contract extends CardDef {
     },
   });
 
-  /**
-   * Edit — grouped the way a contracts manager fills a record in, not in
-   * schema order: who and what → who is bound → when → how much and how risky
-   * → the signature page → approval → the words. Seven sections, so the
-   * EditSectionNav rail is the table of contents.
-   *
-   * Command-owned fields (status, signature stamps, fullText) are still
-   * editable here — to correct a record — but each carries a hint saying
-   * which command normally writes it, so a hand edit is a deliberate act.
-   */
-  static edit = ContractEdit;
-
   static atom = class Atom extends Component<typeof Contract> {
     <template>
       <span class='contract-atom'>
-        <ContractIcon class='ca-icon' />
-        <span class='ca-name'>{{@model.cardTitle}}</span>
+        <span class='mark' aria-hidden='true'>Ct</span>
+        <span class='name'>{{@model.cardTitle}}</span>
       </span>
       <style scoped>
         .contract-atom {
@@ -1112,17 +986,24 @@ export class Contract extends CardDef {
           align-items: center;
           gap: 0.375rem;
           min-width: 0;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          max-width: 100%;
+          font-size: 0.75rem;
+          font-weight: 600;
           color: var(--foreground);
         }
-        .ca-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          inline-size: 1.125rem;
+          block-size: 1.125rem;
+          border: 1px solid var(--border);
+          border-radius: 0.25rem;
+          background-color: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
         }
-        .ca-name {
+        .name {
           min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1139,71 +1020,161 @@ export class Contract extends CardDef {
         this.args.model?.value?.currency?.code,
       );
     }
+    get termRange(): string {
+      let m = this.args.model;
+      let a = shortDate(m?.startDate, true);
+      let b = shortDate(m?.endDate, true);
+      return a || b ? `${a || '—'} – ${b || '—'}` : '';
+    }
     <template>
-      <div class='contract'>
-        <ContractIcon class='icon' />
-        <div class='info'>
-          <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.account.name}}
-            <span class='meta'>{{@model.account.name}}</span>
+      <article class='ce'>
+        <header class='head'>
+          <span class='mark' aria-hidden='true'>Ct</span>
+          <div class='id'>
+            <strong class='name'>{{@model.cardTitle}}</strong>
+            <span class='muted ell'>{{contractMeta @model}}</span>
+          </div>
+          {{#if @model.status}}
+            <span
+              class='dot'
+              data-tone={{statusTone @model.status}}
+            >{{contractStatusLabel @model.status}}</span>
           {{/if}}
-        </div>
-        <span class='figure'>{{if
-            this.valueDisplay
-            this.valueDisplay
-            '—'
-          }}</span>
-        {{#if @model.status}}
-          <StatePill
-            class='status'
-            @label={{contractStatusLabel @model.status}}
-            @hue={{statusHue ContractStatusField @model.status}}
-            @dot={{true}}
-          />
+        </header>
+        {{#if @model.noticeBy}}
+          <p class='muted fact'>Notice by
+            <b>{{shortDate @model.noticeBy true}}</b>{{#if @model.daysToNotice}}
+              ·
+              {{@model.daysToNotice}}
+              days left{{/if}}</p>
         {{/if}}
-      </div>
+        <dl class='kv'>
+          <dt>Value</dt><dd>{{pick this.valueDisplay '—'}}</dd>
+          <dt>Term</dt><dd>{{pick this.termRange '—'}}</dd>
+          <dt>Notice</dt><dd class='mono'>{{if
+              @model.renewalNoticeDays
+              (concat @model.renewalNoticeDays ' days')
+              '—'
+            }}</dd>
+          <dt>Risk</dt><dd>{{pick @model.risk.summary '—'}}</dd>
+          <dt>Signed</dt><dd class='mono'>{{pick
+              (shortDate @model.signedAt true)
+              '—'
+            }}</dd>
+          <dt>Provider</dt><dd>{{pick @model.signatureProvider '—'}}</dd>
+          <dt>Owner</dt><dd>{{#if @model.owner}}<@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+        </dl>
+      </article>
       <style scoped>
-        .contract {
+        .ce {
+          padding: 0.4375rem 0.625rem;
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          color: var(--foreground);
+        }
+        .head {
           display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
+          align-items: flex-start;
+          gap: 0.5rem;
         }
-        .icon {
-          width: 1.25rem;
-          height: 1.25rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          inline-size: 1.5rem;
+          block-size: 1.5rem;
+          border: 1px solid var(--border);
+          border-radius: 0.25rem;
+          background-color: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.625rem;
+          font-weight: 600;
         }
-        .info {
-          min-width: 0;
+        .id {
           flex: 1;
+          min-width: 0;
           display: flex;
           flex-direction: column;
         }
-        .name {
-          font-weight: 600;
+        .name,
+        .ell {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .meta {
-          font-size: 0.75rem;
+        .name {
+          font-weight: 700;
+        }
+        .muted {
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
-        .figure {
-          font-weight: 600;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
+        .fact {
+          margin: 0.375rem 0;
         }
-        .status {
-          flex-shrink: 0;
+        .fact b {
+          color: var(--foreground);
+        }
+        .dot {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          white-space: nowrap;
+          text-transform: lowercase;
+        }
+        .dot::before {
+          content: '';
+          inline-size: 0.4375rem;
+          block-size: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--muted-foreground);
+        }
+        .dot[data-tone='ok']::before {
+          background-color: var(--success);
+        }
+        .dot[data-tone='bad']::before {
+          background-color: var(--destructive);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          margin: 0;
+        }
+        dt,
+        dd {
+          margin: 0;
+          display: flex;
+          align-items: center;
+          min-block-size: 1.75rem;
+          border-top: 1px solid var(--border);
+          min-width: 0;
+        }
+        dt {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+        }
+        @container (width < 22rem) {
+          .kv {
+            grid-template-columns: 6rem minmax(0, 1fr);
+          }
         }
       </style>
     </template>
   };
 
+  // Rows in priority order; container queries drop whole rows as the tile
+  // shrinks (identity → status → key fact → state → linked → numbers).
   static fitted = class Fitted extends Component<typeof Contract> {
     get valueDisplay() {
       return formatMoney(
@@ -1211,167 +1182,211 @@ export class Contract extends CardDef {
         this.args.model?.value?.currency?.code,
       );
     }
-    get expiryNote() {
-      let days = this.args.model?.daysToExpiry;
-      if (!days) return '';
-      return days === 1 ? 'ends tomorrow' : `${days} days left`;
-    }
     <template>
-      <div class='fitted'>
-        <div class='top'>
-          <ContractIcon class='icon' />
+      <article class='cf'>
+        <div class='r head'>
+          <span class='mark' aria-hidden='true'>Ct</span>
+          <strong class='name'>{{@model.cardTitle}}</strong>
           {{#if @model.status}}
-            <StatePill
-              class='status'
-              @label={{contractStatusLabel @model.status}}
-              @hue={{statusHue ContractStatusField @model.status}}
-            />
+            <span
+              class='dot st-inline'
+              data-tone={{statusTone @model.status}}
+            >{{contractStatusLabel @model.status}}</span>
           {{/if}}
         </div>
-        <span class='name'>{{@model.cardTitle}}</span>
-        {{#if this.valueDisplay}}
-          <span class='figure'>{{this.valueDisplay}}</span>
+        <div class='r meta'>{{contractMeta @model}}</div>
+        {{#if @model.status}}
+          <div class='r st-row'><span
+              class='dot'
+              data-tone={{statusTone @model.status}}
+            >{{contractStatusLabel @model.status}}</span></div>
         {{/if}}
-        {{#if @model.account.name}}
-          <span class='meta line-account'>{{@model.account.name}}</span>
+        {{#if @model.noticeBy}}
+          <div class='r fact'>Notice by
+            {{shortDate @model.noticeBy true}}{{#if @model.daysToNotice}}
+              ·
+              {{@model.daysToNotice}}
+              days left{{/if}}</div>
         {{/if}}
-        {{#if this.expiryNote}}
-          <span class='meta line-expiry'>{{this.expiryNote}}</span>
+        <div class='r flags'>
+          {{#if @model.riskGrade}}
+            <span class='dot' data-tone='warn'>{{@model.riskGrade}} risk</span>
+          {{/if}}
+          {{#if @model.autoRenews}}<span
+              class='dot renews'
+            >auto-renews</span>{{/if}}
+        </div>
+        {{#if @model.owner}}
+          <div class='r kv owner'><span class='cap'>Owner</span><@fields.owner
+              @format='atom'
+              @displayContainer={{false}}
+            /></div>
         {{/if}}
-        {{#if @model.startDate}}
-          <span class='meta line-term'>Term
-            <@fields.startDate />
-            –
-            <@fields.endDate /></span>
-        {{/if}}
-        {{#if @model.deal.name}}
-          <span class='meta line-deal'>from {{@model.deal.name}}</span>
-        {{/if}}
-      </div>
+        <div class='r kv val'><span class='cap'>Value</span><span>{{pick
+              this.valueDisplay
+              '—'
+            }}</span></div>
+        <div class='r kv term'><span class='cap'>Signed</span><span
+            class='mono'
+          >{{pick (shortDate @model.signedAt true) '—'}}</span></div>
+        <div class='r kv prov'><span class='cap'>Provider</span><span>{{pick
+              @model.signatureProvider
+              '—'
+            }}</span></div>
+      </article>
       <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
+        .cf {
+          block-size: 100%;
           box-sizing: border-box;
-          padding: 0.625rem 0.75rem;
+          overflow: hidden;
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
-          overflow: hidden;
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
           color: var(--foreground);
         }
-        .top {
+        .r {
+          flex: none;
           display: flex;
           align-items: center;
-          gap: 0.375rem;
-        }
-        .icon {
-          width: 1rem;
-          height: 1rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .status {
-          margin-left: auto;
+          gap: 0.5rem;
+          min-block-size: 1.75rem;
+          padding-inline: 0.625rem;
+          border-top: 1px solid var(--border);
           min-width: 0;
+          overflow: hidden;
+          white-space: nowrap;
+        }
+        .head {
+          border-top: 0;
+          min-block-size: 2.375rem;
+        }
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          inline-size: 1.25rem;
+          block-size: 1.25rem;
+          border: 1px solid var(--border);
+          border-radius: 0.25rem;
+          background-color: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
         }
         .name {
-          /* Truncate at a line boundary, never mid-glyph: the reader must
-             see an ellipsis rather than half a letter. Single line by
-             default; tall tiles relax this to a 2-line clamp below. */
+          flex: 1;
+          min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
-          line-height: 1.25;
-          font-weight: 600;
-          font-size: 0.8125rem;
-          flex-shrink: 0;
-        }
-        .figure {
-          white-space: nowrap;
-          line-height: 1.25;
           font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          flex-shrink: 0;
         }
-        .meta {
-          line-height: 1.25;
+        .meta,
+        .fact {
           font-size: 0.6875rem;
           color: var(--muted-foreground);
-          overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
-          flex-shrink: 0;
+          display: block;
+          line-height: 1.75rem;
         }
-        .line-account,
-        .line-expiry,
-        .line-term,
-        .line-deal {
+        .kv {
+          justify-content: space-between;
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+        }
+        .dot {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          white-space: nowrap;
+          text-transform: lowercase;
+        }
+        .dot::before {
+          content: '';
+          flex: none;
+          inline-size: 0.4375rem;
+          block-size: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--muted-foreground);
+        }
+        .dot[data-tone='ok']::before {
+          background-color: var(--success);
+        }
+        .dot[data-tone='warn']::before {
+          background-color: var(--warning);
+        }
+        .dot[data-tone='bad']::before {
+          background-color: var(--destructive);
+        }
+
+        /* Narrow (< 250): status gets its own row; wide: beside the title. */
+        .st-inline {
           display: none;
         }
-        /* Short cells — the edit-form link pill, strips, badges. A column
-           cannot fit here, and flex would shear the one shrinkable row
-           mid-glyph (hide whole rows, never shrink one into a
-           clip). Below 90px the card re-lays as ONE centered row:
-           icon · name · figure · status. */
-        @container fitted-card (max-height: 90px) {
-          .fitted {
-            flex-direction: row;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.25rem 0.75rem;
+        @container fitted-card (min-width: 250px) {
+          .st-inline {
+            display: inline-flex;
           }
-          .top {
-            display: contents;
-          }
-          .status {
-            margin-left: 0;
-            order: 4;
-          }
-          .name {
-            flex: 0 1 auto;
-            min-width: 0;
-          }
-          .figure {
-            margin-left: auto;
-            font-size: 0.8125rem;
-          }
-        }
-        /* Narrow badge: the name is the sole survivor (data is
-           all-or-nothing — a hidden figure beats a truncated one). */
-        @container fitted-card (max-height: 90px) and (max-width: 220px) {
-          .figure,
-          .status {
+          .st-row {
             display: none;
           }
         }
-        /* Each taller tier adds a line rather than just unhiding one, so a
-           tile-sized render fills its box instead of trailing off. */
-        @container fitted-card (min-height: 170px) {
-          .name {
-            white-space: normal;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+        /* Height budget: hide whole rows from the bottom up. */
+        @container fitted-card (max-height: 64px) {
+          .r:not(.head) {
+            display: none;
           }
-          .line-account,
-          .line-expiry {
-            display: block;
-          }
-          /* Anchors the meta block to the bottom so a tall tile reads as a
-             composed card rather than content trailing off at the top. */
-          .line-account {
-            margin-top: auto;
+          .head {
+            block-size: 100%;
           }
         }
-        @container fitted-card (min-height: 215px) {
-          .line-term {
-            display: block;
+        @container fitted-card (max-height: 104px) {
+          .st-row,
+          .fact {
+            display: none;
           }
         }
-        @container fitted-card (min-width: 300px) and (min-height: 170px) {
-          .line-deal {
-            display: block;
+        @container fitted-card (max-height: 169px) {
+          .flags,
+          .owner {
+            display: none;
+          }
+        }
+        @container fitted-card (max-height: 274px) {
+          .val,
+          .term,
+          .prov {
+            display: none;
+          }
+        }
+        @container fitted-card (min-height: 275px) and (max-height: 400px) {
+          .prov {
+            display: none;
+          }
+        }
+        @container fitted-card (max-width: 249px) and (max-height: 274px) {
+          .owner {
+            display: none;
+          }
+        }
+        @container fitted-card (max-width: 249px) and (min-height: 250px) {
+          .owner {
+            display: flex;
+          }
+        }
+        @container fitted-card (max-width: 249px) {
+          .renews {
+            display: none;
           }
         }
       </style>

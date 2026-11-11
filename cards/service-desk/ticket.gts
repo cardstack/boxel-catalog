@@ -7,16 +7,13 @@ import {
   linksTo,
   linksToMany,
   StringField,
-  realmURL,
   type BaseDefComponent,
 } from 'https://cardstack.com/base/card-api';
 import DateTimeField from 'https://cardstack.com/base/datetime';
 import NumberField from 'https://cardstack.com/base/number';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import TicketIcon from '@cardstack/boxel-icons/ticket';
-import { htmlSafe } from '@ember/template';
 import { formatDateTime } from '@cardstack/boxel-ui/helpers';
-
 import { SupportContact } from './support-contact';
 import { SupportAgent } from './support-agent';
 import { Queue } from './queue';
@@ -32,16 +29,14 @@ import {
   TicketTypeField,
 } from './ticket-taxonomy';
 import { SlaTimerBadge } from './components/sla-timer-badge';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { Feed, type FeedEntry } from './components/feed';
-import { TicketWorkspace } from './components/ticket-workspace';
-import { tokenStyle } from '@cardstack/catalog/components/pretui-helpers';
-import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { priorityOption } from '@cardstack/catalog/fields/priority/priority';
 import { timerSnapshot, urgencyRank, type TimerSnapshot } from './utils/sla';
-import { stateColor } from '@cardstack/catalog/components/state-pill';
-import { KeyValue } from '@cardstack/pretui/components/key-value';
-import { Token } from '@cardstack/pretui/components/token';
+import { Chip } from '@cardstack/pretui/components/chip';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { FitTile } from '../shared/fit-tile';
+import { FittedExtras } from '../procurement/vendor';
 
 function daysBetween(
   from?: Date | string | null,
@@ -69,341 +64,6 @@ function daysBetween(
  */
 
 /**
- * The ticket as a RECORD, not as a workbench.
- *
- * The isolated format used to mount the agent workspace — composer, action
- * bar, in-place link pickers. That was wrong twice over. It duplicated the
- * host's own chrome (the stack already gives this card a title bar with Edit
- * and Close, so the workspace's header drew a second one underneath), and it
- * assumed context a card opened on its own does not have: no realms means the
- * pickers open onto an empty list, which is a control that looks live and
- * cannot work.
- *
- * So the split is by role. **The workspace is the console's detail pane** —
- * it belongs to ServiceDesk, where the realm, the command context and the
- * CRUD functions all exist. **This is what a ticket looks like when you open
- * it**: everything that happened, laid out to be read. Changing it is what
- * the edit format is for.
- */
-class TicketRecord extends Component<typeof Ticket> {
-  get statusHue() {
-    return statusHue(TicketStatusField, this.args.model?.status);
-  }
-
-  get priorityHue() {
-    return (
-      priorityOption(TicketPriorityField, this.args.model?.priority)?.hue ??
-      'slate'
-    );
-  }
-
-  get feedEntries(): FeedEntry[] {
-    return (this.args.model?.messages ?? [])
-      .filter(Boolean)
-      .map((message) => message.feedEntry);
-  }
-
-  get firstResponseTimer() {
-    return (this.args.model?.timers ?? []).find(
-      (t) => t?.kind === 'First response',
-    );
-  }
-
-  get resolutionTimer() {
-    return (this.args.model?.timers ?? []).find(
-      (t) => t?.kind === 'Resolution',
-    );
-  }
-
-  get articles() {
-    return (this.args.model?.linkedArticles ?? []).filter(Boolean);
-  }
-
-  get facts() {
-    let model = this.args.model;
-    return [
-      { key: 'Category', value: model?.categoryName || '—' },
-      { key: 'Channel', value: model?.channel || '—' },
-      { key: 'Opened', value: model?.ageLabel || '—' },
-    ];
-  }
-
-  <template>
-    <article class='rec'>
-      <header class='rec-head'>
-        <Token
-          class='rec-ref'
-          @value={{if @model.reference @model.reference '—'}}
-          style={{tokenStyle '--boxel-font-size-sm' 'var(--muted-foreground)'}}
-        />
-        <h1 class='rec-title'>{{if
-            @model.subject
-            @model.subject
-            'Untitled ticket'
-          }}</h1>
-        <div class='rec-pills'>
-          <StatePill
-            @label={{@model.priority}}
-            @hue={{this.priorityHue}}
-            @emphatic={{true}}
-          />
-          <StatePill
-            @label={{@model.status}}
-            @hue={{this.statusHue}}
-            @dot={{true}}
-          />
-          {{#if @model.ticketType}}
-            <StatePill @label={{@model.ticketType}} @chrome={{true}} />
-          {{/if}}
-        </div>
-      </header>
-
-      {{! The four facts, read-only. Live badges: a record open on a second
-          screen is exactly where a stale countdown would mislead. }}
-      <section class='rec-slab' aria-label='Summary'>
-        <div class='rec-cell'>
-          <span class='rec-lb'>Customer</span>
-          <span class='rec-strong'>{{if
-              @model.customerName
-              @model.customerName
-              'Unlinked'
-            }}</span>
-          <span class='rec-dim'>{{@model.customerCompany}}</span>
-        </div>
-        <div class='rec-cell'>
-          <span class='rec-lb'>First response</span>
-          <SlaTimerBadge
-            @facts={{this.firstResponseTimer}}
-            @live={{true}}
-            @showBar={{true}}
-          />
-        </div>
-        <div class='rec-cell'>
-          <span class='rec-lb'>Resolution</span>
-          <SlaTimerBadge
-            @facts={{this.resolutionTimer}}
-            @live={{true}}
-            @showBar={{true}}
-          />
-        </div>
-        <div class='rec-cell'>
-          <span class='rec-lb'>Owner</span>
-          <span class='rec-strong'>{{if
-              @model.assigneeName
-              @model.assigneeName
-              'Unclaimed'
-            }}</span>
-          <span class='rec-dim'>{{if
-              @model.queueName
-              @model.queueName
-              'Unrouted'
-            }}</span>
-        </div>
-      </section>
-
-      <div class='rec-body'>
-        <main class='rec-thread'>
-          <h2 class='rec-h'>Conversation</h2>
-          {{#if @model.details}}
-            <div class='rec-details'><@fields.details /></div>
-          {{/if}}
-          <Feed
-            @entries={{this.feedEntries}}
-            @emptyMessage='Nothing has been said on this ticket yet.'
-          />
-        </main>
-
-        <aside class='rec-rail' aria-label='Details'>
-          <section>
-            <h2 class='rec-h'>Details</h2>
-            <KeyValue class='rec-facts' @items={{this.facts}} />
-            {{#if @model.tags.length}}
-              <ul class='rec-tags'>
-                {{#each @model.tags as |tag|}}
-                  <li><StatePill @label={{tag}} @hue='slate' /></li>
-                {{/each}}
-              </ul>
-            {{/if}}
-          </section>
-
-          {{#if this.articles.length}}
-            <section>
-              <h2 class='rec-h'>Linked articles</h2>
-              <ul class='rec-links'>
-                {{#each this.articles key='id' as |article|}}
-                  <li>{{article.title}}</li>
-                {{/each}}
-              </ul>
-            </section>
-          {{/if}}
-        </aside>
-      </div>
-    </article>
-
-    <style scoped>
-      .rec {
-        /* The container the `@container rec` rule below queries. An isolated card
-           gets NO container from the host — every ancestor up to the panel is
-           `container-type: normal` — so a bare `@container (max-width: 44rem)`
-           here matched nothing and `.rec-body` never collapsed to one column in a
-           narrow panel. Named, because an unnamed container is claimed by the
-           nearest query and this template also renders fitted cards that query
-           `fitted-card`. `inline-size` rather than `size`: the card scrolls, and
-           `size` needs a definite block size. */
-        container-name: rec;
-        container-type: inline-size;
-        display: flex;
-        flex-direction: column;
-        min-height: 100%;
-      }
-      /* No action bar and no second title: the host's own header already
-         names this card and owns Edit / Close. */
-      .rec-head {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-        padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-sm);
-      }
-      .rec-head .rec-ref {
-        margin-inline: 0;
-      }
-      .rec-title {
-        margin: 0;
-        flex: 1;
-        min-width: 12rem;
-        font-size: var(--boxel-font-size-lg);
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        text-wrap: balance;
-      }
-      .rec-pills {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-4xs);
-        flex-wrap: wrap;
-      }
-      .rec-slab {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-        border-block: 1px solid var(--border);
-        background-color: var(--muted);
-        color: var(--foreground);
-      }
-      .rec-cell {
-        display: flex;
-        flex-direction: column;
-        gap: 0.1875rem;
-        min-width: 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-lg);
-      }
-      .rec-lb {
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .rec-strong {
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .rec-dim {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .rec-body {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 16rem;
-        flex: 1;
-        min-height: 0;
-      }
-      .rec-thread {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-sm);
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        min-width: 0;
-      }
-      /* Prose caps at a readable measure however wide the stack gets. */
-      .rec-thread > * {
-        max-width: 70ch;
-        width: 100%;
-      }
-      .rec-details {
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.7;
-        color: var(--muted-foreground);
-        border-left: 0.125rem solid var(--border);
-        padding-left: var(--boxel-sp-sm);
-      }
-      .rec-rail {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp);
-        padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp) 0;
-      }
-      .rec-h {
-        margin: 0 0 var(--boxel-sp-4xs);
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      /* Pret UI KeyValue at the rail's 12px text, values in bold. */
-      .rec-facts {
-        --text-ui: var(--boxel-font-size-xs);
-        --text-ui-md: var(--boxel-font-size-xs);
-        --space-6: var(--boxel-sp-xs);
-      }
-      .rec-facts :deep(dd) {
-        font-weight: 600;
-        overflow-wrap: anywhere;
-      }
-      .rec-tags,
-      .rec-links {
-        list-style: none;
-        margin: var(--boxel-sp-xs) 0 0;
-        padding: 0;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.1875rem;
-      }
-      .rec-links {
-        flex-direction: column;
-      }
-      .rec-tags li {
-        display: flex;
-        max-width: 100%;
-      }
-      .rec-links li {
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-      }
-      @container rec (max-width: 44rem) {
-        .rec-body {
-          grid-template-columns: 1fr;
-        }
-        .rec-rail {
-          padding: 0 var(--boxel-sp-lg) var(--boxel-sp);
-        }
-      }
-    </style>
-  </template>
-}
-
-/**
  * Editing a ticket IS the agent workspace.
  *
  * The default edit format — every field stacked in a form — is the wrong shape
@@ -413,34 +73,32 @@ class TicketRecord extends Component<typeof Ticket> {
  * the same component rather than a second, lesser one. One editing surface,
  * defined once, reached from two places — pressing Edit on a ticket anywhere
  * in Boxel, and selecting a row in the console.
- *
- * Its counterpart is `TicketRecord`, the isolated format: what a ticket looks
- * like when you are reading it rather than working it.
  */
-class TicketEditor extends Component<typeof Ticket> {
-  // The workspace queries this realm for the customers, agents, queues and
-  // categories its pickers offer. Opened standalone there is no console to
-  // hand it down, so it comes off the card itself.
-  get realms(): string[] {
-    let realm = (this.args.model as any)?.[realmURL];
-    return realm ? [String(realm)] : [];
-  }
 
-  // `@model` in an edit format is a PartialFields proxy — every field is
-  // optional until it is set — so it does not satisfy `Ticket` structurally
-  // even though it IS one at runtime. Narrowed once here rather than loosening
-  // the workspace's own argument type, which would cost every other caller.
-  get ticket(): Ticket | undefined {
-    return this.args.model as unknown as Ticket | undefined;
-  }
-
-  <template>
-    <TicketWorkspace
-      @ticket={{this.ticket}}
-      @context={{@context}}
-      @realms={{this.realms}}
-    />
-  </template>
+const STATUS_TONE: Record<string, PretuiToneArg> = {
+  Open: 'info',
+  Pending: 'warning',
+  'On Hold': 'warning',
+  Resolved: 'success',
+  Closed: 'neutral',
+};
+function ticketStatusTone(status?: string): PretuiToneArg {
+  return (status && STATUS_TONE[status]) || 'neutral';
+}
+function ticketPriorityTone(priority?: string): PretuiToneArg {
+  let hue = priorityOption(TicketPriorityField, priority)?.hue ?? 'slate';
+  return (
+    (
+      {
+        red: 'danger',
+        orange: 'warning',
+        amber: 'warning',
+        yellow: 'warning',
+        green: 'success',
+        blue: 'info',
+      } as Record<string, PretuiToneArg>
+    )[hue] ?? 'neutral'
+  );
 }
 
 export class Ticket extends CardDef {
@@ -648,112 +306,358 @@ export class Ticket extends CardDef {
     },
   });
 
-  static isolated: BaseDefComponent = TicketRecord as BaseDefComponent;
-
-  static edit: BaseDefComponent = TicketEditor as BaseDefComponent;
-
-  static embedded: BaseDefComponent = class Embedded extends Component<
+  static isolated: BaseDefComponent = class Isolated extends Component<
     typeof this
   > {
-    get statusHue() {
-      return statusHue(TicketStatusField, this.args.model?.status);
+    timerOf = (kind: string) =>
+      (this.args.model?.timers ?? []).find((t) => t?.kind === kind);
+    snap = (kind: string) => {
+      let t = this.timerOf(kind);
+      return t ? timerSnapshot(t as any) : undefined;
+    };
+    get firstResponse() {
+      return this.snap('First response');
     }
-    get priorityHue() {
-      return (
-        priorityOption(TicketPriorityField, this.args.model?.priority)?.hue ??
-        'slate'
-      );
+    get resolution() {
+      return this.snap('Resolution');
     }
-    // One line of context instead of a second row of chips. Density comes
-    // from packing the same height harder, never from shrinking the type.
-    get context() {
-      let model = this.args.model;
-      return [
-        model?.customerName,
-        model?.customerCompany,
-        model?.categoryName,
-        model?.queueName,
-        model?.assigneeName,
-        model?.ageLabel,
-      ]
-        .filter(Boolean)
-        .join(' · ');
+    get messages() {
+      return (this.args.model?.messages ?? []).filter(Boolean);
     }
+    get internalCount() {
+      return this.messages.filter((m) => m.isInternal).length;
+    }
+    get timers() {
+      return (this.args.model?.timers ?? []).filter(Boolean);
+    }
+    stamp = (d?: Date) =>
+      d
+        ? new Date(d).toLocaleString('en-GB', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : '—';
+    visTone = (m: any) =>
+      m.isSlaEvent ? 'info' : m.isInternal ? 'warning' : 'success';
+    visText = (m: any) =>
+      m.isSlaEvent ? 'SLA event' : m.isInternal ? 'internal' : 'public';
 
     <template>
-      <article class='row'>
-        <span class='row-spine'></span>
-        {{#if @model.reference}}
-          <Token
-            class='row-ref'
-            @value={{@model.reference}}
-            style={{tokenStyle
-              '--boxel-font-size-xs'
-              'var(--muted-foreground)'
-            }}
-          />
-        {{/if}}
-        <span class='row-main'>
-          <span class='row-subject'>{{@model.subject}}</span>
-          <span class='row-context'>{{this.context}}</span>
-        </span>
-        <StatePill
-          @label={{@model.priority}}
-          @hue={{this.priorityHue}}
-          @emphatic={{true}}
-        />
-        <StatePill @label={{@model.status}} @chrome={{true}} />
-        <SlaTimerBadge @facts={{@model.governingTimer}} @live={{true}} />
+      <article class='tk'>
+        <header class='head'>
+          <span class='mark' aria-hidden='true'>#</span>
+          <span class='id'>
+            <h1>{{@model.subject}}</h1>
+            <span class='meta'>{{@model.reference}}
+              ·
+              {{@model.customerName}}{{@model.customerSuffix}}</span>
+          </span>
+          <span class='sts'>
+            <Chip
+              @appearance='plain'
+              @tone={{ticketStatusTone @model.status}}
+            >{{@model.status}}</Chip>
+            <Chip
+              @appearance='plain'
+              @tone={{ticketPriorityTone @model.priority}}
+            >{{@model.priority}}</Chip>
+          </span>
+        </header>
+
+        <section class='stats' aria-label='Ticket numbers'>
+          <div class='cell'><Stat
+              @label='First response'
+              @tone={{if this.firstResponse 'success' 'neutral'}}
+              @value={{if this.firstResponse this.firstResponse.shortLabel '—'}}
+              @roll={{false}}
+            /></div>
+          <div class='cell'><Stat
+              @label='Resolution'
+              @tone='info'
+              @value={{if this.resolution this.resolution.shortLabel '—'}}
+              @hint={{@model.slaDueLabel}}
+              @roll={{false}}
+            /></div>
+          <div class='cell'><Stat
+              @label='Messages'
+              @tone='neutral'
+              @value={{this.messages.length}}
+              @hint='{{this.internalCount}} internal'
+              @roll={{false}}
+            /></div>
+          <div class='cell'><Stat
+              @label='Age'
+              @tone='neutral'
+              @value={{if @model.ageLabel @model.ageLabel '—'}}
+              @roll={{false}}
+            /></div>
+        </section>
+
+        <div class='body'>
+          <div class='main'>
+            <section class='blk'>
+              <h2 class='sh'>Details</h2>
+              <p class='txt'>{{@model.details}}</p>
+            </section>
+            <section class='blk'>
+              <h2 class='sh'>Conversation</h2>
+              <ul class='msgs'>
+                {{#each this.messages as |m|}}
+                  <li class='msg'>
+                    <span class='lines'>
+                      <span class='who'><b>{{m.author}}</b>
+                        ·
+                        {{m.authorRole}}
+                        <span class='mono dim'>{{this.stamp
+                            m.sentAt
+                          }}</span></span>
+                      <span class='tx'>{{m.body}}</span>
+                    </span>
+                    <Chip
+                      @appearance='plain'
+                      @tone={{this.visTone m}}
+                    >{{this.visText m}}</Chip>
+                  </li>
+                {{/each}}
+              </ul>
+            </section>
+            <section class='blk'>
+              <h2 class='sh'>SLA timers</h2>
+              <dl class='kv'>
+                {{#each this.timers as |t|}}
+                  <dt>{{t.kind}}</dt>
+                  <dd><SlaTimerBadge
+                      @facts={{t}}
+                      @live={{false}}
+                      @plain={{true}}
+                    /></dd>
+                {{/each}}
+                <dt>Category</dt><dd>{{if
+                    @model.categoryName
+                    @model.categoryName
+                    '—'
+                  }}</dd>
+              </dl>
+            </section>
+          </div>
+          <aside class='side'>
+            <section class='blk'>
+              <h2 class='sh'>Linked</h2>
+              <dl class='kv'>
+                <dt>Customer</dt><dd>{{#if @model.customer}}<@fields.customer
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                <dt>Assignee</dt><dd>{{#if @model.assignee}}<@fields.assignee
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                <dt>Queue</dt><dd>{{#if @model.queue}}<@fields.queue
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                <dt>Category</dt><dd>{{#if @model.category}}<@fields.category
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                <dt>Commitment</dt><dd>{{#if
+                    @model.slaPolicy
+                  }}<@fields.slaPolicy
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                <dt>Article</dt><dd>{{#if
+                    @model.linkedArticles.length
+                  }}<@fields.linkedArticles
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+              </dl>
+            </section>
+            <section class='blk'>
+              <h2 class='sh'>Details</h2>
+              <dl class='kv'>
+                <dt>Priority</dt><dd>{{@model.priority}}</dd>
+                <dt>Status</dt><dd>{{@model.status}}</dd>
+                <dt>Channel</dt><dd>{{if
+                    @model.channel
+                    @model.channel
+                    '—'
+                  }}</dd>
+                <dt>Type</dt><dd>{{if
+                    @model.ticketType
+                    @model.ticketType
+                    '—'
+                  }}</dd>
+                <dt>Opened</dt><dd class='mono'>{{this.stamp
+                    @model.openedAt
+                  }}</dd>
+                <dt>Resolution due</dt><dd class='mono'>{{if
+                    @model.slaDueLabel
+                    @model.slaDueLabel
+                    '—'
+                  }}</dd>
+                <dt>Tags</dt><dd>{{if
+                    @model.tagSummary
+                    @model.tagSummary
+                    '—'
+                  }}</dd>
+              </dl>
+            </section>
+          </aside>
+        </div>
       </article>
       <style scoped>
-        /* 46px, down from 88. A screen of forty tickets is eleven rows
-           instead of five, and it carries eight fields instead of five. */
-        .row {
+        .tk {
+          margin: 0;
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+        }
+        .head {
           display: flex;
           align-items: center;
-          gap: var(--boxel-sp-4xs);
-          height: 2.875rem;
-          padding: 0 var(--boxel-sp-sm);
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
+          flex-wrap: wrap;
+        }
+        .mark {
+          display: grid;
+          place-items: center;
+          inline-size: 1.75rem;
+          block-size: 1.75rem;
           border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius-sm);
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        /* The one cue that stays readable down a long stacked list. */
-        .row-spine {
-          width: 0.1875rem;
-          height: 1.625rem;
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          font-weight: 600;
+          line-height: 1;
           flex: none;
-          border-radius: 1px;
-          background-color: var(--primary);
         }
-        .row .row-ref {
-          flex: none;
-          margin-inline: 0;
+        .id {
+          flex: 1 1 12rem;
+          min-inline-size: 0;
+          display: grid;
+          gap: var(--boxel-sp-6xs);
         }
-        .row-main {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-        }
-        .row-subject {
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.3;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .row-context {
+        h1 {
+          font-family: var(--font-sans);
           font-size: var(--boxel-font-size-xs);
-          line-height: 1.3;
+          font-weight: 700;
+          text-transform: none;
+          letter-spacing: normal;
+        }
+        .meta,
+        .dim {
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          font-variant-numeric: tabular-nums;
+        }
+        .sts {
+          display: flex;
+          gap: var(--boxel-sp-sm);
+        }
+        .stats {
+          --text-stat: 1.375rem;
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          border-block-start: 1px solid var(--border);
+        }
+        .cell {
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+          min-inline-size: 0;
+        }
+        .cell + .cell {
+          border-inline-start: 1px solid var(--border);
+        }
+        .body {
+          display: grid;
+          grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+          border-block-start: 1px solid var(--border);
+        }
+        .side {
+          border-inline-start: 1px solid var(--border);
+          min-inline-size: 0;
+        }
+        .main {
+          min-inline-size: 0;
+        }
+        .blk + .blk {
+          border-block-start: 1px solid var(--border);
+        }
+        .sh {
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .txt {
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
+        }
+        .msgs {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+        .msg {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+          border-block-start: 1px solid var(--border);
+        }
+        .lines {
+          display: grid;
+          gap: var(--boxel-sp-6xs);
+          min-inline-size: 0;
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          margin: 0;
+        }
+        .kv > * {
+          min-block-size: 1.75rem;
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-4xs);
+          border-block-start: 1px solid var(--border);
+          min-inline-size: 0;
+          margin: 0;
+        }
+        dt {
+          padding-inline-start: var(--boxel-sp-xs);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1.3;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        dd {
+          padding-inline-end: var(--boxel-sp-xs);
+        }
+        @container (width <= 44rem) {
+          .body {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .side {
+            border-inline-start: none;
+            border-block-start: 1px solid var(--border);
+          }
+          .stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
         }
       </style>
     </template>
@@ -762,36 +666,46 @@ export class Ticket extends CardDef {
   static atom: BaseDefComponent = class Atom extends Component<typeof this> {
     <template>
       <span class='atom'>
-        <span class='atom-spine'></span>
-        <span class='atom-ref'>{{@model.reference}}</span>
-        <span class='atom-subject'>{{@model.subject}}</span>
-        <SlaTimerBadge @facts={{@model.governingTimer}} @live={{false}} />
+        <span class='mark' aria-hidden='true'>#</span>
+        <span class='ref'>{{@model.reference}}</span>
+        <span class='subject'>{{@model.subject}}</span>
+        <Chip
+          @appearance='plain'
+          @tone={{ticketStatusTone @model.status}}
+        >{{@model.status}}</Chip>
       </span>
       <style scoped>
         .atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.3rem;
-          max-width: 100%;
-          font-size: 0.8125rem;
+          gap: var(--boxel-sp-3xs);
+          max-inline-size: 100%;
+          min-inline-size: 0;
+          font-size: var(--boxel-font-size-xs);
         }
-        .atom-spine {
-          width: 0.1875rem;
-          height: 0.9rem;
+        .mark {
           flex: none;
-          border-radius: 1px;
-          background-color: var(--primary);
+          display: grid;
+          place-items: center;
+          inline-size: 1rem;
+          block-size: 1rem;
+          border: 1px solid var(--border);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1;
+          color: var(--muted-foreground);
         }
-        .atom-ref {
+        .ref {
           flex: none;
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
+          font-size: var(--boxel-font-size-2xs);
           font-variant-numeric: tabular-nums;
+          color: var(--muted-foreground);
         }
-        .atom-subject {
-          min-width: 0;
-          font-weight: 500;
+        .subject {
+          min-inline-size: 0;
+          font-weight: 700;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -800,293 +714,170 @@ export class Ticket extends CardDef {
     </template>
   };
 
+  static embedded: BaseDefComponent = class Embedded extends Component<
+    typeof this
+  > {
+    <template>
+      <article class='emb'>
+        <header class='head'>
+          <span class='mark' aria-hidden='true'>#</span>
+          <span class='titles'>
+            <b class='ell'>{{@model.subject}}</b>
+            <span class='meta ell'>{{@model.reference}}
+              ·
+              {{@model.customerName}}{{@model.customerSuffix}}</span>
+          </span>
+        </header>
+        <div class='chips'>
+          <Chip
+            @appearance='plain'
+            @tone={{ticketStatusTone @model.status}}
+          >{{@model.status}}</Chip>
+          <Chip
+            @appearance='plain'
+            @tone={{ticketPriorityTone @model.priority}}
+          >{{@model.priority}}</Chip>
+        </div>
+        <dl class='kv'>
+          <div><dt>Priority</dt><dd>{{@model.priority}}</dd></div>
+          <div><dt>Status</dt><dd>{{@model.status}}</dd></div>
+          <div><dt>Channel</dt><dd>{{@model.channel}}</dd></div>
+          <div><dt>Resolution due</dt><dd
+              class='mono'
+            >{{@model.slaDueLabel}}</dd></div>
+          <div><dt>Assignee</dt><dd>{{@model.assigneeName}}</dd></div>
+          <div><dt>Queue</dt><dd>{{@model.queueName}}</dd></div>
+        </dl>
+      </article>
+      <style scoped>
+        .emb {
+          display: grid;
+          gap: var(--boxel-sp-2xs);
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
+          color: var(--foreground);
+        }
+        .head {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          min-inline-size: 0;
+        }
+        .mark {
+          flex: none;
+          display: grid;
+          place-items: center;
+          inline-size: 1.25rem;
+          block-size: 1.25rem;
+          border: 1px solid var(--border);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1;
+        }
+        .titles {
+          display: grid;
+          min-inline-size: 0;
+        }
+        .ell {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .meta {
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
+        }
+        .chips {
+          display: flex;
+          gap: var(--boxel-sp-sm);
+        }
+        .kv {
+          margin: 0;
+        }
+        .kv > div {
+          display: grid;
+          grid-template-columns: 7rem minmax(0, 1fr);
+          align-items: center;
+          block-size: 1.75rem;
+          border-block-start: 1px solid var(--border);
+        }
+        dt {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1.3;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        dd {
+          margin: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
+        }
+      </style>
+    </template>
+  };
+
   static fitted: BaseDefComponent = class Fitted extends Component<
     typeof this
   > {
-    get priorityHue() {
-      return (
-        priorityOption(TicketPriorityField, this.args.model?.priority)?.hue ??
-        'slate'
-      );
+    get facts() {
+      let m = this.args.model;
+      return [
+        { key: 'Priority', value: m?.priority || '—' },
+        { key: 'Status', value: m?.status || '—' },
+        { key: 'Assignee', value: m?.assigneeName || '—' },
+        { key: 'Queue', value: m?.queueName || '—' },
+        { key: 'Channel', value: m?.channel || '—' },
+        { key: 'Resolution due', value: m?.slaDueLabel || '—' },
+      ];
     }
-    get spineStyle() {
-      return htmlSafe(
-        `background-color: ${stateColor(this.priorityHue).ring};`,
-      );
+    get stats() {
+      let m = this.args.model;
+      let msgs = (m?.messages ?? []).filter(Boolean).length;
+      return [
+        { key: 'Priority', value: m?.priority || '—' },
+        { key: 'Status', value: m?.status || '—' },
+        { key: 'Messages', value: String(msgs) },
+      ];
     }
-
     <template>
-      {{! Single `.fit` grid, and it declares NO container of its own — it
-          queries the host's `fitted-card`. Every region clips and can shrink
-          (`min-height: 0`), so a tier that hides a row cannot push another one
-          out of the box.
-
-          Everything below reads FLATTENED string fields. A prerendered fitted
-          view resolves no links, and reading through one there throws rather
-          than returning blank — that is how a tile becomes a red error card. }}
-      <article class='fit'>
-        <span class='spine' style={{this.spineStyle}}></span>
-
-        <header class='r-head'>
-          <span class='ref'>{{@model.reference}}</span>
-          <h3 class='title'>{{@model.subject}}</h3>
-          {{! A due time, not a countdown — see `slaDueLabel`. }}
-          <span
-            class='sla sla-{{@model.slaState}}'
-          >{{@model.slaDueLabel}}</span>
-        </header>
-
-        <div class='r-body'>
-          <span class='line'>{{@model.customerName}}{{#if
-              @model.customerCompany
-            }}
+      <FittedExtras @facts={{this.facts}} @stats={{this.stats}}>
+        <:default>
+          <FitTile>
+            <:avatar><Avatar
+                @name='Ticket'
+                @shape='square'
+                @size={{32}}
+              /></:avatar>
+            <:title>{{@model.subject}}</:title>
+            <:subtitle>{{@model.reference}}
               ·
-              {{@model.customerCompany}}{{/if}}</span>
-          <span class='line line-2'>{{@model.categoryName}}{{#if
-              @model.queueName
-            }}
-              ·
-              {{@model.queueName}}{{/if}}{{#if @model.assigneeName}}
-              ·
-              {{@model.assigneeName}}{{/if}}</span>
-          <p class='snip'>{{@model.latestMessage}}</p>
-          <span class='line line-3'>{{@model.tagSummary}}</span>
-        </div>
-
-        <footer class='r-meta'>
-          <span class='pri'>{{@model.priority}}</span>
-          <span class='status'>{{@model.status}}</span>
-          <span class='age'>{{@model.ageLabel}}</span>
-        </footer>
-      </article>
-
-      <style scoped>
-        .fit {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          grid-template-areas: 'head' 'body' 'meta';
-          gap: 0.125rem;
-          padding: 0.4375rem 0.5625rem 0.4375rem 0.75rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          /* One continuous type scale driven by the container, never stepped
-             per tier: the @container blocks below change structure only. */
-          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
-          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
-        }
-        .fit > * {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .spine {
-          position: absolute;
-          left: 0;
-          top: 0;
-          bottom: 0;
-          width: 0.1875rem;
-        }
-        .r-head {
-          grid-area: head;
-          display: flex;
-          align-items: baseline;
-          gap: 0.3125rem;
-          min-width: 0;
-        }
-        .ref {
-          flex: none;
-          font-family: var(--font-mono);
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-        }
-        .title {
-          flex: 1;
-          min-width: 0;
-          margin: 0;
-          font-size: var(--type-title);
-          font-weight: 600;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        /* The one thing that survives every tier alongside the reference:
-           together they answer "which ticket, how urgent" at 150x40. */
-        .sla {
-          flex: none;
-          margin-left: auto;
-          padding: 0 0.25rem;
-          border-radius: 0.25rem;
-          font-family: var(--font-mono);
-          font-size: var(--type-base);
-          font-weight: 600;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-        .sla-met,
-        .sla-healthy {
-          color: var(--success-ink);
-          background-color: color-mix(
-            in oklab,
-            var(--success-ink) 12%,
-            var(--card)
-          );
-        }
-        .sla-warning {
-          color: var(--attention-ink);
-          background-color: color-mix(
-            in oklab,
-            var(--attention-ink) 12%,
-            var(--card)
-          );
-        }
-        .sla-urgent {
-          color: var(--destructive-ink);
-          background-color: color-mix(
-            in oklab,
-            var(--destructive-ink) 12%,
-            var(--card)
-          );
-        }
-        .sla-breached {
-          color: var(--background);
-          background-color: var(--destructive-ink);
-        }
-        .sla-paused {
-          color: var(--muted-foreground);
-          background-color: var(--muted);
-        }
-        .r-body {
-          grid-area: body;
-          display: none;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
-        }
-        .line {
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .line-3 {
-          display: none;
-          margin-top: auto;
-        }
-        .snip {
-          display: none;
-          margin: 0;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .r-meta {
-          grid-area: meta;
-          display: none;
-          align-items: center;
-          gap: 0.375rem;
-          min-width: 0;
-        }
-        .pri {
-          flex: none;
-          font-family: var(--font-mono);
-          font-size: var(--type-base);
-          font-weight: 700;
-        }
-        .status,
-        .age {
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .age {
-          margin-left: auto;
-          flex: none;
-        }
-
-        /* Height quanta. Each tier ADDS a row rather than un-cropping one:
-           up to 50px is the badge (identity only); past 50px priority and
-           status return; past 105px the body says who it is about; past 240px
-           there is finally room for the last thing said. */
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
-            padding-block: 0.25rem;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 50px) {
-          .r-meta {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 50px) and (height <= 105px) {
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        /* 80px is where a body line first fits without crowding the meta row.
-           Waiting until 105 left the Large Badge (150x105) with a visible void
-           — the "empty-looking cell" the size walk exists to catch. */
-        @container fitted-card (height > 80px) {
-          .r-body {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 160px) {
-          .snip {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-          }
-        }
-        /* Taller tiers ADD rather than un-crop: the excerpt grows and the tags
-           appear, so a 275px tile is not a 170px tile with a hole in it. */
-        @container fitted-card (height > 240px) {
-          .snip {
-            -webkit-line-clamp: 4;
-          }
-          .line-3 {
-            display: block;
-          }
-        }
-        /* Wide and short: two columns rather than a squeezed stack, with the
-           content column held at >=200px so the title never becomes a word. */
-        @container fitted-card (width > 300px) and (height <= 130px) {
-          .fit {
-            grid-template-columns: minmax(12.5rem, 1fr) auto;
-            grid-template-areas: 'head meta' 'body meta';
-            align-items: center;
-          }
-          .r-meta {
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.0625rem;
-          }
-          .age {
-            margin-left: 0;
-          }
-        }
-        /* Narrow: the second line would be two words and an ellipsis. */
-        @container fitted-card (width <= 170px) {
-          .line-2 {
-            display: none;
-          }
-        }
-      </style>
+              {{@model.customerName}}{{@model.customerSuffix}}</:subtitle>
+            <:status>
+              <Chip
+                @appearance='plain'
+                @tone={{ticketStatusTone @model.status}}
+              >{{@model.status}}</Chip>
+              <Chip
+                @appearance='plain'
+                @tone={{ticketPriorityTone @model.priority}}
+              >{{@model.priority}}</Chip>
+            </:status>
+            <:fact>{{@model.slaDueLabel}}</:fact>
+            <:relations>{{@model.assigneeName}}{{#if @model.queueName}}
+                ·
+                {{@model.queueName}}{{/if}}</:relations>
+          </FitTile>
+        </:default>
+      </FittedExtras>
     </template>
   };
 }

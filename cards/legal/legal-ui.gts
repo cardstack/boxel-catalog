@@ -23,7 +23,10 @@ interface LegalFactsSignature {
 export const LegalFacts: TemplateOnlyComponent<LegalFactsSignature> = <template>
   {{#if (has-block 'value')}}
     <KeyValue class='legal-facts' @items={{@items}} ...attributes>
-      <:value as |item|>{{yield item to='value'}}</:value>
+      <:value as |item|><span class='legal-val'>{{yield
+            item
+            to='value'
+          }}</span></:value>
     </KeyValue>
   {{else}}
     <KeyValue class='legal-facts' @items={{@items}} ...attributes />
@@ -36,15 +39,20 @@ export const LegalFacts: TemplateOnlyComponent<LegalFactsSignature> = <template>
       align-items: baseline;
     }
     .legal-facts {
-      --text-ui: var(--boxel-font-size-sm);
-      --text-ui-md: var(--boxel-font-size-sm);
-      --space-6: var(--boxel-sp);
+      --pretui-kv-label-font-size: 0.5625rem; /* 9px ladder label: no token */
+      font-size: var(--boxel-font-size-xs);
+      column-gap: var(--boxel-sp);
       font-variant-numeric: tabular-nums;
-    }
-    .legal-facts :deep(dd) {
-      flex-wrap: wrap;
+      /* A long value wraps inside its column. */
+      overflow-wrap: break-word;
       min-width: 0;
-      overflow-wrap: anywhere;
+    }
+    .legal-val {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--boxel-sp-2xs);
+      min-width: 0;
     }
   </style>
 </template>;

@@ -10,16 +10,84 @@ import {
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import PackageIcon from '@cardstack/boxel-icons/package';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { FitTile } from '../shared/fit-tile';
 
 import { Asset } from './asset';
 import { AssetCategory } from './asset-category';
 import { Vendor } from '../procurement/vendor';
 import { InventoryStock } from '../fulfilment/inventory-stock';
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
-import { formatMoneyDisplay } from '@cardstack/catalog/components/money-display';
+import {
+  Chip,
+  Dot,
+  Head,
+  Mark,
+  Row,
+  Kv,
+  KvRow,
+  Section,
+  Stats,
+  money,
+  type Tone,
+} from './card-ui';
+
+const STOCK_TONE: Record<string, Tone> = { out: 'bad', low: 'warn', ok: 'ok' };
+const ASSET_TONE: Record<string, Tone> = {
+  'in-service': 'ok',
+  'out-of-service': 'bad',
+  'under-maintenance': 'warn',
+};
+
+function stockTone(m: Partial<SparePart>): Tone {
+  return STOCK_TONE[m.stockState ?? 'ok'] ?? 'muted';
+}
+function stockLabel(m: Partial<SparePart>): string {
+  return m.stockState === 'out' ? 'out' : (m.stockState ?? 'ok');
+}
+function metaLine(m: Partial<SparePart>): string {
+  let d = m.description?.replace(/\.$/, '');
+  return [m.partNumber, d].filter(Boolean).join(' · ');
+}
+function n(v?: number | null): string {
+  return v != null ? String(v) : '';
+}
+function stockValue(m: Partial<SparePart>): string {
+  let u = m.unitCost;
+  return u?.amount != null
+    ? money(u.amount * (m.onHand ?? 0), u.currency?.code)
+    : '';
+}
+function unitCost(m: Partial<SparePart>): string {
+  let u = m.unitCost;
+  return u?.amount != null ? money(u.amount, u.currency?.code) : '';
+}
+function onHandFact(m: Partial<SparePart>): string {
+  return m.reorderPoint != null ? `reorder at ${m.reorderPoint}` : '';
+}
+function assetTone(a: any): Tone {
+  return ASSET_TONE[a?.status ?? ''] ?? 'muted';
+}
+function label(s?: string | null): string {
+  return (s ?? '').replace(/-/g, ' ');
+}
+function catCode(c: any): string {
+  return (c?.name ?? '').split(/[\s/]+/)[0] ?? '';
+}
+
+const StockDots: TemplateOnlyComponent<{
+  Args: { model: Partial<SparePart> };
+}> = <template>
+  <Dot @tone={{stockTone @model}} @label={{stockLabel @model}} />
+  {{#if @model.belowReorderPoint}}{{#if @model.reorderQuantity}}<Dot
+        @label={{concat 'reorder ' @model.reorderQuantity}}
+      />{{/if}}{{/if}}
+</template>;
+
+function concat(a: unknown, b: unknown) {
+  return `${a ?? ''}${b ?? ''}`;
+}
 
 /**
  * A stocked consumable or component — filters, oil, unions, extinguishers.
@@ -79,9 +147,7 @@ export class SparePart extends CardDef {
   @field unitCostLabel = contains(StringField, {
     computeVia: function (this: SparePart) {
       let u = this.unitCost;
-      return u?.amount != null
-        ? formatMoneyDisplay(u.amount, u.currency?.code)
-        : '';
+      return u?.amount != null ? money(u.amount, u.currency?.code) : '';
     },
   });
   @field cardTitle = contains(StringField, {
@@ -92,390 +158,271 @@ export class SparePart extends CardDef {
     },
   });
 
-  static atom = class Atom extends Component<typeof this> {
+  static isolated = class Isolated extends Component<typeof this> {
+    get stats() {
+      let m = this.args.model;
+      return [
+        { label: 'On hand', value: n(m.onHand) || '0', meta: onHandFact(m) },
+        {
+          label: 'Unit cost',
+          value: unitCost(m) || '—',
+          meta: m.unitCost?.currency?.code ?? '',
+        },
+        {
+          label: 'Reorder qty',
+          value: n(m.reorderQuantity) || '—',
+          meta: m.vendorName ? `from ${m.vendorName}` : '',
+        },
+      ];
+    }
     <template>
-      <span class='sp-atom'><code>{{@model.partNumber}}</code>
-        {{@model.name}}</span>
+      <article class='sp'>
+        <Head @mark='Pt' @title={{@model.name}} @meta={{metaLine @model}}>
+          <StockDots @model={{@model}} />
+        </Head>
+        <Stats @items={{this.stats}} />
+        <div class='cols'>
+          <div class='col'>
+            <Section @title='Stock'>
+              <Kv>
+                <KvRow @label='On hand' @value={{n @model.onHand}} />
+                <KvRow
+                  @label='Reorder point'
+                  @value={{n @model.reorderPoint}}
+                />
+                <KvRow
+                  @label='Reorder quantity'
+                  @value={{n @model.reorderQuantity}}
+                />
+                <KvRow @label='State'><Dot
+                    @tone={{stockTone @model}}
+                    @label={{stockLabel @model}}
+                  /></KvRow>
+              </Kv>
+            </Section>
+            <Section @title='Cost'>
+              <Kv>
+                <KvRow @label='Unit cost' @value={{unitCost @model}} />
+                <KvRow @label='Stock value' @value={{stockValue @model}} />
+                <KvRow @label='Preferred vendor' @value={{@model.vendorName}} />
+              </Kv>
+            </Section>
+            <Section @title='Compatible with'>
+              {{#each @model.compatibleCategories as |c|}}
+                <Row @title={{c.name}} @meta='category' @state={{catCode c}} />
+              {{/each}}
+              {{#each @model.compatibleAssets as |a|}}
+                <Row
+                  @title={{a.name}}
+                  @meta={{a.tag}}
+                  @tone={{assetTone a}}
+                  @state={{label a.status}}
+                />
+              {{/each}}
+              {{#unless (fits @model)}}<p class='empty'>No compatibility
+                  recorded</p>{{/unless}}
+            </Section>
+          </div>
+          <aside class='col side'>
+            <Section @title='Linked'>
+              <Kv>
+                <KvRow @label='Vendor'>{{#if
+                    @model.preferredVendor
+                  }}<@fields.preferredVendor
+                      @format='atom'
+                    />{{else}}—{{/if}}</KvRow>
+                <KvRow @label='Fits'>{{#if
+                    @model.compatibleAssets.length
+                  }}<@fields.compatibleAssets
+                      @format='atom'
+                    />{{else}}—{{/if}}</KvRow>
+                <KvRow @label='Category'>{{#if
+                    @model.compatibleCategories.length
+                  }}<@fields.compatibleCategories
+                      @format='atom'
+                    />{{else}}—{{/if}}</KvRow>
+                {{#if @model.stock}}
+                  <KvRow @label='Stock'><@fields.stock @format='atom' /></KvRow>
+                {{/if}}
+              </Kv>
+            </Section>
+            <Section @title='Details'>
+              <PartDetails @model={{@model}} />
+            </Section>
+          </aside>
+        </div>
+      </article>
       <style scoped>
-        .sp-atom {
+        .sp {
+          container-type: inline-size;
+          min-block-size: 100%;
+          box-sizing: border-box;
+          font-family: var(--font-sans);
           font-size: var(--boxel-font-size-xs);
-          color: var(--foreground);
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
         }
-        code {
-          font-family: var(--font-mono);
-          font-weight: 600;
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+        .col {
+          min-inline-size: 0;
+        }
+        .side {
+          border-inline-start: 1px solid var(--border);
+        }
+        .empty {
+          padding-block: var(--boxel-sp-5xs);
+          color: var(--muted-foreground);
+        }
+        @container (width < 40rem) {
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .side {
+            border-inline-start: 0;
+            border-block-start: 1px solid var(--border);
+          }
         }
       </style>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get hue() {
-      let s = this.args.model.stockState;
-      return s === 'out' ? 'red' : s === 'low' ? 'amber' : 'green';
-    }
-    get stockLabel() {
-      let m = this.args.model;
-      let s = m.stockState;
-      return s === 'out'
-        ? 'out of stock'
-        : s === 'low'
-          ? `low · ${m.onHand}`
-          : `in stock ${m.onHand}`;
-    }
     <template>
-      <div class='sp'>
-        <span class='sp-disc'><PackageIcon class='sp-ico' /></span>
-        <div class='sp-body'>
-          <div class='sp-row'><code
-              class='sp-pn'
-            >{{@model.partNumber}}</code><span
-              class='sp-name'
-            >{{@model.name}}</span></div>
-          <div class='sp-meta'>{{#if
-              @model.vendorName
-            }}{{@model.vendorName}}{{/if}}{{#if @model.unitCostLabel}}
-              ·
-              {{@model.unitCostLabel}}
-              each{{/if}}</div>
+      <article class='emb'>
+        <Head @mark='Pt' @title={{@model.name}} @meta={{metaLine @model}} />
+        <div class='body'>
+          <div class='dots'><StockDots @model={{@model}} /></div>
+          <p class='fact'><strong>{{if @model.onHand @model.onHand 0}}
+              on hand</strong>
+            {{#if @model.reorderPoint}}· {{onHandFact @model}}{{/if}}</p>
+          <PartDetails @model={{@model}} @short={{true}} />
+          <Kv>
+            <KvRow @label='Vendor'>{{#if
+                @model.preferredVendor
+              }}<@fields.preferredVendor
+                  @format='atom'
+                />{{else}}—{{/if}}</KvRow>
+            <KvRow @label='Fits'>{{#if
+                @model.compatibleAssets.length
+              }}<@fields.compatibleAssets
+                  @format='atom'
+                />{{else}}—{{/if}}</KvRow>
+            <KvRow @label='Category'>{{#if
+                @model.compatibleCategories.length
+              }}<@fields.compatibleCategories
+                  @format='atom'
+                />{{else}}—{{/if}}</KvRow>
+          </Kv>
         </div>
-        <StatePill @label={{this.stockLabel}} @hue={{this.hue}} @dot={{true}} />
-      </div>
+      </article>
       <style scoped>
-        .sp {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          min-width: 0;
-          color: var(--foreground);
+        .emb {
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
         }
-        .sp-disc {
-          flex: none;
-          width: 2rem;
-          height: 2rem;
-          border-radius: 50%;
+        .body {
           display: grid;
-          place-items: center;
-          background: var(--muted);
-          color: var(--muted-foreground);
-        }
-        .sp-ico {
-          width: 1rem;
-          height: 1rem;
-        }
-        .sp-body {
-          flex: 1;
-          min-width: 0;
-        }
-        .sp-row {
-          display: flex;
           gap: var(--boxel-sp-xs);
-          align-items: baseline;
-          min-width: 0;
+          padding: 0 var(--boxel-sp-sm) var(--boxel-sp-xs);
         }
-        .sp-pn {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
-          flex: none;
-        }
-        .sp-name {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sp-meta {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
+        .dots {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get hue() {
-      let s = this.args.model.stockState;
-      return s === 'out' ? 'red' : s === 'low' ? 'amber' : 'green';
-    }
-    get stockLabel() {
+    get ratio() {
       let m = this.args.model;
-      let s = m.stockState;
-      return s === 'out'
-        ? 'out'
-        : s === 'low'
-          ? `low · ${m.onHand}`
-          : `${m.onHand} in stock`;
+      let max = Math.max(m.reorderPoint ?? 0, m.onHand ?? 0, 1);
+      return Math.min(100, Math.round(((m.onHand ?? 0) / max) * 100));
     }
     <template>
-      <FittedCard class='fit' @titleTag='h3'>
-        <:eyebrow><span class='mono'>{{if
-              @model.partNumber
-              @model.partNumber
-              'no P/N'
-            }}</span></:eyebrow>
+      <FitTile class='fit'>
+        <:avatar><Mark @text='Pt' @size='lg' /></:avatar>
         <:title>{{@model.name}}</:title>
-        <:subtitle>{{@model.vendorName}}{{#if @model.unitCostLabel}}
-            ·
-            {{@model.unitCostLabel}}{{/if}}</:subtitle>
-        <:meta>reorder at
-          {{@model.reorderPoint}}
-          · qty
-          {{@model.reorderQuantity}}</:meta>
-        <:badge><StatePill
-            @label={{this.stockLabel}}
-            @hue={{this.hue}}
-          /></:badge>
-      </FittedCard>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><span class='dots'><StockDots
+              @model={{@model}}
+            /></span></:status>
+        <:fact><span class='fact'><span><strong>{{if
+                  @model.onHand
+                  @model.onHand
+                  0
+                }}
+                on hand</strong>
+              {{#if @model.reorderPoint}}· {{onHandFact @model}}{{/if}}</span>
+            {{#if @model.reorderPoint}}<ProgressBar
+                @value={{this.ratio}}
+                @label='On hand vs reorder point'
+              />{{/if}}</span></:fact>
+        <:relations>{{#if @model.preferredVendor}}<@fields.preferredVendor
+              @format='atom'
+            />{{/if}}</:relations>
+      </FitTile>
       <style scoped>
         .fit {
-          --fc-title-font-size: var(--boxel-font-size-sm);
-          --fc-subtitle-font-size: var(--boxel-font-size-xs);
+          color: var(--card-foreground);
+          background-color: var(--card);
         }
-        .mono {
-          font-family: var(--font-mono);
+        .dots {
+          display: inline-flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
+        }
+        .fact {
+          display: grid;
+          gap: var(--boxel-sp-5xs);
         }
       </style>
     </template>
   };
 
-  static isolated = class Isolated extends Component<typeof this> {
-    get hue() {
-      let s = this.args.model.stockState;
-      return s === 'out' ? 'red' : s === 'low' ? 'amber' : 'green';
-    }
+  static atom = class Atom extends Component<typeof this> {
     <template>
-      <article class='iso'>
-        <header class='hero'>
-          <div>
-            <p class='eyebrow'>Spare part ·
-              <code>{{@model.partNumber}}</code></p>
-            <h1 class='title'>{{@model.name}}</h1>
-            {{#if @model.description}}<p
-                class='desc'
-              >{{@model.description}}</p>{{/if}}
-          </div>
-          <div class='stock'>
-            <span class='stock-v'>{{if @model.onHand @model.onHand 0}}</span>
-            <StatePill
-              @label={{@model.stockState}}
-              @hue={{this.hue}}
-              @dot={{true}}
-            />
-            <span class='stock-l'>on hand · reorder at
-              {{@model.reorderPoint}}
-              ({{@model.reorderQuantity}}
-              per order)</span>
-          </div>
-        </header>
-        <div class='grid'>
-          <section class='panel'>
-            <h2>Supply</h2>
-            <dl class='facts'>
-              <div><dt>Preferred vendor</dt><dd>{{#if
-                    @model.preferredVendor
-                  }}<@fields.preferredVendor
-                      @format='atom'
-                    />{{else}}—{{/if}}</dd></div>
-              <div><dt>Unit cost</dt><dd>{{if
-                    @model.unitCostLabel
-                    @model.unitCostLabel
-                    '—'
-                  }}</dd></div>
-              <div><dt>Inventory stock</dt><dd>{{#if
-                    @model.stock
-                  }}<@fields.stock @format='atom' />{{else}}local count{{/if}}</dd></div>
-            </dl>
-          </section>
-          <section class='panel'>
-            <h2>Fits</h2>
-            {{#if @model.compatibleCategories.length}}
-              <div class='chips'><@fields.compatibleCategories
-                  @format='atom'
-                /></div>
-            {{/if}}
-            {{#if @model.compatibleAssets.length}}
-              <div class='chips'><@fields.compatibleAssets
-                  @format='atom'
-                /></div>
-            {{/if}}
-            {{#unless @model.compatibleCategories.length}}{{#unless
-                @model.compatibleAssets.length
-              }}<p class='empty'>No compatibility recorded.</p>{{/unless}}{{/unless}}
-          </section>
-        </div>
-      </article>
-      <style scoped>
-        .iso {
-          container-type: inline-size;
-          padding: var(--boxel-sp-lg);
-          display: grid;
-          gap: var(--boxel-sp);
-          color: var(--foreground);
-          background: var(--card);
-        }
-        .hero {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp);
-          flex-wrap: wrap;
-          align-items: flex-start;
-        }
-        .eyebrow {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--muted-foreground);
-        }
-        .eyebrow code {
-          font-family: var(--font-mono);
-          text-transform: none;
-          color: var(--foreground);
-        }
-        .title {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-        }
-        .desc {
-          margin: var(--boxel-sp-4xs) 0 0;
-          color: var(--muted-foreground);
-          max-width: 60ch;
-        }
-        .stock {
-          display: grid;
-          justify-items: end;
-          gap: var(--boxel-sp-4xs);
-          text-align: right;
-        }
-        .stock-v {
-          font-size: 2.5rem;
-          font-weight: 700;
-          line-height: 1;
-          font-variant-numeric: tabular-nums;
-        }
-        .stock-l {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
-          gap: var(--boxel-sp);
-        }
-        .panel {
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius-lg);
-          background: var(--card);
-          box-shadow: var(--shadow-2xs);
-          padding: var(--boxel-sp);
-          display: grid;
-          gap: var(--boxel-sp-sm);
-          align-content: start;
-        }
-        .panel h2 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .facts {
-          margin: 0;
-          display: grid;
-          gap: var(--boxel-sp-xs);
-        }
-        .facts dt {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .facts dd {
-          margin: 0;
-        }
-        .chips {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-xs);
-        }
-        .empty {
-          margin: 0;
-          font-style: italic;
-          color: var(--muted-foreground);
-        }
-      </style>
+      <Chip
+        @bare={{true}}
+        @mark='Pt'
+        @name={{@model.name}}
+        @tone={{stockTone @model}}
+        @meta={{stockLabel @model}}
+      />
     </template>
   };
+}
 
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'fits', label: 'Compatibility' },
-      { id: 'stock', label: 'Stock & supply' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Spare part sections'
-        as |e|
-      >
-        <e.Section @id='identity' @title='Identity' @cols={{2}}>
-          <FieldContainer
-            @label='Part number'
-            @vertical={{true}}
-          ><@fields.partNumber /></FieldContainer>
-          <FieldContainer @label='Name' @vertical={{true}}><@fields.name
-            /></FieldContainer>
-          <FieldContainer
-            @label='Description'
-            @vertical={{true}}
-          ><@fields.description /></FieldContainer>
-        </e.Section>
-        <e.Section @id='fits' @title='Compatibility' @cols={{2}}>
-          <FieldContainer
-            @label='Categories'
-            @vertical={{true}}
-          ><@fields.compatibleCategories /></FieldContainer>
-          <FieldContainer
-            @label='Assets'
-            @vertical={{true}}
-          ><@fields.compatibleAssets /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='stock'
-          @title='Stock & supply'
-          @hint='link an Inventory Stock card or keep a local count'
-          @cols={{2}}
-        >
-          <FieldContainer
-            @label='Inventory stock'
-            @vertical={{true}}
-          ><@fields.stock /></FieldContainer>
-          <FieldContainer
-            @label='Quantity on hand (local)'
-            @vertical={{true}}
-          ><@fields.quantityOnHand /></FieldContainer>
-          <FieldContainer
-            @label='Reorder point'
-            @vertical={{true}}
-          ><@fields.reorderPoint /></FieldContainer>
-          <FieldContainer
-            @label='Reorder quantity'
-            @vertical={{true}}
-          ><@fields.reorderQuantity /></FieldContainer>
-          <FieldContainer
-            @label='Preferred vendor'
-            @vertical={{true}}
-          ><@fields.preferredVendor /></FieldContainer>
-          <FieldContainer
-            @label='Unit cost'
-            @vertical={{true}}
-          ><@fields.unitCost /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-    </template>
-  };
+const PartDetails: TemplateOnlyComponent<{
+  Args: { model: Partial<SparePart>; short?: boolean };
+}> = <template>
+  <Kv>
+    <KvRow @label='On hand' @value={{n @model.onHand}} />
+    <KvRow @label='Reorder point' @value={{n @model.reorderPoint}} />
+    <KvRow @label='Reorder qty' @value={{n @model.reorderQuantity}} />
+    <KvRow @label='Unit cost' @value={{unitCost @model}} />
+    <KvRow @label='Stock value' @value={{stockValue @model}} />
+    <KvRow @label='Vendor' @value={{@model.vendorName}} />
+    {{#unless @short}}
+      <KvRow @label='Part number' @value={{@model.partNumber}} />
+    {{/unless}}
+  </Kv>
+</template>;
+
+function fits(m: Partial<SparePart>): boolean {
+  return (
+    (m.compatibleCategories?.length ?? 0) + (m.compatibleAssets?.length ?? 0) >
+    0
+  );
 }
 
 export default SparePart;

@@ -36,7 +36,11 @@
           "prompt": "Did the evening meet your expectations?",
           "helpText": null,
           "kind": "single-choice",
-          "options": ["Exceeded them", "Met them", "Fell short"],
+          "options": [
+            "Exceeded them",
+            "Met them",
+            "Fell short"
+          ],
           "required": true
         },
         {
@@ -63,6 +67,13 @@
       "adoptsFrom": {
         "module": "../survey",
         "name": "Survey"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

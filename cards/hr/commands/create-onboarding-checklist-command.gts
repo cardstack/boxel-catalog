@@ -9,7 +9,7 @@ import {
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../employee';
 import { Contractor } from '../contractor';
 import { OnboardingTemplate } from '../onboarding-template';
 import { durationInDays } from '../duration-field';

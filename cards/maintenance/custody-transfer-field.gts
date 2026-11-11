@@ -8,11 +8,10 @@ import {
 import DateField from '@cardstack/base/date';
 import DateTimeField from '@cardstack/base/datetime';
 import ArrowRightLeftIcon from '@cardstack/boxel-icons/arrow-right-left';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Dot, hueTone } from './card-ui';
 
-import { CustodyKindField } from './maintenance-vocabulary';
+import { CustodyKindField, type Hue } from './maintenance-vocabulary';
 import { absoluteStamp } from './utils/relative-time';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
 
 const KIND_HUE: Record<string, Hue> = {
   'check-out': 'teal',
@@ -81,9 +80,9 @@ export class CustodyTransferField extends FieldDef {
     }
     <template>
       <div class='ct'>
-        <StatePill
+        <Dot
+          @tone={{hueTone this.hue}}
           @label={{if @model.kind @model.kind 'event'}}
-          @hue={{this.hue}}
         />
         <span class='ct-label'>{{@model.label}}</span>
         <span class='ct-meta'>
@@ -121,33 +120,6 @@ export class CustodyTransferField extends FieldDef {
       <style scoped>
         .ct-atom {
           font-size: var(--boxel-font-size-xs);
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    <template>
-      {{! Custody is written by the Transfer Custody command so the trail stays
-          truthful; edit shows the facts, not inputs. }}
-      <div class='ct-edit'>
-        <span class='ct-current'>{{@model.label}}</span>
-        <p class='ct-note'>Change custody with the Transfer Custody action so
-          the owner, the status and the trail all move together.</p>
-      </div>
-      <style scoped>
-        .ct-edit {
-          display: grid;
-          gap: var(--boxel-sp-4xs);
-          font-size: var(--boxel-font-size-sm);
-        }
-        .ct-current {
-          font-weight: 500;
-        }
-        .ct-note {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
         }
       </style>
     </template>

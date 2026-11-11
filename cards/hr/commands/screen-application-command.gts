@@ -12,17 +12,13 @@ import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search
 
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 
-import { Application } from '@cardstack/catalog/cards/hr/application';
-import { Candidate } from '@cardstack/catalog/cards/hr/candidate';
-import type { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Application } from '../application';
+import { Candidate } from '../candidate';
+import type { Employee } from '../employee';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
-const employeeRef = codeRef(
-  here,
-  '@cardstack/catalog/cards/hr/employee',
-  'Employee',
-);
+const employeeRef = codeRef(here, '../employee', 'Employee');
 
 class ScreenApplicationInput extends CardDef {
   @field application = linksTo(() => Application, { searchable: true });

@@ -3,7 +3,7 @@
     "type": "card",
     "attributes": {
       "cardInfo": {
-        "name": "Ticket queue — three open tickets",
+        "name": "Ticket queue \u2014 three open tickets",
         "summary": "Queue View alone, then with the Work Rail choosing its lens",
         "notes": null,
         "cardThumbnailURL": null
@@ -23,6 +23,11 @@
       "tickets.2": {
         "links": {
           "self": "../../Ticket/checkout-500s"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/site-tools"
         }
       }
     },

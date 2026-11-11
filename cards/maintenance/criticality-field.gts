@@ -7,10 +7,9 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Dot, hueTone } from './card-ui';
 
 import {
-  CRITICALITY,
   CriticalityLevelField,
   criticalityLevel,
 } from './maintenance-vocabulary';
@@ -57,15 +56,9 @@ export class CriticalityField extends FieldDef {
     }
     <template>
       <div class='crit'>
-        <StatePill
+        <Dot
+          @tone={{hueTone (if this.level this.level.hue 'slate')}}
           @label={{if this.level this.level.label 'Unrated'}}
-          @hue={{if this.level this.level.hue 'slate'}}
-          @dot={{true}}
-          @emphatic={{if
-            this.level
-            (if (this.isTop this.level.rank) true false)
-            false
-          }}
         />
         {{#if this.level}}
           <span class='crit-target'>respond within
@@ -95,45 +88,10 @@ export class CriticalityField extends FieldDef {
       return criticalityLevel(this.args.model.level);
     }
     <template>
-      <StatePill
+      <Dot
+        @tone={{hueTone (if this.level this.level.hue 'slate')}}
         @label={{if this.level this.level.label 'Unrated'}}
-        @hue={{if this.level this.level.hue 'slate'}}
       />
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    levels = CRITICALITY;
-    <template>
-      <div class='crit-edit'>
-        <@fields.level />
-        <p class='crit-hint'>
-          {{#each this.levels as |l|}}
-            <span class='crit-hint-row'><strong>{{l.label}}</strong>
-              — respond within
-              {{l.responseTargetHours}}
-              h, defaults to
-              {{l.defaultPriority}}</span>
-          {{/each}}
-        </p>
-      </div>
-      <style scoped>
-        .crit-edit {
-          display: grid;
-          gap: var(--boxel-sp-xs);
-        }
-        .crit-hint {
-          margin: 0;
-          display: grid;
-          gap: var(--boxel-sp-5xs);
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .crit-hint strong {
-          color: var(--foreground);
-          font-weight: 600;
-        }
-      </style>
     </template>
   };
 }

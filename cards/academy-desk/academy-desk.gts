@@ -15,12 +15,24 @@ import {
   realmURL,
   type getCards,
 } from '@cardstack/runtime-common';
-import { FittedCard } from '@cardstack/boxel-ui/components';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import SchoolIcon from '@cardstack/boxel-icons/school';
+import HouseIcon from '@cardstack/boxel-icons/house';
+import BookIcon from '@cardstack/boxel-icons/book';
+import UsersIcon from '@cardstack/boxel-icons/users';
+import UserIcon from '@cardstack/boxel-icons/user';
+import AwardIcon from '@cardstack/boxel-icons/award';
+import ArrowLeftIcon from '@cardstack/boxel-icons/arrow-left';
 
 import { Button } from '@cardstack/pretui/components/button';
 import { LoadingState } from '@cardstack/pretui/components/loading-state';
-import { Tabs } from '@cardstack/pretui/components/tabs';
+import {
+  Sidebar,
+  SidebarGroup,
+  SidebarItem,
+  SidebarTrigger,
+} from '@cardstack/pretui/components/sidebar';
+import { FitTile } from '../shared/fit-tile';
 import { CertificationAuthority } from '../audit/certification-authority';
 import { Employee } from '../hr/employee';
 import { Course, CourseStatusField, COURSE_STATUSES } from '../academy/course';
@@ -31,28 +43,29 @@ import {
   CertificateStatusField,
   CERTIFICATE_STATUSES,
 } from '../academy/certificate';
-import { statusHue } from '../../fields/status/status';
-import { type TableColumn } from '../../components/table';
-import { StatePill } from '../../components/state-pill';
+import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { AcademyHome } from '../academy/components/academy-home';
 import { CohortWorkspace } from '../academy/components/cohort-workspace';
 import {
-  CollectionShell,
-  type CollectionBadge,
-} from '../../components/collection-shell';
+  DeskList,
+  type DeskColumn,
+  type DeskStat,
+} from '../academy/components/desk-parts';
 
 type Tab = 'home' | 'courses' | 'cohorts' | 'learners' | 'certificates';
-const TABS: { value: Tab; label: string }[] = [
-  { value: 'home', label: 'Home' },
-  { value: 'courses', label: 'Courses' },
-  { value: 'cohorts', label: 'Cohorts' },
-  { value: 'learners', label: 'Learners' },
-  { value: 'certificates', label: 'Certificates' },
-];
 
-function eq(a: unknown, b: unknown) {
-  return a === b;
+interface TabSpec {
+  id: Tab;
+  label: string;
+  icon: typeof HouseIcon;
 }
+const TABS: TabSpec[] = [
+  { id: 'home', label: 'Home', icon: HouseIcon },
+  { id: 'courses', label: 'Courses', icon: BookIcon },
+  { id: 'cohorts', label: 'Cohorts', icon: UsersIcon },
+  { id: 'learners', label: 'Learners', icon: UserIcon },
+  { id: 'certificates', label: 'Certificates', icon: AwardIcon },
+];
 
 // Issued certificates carry a timestamp; show the local calendar day.
 function formatIssued(value?: Date | string | null): string {
@@ -70,28 +83,44 @@ function formatIssued(value?: Date | string | null): string {
   });
 }
 
-function statusBadges(
+function countBy(items: any[], field: string, value: string) {
+  return items.filter((i) => i?.[field] === value).length;
+}
+
+// "All · 6" then one chip per status.
+function statusChips(
   items: any[],
   field: string,
   options: { value: string; label?: string }[],
-): CollectionBadge[] {
+) {
   return [
-    { id: 'all', label: 'All', count: items.length },
+    { value: 'all', label: 'All', count: items.length },
     ...options.map((o) => ({
-      id: o.value,
-      label: o.label ?? o.value,
-      count: items.filter((i) => i?.[field] === o.value).length,
-      field,
       value: o.value,
+      label: o.label ?? o.value,
+      count: countBy(items, field, o.value),
     })),
   ];
+}
+
+function matches(row: any, text: string, keys: string[]) {
+  if (!text) return true;
+  let t = text.toLowerCase();
+  return keys.some((k) =>
+    String(row?.[k] ?? '')
+      .toLowerCase()
+      .includes(t),
+  );
 }
 
 // The isolated desk, hoisted out of the card class so its fields can be
 // @tracked.
 class AcademyDeskIsolated extends Component<typeof AcademyDesk> {
+  tabs = TABS;
   @tracked tab: Tab = 'home';
   @tracked openCohort: Cohort | undefined;
+  @tracked search = '';
+  @tracked chip = 'all';
   private coursesQ: ReturnType<getCards> | undefined;
   private cohortsQ: ReturnType<getCards> | undefined;
   private learnersQ: ReturnType<getCards> | undefined;
@@ -165,117 +194,216 @@ class AcademyDeskIsolated extends Component<typeof AcademyDesk> {
     return `Loading ${this.tab}…`;
   }
 
-  courseColumns: TableColumn[] = [
-    { key: 'code', label: 'Code', width: '6rem', value: (c: any) => c.code },
-    { key: 'title', label: 'Course', value: (c: any) => c.cardTitle },
-    {
-      key: 'level',
-      label: 'Level',
-      showAbove: 640,
-      value: (c: any) => c.levelLabel,
-    },
-    {
-      key: 'modules',
-      label: 'Modules',
-      align: 'end',
-      value: (c: any) => c.moduleCount,
-    },
-    {
-      key: 'credit',
-      label: 'Credit',
-      align: 'end',
-      showAbove: 480,
-      value: (c: any) => c.creditHours,
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      custom: true,
-      sortValue: (c: any) => c.status,
-    },
+  countOf = (id: Tab): string | undefined => {
+    let list = {
+      home: undefined,
+      courses: this.coursesQ,
+      cohorts: this.cohortsQ,
+      learners: this.learnersQ,
+      certificates: this.certsQ,
+    }[id];
+    return list?.instances ? String(this.instancesOf(list).length) : undefined;
+  };
+
+  get current(): TabSpec {
+    return TABS.find((t) => t.id === this.tab) ?? TABS[0]!;
+  }
+
+  get subtitle(): string {
+    switch (this.tab) {
+      case 'home':
+        return this.args.model.tagline ?? 'Course & cohort learning';
+      case 'courses':
+        return `${this.courses.length} in this realm`;
+      case 'cohorts':
+        return `${this.cohorts.length} cohorts across every course`;
+      case 'learners':
+        return `${this.learners.length} learners enrolled or invited`;
+      default:
+        return `${this.certificates.length} certificates issued by this academy`;
+    }
+  }
+
+  // Rows after the chip and the search box.
+  private narrow(rows: any[], field: string, keys: string[]) {
+    let text = this.search.trim();
+    return rows.filter(
+      (r) =>
+        (this.chip === 'all' || r?.[field] === this.chip) &&
+        matches(r, text, keys),
+    );
+  }
+
+  courseColumns: DeskColumn[] = [
+    { key: 'cardTitle', label: 'Course', name: true },
+    { key: 'code', label: 'Code', mono: true },
+    { key: 'levelLabel', label: 'Level' },
+    { key: 'moduleCount', label: 'Modules', align: 'end', mono: true },
+    { key: 'creditHours', label: 'Credit', align: 'end', mono: true },
+    { key: 'status', label: 'Status', status: true },
   ];
-  cohortColumns: TableColumn[] = [
-    { key: 'name', label: 'Cohort', value: (c: any) => c.cardTitle },
-    {
-      key: 'course',
-      label: 'Course',
-      showAbove: 640,
-      value: (c: any) => c.courseCode,
-    },
-    {
-      key: 'term',
-      label: 'Term',
-      value: (c: any) => c.termLabel,
-      sortValue: (c: any) => c.term?.start ?? '',
-    },
+  cohortColumns: DeskColumn[] = [
+    { key: 'cardTitle', label: 'Cohort', name: true },
+    { key: 'courseCode', label: 'Course', mono: true },
+    { key: 'termLabel', label: 'Term', mono: true },
     {
       key: 'week',
       label: 'Week',
       align: 'end',
+      mono: true,
       value: (c: any) =>
         `${c.currentWeek ? c.currentWeek : '—'}/${c.weekCount}`,
     },
-    {
-      key: 'status',
-      label: 'Status',
-      custom: true,
-      sortValue: (c: any) => c.status,
-    },
+    { key: 'status', label: 'Status', status: true },
   ];
-  learnerColumns: TableColumn[] = [
-    { key: 'name', label: 'Learner', value: (l: any) => l.title },
-    {
-      key: 'email',
-      label: 'Email',
-      showAbove: 640,
-      value: (l: any) => l.email,
-    },
-    {
-      key: 'org',
-      label: 'Organisation',
-      showAbove: 480,
-      value: (l: any) => l.organisation,
-    },
-    {
-      key: 'tz',
-      label: 'Zone',
-      showAbove: 900,
-      value: (l: any) => l.timezone,
-    },
+  learnerColumns: DeskColumn[] = [
+    { key: 'title', label: 'Learner', name: true },
+    { key: 'email', label: 'Email', mono: true },
+    { key: 'organisation', label: 'Organization' },
+    { key: 'timezone', label: 'Zone', mono: true },
   ];
-  certColumns: TableColumn[] = [
-    { key: 'number', label: 'Number', value: (c: any) => c.number },
-    { key: 'learner', label: 'Learner', value: (c: any) => c.learnerName },
-    {
-      key: 'course',
-      label: 'Course',
-      showAbove: 640,
-      value: (c: any) => c.courseTitle,
-    },
-    {
-      key: 'letter',
-      label: 'Final',
-      align: 'end',
-      showAbove: 480,
-      value: (c: any) => c.finalLetter,
-    },
+  certColumns: DeskColumn[] = [
+    { key: 'number', label: 'Number', name: true },
+    { key: 'learnerName', label: 'Learner' },
+    { key: 'courseTitle', label: 'Course' },
+    { key: 'finalLetter', label: 'Final', align: 'end', mono: true },
     {
       key: 'issued',
       label: 'Issued',
+      mono: true,
       value: (c: any) => formatIssued(c.issuedAt),
-      sortValue: (c: any) => new Date(c.issuedAt ?? 0).getTime(),
     },
-    {
-      key: 'status',
-      label: 'Status',
-      custom: true,
-      sortValue: (c: any) => c.certStatus,
-    },
+    { key: 'certStatus', label: 'Status', status: true },
   ];
 
-  setTab = (value: string) => {
-    this.tab = value as Tab;
+  courseStatus = (c: any) => ({
+    label: c.status,
+    hue: statusHue(CourseStatusField, c.status),
+  });
+  cohortStatus = (c: any) => ({
+    label: c.status,
+    hue: statusHue(CohortStatusField, c.status),
+  });
+  certStatus = (c: any) => ({
+    label: c.statusLabel,
+    hue: statusHue(CertificateStatusField, c.certStatus),
+  });
+
+  // Status counts in the strip, the same numbers as the chips.
+  private statusStats(
+    items: any[],
+    field: string,
+    options: { value: string; label?: string; hue?: string }[],
+    fieldClass: any,
+  ): DeskStat[] {
+    return [
+      { label: 'Total', value: items.length },
+      ...options.map((o) => ({
+        label: o.label ?? o.value,
+        value: countBy(items, field, o.value),
+        hue: statusHue(fieldClass, o.value),
+      })),
+    ];
+  }
+
+  get courseStats() {
+    return this.statusStats(
+      this.courses,
+      'status',
+      COURSE_STATUSES,
+      CourseStatusField,
+    );
+  }
+  get cohortStats() {
+    return this.statusStats(
+      this.cohorts,
+      'status',
+      COHORT_STATUSES,
+      CohortStatusField,
+    );
+  }
+  get certStats() {
+    return this.statusStats(
+      this.certificates,
+      'certStatus',
+      CERTIFICATE_STATUSES,
+      CertificateStatusField,
+    );
+  }
+  get orgs(): string[] {
+    return [
+      ...new Set(
+        this.learners.map((l) => l.organisation).filter(Boolean) as string[],
+      ),
+    ].sort();
+  }
+  get learnerStats(): DeskStat[] {
+    return [
+      { label: 'Total', value: this.learners.length },
+      ...this.orgs.slice(0, 4).map((o) => ({
+        label: o,
+        value: countBy(this.learners, 'organisation', o),
+      })),
+    ];
+  }
+
+  get courseChips() {
+    return statusChips(this.courses, 'status', COURSE_STATUSES);
+  }
+  get cohortChips() {
+    return statusChips(this.cohorts, 'status', COHORT_STATUSES);
+  }
+  get certChips() {
+    return statusChips(this.certificates, 'certStatus', CERTIFICATE_STATUSES);
+  }
+  get learnerChips() {
+    return [
+      { value: 'all', label: 'All', count: this.learners.length },
+      ...this.orgs.map((o) => ({
+        value: o,
+        label: o,
+        count: countBy(this.learners, 'organisation', o),
+      })),
+    ];
+  }
+
+  get courseRows() {
+    return this.narrow(this.courses, 'status', ['cardTitle', 'code']);
+  }
+  get cohortRows() {
+    return this.narrow(this.cohorts, 'status', ['cardTitle', 'courseCode']);
+  }
+  get learnerRows() {
+    return this.narrow(this.learners, 'organisation', [
+      'title',
+      'email',
+      'organisation',
+    ]);
+  }
+  get certRows() {
+    return this.narrow(this.certificates, 'certStatus', [
+      'number',
+      'learnerName',
+      'courseTitle',
+    ]);
+  }
+
+  setTab = (value: Tab) => {
+    this.tab = value;
     this.openCohort = undefined;
+    this.search = '';
+    this.chip = 'all';
+  };
+  // On the phone the rail is a drawer; picking a tab closes it.
+  navTo = (bar: { mobile?: boolean; toggle?: () => void }, id: Tab) => {
+    this.setTab(id);
+    if (bar.mobile) bar.toggle?.();
+  };
+  setSearch = (v: string) => {
+    this.search = v;
+  };
+  setChip = (v: string) => {
+    this.chip = v;
   };
   showCohort = (cohort: Cohort) => {
     this.openCohort = cohort;
@@ -290,40 +418,6 @@ class AcademyDeskIsolated extends Component<typeof AcademyDesk> {
     }
   };
 
-  courseHue = (c: any) => statusHue(CourseStatusField, c.status);
-  cohortHue = (c: any) => statusHue(CohortStatusField, c.status);
-  certHue = (c: any) => statusHue(CertificateStatusField, c.certStatus);
-
-  get courseBadges() {
-    return statusBadges(this.courses, 'status', COURSE_STATUSES);
-  }
-  get cohortBadges() {
-    return statusBadges(this.cohorts, 'status', COHORT_STATUSES);
-  }
-  get learnerBadges(): CollectionBadge[] {
-    let orgs = [
-      ...new Set(
-        this.learners.map((l) => l.organisation).filter(Boolean) as string[],
-      ),
-    ].sort();
-    return [
-      { id: 'all', label: 'All', count: this.learners.length },
-      ...orgs.map((o) => ({
-        id: o,
-        label: o,
-        count: this.learners.filter((l) => l.organisation === o).length,
-        field: 'organisation',
-        value: o,
-      })),
-    ];
-  }
-  get certBadges() {
-    return statusBadges(this.certificates, 'certStatus', CERTIFICATE_STATUSES);
-  }
-
-  refOf = (cls: typeof CardDef) =>
-    identifyCard(cls) as { module: string; name: string } | undefined;
-
   // The host's createCard opens a new instance of the type, in edit mode, in
   // this realm.
   createFor = (cls: typeof CardDef) => () => {
@@ -336,259 +430,277 @@ class AcademyDeskIsolated extends Component<typeof AcademyDesk> {
   };
 
   <template>
-    <div class='desk'>
-      <header class='top'>
-        <div class='brand'>
-          <span class='mark' aria-hidden='true'>A</span>
-          <div>
-            <h1>{{@model.cardTitle}}</h1>
-            {{#if @model.tagline}}<p class='tag'>{{@model.tagline}}</p>{{/if}}
+    <div class='app'>
+      <Sidebar
+        class='shell'
+        @label='Academy Desk'
+        @collapsible='rail'
+        @railBreakpoint={{1100}}
+        @mobileBreakpoint={{720}}
+        @bordered={{true}}
+        @scroll='content'
+        @resizable={{true}}
+      >
+        <:header as |bar|>
+          <div class='brand'>
+            <span class='brand-mark' aria-hidden='true'>Ad</span>
+            {{#unless bar.collapsed}}
+              <span class='brand-name'><small>Course &amp; cohort learning</small>{{@model.cardTitle}}</span>
+            {{/unless}}
           </div>
-        </div>
-        <Tabs
-          class='tabs'
-          aria-label='Academy sections'
-          @options={{TABS}}
-          @value={{this.tab}}
-          @onValueChange={{this.setTab}}
-        />
-        <p class='who' role='status'>
-          {{#if @model.actor}}
-            <span class='who-l'>Acting as</span>
-            <b>{{@model.actor.name}}</b>
-          {{else}}
-            <span class='who-l warn'>No instructor set. Edit the desk to choose
-              who is acting.</span>
-          {{/if}}
-        </p>
-      </header>
-
-      <main class='body'>
-        {{#if this.openCohort}}
-          <div class='crumb'>
-            <Button
-              @tone='neutral'
-              @appearance='plain'
-              @size='s'
-              {{on 'click' this.backToCohorts}}
-            >← Cohorts</Button>
-            <span class='crumb-name'>{{this.openCohort.cardTitle}}</span>
-            <StatePill
-              @label={{this.openCohort.status}}
-              @hue={{this.cohortHue this.openCohort}}
-              @dot={{true}}
-            />
-            <span class='muted'>{{this.openCohort.termLabel}}</span>
-            <Button
-              class='right'
-              @tone='neutral'
-              @appearance='plain'
-              @size='s'
-              {{on 'click' (fn this.view this.openCohort)}}
-            >Open card ↗</Button>
-          </div>
-          <CohortWorkspace
-            @cohort={{this.openCohort}}
-            @context={{@context}}
-            @actor={{@model.actor}}
-            @authority={{@model.authority}}
-            @onOpenCard={{this.view}}
-          />
-
-        {{else if (eq this.tab 'home')}}
-          <AcademyHome
-            @context={{@context}}
-            @realms={{this.realms}}
-            @onOpenCohort={{this.showCohort}}
-            @onOpenCourse={{this.view}}
-            @onOpenSubmission={{this.view}}
-          />
-
-        {{else if this.tabLoading}}
-          <LoadingState class='loading' @label={{this.loadingLabel}} />
-
-        {{else if (eq this.tab 'courses')}}
-          <CollectionShell
-            @noun='courses'
-            @singular='Course'
-            @cardTypeRef={{this.refOf Course}}
-            @items={{this.courses}}
-            @realms={{this.realms}}
-            @context={{@context}}
-            @badges={{this.courseBadges}}
-            @columns={{this.courseColumns}}
-            @onOpen={{this.view}}
-            @onAdd={{this.createFor Course}}
-          >
-            <:cell as |c col|>
-              {{#if (eq col.key 'status')}}
-                <StatePill @label={{c.status}} @hue={{this.courseHue c}} />
+        </:header>
+        <:nav as |bar|>
+          <SidebarGroup @label='Academy' @hideLabel={{bar.collapsed}}>
+            {{#each this.tabs as |t|}}
+              <SidebarItem
+                @label={{t.label}}
+                @badge={{unless bar.collapsed (this.countOf t.id)}}
+                @active={{eq t.id this.tab}}
+                @collapsed={{bar.collapsed}}
+                @onClick={{fn this.navTo bar t.id}}
+              >
+                <:icon><t.icon aria-hidden='true' /></:icon>
+              </SidebarItem>
+            {{/each}}
+          </SidebarGroup>
+        </:nav>
+        <:footer as |bar|>
+          {{#unless bar.collapsed}}
+            <p class='who'>
+              <span class='cap'>Acting as</span>
+              {{#if @model.actor}}
+                <b>{{@model.actor.name}}</b>
+              {{else}}
+                <span class='warn'>No instructor set. Edit the desk to choose
+                  who is acting.</span>
               {{/if}}
-            </:cell>
-          </CollectionShell>
+            </p>
+          {{/unless}}
+        </:footer>
+        <:default as |bar|>
+          <main class='main'>
+            {{#if bar.mobile}}
+              <SidebarTrigger
+                @open={{bar.open}}
+                @onToggle={{bar.toggle}}
+                @controls={{bar.controls}}
+                @label='Menu'
+              />
+            {{/if}}
 
-        {{else if (eq this.tab 'cohorts')}}
-          <CollectionShell
-            @noun='cohorts'
-            @singular='Cohort'
-            @cardTypeRef={{this.refOf Cohort}}
-            @items={{this.cohorts}}
-            @realms={{this.realms}}
-            @context={{@context}}
-            @badges={{this.cohortBadges}}
-            @columns={{this.cohortColumns}}
-            @onOpen={{this.showCohort}}
-            @onAdd={{this.createFor Cohort}}
-          >
-            <:cell as |c col|>
-              {{#if (eq col.key 'status')}}
-                <StatePill @label={{c.status}} @hue={{this.cohortHue c}} />
+            {{#if this.openCohort}}
+              <header class='head'>
+                <p class='cap'>Academy Desk · Cohorts</p>
+                <h1>{{this.openCohort.cardTitle}}</h1>
+                <p class='sub'>{{this.openCohort.courseCode}}
+                  ·
+                  {{this.openCohort.termLabel}}</p>
+              </header>
+              <div class='crumb'>
+                <Button
+                  @icon={{ArrowLeftIcon}}
+                  @tone='neutral'
+                  @appearance='outlined'
+                  @size='s'
+                  {{on 'click' this.backToCohorts}}
+                >Cohorts</Button>
+                <Button
+                  @tone='neutral'
+                  @appearance='outlined'
+                  @size='s'
+                  {{on 'click' (fn this.view this.openCohort)}}
+                >Open card</Button>
+              </div>
+              <CohortWorkspace
+                @cohort={{this.openCohort}}
+                @context={{@context}}
+                @actor={{@model.actor}}
+                @authority={{@model.authority}}
+                @onOpenCard={{this.view}}
+              />
+            {{else}}
+              <header class='head'>
+                <p class='cap'>Academy Desk · {{this.current.label}}</p>
+                <h1>{{this.current.label}}</h1>
+                <p class='sub'>{{this.subtitle}}</p>
+              </header>
+
+              {{#if (eq this.tab 'home')}}
+                <AcademyHome
+                  @context={{@context}}
+                  @realms={{this.realms}}
+                  @onOpenCohort={{this.showCohort}}
+                  @onOpenCourse={{this.view}}
+                  @onOpenSubmission={{this.view}}
+                  @onNewCohort={{this.createFor Cohort}}
+                />
+              {{else if this.tabLoading}}
+                <LoadingState class='loading' @label={{this.loadingLabel}} />
+              {{else if (eq this.tab 'courses')}}
+                <DeskList
+                  @title='Courses'
+                  @noun='courses'
+                  @mark='Co'
+                  @stats={{this.courseStats}}
+                  @chips={{this.courseChips}}
+                  @chip={{this.chip}}
+                  @onChip={{this.setChip}}
+                  @search={{this.search}}
+                  @onSearch={{this.setSearch}}
+                  @newLabel='New course'
+                  @onNew={{this.createFor Course}}
+                  @rows={{this.courseRows}}
+                  @columns={{this.courseColumns}}
+                  @statusOf={{this.courseStatus}}
+                  @onOpen={{this.view}}
+                />
+              {{else if (eq this.tab 'cohorts')}}
+                <DeskList
+                  @title='Cohorts'
+                  @noun='cohorts'
+                  @mark='Ch'
+                  @stats={{this.cohortStats}}
+                  @chips={{this.cohortChips}}
+                  @chip={{this.chip}}
+                  @onChip={{this.setChip}}
+                  @search={{this.search}}
+                  @onSearch={{this.setSearch}}
+                  @newLabel='New cohort'
+                  @onNew={{this.createFor Cohort}}
+                  @rows={{this.cohortRows}}
+                  @columns={{this.cohortColumns}}
+                  @statusOf={{this.cohortStatus}}
+                  @onOpen={{this.showCohort}}
+                />
+              {{else if (eq this.tab 'learners')}}
+                <DeskList
+                  @title='Learners'
+                  @noun='learners'
+                  @mark='Le'
+                  @avatar={{true}}
+                  @stats={{this.learnerStats}}
+                  @chips={{this.learnerChips}}
+                  @chip={{this.chip}}
+                  @onChip={{this.setChip}}
+                  @search={{this.search}}
+                  @onSearch={{this.setSearch}}
+                  @newLabel='New learner'
+                  @onNew={{this.createFor Learner}}
+                  @rows={{this.learnerRows}}
+                  @columns={{this.learnerColumns}}
+                  @onOpen={{this.view}}
+                />
+              {{else}}
+                <DeskList
+                  @title='Certificates'
+                  @noun='certificates'
+                  @mark='Ce'
+                  @stats={{this.certStats}}
+                  @chips={{this.certChips}}
+                  @chip={{this.chip}}
+                  @onChip={{this.setChip}}
+                  @search={{this.search}}
+                  @onSearch={{this.setSearch}}
+                  @rows={{this.certRows}}
+                  @columns={{this.certColumns}}
+                  @statusOf={{this.certStatus}}
+                  @onOpen={{this.view}}
+                />
               {{/if}}
-            </:cell>
-          </CollectionShell>
-
-        {{else if (eq this.tab 'learners')}}
-          <CollectionShell
-            @noun='learners'
-            @singular='Learner'
-            @cardTypeRef={{this.refOf Learner}}
-            @items={{this.learners}}
-            @realms={{this.realms}}
-            @context={{@context}}
-            @badges={{this.learnerBadges}}
-            @columns={{this.learnerColumns}}
-            @onOpen={{this.view}}
-            @onAdd={{this.createFor Learner}}
-          />
-
-        {{else}}
-          <CollectionShell
-            @noun='certificates'
-            @singular='Certificate'
-            @cardTypeRef={{this.refOf Certificate}}
-            @items={{this.certificates}}
-            @realms={{this.realms}}
-            @context={{@context}}
-            @badges={{this.certBadges}}
-            @columns={{this.certColumns}}
-            @onOpen={{this.view}}
-          >
-            <:cell as |c col|>
-              {{#if (eq col.key 'status')}}
-                <StatePill @label={{c.statusLabel}} @hue={{this.certHue c}} />
-              {{/if}}
-            </:cell>
-          </CollectionShell>
-        {{/if}}
-      </main>
+            {{/if}}
+          </main>
+        </:default>
+      </Sidebar>
     </div>
     <style scoped>
-      .desk {
-        min-height: 100%;
-        display: grid;
-        grid-template-rows: auto 1fr;
-        color: var(--foreground);
-        background: var(--background);
+      .app {
         container-type: inline-size;
+        block-size: 100%;
+        min-block-size: 0;
+        overflow: hidden;
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-xs);
       }
-      .top {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: var(--boxel-sp-lg);
-        align-items: center;
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border);
-        background: var(--card);
+      .shell {
+        block-size: 100%;
+        min-block-size: 0;
       }
       .brand {
         display: flex;
-        gap: var(--boxel-sp-sm);
         align-items: center;
+        gap: var(--boxel-sp-xs);
       }
-      .mark {
-        width: 2.5rem;
-        height: 2.5rem;
+      .brand-mark {
         display: grid;
         place-items: center;
+        inline-size: 1.75rem;
+        block-size: 1.75rem;
         border-radius: var(--radius);
-        background: var(--primary);
-        color: var(--primary-foreground);
-        font-size: var(--boxel-font-size-md);
-        font-weight: 800;
-      }
-      .tag {
+        background: var(--muted);
+        font-family: var(--font-mono);
+        font-weight: 600;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
+        flex: none;
       }
-      .tabs {
-        justify-self: center;
+      .brand-name {
+        display: grid;
+        font-weight: 700;
+        font-size: var(--boxel-font-size-sm);
+      }
+      .brand-name small,
+      .cap {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-weight: 600;
+        font-size: var(--boxel-font-size-2xs, var(--boxel-font-size-xs));
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
       }
       .who {
-        font-size: var(--boxel-font-size-sm);
-        text-align: end;
+        display: grid;
+        gap: var(--boxel-sp-5xs);
+        padding: var(--boxel-sp-xs);
+        border-top: 1px solid var(--border);
       }
-      .who-l {
+      .warn {
         color: var(--muted-foreground);
       }
-      .who-l.warn {
-        color: var(--warning-ink);
-      }
-      .body {
+      .main {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-lg);
-        display: grid;
-        gap: var(--boxel-sp);
-        align-content: start;
+        min-width: 0;
       }
-      .loading {
-        justify-self: center;
-        padding: var(--boxel-sp-xl);
+      .head {
+        display: grid;
+        gap: var(--boxel-sp-5xs);
+      }
+      h1 {
+        font-weight: 400;
+        font-size: var(--boxel-font-size-2xl);
+        line-height: var(--boxel-line-height-xl);
+        text-transform: uppercase;
+      }
+      .sub {
+        margin: 0;
+        color: var(--muted-foreground);
       }
       .crumb {
         display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-sm);
-        align-items: center;
-        font-size: var(--boxel-font-size-sm);
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+        --control-height: 1.625rem;
       }
-      .crumb-name {
-        font-size: var(--boxel-font-size-lg);
-        font-weight: 700;
+      .loading {
+        align-self: center;
+        padding: var(--boxel-sp-xl);
       }
-      .right {
-        margin-left: auto;
-      }
-      .muted {
-        color: var(--muted-foreground);
-      }
-      @media (prefers-reduced-motion: no-preference) {
-        .body > * {
-          animation: desk-enter 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-        }
-      }
-      @keyframes desk-enter {
-        from {
-          opacity: 0;
-          transform: translateY(0.375rem);
-        }
-        to {
-          opacity: 1;
-          transform: none;
-        }
-      }
-      @container (width <= 47.5rem) {
-        .top {
-          grid-template-columns: 1fr;
-          gap: var(--boxel-sp-sm);
-        }
-        .tabs {
-          justify-self: start;
-          max-width: 100%;
-          overflow-x: auto;
-        }
-        .who {
-          text-align: start;
-        }
-        .body {
+      @container (width <= 45rem) {
+        .main {
           padding: var(--boxel-sp);
         }
       }
@@ -684,20 +796,16 @@ export class AcademyDesk extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>Academy desk</:eyebrow>
+      <FitTile>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{if
             @model.tagline
             @model.tagline
             'Course & cohort learning'
           }}</:subtitle>
-        <:meta>
-          {{#if @model.actor}}
-            <span>Acting as {{@model.actor.name}}</span>
-          {{/if}}
-        </:meta>
-      </FittedCard>
+        <:fact>{{#if @model.actor}}Acting as
+            {{@model.actor.name}}{{/if}}</:fact>
+      </FitTile>
     </template>
   };
 }

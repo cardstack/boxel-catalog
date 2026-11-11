@@ -27,6 +27,11 @@
         "links": {
           "self": "../Lesson/m3-experiments-live"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

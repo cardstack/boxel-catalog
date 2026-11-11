@@ -14,18 +14,12 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { Button } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
 import TicketIcon from '@cardstack/boxel-icons/ticket';
 import { Alert } from '@cardstack/pretui/components/alert';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { Token } from '@cardstack/pretui/components/token';
-import {
-  ALERT_STYLE,
-  COMPACT_EMPTY_STYLE,
-} from '@cardstack/catalog/components/pretui-helpers';
+import { FitTile } from '../shared/fit-tile';
 
-import { Contact } from '@cardstack/catalog/cards/crm/contact';
-import { Money } from '@cardstack/catalog/cards/crm/money';
+import { Contact } from '../crm/contact';
 import { Event } from './event';
 import RsvpStatusField from './rsvp-status-field';
 import { statusField } from '@cardstack/catalog/fields/status/status';
@@ -65,17 +59,78 @@ export const BookingPaymentStatusField = markDefinition(
   }),
 );
 
-function placesOf(quantity?: number | null): string {
+function ticketsOf(quantity?: number | null): string {
   let q = quantity ?? 1;
-  return q === 1 ? '1 place' : `${q} places`;
+  return q === 1 ? '1 ticket' : `${q} tickets`;
+}
+
+function priceOf(b?: Booking | null): string {
+  let amount = b?.totalPrice?.amount;
+  if (typeof amount !== 'number') return '';
+  let code = b?.totalPrice?.currency?.code;
+  try {
+    return new Intl.NumberFormat('en-GB', {
+      style: code ? 'currency' : 'decimal',
+      currency: code ?? undefined,
+      minimumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return String(amount);
+  }
+}
+
+/** "Sat 12 Sep, 15:00" */
+function whenOf(d?: Date | string | null): string {
+  let date = d ? new Date(d) : undefined;
+  if (!date || isNaN(+date)) return '';
+  return date.toLocaleString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+// Dot tone per state: settled is ok, owed is a warning, a refund is a stop.
+const TONE: Record<string, string> = {
+  Paid: 'ok',
+  Unpaid: 'warn',
+  Refunded: 'bad',
+  Going: 'info',
+  Declined: 'bad',
+};
+
+function toneOf(value?: string | null): string {
+  return TONE[value ?? ''] ?? '';
+}
+
+function lower(value?: string | null): string {
+  return (value ?? '').toLowerCase();
+}
+
+function subtitleOf(b?: Booking | null): string {
+  return [b?.holder?.name, b?.event?.cardTitle].filter(Boolean).join(' · ');
 }
 
 class BookingIsolated extends Component<typeof Booking> {
   @tracked runningAction: 'confirm' | 'check-in' | undefined;
   @tracked actionProblem: string | undefined;
 
-  get places() {
-    return placesOf(this.args.model.quantity);
+  get tickets() {
+    return ticketsOf(this.args.model.quantity);
+  }
+  get price() {
+    return priceOf(this.args.model as Booking);
+  }
+  get subtitle() {
+    return subtitleOf(this.args.model as Booking);
+  }
+  get kickOff() {
+    return whenOf(this.args.model.event?.startsAt);
+  }
+  get checkedIn() {
+    return whenOf(this.args.model.checkedInAt);
   }
 
   get realm(): string | undefined {
@@ -92,10 +147,6 @@ class BookingIsolated extends Component<typeof Booking> {
   get canConfirm(): boolean {
     let m = this.args.model;
     return this.canAct && !m.checkedInAt && m.rsvp !== 'Going';
-  }
-
-  get hasActions(): boolean {
-    return this.canConfirm || this.canCheckIn;
   }
 
   get canCheckIn(): boolean {
@@ -145,173 +196,304 @@ class BookingIsolated extends Component<typeof Booking> {
   };
 
   <template>
-    <article class='bk-page'>
-      <header class='bh'>
-        <div class='bh-id'>
-          <p class='doc-kind'>Booking</p>
-          <h1>{{if @model.reference @model.reference 'No reference'}}</h1>
-          <p class='bh-places'>{{this.places}}</p>
+    <article class='rec'>
+      <header class='head'>
+        <span class='mark' aria-hidden='true'>Bk</span>
+        <div class='id'>
+          <h1 class='name'>{{@model.cardTitle}}</h1>
+          {{#if this.subtitle}}<p class='meta'>{{this.subtitle}}</p>{{/if}}
         </div>
-        <div class='bh-standing'>
-          {{#if @model.rsvp}}<@fields.rsvp @format='embedded' />{{/if}}
+        <span class='sts'>
           {{#if @model.paymentStatus}}
-            <@fields.paymentStatus @format='embedded' />
+            <span class='dot-text'><span
+                class='dot {{toneOf @model.paymentStatus}}'
+              ></span>{{lower @model.paymentStatus}}</span>
           {{/if}}
-        </div>
+          {{#if @model.rsvp}}
+            <span class='dot-text'><span
+                class='dot {{toneOf @model.rsvp}}'
+              ></span>{{lower @model.rsvp}}</span>
+          {{/if}}
+        </span>
+        {{#if this.canConfirm}}
+          <Button
+            @tone='neutral'
+            @appearance='outlined'
+            @size='s'
+            @busy={{eq this.runningAction 'confirm'}}
+            {{on 'click' this.confirm}}
+          >Confirm</Button>
+        {{/if}}
+        {{#if this.canCheckIn}}
+          <Button
+            @tone='primary'
+            @appearance='accent'
+            @size='s'
+            @busy={{eq this.runningAction 'check-in'}}
+            {{on 'click' this.checkIn}}
+          >Check in</Button>
+        {{/if}}
       </header>
-      {{#if @model.event}}
-        <section class='panel'>
-          <h2>Event</h2>
-          <div class='linked'><@fields.event @format='embedded' /></div>
-        </section>
+      {{#if this.actionProblem}}
+        <Alert class='problem' @tone='danger'>{{this.actionProblem}}</Alert>
       {{/if}}
-      {{#if @model.holder}}
-        <section class='panel'>
-          <h2>Holder</h2>
-          <div class='linked'><@fields.holder @format='embedded' /></div>
-        </section>
-      {{/if}}
-      <section class='panel'>
-        <h2>Attendance</h2>
-        {{#if @model.checkedInAt}}
-          <p class='fact'>Checked in <@fields.checkedInAt /></p>
-        {{else if this.hasActions}}
-          <EmptyState
-            style={{COMPACT_EMPTY_STYLE}}
-            @title='Not checked in'
-            @texture={{false}}
-          >
-            <:action>
-              <div class='actions'>
-                {{#if this.canConfirm}}
-                  <Button
-                    @kind='secondary-light'
-                    @size='small'
-                    @loading={{eq this.runningAction 'confirm'}}
-                    {{on 'click' this.confirm}}
-                  >Confirm</Button>
-                {{/if}}
-                {{#if this.canCheckIn}}
-                  <Button
-                    @kind='primary'
-                    @size='small'
-                    @loading={{eq this.runningAction 'check-in'}}
-                    {{on 'click' this.checkIn}}
-                  >Check in</Button>
-                {{/if}}
-              </div>
-            </:action>
-          </EmptyState>
-        {{else}}
-          <EmptyState
-            style={{COMPACT_EMPTY_STYLE}}
-            @title='Not checked in'
-            @texture={{false}}
-          />
-        {{/if}}
-        {{#if this.actionProblem}}
-          <Alert class='problem' @tone='danger' style={{ALERT_STYLE.danger}}>
-            {{this.actionProblem}}
-          </Alert>
-        {{/if}}
-      </section>
-      {{#if @model.totalPrice.amount}}
-        <section class='panel'>
-          <h2>Price</h2>
-          <Money
-            class='price'
-            @amount={{@model.totalPrice.amount}}
-            @code={{@model.totalPrice.currency.code}}
-          />
-        </section>
-      {{/if}}
+      <dl class='stats' aria-label='Key numbers'>
+        <div class='stat'>
+          <dt>Tickets</dt>
+          <dd class='num'>{{if @model.quantity @model.quantity 1}}</dd>
+          <dd class='sub'>{{if @model.rsvp @model.rsvp 'No RSVP'}}</dd>
+        </div>
+        <div class='stat'>
+          <dt>Total</dt>
+          <dd class='num'>{{if this.price this.price '—'}}</dd>
+          <dd class='sub'>{{if
+              @model.paymentStatus
+              (lower @model.paymentStatus)
+              '—'
+            }}</dd>
+        </div>
+        <div class='stat'>
+          <dt>Check-in</dt>
+          <dd class='num'>{{if this.checkedIn this.checkedIn '—'}}</dd>
+          <dd class='sub'>{{if
+              @model.checkedInAt
+              'arrived'
+              'not yet arrived'
+            }}</dd>
+        </div>
+      </dl>
+      <div class='cols'>
+        <div class='main'>
+          <section class='sec'>
+            <h2>Fixture</h2>
+            <dl class='kv'>
+              <dt>Event</dt><dd>{{if
+                  @model.eventTitle
+                  @model.eventTitle
+                  '—'
+                }}</dd>
+              <dt>Kick-off</dt><dd>{{if this.kickOff this.kickOff '—'}}</dd>
+              <dt>Venue</dt><dd>{{if
+                  @model.event.venue.name
+                  @model.event.venue.name
+                  '—'
+                }}</dd>
+            </dl>
+          </section>
+          <section class='sec'>
+            <h2>Payment</h2>
+            <dl class='kv'>
+              <dt>Total price</dt><dd>{{if this.price this.price '—'}}</dd>
+              <dt>Payment status</dt><dd>{{if
+                  @model.paymentStatus
+                  @model.paymentStatus
+                  '—'
+                }}</dd>
+              <dt>RSVP</dt><dd>{{if @model.rsvp @model.rsvp '—'}}</dd>
+            </dl>
+          </section>
+        </div>
+        <aside class='side'>
+          <section class='sec'>
+            <h2>Linked</h2>
+            <dl class='kv'>
+              <dt>Holder</dt><dd>{{#if @model.holder}}<@fields.holder
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</dd>
+              <dt>Fixture</dt><dd>{{#if @model.event}}<@fields.event
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</dd>
+            </dl>
+          </section>
+          <section class='sec'>
+            <h2>Details</h2>
+            <dl class='kv'>
+              <dt>Quantity</dt><dd>{{this.tickets}}</dd>
+              <dt>Total</dt><dd>{{if this.price this.price '—'}}</dd>
+              <dt>Payment</dt><dd>{{if
+                  @model.paymentStatus
+                  @model.paymentStatus
+                  '—'
+                }}</dd>
+              <dt>RSVP</dt><dd>{{if @model.rsvp @model.rsvp '—'}}</dd>
+              <dt>Kick-off</dt><dd>{{if this.kickOff this.kickOff '—'}}</dd>
+              <dt>Checked in</dt><dd>{{if
+                  this.checkedIn
+                  this.checkedIn
+                  'Not yet'
+                }}</dd>
+              <dt>Holder</dt><dd>{{if
+                  @model.holderName
+                  @model.holderName
+                  '—'
+                }}</dd>
+              <dt>Fixture</dt><dd>{{if
+                  @model.eventTitle
+                  @model.eventTitle
+                  '—'
+                }}</dd>
+            </dl>
+          </section>
+        </aside>
+      </div>
     </article>
     <style scoped>
-      .bk-page {
-        max-width: 40rem;
-        margin: 0 auto;
-        padding: 2rem 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1.25rem;
+      .rec {
+        container-type: inline-size;
+        margin: var(--boxel-sp-sm);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-xs);
+        overflow: hidden;
       }
-      .bh {
+      .head {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 1rem;
-        border-bottom: 0.125rem solid var(--foreground);
-        padding-bottom: 1.25rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-sm);
+        border-bottom: 1px solid var(--border);
       }
-      .bh-id {
+      .mark {
+        display: inline-grid;
+        place-items: center;
+        flex-shrink: 0;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.375rem;
+        background-color: var(--muted);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 700;
+      }
+      .id {
         flex: 1;
         min-width: 0;
       }
-      .doc-kind {
-        margin: 0 0 0.125rem;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      h1 {
-        font-size: 1.5rem;
-        line-height: 1.1;
+      .name {
+        margin: 0;
         font-family: var(--font-mono);
-        letter-spacing: 0.04em;
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
       }
-      .bh-places {
-        margin: 0.25rem 0 0;
-        font-size: 0.875rem;
+      .meta {
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
-      .bh-standing {
+      .sts {
         display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 0.375rem;
-        flex-shrink: 0;
+        gap: var(--boxel-sp-xs);
       }
-      .panel {
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 1rem 1.25rem;
-        background-color: var(--card);
-        color: var(--card-foreground);
+      .dot-text {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-5xs);
+        font-weight: 600;
       }
-      h2 {
-        margin: 0 0 0.75rem;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
+      .dot {
+        width: 0.4375rem;
+        height: 0.4375rem;
+        border-radius: 50%;
+        background-color: var(--muted-foreground);
       }
-      .linked {
-        border: 1px solid var(--border);
-        border-radius: 0.5rem;
+      .dot.ok {
+        background-color: var(--success);
       }
-      .fact {
-        font-size: 0.875rem;
+      .dot.warn {
+        background-color: var(--warning);
       }
-      .actions {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.5rem;
+      .dot.bad {
+        background-color: var(--destructive);
+      }
+      .dot.info {
+        background-color: var(--primary);
       }
       .problem {
-        margin-top: 0.75rem;
-        --text-ui-md: 0.8125rem;
+        margin: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
-      .price {
-        display: block;
-        font-size: 0.9375rem;
+      .stats {
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+        border-bottom: 1px solid var(--border);
+      }
+      .stat {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-6xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border-right: 1px solid var(--border);
+        min-width: 0;
+      }
+      .stat dt,
+      .stat dd {
+        margin: 0;
+      }
+      .stat dt,
+      .kv dt {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .num {
+        font-size: var(--boxel-font-size-lg);
+        font-weight: 700;
+        line-height: 1.2;
+        font-variant-numeric: tabular-nums;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .sub {
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+      .main {
+        border-right: 1px solid var(--border);
+      }
+      @container (max-width: 44rem) {
+        .cols {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .main {
+          border-right: 0;
+          border-bottom: 1px solid var(--border);
+        }
+      }
+      .sec + .sec {
+        border-top: 1px solid var(--border);
+      }
+      h2 {
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
+      }
+      .kv {
+        display: grid;
+        grid-template-columns: 8rem minmax(0, 1fr);
+        margin: 0;
+        padding: 0 var(--boxel-sp-sm) var(--boxel-sp-4xs);
+      }
+      .kv dt,
+      .kv dd {
+        margin: 0;
+        padding: var(--boxel-sp-4xs) 0;
+        border-top: 1px solid var(--border);
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
       }
     </style>
   </template>
@@ -370,188 +552,278 @@ export class Booking extends CardDef {
 
   static atom = class Atom extends Component<typeof Booking> {
     <template>
-      <span class='bk-atom'>
-        <TicketIcon class='bk-icon' />
-        <span class='bk-ref'>{{if
-            @model.reference
-            @model.reference
-            'No reference'
-          }}</span>
+      <span class='atom'>
+        <span class='mark' aria-hidden='true'>Bk</span>
+        <span class='name'>{{@model.cardTitle}}</span>
       </span>
       <style scoped>
-        .bk-atom {
+        .atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.25rem;
-          font-size: 0.8125rem;
+          gap: var(--boxel-sp-4xs);
+          max-width: 100%;
+          min-width: 0;
+          font-size: var(--boxel-font-size-xs);
+          color: var(--card-foreground);
         }
-        .bk-icon {
-          width: 0.875rem;
-          height: 0.875rem;
+        .mark {
+          display: inline-grid;
+          place-items: center;
           flex-shrink: 0;
-          color: var(--muted-foreground);
+          width: 1.125rem;
+          height: 1.125rem;
+          border-radius: 0.25rem;
+          background-color: var(--muted);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 700;
         }
-        .bk-ref {
-          font-family: var(--font-mono);
-          letter-spacing: 0.04em;
+        .name {
+          min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          font-family: var(--font-mono);
+          font-weight: 600;
         }
       </style>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof Booking> {
-    get places() {
-      return placesOf(this.args.model.quantity);
+    get subtitle() {
+      return subtitleOf(this.args.model as Booking);
+    }
+    get price() {
+      return priceOf(this.args.model as Booking);
+    }
+    get kickOff() {
+      return whenOf(this.args.model.event?.startsAt);
+    }
+    get checkedIn() {
+      return whenOf(this.args.model.checkedInAt);
+    }
+    get tickets() {
+      return ticketsOf(this.args.model.quantity);
     }
     <template>
-      <div class='bk'>
-        <div class='bk-id'>
-          <Token
-            class='bk-ref'
-            @value={{if @model.reference @model.reference 'No reference'}}
-          />
-          <span class='bk-meta'>
-            {{if @model.holder.name @model.holder.name 'Unassigned'}}
-            ·
-            {{this.places}}
-            {{#if @model.checkedInAt}}· checked in{{/if}}
+      <article class='emb'>
+        <header class='head'>
+          <span class='mark' aria-hidden='true'>Bk</span>
+          <div class='id'>
+            <h3 class='name'>{{@model.cardTitle}}</h3>
+            {{#if this.subtitle}}<p class='meta'>{{this.subtitle}}</p>{{/if}}
+          </div>
+          <span class='sts'>
+            {{#if @model.paymentStatus}}
+              <span class='dot-text'><span
+                  class='dot {{toneOf @model.paymentStatus}}'
+                ></span>{{lower @model.paymentStatus}}</span>
+            {{/if}}
+            {{#if @model.rsvp}}
+              <span class='dot-text'><span
+                  class='dot {{toneOf @model.rsvp}}'
+                ></span>{{lower @model.rsvp}}</span>
+            {{/if}}
           </span>
-        </div>
-        <span class='bk-payment'>
-          {{#if @model.paymentStatus}}
-            <@fields.paymentStatus @format='atom' />
+        </header>
+        <dl class='kv'>
+          <dt>Quantity</dt><dd>{{this.tickets}}</dd>
+          <dt>Total</dt><dd>{{if this.price this.price '—'}}</dd>
+          <dt>Kick-off</dt><dd>{{if this.kickOff this.kickOff '—'}}</dd>
+          <dt>Checked in</dt><dd>{{if
+              this.checkedIn
+              this.checkedIn
+              'Not yet'
+            }}</dd>
+          {{#if @model.holder}}
+            <dt>Holder</dt><dd><@fields.holder
+                @format='atom'
+                @displayContainer={{false}}
+              /></dd>
           {{/if}}
-        </span>
-        <span class='bk-rsvp'>
-          {{#if @model.rsvp}}<@fields.rsvp @format='atom' />{{/if}}
-        </span>
-      </div>
+          {{#if @model.event}}
+            <dt>Fixture</dt><dd><@fields.event
+                @format='atom'
+                @displayContainer={{false}}
+              /></dd>
+          {{/if}}
+        </dl>
+      </article>
       <style scoped>
-        .bk {
+        .emb {
+          font-size: var(--boxel-font-size-xs);
+          color: var(--card-foreground);
+        }
+        .head {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.875rem;
-        }
-        .bk-id {
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           min-width: 0;
+        }
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          flex-shrink: 0;
+          width: 1.5rem;
+          height: 1.5rem;
+          border-radius: 0.25rem;
+          background-color: var(--muted);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 700;
+        }
+        .id {
           flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
+          min-width: 0;
         }
-        /* Pret UI Token at the row's title size, inked from --primary-ink
-           (8.24:1 light / 8.14:1 dark on its own tint) and clipped with an
-           ellipsis like a title. */
-        .bk-ref {
-          --pretui-token-font-size: 0.8125rem;
-          --pretui-primary-ink: var(--primary-ink);
-          align-self: flex-start;
-          max-width: 100%;
-          margin-inline: 0;
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .bk-meta {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
+        .name,
+        .meta {
+          margin: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        /* Constant-width trailing slots so booking rows column-align. */
-        .bk-payment {
-          width: 4.5rem;
-          display: inline-flex;
-          justify-content: flex-end;
+        .name {
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .meta {
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
+        }
+        .sts {
+          display: flex;
+          gap: var(--boxel-sp-xs);
           flex-shrink: 0;
         }
-        .bk-rsvp {
-          width: 5.25rem;
+        .dot-text {
           display: inline-flex;
-          justify-content: flex-end;
-          flex-shrink: 0;
+          align-items: center;
+          gap: var(--boxel-sp-5xs);
+          font-weight: 600;
+        }
+        .dot {
+          width: 0.375rem;
+          height: 0.375rem;
+          border-radius: 50%;
+          background-color: var(--muted-foreground);
+        }
+        .dot.ok {
+          background-color: var(--success);
+        }
+        .dot.warn {
+          background-color: var(--warning);
+        }
+        .dot.bad {
+          background-color: var(--destructive);
+        }
+        .dot.info {
+          background-color: var(--primary);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 6rem minmax(0, 1fr);
+          margin: 0;
+          padding: 0 var(--boxel-sp-sm) var(--boxel-sp-4xs);
+          border-top: 1px solid var(--border);
+        }
+        .kv dt,
+        .kv dd {
+          margin: 0;
+          padding: var(--boxel-sp-4xs) 0;
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .kv > :nth-child(n + 3) {
+          border-top: 1px solid var(--border);
+        }
+        .kv dt {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof Booking> {
-    get places() {
-      return placesOf(this.args.model.quantity);
+    get fact() {
+      let price = priceOf(this.args.model as Booking);
+      let tickets = ticketsOf(this.args.model.quantity);
+      return price ? `${tickets} · ${price}` : tickets;
     }
     <template>
-      <div class='fitted'>
-        <Token
-          class='ref'
-          @value={{if @model.reference @model.reference 'No reference'}}
-        />
-        <span class='meta line-places'>{{this.places}}</span>
-        <span class='line-rsvp'>
-          {{#if @model.rsvp}}<@fields.rsvp @format='atom' />{{/if}}
-        </span>
-        {{#if @model.checkedInAt}}
-          <span class='meta line-checkin'>Checked in
-            <@fields.checkedInAt /></span>
-        {{/if}}
-      </div>
+      <FitTile>
+        <:avatar><span class='mark' aria-hidden='true'>Bk</span></:avatar>
+        <:title><span class='ref'>{{@model.cardTitle}}</span></:title>
+        <:subtitle>{{if
+            @model.holderName
+            @model.holderName
+            'Unassigned'
+          }}</:subtitle>
+        <:status>
+          {{#if @model.paymentStatus}}
+            <span class='dot-text'><span
+                class='dot {{toneOf @model.paymentStatus}}'
+              ></span>{{lower @model.paymentStatus}}</span>
+          {{/if}}
+          {{#if @model.rsvp}}
+            <span class='dot-text'><span
+                class='dot {{toneOf @model.rsvp}}'
+              ></span>{{lower @model.rsvp}}</span>
+          {{/if}}
+        </:status>
+        <:fact>{{this.fact}}</:fact>
+        <:relations>{{#if @model.event}}<@fields.event
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
       <style scoped>
-        .fitted {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: 0.25rem;
-          width: 100%;
-          height: 100%;
-          padding: 0.625rem 0.75rem;
-          box-sizing: border-box;
-          overflow: hidden;
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          width: 1.5rem;
+          height: 1.5rem;
+          border-radius: 0.25rem;
+          background-color: var(--muted);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 700;
         }
-        /* Pret UI Token at the fitted title size; see Embedded. */
         .ref {
-          --pretui-token-font-size: 0.75rem;
-          --pretui-primary-ink: var(--primary-ink);
-          align-self: flex-start;
-          max-width: 100%;
-          margin-inline: 0;
+          font-family: var(--font-mono);
+        }
+        .dot-text {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-5xs);
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          white-space: nowrap;
         }
-        .meta {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
+        .dot {
+          width: 0.375rem;
+          height: 0.375rem;
+          border-radius: 50%;
+          background-color: var(--muted-foreground);
         }
-        .line-places,
-        .line-rsvp,
-        .line-checkin {
-          display: none;
+        .dot.ok {
+          background-color: var(--success);
         }
-        /* Badge degradation: strip height keeps only the first line. */
-        @container fitted-card (max-height: 50px) {
-          .fitted {
-            padding: 0.25rem 0.5rem;
-            gap: 0.125rem;
-          }
+        .dot.warn {
+          background-color: var(--warning);
         }
-        @container fitted-card (min-height: 65px) {
-          .line-rsvp {
-            display: inline-flex;
-          }
+        .dot.bad {
+          background-color: var(--destructive);
         }
-        @container fitted-card (min-height: 170px) {
-          .line-places {
-            display: block;
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .line-checkin {
-            display: block;
-          }
+        .dot.info {
+          background-color: var(--primary);
         }
       </style>
     </template>

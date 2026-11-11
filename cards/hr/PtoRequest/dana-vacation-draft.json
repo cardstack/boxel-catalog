@@ -5,7 +5,7 @@
       "ptoType": "vacation",
       "startDate": "2026-12-21",
       "endDate": "2026-12-31",
-      "reason": "End-of-year break \u2014 still checking the December payroll close schedule before submitting.",
+      "reason": "End-of-year break — still checking the December payroll close schedule before submitting.",
       "requestedDate": "2026-08-10",
       "approvalChain": {
         "startedAt": null,
@@ -22,6 +22,11 @@
       "employee": {
         "links": {
           "self": "../Employee/dana-kim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

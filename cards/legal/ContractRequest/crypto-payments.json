@@ -21,6 +21,11 @@
         "links": {
           "self": "../../hr/Employee/leo-park"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

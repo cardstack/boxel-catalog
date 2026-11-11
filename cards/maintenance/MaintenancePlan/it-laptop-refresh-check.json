@@ -58,6 +58,11 @@
         "links": {
           "self": "../AssetCategory/it-hardware"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

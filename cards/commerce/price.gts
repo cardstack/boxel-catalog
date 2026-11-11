@@ -54,9 +54,9 @@ export class Price extends CardDef {
         .price-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 600;
           color: var(--foreground);
         }
         .pa-icon {
@@ -93,9 +93,9 @@ export class Price extends CardDef {
         .price-row {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .icon {
           width: 20px;
@@ -108,11 +108,11 @@ export class Price extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .chip {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.04em;
-          padding: 0.125rem 0.5rem;
+          padding: var(--boxel-sp-6xs) var(--boxel-sp-xs);
           border-radius: 999px;
           background: var(--muted);
           color: var(--muted-foreground);
@@ -157,7 +157,7 @@ export class Price extends CardDef {
           box-sizing: border-box;
           overflow: hidden;
           align-items: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
         }
         .doc-icon {
           width: 18px;
@@ -168,14 +168,14 @@ export class Price extends CardDef {
         .figure {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           white-space: nowrap;
         }
         .chip {
-          font-size: 0.625rem;
+          font-size: 0.5625rem;
           font-weight: 600;
           text-transform: uppercase;
-          padding: 0.125rem 0.4375rem;
+          padding: var(--boxel-sp-6xs) var(--boxel-sp-2xs);
           border-radius: 999px;
           background: var(--muted);
           color: var(--muted-foreground);
@@ -186,14 +186,14 @@ export class Price extends CardDef {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 0.5rem;
+            padding: var(--boxel-sp-xs);
             text-align: center;
           }
         }
         @container fitted-card (min-width: 151px) {
           .strip {
             display: flex;
-            padding: 0.625rem 0.75rem;
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           }
         }
       </style>
@@ -229,38 +229,36 @@ export class Price extends CardDef {
         .price-page {
           max-width: 32rem;
           margin: 0 auto;
-          padding: 2rem 1.5rem;
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: var(--boxel-sp);
         }
         .ph {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           border-bottom: 2px solid var(--foreground);
-          padding-bottom: 1.25rem;
+          padding-bottom: var(--boxel-sp-lg);
         }
         .doc-kind {
-          margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.14em;
           color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
-          font-size: 2rem;
+          font-size: var(--boxel-font-size-xl);
           line-height: 1.1;
           font-variant-numeric: tabular-nums;
         }
         .chip {
           align-self: flex-start;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           text-transform: uppercase;
-          padding: 0.1875rem 0.625rem;
+          padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
           border-radius: 999px;
           background: var(--muted);
           color: var(--muted-foreground);

@@ -5,21 +5,17 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import CurrencyField from '@cardstack/base/currency';
 import { Command, realmURL } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import {
-  Invoice,
-  InvoiceStatusField,
-  invoiceAmounts,
-} from '@cardstack/catalog/cards/commerce/invoice';
-import { canTransition } from '@cardstack/catalog/cards/commerce/payment-status-field';
-import { Account } from '@cardstack/catalog/cards/crm/account';
-import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
+import { Invoice, InvoiceStatusField, invoiceAmounts } from '../invoice';
+import { canTransition } from '../payment-status-field';
+import { Account } from '../../crm/account';
+import { PurchaseOrder } from '../../procurement/purchase-order';
 import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
 import {
   findCards,
   getCard,
   inputCard,
 } from '@cardstack/catalog/utils/find-card';
-import { Payment } from '@cardstack/catalog/cards/commerce/payment';
+import { Payment } from '../payment';
 
 export class RecordPaymentInput extends CardDef {
   @field invoice = linksTo(Invoice, { searchable: true });

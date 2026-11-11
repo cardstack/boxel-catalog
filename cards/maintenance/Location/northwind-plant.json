@@ -25,6 +25,13 @@
         "module": "../../events/location",
         "name": "Location"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

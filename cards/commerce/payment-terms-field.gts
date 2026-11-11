@@ -10,7 +10,6 @@ import NumberField from '@cardstack/base/number';
 // Imported from its own module, never through `payment` — that path runs
 // through the payment↔invoice cycle and yields undefined.
 import { PaymentMethodField } from './payment-method-field';
-import { PaymentTermsEditor } from '../procurement/components/payment-terms-editor';
 
 // Negotiated payment terms as one value — "2/10 net 30" as data, not a
 // string someone parses later. The computed `shorthand` renders the
@@ -60,7 +59,7 @@ export class PaymentTermsField extends FieldDef {
           align-items: baseline;
           gap: var(--boxel-sp-xs);
           flex-wrap: wrap;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .shorthand {
           font-weight: 700;
@@ -71,7 +70,7 @@ export class PaymentTermsField extends FieldDef {
         }
         .notes {
           flex-basis: 100%;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>
@@ -85,15 +84,9 @@ export class PaymentTermsField extends FieldDef {
         .terms-atom {
           font-weight: 600;
           font-variant-numeric: tabular-nums;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    <template>
-      <PaymentTermsEditor @fields={{@fields}} @shorthand={{@model.shorthand}} />
     </template>
   };
 }

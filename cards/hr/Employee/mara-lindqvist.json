@@ -19,6 +19,13 @@
         "module": "../employee",
         "name": "Employee"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }
