@@ -212,7 +212,7 @@ export class Feed extends GlimmerComponent<Signature> {
         color: var(--foreground);
       }
       .feed-tagline {
-        font-size: 0.625rem;
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--feed-rule);
@@ -229,13 +229,13 @@ export class Feed extends GlimmerComponent<Signature> {
         line-height: 1.6;
         /* Long unbroken strings — a pasted URL, a stack trace — otherwise
            push the whole thread sideways. */
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
+        min-width: 0;
       }
       .feed-system {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }

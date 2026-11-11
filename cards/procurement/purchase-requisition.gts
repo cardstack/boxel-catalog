@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -60,13 +61,15 @@ const STATUS_HUES: Record<string, 'slate' | 'amber' | 'green' | 'red'> = {
   rejected: 'red',
 };
 
-export const RequisitionStatusField = enumField(StringField, {
-  options: REQUISITION_STATUSES.map((value) => ({
-    value,
-    label: REQUISITION_STATUS_LABELS[value],
-  })),
-  displayName: 'Requisition Status',
-});
+export const RequisitionStatusField = markDefinition(
+  enumField(StringField, {
+    options: REQUISITION_STATUSES.map((value) => ({
+      value,
+      label: REQUISITION_STATUS_LABELS[value],
+    })),
+    displayName: 'Requisition Status',
+  }),
+);
 
 class PurchaseRequisitionEdit extends Component<typeof PurchaseRequisition> {
   @tracked activeSection = 'whats-needed';

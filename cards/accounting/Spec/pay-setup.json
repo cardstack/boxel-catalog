@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Pay Setup\n\nHow the books pay one employee, linked to their HR `Employee` card: salary or hourly rate, pay schedule, the expense account and class wages post to, filing status and allowances, and recurring deductions with the liability each is owed onward on. A salary left empty reads the HR card's salary.\n\n```ts\nimport { PaySetup } from '@cardstack/catalog/cards/accounting/ledger-payroll';\n```",
+      "ref": {
+        "module": "../ledger-payroll",
+        "name": "PaySetup"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Pay Setup",
+      "cardDescription": "How the books pay an HR employee: rate, schedule, withholding and deductions.",
+      "cardInfo": {
+        "name": "Pay Setup",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PaySetup/dana-kim"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

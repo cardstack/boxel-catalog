@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   field,
   contains,
@@ -18,10 +19,12 @@ export const APPROVAL_STATES = [
   'Declined',
 ] as const;
 
-export const ApprovalStateField = enumField(StringField, {
-  displayName: 'Approval',
-  options: APPROVAL_STATES as unknown as string[],
-});
+export const ApprovalStateField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Approval',
+    options: APPROVAL_STATES as unknown as string[],
+  }),
+);
 
 /**
  * Somebody wants something they are entitled to ask for.

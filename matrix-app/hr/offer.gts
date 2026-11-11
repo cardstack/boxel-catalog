@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import {
   CardDef,
@@ -123,12 +124,17 @@ export function offerStatusLabel(status?: string | null): string | undefined {
   return OFFER_STATUS_LABELS[status] ?? status;
 }
 
-export const OfferStatusField = dotEnumField(
-  {
-    options: OFFER_STATUSES.map((status) => ({ value: status, label: status })),
-    displayName: 'Offer Status',
-  },
-  OFFER_STATUS_HUES,
+export const OfferStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: OFFER_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Offer Status',
+    },
+    OFFER_STATUS_HUES,
+  ),
 );
 
 // The status chip's tone: a draft is neutral, an offer out for reply is
@@ -547,13 +553,8 @@ class OfferIsolated extends Component<typeof Offer> {
     </IsoPage>
     <style scoped>
       .muted {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
-      }
-      .letter-doc {
-        max-height: 24rem;
-        overflow-y: auto;
-        min-width: 0;
       }
     </style>
   </template>
@@ -687,7 +688,7 @@ export class Offer extends CardDef {
             --pretui-avatar-size: 1.25rem;
             display: inline-flex;
             align-items: center;
-            gap: 0.375rem;
+            gap: var(--boxel-sp-2xs);
             max-width: 100%;
             min-width: 0;
             /* a chip that cannot fit whole wraps onto a clipped second line
@@ -695,12 +696,12 @@ export class Offer extends CardDef {
             flex-wrap: wrap;
             align-content: flex-start;
             block-size: 1.375rem;
-            row-gap: 1.375rem;
+            row-gap: var(--boxel-sp-lg);
             overflow: hidden;
             vertical-align: middle;
             font-size: var(--boxel-font-size-xs);
             font-weight: 600;
-            line-height: 1.375rem;
+            line-height: 1;
             white-space: nowrap;
             color: var(--foreground);
           }
@@ -809,13 +810,15 @@ export class Offer extends CardDef {
         .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-          font: 500 0.6875rem var(--font-mono);
+          font-weight: 500;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
       </style>

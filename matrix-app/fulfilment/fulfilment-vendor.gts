@@ -229,7 +229,7 @@ export class FulfilmentVendor extends CardDef {
         .ven {
           container-type: inline-size;
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           color: var(--card-foreground);
           background-color: var(--card);
@@ -260,7 +260,7 @@ export class FulfilmentVendor extends CardDef {
           border-radius: calc(var(--radius) * 0.6);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
           color: var(--foreground);
         }
@@ -268,16 +268,15 @@ export class FulfilmentVendor extends CardDef {
           min-width: 0;
         }
         .name {
-          margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           letter-spacing: normal;
           text-transform: none;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .bar {
@@ -311,7 +310,7 @@ export class FulfilmentVendor extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -338,7 +337,7 @@ export class FulfilmentVendor extends CardDef {
           white-space: nowrap;
         }
         .num {
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           line-height: 1.1;
           font-variant-numeric: tabular-nums;
@@ -356,7 +355,7 @@ export class FulfilmentVendor extends CardDef {
           margin: 0;
           padding: var(--boxel-sp-sm) var(--boxel-sp-sm) var(--boxel-sp-4xs);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           letter-spacing: normal;
           text-transform: none;
@@ -374,14 +373,19 @@ export class FulfilmentVendor extends CardDef {
           border-top: 1px solid var(--border);
           background: none;
           color: inherit;
-          font: inherit;
+          font-family: inherit;
+          font-size: inherit;
+          font-weight: inherit;
+          line-height: inherit;
           text-align: start;
         }
         button.row {
           cursor: pointer;
         }
-        button.row:hover {
-          background-color: var(--muted);
+        @media (hover: hover) {
+          button.row:hover {
+            background-color: var(--muted);
+          }
         }
         button.row:focus-visible {
           outline: 2px solid var(--ring);
@@ -426,7 +430,8 @@ export class FulfilmentVendor extends CardDef {
         .kv dd {
           padding: 0 var(--boxel-sp-sm);
           min-width: 0;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
+          min-width: 0;
         }
         .mono {
           font-family: var(--font-mono);
@@ -470,7 +475,7 @@ export class FulfilmentVendor extends CardDef {
       <style scoped>
         .emb {
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           color: var(--card-foreground);
           background-color: var(--card);
@@ -490,7 +495,7 @@ export class FulfilmentVendor extends CardDef {
           border-radius: calc(var(--radius) * 0.6);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .id {
@@ -498,8 +503,7 @@ export class FulfilmentVendor extends CardDef {
           min-width: 0;
         }
         h3 {
-          margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -507,7 +511,7 @@ export class FulfilmentVendor extends CardDef {
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -552,7 +556,7 @@ export class FulfilmentVendor extends CardDef {
         .kv dt {
           padding-left: var(--boxel-sp-sm);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -612,7 +616,7 @@ export class FulfilmentVendor extends CardDef {
           border-radius: calc(var(--radius) * 0.6);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           color: var(--foreground);
         }

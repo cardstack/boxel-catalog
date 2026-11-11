@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "employeeId": "leo-park",
+      "name": "Leo Park",
+      "active": true,
+      "workState": "NY",
+      "hourlyRateMinor": 3200,
+      "defaultHoursMilli": 80000,
+      "federalCreditsMinor": 0,
+      "extraWithholdingMinor": 0,
+      "annualSalaryMinor": null,
+      "payType": "hourly",
+      "schedule": "biweekly",
+      "expenseAccount": "6100",
+      "cls": "Production Overhead",
+      "filingStatus": "single",
+      "allowances": 0,
+      "deductions": [],
+      "cardInfo": {
+        "name": "Pay · Leo Park"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "employee": {
+        "links": {
+          "self": "../../hr/Employee/leo-park"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PaySetup"
+      }
+    }
+  }
+}

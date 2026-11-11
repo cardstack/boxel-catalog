@@ -24,6 +24,11 @@
         "links": {
           "self": "../ProcurementBudget/it-hardware-fy26q1"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

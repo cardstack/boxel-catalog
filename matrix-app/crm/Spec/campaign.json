@@ -33,6 +33,11 @@
         "links": {
           "self": "../Campaign/logistics-expo-2026"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

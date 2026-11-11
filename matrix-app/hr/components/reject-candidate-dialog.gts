@@ -117,9 +117,14 @@ export class RejectCandidateDialog extends GlimmerComponent<RejectCandidateDialo
         </div>
       </:default>
       <:footer>
-        <Button @variant='secondary' {{on 'click' this.cancel}}>Cancel</Button>
         <Button
-          @variant='destructive'
+          @tone='neutral'
+          @appearance='outlined'
+          {{on 'click' this.cancel}}
+        >Cancel</Button>
+        <Button
+          @tone='danger'
+          @appearance='accent'
           @disabled={{not this.canConfirm}}
           {{on 'click' this.confirm}}
         >Confirm rejection</Button>

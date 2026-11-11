@@ -33,6 +33,11 @@
         "links": {
           "self": "../Subscription/acme-data-addon"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -323,7 +323,7 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
       .ecard-overdue {
         font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .ecard-action {
         align-self: flex-end;
@@ -367,7 +367,6 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .desk-refusal {
-        margin: 0;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
         border: 1px solid var(--border);
         border-inline-start: 0.1875rem solid var(--destructive);

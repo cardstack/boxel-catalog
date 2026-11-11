@@ -112,6 +112,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
                   {{if (this.isCurrent w) "current"}}
                   {{if (this.isSelected w) "selected"}}'
                 aria-pressed={{if (this.isSelected w) 'true' 'false'}}
+                aria-current={{if (this.isCurrent w) 'date'}}
                 aria-label='Week {{w.index}}: {{w.label}}, {{w.marks.length}} events'
                 {{on 'click' (fn this.select w)}}
               >
@@ -188,7 +189,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       }
       @media (prefers-reduced-motion: no-preference) {
         .today-tag {
-          animation: tl-breathe 2.8s ease-in-out 3;
+          animation: tl-breathe 2.8s ease-in-out 1;
         }
         .interactive .week {
           transition: background 140ms ease;
@@ -197,6 +198,8 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         .dot {
           transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
         }
+      }
+      @media (prefers-reduced-motion: no-preference) and (hover: hover) {
         .interactive .week:hover .mark,
         .interactive .week:hover .dot {
           transform: scale(1.35);
@@ -217,7 +220,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       .weeks {
         position: relative;
         display: grid;
-        gap: 0.125rem;
+        gap: var(--boxel-sp-6xs);
         height: var(--_tl-h);
       }
       .rail:not(.compact) .weeks {
@@ -240,8 +243,10 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         line-height: inherit;
         min-width: 0;
       }
-      .interactive .week:hover {
-        background: var(--muted);
+      @media (hover: hover) {
+        .interactive .week:hover {
+          background: var(--muted);
+        }
       }
       .week:focus-visible {
         outline: 2px solid var(--ring);
@@ -259,7 +264,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       .top,
       .bottom {
         display: flex;
-        gap: 0.125rem;
+        gap: var(--boxel-sp-6xs);
         align-items: center;
         min-height: 0.5rem;
       }
@@ -269,7 +274,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         background: var(--border);
         display: flex;
         justify-content: center;
-        gap: 0.1875rem;
+        gap: var(--boxel-sp-5xs);
         align-items: center;
       }
       .mark {
@@ -344,7 +349,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       }
       .legend span {
         display: inline-flex;
-        gap: 0.25rem;
+        gap: var(--boxel-sp-4xs);
         align-items: center;
       }
       .legend i {

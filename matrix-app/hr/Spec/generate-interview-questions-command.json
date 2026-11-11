@@ -25,6 +25,11 @@
         "links": {
           "self": "../Candidate/interviewing-amara"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

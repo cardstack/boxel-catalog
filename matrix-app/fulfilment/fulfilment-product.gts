@@ -261,7 +261,7 @@ export class FulfilmentProduct extends Product {
         .prod {
           container-type: inline-size;
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           color: var(--card-foreground);
           background-color: var(--card);
@@ -293,7 +293,7 @@ export class FulfilmentProduct extends Product {
           background-color: var(--muted);
           object-fit: cover;
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .id {
@@ -302,14 +302,14 @@ export class FulfilmentProduct extends Product {
         .name {
           margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           letter-spacing: normal;
           text-transform: none;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .bar {
@@ -343,7 +343,7 @@ export class FulfilmentProduct extends Product {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -365,7 +365,7 @@ export class FulfilmentProduct extends Product {
           margin-bottom: -1px;
         }
         .num {
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           line-height: 1.15;
           font-variant-numeric: tabular-nums;
@@ -379,7 +379,7 @@ export class FulfilmentProduct extends Product {
         .blk h2 {
           margin: 0;
           padding: var(--boxel-sp-sm) var(--boxel-sp-xs) var(--boxel-sp-2xs);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .row {
@@ -403,7 +403,7 @@ export class FulfilmentProduct extends Product {
         }
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .kv {
@@ -470,7 +470,7 @@ export class FulfilmentProduct extends Product {
       <style scoped>
         .emb {
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           color: var(--card-foreground);
           background-color: var(--card);
@@ -491,7 +491,7 @@ export class FulfilmentProduct extends Product {
           background-color: var(--muted);
           object-fit: cover;
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .id {
@@ -499,13 +499,12 @@ export class FulfilmentProduct extends Product {
           min-width: 0;
         }
         h3 {
-          margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -544,7 +543,7 @@ export class FulfilmentProduct extends Product {
         .kv dt {
           padding-left: var(--boxel-sp-xs);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -575,7 +574,7 @@ export class FulfilmentProduct extends Product {
           gap: var(--boxel-sp-2xs);
           min-width: 0;
           max-width: 100%;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           color: var(--card-foreground);
         }
@@ -589,7 +588,7 @@ export class FulfilmentProduct extends Product {
           background-color: var(--muted);
           object-fit: cover;
           font-family: var(--font-mono);
-          font-size: 0.5rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .name {
@@ -641,7 +640,7 @@ export class FulfilmentProduct extends Product {
           background-color: var(--muted);
           object-fit: cover;
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           color: var(--card-foreground);
         }

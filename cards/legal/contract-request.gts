@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   field,
@@ -55,11 +56,13 @@ export const REQUEST_STATES = [
   { value: 'declined', label: 'Declined', hue: 'red' },
 ] as const;
 
-export const RequestStateField = enumField(StringField, {
-  options: REQUEST_STATES.map((r) => ({ value: r.value, label: r.label })),
-  displayName: 'Request State',
-  icon: ClipboardCheckIcon,
-});
+export const RequestStateField = markDefinition(
+  enumField(StringField, {
+    options: REQUEST_STATES.map((r) => ({ value: r.value, label: r.label })),
+    displayName: 'Request State',
+    icon: ClipboardCheckIcon,
+  }),
+);
 
 export function requestStateLabel(v?: string | null): string {
   return REQUEST_STATES.find((s) => s.value === v)?.label ?? v ?? 'Draft';

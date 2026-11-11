@@ -94,10 +94,9 @@ export const PanelHead: TemplateOnlyComponent<{
       gap: var(--boxel-sp-xs);
     }
     h2 {
-      margin: 0;
       font-family: var(--font-sans);
-      font-size: var(--pretui-panel-title-size, var(--boxel-font-size-sm));
-      font-weight: 800;
+      font-size: var(--boxel-font-size-sm);
+      font-weight: 700;
     }
     .panel-meta {
       font-size: var(--boxel-font-size-xs);
@@ -144,10 +143,9 @@ export const TrackerSection: TemplateOnlyComponent<{
       padding: var(--trt-py) var(--trt-px);
     }
     h2 {
-      margin: 0;
       font-family: var(--font-sans);
       font-size: var(--trt-fs);
-      font-weight: 800;
+      font-weight: 700;
       line-height: 1.3;
     }
     .ts-meta {
@@ -156,7 +154,7 @@ export const TrackerSection: TemplateOnlyComponent<{
     }
     /* quiet text links: no control box, so the head keeps the mock's height */
     .ts-aside {
-      margin-left: auto;
+      margin-inline-start: auto;
       --pretui-button-h: 0;
       --pretui-button-px: 0;
     }
@@ -200,7 +198,6 @@ export const TrackerEmpty: TemplateOnlyComponent<{
   <p class='te'>{{yield}}</p>
   <style scoped>
     .te {
-      margin: 0;
       padding: var(--trt-py) var(--trt-px);
       border-top: 1px solid var(--border);
       color: var(--muted-foreground);
@@ -284,7 +281,7 @@ export const RowOpen: TemplateOnlyComponent<{
       cursor: pointer;
     }
     .row-open:hover {
-      color: var(--primary);
+      color: var(--primary-ink);
       text-decoration: underline;
     }
     .row-open:focus-visible {
@@ -511,8 +508,10 @@ export class TrackerPage extends GlimmerComponent<TrackerPageSignature> {
         min-width: 0;
       }
       .tp-eyebrow {
-        margin: 0;
-        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -526,7 +525,6 @@ export class TrackerPage extends GlimmerComponent<TrackerPageSignature> {
         background: var(--primary);
       }
       h1 {
-        margin: 0;
         /* only the page title takes the theme's heading face */
         font-family: var(--boxel-heading-font-family);
         font-weight: var(--boxel-heading-font-weight);
@@ -569,7 +567,10 @@ export class TrackerPage extends GlimmerComponent<TrackerPageSignature> {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-2xs);
-        font: 600 calc(var(--boxel-font-size-xs) * 0.75) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);

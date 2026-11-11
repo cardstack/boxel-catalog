@@ -600,7 +600,7 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
                   {{#if (this.canWithdraw e)}}
                     <Button
                       class='cta'
-                      @tone='neutral'
+                      @tone='danger'
                       @appearance='plain'
                       @size='xs'
                       @busy={{this.isBusy (concat 'withdraw-' e.id)}}
@@ -876,7 +876,7 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         font-weight: 700;
       }
       .post-body {
-        margin: 0.125rem 0 0;
+        margin: var(--boxel-sp-6xs) 0 0;
         font-size: var(--boxel-font-size-sm);
         white-space: pre-wrap;
       }

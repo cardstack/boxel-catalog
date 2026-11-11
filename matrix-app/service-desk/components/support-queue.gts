@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
+import { Checkbox } from '@cardstack/pretui/components/checkbox';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import ChevronRight from '@cardstack/boxel-icons/chevron-right';
 
@@ -76,8 +77,7 @@ export class SupportQueue extends GlimmerComponent<Signature> {
   countdown = (row: QueueRow) => timerSnapshot(row.timerFacts ?? {}).shortLabel;
   countdownState = (row: QueueRow) => timerSnapshot(row.timerFacts ?? {}).state;
 
-  toggle = (row: QueueRow, ev: Event) => {
-    ev.stopPropagation();
+  toggle = (row: QueueRow) => {
     let next = new Set(this.selectedIds);
     let id = row.card?.id;
     if (next.has(id)) next.delete(id);
@@ -121,13 +121,12 @@ export class SupportQueue extends GlimmerComponent<Signature> {
       {{#each this.rows as |row idx|}}
         <div class='qrow-wrap' style={{this.rowStyle idx}}>
           {{#if @onBatch}}
-            <input
-              type='checkbox'
+            <Checkbox
               class='qrow-cb'
-              checked={{this.isSelected row}}
-              aria-label='Select {{if row.label row.label row.card.cardTitle}}'
-              {{on 'change' (fn this.toggle row)}}
-            />
+              @checked={{this.isSelected row}}
+              @onCheckedChange={{fn this.toggle row}}
+            ><span class='sr-only'>Select
+                {{if row.label row.label row.card.cardTitle}}</span></Checkbox>
           {{/if}}
           <button type='button' class='qrow' {{on 'click' (fn this.open row)}}>
             {{#if row.timerFacts}}
@@ -219,10 +218,13 @@ export class SupportQueue extends GlimmerComponent<Signature> {
       }
       .qrow-cb {
         flex: none;
-        width: 0.9375rem;
-        height: 0.9375rem;
-        accent-color: var(--primary);
-        cursor: pointer;
+      }
+      .sr-only {
+        position: absolute;
+        inline-size: 1px;
+        block-size: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
       }
       .qrow-wrap {
         animation: qrow-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -240,21 +242,25 @@ export class SupportQueue extends GlimmerComponent<Signature> {
         background: var(--card);
         color: var(--card-foreground);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        cursor: pointer;
         box-shadow: 0 1px 0
           color-mix(in oklab, var(--foreground) 5%, transparent);
         transition:
           transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
           border-color 160ms ease-out,
           box-shadow 160ms ease-out;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
       }
-      .qrow:hover,
-      .qrow:focus-visible {
-        transform: translateY(-1px);
-        border-color: color-mix(in oklab, var(--primary) 40%, transparent);
-        box-shadow: 0 6px 18px -10px
-          color-mix(in oklab, var(--foreground) 40%, transparent);
+      @media (hover: hover) {
+        .qrow:hover,
+        .qrow:focus-visible {
+          transform: translateY(-1px);
+          border-color: color-mix(in oklab, var(--primary) 40%, transparent);
+          box-shadow: 0 6px 18px -10px
+            color-mix(in oklab, var(--foreground) 40%, transparent);
+        }
       }
       @keyframes qrow-in {
         from {
@@ -270,9 +276,11 @@ export class SupportQueue extends GlimmerComponent<Signature> {
         outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
-      .qrow:hover .qrow-cue,
-      .qrow:focus-visible .qrow-cue {
-        transform: translateX(2px);
+      @media (hover: hover) {
+        .qrow:hover .qrow-cue,
+        .qrow:focus-visible .qrow-cue {
+          transform: translateX(2px);
+        }
       }
       .qrow-title {
         font-weight: 600;

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -18,13 +19,15 @@ export const PAY_PERIOD_LABELS: Record<string, string> = {
   hourly: 'per hour',
 };
 
-export const PayPeriodField = enumField(StringField, {
-  options: PAY_PERIODS.map((value) => ({
-    value,
-    label: PAY_PERIOD_LABELS[value],
-  })),
-  displayName: 'Pay Period',
-});
+export const PayPeriodField = markDefinition(
+  enumField(StringField, {
+    options: PAY_PERIODS.map((value) => ({
+      value,
+      label: PAY_PERIOD_LABELS[value],
+    })),
+    displayName: 'Pay Period',
+  }),
+);
 
 // A pay package as one value: base + period, bonus target, equity. A
 // compound field rather than loose numbers on Employee, so a compensation
@@ -82,15 +85,15 @@ export class CompensationField extends FieldDef {
         .comp {
           display: grid;
           gap: var(--boxel-sp-5xs);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .base {
-          font-size: 1.125rem;
+          font-size: var(--boxel-font-size-md);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }
         .period {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 400;
           color: var(--muted-foreground);
         }
@@ -109,7 +112,7 @@ export class CompensationField extends FieldDef {
       <span class='comp-atom'>{{@model.summary}}</span>
       <style scoped>
         .comp-atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
         }
       </style>

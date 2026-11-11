@@ -6,7 +6,6 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Table } from '@cardstack/pretui/components/table';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { formatMoney, lineTotal } from '../../commerce/line-item-totals';
 import type { VendorQuote } from '../vendor-quote';
 
@@ -361,7 +360,7 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
         </Table>
       {{else}}
         <EmptyState
-          style={{COMPACT_EMPTY_STYLE}}
+          @size='s'
           @texture={{false}}
           @title='The comparison starts with the first quote'
           @message="Record each vendor's inbound quote and they'll line up here, column against column, best value highlighted."
@@ -371,25 +370,24 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
     <style scoped>
       .board {
         /* command-console adapter: structure in the procurement ink, signal amber/red */
-        --console-ink: var(--procurement-ink, var(--primary-ink));
         overflow: hidden;
       }
       .insight {
         margin: 0 0 var(--boxel-sp-sm);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-left: 0.1875rem solid var(--console-ink);
+        border-inline-start: 0.1875rem solid var(--primary-ink);
         background-color: color-mix(
           in oklab,
-          var(--console-ink) 6%,
+          var(--primary-ink) 6%,
           transparent
         );
         border-radius: 0 var(--radius) var(--radius) 0;
-        font-size: 0.9375rem;
+        font-size: var(--boxel-font-size-sm);
         line-height: 1.4;
       }
       .insight-mark {
-        color: var(--console-ink);
-        margin-right: 0.25rem;
+        color: var(--primary-ink);
+        margin-inline-end: var(--boxel-sp-4xs);
         font-size: var(--boxel-font-size-xs);
       }
       .matrix {
@@ -402,7 +400,7 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
       thead th {
         height: auto;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm) var(--boxel-sp-sm);
-        box-shadow: inset 0 -0.125rem 0 var(--console-ink);
+        box-shadow: inset 0 -0.125rem 0 var(--primary-ink);
         white-space: normal;
       }
       td {
@@ -420,11 +418,11 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
         display: block;
         font-family: var(--font-sans);
         font-weight: 700;
-        font-size: 1.0625rem;
+        font-size: var(--boxel-font-size);
         letter-spacing: -0.01em;
         text-transform: none;
         margin-bottom: var(--boxel-sp-5xs);
-        color: var(--console-ink);
+        color: var(--primary-ink);
       }
       .awarded-col {
         background-color: color-mix(in oklab, var(--success) 12%, var(--inset));
@@ -449,50 +447,44 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
       .num {
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
-        font-size: 0.9375rem;
+        font-size: var(--boxel-font-size-sm);
       }
       .cell-inner {
         display: inline-block;
       }
       .num.best {
         font-weight: 700;
-        color: var(--console-ink);
+        color: var(--primary-ink);
       }
       .num.best .cell-inner {
         position: relative;
-        padding: 0.125rem 0.5rem;
+        padding: var(--boxel-sp-6xs) var(--boxel-sp-xs);
         margin: -0.125rem -0.5rem;
         border-radius: var(--radius);
         background-color: color-mix(
           in oklab,
-          var(--console-ink) 9%,
+          var(--primary-ink) 9%,
           transparent
         );
       }
       .best-mark {
-        margin-left: 0.25rem;
-        font-size: 0.6875rem;
+        margin-inline-start: var(--boxel-sp-4xs);
+        font-size: var(--boxel-font-size-2xs);
       }
       .num.stale {
         color: var(--destructive-ink);
       }
       .compliance-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        border: none;
-        background: none;
-        padding: 0.125rem;
-        margin: -0.125rem;
-        border-radius: var(--radius);
-        cursor: pointer;
-        font: inherit;
+        --pretui-button-px: var(--boxel-sp-6xs);
+        --pretui-button-radius: var(--radius);
+        gap: var(--boxel-sp-4xs);
+        margin: calc(-1 * var(--boxel-sp-6xs));
       }
       .compliance-link:hover,
       .compliance-link:focus-visible {
         background-color: color-mix(
           in oklab,
-          var(--console-ink) 8%,
+          var(--primary-ink) 8%,
           transparent
         );
       }
@@ -503,12 +495,12 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
       }
       .compliance-link:hover .compliance-arrow {
         transform: translateX(0.125rem);
-        color: var(--console-ink);
+        color: var(--primary-ink);
       }
       .total-row td {
-        box-shadow: inset 0 0.125rem 0 var(--console-ink);
+        box-shadow: inset 0 0.125rem 0 var(--primary-ink);
         font-weight: 600;
-        font-size: 1.0625rem;
+        font-size: var(--boxel-font-size);
       }
       .action-row td {
         box-shadow: none;
@@ -581,7 +573,7 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
           transform: scale(0.92);
           background-color: color-mix(
             in oklab,
-            var(--console-ink) 24%,
+            var(--primary-ink) 24%,
             transparent
           );
         }

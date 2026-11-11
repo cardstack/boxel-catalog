@@ -1,6 +1,7 @@
 // Registers as cards, each computed from the journal's postings (their facts and detail items) and
 // tied to the general ledger through the closed months: fixed assets (and their register), the equipment loan, schedules (prepaids,
 // deferred revenue, reversals), the sales tax agency, and payroll by quarter.
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -863,14 +864,16 @@ export class TaxAgency extends CardDef {
 }
 
 // ── sales tax returns ────────────────────────────────────────────────────────
-export const TaxReturnStatusField = enumField(StringField, {
-  displayName: 'Tax return status',
-  options: [
-    { value: 'open', label: 'Open' },
-    { value: 'filed', label: 'Filed' },
-    { value: 'paid', label: 'Paid' },
-  ],
-});
+export const TaxReturnStatusField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Tax return status',
+    options: [
+      { value: 'open', label: 'Open' },
+      { value: 'filed', label: 'Filed' },
+      { value: 'paid', label: 'Paid' },
+    ],
+  }),
+);
 
 /**
  * One agency's sales tax for one period. While open, its figures come from that period's sales;

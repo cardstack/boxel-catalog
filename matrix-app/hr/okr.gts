@@ -14,7 +14,6 @@ import { Employee } from './employee';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 function krProgress(kr: KeyResultField | undefined): number {
   // A key result with no target hasn't been defined yet, so it has made no
@@ -106,7 +105,7 @@ export class KeyResultField extends FieldDef {
           grid-template-columns: 1fr auto auto;
           gap: var(--boxel-sp-sm);
           align-items: baseline;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .kr-desc {
           font-weight: 600;
@@ -114,7 +113,7 @@ export class KeyResultField extends FieldDef {
         .kr-nums {
           color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
         }
         .kr-pct {
           font-weight: 700;
@@ -140,7 +139,6 @@ export class KeyResultField extends FieldDef {
 // reading convention documented here, not a threshold the card enforces.
 export class Okr extends CardDef {
   static displayName = 'OKR';
-  static headerColor = '#2f4f4f';
 
   @field objective = contains(StringField);
   @field period = contains(StringField, {
@@ -199,7 +197,7 @@ export class Okr extends CardDef {
                 @title='No key results yet'
                 @message='An objective without measures is a wish.'
                 @texture={{false}}
-                style={{COMPACT_EMPTY_STYLE}}
+                @size='s'
               />
             {{/each}}
           </div>
@@ -215,8 +213,8 @@ export class Okr extends CardDef {
         .okr {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--canvas);
-          color: var(--foreground);
+          background: var(--card);
+          color: var(--card-foreground);
           display: grid;
           gap: var(--boxel-sp);
         }
@@ -230,14 +228,14 @@ export class Okr extends CardDef {
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
           line-height: 1.25;
         }
         .sub {
@@ -249,12 +247,12 @@ export class Okr extends CardDef {
         }
         .score-num {
           display: block;
-          font-size: 2rem;
+          font-size: var(--boxel-font-size-xl);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }
         .score-label {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--muted-foreground);
@@ -276,7 +274,7 @@ export class Okr extends CardDef {
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.08em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -288,7 +286,7 @@ export class Okr extends CardDef {
         .notes {
           margin: 0;
           white-space: pre-wrap;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         @container (max-width: 480px) {
           .head {
@@ -336,13 +334,13 @@ export class Okr extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .meta {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>
@@ -356,7 +354,7 @@ export class Okr extends CardDef {
         {{@model.overallProgress}}%</span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -387,7 +385,7 @@ export class Okr extends CardDef {
         }
         .fit-name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.2;
           overflow: hidden;
           display: -webkit-box;
@@ -395,12 +393,12 @@ export class Okr extends CardDef {
           -webkit-box-orient: vertical;
         }
         .fit-sub {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .fit-pct {
           margin-top: auto;
-          font-size: 1.125rem;
+          font-size: var(--boxel-font-size-md);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }
@@ -425,7 +423,7 @@ export class Okr extends CardDef {
           .fit-pct {
             margin-top: 0;
             margin-left: auto;
-            font-size: 0.9375rem;
+            font-size: var(--boxel-font-size-sm);
           }
           .fit-name {
             -webkit-line-clamp: 1;

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -31,13 +32,15 @@ export const ANNOTATION_HUE: Record<string, Hue> = {
   question: 'blue',
 };
 
-export const AnnotationKindField = enumField(StringField, {
-  displayName: 'Annotation Kind',
-  options: ANNOTATION_KINDS.map((value) => ({
-    value,
-    label: ANNOTATION_LABELS[value],
-  })),
-});
+export const AnnotationKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Annotation Kind',
+    options: ANNOTATION_KINDS.map((value) => ({
+      value,
+      label: ANNOTATION_LABELS[value],
+    })),
+  }),
+);
 
 /**
  * A remark pinned to a location in something else.
@@ -100,12 +103,12 @@ export class AnnotationField extends FieldDef {
           gap: var(--boxel-sp-xs);
         }
         .who {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .text {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.5;
           color: var(--foreground);
         }

@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "year": 2025,
+      "effectiveFrom": "2025-01-01",
+      "ratePpm": 3880,
+      "employerRatePpm": null,
+      "wageBaseMinor": null,
+      "thresholdMinor": null,
+      "extraRatePpm": null,
+      "weeklyCapMinor": null,
+      "annualCapMinor": 35453,
+      "allowanceMinor": null,
+      "brackets": [],
+      "statusAmounts": [],
+      "tax": "ny-pfl",
+      "label": "New York paid family leave",
+      "agencyId": "ny-dbl-pfl",
+      "source": "NY PFL 2025: 0.388% of wages, at most $354.53 a year",
+      "cardInfo": {
+        "name": "New York paid family leave · 2025 figures",
+        "summary": "Demo figures entered by hand, not tax advice."
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PayrollTaxTable"
+      }
+    }
+  }
+}

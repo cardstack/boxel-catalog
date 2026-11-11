@@ -34,6 +34,11 @@
         "links": {
           "self": "../PurchaseOrder/po-2026-0051"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

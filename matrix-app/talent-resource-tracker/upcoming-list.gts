@@ -107,7 +107,7 @@ export class UpcomingList extends GlimmerComponent<Signature> {
         background: none;
         color: var(--foreground);
         font: inherit;
-        text-align: left;
+        text-align: start;
         cursor: pointer;
       }
       .row:focus-visible {
@@ -117,7 +117,9 @@ export class UpcomingList extends GlimmerComponent<Signature> {
       .when {
         flex: none;
         inline-size: 4.625rem;
-        font: 500 var(--boxel-font-size-2xs) var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
         font-variant-numeric: tabular-nums;
       }
       .what {
@@ -128,7 +130,7 @@ export class UpcomingList extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .who {
-        margin-left: auto;
+        margin-inline-start: auto;
         min-width: 0;
       }
       @media (hover: hover) {

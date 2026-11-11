@@ -1,6 +1,7 @@
 import { module, test } from 'qunit';
 
 import {
+  hasPullRequest,
   resolveSubmissionWorkflowState,
   type WorkflowState,
 } from './submission-workflow-card';
@@ -264,6 +265,29 @@ export function runTests() {
           isClosed: true,
         });
         assert.strictEqual(step(state, 'merge-catalog').status, 'blocked');
+      });
+    });
+
+    module('PR found by its GitHub events', function () {
+      test('a pull_request event counts as a PR without a prCard link', function (assert) {
+        assert.true(hasPullRequest(false, true));
+        assert.true(hasPullRequest(true, false));
+        assert.false(hasPullRequest(false, false));
+      });
+
+      test('an unlinked submission with a merged PR completes every step', function (assert) {
+        let state = resolve({
+          hasListing: true,
+          hasPr: hasPullRequest(false, true),
+          lintStatus: 'passed',
+          ciAllPassed: true,
+          reviewState: 'approved',
+          isMerged: true,
+        });
+        assert.deepEqual(
+          state.steps.map((s) => s.status),
+          ['completed', 'completed', 'completed', 'completed', 'completed'],
+        );
       });
     });
   });

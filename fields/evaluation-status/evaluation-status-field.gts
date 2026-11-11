@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -44,13 +45,15 @@ export const EVALUATION_HUE: Record<string, Hue> = {
 
 const CONCLUSIVE = new Set(['pass', 'fail', 'partial', 'not-applicable']);
 
-export const EvaluationStatusValueField = enumField(StringField, {
-  displayName: 'Evaluation Status',
-  options: EVALUATION_STATUSES.map((value) => ({
-    value,
-    label: EVALUATION_LABELS[value],
-  })),
-});
+export const EvaluationStatusValueField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Evaluation Status',
+    options: EVALUATION_STATUSES.map((value) => ({
+      value,
+      label: EVALUATION_LABELS[value],
+    })),
+  }),
+);
 
 /**
  * The outcome of evaluating one rule against one subject.

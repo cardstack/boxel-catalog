@@ -63,7 +63,7 @@ export class EnumSelect extends GlimmerComponent<Signature> {
       .es {
         display: flex;
         flex-direction: column;
-        gap: 0.1875rem;
+        gap: var(--boxel-sp-5xs);
         min-width: 0;
       }
       .es-label {
@@ -90,7 +90,7 @@ export class EnumSelect extends GlimmerComponent<Signature> {
         --boxel-select-background-color: var(--card);
         --boxel-select-border-color: var(--border);
         --boxel-select-text-color: var(--foreground);
-        --boxel-select-trigger-padding: 0.1875rem 0.375rem;
+        --boxel-select-trigger-padding: var(--boxel-sp-5xs) var(--boxel-sp-2xs);
         --boxel-form-control-border-radius: var(--boxel-border-radius-sm);
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;

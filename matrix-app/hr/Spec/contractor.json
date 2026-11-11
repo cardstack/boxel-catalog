@@ -24,6 +24,11 @@
         "links": {
           "self": "../Contractor/marcus-rodriguez"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {
