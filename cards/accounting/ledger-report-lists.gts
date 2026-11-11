@@ -138,6 +138,22 @@ export function settledAfter(
           add(invoiceKey(i.ref ?? ''), -(i.amountMinor ?? 0));
         else if (p.kind === 'bill-payment')
           add(billKey(p.party ?? '', i.ref ?? ''), -(i.amountMinor ?? 0));
+      // A credit or write-off reversed after the date had reduced its document on it, the same way.
+      let fact = (k: string) =>
+        String(
+          ((p.facts ?? []) as any[]).find((f) => f?.key === k)?.value ?? '',
+        );
+      let amount = Number(fact('amountMinor')) || 0;
+      if (p.kind === 'credit-memo' || p.kind === 'write-off')
+        add(
+          invoiceKey(fact('invoiceNo')),
+          -(amount || lineSum(p.lines ?? [], '1100', 'creditMinor')),
+        );
+      else if (p.kind === 'vendor-credit')
+        add(
+          billKey(p.party ?? '', fact('billNo')),
+          -(amount || lineSum(p.lines ?? [], '2000', 'debitMinor')),
+        );
     }
   }
   return out;
@@ -639,6 +655,7 @@ export class ListReport extends GlimmerComponent<ListSignature> {
         [this.billData, DOC_PAGE, 'bills'],
         [this.journalData, MONTH_PAGE, 'journal months'],
         [this.timeData, DOC_PAGE, 'time entries'],
+        [this.accountData, 500, 'accounts'],
       ];
     return [
       [this.invoiceData, DOC_PAGE, 'invoices'],
@@ -823,8 +840,7 @@ export class ListReport extends GlimmerComponent<ListSignature> {
       {{#if this.periodError}}
         <EmptyState
           @size='s'
-          @title='Choose a date'
-          @message={{this.periodError}}
+          @title={{if this.def.asOf 'Set the date' 'Set the period'}}
         />
       {{else if this.loading}}
         <Skeleton @height='6rem' />
@@ -854,10 +870,6 @@ export class ListReport extends GlimmerComponent<ListSignature> {
         flex-wrap: wrap;
         justify-content: space-between;
         gap: var(--boxel-sp-sm);
-      }
-      h2 {
-        font-family: var(--font-serif);
-        font-size: var(--boxel-font-size-lg);
       }
       .actions,
       .controls {
