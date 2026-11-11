@@ -209,6 +209,7 @@ import {
   MyReports,
   isLibraryKind,
 } from '../accounting/ledger-report-desk';
+import { AuditLog } from '../accounting/ledger-audit';
 import {
   KIND_LABEL,
   seqText,
@@ -1185,6 +1186,14 @@ const PAGES: PageDef[] = [
     report: 'custom',
   },
   {
+    id: 'r-audit',
+    area: 'Reports',
+    label: 'Audit log',
+    blurb:
+      'Every posting, reversal, void, close and sign-off, newest first, with who did it and when.',
+    report: 'audit',
+  },
+  {
     id: 'r-txn-detail',
     area: 'Reports',
     label: 'Transaction detail by account',
@@ -1631,6 +1640,7 @@ const WORKSPACES: Workspace[] = [
       'depreciation',
       'closes',
       'r-year',
+      'r-audit',
     ],
     subject: 'months',
     subjectLabel: 'Months',
@@ -7833,6 +7843,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @pages={{this.reportPages}}
                 @onOpenPage={{this.go}}
               />
+            {{else if (eq this.page 'r-audit')}}
+              <AuditLog @context={{@context}} @realms={{this.realms}} />
             {{else if (isLibraryKind this.def.report)}}
               <LibraryReport
                 @context={{@context}}
