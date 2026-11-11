@@ -516,7 +516,12 @@ export function paycheckPostings(run: {
   sdiPflMinor?: Num;
   netMinor?: Num;
   paychecks?: (
-    | { deductions?: ({ account?: Str; amountMinor?: Num } | undefined)[] }
+    | {
+        expenseAccount?: Str;
+        cls?: Str;
+        grossMinor?: Num;
+        deductions?: ({ account?: Str; amountMinor?: Num } | undefined)[];
+      }
     | undefined
   )[];
 }): Line[] {
@@ -538,15 +543,22 @@ export function paycheckPostings(run: {
           d.account ?? '',
           (byAccount.get(d.account ?? '') ?? 0) + (d.amountMinor ?? 0),
         );
+  // Wages post where each paycheck says, whatever wage rows the run carries.
+  let wages = new Map<string, Line>();
+  for (let p of run.paychecks ?? []) {
+    if (!p) continue;
+    let k = `${p.expenseAccount ?? ''}|${p.cls ?? ''}`;
+    let w = wages.get(k) ?? {
+      account: p.expenseAccount ?? '',
+      debitMinor: 0,
+      creditMinor: 0,
+      ...(p.cls ? { cls: p.cls } : {}),
+    };
+    w.debitMinor += p.grossMinor ?? 0;
+    wages.set(k, w);
+  }
   return [
-    ...(run.wages ?? [])
-      .filter((w) => !!w)
-      .map((w) => ({
-        account: w!.account ?? '',
-        debitMinor: w!.amountMinor ?? 0,
-        creditMinor: 0,
-        cls: w!.cls ?? undefined,
-      })),
+    ...wages.values(),
     {
       account: run.employerTaxAccount ?? EMPLOYER_TAX_ACCOUNT,
       debitMinor: run.employerTaxMinor ?? 0,
@@ -710,7 +722,21 @@ export function staleEmployees(
           ytd: ytdOf(p.employeeId ?? '', date, before, run.docNo),
           tables,
         });
-        return COMPARED.some((k) => (fresh[k] ?? 0) !== (p[k] ?? 0));
+        let routed = (x: Partial<PaycheckData>) =>
+          JSON.stringify([
+            x.expenseAccount ?? '',
+            x.cls ?? null,
+            (x.deductions ?? []).map((d) => [
+              d?.label ?? '',
+              d?.kind ?? '',
+              d?.account ?? '',
+              d?.amountMinor ?? 0,
+            ]),
+          ]);
+        return (
+          COMPARED.some((k) => (fresh[k] ?? 0) !== (p[k] ?? 0)) ||
+          routed(fresh) !== routed(p)
+        );
       } catch {
         return true;
       }
