@@ -38,14 +38,13 @@ export const AuditFacts: TemplateOnlyComponent<AuditFactsSignature> = <template>
     .audit-facts.audit-facts {
       align-items: baseline;
     }
+    /* Our rule beats KeyValue's layered one; the values inherit size and wrapping. */
     .audit-facts {
-      --text-ui: var(--boxel-font-size-sm);
-      --text-ui-md: var(--boxel-font-size-sm);
-      --space-6: var(--boxel-sp-sm);
-    }
-    /* Inherited by the plain-text values KeyValue renders in its <dd>. */
-    .audit-facts {
-      overflow-wrap: anywhere;
+      --pretui-kv-label-font-size: var(--boxel-font-size-sm);
+      font-size: var(--boxel-font-size-sm);
+      column-gap: var(--boxel-sp-sm);
+      overflow-wrap: break-word;
+      min-width: 0;
     }
     .audit-value {
       display: flex;

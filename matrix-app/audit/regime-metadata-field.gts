@@ -67,14 +67,14 @@ export class RegimeMetadataField extends FieldDef {
           flex-wrap: wrap;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .title,
         .auth {
           color: var(--muted-foreground);
         }
         .link {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--foreground);
           text-decoration: underline;
           text-underline-offset: 0.125rem;

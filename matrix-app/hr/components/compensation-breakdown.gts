@@ -4,7 +4,6 @@ import { gt } from '@cardstack/boxel-ui/helpers';
 
 import { formatAmount } from '../utils';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 export interface CompComponent {
   label: string;
@@ -190,7 +189,7 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         <EmptyState
           @title='No compensation components recorded'
           @texture={{false}}
-          style={{COMPACT_EMPTY_STYLE}}
+          @size='s'
         />
       {{/if}}
     </section>
@@ -224,7 +223,6 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         flex-wrap: wrap;
       }
       .comp-head h3 {
-        margin: 0;
         font-weight: 600;
         font-size: var(--boxel-font-size-xs);
         text-transform: uppercase;
@@ -232,7 +230,7 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         color: var(--muted-foreground);
       }
       .total {
-        margin: 2px 0 0;
+        margin: var(--boxel-sp-5xs) 0 0;
         font-weight: 700;
         font-size: var(--boxel-font-size-lg);
         font-variant-numeric: tabular-nums;
@@ -253,7 +251,7 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
       .track {
         position: relative;
         display: flex;
-        height: 26px;
+        height: 1.625rem;
         border-radius: 3px;
         overflow: hidden;
         background: var(--muted);
@@ -277,7 +275,7 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         position: absolute;
         top: -3px;
         bottom: -3px;
-        width: 2px;
+        width: 0.125rem;
         background: var(--foreground);
       }
       .market {
@@ -301,8 +299,8 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
       }
       .dot {
         flex: none;
-        width: 10px;
-        height: 10px;
+        width: 0.625rem;
+        height: 0.625rem;
         border-radius: 2px;
         background: var(--seg);
       }

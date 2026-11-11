@@ -49,7 +49,7 @@ export function dotEnumField(
           .dot-enum {
             display: inline-flex;
             align-items: center;
-            gap: 0.375rem;
+            gap: var(--boxel-sp-2xs);
             max-inline-size: 100%;
             font-weight: 600;
             white-space: nowrap;
@@ -97,7 +97,7 @@ export class DotLabel extends GlimmerComponent<DotLabelSignature> {
         .dot-label {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
+          gap: var(--boxel-sp-2xs);
           max-inline-size: 100%;
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;

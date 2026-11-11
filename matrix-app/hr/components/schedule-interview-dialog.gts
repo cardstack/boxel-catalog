@@ -1,12 +1,16 @@
 import GlimmerComponent from '@glimmer/component';
 import { cached, tracked } from '@glimmer/tracking';
-import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
-import { eq, not } from '@cardstack/boxel-ui/helpers';
+import { not } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
 import { Dialog } from '@cardstack/pretui/components/dialog';
 import { Input } from '@cardstack/pretui/components/input';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import {
+  ToggleGroup,
+  type ToggleOption,
+} from '@cardstack/pretui/components/toggle-group';
 
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import type { Candidate } from '../candidate';
@@ -86,20 +90,31 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
     );
   }
 
-  isInterviewerSelected = (employee: Employee): boolean => {
-    return Boolean(
-      employee.id && this.selectedInterviewerIds.includes(employee.id),
-    );
+  get interviewerOptions(): ToggleOption[] {
+    return this.availableEmployees
+      .filter((e) => e.id)
+      .map((e) => ({ value: e.id!, label: e.name ?? '' }));
+  }
+
+  setInterviewers = (ids: string[]) => {
+    this.selectedInterviewerIds = ids;
   };
 
-  toggleInterviewer = (employee: Employee) => {
-    let id = employee.id;
-    if (!id) {
-      return;
-    }
-    this.selectedInterviewerIds = this.selectedInterviewerIds.includes(id)
-      ? this.selectedInterviewerIds.filter((x) => x !== id)
-      : [...this.selectedInterviewerIds, id];
+  // A booked slot stays pickable for the override; its label says it is booked.
+  get slotOptions(): ToggleOption[] {
+    return this.slots.map((slot) => ({
+      value: String(slot.hour),
+      label: slot.free ? slot.label : `${slot.label} · ${slot.reason}`,
+      disabled: slot.reason === 'In the past',
+    }));
+  }
+
+  get selectedHourValue(): string | null {
+    return this.selectedHour == null ? null : String(this.selectedHour);
+  }
+
+  setSlotValue = (value: string | undefined) => {
+    this.selectedHour = value == null ? undefined : Number(value);
   };
 
   setRoundType = (value: string) => {
@@ -108,10 +123,6 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
 
   setDate = (value: string) => {
     this.dateStr = value;
-  };
-
-  setSlot = (hour: number) => {
-    this.selectedHour = hour;
   };
 
   private slotStart(hour: number): Date | undefined {
@@ -258,62 +269,32 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
       <:default>
         <div class='schedule-dialog'>
           <p class='sd-sub'>Pick interviewers, a day, and a free slot. A slot
-            already booked for the chosen interviewers is struck through; it can
-            still be booked with an override.</p>
+            already booked for the chosen interviewers says so; it can still be
+            booked with an override.</p>
 
           <div class='sd-field'>
             <span
               class='sd-label'
               id='sd-interviewers-label'
             >Interviewers</span>
-            <div
-              class='sd-toggle-row'
-              role='group'
-              aria-labelledby='sd-interviewers-label'
-            >
-              {{#each this.availableEmployees key='id' as |employee|}}
-                <Button
-                  @variant={{if
-                    (this.isInterviewerSelected employee)
-                    'primary'
-                    'outline'
-                  }}
-                  @size='s'
-                  aria-pressed={{if
-                    (this.isInterviewerSelected employee)
-                    'true'
-                    'false'
-                  }}
-                  {{on 'click' (fn this.toggleInterviewer employee)}}
-                >{{employee.name}}</Button>
-              {{/each}}
-            </div>
+            <ToggleGroup
+              @multiple={{true}}
+              @wrap={{true}}
+              @label='Interviewers'
+              @options={{this.interviewerOptions}}
+              @values={{this.selectedInterviewerIds}}
+              @onValuesChange={{this.setInterviewers}}
+            />
           </div>
 
           <div class='sd-field'>
             <span class='sd-label' id='sd-round-label'>Round</span>
-            <div
-              class='sd-toggle-row'
-              role='group'
-              aria-labelledby='sd-round-label'
-            >
-              {{#each this.roundTypeOptions as |option|}}
-                <Button
-                  @variant={{if
-                    (eq this.roundType option.value)
-                    'primary'
-                    'outline'
-                  }}
-                  @size='s'
-                  aria-pressed={{if
-                    (eq this.roundType option.value)
-                    'true'
-                    'false'
-                  }}
-                  {{on 'click' (fn this.setRoundType option.value)}}
-                >{{option.label}}</Button>
-              {{/each}}
-            </div>
+            <SegmentedControl
+              @label='Round'
+              @options={{this.roundTypeOptions}}
+              @value={{this.roundType}}
+              @onValueChange={{this.setRoundType}}
+            />
           </div>
 
           <div class='sd-field'>
@@ -340,31 +321,13 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
                 · pick interviewers to see availability
               {{/if}}
             </span>
-            <div
-              class='sd-slot-row'
-              role='group'
-              aria-labelledby='sd-slots-label'
-            >
-              {{#each this.slots key='hour' as |slot|}}
-                <Button
-                  class='sd-slot {{unless slot.free "busy"}}'
-                  @variant={{if
-                    (eq this.selectedHour slot.hour)
-                    'primary'
-                    'outline'
-                  }}
-                  @size='s'
-                  aria-pressed={{if
-                    (eq this.selectedHour slot.hour)
-                    'true'
-                    'false'
-                  }}
-                  @disabled={{eq slot.reason 'In the past'}}
-                  title={{slot.reason}}
-                  {{on 'click' (fn this.setSlot slot.hour)}}
-                >{{slot.label}}</Button>
-              {{/each}}
-            </div>
+            <ToggleGroup
+              @wrap={{true}}
+              @label='Time'
+              @options={{this.slotOptions}}
+              @value={{this.selectedHourValue}}
+              @onValueChange={{this.setSlotValue}}
+            />
           </div>
 
           {{#if @error}}
@@ -378,19 +341,22 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
       </:default>
       <:footer>
         <Button
-          @variant='secondary'
+          @tone='neutral'
+          @appearance='outlined'
           @disabled={{@isRunning}}
           {{on 'click' @onCancel}}
         >Cancel</Button>
         {{#if this.showOverride}}
           <Button
-            @variant='secondary'
+            @tone='neutral'
+            @appearance='outlined'
             @disabled={{not this.canConfirm}}
             {{on 'click' this.confirmOverride}}
           >Book anyway (override)</Button>
         {{/if}}
         <Button
-          @variant='primary'
+          @tone='primary'
+          @appearance='accent'
           @disabled={{not this.canConfirm}}
           @busy={{@isRunning}}
           {{on 'click' this.confirm}}
@@ -420,16 +386,6 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
       }
       .sd-date {
         max-width: 14rem;
-      }
-      .sd-toggle-row,
-      .sd-slot-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-4xs);
-      }
-      /* A booked slot stays pickable for the override; the strike says why. */
-      .sd-slot.busy {
-        text-decoration: line-through;
       }
     </style>
   </template>

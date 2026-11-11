@@ -51,12 +51,12 @@ export const Sheet: TemplateOnlyComponent<SheetSignature> = <template>
         container: sheet / inline-size;
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         box-sizing: border-box;
         min-height: 100%;
-        padding: 0.875rem;
-        background: var(--canvas, var(--background));
-        color: var(--foreground);
+        padding: var(--boxel-sp-sm);
+        background: var(--card);
+        color: var(--card-foreground);
         font-family: var(--font-sans);
         font-size: var(--boxel-font-size-xs);
         line-height: 1.35;
@@ -64,7 +64,7 @@ export const Sheet: TemplateOnlyComponent<SheetSignature> = <template>
       .sheet-head {
         display: flex;
         align-items: center;
-        gap: 0.625rem;
+        gap: var(--boxel-sp-xs);
         min-width: 0;
       }
       .sheet-mark {
@@ -73,9 +73,9 @@ export const Sheet: TemplateOnlyComponent<SheetSignature> = <template>
         --meeting-mark-size: 2rem;
         --pto-mark-size: 2rem;
         --review-mark-size: 2rem;
-        --review-mark-font-size: 0.5625rem;
-        --pto-mark-font-size: 0.5625rem;
-        --meeting-mark-font-size: 0.5625rem;
+        --review-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --pto-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --meeting-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         flex: none;
         display: inline-flex;
       }
@@ -87,7 +87,7 @@ export const Sheet: TemplateOnlyComponent<SheetSignature> = <template>
         margin: 0;
         overflow: hidden;
         font-family: var(--font-sans);
-        font-size: 1.0625rem;
+        font-size: var(--boxel-font-size);
         font-weight: 800;
         line-height: 1.25;
         letter-spacing: -0.01em;
@@ -106,7 +106,7 @@ export const Sheet: TemplateOnlyComponent<SheetSignature> = <template>
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       /* the one outer card; sections inside are flat */
       .sheet-card {
@@ -160,13 +160,16 @@ export const SheetSection: TemplateOnlyComponent<SectionSignature> = <template>
       .sheet-section-head {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         min-height: 1.75rem;
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
       }
       .sheet-label {
         margin: 0;
-        font: 600 0.5625rem / 1.3 var(--font-mono);
+        font-weight: 600;
+        font-size: 0.5625rem; /* 9px ladder label: no token */
+        line-height: 1.3;
+        font-family: var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -214,15 +217,18 @@ export const SheetRows: TemplateOnlyComponent<RowsSignature> = <template>
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        column-gap: 0.625rem;
+        column-gap: var(--boxel-sp-xs);
         min-height: 1.75rem;
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
       }
       .sheet-key {
         flex: none;
         inline-size: 7.5rem;
-        font: 600 0.5625rem / 1.3 var(--font-mono);
+        font-weight: 600;
+        font-size: 0.5625rem; /* 9px ladder label: no token */
+        line-height: 1.3;
+        font-family: var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -232,7 +238,7 @@ export const SheetRows: TemplateOnlyComponent<RowsSignature> = <template>
         min-width: 0;
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
       }
     }
   </style>
@@ -252,9 +258,9 @@ export const SheetLine: TemplateOnlyComponent<LineSignature> = <template>
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.25rem 0.625rem;
+        gap: var(--boxel-sp-4xs) var(--boxel-sp-xs);
         min-height: 1.75rem;
-        padding: 0.25rem 0.625rem;
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
         box-sizing: border-box;
         border-top: 1px solid var(--border);
         font-size: var(--boxel-font-size-xs);
@@ -281,16 +287,19 @@ export const SheetStat: TemplateOnlyComponent<StatSignature> = <template>
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        column-gap: 0.625rem;
+        column-gap: var(--boxel-sp-xs);
         min-height: 1.75rem;
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
         font-size: var(--boxel-font-size-xs);
       }
       .sheet-stat-key {
         flex: none;
         inline-size: 7.5rem;
-        font: 600 0.5625rem / 1.3 var(--font-mono);
+        font-weight: 600;
+        font-size: 0.5625rem; /* 9px ladder label: no token */
+        line-height: 1.3;
+        font-family: var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -319,7 +328,7 @@ export const SheetEmpty: TemplateOnlyComponent<EmptySignature> = <template>
     @layer PretComponent {
       .sheet-empty {
         margin: 0;
-        padding: 0.375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
         color: var(--muted-foreground);
         font-size: var(--boxel-font-size-xs);
@@ -358,7 +367,7 @@ export class HeadAction extends Component<HeadActionSignature> {
         @size='xs'
         @tone={{if @primary 'primary' 'neutral'}}
         @appearance={{if @primary 'accent' 'outlined'}}
-        @loading={{@loading}}
+        @busy={{@loading}}
         @disabled={{@disabled}}
         {{on 'click' @onClick}}
       >{{@label}}</Button>
@@ -418,8 +427,8 @@ export const IsoHead: TemplateOnlyComponent<IsoHeadSignature> = <template>
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.375rem 0.75rem;
-        padding: 0.75rem 0.625rem;
+        gap: var(--boxel-sp-2xs) var(--boxel-sp-sm);
+        padding: var(--boxel-sp-sm) var(--boxel-sp-xs);
       }
       .ih-mark {
         --pretui-avatar-size: 2.25rem;
@@ -427,9 +436,9 @@ export const IsoHead: TemplateOnlyComponent<IsoHeadSignature> = <template>
         --meeting-mark-size: 2.25rem;
         --pto-mark-size: 2.25rem;
         --review-mark-size: 2.25rem;
-        --review-mark-font-size: 0.5625rem;
-        --pto-mark-font-size: 0.5625rem;
-        --meeting-mark-font-size: 0.5625rem;
+        --review-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --pto-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --meeting-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         flex: none;
         display: inline-flex;
       }
@@ -440,23 +449,23 @@ export const IsoHead: TemplateOnlyComponent<IsoHeadSignature> = <template>
       .ih-title {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         line-height: 1.35;
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
       }
       .ih-meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
       }
       .ih-aside {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.5rem;
-        font-size: 0.75rem;
+        gap: var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
       }
       .ih-stats {
         border-top: 1px solid var(--border);
@@ -524,11 +533,12 @@ export const StatStrip: TemplateOnlyComponent<StatStripSignature> = <template>
     }
     /* rules on each cell's leading and top edge; the strip clips the ones
        on its outer edge, so a short last row leaves no grey gap */
+    /* shortcut: --text-ui-xs / --ink-3 are Stat's season tokens, set here because Stat has no hint size or ink knob; drop with the :deep rules below. */
     .strip-cell {
       --pretui-stat-line: 1;
       --text-ui-xs: 0.6875rem;
       --ink-3: var(--muted-foreground);
-      padding: 0.4375rem 0.625rem;
+      padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       min-width: 0;
       box-shadow:
         -1px 0 0 var(--border),
@@ -536,13 +546,19 @@ export const StatStrip: TemplateOnlyComponent<StatStripSignature> = <template>
     }
     /* shortcut: Pret UI Stat has no label or value weight/size knobs, so the kit's mono caps label and 22px 700 value are set here; drop once Stat exposes them. */
     .strip-cell :deep(.pretui-stat-label) {
-      font: 600 0.5625rem / 1.3 var(--font-mono);
+      font-weight: 600;
+      font-size: 0.5625rem; /* 9px ladder label: no token */
+      line-height: 1.3;
+      font-family: var(--font-mono);
       letter-spacing: 0.13em;
       text-transform: uppercase;
       color: var(--subtle-foreground);
     }
     .strip-cell :deep(.pretui-stat-value) {
-      font: 700 1.375rem / 1 var(--font-sans);
+      font-weight: 700;
+      font-size: var(--boxel-font-size-lg);
+      line-height: 1;
+      font-family: var(--font-sans);
       font-variant-numeric: tabular-nums;
       overflow-wrap: break-word;
     }
@@ -572,20 +588,20 @@ export const IsoPage: TemplateOnlyComponent<IsoPageSignature> = <template>
         container: iso / inline-size;
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         box-sizing: border-box;
         min-height: 100%;
-        padding: 0.875rem;
-        background: var(--canvas, var(--background));
-        color: var(--foreground);
+        padding: var(--boxel-sp-sm);
+        background: var(--card);
+        color: var(--card-foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.35;
       }
       .iso-grid {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       /* the main column is ONE card; its sections are flat inside it */
       .iso-col {
@@ -664,21 +680,20 @@ export const Panel: TemplateOnlyComponent<PanelSignature> = <template>
         display: flex;
         flex-wrap: wrap;
         align-items: baseline;
-        gap: 0.5rem;
-        padding: 0.4375rem 0.625rem 0.3125rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs) var(--boxel-sp-3xs);
       }
       .sh h2 {
-        margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 800;
       }
       .sh-meta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .sh-aside {
         margin-left: auto;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       /* wide rows scroll sideways instead of being cut */
       .panel-body {
@@ -713,7 +728,7 @@ export const Kv: TemplateOnlyComponent<KvSignature> = <template>
   <style scoped>
     .kv {
       --pretui-kv-label-font-family: var(--font-mono);
-      --pretui-kv-label-font-size: 0.5625rem;
+      --pretui-kv-label-font-size: 0.5625rem; /* 9px ladder label: no token */
       --pretui-kv-label-font-weight: 600;
       --pretui-kv-label-line-height: 1.3;
       --pretui-kv-label-letter-spacing: 0.13em;
@@ -722,17 +737,17 @@ export const Kv: TemplateOnlyComponent<KvSignature> = <template>
       --boxel-sp-lg: 0.75rem;
       --boxel-sp-xs: 0.375rem;
       margin: 0;
-      padding-inline: 0.625rem;
+      padding-inline: var(--boxel-sp-xs);
       border-top: 1px solid var(--border);
-      font-size: 0.75rem;
-      overflow-wrap: anywhere;
+      font-size: var(--boxel-font-size-xs);
+      overflow-wrap: break-word;
     }
     /* a value holding atoms wraps them instead of running past the edge */
     .kv-v {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.25rem;
+      gap: var(--boxel-sp-4xs);
       min-width: 0;
     }
   </style>
@@ -767,15 +782,15 @@ export const EmbCard: TemplateOnlyComponent<EmbCardSignature> = <template>
         container-type: inline-size;
         min-width: 0;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.35;
         color: var(--card-foreground);
       }
       .eh {
         display: flex;
         align-items: center;
-        gap: 0.625rem;
-        padding: 0.4375rem 0.625rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         min-width: 0;
       }
       .eh-mark {
@@ -784,9 +799,9 @@ export const EmbCard: TemplateOnlyComponent<EmbCardSignature> = <template>
         --meeting-mark-size: 1.5rem;
         --pto-mark-size: 1.5rem;
         --review-mark-size: 1.5rem;
-        --review-mark-font-size: 0.5625rem;
-        --pto-mark-font-size: 0.5625rem;
-        --meeting-mark-font-size: 0.5625rem;
+        --review-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --pto-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --meeting-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         flex: none;
         display: inline-flex;
       }
@@ -805,14 +820,14 @@ export const EmbCard: TemplateOnlyComponent<EmbCardSignature> = <template>
         font-weight: 700;
       }
       .eh-meta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .eh-aside {
         flex: none;
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
     }
   </style>
@@ -856,7 +871,7 @@ export const FitCard: TemplateOnlyComponent<FitCardSignature> = <template>
         block-size: 100%;
         overflow: hidden;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.35;
         color: var(--card-foreground);
       }
@@ -864,9 +879,9 @@ export const FitCard: TemplateOnlyComponent<FitCardSignature> = <template>
         flex: none;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         block-size: 1.875rem;
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
         min-width: 0;
       }
       .fh-mark {
@@ -875,9 +890,9 @@ export const FitCard: TemplateOnlyComponent<FitCardSignature> = <template>
         --meeting-mark-size: 1.25rem;
         --pto-mark-size: 1.25rem;
         --review-mark-size: 1.25rem;
-        --review-mark-font-size: 0.5625rem;
-        --pto-mark-font-size: 0.5625rem;
-        --meeting-mark-font-size: 0.5625rem;
+        --review-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --pto-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --meeting-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         flex: none;
         display: inline-flex;
       }
@@ -911,7 +926,7 @@ export const FitCard: TemplateOnlyComponent<FitCardSignature> = <template>
         align-items: center;
         box-sizing: border-box;
         block-size: 1.75rem;
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
         overflow: hidden;
       }
@@ -947,10 +962,10 @@ export const FitRow: TemplateOnlyComponent<FitRowSignature> = <template>
         flex: none;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         box-sizing: border-box;
         block-size: 1.75rem;
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
         min-width: 0;
         overflow: hidden;
@@ -958,7 +973,10 @@ export const FitRow: TemplateOnlyComponent<FitRowSignature> = <template>
       }
       .fr-k {
         flex: none;
-        font: 600 0.5625rem / 1.3 var(--font-mono);
+        font-weight: 600;
+        font-size: 0.5625rem; /* 9px ladder label: no token */
+        line-height: 1.3;
+        font-family: var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -969,7 +987,7 @@ export const FitRow: TemplateOnlyComponent<FitRowSignature> = <template>
         display: flex;
         justify-content: flex-end;
         align-items: center;
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
         overflow: hidden;
         text-overflow: ellipsis;
       }
