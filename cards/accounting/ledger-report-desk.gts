@@ -119,17 +119,22 @@ type SavedRow = {
   period: string;
   savedBy: string;
   visibility: string;
-  card: SavedLike;
+  card: SavedLike | undefined;
 };
-/** A search row's saved report, as its stored values. */
-export const savedOfEntry = (e: {
-  id: string;
-  item?: { attributes?: Record<string, unknown> } | unknown;
-}): SavedLike => ({
-  ...(((e.item as { attributes?: Record<string, unknown> })?.attributes ??
-    {}) as SavedLike),
-  id: e.id,
-});
+/** A search row's saved report, as its stored values: from the row's serialization when it carries
+ *  one, else from the card itself, which a row answered as prerendered HTML doesn't. */
+export const savedOfEntry = (
+  e: {
+    id: string;
+    item?: { attributes?: Record<string, unknown> } | unknown;
+  },
+  card?: SavedLike,
+): SavedLike | undefined => {
+  let attributes = (e.item as { attributes?: Record<string, unknown> })
+    ?.attributes;
+  if (attributes) return { ...(attributes as SavedLike), id: e.id };
+  return card;
+};
 const SAVED_COLUMNS = [
   { key: 'name', label: 'Name' },
   { key: 'kindLabel', label: 'Report' },
@@ -151,6 +156,22 @@ export class MyReports extends GlimmerComponent<MineSignature> {
     { realms: this.args.refRealms ?? this.args.realms, owner: this },
   );
   @tracked returnTo = '';
+  // The saved reports read from the store, by id, for the rows the search answered as HTML only.
+  @tracked cards: Record<string, SavedLike> = {};
+  #asked = new Set<string>();
+  private readCard(id: string) {
+    if (this.#asked.has(id)) return;
+    this.#asked.add(id);
+    Promise.resolve().then(async () => {
+      try {
+        let card = (await this.args.context?.store?.get(id)) as unknown;
+        if (card && typeof card === 'object' && 'kind' in (card as object))
+          this.cards = { ...this.cards, [id]: card as SavedLike };
+      } catch {
+        this.#asked.delete(id);
+      }
+    });
+  }
   get loading() {
     return this.visible.isLoading && !this.visible.entries.length;
   }
@@ -163,7 +184,19 @@ export class MyReports extends GlimmerComponent<MineSignature> {
   }
   get rows(): SavedRow[] {
     return this.visible.entries.map((e) => {
-      let c = savedOfEntry(e);
+      let c = savedOfEntry(e, this.cards[e.id]);
+      if (!c) {
+        this.readCard(e.id);
+        return {
+          id: e.id,
+          name: 'Loading…',
+          kindLabel: '',
+          period: '',
+          savedBy: '',
+          visibility: '',
+          card: undefined,
+        };
+      }
       return {
         id: e.id,
         name: c.name ?? '',
@@ -184,6 +217,10 @@ export class MyReports extends GlimmerComponent<MineSignature> {
   openReport = (r: SavedRow) => {
     let c = r.card;
     this.openError = '';
+    if (!c) {
+      this.openError = 'This report is still loading. Open it again in a moment.';
+      return;
+    }
     if (this.isRunner(c.kind)) {
       this.returnTo = r.id;
       this.open = c;
