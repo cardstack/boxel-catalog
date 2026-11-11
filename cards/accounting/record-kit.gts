@@ -491,7 +491,7 @@ export class Lines extends Component<LinesSig> {
             { on: type, any: this.codes.map((code) => ({ eq: { code } })) },
           ],
         },
-        page: { size: Math.max(this.codes.length, 1) },
+        page: { size: Math.min(Math.max(this.codes.length, 1), 100) },
       } as never;
     },
     () => {

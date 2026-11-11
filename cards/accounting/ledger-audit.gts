@@ -17,7 +17,8 @@ import { BillPayment } from './ledger-payments';
 import { OpeningBalances } from './ledger-opening';
 import { MonthClose, BankReconciliation } from './ledger-close';
 import { YearClose } from './ledger-year';
-import { instancesOf, loadingOf, isCapped } from './ledger-report-custom';
+import { instancesOf, loadingOf } from './ledger-report-custom';
+import { AllCards } from './all-cards';
 import { toHome } from './ledger-document';
 
 export type AuditKind =
@@ -262,7 +263,7 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
   // Each source within the period when one is set, newest first, so a full page drops the oldest.
   // A journal posting is filtered by when it was posted, which can be long after the date it posts
   // on, so the journal reads every month from a year before the period on.
-  query = (type: unknown, size: number, by?: SortBy) => {
+  query = (type: unknown, by?: SortBy) => {
     let ref = identifyCard(type as never),
       month = by === 'month' || by === 'journal',
       from = month ? this.from.slice(0, 7) : this.from,
@@ -279,15 +280,15 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
         ],
       },
       ...(field ? { sort: [{ by: field, on: ref, direction: 'desc' }] } : {}),
-      page: { size },
     } as never;
   };
-  load = (type: unknown, size: number, by?: SortBy) =>
-    this.args.context?.getCards(
+  load = (type: unknown, limit: number, by?: SortBy) =>
+    new AllCards(
+      this.args.context,
       this,
-      () => this.query(type, size, by),
+      () => this.query(type, by),
       () => this.args.realms,
-      { isLive: true },
+      { isLive: true, limit },
     );
   journalData = this.load(JournalMonth, 240, 'journal');
   // A document's events (a void, a post) can come long after its date, so documents aren't ranged
@@ -299,7 +300,7 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
   closeData = this.load(MonthClose, 240, 'month');
   recData = this.load(BankReconciliation, 500, 'statementDate');
   yearData = this.load(YearClose, 50, 'year');
-  get sources(): [unknown, number, string][] {
+  get sources(): [AllCards, number, string][] {
     return [
       [this.journalData, 240, 'journal months'],
       [this.docData, 1000, 'documents'],
@@ -314,8 +315,16 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
   get loading() {
     return this.sources.some(([r]) => loadingOf(r));
   }
+  get failNote() {
+    if (this.loading) return '';
+    let failed = this.sources.filter(([r]) => r.failed);
+    return failed.length
+      ? `The log couldn't read its ${failed.map(([, , noun]) => noun).join(', ')}, so it shows no events. Reload to try again.`
+      : '';
+  }
   get capNote() {
-    let full = this.sources.filter(([r, size]) => isCapped(r, size));
+    if (this.loading || this.failNote) return '';
+    let full = this.sources.filter(([r]) => r.truncated);
     return full.length
       ? `The log read only the newest ${full.map(([, size, noun]) => `${size} ${noun}`).join(' and ')}, so older events are missing. Set a From and To date to read a shorter period.`
       : '';
@@ -336,6 +345,7 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
     });
   }
   get rows(): Row[] {
+    if (this.failNote) return [];
     return filterAudit(this.events, { from: this.from, to: this.to }).map(
       (e, i) => ({
         ...e,
@@ -401,13 +411,17 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
             /></:default>
         </Field>
       </div>
+      {{#if this.failNote}}<Callout
+          @tone='danger'
+          @title="Couldn't read the log"
+        >{{this.failNote}}</Callout>{{/if}}
       <DataTable
         @columns={{this.columns}}
         @rows={{this.rows}}
         @key={{this.rowKey}}
         @rowLabel={{this.rowLabel}}
         @label='Audit log'
-        @itemNoun='events'
+        @itemNoun='event'
         @size='s'
         @pageSize={{100}}
         @sortable={{false}}
