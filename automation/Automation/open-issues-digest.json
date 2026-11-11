@@ -31,7 +31,12 @@
           "date": null,
           "time": null,
           "webhookPath": null,
-          "params": []
+          "params": [
+            {
+              "name": "reportPath",
+              "value": "reports/release-week-issues.md"
+            }
+          ]
         },
         {
           "kind": "once",
@@ -62,13 +67,18 @@
         "resolveCalls": 0,
         "writes": 1,
         "seconds": 300,
+        "dailyCredits": 40,
         "monthlyCredits": 400
       },
-      "params": [],
-      "milestones": [
-        "Fetch open issues",
-        "Group by label",
-        "Write digest"
+      "params": [
+        {
+          "name": "repository",
+          "value": "automation/examples/GitHubRepository/boxel"
+        },
+        {
+          "name": "reportPath",
+          "value": "reports/open-issues.md"
+        }
       ],
       "batchedAI": false
     },

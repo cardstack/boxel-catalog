@@ -35,7 +35,7 @@ interface CodeViewSignature {
 export class CodeView extends GlimmerComponent<CodeViewSignature> {
   <template>
     <CodeBlock
-      @code={{@code}}
+      @code={{if @code @code ''}}
       @language={{@language}}
       @filename={{@filename}}
       @lineNumbers={{true}}
@@ -92,7 +92,7 @@ export class CodeField extends StringField {
   };
 
   static atom = class Atom extends Component<typeof CodeField> {
-    <template><Token @value={{@model}} /></template>
+    <template><Token @value={{if @model @model ''}} /></template>
   };
 
   static edit = class Edit extends Component<typeof CodeField> {

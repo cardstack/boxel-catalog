@@ -9,6 +9,8 @@
 // an expression is valid, and when it fires, is the server's to decide.
 
 export interface CronDescriptionGroup {
+  // Leads into the list as part of a sentence: "at these times", "on these
+  // days". Lower case, so a view can join several with "and".
   label: string;
   items: string[];
 }
@@ -88,11 +90,16 @@ function parseField(
     if (range) {
       let from = value(range[1]);
       let to = value(range[2]);
+      // Sunday is both 0 and 7, so a range of days that ends on Sunday
+      // (FRI-SUN, 5-7) runs up to 7 and wraps back to 0.
+      if (names === DAY_NAMES && to === 0 && from !== undefined && from > 0) {
+        to = 7;
+      }
       if (from === undefined || to === undefined || to < from) {
         return undefined;
       }
       for (let n = from; n <= to; n++) {
-        values.add(n);
+        values.add(names === DAY_NAMES ? n % 7 : n);
       }
     } else {
       let n = value(part);
@@ -142,6 +149,21 @@ function isRun(values: number[]): boolean {
   );
 }
 
+// Days of the week as a run of three or more, starting wherever the run
+// starts, so one that passes the end of the week (5, 6, 0) still counts.
+function weekRun(values: number[]): number[] | undefined {
+  for (let i = 0; i < values.length; i++) {
+    let rotated = [...values.slice(i), ...values.slice(0, i)];
+    if (
+      rotated.length > 2 &&
+      rotated.every((v, j) => j === 0 || v === (rotated[j - 1] + 1) % 7)
+    ) {
+      return rotated;
+    }
+  }
+  return undefined;
+}
+
 // Within a day: `phrase` repeats through the day ("Every 5 minutes"), or is
 // the time it fires at ("at 7:00 AM"); several times are listed instead.
 interface TimeOfDay {
@@ -170,7 +192,10 @@ function describeTime(minute: Parsed, hour: Parsed): TimeOfDay | undefined {
   let minutes = minute.values;
   let pastList =
     minutes.length > 1
-      ? { label: 'Minutes', items: minutes.map(pastTheHour) }
+      ? {
+          label: 'at these points in each hour',
+          items: minutes.map(pastTheHour),
+        }
       : undefined;
   let hourly = (prefix: string) =>
     minutes.length === 1
@@ -217,7 +242,7 @@ function describeTime(minute: Parsed, hour: Parsed): TimeOfDay | undefined {
   return {
     repeats: false,
     phrase: times(all.length, 'a day').toLowerCase(),
-    list: { label: 'Times', items: all },
+    list: { label: 'at these times', items: all },
   };
 }
 
@@ -235,8 +260,7 @@ function describeDays(dom: Parsed, dow: Parsed): Days | undefined {
   if (dom.step || dow.step) {
     return undefined;
   }
-  let weekdayItems = (values: number[]) =>
-    values.map((d) => `Every ${DAYS[d]}`);
+  let weekdayItems = (values: number[]) => values.map((d) => DAYS[d]);
   let dayOfWeek = (): Days => {
     let values = dow.values;
     let key = values.join(',');
@@ -246,8 +270,13 @@ function describeDays(dom: Parsed, dow: Parsed): Days | undefined {
     if (key === '0,6') {
       return { everyDay: false, phrase: 'Weekends', qualifier: 'on weekends' };
     }
-    if (isRun(values)) {
-      let range = `${DAYS[values[0]]} through ${DAYS[values[values.length - 1]]}`;
+    if (values.length === 7) {
+      return { everyDay: true, phrase: 'Every day', qualifier: '' };
+    }
+    // The week wraps, so Friday, Saturday and Sunday are a run too.
+    let run = weekRun(values);
+    if (run) {
+      let range = `${DAYS[run[0]]} through ${DAYS[run[run.length - 1]]}`;
       return { everyDay: false, phrase: range, qualifier: range };
     }
     if (values.length === 1) {
@@ -262,7 +291,7 @@ function describeDays(dom: Parsed, dow: Parsed): Days | undefined {
       everyDay: false,
       phrase: count,
       qualifier: count,
-      list: { label: 'Days', items: weekdayItems(values) },
+      list: { label: 'on these days', items: weekdayItems(values) },
     };
   };
   let dayOfMonth = (): Days => {
@@ -277,8 +306,8 @@ function describeDays(dom: Parsed, dow: Parsed): Days | undefined {
       phrase: count,
       qualifier: count,
       list: {
-        label: 'Days of the month',
-        items: values.map((d) => `The ${ordinal(d)}`),
+        label: 'on these days of the month',
+        items: values.map((d) => ordinal(d)),
       },
     };
   };
@@ -297,9 +326,9 @@ function describeDays(dom: Parsed, dow: Parsed): Days | undefined {
     phrase: 'On any of these days',
     qualifier: 'on any of these days',
     list: {
-      label: 'Days',
+      label: 'on any of these days',
       items: [
-        ...dom.values.map((d) => `The ${ordinal(d)} of the month`),
+        ...dom.values.map((d) => `${ordinal(d)} of the month`),
         ...weekdayItems(dow.values),
       ],
     },
@@ -312,7 +341,7 @@ function describeMonths(month: Parsed): CronDescriptionGroup | undefined {
   }
   let values = month.values;
   return {
-    label: 'Months',
+    label: 'in these months',
     items: isRun(values)
       ? [
           `${MONTHS[values[0] - 1]} through ${MONTHS[values[values.length - 1] - 1]}`,
@@ -379,4 +408,56 @@ export function describeCron(
     (g): g is CronDescriptionGroup => Boolean(g),
   );
   return { summary, groups };
+}
+
+// What's wrong with an expression, in words, for an editor to show as the
+// author types; undefined when nothing it can see is wrong. It catches the
+// common slips (not five fields, firing more often than every
+// `minimumMinutes`) and leaves anything subtler to the server, which decides.
+export function cronProblem(
+  expression: string | null | undefined,
+  minimumMinutes = 5,
+): string | undefined {
+  if (typeof expression !== 'string' || expression.trim() === '') {
+    return 'Enter when it runs, such as 0 7 * * MON';
+  }
+  let source = expression.trim();
+  let fields = (MACROS[source.toLowerCase()] ?? source).split(/\s+/);
+  if (fields.length !== 5) {
+    return 'A cron expression has five fields: minute, hour, day of the month, month and day of the week';
+  }
+  let minute = parseField(fields[0], 0, 59);
+  let hour = parseField(fields[1], 0, 23);
+  if (!minute || !hour) {
+    return undefined;
+  }
+  let tooOften = `It can run at most once every ${minimumMinutes} minutes`;
+  if (minute.any || (minute.step && minute.step < minimumMinutes)) {
+    return tooOften;
+  }
+  let minutes = minute.step
+    ? Array.from(
+        { length: Math.ceil(60 / minute.step) },
+        (_, i) => i * minute.step!,
+      )
+    : minute.values;
+  for (let i = 1; i < minutes.length; i++) {
+    if (minutes[i] - minutes[i - 1] < minimumMinutes) {
+      return tooOften;
+    }
+  }
+  // The last minute of one hour and the first of the next.
+  let hours = hour.any
+    ? Array.from({ length: 24 }, (_, i) => i)
+    : hour.step
+      ? Array.from(
+          { length: Math.ceil(24 / hour.step) },
+          (_, i) => i * hour.step!,
+        )
+      : hour.values;
+  let wraps = hours.some((h) => hours.includes(h + 1));
+  if (wraps && 60 - minutes[minutes.length - 1] + minutes[0] < minimumMinutes) {
+    return tooOften;
+  }
+  return undefined;
 }

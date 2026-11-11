@@ -41,13 +41,10 @@
         "resolveCalls": 0,
         "writes": 1,
         "seconds": 60,
+        "dailyCredits": 20,
         "monthlyCredits": 50
       },
       "params": [],
-      "milestones": [
-        "Count cards",
-        "Write report"
-      ],
       "batchedAI": false
     },
     "relationships": {

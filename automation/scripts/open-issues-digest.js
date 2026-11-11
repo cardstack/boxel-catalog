@@ -2,13 +2,20 @@
 // A Realm Runner script: the body of an async function, run with the
 // automation surface's `realm` object. It reads a repository's open issues
 // through the automation's one declared outside call, groups them by label,
-// and writes the digest to a Markdown file in the workspace.
+// and writes the digest to a Markdown file in the workspace. Its params name
+// the repository card to read and the file to write; a trigger's params
+// override the automation's own.
 
-await realm.plan(['Fetch open issues', 'Group by label', 'Write digest']);
+await realm.progress.plan(['Fetch open issues', 'Group by label', 'Write digest']);
+
+const {
+  repository = 'automation/examples/GitHubRepository/boxel',
+  reportPath = 'reports/open-issues.md',
+} = realm.current?.automation?.params ?? {};
 
 await realm.activity({ message: 'Fetching open issues', current: 1, total: 3 });
 const { body: issues } = await realm.operations.invoke(
-  'automation/examples/GitHubRepository/boxel',
+  repository,
   'openIssues',
   {},
 );
@@ -33,6 +40,6 @@ const sections = [...byLabel.entries()]
     ),
   );
 await realm.fs.writeText(
-  'reports/open-issues.md',
+  reportPath,
   ['# Open issues in cardstack/boxel', '', ...sections, ''].join('\n'),
 );
