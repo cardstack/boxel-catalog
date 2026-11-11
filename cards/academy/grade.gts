@@ -20,6 +20,7 @@ import { round1 } from './rubric-criterion-field';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { Dot, Mark } from './components/record-sheet';
 import { FitTile } from '../shared/fit-tile';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /** The grader's pick for one rubric criterion. */
 export class CriterionScoreField extends FieldDef {
@@ -144,51 +145,59 @@ export class Grade extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     <template>
-      <article class='grade'>
-        <header class='hero'>
-          <div class='letter-box'>
-            <span class='letter'>{{if @model.letter @model.letter '—'}}</span>
-            <span class='pct'>{{@model.pct}}%</span>
-          </div>
-          <div class='hero-text'>
-            <span class='eyebrow'>Grade ·
-              {{#if @model.submission}}<@fields.submission
-                  @format='atom'
-                />{{/if}}</span>
-            <h1>{{@model.total}}
-              <span class='of'>/ {{@model.maxPoints}} points</span></h1>
-            <p class='meta'>
-              {{#if @model.graderName}}<span>by
-                  {{@model.graderName}}</span>{{/if}}
-              {{#if @model.gradedAt}}<span>{{fmtDate
-                    @model.gradedAt
-                  }}</span>{{/if}}
-              {{#if @model.penaltyPct}}<span class='pen'>−{{@model.penaltyPct}}%
-                  late ({{@model.daysLate}}d)</span>{{/if}}
-              {{#if @model.overridePoints}}<span class='pen'>override applied</span>{{/if}}
-            </p>
-          </div>
-        </header>
-        <section class='panel'>
-          <h2>Rubric</h2>
-          {{#if @model.criterionScores.length}}
-            <div class='stack'>{{#each @fields.criterionScores as |Cs|}}<Cs
-                />{{/each}}</div>
-            <div class='sum'><span>Raw total</span><span>{{@model.rawTotal}}
-                /
-                {{@model.maxPoints}}</span></div>
-          {{else}}
-            <p class='empty'>No criterion scores recorded.</p>
-          {{/if}}
-        </section>
-        <section class='panel'>
-          <h2>Feedback</h2>
-          {{#if @model.feedback}}<@fields.feedback />{{else}}<p class='empty'>No
-              written feedback.</p>{{/if}}
-        </section>
-      </article>
+      <IsoFrame>
+        <article class='grade'>
+          <header class='hero'>
+            <div class='letter-box'>
+              <span class='letter'>{{if @model.letter @model.letter '—'}}</span>
+              <span class='pct'>{{@model.pct}}%</span>
+            </div>
+            <div class='hero-text'>
+              <span class='eyebrow'>Grade ·
+                {{#if @model.submission}}<@fields.submission
+                    @format='atom'
+                  />{{/if}}</span>
+              <h1>{{@model.total}}
+                <span class='of'>/ {{@model.maxPoints}} points</span></h1>
+              <p class='meta'>
+                {{#if @model.graderName}}<span>by
+                    {{@model.graderName}}</span>{{/if}}
+                {{#if @model.gradedAt}}<span>{{fmtDate
+                      @model.gradedAt
+                    }}</span>{{/if}}
+                {{#if @model.penaltyPct}}<span
+                    class='pen'
+                  >−{{@model.penaltyPct}}% late ({{@model.daysLate}}d)</span>{{/if}}
+                {{#if @model.overridePoints}}<span class='pen'>override applied</span>{{/if}}
+              </p>
+            </div>
+          </header>
+          <section class='panel'>
+            <h2>Rubric</h2>
+            {{#if @model.criterionScores.length}}
+              <div class='stack'>{{#each @fields.criterionScores as |Cs|}}<Cs
+                  />{{/each}}</div>
+              <div class='sum'><span>Raw total</span><span>{{@model.rawTotal}}
+                  /
+                  {{@model.maxPoints}}</span></div>
+            {{else}}
+              <p class='empty'>No criterion scores recorded.</p>
+            {{/if}}
+          </section>
+          <section class='panel'>
+            <h2>Feedback</h2>
+            {{#if @model.feedback}}<@fields.feedback />{{else}}<p
+                class='empty'
+              >No written feedback.</p>{{/if}}
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .grade {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 48rem;
           margin: 0 auto;
           container-type: inline-size;
@@ -196,7 +205,6 @@ export class Grade extends CardDef {
           display: grid;
           gap: var(--boxel-sp-lg);
           color: var(--foreground);
-          background: var(--background);
         }
         .hero {
           display: grid;

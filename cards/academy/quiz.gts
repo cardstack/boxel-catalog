@@ -17,6 +17,7 @@ import { KeyValue } from '@cardstack/pretui/components/key-value';
 
 import { DurationField } from '../hr/duration-field';
 import { QuizQuestionField, pointsOf } from './quiz-question-field';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * A scored, auto-marked check of understanding. Questions are contained (a
@@ -67,48 +68,54 @@ export class Quiz extends CardDef {
       ];
     }
     <template>
-      <article class='quiz'>
-        <header class='hero'>
-          <div>
-            <span class='eyebrow'>Quiz ·
-              {{@model.questionCount}}
-              questions ·
-              {{@model.totalPoints}}
-              pts</span>
-            <h1>{{@model.cardTitle}}</h1>
-            {{#if @model.instructions}}<p
-                class='instr'
-              >{{@model.instructions}}</p>{{/if}}
-          </div>
-          <KeyValue
-            class='facts kv-pad'
-            @items={{this.facts}}
-            @layout='stacked'
-          />
-        </header>
-        {{#if @model.questions.length}}
-          <ol class='questions'>
-            {{#each @fields.questions as |Question index|}}
-              <li class='q'>
-                <span class='q-n'>{{inc index}}</span>
-                <div class='q-body'><Question /></div>
-              </li>
-            {{/each}}
-          </ol>
-        {{else}}
-          <EmptyState
-            @size='s'
-            @title='No questions yet'
-            @message='Add questions in edit mode; each one carries its own points.'
-          />
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='quiz'>
+          <header class='hero'>
+            <div>
+              <span class='eyebrow'>Quiz ·
+                {{@model.questionCount}}
+                questions ·
+                {{@model.totalPoints}}
+                pts</span>
+              <h1>{{@model.cardTitle}}</h1>
+              {{#if @model.instructions}}<p
+                  class='instr'
+                >{{@model.instructions}}</p>{{/if}}
+            </div>
+            <KeyValue
+              class='facts kv-pad'
+              @items={{this.facts}}
+              @layout='stacked'
+            />
+          </header>
+          {{#if @model.questions.length}}
+            <ol class='questions'>
+              {{#each @fields.questions as |Question index|}}
+                <li class='q'>
+                  <span class='q-n'>{{inc index}}</span>
+                  <div class='q-body'><Question /></div>
+                </li>
+              {{/each}}
+            </ol>
+          {{else}}
+            <EmptyState
+              @size='s'
+              @title='No questions yet'
+              @message='Add questions in edit mode; each one carries its own points.'
+            />
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .kv-pad {
           padding-inline: var(--boxel-sp-sm);
         }
 
         .quiz {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 52rem;
           margin: 0 auto;
           container-type: inline-size;
@@ -116,7 +123,6 @@ export class Quiz extends CardDef {
           display: grid;
           gap: var(--boxel-sp-lg);
           color: var(--foreground);
-          background: var(--background);
         }
         .hero {
           display: flex;
