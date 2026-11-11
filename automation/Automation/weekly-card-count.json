@@ -13,10 +13,10 @@
           "expression": "0 7 * * MON",
           "timeZone": "America/Chicago",
           "untilDate": null,
-          "untilTime": { "value": null },
-          "count": null,
+          "untilTime": null,
+          "count": 52,
           "date": null,
-          "time": { "value": null },
+          "time": null,
           "webhookPath": null,
           "params": []
         },
@@ -26,10 +26,10 @@
           "expression": null,
           "timeZone": null,
           "untilDate": null,
-          "untilTime": { "value": null },
+          "untilTime": null,
           "count": null,
           "date": null,
-          "time": { "value": null },
+          "time": null,
           "webhookPath": "card-count",
           "params": []
         }
@@ -44,7 +44,10 @@
         "monthlyCredits": 50
       },
       "params": [],
-      "milestones": [],
+      "milestones": [
+        "Count cards",
+        "Write report"
+      ],
       "batchedAI": false
     },
     "relationships": {
