@@ -983,7 +983,10 @@ export function runTests() {
       assert.false(ops('limited-sales').has('Ledger.enterBill'));
       assert.true(ops('limited-sales').has('Invoice.post'));
       assert.false(ops('limited-purchases').has('Invoice.post'));
-      assert.deepEqual([...ops('reports-only')], ['Ledger.saveReport']);
+      assert.deepEqual(
+        [...ops('reports-only')],
+        ['Ledger.saveReport', 'SavedReport.delete'],
+      );
     });
 
     test("a user's role reads back from the policy's rules, and a change rewrites only theirs", function (assert) {
