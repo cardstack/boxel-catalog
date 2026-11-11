@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Payroll Tax Agency\n\nWho payroll taxes are owed to: the form filed, how often, the liability account the taxes wait in, and the taxes it collects.\n\n```ts\nimport { PayrollAgency } from '@cardstack/catalog/cards/accounting/ledger-payroll';\n```",
+      "ref": {
+        "module": "../ledger-payroll",
+        "name": "PayrollAgency"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Payroll Tax Agency",
+      "cardDescription": "A payroll tax agency: its form, filing frequency and liability account.",
+      "cardInfo": {
+        "name": "Payroll Tax Agency",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PayrollAgency/irs-941"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

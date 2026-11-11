@@ -1,0 +1,59 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "employeeId": "dana-kim",
+      "name": "Dana Kim",
+      "active": true,
+      "workState": "NY",
+      "hourlyRateMinor": null,
+      "defaultHoursMilli": null,
+      "federalCreditsMinor": 0,
+      "extraWithholdingMinor": 0,
+      "annualSalaryMinor": null,
+      "payType": "salary",
+      "schedule": "biweekly",
+      "expenseAccount": "6100",
+      "cls": null,
+      "filingStatus": "single",
+      "allowances": 1,
+      "deductions": [
+        {
+          "label": "401(k)",
+          "kind": "retirement",
+          "amountMinor": null,
+          "ratePpm": 50000,
+          "account": "2340"
+        },
+        {
+          "label": "Health plan",
+          "kind": "section125",
+          "amountMinor": 9500,
+          "ratePpm": null,
+          "account": "2350"
+        }
+      ],
+      "cardInfo": {
+        "name": "Pay · Dana Kim"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "employee": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PaySetup"
+      }
+    }
+  }
+}

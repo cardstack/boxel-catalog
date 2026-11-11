@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Component,
   contains,
@@ -36,9 +37,14 @@ export function isGradeConsistent(
 
 // letter grades the grading skill is allowed to award (see the skill's
 // grading scale) — an enum so the edit UI is a picker, not free text
-export const LetterGradeField = enumField(StringField, {
-  options: ['A', 'B', 'C', 'D', 'E', 'F'].map((g) => ({ value: g, label: g })),
-});
+export const LetterGradeField = markDefinition(
+  enumField(StringField, {
+    options: ['A', 'B', 'C', 'D', 'E', 'F'].map((g) => ({
+      value: g,
+      label: g,
+    })),
+  }),
+);
 
 export class GradeField extends FieldDef {
   @field overallGrade = contains(LetterGradeField);

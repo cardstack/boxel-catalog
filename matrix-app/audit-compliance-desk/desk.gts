@@ -53,6 +53,7 @@ import {
   TRUST_LABELS,
   TRUST_HUE,
 } from '@cardstack/catalog/fields/trust-metadata/trust-metadata-field';
+import { registerOrder } from './register-order';
 
 type Tab = 'evidence' | 'vocabulary';
 
@@ -179,6 +180,10 @@ export class AuditComplianceDeskIsolated extends Component<
   @tracked tab: Tab = 'evidence';
   @tracked docSearch = '';
   @tracked docKind = 'all';
+
+  get docsFiltered() {
+    return this.docSearch.trim() !== '' || this.docKind !== 'all';
+  }
   @tracked vocabSearch = '';
   @tracked vocabOrder = 'all';
 
@@ -248,7 +253,7 @@ export class AuditComplianceDeskIsolated extends Component<
       {
         label: 'Not yet hashed',
         value: dash ? '—' : total - hashed,
-        tone: 'destructive',
+        tone: 'warning',
         hint: 'records, not evidence',
       },
       {
@@ -262,7 +267,7 @@ export class AuditComplianceDeskIsolated extends Component<
 
   get rows() {
     let q = this.docSearch.trim().toLowerCase();
-    return this.documents
+    return registerOrder(this.documents)
       .filter((d) => this.docKind === 'all' || d.kind === this.docKind)
       .filter((d) => !q || (d.cardTitle ?? '').toLowerCase().includes(q))
       .map((d) => {
@@ -480,11 +485,11 @@ export class AuditComplianceDeskIsolated extends Component<
               {{/if}}
 
               <section class='block' aria-labelledby='acd-docs'>
-                <header class='block-head'>
+                <div class='block-head'>
                   <h2 id='acd-docs'>Documents</h2>
                   <span class='block-meta mono'>{{this.rows.length}}
                     documents · newest first</span>
-                </header>
+                </div>
                 {{#if this.isLoading}}
                   <p class='block-body muted' role='status'>Loading the
                     register…</p>
@@ -543,7 +548,11 @@ export class AuditComplianceDeskIsolated extends Component<
                   <div class='block-body'>
                     <EmptyState
                       @size='s'
-                      @title='No documents match'
+                      @title={{if
+                        this.docsFiltered
+                        'No documents match'
+                        'No documents yet'
+                      }}
                       @message='A document is the artefact plus who owns it and what it replaced. Evidence arrives here before it is ever cited.'
                     />
                   </div>
@@ -585,13 +594,13 @@ export class AuditComplianceDeskIsolated extends Component<
               {{/if}}
 
               <div class='vocab-grid'>
-                {{#each this.vocabularies as |v|}}
-                  <section class='block' aria-label={{v.title}}>
-                    <header class='block-head'>
-                      <h2>{{v.title}}</h2>
+                {{#each this.vocabularies as |v i|}}
+                  <section class='block' aria-labelledby='acd-vocab-{{i}}'>
+                    <div class='block-head'>
+                      <h2 id='acd-vocab-{{i}}'>{{v.title}}</h2>
                       <span class='block-meta mono push'>{{v.rows.length}}
                         values</span>
-                    </header>
+                    </div>
                     <p class='note'>{{v.note}}</p>
                     <ul class='rows'>
                       {{#each v.rows as |r i|}}
@@ -654,9 +663,6 @@ export class AuditComplianceDeskIsolated extends Component<
         font-family: var(--font-sans);
         font-size: var(--boxel-font-size-xs);
       }
-      p {
-        margin: 0;
-      }
       .brand {
         display: flex;
         align-items: center;
@@ -671,7 +677,10 @@ export class AuditComplianceDeskIsolated extends Component<
         block-size: 1.75rem;
         border-radius: var(--radius);
         background: var(--muted);
-        font: 600 var(--boxel-font-size-2xs)/1 var(--font-mono);
+        font-weight: 600;
+        font-size: var(--boxel-font-size-2xs);
+        line-height: 1;
+        font-family: var(--font-mono);
       }
       .doc-mark {
         inline-size: 1.25rem;
@@ -688,7 +697,10 @@ export class AuditComplianceDeskIsolated extends Component<
         color: var(--muted-foreground);
       }
       .eyebrow {
-        font: 600 var(--boxel-font-size-2xs)/1.3 var(--font-mono);
+        font-weight: 600;
+        font-size: 0.5625rem; /* 9px ladder label: no token */
+        line-height: 1.3;
+        font-family: var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -741,7 +753,10 @@ export class AuditComplianceDeskIsolated extends Component<
       }
       .authority-kv dt {
         padding-inline-end: var(--boxel-sp-sm);
-        font: 600 var(--boxel-font-size-2xs)/1.3 var(--font-mono);
+        font-weight: 600;
+        font-size: 0.5625rem; /* 9px ladder label: no token */
+        line-height: 1.3;
+        font-family: var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -752,7 +767,6 @@ export class AuditComplianceDeskIsolated extends Component<
       }
       .aside-block h2,
       .block-head h2 {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
@@ -762,8 +776,7 @@ export class AuditComplianceDeskIsolated extends Component<
         gap: var(--boxel-sp-4xs);
       }
       .h1 {
-        margin: 0;
-        font-family: var(--boxel-heading-font-family, var(--font-sans));
+        font-family: var(--boxel-heading-font-family);
         font-weight: 400;
         font-size: var(--boxel-font-size-2xl);
         line-height: 1;
@@ -845,7 +858,7 @@ export class AuditComplianceDeskIsolated extends Component<
 
       /* compact register: one line per row, centred like the mock */
       .reg-row > td {
-        block-size: 1.75rem;
+        min-block-size: 1.75rem;
         padding-block: 0;
         vertical-align: middle;
         white-space: nowrap;
@@ -855,8 +868,7 @@ export class AuditComplianceDeskIsolated extends Component<
         align-items: center;
         gap: var(--boxel-sp-xs);
       }
-      .name {
-        --pretui-button-fg: var(--card-foreground);
+      span.name {
         font-weight: 600;
       }
 

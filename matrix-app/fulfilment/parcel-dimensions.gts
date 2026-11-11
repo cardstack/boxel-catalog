@@ -139,7 +139,7 @@ export class ParcelDimensionsField extends FieldDef {
           align-items: center;
           flex-wrap: wrap;
           gap: var(--boxel-sp-2xs);
-          font-size: 0.85rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
         }
         .pd-size {
@@ -163,7 +163,7 @@ export class ParcelDimensionsField extends FieldDef {
         .pd .pd-billable {
           --pretui-chip-mix: 14%;
           --pretui-ink-mix: 62%;
-          --text-ui-xs: 0.75rem;
+          --pretui-chip-font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
       </style>

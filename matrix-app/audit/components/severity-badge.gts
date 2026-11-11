@@ -1,7 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import { Chip } from '@cardstack/pretui/components/chip';
 
-import { stateColor } from '@cardstack/catalog/components/state-pill';
 import {
   SEVERITY_HUE,
   SEVERITY_LABELS,
@@ -45,11 +44,13 @@ export class SeverityBadge extends GlimmerComponent<Signature> {
   get isCritical() {
     return this.level === 'critical';
   }
-  // Critical paints its own fill, so it takes no hue.
-  get hue() {
+  // Minor and major share the warning tone; the meter and the word tell them apart.
+  get tone() {
     return this.isCritical
-      ? undefined
-      : stateColor(SEVERITY_HUE[this.level] ?? 'slate').ring;
+      ? 'danger'
+      : this.level in SEVERITY_HUE
+        ? 'warning'
+        : 'neutral';
   }
   get title() {
     let base = `Severity: ${this.label}`;
@@ -62,7 +63,8 @@ export class SeverityBadge extends GlimmerComponent<Signature> {
         class='severity-badge
           {{if @compact "compact"}}
           {{if this.isCritical "critical"}}'
-        @hue={{this.hue}}
+        @tone={{this.tone}}
+        @appearance='soft'
         @dot={{false}}
         title={{this.title}}
         ...attributes
@@ -83,8 +85,6 @@ export class SeverityBadge extends GlimmerComponent<Signature> {
     <style scoped>
       /* Chip sits in a lower cascade layer, so these plain rules win. */
       .severity-badge {
-        --pretui-chip-mix: 14%;
-        --pretui-ink-mix: 62%;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.02em;

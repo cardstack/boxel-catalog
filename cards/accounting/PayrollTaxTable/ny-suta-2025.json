@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "year": 2025,
+      "effectiveFrom": "2025-01-01",
+      "ratePpm": null,
+      "employerRatePpm": 41000,
+      "wageBaseMinor": 1280000,
+      "thresholdMinor": null,
+      "extraRatePpm": null,
+      "weeklyCapMinor": null,
+      "annualCapMinor": null,
+      "allowanceMinor": null,
+      "brackets": [],
+      "statusAmounts": [],
+      "tax": "ny-suta",
+      "label": "New York unemployment insurance",
+      "agencyId": "ny-dtf",
+      "source": "NY DOL 2025: new-employer rate with the re-employment service fund",
+      "cardInfo": {
+        "name": "New York unemployment insurance · 2025 figures",
+        "summary": "Demo figures entered by hand, not tax advice."
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PayrollTaxTable"
+      }
+    }
+  }
+}

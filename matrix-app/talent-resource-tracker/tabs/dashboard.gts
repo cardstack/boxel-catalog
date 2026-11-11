@@ -1055,13 +1055,19 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       }
       .dash-asof {
         margin-inline-end: var(--boxel-sp-2xs);
-        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
       }
       .dash-cap {
-        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -1075,6 +1081,8 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         padding: var(--trt-py) 0;
         border-block: 1px solid var(--border);
       }
+      /* a native button: a Pret UI Button can't be a full-width row whose
+         dot and summary are flex items */
       .dash-attn-short {
         display: none;
         align-items: center;
@@ -1086,7 +1094,9 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         border-block: 1px solid var(--border);
         background: none;
         color: var(--foreground);
-        font: 700 var(--boxel-font-size-sm) var(--font-sans);
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 700;
         cursor: pointer;
       }
       .dash-attn-short:focus-visible {
@@ -1100,8 +1110,10 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         background: var(--destructive);
       }
       .dash-attn-sum {
-        margin-left: auto;
-        font: 500 var(--boxel-font-size-2xs) var(--font-mono);
+        margin-inline-start: auto;
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
         color: var(--muted-foreground);
       }
       @container (width < 40rem) {
@@ -1245,8 +1257,10 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       .dash-col-head {
         display: flex;
         justify-content: space-between;
-        margin: 0;
-        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);

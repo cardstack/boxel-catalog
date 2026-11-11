@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
@@ -69,15 +70,17 @@ export const REVIEW_CYCLE_STATUS_COLORS = stateColorsOf(
   REVIEW_CYCLE_STATUS_HUES,
 );
 
-export const ReviewCycleStatusField = dotEnumField(
-  {
-    options: REVIEW_CYCLE_STATUSES.map((status) => ({
-      value: status,
-      label: status,
-    })),
-    displayName: 'Review Cycle Status',
-  },
-  REVIEW_CYCLE_STATUS_HUES,
+export const ReviewCycleStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: REVIEW_CYCLE_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Review Cycle Status',
+    },
+    REVIEW_CYCLE_STATUS_HUES,
+  ),
 );
 
 // The review's lifecycle mirrors its sign-off chain (see PerformanceReview's
@@ -337,43 +340,16 @@ export class ReviewCycle extends CardDef {
             flex-direction: column;
             gap: var(--boxel-sp-lg);
             padding: var(--boxel-sp-lg);
-            background: var(--canvas);
-            color: var(--foreground);
+            background: var(--card);
+            color: var(--card-foreground);
             container-type: inline-size;
           }
-          .iso-head {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp);
-          }
-          .iso-id {
-            flex: 1 1 0;
-            min-width: 0;
-          }
           h1 {
-            margin: 0;
             font-size: var(--boxel-font-size-lg);
             font-weight: 600;
             line-height: 1.25;
-            color: var(--primary);
-            overflow-wrap: anywhere;
-          }
-          .iso-sub {
-            margin: var(--boxel-sp-6xs) 0 0;
-            font-size: var(--boxel-font-size-sm);
-            color: var(--muted-foreground);
-            font-variant-numeric: tabular-nums;
-          }
-          .chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
-          }
-          .stat-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
-            gap: var(--boxel-sp);
+            color: var(--primary-ink);
+            overflow-wrap: break-word;
           }
           .iso-body {
             display: grid;
@@ -498,7 +474,7 @@ export class ReviewCycle extends CardDef {
             @items={{this.details}}
             @columns={{3}}
             @layout='vertical'
-            @size='sm'
+            @size='s'
           />
         {{/if}}
       </article>
@@ -526,7 +502,7 @@ export class ReviewCycle extends CardDef {
             font-size: var(--boxel-font-size-sm);
             font-weight: 600;
             line-height: 1.5;
-            overflow-wrap: anywhere;
+            overflow-wrap: break-word;
           }
           .emb-sub {
             margin: var(--boxel-sp-6xs) 0 0;
@@ -716,7 +692,7 @@ export class ReviewCycle extends CardDef {
             margin: 0;
             font-size: var(--boxel-font-size);
             font-weight: 600;
-            color: var(--primary);
+            color: var(--primary-ink);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1235,7 +1211,7 @@ export class PerformanceReview extends CardDef {
           min-width: 0;
         }
         .muted {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .prose {
@@ -1323,7 +1299,7 @@ export class PerformanceReview extends CardDef {
         .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
       </style>

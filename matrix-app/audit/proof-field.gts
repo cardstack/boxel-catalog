@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -51,13 +52,15 @@ const INTEGRITY_HUE: Record<Integrity, Hue> = {
   unverified: 'slate',
 };
 
-export const ProofKindField = enumField(StringField, {
-  displayName: 'Proof Kind',
-  options: PROOF_KINDS.map((value) => ({
-    value,
-    label: PROOF_KIND_LABELS[value],
-  })),
-});
+export const ProofKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Proof Kind',
+    options: PROOF_KINDS.map((value) => ({
+      value,
+      label: PROOF_KIND_LABELS[value],
+    })),
+  }),
+);
 
 /**
  * One piece of evidence, with its provenance and its tamper check.
@@ -166,7 +169,7 @@ export class ProofField extends FieldDef {
           gap: var(--boxel-sp-xs);
         }
         .kind {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
         .artefact {
@@ -175,15 +178,15 @@ export class ProofField extends FieldDef {
           border-radius: var(--boxel-border-radius-sm);
         }
         .artefact-link {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--foreground);
           text-decoration: underline;
           text-underline-offset: 0.125rem;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
         }
         .statement {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.5;
         }
         .empty {
@@ -215,7 +218,7 @@ export class ProofField extends FieldDef {
           gap: var(--boxel-sp-5xs);
         }
         .kind {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
       </style>

@@ -106,8 +106,8 @@ export const FactList: TemplateOnlyComponent<FactListSignature> = <template>
   {{/if}}
   <style scoped>
     .hr-facts {
-      --text-ui-md: var(--boxel-font-size-sm);
-      --space-6: var(--boxel-sp);
+      font-size: var(--boxel-font-size-sm);
+      column-gap: var(--boxel-sp);
       --pretui-kv-label-font-size: var(--boxel-eyebrow-font-size);
       --pretui-kv-label-font-weight: var(--boxel-eyebrow-font-weight);
       --pretui-kv-label-line-height: var(--boxel-eyebrow-line-height);

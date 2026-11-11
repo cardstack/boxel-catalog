@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -63,13 +64,15 @@ export const RFQ_STATUS_COLORS: Record<string, StateColor> = {
   cancelled: stateColor('red'),
 };
 
-export const RfqStatusField = enumField(StringField, {
-  options: RFQ_STATUSES.map((value) => ({
-    value,
-    label: RFQ_STATUS_LABELS[value],
-  })),
-  displayName: 'RFQ Status',
-});
+export const RfqStatusField = markDefinition(
+  enumField(StringField, {
+    options: RFQ_STATUSES.map((value) => ({
+      value,
+      label: RFQ_STATUS_LABELS[value],
+    })),
+    displayName: 'RFQ Status',
+  }),
+);
 
 type Tone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 const STATUS_TONES: Record<string, Tone> = {

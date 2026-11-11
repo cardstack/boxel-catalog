@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
@@ -97,26 +98,32 @@ function salaryRangeLabel(
   return fmt(min ?? max!);
 }
 
-export const PositionStatusField = dotEnumField(
-  {
-    options: POSITION_STATUSES.map((status) => ({
-      value: status,
-      label: status,
-    })),
-    displayName: 'Position Status',
-  },
-  POSITION_STATUS_HUES,
+export const PositionStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: POSITION_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Position Status',
+    },
+    POSITION_STATUS_HUES,
+  ),
 );
 
-export const EmploymentTypeField = enumField(StringField, {
-  options: EMPLOYMENT_TYPES.map((type) => ({ value: type, label: type })),
-  displayName: 'Employment Type',
-});
+export const EmploymentTypeField = markDefinition(
+  enumField(StringField, {
+    options: EMPLOYMENT_TYPES.map((type) => ({ value: type, label: type })),
+    displayName: 'Employment Type',
+  }),
+);
 
-export const ExperienceLevelField = enumField(StringField, {
-  options: EXPERIENCE_LEVELS.map((level) => ({ value: level, label: level })),
-  displayName: 'Experience Level',
-});
+export const ExperienceLevelField = markDefinition(
+  enumField(StringField, {
+    options: EXPERIENCE_LEVELS.map((level) => ({ value: level, label: level })),
+    displayName: 'Experience Level',
+  }),
+);
 
 // The status chip's tone. Open and filled read as on-track, on-hold as a
 // warning and closed (ended without a hire) as danger, the same story the
@@ -459,7 +466,7 @@ class PositionIsolated extends PositionView {
     </IsoPage>
     <style scoped>
       .muted {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .prose {
@@ -581,7 +588,7 @@ export class Position extends CardDef {
           .position-atom {
             display: inline-flex;
             align-items: center;
-            gap: 0.375rem;
+            gap: var(--boxel-sp-2xs);
             max-width: 100%;
             min-width: 0;
             /* a chip that cannot fit whole wraps onto a clipped second line
@@ -589,21 +596,18 @@ export class Position extends CardDef {
             flex-wrap: wrap;
             align-content: flex-start;
             block-size: 1.375rem;
-            row-gap: 1.375rem;
+            row-gap: var(--boxel-sp-lg);
             overflow: hidden;
             vertical-align: middle;
             font-size: var(--boxel-font-size-xs);
             font-weight: 600;
-            line-height: 1.375rem;
+            line-height: 1;
             color: var(--foreground);
             white-space: nowrap;
           }
           .atom-mark {
             --position-mark-size: 1.25rem;
             --position-mark-font-size: var(--boxel-font-size-2xs);
-          }
-          .position-atom-chip {
-            flex: none;
           }
           .position-atom-name {
             flex: 1 1 4rem;
@@ -673,13 +677,15 @@ export class Position extends CardDef {
         .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-          font: 500 0.6875rem var(--font-mono);
+          font-weight: 500;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
       </style>

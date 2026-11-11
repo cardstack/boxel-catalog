@@ -33,6 +33,11 @@
         "links": {
           "self": "../Contact/mei-fong"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

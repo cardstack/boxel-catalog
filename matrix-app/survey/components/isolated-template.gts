@@ -331,7 +331,8 @@ export class SurveyIsolated extends Component<typeof Survey> {
             {{#unless @model.isPublished}}
               <Button
                 @size='s'
-                @variant='primary'
+                @tone='primary'
+                @appearance='accent'
                 {{on 'click' this.publish}}
               >Publish</Button>
             {{/unless}}
@@ -611,12 +612,10 @@ export class SurveyIsolated extends Component<typeof Survey> {
         min-width: 0;
       }
       .name {
-        margin: 0;
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .meta {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
@@ -667,7 +666,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
       .stat dt,
       .kv dt {
         font-family: var(--font-mono);
-        font-size: 0.5625rem;
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -775,24 +774,23 @@ export class SurveyIsolated extends Component<typeof Survey> {
       .survey-header {
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
+        gap: var(--boxel-sp-2xs);
       }
       .survey-head-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 0.75rem;
+        gap: var(--boxel-sp-sm);
       }
       .survey-title {
-        margin: 0;
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .survey-progress {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        margin-top: 0.4rem;
+        gap: var(--boxel-sp-sm);
+        margin-top: var(--boxel-sp-2xs);
       }
       .survey-progress-bar {
         flex: 1;
@@ -818,10 +816,10 @@ export class SurveyIsolated extends Component<typeof Survey> {
         background: var(--card);
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       .survey-q-num {
-        font-size: 0.625rem;
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -829,20 +827,18 @@ export class SurveyIsolated extends Component<typeof Survey> {
       }
       .survey-q-prompt {
         padding: 0;
-        font-size: 1rem;
+        font-size: var(--boxel-font-size);
         font-weight: 600;
       }
       .survey-q-req {
         color: var(--destructive-ink);
-        margin-left: 0.15rem;
+        margin-left: var(--boxel-sp-6xs);
       }
       .survey-q-help {
-        margin: 0;
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .survey-q-error {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         color: var(--destructive-ink);
@@ -851,11 +847,11 @@ export class SurveyIsolated extends Component<typeof Survey> {
       .survey-review {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       .survey-review-title {
-        margin: 0 0 0.25rem;
-        font-size: 1.1rem;
+        margin: 0 0 var(--boxel-sp-4xs);
+        font-size: var(--boxel-font-size);
         font-weight: 700;
       }
       .survey-review-row {
@@ -864,20 +860,24 @@ export class SurveyIsolated extends Component<typeof Survey> {
         align-items: center;
         gap: var(--boxel-sp);
         width: 100%;
-        padding: 0.6rem 0.75rem;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border: 1px solid var(--border);
         border-radius: 0.5rem;
         background: var(--card);
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: left;
-        cursor: pointer;
         transition:
           border-color 0.15s ease,
           background 0.15s ease;
       }
-      .survey-review-row:hover {
-        border-color: var(--survey-accent);
-        background: color-mix(in srgb, var(--survey-accent) 6%, transparent);
+      @media (hover: hover) {
+        .survey-review-row:hover {
+          border-color: var(--survey-accent);
+          background: color-mix(in srgb, var(--survey-accent) 6%, transparent);
+        }
       }
       .survey-review-row.is-invalid {
         border-color: var(--destructive);
@@ -892,7 +892,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         text-align: right;
       }
       .survey-review-edit {
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
@@ -905,7 +905,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       .survey-done-check {
         width: 3.5rem;
@@ -914,32 +914,31 @@ export class SurveyIsolated extends Component<typeof Survey> {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.75rem;
+        font-size: var(--boxel-font-size-xl);
         font-weight: 800;
         color: var(--success-foreground);
         background: var(--success);
-        margin-bottom: 0.5rem;
+        margin-bottom: var(--boxel-sp-xs);
       }
       .survey-done h2 {
         margin: 0;
       }
       .survey-done-sub {
-        margin: 0;
         color: var(--muted-foreground);
       }
       .survey-done-list {
-        margin: 0.75rem 0 0;
+        margin: var(--boxel-sp-sm) 0 0;
         width: 100%;
         max-width: 34rem;
         display: grid;
-        gap: 0.4rem;
+        gap: var(--boxel-sp-2xs);
         text-align: left;
       }
       .survey-done-row {
         display: grid;
         grid-template-columns: 1fr auto;
         gap: var(--boxel-sp);
-        padding: 0.5rem 0.75rem;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border: 1px solid var(--border);
         border-radius: 0.5rem;
       }

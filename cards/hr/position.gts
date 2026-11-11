@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -91,23 +92,29 @@ function salaryRangeLabel(
   return fmt(min ?? max!);
 }
 
-export const PositionStatusField = enumField(StringField, {
-  options: POSITION_STATUSES.map((status) => ({
-    value: status,
-    label: status,
-  })),
-  displayName: 'Position Status',
-});
+export const PositionStatusField = markDefinition(
+  enumField(StringField, {
+    options: POSITION_STATUSES.map((status) => ({
+      value: status,
+      label: status,
+    })),
+    displayName: 'Position Status',
+  }),
+);
 
-export const EmploymentTypeField = enumField(StringField, {
-  options: EMPLOYMENT_TYPES.map((type) => ({ value: type, label: type })),
-  displayName: 'Employment Type',
-});
+export const EmploymentTypeField = markDefinition(
+  enumField(StringField, {
+    options: EMPLOYMENT_TYPES.map((type) => ({ value: type, label: type })),
+    displayName: 'Employment Type',
+  }),
+);
 
-export const ExperienceLevelField = enumField(StringField, {
-  options: EXPERIENCE_LEVELS.map((level) => ({ value: level, label: level })),
-  displayName: 'Experience Level',
-});
+export const ExperienceLevelField = markDefinition(
+  enumField(StringField, {
+    options: EXPERIENCE_LEVELS.map((level) => ({ value: level, label: level })),
+    displayName: 'Experience Level',
+  }),
+);
 
 // Hoisted out of `static isolated = class {…}`: decorators are not valid in a
 // class expression under the catalog type-check.

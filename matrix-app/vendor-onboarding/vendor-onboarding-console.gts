@@ -11,6 +11,7 @@ import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Button } from '@cardstack/pretui/components/button';
+import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { LayoutControl } from '@cardstack/pretui/components/layout-control';
 import { SearchInput } from '@cardstack/pretui/components/search-input';
@@ -46,6 +47,16 @@ import { GoodsReceipt } from '../procurement/goods-receipt';
 import type { VendorOnboardingApp } from './vendor-onboarding-app';
 
 type Tone = 'neutral' | 'ok' | 'warn' | 'bad' | 'info';
+
+// The console's tone names, as Pret UI StatusChip tones
+const CHIP_TONE = {
+  neutral: 'neutral',
+  ok: 'success',
+  warn: 'warning',
+  bad: 'danger',
+  info: 'info',
+} as const;
+const chipTone = (tone: Tone) => CHIP_TONE[tone];
 
 interface Cell {
   text: string;
@@ -1212,9 +1223,10 @@ export class VendorOnboardingConsole extends Component<
               >
                 {{#each this.stats as |s|}}
                   <div class='stat'>
-                    <span class='st'><span class='dot {{s.tone}}'></span><span
-                        class='cap'
-                      >{{s.label}}</span></span>
+                    <span class='st'><span
+                        class='dot {{s.tone}}'
+                        aria-hidden='true'
+                      ></span><span class='cap'>{{s.label}}</span></span>
                     <span class='num'>{{s.value}}</span>
                     <span class='meta'>{{s.hint}}</span>
                   </div>
@@ -1289,6 +1301,7 @@ export class VendorOnboardingConsole extends Component<
                         <header class='lh'>
                           <h3 id='lane-{{lane.key}}' class='st'><span
                               class='dot {{lane.tone}}'
+                              aria-hidden='true'
                             ></span><span class='cap'>{{lane.label}}</span></h3>
                           <span class='mono'>{{lane.cards.length}}</span>
                           <p class='meta lane-hint'>{{lane.hint}}</p>
@@ -1296,17 +1309,23 @@ export class VendorOnboardingConsole extends Component<
                         <ul class='ul'>
                           {{#each lane.cards as |c|}}
                             <li class='bi'>
-                              <button
-                                type='button'
-                                class='open who'
+                              <Button
+                                @appearance='link'
+                                class='who'
                                 {{on 'click' (fn this.openCard c.card)}}
-                              ><Avatar @name={{c.name}} @size={{20}} /><span
-                                  class='nm'
-                                >{{c.name}}</span></button>
+                              ><span class='who-in'><Avatar
+                                    @name={{c.name}}
+                                    @size={{20}}
+                                  /><span
+                                    class='nm'
+                                  >{{c.name}}</span></span></Button>
                               <span class='meta'>{{if c.meta c.meta '—'}}</span>
-                              <span class='st strong'><span
-                                  class='dot {{c.compliance.tone}}'
-                                ></span>{{c.compliance.text}}</span>
+                              <StatusChip
+                                @value={{c.compliance.text}}
+                                @tone={{chipTone c.compliance.tone}}
+                                @appearance='plain'
+                                @dot={{true}}
+                              />
                               <span class='meta'>{{c.fact}}</span>
                             </li>
                           {{else}}
@@ -1355,16 +1374,16 @@ export class VendorOnboardingConsole extends Component<
                               {{#each row.cells as |cell i|}}
                                 {{#if (eq i 0)}}
                                   <th scope='row' class='rh'>
-                                    <button
-                                      type='button'
-                                      class='open who'
+                                    <Button
+                                      @appearance='link'
+                                      class='who'
                                       {{on 'click' (fn this.openCard row.card)}}
-                                    ><Avatar
-                                        @name={{cell.text}}
-                                        @size={{16}}
-                                      /><span
-                                        class='nm'
-                                      >{{cell.text}}</span></button>
+                                    ><span class='who-in'><Avatar
+                                          @name={{cell.text}}
+                                          @size={{16}}
+                                        /><span
+                                          class='nm'
+                                        >{{cell.text}}</span></span></Button>
                                   </th>
                                 {{else if (eq cell.kind 'status')}}
                                   <td><span class='st strong'><span
@@ -1410,7 +1429,7 @@ export class VendorOnboardingConsole extends Component<
         background: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.35;
         --control-height: 1.625rem;
         /* shortcut: Pret UI parts ignore --control-height until CS-14733 merges, then drop the two lines below. */
@@ -1430,9 +1449,6 @@ export class VendorOnboardingConsole extends Component<
         flex-direction: column;
         gap: var(--boxel-sp-xs);
       }
-      p {
-        margin: 0;
-      }
       .cap,
       th {
         margin: 0;
@@ -1449,7 +1465,6 @@ export class VendorOnboardingConsole extends Component<
         gap: var(--boxel-sp-5xs);
       }
       h1 {
-        margin: 0;
         font-family: var(--boxel-heading-font-family, var(--font-sans));
         font-weight: 400;
         font-size: 2.5rem;
@@ -1457,12 +1472,8 @@ export class VendorOnboardingConsole extends Component<
         text-transform: uppercase;
       }
       h2 {
-        margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-      }
-      h3 {
-        margin: 0;
       }
       .meta {
         font-size: var(--boxel-font-size-xs);
@@ -1498,7 +1509,7 @@ export class VendorOnboardingConsole extends Component<
       }
       .brand-name {
         display: grid;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .brand-name small {
@@ -1593,7 +1604,7 @@ export class VendorOnboardingConsole extends Component<
           0 1px 0 var(--border);
       }
       .num {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
         line-height: 1;
@@ -1636,21 +1647,29 @@ export class VendorOnboardingConsole extends Component<
       .lane-add {
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
       }
-      .open {
-        all: unset;
-        cursor: pointer;
+      /* Pret UI link Button holding the Avatar and name */
+      .who {
+        --pretui-button-h: auto;
+        --pretui-button-px: 0;
+        --pretui-button-gap: var(--boxel-sp-xxs);
         min-inline-size: 0;
         max-inline-size: 100%;
       }
-      .open:focus-visible {
-        outline: 2px solid var(--ring);
+      /* Button's label is a flex item with min-width: auto, so it can't shrink
+         below the name's full width; lowering that lets the name truncate
+         (a default Pret UI Button should ship, then this goes) */
+      .who :deep(.pretui-btn-label) {
+        min-inline-size: 0;
       }
-      .who {
-        display: inline-flex;
+      /* the Avatar + name row brings its own flex layout */
+      .who-in {
+        display: flex;
         align-items: center;
         gap: var(--boxel-sp-xxs);
+        min-inline-size: 0;
       }
       .nm {
+        min-inline-size: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -1678,7 +1697,7 @@ export class VendorOnboardingConsole extends Component<
       }
       th.rh {
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         letter-spacing: 0;
         text-transform: none;
         color: var(--foreground);

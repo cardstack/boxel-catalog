@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   statusField,
   canTransition,
@@ -57,62 +58,64 @@ export function stageSlug(stage: string | undefined): string {
   return (stage ?? '').replace(/\s+/g, '-');
 }
 
-export const PipelineStageField = statusField({
-  displayName: 'Pipeline Stage',
-  options: [
-    {
-      value: 'new lead',
-      hue: 'slate',
-      meaning: 'Not yet contacted.',
+export const PipelineStageField = markDefinition(
+  statusField({
+    displayName: 'Pipeline Stage',
+    options: [
+      {
+        value: 'new lead',
+        hue: 'slate',
+        meaning: 'Not yet contacted.',
+      },
+      {
+        value: 'contacted',
+        hue: 'blue',
+        meaning: 'A rep has reached out; no qualification yet.',
+      },
+      {
+        value: 'qualified',
+        hue: 'teal',
+        meaning: 'Confirmed budget, authority, need, and timeline.',
+      },
+      {
+        value: 'discovery',
+        hue: 'purple',
+        meaning: 'Scoping the actual solution with the prospect.',
+      },
+      {
+        value: 'proposal',
+        hue: 'amber',
+        meaning: 'A priced proposal or quote is with the prospect.',
+      },
+      {
+        value: 'negotiation',
+        hue: 'orange',
+        meaning: 'Terms are being finalized before signature.',
+      },
+      {
+        value: 'closed won',
+        hue: 'green',
+        terminal: true,
+        holds: true,
+        meaning: 'Deal signed. Nothing further happens on this record.',
+      },
+      {
+        value: 'closed lost',
+        hue: 'red',
+        terminal: true,
+        holds: true,
+        meaning: 'Deal will not close. A revival is a new Opportunity.',
+      },
+    ],
+    transitions: {
+      'new lead': ['contacted', 'closed lost'],
+      contacted: ['qualified', 'closed lost'],
+      qualified: ['discovery', 'closed lost'],
+      discovery: ['proposal', 'closed lost'],
+      proposal: ['negotiation', 'closed lost'],
+      negotiation: ['closed won', 'closed lost'],
     },
-    {
-      value: 'contacted',
-      hue: 'blue',
-      meaning: 'A rep has reached out; no qualification yet.',
-    },
-    {
-      value: 'qualified',
-      hue: 'teal',
-      meaning: 'Confirmed budget, authority, need, and timeline.',
-    },
-    {
-      value: 'discovery',
-      hue: 'purple',
-      meaning: 'Scoping the actual solution with the prospect.',
-    },
-    {
-      value: 'proposal',
-      hue: 'amber',
-      meaning: 'A priced proposal or quote is with the prospect.',
-    },
-    {
-      value: 'negotiation',
-      hue: 'orange',
-      meaning: 'Terms are being finalized before signature.',
-    },
-    {
-      value: 'closed won',
-      hue: 'green',
-      terminal: true,
-      holds: true,
-      meaning: 'Deal signed. Nothing further happens on this record.',
-    },
-    {
-      value: 'closed lost',
-      hue: 'red',
-      terminal: true,
-      holds: true,
-      meaning: 'Deal will not close. A revival is a new Opportunity.',
-    },
-  ],
-  transitions: {
-    'new lead': ['contacted', 'closed lost'],
-    contacted: ['qualified', 'closed lost'],
-    qualified: ['discovery', 'closed lost'],
-    discovery: ['proposal', 'closed lost'],
-    proposal: ['negotiation', 'closed lost'],
-    negotiation: ['closed won', 'closed lost'],
-  },
-});
+  }),
+);
 
 export { canTransition, nextStatuses };

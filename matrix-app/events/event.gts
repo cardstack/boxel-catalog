@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -21,33 +22,35 @@ import { statusField } from '@cardstack/catalog/fields/status/status';
  * Live only matters to consumers that render "happening now"; Cancelled can
  * be reinstated (postponements do exactly this), Completed cannot un-happen.
  */
-export const EventStatusField = statusField({
-  displayName: 'Event Status',
-  options: [
-    { value: 'Draft', hue: 'slate', meaning: 'Being planned — not public' },
-    { value: 'Scheduled', hue: 'teal', meaning: 'Announced and upcoming' },
-    { value: 'Live', hue: 'green', meaning: 'Happening now' },
-    {
-      value: 'Completed',
-      hue: 'slate',
-      meaning: 'Took place',
-      terminal: true,
-      holds: true,
+export const EventStatusField = markDefinition(
+  statusField({
+    displayName: 'Event Status',
+    options: [
+      { value: 'Draft', hue: 'slate', meaning: 'Being planned — not public' },
+      { value: 'Scheduled', hue: 'teal', meaning: 'Announced and upcoming' },
+      { value: 'Live', hue: 'green', meaning: 'Happening now' },
+      {
+        value: 'Completed',
+        hue: 'slate',
+        meaning: 'Took place',
+        terminal: true,
+        holds: true,
+      },
+      {
+        value: 'Cancelled',
+        hue: 'red',
+        meaning: 'Called off — can be reinstated',
+        holds: true,
+      },
+    ],
+    transitions: {
+      Draft: ['Scheduled', 'Cancelled'],
+      Scheduled: ['Live', 'Completed', 'Cancelled'],
+      Live: ['Completed'],
+      Cancelled: ['Scheduled'],
     },
-    {
-      value: 'Cancelled',
-      hue: 'red',
-      meaning: 'Called off — can be reinstated',
-      holds: true,
-    },
-  ],
-  transitions: {
-    Draft: ['Scheduled', 'Cancelled'],
-    Scheduled: ['Live', 'Completed', 'Cancelled'],
-    Live: ['Completed'],
-    Cancelled: ['Scheduled'],
-  },
-});
+  }),
+);
 
 /**
  * Something that happens at a time, usually at a place, usually with an
@@ -91,8 +94,8 @@ export class Event extends CardDef {
         .ev-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.25rem;
-          font-size: 0.8125rem;
+          gap: var(--boxel-sp-4xs);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 500;
         }
         .ev-icon {
@@ -151,16 +154,13 @@ export class Event extends CardDef {
         .ev {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
         /* Pret UI EntityDisplay: the date tile in its visual slot, sized and
            spaced through its own knobs, title and meta at the row's sizes. */
         .ev-entity {
           --pretui-entity-visual-size: 2.75rem;
-          --space-3: 0.75rem;
-          --text-ui-md: 0.875rem;
-          --text-ui-sm: 0.75rem;
           flex: 1;
         }
         /* The date block is the row's anchor: events are found by date
@@ -180,13 +180,13 @@ export class Event extends CardDef {
           flex-shrink: 0;
         }
         .ev-day {
-          font-size: 1rem;
+          font-size: var(--boxel-font-size);
           font-weight: 700;
           line-height: 1.1;
           font-variant-numeric: tabular-nums;
         }
         .ev-month {
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
@@ -240,10 +240,10 @@ export class Event extends CardDef {
         .fitted {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
+          gap: var(--boxel-sp-xs);
           width: 100%;
           height: 100%;
-          padding: 0.625rem 0.75rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           box-sizing: border-box;
           overflow: hidden;
         }
@@ -261,13 +261,13 @@ export class Event extends CardDef {
           flex-shrink: 0;
         }
         .ev-day {
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 700;
           line-height: 1.1;
           font-variant-numeric: tabular-nums;
         }
         .ev-month {
-          font-size: 0.5rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
@@ -276,18 +276,18 @@ export class Event extends CardDef {
         .info {
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
           min-width: 0;
         }
         .title {
           font-weight: 600;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -301,8 +301,8 @@ export class Event extends CardDef {
         /* Badge degradation: strip height keeps only the first line. */
         @container fitted-card (max-height: 50px) {
           .fitted {
-            padding: 0.25rem 0.5rem;
-            gap: 0.125rem;
+            padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+            gap: var(--boxel-sp-6xs);
           }
         }
         @container fitted-card (min-height: 65px) {
@@ -315,7 +315,7 @@ export class Event extends CardDef {
             flex-direction: column;
             align-items: flex-start;
             justify-content: center;
-            padding: 0.875rem;
+            padding: var(--boxel-sp-sm);
           }
           .line-kind {
             display: block;
@@ -373,24 +373,24 @@ export class Event extends CardDef {
         .ev-page {
           max-width: 40rem;
           margin: 0 auto;
-          padding: 2rem 1.5rem;
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: var(--boxel-sp-lg);
         }
         .eh {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: var(--boxel-sp);
           border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: 1.25rem;
+          padding-bottom: var(--boxel-sp-lg);
         }
         .eh-id {
           flex: 1;
           min-width: 0;
         }
         .doc-kind {
-          margin: 0 0 0.125rem;
+          margin: 0 0 var(--boxel-sp-6xs);
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -400,12 +400,12 @@ export class Event extends CardDef {
           color: var(--muted-foreground);
         }
         h1 {
-          font-size: 1.625rem;
+          font-size: var(--boxel-font-size-lg);
           line-height: 1.1;
         }
         .eh-when {
-          margin: 0.25rem 0 0;
-          font-size: 0.875rem;
+          margin: var(--boxel-sp-4xs) 0 0;
+          font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }
         .eh-status {
@@ -414,12 +414,12 @@ export class Event extends CardDef {
         .panel {
           border: 1px solid var(--border);
           border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
+          padding: var(--boxel-sp) var(--boxel-sp-lg);
           background-color: var(--card);
           color: var(--card-foreground);
         }
         h2 {
-          margin: 0 0 0.75rem;
+          margin: 0 0 var(--boxel-sp-sm);
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -433,7 +433,7 @@ export class Event extends CardDef {
           border-radius: 0.5rem;
         }
         .about {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.6;
         }
       </style>

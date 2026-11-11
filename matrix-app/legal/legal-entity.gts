@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -37,13 +38,15 @@ export const LEGAL_ENTITY_TYPE_LABELS: Record<string, string> = {
   nonprofit: 'Nonprofit',
 };
 
-export const LegalEntityTypeField = enumField(StringField, {
-  options: LEGAL_ENTITY_TYPES.map((value) => ({
-    value,
-    label: LEGAL_ENTITY_TYPE_LABELS[value],
-  })),
-  displayName: 'Legal Entity Type',
-});
+export const LegalEntityTypeField = markDefinition(
+  enumField(StringField, {
+    options: LEGAL_ENTITY_TYPES.map((value) => ({
+      value,
+      label: LEGAL_ENTITY_TYPE_LABELS[value],
+    })),
+    displayName: 'Legal Entity Type',
+  }),
+);
 
 function maskTail(value?: string | null): string {
   let v = (value ?? '').replace(/\s/g, '');
@@ -57,7 +60,6 @@ function maskTail(value?: string | null): string {
 // through its parties and signature blocks, not through a field here.
 export class LegalEntity extends CardDef {
   static displayName = 'Legal Entity';
-  static headerColor = '#41337a';
 
   @field legalName = contains(StringField);
   @field entityType = contains(LegalEntityTypeField);
@@ -184,9 +186,8 @@ export class LegalEntity extends CardDef {
           margin-bottom: var(--boxel-sp);
         }
         .kicker {
-          margin: 0;
           font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
           font-weight: var(--boxel-eyebrow-font-weight);
           line-height: var(--boxel-eyebrow-line-height);
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
@@ -195,10 +196,9 @@ export class LegalEntity extends CardDef {
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
         }
         .sub {
-          margin: 0;
           color: var(--muted-foreground);
         }
         .grid {
@@ -218,7 +218,7 @@ export class LegalEntity extends CardDef {
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
           font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
           font-weight: var(--boxel-eyebrow-font-weight);
           line-height: var(--boxel-eyebrow-line-height);
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
@@ -226,9 +226,8 @@ export class LegalEntity extends CardDef {
           color: var(--muted-foreground);
         }
         .notes {
-          margin: 0;
           white-space: pre-wrap;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         @container (max-width: 560px) {
           .grid {
@@ -272,15 +271,15 @@ export class LegalEntity extends CardDef {
         .who {
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
           min-width: 0;
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .meta {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>
@@ -292,7 +291,7 @@ export class LegalEntity extends CardDef {
       <span class='atom'>{{@model.legalName}}</span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
       </style>
@@ -321,7 +320,7 @@ export class LegalEntity extends CardDef {
         }
         .fit-name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.2;
           overflow: hidden;
           display: -webkit-box;
@@ -329,7 +328,7 @@ export class LegalEntity extends CardDef {
           -webkit-box-orient: vertical;
         }
         .fit-sub {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -83,10 +84,15 @@ function statusHueOf(status?: string | null): Hue {
   return (status && PROJECT_STATUS_HUES[status]) || 'slate';
 }
 
-export const ProjectStatusField = enumField(StringField, {
-  options: PROJECT_STATUSES.map((status) => ({ value: status, label: status })),
-  displayName: 'Project Status',
-});
+export const ProjectStatusField = markDefinition(
+  enumField(StringField, {
+    options: PROJECT_STATUSES.map((status) => ({
+      value: status,
+      label: status,
+    })),
+    displayName: 'Project Status',
+  }),
+);
 
 export class Project extends CardDef {
   static displayName = 'Project';

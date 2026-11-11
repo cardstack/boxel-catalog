@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/complete-work-order-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Complete Work Order\n\nCloses the work loop on a job: refuses to mark `completed` while a required checklist item is unresolved (unless the caller gives an override reason) and while no labour was logged (unless the caller gives `noLabourReason`) — \"complete\" always means the same thing everywhere, because this is the only place that writes it. `isComplete` is computed by the SAME `checklistStats` the Checklist Runner UI uses, so the UI and this gate can never disagree about what \"done\" means.\n\nOn success: stamps `completedAt`/status, and if this work order came from a Maintenance Plan, advances the plan's `lastCompletedAt` / `lastCompletedMeter` so the next occurrence calculation is correct.",
+      "cardInfo": {
+        "name": "Complete Work Order",
+        "summary": "The single writer of Work Order completion — checklist and labour gated, plan advanced on success."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../WorkOrder/wo-0871"
+        }
+      }
+    }
+  }
+}

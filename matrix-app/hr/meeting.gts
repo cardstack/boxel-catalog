@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -231,10 +232,12 @@ export const MEETING_TYPE_COLORS: Record<string, StateColor> =
 
 type ScoreState = 'scored' | 'awaiting' | 'upcoming';
 
-export const MeetingTypeField = enumField(StringField, {
-  options: MEETING_TYPES.map((type) => ({ value: type, label: type })),
-  displayName: 'Meeting Type',
-});
+export const MeetingTypeField = markDefinition(
+  enumField(StringField, {
+    options: MEETING_TYPES.map((type) => ({ value: type, label: type })),
+    displayName: 'Meeting Type',
+  }),
+);
 
 // A meeting's date as a Date, or undefined when it is unset or unparseable,
 // so every render site gates on the same check.
@@ -478,11 +481,13 @@ export class Meeting extends CardDef {
         .status {
           display: inline-flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: var(--boxel-sp-sm);
           font-weight: 600;
         }
         .num {
-          font: 400 0.6875rem var(--font-mono);
+          font-weight: 400;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           color: var(--muted-foreground);
           white-space: nowrap;
@@ -500,7 +505,7 @@ export class Meeting extends CardDef {
         }
         .text {
           min-width: 0;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
         }
         .lk {
           flex-wrap: nowrap;
@@ -509,7 +514,10 @@ export class Meeting extends CardDef {
         .k {
           flex: none;
           inline-size: 5.5rem;
-          font: 600 0.5625rem / 1.3 var(--font-mono);
+          font-weight: 600;
+          font-size: 0.5625rem; /* 9px ladder label: no token */
+          line-height: 1.3;
+          font-family: var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--subtle-foreground);
@@ -573,7 +581,10 @@ export class Meeting extends CardDef {
       <style scoped>
         .k {
           inline-size: 7.5rem;
-          font: 600 0.5625rem / 1.3 var(--font-mono);
+          font-weight: 600;
+          font-size: 0.5625rem; /* 9px ladder label: no token */
+          line-height: 1.3;
+          font-family: var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--subtle-foreground);
@@ -713,13 +724,15 @@ export class Meeting extends CardDef {
         .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-          font: 400 0.6875rem var(--font-mono);
+          font-weight: 400;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
       </style>
