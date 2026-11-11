@@ -215,11 +215,14 @@ function waitLength(minutes: number): string {
 }
 const DEFAULT_BATCH_DEADLINE_MINUTES = 60;
 
-// Whether the AI requests limit lets a run make any AI request at all.
+// Whether the limits let a run make any AI request at all: it needs at least
+// one AI request and some credits to spend on them.
 function allowsAIRequests(model: {
-  caps?: { resolveCalls?: number | null } | null;
+  caps?: { resolveCalls?: number | null; aiCredits?: number | null } | null;
 }) {
-  return (model.caps?.resolveCalls ?? 0) > 0;
+  return (
+    (model.caps?.resolveCalls ?? 0) > 0 && (model.caps?.aiCredits ?? 0) > 0
+  );
 }
 
 function count(value: number | null | undefined): string {
@@ -232,6 +235,7 @@ const CAP_DEFAULTS: Record<string, number> = {
   callApiCalls: 10,
   responseBytes: 5_000_000,
   resolveCalls: 5,
+  aiCredits: 100,
   writes: 50,
   seconds: 300,
   dailyCredits: 500,
@@ -1175,6 +1179,14 @@ const RUN_LIMITS = [
     noneHint: 'No AI requests',
   },
   {
+    key: 'aiCredits',
+    label: 'AI spending',
+    hint: 'Credits a run’s AI requests may cost in all',
+    editLabel: 'AI spending, in credits',
+    editHint: 'Credits a run’s AI requests may cost in all',
+    noneHint: 'No credits for AI requests',
+  },
+  {
     key: 'writes',
     label: 'Saves',
     hint: 'Files and cards a run may create or change',
@@ -1217,6 +1229,9 @@ export class AutomationCaps extends FieldDef {
   @field callApiCalls = contains(NumberField);
   @field responseBytes = contains(NumberField);
   @field resolveCalls = contains(NumberField);
+  // Credits a run's AI requests may cost in all. Boxel refuses an AI request
+  // whose most possible cost would take the run past it.
+  @field aiCredits = contains(NumberField);
   @field writes = contains(NumberField);
   // At most 1200 (20 minutes).
   @field seconds = contains(NumberField);
@@ -2352,7 +2367,7 @@ class Edit extends Component<typeof Automation> {
     });
   }
   // Batched AI only changes how AI requests are sent, so it means nothing
-  // while the AI requests limit allows none.
+  // while the limits allow no AI request or no AI spending.
   get allowsAI() {
     return allowsAIRequests(this.args.model);
   }
@@ -2577,7 +2592,8 @@ class Edit extends Component<typeof Automation> {
       >
         {{#unless this.allowsAI}}
           <p class='automation-edit__note'>This automation may not make AI
-            requests. To use batched AI, set AI requests under Limits above 0.</p>
+            requests. To use batched AI, set AI requests and AI spending under
+            Limits above 0.</p>
         {{/unless}}
         <div class='automation-edit__batch-row'>
           <Field
