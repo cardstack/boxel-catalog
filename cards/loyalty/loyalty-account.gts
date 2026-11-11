@@ -28,6 +28,7 @@ import LoyaltyTierField, { type TierOption } from './loyalty-tier-field';
 import MemberNumberField from './member-number-field';
 import PointsBalanceField from './points-balance-field';
 import { MembershipStatusField } from './membership-status-field';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const NUM = new Intl.NumberFormat();
 const SIGNED = new Intl.NumberFormat(undefined, { signDisplay: 'exceptZero' });
@@ -532,128 +533,130 @@ export class LoyaltyAccount extends CardDef {
     }
 
     <template>
-      <article class='page'>
-        <header class='head'>
-          <Avatar @name={{this.name}} @size={{28}} />
-          <div class='id'>
-            <h1 class='name'>{{this.name}}</h1>
-            {{#if this.meta}}<p class='meta'>{{this.meta}}</p>{{/if}}
-          </div>
-          <div class='tags'>
-            <DotText @label={{@model.tier}} @tone='primary' />
-            <DotText
-              @label={{@model.status}}
-              @tone={{statusTone @model.status}}
-            />
-          </div>
-        </header>
-
-        <dl class='stats' aria-label='Key numbers'>
-          <div class='stat'>
-            <dt class='label'>Balance</dt>
-            <dd class='value'>{{num @model.pointsBalance}}</dd>
-            <dd class='sub'>redeemable points</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Lifetime</dt>
-            <dd class='value'>{{num @model.lifetimePoints}}</dd>
-            <dd class='sub'>points earned</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Tier</dt>
-            <dd class='value'>{{if @model.tier @model.tier '—'}}</dd>
-            <dd class='sub'>since {{day @model.tierSince}}</dd>
-          </div>
-          {{#if this.hasBookings}}
-            <div class='stat'>
-              <dt class='label'>Bookings</dt>
-              <dd class='value'>{{this.bookings.length}}</dd>
-              <dd class='sub'>for this holder</dd>
+      <IsoFrame>
+        <article class='page'>
+          <header class='head'>
+            <Avatar @name={{this.name}} @size={{28}} />
+            <div class='id'>
+              <h1 class='name'>{{this.name}}</h1>
+              {{#if this.meta}}<p class='meta'>{{this.meta}}</p>{{/if}}
             </div>
-          {{/if}}
-        </dl>
+            <div class='tags'>
+              <DotText @label={{@model.tier}} @tone='primary' />
+              <DotText
+                @label={{@model.status}}
+                @tone={{statusTone @model.status}}
+              />
+            </div>
+          </header>
 
-        <div class='cols'>
-          <div class='main'>
-            <section class='sec'>
-              <h2>Recent activity</h2>
-              {{#if this.ledger.length}}
-                <ul class='rows'>
-                  {{#each this.ledger key='id' as |t|}}
-                    <li class='row'>
-                      <span class='date'>{{day t.occurredAt}}</span>
-                      <span class='what'><strong>{{reasonOf t}}</strong>
-                        <span class='muted'>{{#if t.source}}·
-                            {{t.source}}{{/if}}{{#if t.expiresAt}}
-                            · expires
-                            {{dayMonth t.expiresAt}}{{/if}}</span></span>
-                      <span class='amt {{sign t.amount}}'>{{signed
-                          t.amount
-                        }}</span>
-                    </li>
-                  {{/each}}
-                </ul>
-              {{else}}
-                <p class='empty'>No points activity yet</p>
-              {{/if}}
-            </section>
-            {{#if this.ladder.length}}
+          <dl class='stats' aria-label='Key numbers'>
+            <div class='stat'>
+              <dt class='label'>Balance</dt>
+              <dd class='value'>{{num @model.pointsBalance}}</dd>
+              <dd class='sub'>redeemable points</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Lifetime</dt>
+              <dd class='value'>{{num @model.lifetimePoints}}</dd>
+              <dd class='sub'>points earned</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Tier</dt>
+              <dd class='value'>{{if @model.tier @model.tier '—'}}</dd>
+              <dd class='sub'>since {{day @model.tierSince}}</dd>
+            </div>
+            {{#if this.hasBookings}}
+              <div class='stat'>
+                <dt class='label'>Bookings</dt>
+                <dd class='value'>{{this.bookings.length}}</dd>
+                <dd class='sub'>for this holder</dd>
+              </div>
+            {{/if}}
+          </dl>
+
+          <div class='cols'>
+            <div class='main'>
               <section class='sec'>
-                <h2>Tier ladder</h2>
+                <h2>Recent activity</h2>
+                {{#if this.ledger.length}}
+                  <ul class='rows'>
+                    {{#each this.ledger key='id' as |t|}}
+                      <li class='row'>
+                        <span class='date'>{{day t.occurredAt}}</span>
+                        <span class='what'><strong>{{reasonOf t}}</strong>
+                          <span class='muted'>{{#if t.source}}·
+                              {{t.source}}{{/if}}{{#if t.expiresAt}}
+                              · expires
+                              {{dayMonth t.expiresAt}}{{/if}}</span></span>
+                        <span class='amt {{sign t.amount}}'>{{signed
+                            t.amount
+                          }}</span>
+                      </li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <p class='empty'>No points activity yet</p>
+                {{/if}}
+              </section>
+              {{#if this.ladder.length}}
+                <section class='sec'>
+                  <h2>Tier ladder</h2>
+                  <dl class='kv'>
+                    {{#each this.ladder as |o|}}
+                      <dt>{{o.value}}{{if o.current ' (current)'}}</dt>
+                      <dd>{{if o.meaning o.meaning '—'}}{{#if o.multiplier}}
+                          ·
+                          {{o.multiplier}}×{{/if}}</dd>
+                    {{/each}}
+                  </dl>
+                </section>
+              {{/if}}
+            </div>
+
+            <aside class='side'>
+              <section class='sec'>
+                <h2>Linked</h2>
                 <dl class='kv'>
-                  {{#each this.ladder as |o|}}
-                    <dt>{{o.value}}{{if o.current ' (current)'}}</dt>
-                    <dd>{{if o.meaning o.meaning '—'}}{{#if o.multiplier}}
-                        ·
-                        {{o.multiplier}}×{{/if}}</dd>
+                  <dt>Holder</dt>
+                  <dd>{{#if @model.holder}}<@fields.holder
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                  {{#each this.bookings as |b|}}
+                    <dt>Booking</dt>
+                    <dd>{{#let (getComponent b) as |B|}}<B
+                          @format='atom'
+                          @displayContainer={{false}}
+                        />{{/let}}</dd>
                   {{/each}}
                 </dl>
               </section>
-            {{/if}}
+              <section class='sec'>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  <dt>Points balance</dt><dd class='num'>{{num
+                      @model.pointsBalance
+                    }}</dd>
+                  <dt>Lifetime points</dt><dd class='num'>{{num
+                      @model.lifetimePoints
+                    }}</dd>
+                  <dt>Tier</dt><dd>{{this.tierLine}}</dd>
+                  <dt>Tier since</dt><dd>{{day @model.tierSince}}</dd>
+                  <dt>Member since</dt><dd>{{day @model.memberSince}}</dd>
+                  <dt>Status</dt><dd>{{if @model.status @model.status '—'}}</dd>
+                  <dt>Expiring</dt><dd>{{this.expiring}}</dd>
+                  <dt>Member no.</dt><dd class='mono'>{{if
+                      @model.memberNumber
+                      @model.memberNumber
+                      '—'
+                    }}</dd>
+                </dl>
+              </section>
+            </aside>
           </div>
-
-          <aside class='side'>
-            <section class='sec'>
-              <h2>Linked</h2>
-              <dl class='kv'>
-                <dt>Holder</dt>
-                <dd>{{#if @model.holder}}<@fields.holder
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-                {{#each this.bookings as |b|}}
-                  <dt>Booking</dt>
-                  <dd>{{#let (getComponent b) as |B|}}<B
-                        @format='atom'
-                        @displayContainer={{false}}
-                      />{{/let}}</dd>
-                {{/each}}
-              </dl>
-            </section>
-            <section class='sec'>
-              <h2>Details</h2>
-              <dl class='kv'>
-                <dt>Points balance</dt><dd class='num'>{{num
-                    @model.pointsBalance
-                  }}</dd>
-                <dt>Lifetime points</dt><dd class='num'>{{num
-                    @model.lifetimePoints
-                  }}</dd>
-                <dt>Tier</dt><dd>{{this.tierLine}}</dd>
-                <dt>Tier since</dt><dd>{{day @model.tierSince}}</dd>
-                <dt>Member since</dt><dd>{{day @model.memberSince}}</dd>
-                <dt>Status</dt><dd>{{if @model.status @model.status '—'}}</dd>
-                <dt>Expiring</dt><dd>{{this.expiring}}</dd>
-                <dt>Member no.</dt><dd class='mono'>{{if
-                    @model.memberNumber
-                    @model.memberNumber
-                    '—'
-                  }}</dd>
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .page {
           margin: var(--boxel-sp-sm);
