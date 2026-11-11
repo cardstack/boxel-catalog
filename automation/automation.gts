@@ -1176,7 +1176,7 @@ const RUN_LIMITS = [
     key: 'writes',
     label: 'Saves',
     hint: 'Files and cards a run may create or change',
-    noneHint: 'No files or cards may be created or changed',
+    noneHint: 'A run may not create or change any file or card',
   },
   {
     key: 'resolveCalls',
@@ -1190,7 +1190,7 @@ const RUN_LIMITS = [
     hint: 'Credits a run’s AI requests may cost in all',
     editLabel: 'AI spending, in credits',
     editHint:
-      'Each AI request counts at the most it could cost until its cost is known, so a long reply needs room',
+      'Boxel counts each AI request at the most the request could cost until the AI provider reports the actual cost, so a long reply needs a higher limit',
     noneHint: 'No credits for AI requests',
   },
   {
