@@ -21,6 +21,7 @@ import { Chip } from '@cardstack/pretui/components/chip';
 import { FitTile } from '../shared/fit-tile';
 import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const TRANSITION_GUARDS = [
   'none',
@@ -356,107 +357,109 @@ export class Workflow extends CardDef {
       this.args.editCard?.(this.args.model as Workflow);
     };
     <template>
-      <article class='iso'>
-        <header class='ih'>
-          <span class='mark' aria-hidden='true'>Wf</span>
-          <div class='t'>
-            <h1 class='name'>{{this.v.name}}</h1>
-            <p class='meta'>{{this.v.subline}}</p>
-          </div>
-          <span class='sts'>
-            {{#if this.v.version}}<Chip
-                @label={{this.v.version}}
+      <IsoFrame>
+        <article class='iso'>
+          <header class='ih'>
+            <span class='mark' aria-hidden='true'>Wf</span>
+            <div class='t'>
+              <h1 class='name'>{{this.v.name}}</h1>
+              <p class='meta'>{{this.v.subline}}</p>
+            </div>
+            <span class='sts'>
+              {{#if this.v.version}}<Chip
+                  @label={{this.v.version}}
+                  @tone='neutral'
+                  @appearance='plain'
+                />{{/if}}
+              <Chip
+                @label={{this.v.statesLabel}}
                 @tone='neutral'
                 @appearance='plain'
-              />{{/if}}
-            <Chip
-              @label={{this.v.statesLabel}}
+              />
+            </span>
+            {{#if @editCard}}
+              <Button
+                @tone='neutral'
+                @appearance='outlined'
+                @size='s'
+                @icon={{PencilIcon}}
+                {{on 'click' this.edit}}
+              >Edit</Button>
+            {{/if}}
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='States'
               @tone='neutral'
-              @appearance='plain'
+              @value={{this.v.statesCount}}
+              @hint={{this.pausesHint}}
+              @roll={{false}}
             />
-          </span>
-          {{#if @editCard}}
-            <Button
+            <Stat
+              @label='Transitions'
+              @tone='primary'
+              @value={{this.v.transitionsCount}}
+              @hint={{this.guardedHint}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Version'
               @tone='neutral'
-              @appearance='outlined'
-              @size='s'
-              @icon={{PencilIcon}}
-              {{on 'click' this.edit}}
-            >Edit</Button>
-          {{/if}}
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='States'
-            @tone='neutral'
-            @value={{this.v.statesCount}}
-            @hint={{this.pausesHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Transitions'
-            @tone='primary'
-            @value={{this.v.transitionsCount}}
-            @hint={{this.guardedHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Version'
-            @tone='neutral'
-            @value={{if this.v.version this.v.version '—'}}
-            @hint={{if @model.appliesTo @model.appliesTo '—'}}
-            @roll={{false}}
-          />
-        </div>
-        <div class='cols'>
-          <div class='main'>
-            <section>
-              <h2>States</h2>
-              {{#each this.v.stateRows as |s|}}
-                <div class='row'>
-                  <span class='row-id'>
-                    <span class='row-name'>{{s.label}}</span>
-                    <span class='meta'>{{s.detail}}</span>
-                  </span>
-                  <Chip
-                    @label={{s.kind}}
-                    @tone={{s.tone}}
-                    @appearance='plain'
-                  />
-                </div>
-              {{else}}
-                <p class='row meta'>No states yet</p>
-              {{/each}}
-            </section>
-            <section>
-              <h2>Transitions</h2>
-              {{#each this.v.transitionRows as |t|}}
-                <div class='row'>
-                  <span class='row-name'>{{t.route}}</span>
-                  <Chip
-                    @label={{t.guard}}
-                    @tone={{t.tone}}
-                    @appearance='plain'
-                  />
-                </div>
-              {{else}}
-                <p class='row meta'>No transitions yet</p>
-              {{/each}}
-            </section>
+              @value={{if this.v.version this.v.version '—'}}
+              @hint={{if @model.appliesTo @model.appliesTo '—'}}
+              @roll={{false}}
+            />
           </div>
-          <aside class='side'>
-            <section>
-              <h2>Details</h2>
-              <dl class='kv'>
-                {{#each this.v.facts as |f|}}
-                  <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
-                    >{{f.value}}</dd></div>
+          <div class='cols'>
+            <div class='main'>
+              <section>
+                <h2>States</h2>
+                {{#each this.v.stateRows as |s|}}
+                  <div class='row'>
+                    <span class='row-id'>
+                      <span class='row-name'>{{s.label}}</span>
+                      <span class='meta'>{{s.detail}}</span>
+                    </span>
+                    <Chip
+                      @label={{s.kind}}
+                      @tone={{s.tone}}
+                      @appearance='plain'
+                    />
+                  </div>
+                {{else}}
+                  <p class='row meta'>No states yet</p>
                 {{/each}}
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+              </section>
+              <section>
+                <h2>Transitions</h2>
+                {{#each this.v.transitionRows as |t|}}
+                  <div class='row'>
+                    <span class='row-name'>{{t.route}}</span>
+                    <Chip
+                      @label={{t.guard}}
+                      @tone={{t.tone}}
+                      @appearance='plain'
+                    />
+                  </div>
+                {{else}}
+                  <p class='row meta'>No transitions yet</p>
+                {{/each}}
+              </section>
+            </div>
+            <aside class='side'>
+              <section>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  {{#each this.v.facts as |f|}}
+                    <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+                      >{{f.value}}</dd></div>
+                  {{/each}}
+                </dl>
+              </section>
+            </aside>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .iso {
           container-type: inline-size;

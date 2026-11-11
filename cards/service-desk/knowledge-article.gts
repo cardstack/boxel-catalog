@@ -27,6 +27,7 @@ import {
   RecText,
 } from './components/record';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const ARTICLE_VISIBILITIES = ['Public', 'Internal'] as const;
 export const ARTICLE_STATUSES = ['Draft', 'Published', 'Archived'] as const;
@@ -188,89 +189,97 @@ export class KnowledgeArticle extends CardDef {
       return (this.args.model?.keywords ?? []).filter(Boolean).length;
     }
     <template>
-      <RecCard @inset={{true}}>
-        <RecHead
-          @mark='KB'
-          @title={{@model.title}}
-          @sub='{{@model.categoryName}} · {{this.visLower}}'
-        >
-          <:status>
-            {{#if @model.status}}<Chip
-                @appearance='plain'
-                @tone={{if (eq @model.status 'Published') 'success' 'warning'}}
-              >{{@model.status}}</Chip>{{/if}}
-            {{#if @model.visibility}}<Chip
-                @appearance='plain'
-              >{{@model.visibility}}</Chip>{{/if}}
-          </:status>
-        </RecHead>
-        <RecStats>
-          <Stat
-            @label='Status'
-            @tone={{if (eq @model.status 'Published') 'success' 'warning'}}
-            @value={{if @model.status @model.status '—'}}
-            @hint={{@model.visibility}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Category'
-            @tone='neutral'
-            @value={{if @model.categoryName @model.categoryName '—'}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Keywords'
-            @tone='neutral'
-            @value={{this.keywordCount}}
-            @hint={{@model.keywordLabel}}
-            @roll={{false}}
-          />
-        </RecStats>
-        <RecBody>
-          <:main>
-            <RecBlock @title='Article'>
-              <RecText><@fields.body /></RecText>
-            </RecBlock>
-            <RecBlock @title='Keywords'>
-              <RecText><span class='mono'>{{if
+      <IsoFrame>
+        <RecCard @inset={{true}}>
+          <RecHead
+            @mark='KB'
+            @title={{@model.title}}
+            @sub='{{@model.categoryName}} · {{this.visLower}}'
+          >
+            <:status>
+              {{#if @model.status}}<Chip
+                  @appearance='plain'
+                  @tone={{if
+                    (eq @model.status 'Published')
+                    'success'
+                    'warning'
+                  }}
+                >{{@model.status}}</Chip>{{/if}}
+              {{#if @model.visibility}}<Chip
+                  @appearance='plain'
+                >{{@model.visibility}}</Chip>{{/if}}
+            </:status>
+          </RecHead>
+          <RecStats>
+            <Stat
+              @label='Status'
+              @tone={{if (eq @model.status 'Published') 'success' 'warning'}}
+              @value={{if @model.status @model.status '—'}}
+              @hint={{@model.visibility}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Category'
+              @tone='neutral'
+              @value={{if @model.categoryName @model.categoryName '—'}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Keywords'
+              @tone='neutral'
+              @value={{this.keywordCount}}
+              @hint={{@model.keywordLabel}}
+              @roll={{false}}
+            />
+          </RecStats>
+          <RecBody>
+            <:main>
+              <RecBlock @title='Article'>
+                <RecText><@fields.body /></RecText>
+              </RecBlock>
+              <RecBlock @title='Keywords'>
+                <RecText><span class='mono'>{{if
+                      @model.keywordLabel
+                      @model.keywordLabel
+                      '—'
+                    }}</span></RecText>
+              </RecBlock>
+            </:main>
+            <:side>
+              <RecBlock @title='Linked'>
+                <RecRow @label='Category'>{{#if
+                    @model.category
+                  }}<@fields.category
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</RecRow>
+              </RecBlock>
+              <RecBlock @title='Details'>
+                <RecRow @label='Status'>{{if
+                    @model.status
+                    @model.status
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Visibility'>{{if
+                    @model.visibility
+                    @model.visibility
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Category'>{{if
+                    @model.categoryName
+                    @model.categoryName
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Keywords'>{{if
                     @model.keywordLabel
                     @model.keywordLabel
                     '—'
-                  }}</span></RecText>
-            </RecBlock>
-          </:main>
-          <:side>
-            <RecBlock @title='Linked'>
-              <RecRow @label='Category'>{{#if @model.category}}<@fields.category
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</RecRow>
-            </RecBlock>
-            <RecBlock @title='Details'>
-              <RecRow @label='Status'>{{if
-                  @model.status
-                  @model.status
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Visibility'>{{if
-                  @model.visibility
-                  @model.visibility
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Category'>{{if
-                  @model.categoryName
-                  @model.categoryName
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Keywords'>{{if
-                  @model.keywordLabel
-                  @model.keywordLabel
-                  '—'
-                }}</RecRow>
-            </RecBlock>
-          </:side>
-        </RecBody>
-      </RecCard>
+                  }}</RecRow>
+              </RecBlock>
+            </:side>
+          </RecBody>
+        </RecCard>
+      </IsoFrame>
       <style scoped>
         .mono {
           font-family: var(--font-mono);

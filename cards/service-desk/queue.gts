@@ -48,6 +48,7 @@ import {
   RecLine,
   RecText,
 } from './components/record';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // "L2 Technical" → "L2": the tier code is the queue's mark.
 function queueMark(title?: string) {
@@ -157,112 +158,114 @@ export class Queue extends CardDef {
       return queueCounts(this.tickets?.instances);
     }
     <template>
-      <RecCard @inset={{true}}>
-        <RecHead
-          @mark={{queueMark @model.title}}
-          @title={{@model.title}}
-          @sub={{@model.description}}
-        >
-          <:status>
-            {{#if @model.tierLabel}}<Chip
-                @appearance='plain'
-              >{{@model.tierLabel}}</Chip>{{/if}}
-            <Chip @appearance='plain'>{{@model.agentCount}}</Chip>
-          </:status>
-        </RecHead>
-        <RecStats>
-          <Stat
-            @label='Open'
-            @tone='neutral'
-            @value={{this.counts.open}}
-            @hint='tickets in this queue'
-            @roll={{false}}
-          />
-          <Stat
-            @label='Agents'
-            @tone='neutral'
-            @value={{this.agentTotal}}
-            @hint={{@model.tierDescriptor}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='At risk'
-            @tone='warning'
-            @value={{this.counts.atRisk}}
-            @hint='clock close to breach'
-            @roll={{false}}
-          />
-        </RecStats>
-        <RecBody>
-          <:main>
-            <RecBlock @title='About this queue'>
-              <RecText>{{if
-                  @model.description
-                  @model.description
-                  '—'
-                }}</RecText>
-            </RecBlock>
-            <RecBlock @title='Agents'>
-              {{#each @fields.agents as |Agent|}}
-                <RecLine><Agent
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></RecLine>
-              {{else}}
-                <RecLine><span class='dim'>Nobody works this queue yet.</span></RecLine>
-              {{/each}}
-            </RecBlock>
-            <RecBlock @title='Routing'>
-              <RecRow @label='Default commitment'>{{if
-                  @model.policyName
-                  @model.policyName
-                  '—'
-                }}</RecRow>
-            </RecBlock>
-          </:main>
-          <:side>
-            <RecBlock @title='Linked'>
-              <RecRow @label='Policy'>{{#if
-                  @model.defaultPolicy
-                }}<@fields.defaultPolicy
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</RecRow>
-              {{#each @fields.agents as |Agent|}}
-                <RecRow @label='Agent'><Agent
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></RecRow>
-              {{/each}}
-            </RecBlock>
-            <RecBlock @title='Details'>
-              <RecRow @label='Tier'>{{if
-                  @model.tierLabel
-                  @model.tierLabel
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Agents'>{{@model.agentCount}}</RecRow>
-              <RecRow @label='Default policy'>{{if
-                  @model.policyName
-                  @model.policyName
-                  '—'
-                }}</RecRow>
-              <RecRow
-                @label='Open tickets'
-                @mono={{true}}
-              >{{this.counts.open}}</RecRow>
-              <RecRow
-                @label='At risk'
-                @mono={{true}}
-              >{{this.counts.atRisk}}</RecRow>
-              <RecRow
-                @label='Paused'
-                @mono={{true}}
-              >{{this.counts.paused}}</RecRow>
-            </RecBlock>
-          </:side>
-        </RecBody>
-      </RecCard>
+      <IsoFrame>
+        <RecCard @inset={{true}}>
+          <RecHead
+            @mark={{queueMark @model.title}}
+            @title={{@model.title}}
+            @sub={{@model.description}}
+          >
+            <:status>
+              {{#if @model.tierLabel}}<Chip
+                  @appearance='plain'
+                >{{@model.tierLabel}}</Chip>{{/if}}
+              <Chip @appearance='plain'>{{@model.agentCount}}</Chip>
+            </:status>
+          </RecHead>
+          <RecStats>
+            <Stat
+              @label='Open'
+              @tone='neutral'
+              @value={{this.counts.open}}
+              @hint='tickets in this queue'
+              @roll={{false}}
+            />
+            <Stat
+              @label='Agents'
+              @tone='neutral'
+              @value={{this.agentTotal}}
+              @hint={{@model.tierDescriptor}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='At risk'
+              @tone='warning'
+              @value={{this.counts.atRisk}}
+              @hint='clock close to breach'
+              @roll={{false}}
+            />
+          </RecStats>
+          <RecBody>
+            <:main>
+              <RecBlock @title='About this queue'>
+                <RecText>{{if
+                    @model.description
+                    @model.description
+                    '—'
+                  }}</RecText>
+              </RecBlock>
+              <RecBlock @title='Agents'>
+                {{#each @fields.agents as |Agent|}}
+                  <RecLine><Agent
+                      @format='atom'
+                      @displayContainer={{false}}
+                    /></RecLine>
+                {{else}}
+                  <RecLine><span class='dim'>Nobody works this queue yet.</span></RecLine>
+                {{/each}}
+              </RecBlock>
+              <RecBlock @title='Routing'>
+                <RecRow @label='Default commitment'>{{if
+                    @model.policyName
+                    @model.policyName
+                    '—'
+                  }}</RecRow>
+              </RecBlock>
+            </:main>
+            <:side>
+              <RecBlock @title='Linked'>
+                <RecRow @label='Policy'>{{#if
+                    @model.defaultPolicy
+                  }}<@fields.defaultPolicy
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</RecRow>
+                {{#each @fields.agents as |Agent|}}
+                  <RecRow @label='Agent'><Agent
+                      @format='atom'
+                      @displayContainer={{false}}
+                    /></RecRow>
+                {{/each}}
+              </RecBlock>
+              <RecBlock @title='Details'>
+                <RecRow @label='Tier'>{{if
+                    @model.tierLabel
+                    @model.tierLabel
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Agents'>{{@model.agentCount}}</RecRow>
+                <RecRow @label='Default policy'>{{if
+                    @model.policyName
+                    @model.policyName
+                    '—'
+                  }}</RecRow>
+                <RecRow
+                  @label='Open tickets'
+                  @mono={{true}}
+                >{{this.counts.open}}</RecRow>
+                <RecRow
+                  @label='At risk'
+                  @mono={{true}}
+                >{{this.counts.atRisk}}</RecRow>
+                <RecRow
+                  @label='Paused'
+                  @mono={{true}}
+                >{{this.counts.paused}}</RecRow>
+              </RecBlock>
+            </:side>
+          </RecBody>
+        </RecCard>
+      </IsoFrame>
       <style scoped>
         .dim {
           color: var(--muted-foreground);

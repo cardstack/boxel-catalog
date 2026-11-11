@@ -33,6 +33,7 @@ import {
   RecRow,
   RecStats,
 } from './components/record';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /** One message in a thread. Author is any PersonBase — an Employee or a Learner. */
 export class PostField extends FieldDef {
@@ -150,68 +151,70 @@ export class Thread extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     <template>
-      <RecCard @inset={{true}}>
-        <RecHead
-          @mark='Th'
-          @title={{@model.cardTitle}}
-          @sub={{threadSub @model}}
-        >
-          <:status><ThreadStatus @model={{@model}} /></:status>
-        </RecHead>
-        <RecStats>
-          <Stat
-            @label='Posts'
-            @tone='neutral'
-            @value={{postsCount @model}}
-            @hint={{peopleHint @model}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Last activity'
-            @tone='neutral'
-            @value={{shortDate @model.lastActivityAt}}
-            @hint={{@model.lastAuthorName}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='State'
-            @tone='neutral'
-            @value={{if @model.closed 'Closed' 'Open'}}
-            @hint={{if @model.pinned 'pinned' ''}}
-            @roll={{false}}
-          />
-        </RecStats>
-        <RecBody>
-          <:main>
-            <RecBlock @title='Posts'>
-              {{#each @model.posts as |post|}}
-                <RecLine><span class='post'><strong>{{post.authorName}}
-                      ·
-                      {{shortDate post.postedAt}}</strong><span
-                      class='body'
-                    >{{plain post.body}}</span></span></RecLine>
-              {{else}}
-                <EmptyState
-                  @title='No posts yet'
-                  @message='The first post sets the tone.'
-                  @texture={{false}}
-                  style={{COMPACT_EMPTY_STYLE}}
-                />
-              {{/each}}
-            </RecBlock>
-          </:main>
-          <:side>
-            <RecBlock @title='Linked'>
-              <RecRow @label='About'>{{#if @model.about}}<@fields.about
-                    @format='atom'
-                  />{{else}}—{{/if}}</RecRow>
-            </RecBlock>
-            <RecBlock @title='Details'>
-              <ThreadFacts @model={{@model}} />
-            </RecBlock>
-          </:side>
-        </RecBody>
-      </RecCard>
+      <IsoFrame>
+        <RecCard @inset={{true}}>
+          <RecHead
+            @mark='Th'
+            @title={{@model.cardTitle}}
+            @sub={{threadSub @model}}
+          >
+            <:status><ThreadStatus @model={{@model}} /></:status>
+          </RecHead>
+          <RecStats>
+            <Stat
+              @label='Posts'
+              @tone='neutral'
+              @value={{postsCount @model}}
+              @hint={{peopleHint @model}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Last activity'
+              @tone='neutral'
+              @value={{shortDate @model.lastActivityAt}}
+              @hint={{@model.lastAuthorName}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='State'
+              @tone='neutral'
+              @value={{if @model.closed 'Closed' 'Open'}}
+              @hint={{if @model.pinned 'pinned' ''}}
+              @roll={{false}}
+            />
+          </RecStats>
+          <RecBody>
+            <:main>
+              <RecBlock @title='Posts'>
+                {{#each @model.posts as |post|}}
+                  <RecLine><span class='post'><strong>{{post.authorName}}
+                        ·
+                        {{shortDate post.postedAt}}</strong><span
+                        class='body'
+                      >{{plain post.body}}</span></span></RecLine>
+                {{else}}
+                  <EmptyState
+                    @title='No posts yet'
+                    @message='The first post sets the tone.'
+                    @texture={{false}}
+                    style={{COMPACT_EMPTY_STYLE}}
+                  />
+                {{/each}}
+              </RecBlock>
+            </:main>
+            <:side>
+              <RecBlock @title='Linked'>
+                <RecRow @label='About'>{{#if @model.about}}<@fields.about
+                      @format='atom'
+                    />{{else}}—{{/if}}</RecRow>
+              </RecBlock>
+              <RecBlock @title='Details'>
+                <ThreadFacts @model={{@model}} />
+              </RecBlock>
+            </:side>
+          </RecBody>
+        </RecCard>
+      </IsoFrame>
       <style scoped>
         .post {
           display: grid;

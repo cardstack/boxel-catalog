@@ -48,6 +48,7 @@ import {
 
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const AGENT_TIERS = ['L1', 'L2', 'L3'] as const;
 
@@ -157,116 +158,118 @@ export class SupportAgent extends PersonBase {
     }
     openTicket = (t: any) => (this.args as any).viewCard?.(t);
     <template>
-      <RecCard @inset={{true}}>
-        <RecHead
-          @mark={{initials @model.title}}
-          @title={{@model.title}}
-          @sub={{@model.tierLabel}}
-        >
-          <:status>
-            {{#if @model.tier}}<Chip
-                @appearance='plain'
-              >{{@model.tier}}</Chip>{{/if}}
-            <Chip @appearance='plain'>{{this.assigned.length}} assigned</Chip>
-          </:status>
-        </RecHead>
-        <RecStats>
-          <Stat
-            @label='Tier'
-            @tone='neutral'
-            @value={{if @model.tier @model.tier '—'}}
-            @hint={{@model.tierDescriptor}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Assigned'
-            @tone='neutral'
-            @value={{this.assigned.length}}
-            @hint='{{this.paused}} paused on customer'
-            @roll={{false}}
-          />
-          <Stat
-            @label='Skills'
-            @tone='neutral'
-            @value={{this.skills.length}}
-            @hint={{@model.skillSummary}}
-            @roll={{false}}
-          />
-        </RecStats>
-        <RecBody>
-          <:main>
-            <RecBlock @title='Skills'>
-              <RecText><span class='mono'>{{if
+      <IsoFrame>
+        <RecCard @inset={{true}}>
+          <RecHead
+            @mark={{initials @model.title}}
+            @title={{@model.title}}
+            @sub={{@model.tierLabel}}
+          >
+            <:status>
+              {{#if @model.tier}}<Chip
+                  @appearance='plain'
+                >{{@model.tier}}</Chip>{{/if}}
+              <Chip @appearance='plain'>{{this.assigned.length}} assigned</Chip>
+            </:status>
+          </RecHead>
+          <RecStats>
+            <Stat
+              @label='Tier'
+              @tone='neutral'
+              @value={{if @model.tier @model.tier '—'}}
+              @hint={{@model.tierDescriptor}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Assigned'
+              @tone='neutral'
+              @value={{this.assigned.length}}
+              @hint='{{this.paused}} paused on customer'
+              @roll={{false}}
+            />
+            <Stat
+              @label='Skills'
+              @tone='neutral'
+              @value={{this.skills.length}}
+              @hint={{@model.skillSummary}}
+              @roll={{false}}
+            />
+          </RecStats>
+          <RecBody>
+            <:main>
+              <RecBlock @title='Skills'>
+                <RecText><span class='mono'>{{if
+                      @model.skillSummary
+                      @model.skillSummary
+                      '—'
+                    }}</span></RecText>
+              </RecBlock>
+              <RecBlock @title='Assigned tickets'>
+                {{#each this.assigned as |t|}}
+                  <RecLine>
+                    <:default><Button
+                        @appearance='link'
+                        {{on 'click' (fn this.openTicket t)}}
+                      ><b>{{t.subject}}</b></Button>
+                      <span class='dim'>{{t.reference}}
+                        ·
+                        {{t.customerName}}
+                        ·
+                        {{t.priority}}</span></:default>
+                    <:end><Chip
+                        @appearance='plain'
+                        @tone={{if (eq t.status 'Open') 'info' 'warning'}}
+                      >{{t.status}}</Chip></:end>
+                  </RecLine>
+                {{else}}
+                  <RecLine><span class='dim'>Nothing assigned.</span></RecLine>
+                {{/each}}
+              </RecBlock>
+              <RecBlock @title='Contact'>
+                <RecRow @label='Email'>{{if
+                    @model.email
+                    @model.email
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Phone' @mono={{true}}>{{if
+                    @model.phone
+                    @model.phone
+                    '—'
+                  }}</RecRow>
+              </RecBlock>
+            </:main>
+            <:side>
+              <RecBlock @title='Details'>
+                <RecRow @label='Tier'>{{if
+                    @model.tierLabel
+                    @model.tierLabel
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Skills'>{{if
                     @model.skillSummary
                     @model.skillSummary
                     '—'
-                  }}</span></RecText>
-            </RecBlock>
-            <RecBlock @title='Assigned tickets'>
-              {{#each this.assigned as |t|}}
-                <RecLine>
-                  <:default><Button
-                      @appearance='link'
-                      {{on 'click' (fn this.openTicket t)}}
-                    ><b>{{t.subject}}</b></Button>
-                    <span class='dim'>{{t.reference}}
-                      ·
-                      {{t.customerName}}
-                      ·
-                      {{t.priority}}</span></:default>
-                  <:end><Chip
-                      @appearance='plain'
-                      @tone={{if (eq t.status 'Open') 'info' 'warning'}}
-                    >{{t.status}}</Chip></:end>
-                </RecLine>
-              {{else}}
-                <RecLine><span class='dim'>Nothing assigned.</span></RecLine>
-              {{/each}}
-            </RecBlock>
-            <RecBlock @title='Contact'>
-              <RecRow @label='Email'>{{if
-                  @model.email
-                  @model.email
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Phone' @mono={{true}}>{{if
-                  @model.phone
-                  @model.phone
-                  '—'
-                }}</RecRow>
-            </RecBlock>
-          </:main>
-          <:side>
-            <RecBlock @title='Details'>
-              <RecRow @label='Tier'>{{if
-                  @model.tierLabel
-                  @model.tierLabel
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Skills'>{{if
-                  @model.skillSummary
-                  @model.skillSummary
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Email'>{{if
-                  @model.email
-                  @model.email
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Phone' @mono={{true}}>{{if
-                  @model.phone
-                  @model.phone
-                  '—'
-                }}</RecRow>
-              <RecRow
-                @label='Assigned'
-                @mono={{true}}
-              >{{this.assigned.length}}</RecRow>
-              <RecRow @label='Paused' @mono={{true}}>{{this.paused}}</RecRow>
-            </RecBlock>
-          </:side>
-        </RecBody>
-      </RecCard>
+                  }}</RecRow>
+                <RecRow @label='Email'>{{if
+                    @model.email
+                    @model.email
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Phone' @mono={{true}}>{{if
+                    @model.phone
+                    @model.phone
+                    '—'
+                  }}</RecRow>
+                <RecRow
+                  @label='Assigned'
+                  @mono={{true}}
+                >{{this.assigned.length}}</RecRow>
+                <RecRow @label='Paused' @mono={{true}}>{{this.paused}}</RecRow>
+              </RecBlock>
+            </:side>
+          </RecBody>
+        </RecCard>
+      </IsoFrame>
       <style scoped>
         .dim {
           font-size: var(--boxel-font-size-2xs);

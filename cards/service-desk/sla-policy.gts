@@ -32,6 +32,7 @@ import {
   RecLine,
   RecText,
 } from './components/record';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const CONDITION_OPERATORS = ['is', 'is not', 'contains'] as const;
 
@@ -317,108 +318,110 @@ export class SlaPolicy extends CardDef {
           : `${m}m`;
     };
     <template>
-      <RecCard @inset={{true}}>
-        <RecHead
-          @mark='SL'
-          @title={{@model.title}}
-          @sub={{@model.conditionSummary}}
-        >
-          <:status>{{#if @model.isDefault}}<Chip
+      <IsoFrame>
+        <RecCard @inset={{true}}>
+          <RecHead
+            @mark='SL'
+            @title={{@model.title}}
+            @sub={{@model.conditionSummary}}
+          >
+            <:status>{{#if @model.isDefault}}<Chip
+                  @appearance='plain'
+                  @tone='info'
+                >default</Chip>{{/if}}{{#if @model.businessHoursSummary}}<Chip
+                  @appearance='plain'
+                  @tone='info'
+                >{{@model.businessHoursSummary}}</Chip>{{/if}}<Chip
                 @appearance='plain'
-                @tone='info'
-              >default</Chip>{{/if}}{{#if @model.businessHoursSummary}}<Chip
-                @appearance='plain'
-                @tone='info'
-              >{{@model.businessHoursSummary}}</Chip>{{/if}}<Chip
-              @appearance='plain'
-            >{{this.actions.length}} breach actions</Chip></:status>
-        </RecHead>
-        <RecStats>
-          <Stat
-            @label='First response'
-            @tone='neutral'
-            @value={{this.target 'First response'}}
-            @hint={{this.p1 'First response'}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Resolution'
-            @tone='neutral'
-            @value={{this.target 'Resolution'}}
-            @hint={{this.p1 'Resolution'}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Next response'
-            @tone='neutral'
-            @value={{this.target 'Next response'}}
-            @hint={{this.p1 'Next response'}}
-            @roll={{false}}
-          />
-        </RecStats>
-        <RecBody>
-          <:main>
-            <RecBlock @title='Applies when'>
-              <RecText>{{if
-                  @model.conditionSummary
-                  @model.conditionSummary
-                  'Every ticket'
-                }}</RecText>
-            </RecBlock>
-            <RecBlock @title='Targets by priority'>
-              <div class='dt'>
-                <DataTable
-                  @columns={{this.matrixColumns}}
-                  @rows={{this.matrix}}
-                  @key={{this.rowKey}}
-                  @label='Targets by priority'
-                  @flush={{true}}
-                  @striped={{false}}
-                  @size='s'
-                  @sortable={{false}}
-                  @columnMenu={{false}}
-                />
-              </div>
-            </RecBlock>
-            <RecBlock @title='On breach'>
-              {{#each this.actions as |a|}}
-                <RecLine><:default>{{a.text}}</:default><:end><span
-                      class='mono'
-                    >{{a.n}}</span></:end></RecLine>
-              {{else}}
-                <RecLine>—</RecLine>
-              {{/each}}
-            </RecBlock>
-          </:main>
-          <:side>
-            <RecBlock @title='Linked'>
-              <RecRow @label='Hours'>{{#if
-                  @model.businessHours
-                }}<@fields.businessHours
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</RecRow>
-            </RecBlock>
-            <RecBlock @title='Details'>
-              <RecRow @label='Targets'>{{if
-                  @model.targetSummary
-                  @model.targetSummary
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Hours'>{{if
-                  @model.businessHoursSummary
-                  @model.businessHoursSummary
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Default'>{{if
-                  @model.isDefault
-                  'Yes'
-                  'No'
-                }}</RecRow>
-            </RecBlock>
-          </:side>
-        </RecBody>
-      </RecCard>
+              >{{this.actions.length}} breach actions</Chip></:status>
+          </RecHead>
+          <RecStats>
+            <Stat
+              @label='First response'
+              @tone='neutral'
+              @value={{this.target 'First response'}}
+              @hint={{this.p1 'First response'}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Resolution'
+              @tone='neutral'
+              @value={{this.target 'Resolution'}}
+              @hint={{this.p1 'Resolution'}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Next response'
+              @tone='neutral'
+              @value={{this.target 'Next response'}}
+              @hint={{this.p1 'Next response'}}
+              @roll={{false}}
+            />
+          </RecStats>
+          <RecBody>
+            <:main>
+              <RecBlock @title='Applies when'>
+                <RecText>{{if
+                    @model.conditionSummary
+                    @model.conditionSummary
+                    'Every ticket'
+                  }}</RecText>
+              </RecBlock>
+              <RecBlock @title='Targets by priority'>
+                <div class='dt'>
+                  <DataTable
+                    @columns={{this.matrixColumns}}
+                    @rows={{this.matrix}}
+                    @key={{this.rowKey}}
+                    @label='Targets by priority'
+                    @flush={{true}}
+                    @striped={{false}}
+                    @size='s'
+                    @sortable={{false}}
+                    @columnMenu={{false}}
+                  />
+                </div>
+              </RecBlock>
+              <RecBlock @title='On breach'>
+                {{#each this.actions as |a|}}
+                  <RecLine><:default>{{a.text}}</:default><:end><span
+                        class='mono'
+                      >{{a.n}}</span></:end></RecLine>
+                {{else}}
+                  <RecLine>—</RecLine>
+                {{/each}}
+              </RecBlock>
+            </:main>
+            <:side>
+              <RecBlock @title='Linked'>
+                <RecRow @label='Hours'>{{#if
+                    @model.businessHours
+                  }}<@fields.businessHours
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</RecRow>
+              </RecBlock>
+              <RecBlock @title='Details'>
+                <RecRow @label='Targets'>{{if
+                    @model.targetSummary
+                    @model.targetSummary
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Hours'>{{if
+                    @model.businessHoursSummary
+                    @model.businessHoursSummary
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Default'>{{if
+                    @model.isDefault
+                    'Yes'
+                    'No'
+                  }}</RecRow>
+              </RecBlock>
+            </:side>
+          </RecBody>
+        </RecCard>
+      </IsoFrame>
       <style scoped>
         .dt {
           padding-inline: var(--boxel-sp-2xs);

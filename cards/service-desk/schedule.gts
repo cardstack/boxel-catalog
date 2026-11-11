@@ -27,6 +27,7 @@ import {
   RecRow,
   RecLine,
 } from './components/record';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const WEEKDAYS = [
   'Sunday',
@@ -319,87 +320,89 @@ export class Schedule extends CardDef {
       );
     }
     <template>
-      <RecCard @inset={{true}}>
-        <RecHead @mark='BH' @title={{@model.title}} @sub={{@model.summary}}>
-          <:status>{{#if @model.isDefault}}<Chip
+      <IsoFrame>
+        <RecCard @inset={{true}}>
+          <RecHead @mark='BH' @title={{@model.title}} @sub={{@model.summary}}>
+            <:status>{{#if @model.isDefault}}<Chip
+                  @appearance='plain'
+                  @tone='info'
+                >default</Chip>{{/if}}<Chip
                 @appearance='plain'
-                @tone='info'
-              >default</Chip>{{/if}}<Chip
-              @appearance='plain'
-            >{{this.holidayTotal}} holidays</Chip></:status>
-        </RecHead>
-        <RecStats>
-          <Stat
-            @label='Hours / week'
-            @tone='neutral'
-            @value={{this.hoursPerWeek}}
-            @hint={{this.dayHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Holidays'
-            @tone='neutral'
-            @value={{this.holidayTotal}}
-            @hint={{this.nextHoliday}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Time zone'
-            @tone='neutral'
-            @value={{this.zoneShort}}
-            @hint={{@model.timeZone}}
-            @roll={{false}}
-          />
-        </RecStats>
-        <RecBody>
-          <:main>
-            <RecBlock @title='Working hours'>
-              {{#each this.days as |d|}}
-                <RecLine><:default><b>{{d.day}}</b></:default><:end><span
-                      class='mono dim'
-                    >{{d.hours}}</span></:end></RecLine>
-              {{/each}}
-            </RecBlock>
-            <RecBlock @title='Holidays'>
-              {{#each this.holidayList as |h|}}
-                <RecLine><:default><span
-                      class='mono'
-                    >{{h.date}}</span></:default><:end><span
-                      class='dim'
-                    >{{h.weekday}}</span></:end></RecLine>
-              {{else}}
-                <RecLine><span class='dim'>No holidays.</span></RecLine>
-              {{/each}}
-            </RecBlock>
-          </:main>
-          <:side>
-            <RecBlock @title='Details'>
-              <RecRow @label='Time zone'>{{if
-                  @model.timeZone
-                  @model.timeZone
-                  '—'
-                }}</RecRow>
-              {{#each this.days as |d|}}
-                <RecRow @label={{d.day}} @mono={{true}}>{{d.hours}}</RecRow>
-              {{/each}}
-              <RecRow
-                @label='Hours / week'
-                @mono={{true}}
-              >{{this.hoursPerWeek}}</RecRow>
-              <RecRow
-                @label='Holidays'
-                @mono={{true}}
-              >{{this.holidayTotal}}</RecRow>
-              <RecRow @label='Next holiday'>{{this.nextHoliday}}</RecRow>
-              <RecRow @label='Default'>{{if
-                  @model.isDefault
-                  'Yes'
-                  'No'
-                }}</RecRow>
-            </RecBlock>
-          </:side>
-        </RecBody>
-      </RecCard>
+              >{{this.holidayTotal}} holidays</Chip></:status>
+          </RecHead>
+          <RecStats>
+            <Stat
+              @label='Hours / week'
+              @tone='neutral'
+              @value={{this.hoursPerWeek}}
+              @hint={{this.dayHint}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Holidays'
+              @tone='neutral'
+              @value={{this.holidayTotal}}
+              @hint={{this.nextHoliday}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Time zone'
+              @tone='neutral'
+              @value={{this.zoneShort}}
+              @hint={{@model.timeZone}}
+              @roll={{false}}
+            />
+          </RecStats>
+          <RecBody>
+            <:main>
+              <RecBlock @title='Working hours'>
+                {{#each this.days as |d|}}
+                  <RecLine><:default><b>{{d.day}}</b></:default><:end><span
+                        class='mono dim'
+                      >{{d.hours}}</span></:end></RecLine>
+                {{/each}}
+              </RecBlock>
+              <RecBlock @title='Holidays'>
+                {{#each this.holidayList as |h|}}
+                  <RecLine><:default><span
+                        class='mono'
+                      >{{h.date}}</span></:default><:end><span
+                        class='dim'
+                      >{{h.weekday}}</span></:end></RecLine>
+                {{else}}
+                  <RecLine><span class='dim'>No holidays.</span></RecLine>
+                {{/each}}
+              </RecBlock>
+            </:main>
+            <:side>
+              <RecBlock @title='Details'>
+                <RecRow @label='Time zone'>{{if
+                    @model.timeZone
+                    @model.timeZone
+                    '—'
+                  }}</RecRow>
+                {{#each this.days as |d|}}
+                  <RecRow @label={{d.day}} @mono={{true}}>{{d.hours}}</RecRow>
+                {{/each}}
+                <RecRow
+                  @label='Hours / week'
+                  @mono={{true}}
+                >{{this.hoursPerWeek}}</RecRow>
+                <RecRow
+                  @label='Holidays'
+                  @mono={{true}}
+                >{{this.holidayTotal}}</RecRow>
+                <RecRow @label='Next holiday'>{{this.nextHoliday}}</RecRow>
+                <RecRow @label='Default'>{{if
+                    @model.isDefault
+                    'Yes'
+                    'No'
+                  }}</RecRow>
+              </RecBlock>
+            </:side>
+          </RecBody>
+        </RecCard>
+      </IsoFrame>
       <style scoped>
         .mono {
           font-family: var(--font-mono);

@@ -17,6 +17,7 @@ import { Button } from '@cardstack/pretui/components/button';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { FitTile } from '../shared/fit-tile';
+import { IsoFrame } from '../shared/compact-sheet';
 
 function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -272,128 +273,131 @@ export class Role extends CardDef {
       this.args.editCard?.(this.args.model as Role);
     };
     <template>
-      <article class='iso'>
-        <header class='ih'>
-          <span class='mark' aria-hidden='true'>Ro</span>
-          <div class='t'>
-            <h1 class='name'>{{this.v.name}}</h1>
-            <p class='meta'>{{this.v.subline}}</p>
-          </div>
-          <span class='sts'>
-            {{#if this.v.onDuty}}<Chip
-                @label='on duty'
-                @tone='success'
+      <IsoFrame>
+        <article class='iso'>
+          <header class='ih'>
+            <span class='mark' aria-hidden='true'>Ro</span>
+            <div class='t'>
+              <h1 class='name'>{{this.v.name}}</h1>
+              <p class='meta'>{{this.v.subline}}</p>
+            </div>
+            <span class='sts'>
+              {{#if this.v.onDuty}}<Chip
+                  @label='on duty'
+                  @tone='success'
+                  @appearance='plain'
+                />{{/if}}
+              <Chip
+                @label={{this.v.membersLabel}}
+                @tone='neutral'
                 @appearance='plain'
-              />{{/if}}
-            <Chip
-              @label={{this.v.membersLabel}}
+              />
+            </span>
+            {{#if @editCard}}
+              <Button
+                @tone='neutral'
+                @appearance='outlined'
+                @size='s'
+                @icon={{PencilIcon}}
+                {{on 'click' this.edit}}
+              >Edit</Button>
+            {{/if}}
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Members'
               @tone='neutral'
-              @appearance='plain'
+              @value={{this.v.memberCount}}
+              @hint={{this.v.memberNames}}
+              @roll={{false}}
             />
-          </span>
-          {{#if @editCard}}
-            <Button
-              @tone='neutral'
-              @appearance='outlined'
-              @size='s'
-              @icon={{PencilIcon}}
-              {{on 'click' this.edit}}
-            >Edit</Button>
-          {{/if}}
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Members'
-            @tone='neutral'
-            @value={{this.v.memberCount}}
-            @hint={{this.v.memberNames}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Permissions'
-            @tone='primary'
-            @value={{this.v.permissions.length}}
-            @hint={{this.v.permissionsHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='On duty'
-            @tone='success'
-            @value={{if this.v.onDuty 1 0}}
-            @hint={{if this.v.dutyName this.v.dutyName 'nobody on duty'}}
-            @roll={{false}}
-          />
-        </div>
-        <div class='cols'>
-          <div class='main'>
-            <section>
-              <h2>Members</h2>
-              {{#each this.v.memberRows as |r|}}
-                <div class='row'>
-                  <span class='row-id'>
-                    <span class='row-name'>{{r.name}}</span>
-                    <span class='meta'>{{if r.sub r.sub '—'}}</span>
-                  </span>
-                  {{#if r.duty}}<Chip
-                      @label='on duty'
-                      @tone='success'
-                      @appearance='plain'
-                    />{{else}}<Chip
-                      @label='member'
-                      @tone='neutral'
-                      @appearance='plain'
-                    />{{/if}}
-                </div>
-              {{else}}
-                <p class='row meta'>No members yet</p>
-              {{/each}}
-            </section>
-            {{#if this.v.permissions.length}}
+            <Stat
+              @label='Permissions'
+              @tone='primary'
+              @value={{this.v.permissions.length}}
+              @hint={{this.v.permissionsHint}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='On duty'
+              @tone='success'
+              @value={{if this.v.onDuty 1 0}}
+              @hint={{if this.v.dutyName this.v.dutyName 'nobody on duty'}}
+              @roll={{false}}
+            />
+          </div>
+          <div class='cols'>
+            <div class='main'>
               <section>
-                <h2>Permissions</h2>
-                {{#each this.v.permissions as |p|}}
+                <h2>Members</h2>
+                {{#each this.v.memberRows as |r|}}
                   <div class='row'>
                     <span class='row-id'>
-                      <span class='row-name'>{{p}}</span>
-                      <span class='meta'>can</span>
+                      <span class='row-name'>{{r.name}}</span>
+                      <span class='meta'>{{if r.sub r.sub '—'}}</span>
                     </span>
+                    {{#if r.duty}}<Chip
+                        @label='on duty'
+                        @tone='success'
+                        @appearance='plain'
+                      />{{else}}<Chip
+                        @label='member'
+                        @tone='neutral'
+                        @appearance='plain'
+                      />{{/if}}
                   </div>
+                {{else}}
+                  <p class='row meta'>No members yet</p>
                 {{/each}}
               </section>
-            {{/if}}
+              {{#if this.v.permissions.length}}
+                <section>
+                  <h2>Permissions</h2>
+                  {{#each this.v.permissions as |p|}}
+                    <div class='row'>
+                      <span class='row-id'>
+                        <span class='row-name'>{{p}}</span>
+                        <span class='meta'>can</span>
+                      </span>
+                    </div>
+                  {{/each}}
+                </section>
+              {{/if}}
+            </div>
+            <aside class='side'>
+              <section>
+                <h2>Linked</h2>
+                <dl class='kv'>
+                  {{#if this.v.onDuty}}
+                    <div class='kv-r'><dt class='cap'>On duty</dt><dd
+                      ><@fields.onDuty @format='atom' /></dd></div>
+                  {{/if}}
+                  {{#each @fields.members as |Member i|}}
+                    {{#unless (get this.v.dutyFlags i)}}
+                      <div class='kv-r'><dt class='cap'>Member</dt><dd><Member
+                            @format='atom'
+                          /></dd></div>
+                    {{/unless}}
+                  {{/each}}
+                </dl>
+              </section>
+              <section>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  {{#each this.v.facts as |f|}}
+                    <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+                      >{{f.value}}</dd></div>
+                  {{/each}}
+                  {{#each this.v.permissions as |p|}}
+                    <div class='kv-r'><dt class='cap'>Can</dt><dd
+                      >{{p}}</dd></div>
+                  {{/each}}
+                </dl>
+              </section>
+            </aside>
           </div>
-          <aside class='side'>
-            <section>
-              <h2>Linked</h2>
-              <dl class='kv'>
-                {{#if this.v.onDuty}}
-                  <div class='kv-r'><dt class='cap'>On duty</dt><dd
-                    ><@fields.onDuty @format='atom' /></dd></div>
-                {{/if}}
-                {{#each @fields.members as |Member i|}}
-                  {{#unless (get this.v.dutyFlags i)}}
-                    <div class='kv-r'><dt class='cap'>Member</dt><dd><Member
-                          @format='atom'
-                        /></dd></div>
-                  {{/unless}}
-                {{/each}}
-              </dl>
-            </section>
-            <section>
-              <h2>Details</h2>
-              <dl class='kv'>
-                {{#each this.v.facts as |f|}}
-                  <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
-                    >{{f.value}}</dd></div>
-                {{/each}}
-                {{#each this.v.permissions as |p|}}
-                  <div class='kv-r'><dt class='cap'>Can</dt><dd>{{p}}</dd></div>
-                {{/each}}
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .iso {
           container-type: inline-size;

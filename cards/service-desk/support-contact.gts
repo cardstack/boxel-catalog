@@ -46,6 +46,7 @@ import {
 
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const CUSTOMER_TIERS = ['VIP', 'Standard', 'Trial'] as const;
 
@@ -130,107 +131,113 @@ export class SupportContact extends PersonBase {
     }
     openTicket = (t: any) => (this.args as any).viewCard?.(t);
     <template>
-      <RecCard @inset={{true}}>
-        <RecHead
-          @mark={{initials @model.title}}
-          @title={{@model.title}}
-          @sub={{@model.company}}
-        >
-          <:status>
-            {{#if @model.tier}}<Chip
-                @appearance='plain'
-              >{{@model.tier}}</Chip>{{/if}}
-            <Chip @appearance='plain'>{{this.open.length}} open</Chip>
-          </:status>
-        </RecHead>
-        <RecStats>
-          <Stat
-            @label='Tier'
-            @tone='neutral'
-            @value={{if @model.tier @model.tier '—'}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Open tickets'
-            @tone='neutral'
-            @value={{this.open.length}}
-            @hint={{this.openHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Last contact'
-            @tone='neutral'
-            @value={{this.lastContact}}
-            @roll={{false}}
-          />
-        </RecStats>
-        <RecBody>
-          <:main>
-            <RecBlock @title='Contact'>
-              <RecRow @label='Email'>{{if
-                  @model.email
-                  @model.email
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Phone' @mono={{true}}>{{if
-                  @model.phone
-                  @model.phone
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Company'>{{if
-                  @model.company
-                  @model.company
-                  '—'
-                }}</RecRow>
-            </RecBlock>
-            <RecBlock @title='Tickets'>
-              {{#each this.open as |t|}}
-                <RecLine>
-                  <:default><Button
-                      @appearance='link'
-                      {{on 'click' (fn this.openTicket t)}}
-                    ><b>{{t.subject}}</b></Button>
-                    <span class='dim'>{{t.reference}}
-                      ·
-                      {{t.priority}}
-                      ·
-                      {{t.assigneeName}}</span></:default>
-                  <:end><Chip
-                      @appearance='plain'
-                      @tone={{if (eq t.status 'Open') 'info' 'warning'}}
-                    >{{t.status}}</Chip></:end>
-                </RecLine>
-              {{else}}
-                <RecLine><span class='dim'>No open tickets.</span></RecLine>
-              {{/each}}
-            </RecBlock>
-          </:main>
-          <:side>
-            <RecBlock @title='Details'>
-              <RecRow @label='Company'>{{if
-                  @model.company
-                  @model.company
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Tier'>{{if @model.tier @model.tier '—'}}</RecRow>
-              <RecRow @label='Email'>{{if
-                  @model.email
-                  @model.email
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Phone' @mono={{true}}>{{if
-                  @model.phone
-                  @model.phone
-                  '—'
-                }}</RecRow>
-              <RecRow
-                @label='Open tickets'
-                @mono={{true}}
-              >{{this.open.length}}</RecRow>
-            </RecBlock>
-          </:side>
-        </RecBody>
-      </RecCard>
+      <IsoFrame>
+        <RecCard @inset={{true}}>
+          <RecHead
+            @mark={{initials @model.title}}
+            @title={{@model.title}}
+            @sub={{@model.company}}
+          >
+            <:status>
+              {{#if @model.tier}}<Chip
+                  @appearance='plain'
+                >{{@model.tier}}</Chip>{{/if}}
+              <Chip @appearance='plain'>{{this.open.length}} open</Chip>
+            </:status>
+          </RecHead>
+          <RecStats>
+            <Stat
+              @label='Tier'
+              @tone='neutral'
+              @value={{if @model.tier @model.tier '—'}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Open tickets'
+              @tone='neutral'
+              @value={{this.open.length}}
+              @hint={{this.openHint}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Last contact'
+              @tone='neutral'
+              @value={{this.lastContact}}
+              @roll={{false}}
+            />
+          </RecStats>
+          <RecBody>
+            <:main>
+              <RecBlock @title='Contact'>
+                <RecRow @label='Email'>{{if
+                    @model.email
+                    @model.email
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Phone' @mono={{true}}>{{if
+                    @model.phone
+                    @model.phone
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Company'>{{if
+                    @model.company
+                    @model.company
+                    '—'
+                  }}</RecRow>
+              </RecBlock>
+              <RecBlock @title='Tickets'>
+                {{#each this.open as |t|}}
+                  <RecLine>
+                    <:default><Button
+                        @appearance='link'
+                        {{on 'click' (fn this.openTicket t)}}
+                      ><b>{{t.subject}}</b></Button>
+                      <span class='dim'>{{t.reference}}
+                        ·
+                        {{t.priority}}
+                        ·
+                        {{t.assigneeName}}</span></:default>
+                    <:end><Chip
+                        @appearance='plain'
+                        @tone={{if (eq t.status 'Open') 'info' 'warning'}}
+                      >{{t.status}}</Chip></:end>
+                  </RecLine>
+                {{else}}
+                  <RecLine><span class='dim'>No open tickets.</span></RecLine>
+                {{/each}}
+              </RecBlock>
+            </:main>
+            <:side>
+              <RecBlock @title='Details'>
+                <RecRow @label='Company'>{{if
+                    @model.company
+                    @model.company
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Tier'>{{if
+                    @model.tier
+                    @model.tier
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Email'>{{if
+                    @model.email
+                    @model.email
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Phone' @mono={{true}}>{{if
+                    @model.phone
+                    @model.phone
+                    '—'
+                  }}</RecRow>
+                <RecRow
+                  @label='Open tickets'
+                  @mono={{true}}
+                >{{this.open.length}}</RecRow>
+              </RecBlock>
+            </:side>
+          </RecBody>
+        </RecCard>
+      </IsoFrame>
       <style scoped>
         .dim {
           font-size: var(--boxel-font-size-2xs);
