@@ -113,11 +113,9 @@ export class AllCards {
   }
 
   get isLoading(): boolean {
-    return (
-      this.total === undefined && !this.failed
-        ? true
-        : this.needed.some((p) => !answered(p))
-    );
+    return this.total === undefined && !this.failed
+      ? true
+      : this.needed.some((p) => !answered(p));
   }
 
   // Every record, or nothing usable: false while any page is loading, failed, or over the cap.

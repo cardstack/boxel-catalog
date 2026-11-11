@@ -218,7 +218,8 @@ export class MyReports extends GlimmerComponent<MineSignature> {
     let c = r.card;
     this.openError = '';
     if (!c) {
-      this.openError = 'This report is still loading. Open it again in a moment.';
+      this.openError =
+        'This report is still loading. Open it again in a moment.';
       return;
     }
     if (this.isRunner(c.kind)) {

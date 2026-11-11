@@ -1215,8 +1215,7 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         <div class='skeletons'><Skeleton @height='2rem' /><Skeleton
             @height='2rem'
           /><Skeleton @height='2rem' /></div>
-      {{else if this.capNote}}
-      {{else if this.table.count}}
+      {{else if this.capNote}}{{else if this.table.count}}
         <StatementTable
           @label={{this.title}}
           @columns={{this.table.cols}}

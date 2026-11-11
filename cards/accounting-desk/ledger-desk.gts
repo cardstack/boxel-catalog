@@ -2349,11 +2349,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     { isLive: true },
   );
   get regDocs(): any[] {
-    return [
-      this.regInvoices,
-      this.regBills,
-      this.regOpenings,
-    ].flatMap((d) =>
+    return [this.regInvoices, this.regBills, this.regOpenings].flatMap((d) =>
       (((d as any)?.instances ?? []) as any[]).filter(
         (x) => x && x.status === 'posted',
       ),
@@ -3019,9 +3015,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // A full page may have left out a line that took a posting, so nothing is offered rather than a
   // posting that's already matched.
   get takenFull() {
-    return (
-      this.takenData.incomplete
-    );
+    return this.takenData.incomplete;
   }
   // What's already in the books this line could be: a posting on its account (so a transfer or payout
   // isn't entered twice), or an open invoice or bill it pays in full.
@@ -5364,11 +5358,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     );
   }
   get regLoading() {
-    return [
-      this.regInvoices,
-      this.regBills,
-      this.regOpenings,
-    ].some((d) => (d as any)?.isLoading);
+    return [this.regInvoices, this.regBills, this.regOpenings].some(
+      (d) => (d as any)?.isLoading,
+    );
   }
 
   get subjectRow() {

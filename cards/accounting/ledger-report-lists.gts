@@ -579,15 +579,12 @@ export class ListReport extends GlimmerComponent<ListSignature> {
   vendorCreditData = this.load(this.laterQuery(VendorCredit), ['unpaid-bills']);
   laterJournalData = this.load(
     () =>
-      this.query(
-        JournalMonth,
-        [
-          {
-            on: identifyCard(JournalMonth),
-            range: { month: { gte: this.asOfMonth } },
-          },
-        ],
-      ),
+      this.query(JournalMonth, [
+        {
+          on: identifyCard(JournalMonth),
+          range: { month: { gte: this.asOfMonth } },
+        },
+      ]),
     ['open-invoices', 'collections', 'unpaid-bills'],
   );
   lotData = this.load(() => this.query(StockLot), ['inventory-detail']);
@@ -602,15 +599,12 @@ export class ListReport extends GlimmerComponent<ListSignature> {
   );
   journalData = this.load(
     () =>
-      this.query(
-        JournalMonth,
-        [
-          {
-            on: identifyCard(JournalMonth),
-            range: { month: { gte: this.fromMonth, lte: this.toMonth } },
-          },
-        ],
-      ),
+      this.query(JournalMonth, [
+        {
+          on: identifyCard(JournalMonth),
+          range: { month: { gte: this.fromMonth, lte: this.toMonth } },
+        },
+      ]),
     ['profit-by-project'],
   );
   accountData = new AllCards(
@@ -634,8 +628,7 @@ export class ListReport extends GlimmerComponent<ListSignature> {
         [this.laterJournalData, 'journal months'],
       ];
     if (k === 'inventory-detail') return [[this.lotData, 'lots']];
-    if (k === 'time-by-customer')
-      return [[this.timeData, 'time entries']];
+    if (k === 'time-by-customer') return [[this.timeData, 'time entries']];
     if (k === 'profit-by-project')
       return [
         [this.invoiceData, 'invoices'],
@@ -838,8 +831,7 @@ export class ListReport extends GlimmerComponent<ListSignature> {
         />
       {{else if this.loading}}
         <Skeleton @height='6rem' />
-      {{else if this.capNote}}
-      {{else if this.table.count}}
+      {{else if this.capNote}}{{else if this.table.count}}
         <StatementTable
           @label={{this.title}}
           @columns={{this.table.cols}}

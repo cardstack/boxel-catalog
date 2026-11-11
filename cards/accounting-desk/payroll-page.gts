@@ -287,38 +287,44 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       isLive: true,
     });
   setupData = this.all(this.query('../accounting/ledger-payroll', 'PaySetup'));
-  tableData = this.all(this.query('../accounting/ledger-payroll', 'PayrollTaxTable'));
+  tableData = this.all(
+    this.query('../accounting/ledger-payroll', 'PayrollTaxTable'),
+  );
   runData = this.all(this.query('../accounting/ledger-cash', 'PayrollRun'));
-  monthData = this.all(this.query('../accounting/ledger-journal', 'JournalMonth'));
+  monthData = this.all(
+    this.query('../accounting/ledger-journal', 'JournalMonth'),
+  );
   timeData = this.all(() => {
-      let type = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
-      return {
-        filter: {
-          every: [
-            { type },
-            { on: type, eq: { workerKind: 'employee' } },
-            {
-              on: type,
-              range: {
-                date: { gte: this.period.start, lte: this.period.end },
-              },
+    let type = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
+    return {
+      filter: {
+        every: [
+          { type },
+          { on: type, eq: { workerKind: 'employee' } },
+          {
+            on: type,
+            range: {
+              date: { gte: this.period.start, lte: this.period.end },
             },
-          ],
-        },
-      } as never;
+          },
+        ],
+      },
+    } as never;
   });
 
   filingData = this.all(
     this.query('../accounting/ledger-payroll-filings', 'PayrollFiling'),
   );
-  agencyData = this.all(this.query('../accounting/ledger-payroll', 'PayrollAgency'));
+  agencyData = this.all(
+    this.query('../accounting/ledger-payroll', 'PayrollAgency'),
+  );
   paymentData = this.all(() => {
-      let type = codeRef(here, '../accounting/ledger-cash', 'BankPayment');
-      return {
-        filter: {
-          every: [{ type }, { on: type, eq: { kind: PAYROLL_TAX_KIND } }],
-        },
-      } as never;
+    let type = codeRef(here, '../accounting/ledger-cash', 'BankPayment');
+    return {
+      filter: {
+        every: [{ type }, { on: type, eq: { kind: PAYROLL_TAX_KIND } }],
+      },
+    } as never;
   });
   get setups() {
     return instancesOf(this.setupData).sort((a, b) =>
@@ -741,12 +747,12 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       action: !this.filingsRead
         ? ''
         : this.canFile(f)
-        ? 'File'
-        : this.canPay(f)
-          ? 'Pay'
-          : this.canStartNext(f)
-            ? 'Start next'
-            : '',
+          ? 'File'
+          : this.canPay(f)
+            ? 'Pay'
+            : this.canStartNext(f)
+              ? 'Start next'
+              : '',
     }));
   }
   @tracked formFiling: any;
@@ -1054,7 +1060,9 @@ export class PayrollPage extends Component<PayrollPageSignature> {
                   @appearance='link'
                   @size='s'
                   {{on 'click' (fn this.showForm row)}}
-                >{{text}}</Button>{{else if (isAction col)}}{{#if row.action}}<Button
+                >{{text}}</Button>{{else if (isAction col)}}{{#if
+                  row.action
+                }}<Button
                     @tone='neutral'
                     @appearance='outlined'
                     @size='s'
