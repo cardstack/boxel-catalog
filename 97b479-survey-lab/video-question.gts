@@ -44,6 +44,8 @@ import {
   blobToBase64,
 } from './media';
 import { hostOf, type ToolHost } from './tool-kit';
+// @ts-ignore the host provides glimmer-motion; its types aren't bundled with the CLI
+import { frame as motionFrame } from 'glimmer-motion';
 
 // @ts-ignore import.meta is fine here (the host loads cards as ES modules); the catalog's CommonJS type check rejects it
 const here: string = import.meta.url;
@@ -114,7 +116,7 @@ class Isolated extends Component<typeof VideoQuestion> {
   cam: HTMLVideoElement | null = null;
   stream: MediaStream | null = null;
   marker: any = null;
-  raf = 0;
+  looping = false;
   lastRead = 0;
   samples: Sample[] = [];
   calRows: number[][] = [];
@@ -219,6 +221,7 @@ class Isolated extends Component<typeof VideoQuestion> {
       this.marker = await loadMarker();
       if (!this.alive) return;
       this.camera = true;
+      this.looping = true;
       this.loop();
       this.calibrate();
     } catch (e: any) {
@@ -238,17 +241,17 @@ class Isolated extends Component<typeof VideoQuestion> {
   };
 
   private stopCamera() {
-    cancelAnimationFrame(this.raf);
-    this.raf = 0;
+    this.looping = false;
     this.stream?.getTracks().forEach((t) => t.stop());
     this.stream = null;
     if (this.cam) this.cam.srcObject = null;
   }
 
-  // one loop reads the face ~15 times a second, whatever step we are on
+  // one loop reads the face ~15 times a second, whatever step we are on; it
+  // runs on motion's frame scheduler and stops with the camera
   private loop = () => {
-    // eslint-disable-next-line @cardstack/boxel/no-raf-for-state -- the face reader's frame loop
-    this.raf = requestAnimationFrame(this.loop);
+    if (!this.looping) return;
+    motionFrame.update(this.loop);
     const now = performance.now();
     if (
       !this.marker ||
