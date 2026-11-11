@@ -18,7 +18,7 @@
         ]
       },
       "cardInfo": {
-        "name": "Check Check \u2014 AJ1 Lost & Found US 10.5",
+        "name": "Check Check — AJ1 Lost & Found US 10.5",
         "summary": "A passed legit check, with the certificate reference the collection item denormalizes.",
         "notes": null,
         "cardThumbnailURL": null
@@ -33,6 +33,11 @@
       "order": {
         "links": {
           "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

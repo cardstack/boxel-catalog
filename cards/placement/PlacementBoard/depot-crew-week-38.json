@@ -29,7 +29,7 @@
           "key": "bench",
           "label": "Bench",
           "hue": "slate",
-          "note": "Unlimited \u2014 rostered this week, not assigned to a trade."
+          "note": "Unlimited — rostered this week, not assigned to a trade."
         }
       ],
       "placements": [
@@ -69,7 +69,7 @@
           "itemId": "Employee/sofia-reyes",
           "zoneKey": "mechanical",
           "seq": 2,
-          "note": "Pulled off the bench \u2014 conveyor overhaul needs a third pair of hands."
+          "note": "Pulled off the bench — conveyor overhaul needs a third pair of hands."
         },
         {
           "itemId": "Employee/priya-nair",
@@ -88,8 +88,8 @@
         }
       ],
       "cardInfo": {
-        "name": "Depot Crew \u2014 Week 38",
-        "summary": "Seven technicians across four trades. Mechanical sits at 3/3 and On-call at 1/1, so the next drag into either turns the zone red and blocks the commit \u2014 the fastest way to see the whole gate work."
+        "name": "Depot Crew — Week 38",
+        "summary": "Seven technicians across four trades. Mechanical sits at 3/3 and On-call at 1/1, so the next drag into either turns the zone red and blocks the commit — the fastest way to see the whole gate work."
       }
     },
     "relationships": {
@@ -126,6 +126,11 @@
       "pool.6": {
         "links": {
           "self": "../../hr/Employee/jane-realtor"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

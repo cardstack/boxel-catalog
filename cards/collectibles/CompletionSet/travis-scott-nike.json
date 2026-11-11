@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "goal": "Every Travis Scott collaboration with Nike and Jordan Brand. Retros count; sample pairs and friends-and-family do not \u2014 the line has to be a public release or the set never closes.",
+      "goal": "Every Travis Scott collaboration with Nike and Jordan Brand. Retros count; sample pairs and friends-and-family do not — the line has to be a public release or the set never closes.",
       "completionRule": "own-any",
       "isPublic": true,
       "coverImage": {
@@ -11,7 +11,7 @@
       },
       "cardInfo": {
         "name": "All Travis Scott x Nike",
-        "summary": "A finite-but-growing collab set \u2014 the classic reason a completion goal exists.",
+        "summary": "A finite-but-growing collab set — the classic reason a completion goal exists.",
         "notes": null,
         "cardThumbnailURL": null
       }
@@ -19,7 +19,7 @@
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../../Theme/site-tools"
         }
       },
       "products.0": {

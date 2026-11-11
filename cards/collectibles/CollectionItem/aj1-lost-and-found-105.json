@@ -18,7 +18,7 @@
           }
         },
         "acquiredOn": "2022-11-19",
-        "source": "Retail \u2014 SNKRS",
+        "source": "Retail — SNKRS",
         "reference": "C01234567890"
       },
       "photos": {
@@ -40,9 +40,9 @@
         }
       },
       "valuedOn": "2026-08-01",
-      "notes": "Hit on SNKRS release day. Keeping this one \u2014 the cracked-leather upper is the whole point of the release.",
+      "notes": "Hit on SNKRS release day. Keeping this one — the cracked-leather upper is the whole point of the release.",
       "cardInfo": {
-        "name": "Air Jordan 1 Retro High OG \"Chicago Lost & Found\" \u2014 US 10.5",
+        "name": "Air Jordan 1 Retro High OG \"Chicago Lost & Found\" — US 10.5",
         "summary": "Deadstock, OG All, authenticated by Check Check. Acquired at retail on release day.",
         "notes": null,
         "cardThumbnailURL": null
@@ -57,6 +57,11 @@
       "owner": {
         "links": {
           "self": "../SellerProfile/sneakerking"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },
