@@ -30,13 +30,7 @@ const SALES: Grants = {
       'invoiceFromQuote',
       'receivePayment',
     ],
-    Invoice: [
-      'addLines',
-      'removeTimeLine',
-      'useCurrency',
-      'useTaxCode',
-      'calculateTax',
-    ],
+    Invoice: ['addLines', 'useCurrency', 'useTaxCode', 'calculateTax'],
     SalesReceipt: ['addLines', 'useTaxCode', 'calculateTax'],
     RefundReceipt: ['useTaxCode', 'calculateTax'],
   },
@@ -104,7 +98,7 @@ export const ROLES: RoleDef[] = [
     id: 'standard',
     label: 'Standard',
     summary:
-      'Enters and edits drafts of every kind: sales, purchases, payments, payroll, journal entries and reconciliations. A writer of the realm posts them.',
+      'Enters and edits drafts of every kind: sales, purchases, payments, payroll, journal entries and reconciliations, and records time entries, which show in unbilled time straight away. A writer of the realm posts the drafts.',
     grants: merge(SALES, PURCHASES, OTHER_DRAFTS),
   },
   {

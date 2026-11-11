@@ -241,10 +241,6 @@
               "where": "actor() == \"@demo-sales:example.com\""
             },
             {
-              "operation": "removeTimeLine",
-              "where": "actor() == \"@demo-sales:example.com\""
-            },
-            {
               "operation": "useCurrency",
               "where": "actor() == \"@demo-sales:example.com\""
             },
@@ -258,10 +254,6 @@
             },
             {
               "operation": "addLines",
-              "where": "actor() == \"@demo-standard:example.com\""
-            },
-            {
-              "operation": "removeTimeLine",
               "where": "actor() == \"@demo-standard:example.com\""
             },
             {

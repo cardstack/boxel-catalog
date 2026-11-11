@@ -4034,7 +4034,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       );
       await (operations(customer as never as CardDef) as any).atomic(
         (b: any) => [
-          this.enterOnTerms(b, 'enterInvoice', customer, {
+          this.enterOnTerms(b, 'enterTimeInvoice', customer, {
             docNo,
             date,
             kind: 'sale',

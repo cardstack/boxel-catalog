@@ -1021,6 +1021,9 @@ export function runTests() {
         'Customer.update',
         'Vendor.update',
         'Invoice.update',
+        'Invoice.removeTimeLine',
+        'Customer.enterTimeInvoice',
+        'Customer.enterTimeInvoiceOnTerms',
       ];
       for (let role of ROLES.map((r) => r.id))
         for (let op of unsafe)
@@ -1217,10 +1220,25 @@ export function runTests() {
               data: {
                 type: 'card',
                 attributes: {
-                  rules: rolePolicyRules(
-                    role ? [{ user: TEST_USER, role }] : [],
-                    accounting,
-                  ),
+                  rules: [
+                    ...rolePolicyRules(
+                      role ? [{ user: TEST_USER, role }] : [],
+                      accounting,
+                    ),
+                    // Rules that grant nothing, so this in-browser realm resolves every type the
+                    // refusals below invoke and answers with its policy's 403 for each.
+                    ...[
+                      ['ledger-journal', 'JournalMonth'],
+                      ['ledger-stock', 'StockLot'],
+                      ['ledger-sales', 'Invoice'],
+                      ['ledger-sales', 'SalesReceipt'],
+                      ['ledger-sales', 'Customer'],
+                      ['ledger-cards', 'Bill'],
+                    ].map(([file, name]) => ({
+                      targetType: { module: accounting(file), name },
+                      grants: [],
+                    })),
+                  ],
                 },
                 meta: {
                   adoptsFrom: {
@@ -1342,12 +1360,39 @@ export function runTests() {
           await new Promise((r) => setTimeout(r, 1000));
         }
         assert.ok(error, `${what} is refused`);
-        // A realm in this test harness sometimes can't resolve a type no rule names, and refuses
-        // the call as unknown-operation instead; either way the write is refused.
-        assert.true(
-          error?.status === 403 ||
-            (error?.status === 404 && error?.code === 'unknown-operation'),
-          `${what}: ${error?.status} ${error?.code ?? ''} ${error?.detail ?? error?.message ?? ''}`,
+        assert.strictEqual(
+          error?.status,
+          403,
+          `${what}: ${error?.code ?? ''} ${error?.detail ?? error?.message ?? ''}`,
+        );
+      }
+      // Every write that keeps the books whole only in a writer's batch, refused alone, and the
+      // books left as they were.
+      async function refusesForgery(assert: Assert, adapter: any) {
+        for (let [call, what] of forged()) await refused(assert, call, what);
+        let read = async (path: string) =>
+          JSON.parse(String((await adapter.openFile(path))?.content)).data
+            .attributes;
+        let invoice = await read('Invoice/posted.json');
+        assert.deepEqual(
+          [invoice.paidMinor, invoice.voidDate ?? null],
+          [0, null],
+          'the posted invoice is neither paid nor void',
+        );
+        assert.deepEqual(
+          (await read('JournalMonth/2027-01.json')).postings,
+          [],
+          'nothing posted into the journal',
+        );
+        assert.strictEqual(
+          (await read('StockLot/eth.json')).consumedQty,
+          0,
+          'no stock drawn',
+        );
+        assert.strictEqual(
+          (await read('SalesReceipt/draft.json')).status,
+          'draft',
+          'the receipt is still a draft',
         );
       }
       const invoiceParams = {
@@ -1372,7 +1417,8 @@ export function runTests() {
       };
 
       test('Reports only: saving a report is admitted, posting is refused by the realm', async function (assert) {
-        await books('reports-only');
+        let adapter = await books('reports-only');
+        await refusesForgery(assert, adapter);
         let result: any = await (
           await ops('Ledger/books')
         ).saveReport(
@@ -1518,7 +1564,8 @@ export function runTests() {
         ] as [() => Promise<unknown>, string][];
 
       test('Standard: draft entry is admitted; posting, voiding and journal posting are refused', async function (assert) {
-        await books('standard');
+        let adapter = await books('standard');
+        await refusesForgery(assert, adapter);
         let bill: any = await (await ops('Ledger/books')).enterBill(billParams);
         assert.ok(bill?.id, 'a bill draft is entered');
         let entry: any = await (
@@ -1579,7 +1626,58 @@ export function runTests() {
           await ops('Customer/harbor')
         ).enterInvoice(invoiceParams);
         assert.ok(result?.id, 'the invoice draft is entered');
-        for (let [call, what] of forged()) await refused(assert, call, what);
+        await refusesForgery(assert, adapter);
+        // Time is billed only by a writer's batch that marks it billed, so a role's draft can't carry it.
+        let refusedWith = async (
+          call: () => Promise<unknown>,
+          text: string,
+        ) => {
+          try {
+            await call();
+          } catch (e: any) {
+            return String(e?.detail ?? e?.message).includes(text);
+          }
+          return false;
+        };
+        let timeLine = [{ account: '4000', amountMinor: 2500, timeId: 'TA-1' }];
+        assert.true(
+          await refusedWith(
+            async () =>
+              (await ops('Customer/harbor')).enterInvoice({
+                ...invoiceParams,
+                docNo: 'INV-TIME',
+                lines: timeLine,
+              }),
+            'Bill time from the time page',
+          ),
+          'a draft billing time is refused',
+        );
+        assert.true(
+          await refusedWith(
+            async () =>
+              (await ops('Invoice/draft')).addLines({ lines: timeLine }),
+            'Bill time from the time page',
+          ),
+          'adding a time line to a draft is refused',
+        );
+        assert.true(
+          await refusedWith(
+            async () =>
+              (await ops('Customer/harbor')).enterInvoice({
+                ...invoiceParams,
+                docNo: 'INV-OPEN',
+                kind: 'opening',
+              }),
+            'Only a sale can be entered here',
+          ),
+          'an opening-balance invoice is refused',
+        );
+        await refused(
+          assert,
+          async () =>
+            (await ops('Invoice/draft')).removeTimeLine({ timeId: 'TA-1' }),
+          'taking a time line off a draft',
+        );
         await refused(
           assert,
           async () =>
@@ -1594,27 +1692,14 @@ export function runTests() {
           'entering a bill',
         );
         let file = await adapter.openFile('Invoice/draft.json');
-        assert.strictEqual(
-          JSON.parse(String(file?.content)).data.attributes.status,
-          'draft',
-          'the draft is still a draft',
-        );
-        let month = await adapter.openFile('JournalMonth/2027-01.json');
-        assert.deepEqual(
-          JSON.parse(String(month?.content)).data.attributes.postings,
-          [],
-          'nothing posted into the journal',
-        );
-        let lot = await adapter.openFile('StockLot/eth.json');
-        assert.strictEqual(
-          JSON.parse(String(lot?.content)).data.attributes.consumedQty,
-          0,
-          'no stock drawn',
-        );
+        let draft = JSON.parse(String(file?.content)).data.attributes;
+        assert.strictEqual(draft.status, 'draft', 'the draft is still a draft');
+        assert.strictEqual(draft.lines.length, 1, 'no time line was added');
       });
 
       test('Limited (purchases): a draft bill is admitted; sales and posting are refused', async function (assert) {
-        await books('limited-purchases');
+        let adapter = await books('limited-purchases');
+        await refusesForgery(assert, adapter);
         let result: any = await (
           await ops('Ledger/books')
         ).enterBill(billParams);
