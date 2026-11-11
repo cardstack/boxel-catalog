@@ -345,7 +345,7 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
     });
   }
   get rows(): Row[] {
-    if (this.failNote) return [];
+    if (this.loading || this.failNote) return [];
     return filterAudit(this.events, { from: this.from, to: this.to }).map(
       (e, i) => ({
         ...e,
