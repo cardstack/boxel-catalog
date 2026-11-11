@@ -211,6 +211,8 @@ export const roleById = new Map(ROLES.map((r) => [r.id, r]));
 export interface PolicyGrant {
   operation: string;
   where?: string | { bxl: string; snapshot: true };
+  // The grant's other settings, carried through a role change unchanged.
+  [setting: string]: unknown;
 }
 export interface PolicyRuleJSON {
   targetType: { module: string; name: string };
@@ -220,14 +222,20 @@ export interface PolicyRuleJSON {
 /** The predicate that names one user. */
 export const names = (user: string) => `actor() == ${JSON.stringify(user)}`;
 const NAMED = /^actor\(\) == ("(?:[^"\\]|\\.)*")$/;
-const DRAFT =
-  /^\(\.status == "draft"\) and \(actor\(\) == ("(?:[^"\\]|\\.)*")\)$/;
-/** The user a grant's predicate names, if it names exactly one. */
-export function userNamed(
-  where: string | undefined | null,
-): string | undefined {
-  let m = NAMED.exec(where ?? '') ?? DRAFT.exec(where ?? '');
-  return m ? (JSON.parse(m[1]) as string) : undefined;
+const SAVER =
+  /^\(\.savedBy == ("(?:[^"\\]|\\.)*")\) and \(actor\(\) == ("(?:[^"\\]|\\.)*")\)$/;
+/** The user a grant's predicate names, if it is one of the forms the roles write, in either form. */
+export function userNamed(where: unknown): string | undefined {
+  let text =
+    typeof where === 'string'
+      ? where
+      : typeof (where as { bxl?: unknown })?.bxl === 'string'
+        ? (where as { bxl: string }).bxl
+        : '';
+  let m = NAMED.exec(text);
+  if (m) return JSON.parse(m[1]) as string;
+  let s = SAVER.exec(text);
+  return s && s[1] === s[2] ? (JSON.parse(s[2]) as string) : undefined;
 }
 
 /**
@@ -278,11 +286,7 @@ export function grantsByUser(
   let out = new Map<string, Set<string>>();
   for (let r of rules ?? [])
     for (let g of r?.grants ?? []) {
-      let where =
-        typeof g?.where === 'string'
-          ? g.where
-          : (g?.where as { bxl?: string })?.bxl;
-      let user = userNamed(where);
+      let user = userNamed(g?.where);
       if (!user || !g?.operation) continue;
       let set = out.get(user) ?? new Set<string>();
       set.add(`${r.targetType?.name ?? ''}.${g.operation}`);
@@ -291,7 +295,7 @@ export function grantsByUser(
   return out;
 }
 
-/** The operations a role's grants name, as "Type.operation", draft edits included. */
+/** The operations a role's grants name, as "Type.operation". */
 export function roleOperations(role: RoleId): Set<string> {
   let rules = rolePolicyRules([{ user: '@x', role }], (f) => f);
   return grantsByUser(rules).get('@x') ?? new Set();

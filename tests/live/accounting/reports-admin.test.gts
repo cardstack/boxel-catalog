@@ -1026,6 +1026,52 @@ export function runTests() {
         ),
         { user: '@c:books', role: 'reports-only' },
       );
+
+      // Only the grants that define a role go; a shared custom grant stays, a snapshot-form role grant goes.
+      let shared = {
+        operation: 'read',
+        where: 'actor() == "@a:books" or actor() == "@d:books"',
+      };
+      let snapshot = {
+        operation: 'void',
+        where: { bxl: names('@a:books'), snapshot: true as const },
+      };
+      let mixed = [
+        ...rules,
+        {
+          targetType: { module: mod('ledger-sales'), name: 'Invoice' },
+          grants: [shared, snapshot],
+        },
+      ];
+      let changed = withRole(mixed, '@a:books', 'reports-only', mod);
+      let invoiceGrants = changed
+        .filter((r) => r.targetType.name === 'Invoice')
+        .flatMap((r) => r.grants);
+      assert.true(invoiceGrants.includes(shared), 'the shared grant stays');
+      assert.false(invoiceGrants.includes(snapshot), 'the snapshot grant goes');
+
+      // A grant's other settings come through rulesOf unchanged.
+      let read = rulesOf({
+        rules: [
+          {
+            targetType: { module: mod('ledger-cards'), name: 'Ledger' },
+            grants: [
+              {
+                operation: 'saveReport',
+                where: { source: names('@e:books'), snapshot: false },
+                rateLimitRequests: '30',
+                actingUser: '@bot:books',
+              },
+            ],
+          },
+        ],
+      });
+      assert.deepEqual(read[0].grants[0], {
+        rateLimitRequests: '30',
+        actingUser: '@bot:books',
+        operation: 'saveReport',
+        where: names('@e:books'),
+      });
     });
   });
 
@@ -1390,9 +1436,14 @@ export function runTests() {
         ]);
       });
 
-      test('the journal stamps who prepared an entry, and refuses one reviewed by whoever posts it', async function (assert) {
+      test('a reviewed journal entry is posted by its preparer or reviewer, never reviewed by its preparer', async function (assert) {
         let adapter = await books(undefined, true, { materiality: 100000 });
-        let entry = (key: string, amount: number, reviewer: string | null) => ({
+        let entry = (
+          key: string,
+          amount: number,
+          preparer: string | null,
+          reviewer: string | null,
+        ) => ({
           key,
           kind: 'journal',
           date: '2027-01-15',
@@ -1405,30 +1456,48 @@ export function runTests() {
           ],
           facts: [],
           items: [],
-          preparer: '@someone-else:localhost',
+          preparer,
           reviewer,
         });
         let month = await ops('JournalMonth/2027-01');
-        let error: any;
-        try {
-          await month.post(entry('je-big', 200000, TEST_USER));
-        } catch (e) {
-          error = e;
-        }
-        assert.ok(
-          String(error?.detail ?? error?.message).includes(
-            'someone other than whoever posts the entry',
-          ),
-          `a self-reviewed entry over materiality is refused: ${error?.detail ?? error?.message}`,
+        let refusal = async (call: Promise<unknown>) => {
+          try {
+            await call;
+          } catch (e: any) {
+            return String(e?.detail ?? e?.message);
+          }
+          return '';
+        };
+        assert.true(
+          (
+            await refusal(month.post(entry('je-self', 200000, null, TEST_USER)))
+          ).includes('someone other than the preparer'),
+          'an entry its preparer reviewed is refused',
         );
-        await month.post(entry('je-small', 5000, null));
+        assert.true(
+          (
+            await refusal(
+              month.post(
+                entry('je-other', 200000, '@a:localhost', '@b:localhost'),
+              ),
+            )
+          ).includes('posted by its preparer or its reviewer'),
+          'an entry neither its preparer nor its reviewer posts is refused',
+        );
+        await month.post(
+          entry('je-reviewed', 200000, '@a:localhost', TEST_USER),
+        );
+        await month.post(entry('je-small', 5000, null, null));
         let file = await adapter.openFile('JournalMonth/2027-01.json');
         let postings = JSON.parse(String(file?.content)).data.attributes
           .postings;
         assert.deepEqual(
-          postings.map((p: any) => [p.key, p.preparer, p.postedBy]),
-          [['je-small', TEST_USER, TEST_USER]],
-          'the preparer is the caller, whatever the entry named',
+          postings.map((p: any) => [p.key, p.preparer, p.reviewer, p.postedBy]),
+          [
+            ['je-reviewed', '@a:localhost', TEST_USER, TEST_USER],
+            ['je-small', TEST_USER, null, TEST_USER],
+          ],
+          'the reviewer may post what someone else prepared; with none named, the caller is the preparer',
         );
       });
     },

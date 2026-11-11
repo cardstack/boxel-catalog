@@ -6556,13 +6556,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   };
   // The realm's answer for this viewer's role; only a refusal hides the button.
   get postRefused() {
-    let c = this.sel as CardDef | undefined;
+    let c = this.sel as CardDef | undefined,
+      ask = this.args.context?.canInvoke;
+    if (!c || !ask) return false;
+    if (!this.selJournalable) return ask('post', c) === false;
+    // Posting into a journal also appends to the month, which the role may not be granted.
+    let month = this.journalMonths.find(
+      (m: any) => m?.month === this.selMonth && m?.status === 'open',
+    );
     return (
-      !!c &&
-      this.args.context?.canInvoke?.(
-        this.selJournalable ? 'journal' : 'post',
-        c,
-      ) === false
+      ask('journal', c) === false || (!!month && ask('post', month) === false)
     );
   }
   get canPost() {

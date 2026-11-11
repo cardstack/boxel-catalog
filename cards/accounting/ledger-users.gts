@@ -22,6 +22,7 @@ import {
   roleById,
   membersOf,
   rolePolicyRules,
+  userNamed,
   type RoleId,
   type PolicyRuleJSON,
 } from './ledger-roles';
@@ -39,6 +40,14 @@ const predicateOf = (
   return w.snapshot ? { bxl: source, snapshot: true } : source;
 };
 
+const GRANT_SETTINGS = [
+  'anonymous',
+  'actingUser',
+  'blocklist',
+  'rateLimitRequests',
+  'rateLimitWindowSeconds',
+];
+
 /** The plain rules a policy card holds. */
 export const rulesOf = (policy: any): PolicyRuleJSON[] =>
   ((policy?.rules ?? []) as any[]).filter(Boolean).map((r) => ({
@@ -47,6 +56,10 @@ export const rulesOf = (policy: any): PolicyRuleJSON[] =>
       name: r.targetType?.name ?? '',
     },
     grants: ((r.grants ?? []) as any[]).filter(Boolean).map((g) => ({
+      // Every other setting a grant carries (an acting user, a rate limit) goes back unchanged.
+      ...Object.fromEntries(
+        GRANT_SETTINGS.filter((k) => g[k] != null).map((k) => [k, g[k]]),
+      ),
       operation: g.operation ?? '',
       where: predicateOf(g.where),
     })),
@@ -83,14 +96,11 @@ export function withRole(
     ...(role ? [{ user, role }] : []),
   ];
   let named = new Set([...roled.map((m) => m.user), user]);
-  // Keep every grant that names no user with a role: custom grants and unconditional ones.
+  // Drop exactly the grants that define those users' roles, in either predicate form; keep the rest.
   let kept = rules
     .map((r) => ({
       ...r,
-      grants: r.grants.filter((g) => {
-        let w = typeof g.where === 'string' ? g.where : '';
-        return ![...named].some((u) => w.includes(JSON.stringify(u)));
-      }),
+      grants: r.grants.filter((g) => !named.has(userNamed(g.where) ?? '')),
     }))
     .filter((r) => r.grants.length);
   return [...kept, ...rolePolicyRules(next, moduleOf)];
@@ -107,20 +117,24 @@ const REALM_CONFIG = {
   module: '@cardstack/base/realm-config',
   name: 'RealmConfig',
 };
-/** The policy card a realm.json pointer names, among a realm's policy cards. */
+/**
+ * The policy card a realm.json pointer names, among a realm's policy cards: the pointer resolved
+ * against that realm, matched on the card's whole id.
+ */
 export function policyNamed<T extends { id?: string }>(
   policies: T[],
   pointer: string,
+  realm: string,
 ): T | undefined {
   let bare = (id: string) => id.replace(/\.json$/, '');
-  let want = bare(pointer);
-  if (!want) return undefined;
-  return policies.find((p) => {
-    let id = bare(p.id ?? '');
-    return (
-      id === want || id.endsWith(`/${want.split('/').slice(-2).join('/')}`)
-    );
-  });
+  let want: string;
+  try {
+    want = bare(new URL(pointer, realm).href);
+  } catch {
+    return undefined;
+  }
+  if (!pointer) return undefined;
+  return policies.find((p) => bare(p.id ?? '') === want);
 }
 type Row = { user: string; role: string; roleLabel: string; summary: string };
 const COLUMNS = [
@@ -145,7 +159,7 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
         filter: { type: REALM_CONFIG },
         page: { size: 1 },
       }) as never,
-    () => this.args.realms,
+    () => this.args.realms.slice(0, 1),
     { isLive: true },
   );
   policyData = this.args.context?.getCards(
@@ -166,17 +180,26 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
     return instancesOf(this.configData)[0]?.policy ?? '';
   }
   get policy(): CardDef | undefined {
-    return policyNamed(instancesOf(this.policyData), this.pointer);
+    return policyNamed(
+      instancesOf(this.policyData),
+      this.pointer,
+      this.args.realms[0] ?? '',
+    );
   }
   // A policy card's update is open only to the realm's writers, so the realm's answer for it says
-  // whether the viewer is one: an Admin.
-  get isAdmin() {
+  // whether the viewer is one: an Admin. Nothing is offered until it answers.
+  get adminAnswer(): boolean | undefined {
     let p = this.policy;
-    return !!p && this.args.context?.canInvoke?.('update', p) === true;
+    return p ? this.args.context?.canInvoke?.('update', p) : undefined;
+  }
+  get isAdmin() {
+    return this.adminAnswer === true;
   }
   get mayChange() {
-    let p = this.policy;
-    return !!p && this.args.context?.canInvoke?.('update', p) !== false;
+    return this.adminAnswer === true;
+  }
+  get adminUnknown() {
+    return this.adminAnswer === undefined;
   }
   get rows(): Row[] {
     return membersOf(rulesOf(this.policy)).map((m) => {
@@ -277,8 +300,10 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
       </p>
       {{#if this.policy}}<p class='muted' data-viewer-admin={{this.isAdmin}}>You
           are
-          {{#if this.isAdmin}}an Admin: a writer of the books' realm.{{else}}not
-            an Admin of these books.{{/if}}</p>{{/if}}
+          {{#if this.isAdmin}}an Admin: a writer of the books' realm.{{else if
+            this.adminUnknown
+          }}being checked for whether you're an Admin…{{else}}not an Admin of
+            these books.{{/if}}</p>{{/if}}
       {{#if this.error}}<Callout
           @tone='danger'
           @title="The realm didn't change the role"
