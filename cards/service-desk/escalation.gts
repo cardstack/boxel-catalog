@@ -620,8 +620,8 @@ export class Escalation extends CardDef {
             align-content: start;
             gap: var(--boxel-sp-xs);
             min-height: 100%;
-            padding: var(--boxel-sp-xs);
-            background: var(--muted);
+            padding: var(--boxel-sp-sm);
+            background: var(--background);
             color: var(--card-foreground);
             font-size: var(--boxel-font-size-sm);
           }

@@ -14,6 +14,7 @@ import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helper
 
 import CreatedAtField from '@cardstack/catalog/fields/created-at/created-at';
 import { User } from '../crm/user';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * A freeform written record, usually about something — the base card
@@ -133,33 +134,39 @@ export class Note extends CardDef {
 
   static isolated = class Isolated extends Component<typeof Note> {
     <template>
-      <article class='note-page'>
-        <header>
-          <h1>{{@model.cardTitle}}</h1>
-          <div class='byline'>
-            {{#if @model.author}}
-              <span>{{@model.author.name}}</span>
-            {{/if}}
-            {{#if @model.createdAt}}
-              <span class='muted'><@fields.createdAt @format='atom' /></span>
-            {{/if}}
-            {{#if @model.about}}
-              <span class='about'>on <@fields.about @format='atom' /></span>
-            {{/if}}
-          </div>
-        </header>
-        {{#if @model.body}}
-          <section class='body'><@fields.body /></section>
-        {{else}}
-          <EmptyState
-            @title='Nothing written yet.'
-            @texture={{false}}
-            style={{COMPACT_EMPTY_STYLE}}
-          />
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='note-page'>
+          <header>
+            <h1>{{@model.cardTitle}}</h1>
+            <div class='byline'>
+              {{#if @model.author}}
+                <span>{{@model.author.name}}</span>
+              {{/if}}
+              {{#if @model.createdAt}}
+                <span class='muted'><@fields.createdAt @format='atom' /></span>
+              {{/if}}
+              {{#if @model.about}}
+                <span class='about'>on <@fields.about @format='atom' /></span>
+              {{/if}}
+            </div>
+          </header>
+          {{#if @model.body}}
+            <section class='body'><@fields.body /></section>
+          {{else}}
+            <EmptyState
+              @title='Nothing written yet.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .note-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 40rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);

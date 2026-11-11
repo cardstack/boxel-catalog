@@ -25,6 +25,7 @@ import { KeyValue } from '@cardstack/pretui/components/key-value';
 
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import enumField from '@cardstack/base/enum';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const CallDirectionField = markDefinition(
   enumField(StringField, {
@@ -184,90 +185,100 @@ export class Call extends CardDef {
     }
 
     <template>
-      <article class='card {{@model.outcome}}'>
-        <header class='hero'>
-          <span class='rail' aria-hidden='true'></span>
-          <div class='hero-body'>
-            <p class='eyebrow'>
-              {{#if (eq @model.direction 'inbound')}}
-                <PhoneIncomingIcon width='14' height='14' aria-hidden='true' />
-                Inbound call
-              {{else}}
-                <PhoneOutgoingIcon width='14' height='14' aria-hidden='true' />
-                Outbound call
-              {{/if}}
-            </p>
-            <h1 class='title'><@fields.cardTitle /></h1>
-            {{! The answer, as the one dominant element on the page. }}
-            <p class='answer'>{{this.answer}}</p>
-            <p class='answer-cap'>{{this.answerCaption}}</p>
-          </div>
-        </header>
+      <IsoFrame>
+        <article class='card {{@model.outcome}}'>
+          <header class='hero'>
+            <span class='rail' aria-hidden='true'></span>
+            <div class='hero-body'>
+              <p class='eyebrow'>
+                {{#if (eq @model.direction 'inbound')}}
+                  <PhoneIncomingIcon
+                    width='14'
+                    height='14'
+                    aria-hidden='true'
+                  />
+                  Inbound call
+                {{else}}
+                  <PhoneOutgoingIcon
+                    width='14'
+                    height='14'
+                    aria-hidden='true'
+                  />
+                  Outbound call
+                {{/if}}
+              </p>
+              <h1 class='title'><@fields.cardTitle /></h1>
+              {{! The answer, as the one dominant element on the page. }}
+              <p class='answer'>{{this.answer}}</p>
+              <p class='answer-cap'>{{this.answerCaption}}</p>
+            </div>
+          </header>
 
-        <KeyValue
-          class='glance kv-pad'
-          @items={{this.glance}}
-          @layout='inline'
-          @labelStyle='eyebrow'
-          aria-label='At a glance'
-        >
-          <:value as |item|>
-            {{#if (eq item.key 'When')}}
-              <@fields.startedAt />
-            {{else if (eq item.key 'Number')}}
-              {{! E.164 is read aloud and typed into other systems, so it is
+          <KeyValue
+            class='glance kv-pad'
+            @items={{this.glance}}
+            @layout='inline'
+            @labelStyle='eyebrow'
+            aria-label='At a glance'
+          >
+            <:value as |item|>
+              {{#if (eq item.key 'When')}}
+                <@fields.startedAt />
+              {{else if (eq item.key 'Number')}}
+                {{! E.164 is read aloud and typed into other systems, so it is
                 never ellipsised. }}
-              <span class='num'><@fields.phoneNumber /></span>
-            {{else if @model.needsFollowUp}}
-              <@fields.followUpAt />
-            {{else}}
-              <span class='none'>none booked</span>
-            {{/if}}
-          </:value>
-        </KeyValue>
+                <span class='num'><@fields.phoneNumber /></span>
+              {{else if @model.needsFollowUp}}
+                <@fields.followUpAt />
+              {{else}}
+                <span class='none'>none booked</span>
+              {{/if}}
+            </:value>
+          </KeyValue>
 
-        {{! Three different shapes below, on purpose: prose, a list, a linked
+          {{! Three different shapes below, on purpose: prose, a list, a linked
           card. Three label/value blocks would be the schema dump. }}
-        <section class='sec' aria-label='Notes'>
-          <h2><NoteIcon width='16' height='16' aria-hidden='true' /> Notes</h2>
-          {{#if @model.notes}}
-            <div class='prose'><@fields.notes /></div>
-          {{else}}
-            <EmptyState
-              @title='Nothing was written down for this call.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
-          {{/if}}
-        </section>
-
-        <section class='sec' aria-label='Participants'>
-          <h2><UsersIcon width='16' height='16' aria-hidden='true' />
-            Participants</h2>
-          {{#if @model.participantNames.length}}
-            <ul class='people'>
-              {{#each @model.participantNames as |n|}}
-                <li>{{n}}</li>
-              {{/each}}
-            </ul>
-          {{else}}
-            <EmptyState
-              @title='No participants recorded.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
-          {{/if}}
-        </section>
-
-        {{#if @model.regarding}}
-          <section class='sec' aria-label='Regarding'>
-            <h2><LinkIcon width='16' height='16' aria-hidden='true' />
-              Regarding</h2>
-            <@fields.regarding @displayContainer={{false}} />
+          <section class='sec' aria-label='Notes'>
+            <h2><NoteIcon width='16' height='16' aria-hidden='true' />
+              Notes</h2>
+            {{#if @model.notes}}
+              <div class='prose'><@fields.notes /></div>
+            {{else}}
+              <EmptyState
+                @title='Nothing was written down for this call.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
+            {{/if}}
           </section>
-        {{/if}}
-      </article>
 
+          <section class='sec' aria-label='Participants'>
+            <h2><UsersIcon width='16' height='16' aria-hidden='true' />
+              Participants</h2>
+            {{#if @model.participantNames.length}}
+              <ul class='people'>
+                {{#each @model.participantNames as |n|}}
+                  <li>{{n}}</li>
+                {{/each}}
+              </ul>
+            {{else}}
+              <EmptyState
+                @title='No participants recorded.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
+            {{/if}}
+          </section>
+
+          {{#if @model.regarding}}
+            <section class='sec' aria-label='Regarding'>
+              <h2><LinkIcon width='16' height='16' aria-hidden='true' />
+                Regarding</h2>
+              <@fields.regarding @displayContainer={{false}} />
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .kv-pad {
           padding-inline: var(--boxel-sp-sm);
@@ -277,6 +288,10 @@ export class Call extends CardDef {
            own. Without this every @container rule below is dead CSS.
            inline-size, not size — the card scrolls vertically. */
         .card {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           container-type: inline-size;
           container-name: card;
           width: 100%;
@@ -287,7 +302,6 @@ export class Call extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           box-sizing: border-box;
-          background: var(--background);
           color: var(--foreground);
           font-family: var(--font-sans);
 

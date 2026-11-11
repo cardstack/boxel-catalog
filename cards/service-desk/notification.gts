@@ -23,6 +23,7 @@ import LinkIcon from '@cardstack/boxel-icons/link';
 import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
 import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
 import enumField from '@cardstack/base/enum';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const NotificationSeverityField = markDefinition(
   enumField(StringField, {
@@ -181,93 +182,94 @@ export class Notification extends CardDef {
     }
 
     <template>
-      <article
-        class='card {{@model.severity}} {{if @model.isRead "read" "unread"}}'
-      >
-        <header class='hero'>
-          <span class='rail' aria-hidden='true'></span>
-          <div class='hero-body'>
-            <p class='eyebrow'>
-              <BellIcon width='14' height='14' aria-hidden='true' />
-              {{@model.severity}}
-              notification
-            </p>
-            {{! The subject IS the answer here — so it is the dominant
-              element, not a caption above one. }}
-            <h1 class='subject'>{{@model.subject}}</h1>
-            {{#if @model.body}}<p class='body'>{{@model.body}}</p>{{/if}}
-            <p class='standing'>
-              {{#if @model.isRead}}
-                <CircleCheckIcon width='14' height='14' aria-hidden='true' />
-              {{/if}}
-              {{this.standing}}
-              {{#if this.ageLabel}} · {{this.ageLabel}}{{/if}}
-            </p>
-          </div>
-        </header>
-
-        {{#if @model.isActionable}}
-          {{! Actions sit directly under the hero, not stranded at the foot
-            of the scroll — this is the one thing the reader came to do. }}
-          <nav class='actions' aria-label='Actions'>
-            <Button
-              @href={{@model.actionUrl}}
-              @tone='primary'
-              @appearance='accent'
-              @size='s'
-            >
-              {{if @model.actionLabel @model.actionLabel 'Open'}}
-              <ExternalLinkIcon width='15' height='15' aria-hidden='true' />
-            </Button>
-          </nav>
-        {{/if}}
-
-        <KeyValue
-          class='glance kv-pad'
-          @items={{this.glance}}
-          @layout='inline'
-          @labelStyle='eyebrow'
-          aria-label='At a glance'
+      <IsoFrame>
+        <article
+          class='card {{@model.severity}} {{if @model.isRead "read" "unread"}}'
         >
-          <:value as |item|>
-            {{#if (eq item.key 'Recipient')}}
-              {{@model.recipientRef}}
-            {{else if (eq item.key 'Raised')}}
-              <@fields.createdAt />
-            {{else if @model.expiresAt}}
-              <@fields.expiresAt />
-            {{else}}
-              <span class='none'>does not expire</span>
-            {{/if}}
-          </:value>
-        </KeyValue>
+          <header class='hero'>
+            <span class='rail' aria-hidden='true'></span>
+            <div class='hero-body'>
+              <p class='eyebrow'>
+                <BellIcon width='14' height='14' aria-hidden='true' />
+                {{@model.severity}}
+                notification
+              </p>
+              {{! The subject IS the answer here — so it is the dominant
+              element, not a caption above one. }}
+              <h1 class='subject'>{{@model.subject}}</h1>
+              {{#if @model.body}}<p class='body'>{{@model.body}}</p>{{/if}}
+              <p class='standing'>
+                {{#if @model.isRead}}
+                  <CircleCheckIcon width='14' height='14' aria-hidden='true' />
+                {{/if}}
+                {{this.standing}}
+                {{#if this.ageLabel}} · {{this.ageLabel}}{{/if}}
+              </p>
+            </div>
+          </header>
 
-        {{#if @model.subjectCard}}
-          <section class='sec' aria-label='About'>
-            <h2><LinkIcon width='16' height='16' aria-hidden='true' />
-              About</h2>
-            <@fields.subjectCard @displayContainer={{false}} />
-          </section>
-        {{/if}}
+          {{#if @model.isActionable}}
+            {{! Actions sit directly under the hero, not stranded at the foot
+            of the scroll — this is the one thing the reader came to do. }}
+            <nav class='actions' aria-label='Actions'>
+              <Button
+                @href={{@model.actionUrl}}
+                @tone='primary'
+                @appearance='accent'
+                @size='s'
+              >
+                {{if @model.actionLabel @model.actionLabel 'Open'}}
+                <ExternalLinkIcon width='15' height='15' aria-hidden='true' />
+              </Button>
+            </nav>
+          {{/if}}
 
-        <section class='sec' aria-label='Delivery'>
-          <h2><HashIcon width='16' height='16' aria-hidden='true' />
-            Delivery</h2>
-          {{! Surfaced deliberately: the dedupe key is the field that decides
-            whether a retry writes a second copy, and a support question
-            about a duplicated alert is answered by reading it. }}
-          <KeyValue class='kv-pad' @items={{this.delivery}}>
+          <KeyValue
+            class='glance kv-pad'
+            @items={{this.glance}}
+            @layout='inline'
+            @labelStyle='eyebrow'
+            aria-label='At a glance'
+          >
             <:value as |item|>
-              {{#if (eq item.key 'Dedupe key')}}
-                <Token @value={{item.value}} style={{ID_TOKEN_STYLE.sm}} />
+              {{#if (eq item.key 'Recipient')}}
+                {{@model.recipientRef}}
+              {{else if (eq item.key 'Raised')}}
+                <@fields.createdAt />
+              {{else if @model.expiresAt}}
+                <@fields.expiresAt />
               {{else}}
-                {{item.value}}
+                <span class='none'>does not expire</span>
               {{/if}}
             </:value>
           </KeyValue>
-        </section>
-      </article>
 
+          {{#if @model.subjectCard}}
+            <section class='sec' aria-label='About'>
+              <h2><LinkIcon width='16' height='16' aria-hidden='true' />
+                About</h2>
+              <@fields.subjectCard @displayContainer={{false}} />
+            </section>
+          {{/if}}
+
+          <section class='sec' aria-label='Delivery'>
+            <h2><HashIcon width='16' height='16' aria-hidden='true' />
+              Delivery</h2>
+            {{! Surfaced deliberately: the dedupe key is the field that decides
+            whether a retry writes a second copy, and a support question
+            about a duplicated alert is answered by reading it. }}
+            <KeyValue class='kv-pad' @items={{this.delivery}}>
+              <:value as |item|>
+                {{#if (eq item.key 'Dedupe key')}}
+                  <Token @value={{item.value}} style={{ID_TOKEN_STYLE.sm}} />
+                {{else}}
+                  {{item.value}}
+                {{/if}}
+              </:value>
+            </KeyValue>
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .kv-pad {
           padding-inline: var(--boxel-sp-sm);
@@ -276,6 +278,10 @@ export class Notification extends CardDef {
         /* Rule 1: isolated has no host container — declare our own or every
            @container rule below is inert. */
         .card {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           container-type: inline-size;
           container-name: card;
           width: 100%;
@@ -286,7 +292,6 @@ export class Notification extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           box-sizing: border-box;
-          background: var(--background);
           color: var(--foreground);
           font-family: var(--font-sans);
 
