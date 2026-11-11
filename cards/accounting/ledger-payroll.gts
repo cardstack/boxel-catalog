@@ -20,7 +20,7 @@ import UserIcon from '@cardstack/boxel-icons/user';
 import { Employee } from '../hr/employee';
 import { Sheet, Part, Facts, Strip, Fit, money, type Fact } from './record-kit';
 import { IsoDateField } from './ledger-dates';
-import { PERIODS, type PaySchedule } from './payroll-calc';
+import { PERIODS, PAYROLL_LIABILITIES, type PaySchedule } from './payroll-calc';
 
 export const DEMO_TAX_NOTE =
   'Demo figures entered by hand, not tax advice. A payroll tax service would replace these tables behind the same lookup.';
@@ -417,3 +417,137 @@ export class PaySetup extends CardDef {
     </template>
   };
 }
+
+// ── paychecks ────────────────────────────────────────────────────────────────
+export class PaycheckDeduction extends FieldDef {
+  static displayName = 'Paycheck deduction';
+  @field label = contains(StringField);
+  @field kind = contains(StringField);
+  @field account = contains(StringField);
+  @field amountMinor = contains(NumberField);
+}
+/** One employee's paycheck in a run: gross, each tax and deduction, net, and the wages each tax is on. */
+export class Paycheck extends FieldDef {
+  static displayName = 'Paycheck';
+  @field employeeId = contains(StringField);
+  @field name = contains(StringField);
+  @field expenseAccount = contains(StringField);
+  @field cls = contains(StringField);
+  @field hoursMilli = contains(NumberField);
+  @field grossMinor = contains(NumberField);
+  @field deductions = containsMany(PaycheckDeduction);
+  @field deductionsMinor = contains(NumberField);
+  @field section125Minor = contains(NumberField);
+  @field fitWagesMinor = contains(NumberField);
+  @field fitMinor = contains(NumberField);
+  @field ssWagesMinor = contains(NumberField);
+  @field ssMinor = contains(NumberField);
+  @field medicareWagesMinor = contains(NumberField);
+  @field medicareMinor = contains(NumberField);
+  @field addlMedicareMinor = contains(NumberField);
+  @field addlMedicareWagesMinor = contains(NumberField);
+  @field stateWagesMinor = contains(NumberField);
+  @field stateMinor = contains(NumberField);
+  @field sdiMinor = contains(NumberField);
+  @field pflMinor = contains(NumberField);
+  @field netMinor = contains(NumberField);
+  @field erSsMinor = contains(NumberField);
+  @field erMedicareMinor = contains(NumberField);
+  @field futaWagesMinor = contains(NumberField);
+  @field futaMinor = contains(NumberField);
+  @field sutaWagesMinor = contains(NumberField);
+  @field sutaMinor = contains(NumberField);
+  @field ytdGrossMinor = contains(NumberField);
+  @field ytdNetMinor = contains(NumberField);
+}
+
+/** A paycheck's stub: gross, each tax, each deduction, net and the year to date. */
+export const stubFacts = (p: {
+  grossMinor?: number;
+  hoursMilli?: number | null;
+  fitMinor?: number;
+  ssMinor?: number;
+  medicareMinor?: number;
+  addlMedicareMinor?: number;
+  stateMinor?: number;
+  sdiMinor?: number;
+  pflMinor?: number;
+  netMinor?: number;
+  ytdGrossMinor?: number;
+  ytdNetMinor?: number;
+  deductions?: ({ label?: string; amountMinor?: number } | undefined)[];
+}): Fact[] => [
+  {
+    key: 'Gross',
+    value: `${money(p.grossMinor)}${p.hoursMilli ? ` · ${p.hoursMilli / 1000} h` : ''}`,
+    strong: true,
+  },
+  ...(p.deductions ?? []).filter(Boolean).map((d) => ({
+    key: d!.label ?? 'Deduction',
+    value: money(d!.amountMinor),
+  })),
+  { key: 'Federal income tax', value: money(p.fitMinor) },
+  { key: 'Social Security', value: money(p.ssMinor) },
+  {
+    key: 'Medicare',
+    value: money((p.medicareMinor ?? 0) + (p.addlMedicareMinor ?? 0)),
+  },
+  { key: 'NY income tax', value: money(p.stateMinor) },
+  { key: 'NY disability', value: money(p.sdiMinor) },
+  { key: 'NY paid family leave', value: money(p.pflMinor) },
+  { key: 'Net pay', value: money(p.netMinor), strong: true },
+  { key: 'Gross, year to date', value: money(p.ytdGrossMinor) },
+  { key: 'Net, year to date', value: money(p.ytdNetMinor) },
+];
+
+// Each run total and the per-paycheck sum it must equal. The realm canonicalizes a program by
+// dropping parentheses, so nothing here pipes inside an operand.
+const SUMMED: [string, string][] = [
+  [
+    'withholdingMinor',
+    '.fitMinor + .ssMinor + .medicareMinor + .addlMedicareMinor + .stateMinor + .sdiMinor + .pflMinor',
+  ],
+  ['deductionsMinor', '.deductionsMinor'],
+  [
+    'employerTaxMinor',
+    '.erSsMinor + .erMedicareMinor + .futaMinor + .sutaMinor',
+  ],
+  ['netMinor', '.netMinor'],
+  ['fitMinor', '.fitMinor'],
+  ['ssWagesMinor', '.ssWagesMinor'],
+  ['ssTaxMinor', '.ssMinor + .erSsMinor'],
+  ['medicareWagesMinor', '.medicareWagesMinor'],
+  [
+    'medicareTaxMinor',
+    '.medicareMinor + .erMedicareMinor + .addlMedicareMinor',
+  ],
+  ['stateWagesMinor', '.stateWagesMinor'],
+  ['stateTaxMinor', '.stateMinor'],
+  ['sdiPflMinor', '.sdiMinor + .pflMinor'],
+  ['futaWagesMinor', '.futaWagesMinor'],
+  ['futaMinor', '.futaMinor'],
+  ['sutaWagesMinor', '.sutaWagesMinor'],
+  ['sutaMinor', '.sutaMinor'],
+  ['fitWagesMinor', '.fitWagesMinor'],
+  ['addlMedicareWagesMinor', '.addlMedicareWagesMinor'],
+  ['addlMedicareMinor', '.addlMedicareMinor'],
+  ['section125Minor', '.section125Minor'],
+];
+const ifPaychecks = (cond: string) =>
+  `if (.paychecks | length) == 0 then true else ${cond} end`;
+const AMOUNTS =
+  '.grossMinor, .netMinor, .fitMinor, .ssMinor, .medicareMinor, .addlMedicareMinor, .stateMinor, .sdiMinor, .pflMinor, .erSsMinor, .erMedicareMinor, .futaMinor, .sutaMinor, .deductionsMinor';
+/**
+ * The checks a run with paychecks adds to its post: each paycheck adds up, its amounts are whole
+ * cents and not negative, the run's totals are the sums of its paychecks, and every account it
+ * posts to is in the chart.
+ */
+export const PAYCHECK_CHECKS = `
+      assert(${ifPaychecks(`[.paychecks[] | ${AMOUNTS}] | all(. >= 0)`)}; "Paycheck amounts can't be negative.");
+      assert(${ifPaychecks(`[.paychecks[] | ${AMOUNTS} | floor] == [.paychecks[] | ${AMOUNTS}]`)}; "Paycheck amounts are in whole cents.");
+      assert(${ifPaychecks(`[.paychecks[] | .grossMinor - .netMinor - .deductionsMinor - .fitMinor - .ssMinor - .medicareMinor - .addlMedicareMinor - .stateMinor - .sdiMinor - .pflMinor] | all(. == 0)`)}; "Each paycheck's gross must equal its net plus its taxes and deductions.");
+      assert(${ifPaychecks(`[.paychecks[] | [.deductions[].amountMinor] + [0 - .deductionsMinor] | add] | all(. == 0)`)}; "Each paycheck's deductions must add up to its deductions total.");
+      assert(${ifPaychecks(`[.paychecks[] | [.deductions[] | select(.kind == "section125") | .amountMinor] + [0 - .section125Minor] | add] | all(. == 0)`)}; "Each paycheck's section 125 total must be its section 125 deductions.");
+      assert(${ifPaychecks(`[.wages[].amountMinor] + [.paychecks[] | 0 - .grossMinor] | add == 0`)}; "A payroll run's wages must equal its paychecks' gross.");
+${SUMMED.map(([f, e]) => `      assert(${ifPaychecks(`[.paychecks[] | ${e}] + [0 - .${f}] | add == 0`)}; "A payroll run's totals must be the sums of its paychecks.");`).join('\n')}
+      assert(${ifPaychecks(`if realmConfig().chart == null then true else ${JSON.stringify(Object.values(PAYROLL_LIABILITIES).map((l) => l.account))} + [.paychecks[].deductions[].account] + [.paychecks[].expenseAccount] - realmConfig().chart | length == 0 end`)}; "An account a paycheck posts to isn't in the chart of accounts. Add it to the chart, then post.");`;

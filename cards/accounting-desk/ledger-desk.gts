@@ -185,6 +185,7 @@ import {
 } from '../accounting/ledger-registers';
 import { Form1099Report } from '../accounting/ledger-tax';
 import { PnlForecast } from '../accounting/ledger-forecast';
+import { PayrollPage, payrollPostGuard } from './payroll-page';
 import {
   Budget,
   BudgetVsActual,
@@ -859,10 +860,17 @@ const PAGES: PageDef[] = [
   },
   // Payroll
   {
+    id: 'payrun',
+    area: 'Payroll',
+    label: 'Run payroll',
+    blurb:
+      'Employees and their pay setup, running payroll for a pay date, and each run with its paychecks.',
+  },
+  {
     id: 'payroll',
     journal: ['payroll'],
     area: 'Payroll',
-    label: 'Payroll runs',
+    label: 'Synced runs',
     blurb:
       'Each pay run synced from Gusto: wages, withholding, employer taxes, net pay.',
     module: '../accounting/ledger-cash',
@@ -1460,7 +1468,7 @@ const WORKSPACES: Workspace[] = [
     id: 'payroll',
     label: 'Payroll',
     icon: UsersIcon,
-    pages: ['payroll', 'quarters'],
+    pages: ['payrun', 'payroll', 'quarters'],
     launchers: [{ label: 'Profit and loss', page: 'r-pnl' }],
   },
   {
@@ -1565,7 +1573,8 @@ const TAB: Record<string, string> = {
   roasts: 'Roasts',
   landed: 'Landed cost',
   counts: 'Counts',
-  payroll: 'Runs',
+  payroll: 'Synced runs',
+  payrun: 'Run payroll',
   journalmonths: 'Months',
   pads: 'Pads',
   recurring: 'Recurring',
@@ -6479,6 +6488,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // What a draft must clear before it posts, beyond its own checks, read fresh from the lots: draws
   // priced from the lots as they are, and a roast's output lot not already taken.
   postGuard = async (c: any) => {
+    payrollPostGuard(c);
     if (
       (c instanceof Fulfillment || c instanceof CountAdjustment) &&
       (c.status ?? 'draft') === 'draft' &&
@@ -7667,6 +7677,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 />
               {{/if}}
 
+            {{else if (eq this.page 'payrun')}}
+              <PayrollPage
+                @ledger={{@model.ledger}}
+                @context={{@context}}
+                @realms={{this.refRealms}}
+                @viewCard={{@viewCard}}
+                @notify={{this.notify}}
+              />
             {{else if this.def.report}}
               <section class='report'>
                 {{#if
