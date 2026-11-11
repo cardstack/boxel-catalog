@@ -45,6 +45,7 @@ import {
   shortMoney,
   type Tone,
 } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * A promise a contract compels, with a date and an owner.
@@ -357,44 +358,48 @@ export class Obligation extends CardDef {
       return obligationView(this.args.model);
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='Ob' @size='lg' /></:mark>
-        <:main>
-          <Section @title='Description'><Text
-            >{{@model.description}}</Text></Section>
-          {{#if @model.consequence}}
-            <Section @title='Consequence'><Text
-              >{{@model.consequence}}</Text></Section>
-          {{/if}}
-          <Section @title='Schedule'><Facts
-              @items={{this.v.schedule}}
-            /></Section>
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkRow @label='Contract'><@fields.contract
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-            <LinkRow @label='Owner'><@fields.owner
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-            {{#if @model.escalatedTo}}
-              <LinkRow @label='Escalates to'><@fields.escalatedTo
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='Ob' @size='lg' /></:mark>
+          <:main>
+            <Section @title='Description'><Text
+              >{{@model.description}}</Text></Section>
+            {{#if @model.consequence}}
+              <Section @title='Consequence'><Text
+                >{{@model.consequence}}</Text></Section>
+            {{/if}}
+            <Section @title='Schedule'><Facts
+                @items={{this.v.schedule}}
+              /></Section>
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkRow @label='Contract'><@fields.contract
                   @format='atom'
                   @displayContainer={{false}}
                 /></LinkRow>
-            {{/if}}
-          </Section>
-          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+              <LinkRow @label='Owner'><@fields.owner
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+              {{#if @model.escalatedTo}}
+                <LinkRow @label='Escalates to'><@fields.escalatedTo
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></LinkRow>
+              {{/if}}
+            </Section>
+            <Section @title='Details'><Facts
+                @items={{this.v.facts}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 

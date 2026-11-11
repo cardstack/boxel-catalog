@@ -32,6 +32,7 @@ import {
   type Row,
 } from './compact-card';
 import { cap, longMoney, shortMoney } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * APPROVAL RULE — a declarative approval-routing engine.
@@ -122,36 +123,38 @@ export class ApprovalRule extends CardDef {
       return ruleView(this.args.model);
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='AR' @size='lg' /></:mark>
-        <:main>
-          {{#if @model.guidance}}
-            <Section @title='Guidance'><Text
-              >{{@model.guidance}}</Text></Section>
-          {{/if}}
-          <Section @title='Required approvers' @flush={{true}}>
-            {{#if this.v.steps.length}}
-              <Rows @rows={{this.v.steps}} />
-            {{else}}
-              <Text>No approvers listed. A rule that fires and summons nobody
-                blocks the contract; add a role or deactivate the rule.</Text>
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='AR' @size='lg' /></:mark>
+          <:main>
+            {{#if @model.guidance}}
+              <Section @title='Guidance'><Text
+                >{{@model.guidance}}</Text></Section>
             {{/if}}
-          </Section>
-          <Section @title='Applies when'><Facts
-              @items={{this.v.conditions}}
-            /></Section>
-        </:main>
-        <:side>
-          <Section @title='Details'><Facts
-              @items={{this.v.details}}
-            /></Section>
-        </:side>
-      </IsoLayout>
+            <Section @title='Required approvers' @flush={{true}}>
+              {{#if this.v.steps.length}}
+                <Rows @rows={{this.v.steps}} />
+              {{else}}
+                <Text>No approvers listed. A rule that fires and summons nobody
+                  blocks the contract; add a role or deactivate the rule.</Text>
+              {{/if}}
+            </Section>
+            <Section @title='Applies when'><Facts
+                @items={{this.v.conditions}}
+              /></Section>
+          </:main>
+          <:side>
+            <Section @title='Details'><Facts
+                @items={{this.v.details}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 

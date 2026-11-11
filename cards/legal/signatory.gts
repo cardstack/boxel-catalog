@@ -30,6 +30,7 @@ import {
   type Fact,
 } from './compact-card';
 import { dash, longMoney, shortMoney } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * Who may legally bind the company, and up to what number.
@@ -139,35 +140,39 @@ export class Signatory extends CardDef {
       return signatoryView(this.args.model);
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Avatar
-            @name={{this.v.title}}
-            @src={{this.v.photo}}
-            @size={{36}}
-          /></:mark>
-        <:main>
-          <Section @title='Signing authority'><Facts
-              @items={{this.v.authority}}
-            /></Section>
-          <Section @title='Contract types' @flush={{true}}><Dots
-              @items={{this.v.types}}
-            /></Section>
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkRow @label='Person'><@fields.person
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-          </Section>
-          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Avatar
+              @name={{this.v.title}}
+              @src={{this.v.photo}}
+              @size={{36}}
+            /></:mark>
+          <:main>
+            <Section @title='Signing authority'><Facts
+                @items={{this.v.authority}}
+              /></Section>
+            <Section @title='Contract types' @flush={{true}}><Dots
+                @items={{this.v.types}}
+              /></Section>
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkRow @label='Person'><@fields.person
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+            </Section>
+            <Section @title='Details'><Facts
+                @items={{this.v.facts}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 

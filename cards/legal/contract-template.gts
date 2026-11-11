@@ -33,6 +33,7 @@ import {
   type Row,
 } from './compact-card';
 import { dayAndYear, formatDay } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * CONTRACT TEMPLATE — the standard starting points for a new contract.
@@ -88,43 +89,47 @@ export class ContractTemplate extends CardDef {
       return templateView(this.args.model);
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='Tp' @size='lg' /></:mark>
-        <:main>
-          {{#if @model.guidance}}
-            <Section @title='Guidance'><Text
-              >{{@model.guidance}}</Text></Section>
-          {{/if}}
-          <Section @title='Required inputs' @flush={{true}}>
-            {{#if this.v.inputs.length}}
-              <Dots @items={{this.v.inputs}} />
-            {{else}}
-              <Rows @rows={{this.v.noInputs}} />
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='Tp' @size='lg' /></:mark>
+          <:main>
+            {{#if @model.guidance}}
+              <Section @title='Guidance'><Text
+                >{{@model.guidance}}</Text></Section>
             {{/if}}
-          </Section>
-          <Section @title='Standard clauses' @flush={{true}}>
-            <Rows @rows={{this.v.clauses}} />
-          </Section>
-        </:main>
-        <:side>
-          {{#if this.v.clauses.length}}
-            <Section @title='Linked'>
-              {{#each @fields.standardClauses as |C|}}
-                <LinkRow @label='Clause'><C
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></LinkRow>
-              {{/each}}
+            <Section @title='Required inputs' @flush={{true}}>
+              {{#if this.v.inputs.length}}
+                <Dots @items={{this.v.inputs}} />
+              {{else}}
+                <Rows @rows={{this.v.noInputs}} />
+              {{/if}}
             </Section>
-          {{/if}}
-          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+            <Section @title='Standard clauses' @flush={{true}}>
+              <Rows @rows={{this.v.clauses}} />
+            </Section>
+          </:main>
+          <:side>
+            {{#if this.v.clauses.length}}
+              <Section @title='Linked'>
+                {{#each @fields.standardClauses as |C|}}
+                  <LinkRow @label='Clause'><C
+                      @format='atom'
+                      @displayContainer={{false}}
+                    /></LinkRow>
+                {{/each}}
+              </Section>
+            {{/if}}
+            <Section @title='Details'><Facts
+                @items={{this.v.facts}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 

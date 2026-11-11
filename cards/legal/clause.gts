@@ -35,6 +35,7 @@ import {
   type StatItem,
 } from './compact-card';
 import { cap, dash, dayAndYear, formatDay } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * A pre-approved piece of contract language, owned by legal.
@@ -264,35 +265,39 @@ export class Clause extends CardDef {
       ];
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.stats}}
-      >
-        <:mark><Mark @text='Cl' @size='lg' /></:mark>
-        <:main>
-          <Section @title='Standard text'><@fields.standardText /></Section>
-          {{#if @model.guidance}}
-            <Section @title='Guidance'><Text
-              >{{@model.guidance}}</Text></Section>
-          {{/if}}
-          <Section @title='In use' @flush={{true}}>
-            {{#if this.lookupFailed}}
-              <Rows @rows={{this.failedRows}} />
-            {{else if this.isCounting}}
-              <Rows @rows={{this.countingRows}} />
-            {{else if this.rows.length}}
-              <Rows @rows={{this.rows}} />
-            {{else}}
-              <Rows @rows={{this.unusedRows}} />
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.stats}}
+        >
+          <:mark><Mark @text='Cl' @size='lg' /></:mark>
+          <:main>
+            <Section @title='Standard text'><@fields.standardText /></Section>
+            {{#if @model.guidance}}
+              <Section @title='Guidance'><Text
+                >{{@model.guidance}}</Text></Section>
             {{/if}}
-          </Section>
-        </:main>
-        <:side>
-          <Section @title='Details'><Facts @items={{this.details}} /></Section>
-        </:side>
-      </IsoLayout>
+            <Section @title='In use' @flush={{true}}>
+              {{#if this.lookupFailed}}
+                <Rows @rows={{this.failedRows}} />
+              {{else if this.isCounting}}
+                <Rows @rows={{this.countingRows}} />
+              {{else if this.rows.length}}
+                <Rows @rows={{this.rows}} />
+              {{else}}
+                <Rows @rows={{this.unusedRows}} />
+              {{/if}}
+            </Section>
+          </:main>
+          <:side>
+            <Section @title='Details'><Facts
+                @items={{this.details}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
     failedRows: Row[] = [
       {

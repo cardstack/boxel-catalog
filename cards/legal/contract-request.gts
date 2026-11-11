@@ -42,6 +42,7 @@ import {
   shortMoney,
   type Tone,
 } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * CONTRACT REQUEST — self-service intake for a new contract.
@@ -126,51 +127,55 @@ export class ContractRequest extends CardDef {
       return requestView(this.args.model);
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='Rq' @size='lg' /></:mark>
-        <:main>
-          {{#if @model.background}}
-            <Section @title='Background'><Text
-              >{{@model.background}}</Text></Section>
-          {{/if}}
-          {{#if @model.decisionNote}}
-            <Section @title='Decision'><Text
-              >{{@model.decisionNote}}</Text></Section>
-          {{/if}}
-          <Section @title='Request'><Facts
-              @items={{this.v.request}}
-            /></Section>
-          <Section @title='Status' @flush={{true}}><Dots
-              @items={{this.v.lifecycle}}
-            /></Section>
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkRow @label='Requested by'><@fields.requestedBy
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-            {{#if @model.counterparty}}
-              <LinkRow @label='Counterparty'><@fields.counterparty
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='Rq' @size='lg' /></:mark>
+          <:main>
+            {{#if @model.background}}
+              <Section @title='Background'><Text
+                >{{@model.background}}</Text></Section>
+            {{/if}}
+            {{#if @model.decisionNote}}
+              <Section @title='Decision'><Text
+                >{{@model.decisionNote}}</Text></Section>
+            {{/if}}
+            <Section @title='Request'><Facts
+                @items={{this.v.request}}
+              /></Section>
+            <Section @title='Status' @flush={{true}}><Dots
+                @items={{this.v.lifecycle}}
+              /></Section>
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkRow @label='Requested by'><@fields.requestedBy
                   @format='atom'
                   @displayContainer={{false}}
                 /></LinkRow>
-            {{/if}}
-            {{#if @model.resultingContract}}
-              <LinkRow @label='Contract'><@fields.resultingContract
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></LinkRow>
-            {{/if}}
-          </Section>
-          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+              {{#if @model.counterparty}}
+                <LinkRow @label='Counterparty'><@fields.counterparty
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></LinkRow>
+              {{/if}}
+              {{#if @model.resultingContract}}
+                <LinkRow @label='Contract'><@fields.resultingContract
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></LinkRow>
+              {{/if}}
+            </Section>
+            <Section @title='Details'><Facts
+                @items={{this.v.facts}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 

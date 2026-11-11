@@ -31,6 +31,7 @@ import {
   type Fact,
 } from './compact-card';
 import { cap, dash, type Tone } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * What THIS contract actually says for one provision, next to what it was
@@ -147,41 +148,45 @@ export class ContractClause extends CardDef {
       return ccView(this.args.model);
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='CC' @size='lg' /></:mark>
-        <:main>
-          <Section @title='Actual text'><@fields.actualText /></Section>
-          {{#if @model.deviationNotes}}
-            <Section @title='Deviation notes'><Text
-              >{{@model.deviationNotes}}</Text></Section>
-          {{/if}}
-          {{#if @model.standardClause}}
-            <Section @title='Playbook text'><Text
-              >{{@model.standardClause.standardText}}</Text></Section>
-          {{else}}
-            <Section @title='Playbook text'><Text>Bespoke language: no approved
-                standard to compare against.</Text></Section>
-          {{/if}}
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkRow @label='Contract'><@fields.contract
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-            <LinkRow @label='Standard'><@fields.standardClause
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-          </Section>
-          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='CC' @size='lg' /></:mark>
+          <:main>
+            <Section @title='Actual text'><@fields.actualText /></Section>
+            {{#if @model.deviationNotes}}
+              <Section @title='Deviation notes'><Text
+                >{{@model.deviationNotes}}</Text></Section>
+            {{/if}}
+            {{#if @model.standardClause}}
+              <Section @title='Playbook text'><Text
+                >{{@model.standardClause.standardText}}</Text></Section>
+            {{else}}
+              <Section @title='Playbook text'><Text>Bespoke language: no
+                  approved standard to compare against.</Text></Section>
+            {{/if}}
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkRow @label='Contract'><@fields.contract
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+              <LinkRow @label='Standard'><@fields.standardClause
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+            </Section>
+            <Section @title='Details'><Facts
+                @items={{this.v.facts}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 

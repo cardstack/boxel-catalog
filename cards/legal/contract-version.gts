@@ -40,6 +40,7 @@ import {
   longMoney,
   shortMoney,
 } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
@@ -157,42 +158,47 @@ export class ContractVersion extends CardDef {
       }));
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text={{this.v.mark}} @size='lg' /></:mark>
-        <:main>
-          {{#if @model.summary}}
-            <Section @title='Summary'><Text>{{@model.summary}}</Text></Section>
-          {{/if}}
-          {{#if this.v.changes.length}}
-            <Section @title='What changed'><Facts
-                @items={{this.v.changes}}
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text={{this.v.mark}} @size='lg' /></:mark>
+          <:main>
+            {{#if @model.summary}}
+              <Section @title='Summary'><Text
+                >{{@model.summary}}</Text></Section>
+            {{/if}}
+            {{#if this.v.changes.length}}
+              <Section @title='What changed'><Facts
+                  @items={{this.v.changes}}
+                /></Section>
+            {{/if}}
+            {{#if this.rows.length}}
+              <Section @title='Versions' @flush={{true}}><Rows
+                  @rows={{this.rows}}
+                /></Section>
+            {{/if}}
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkRow @label='Contract'><@fields.contract
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+              <LinkRow @label='Executed by'><@fields.executedBy
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+            </Section>
+            <Section @title='Details'><Facts
+                @items={{this.v.facts}}
               /></Section>
-          {{/if}}
-          {{#if this.rows.length}}
-            <Section @title='Versions' @flush={{true}}><Rows
-                @rows={{this.rows}}
-              /></Section>
-          {{/if}}
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkRow @label='Contract'><@fields.contract
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-            <LinkRow @label='Executed by'><@fields.executedBy
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-          </Section>
-          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 
