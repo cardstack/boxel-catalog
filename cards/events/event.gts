@@ -16,6 +16,7 @@ import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
 import { Location } from './location';
 import CapacityField from './capacity-field';
 import { statusField } from '@cardstack/catalog/fields/status/status';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * Event lifecycle. Draft is unannounced planning; Scheduled is public;
@@ -332,45 +333,53 @@ export class Event extends CardDef {
 
   static isolated = class Isolated extends Component<typeof Event> {
     <template>
-      <article class='ev-page'>
-        <header class='eh'>
-          <div class='eh-id'>
-            <p class='doc-kind'>{{if @model.kind @model.kind 'Event'}}</p>
-            <h1>{{@model.cardTitle}}</h1>
-            <p class='eh-when'>
-              {{#if @model.startsAt}}
-                <@fields.startsAt />
-                {{#if @model.endsAt}}&nbsp;–&nbsp;<@fields.endsAt />{{/if}}
-              {{else}}
-                Date to be announced
-              {{/if}}
-            </p>
-          </div>
-          {{#if @model.status}}
-            <span class='eh-status'><@fields.status @format='embedded' /></span>
+      <IsoFrame>
+        <article class='ev-page'>
+          <header class='eh'>
+            <div class='eh-id'>
+              <p class='doc-kind'>{{if @model.kind @model.kind 'Event'}}</p>
+              <h1>{{@model.cardTitle}}</h1>
+              <p class='eh-when'>
+                {{#if @model.startsAt}}
+                  <@fields.startsAt />
+                  {{#if @model.endsAt}}&nbsp;–&nbsp;<@fields.endsAt />{{/if}}
+                {{else}}
+                  Date to be announced
+                {{/if}}
+              </p>
+            </div>
+            {{#if @model.status}}
+              <span class='eh-status'><@fields.status
+                  @format='embedded'
+                /></span>
+            {{/if}}
+          </header>
+          {{#if @model.venue}}
+            <section class='panel'>
+              <h2>Venue</h2>
+              <div class='venue'><@fields.venue @format='embedded' /></div>
+            </section>
           {{/if}}
-        </header>
-        {{#if @model.venue}}
-          <section class='panel'>
-            <h2>Venue</h2>
-            <div class='venue'><@fields.venue @format='embedded' /></div>
-          </section>
-        {{/if}}
-        {{#if @model.capacity.total}}
-          <section class='panel'>
-            <h2>Capacity</h2>
-            <@fields.capacity @format='embedded' />
-          </section>
-        {{/if}}
-        {{#if @model.description}}
-          <section class='panel'>
-            <h2>About</h2>
-            <div class='about'><@fields.description /></div>
-          </section>
-        {{/if}}
-      </article>
+          {{#if @model.capacity.total}}
+            <section class='panel'>
+              <h2>Capacity</h2>
+              <@fields.capacity @format='embedded' />
+            </section>
+          {{/if}}
+          {{#if @model.description}}
+            <section class='panel'>
+              <h2>About</h2>
+              <div class='about'><@fields.description /></div>
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .ev-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 40rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
