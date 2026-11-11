@@ -36,96 +36,93 @@ function instance(
 }
 
 export function runTests() {
-  module(
-    'Acceptance | Catalog | crm - lead commands',
-    function (hooks) {
-      setupApplicationTest(hooks);
-      setupLocalIndexing(hooks);
-      setupOnSave(hooks);
+  module('Acceptance | Catalog | crm - lead commands', function (hooks) {
+    setupApplicationTest(hooks);
+    setupLocalIndexing(hooks);
+    setupOnSave(hooks);
 
-      let mockMatrixUtils = setupMockMatrix(hooks, {
-        loggedInAs: '@testuser:localhost',
-        activeRealms: [realmURL],
+    let mockMatrixUtils = setupMockMatrix(hooks, {
+      loggedInAs: '@testuser:localhost',
+      activeRealms: [realmURL],
+    });
+
+    hooks.beforeEach(async function () {
+      mockMatrixUtils.createAndJoinRoom({
+        sender: '@testuser:localhost',
+        name: 'room-test',
       });
-
-      hooks.beforeEach(async function () {
-        mockMatrixUtils.createAndJoinRoom({
-          sender: '@testuser:localhost',
-          name: 'room-test',
-        });
-        setupUserSubscription();
-        setupAuthEndpoints();
-        await setupAcceptanceTestRealm({
-          realmURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            'nameless-lead.json': instance('lead', 'Lead', {
-              name: '',
-              email: '',
-              company: 'Quayside Freight',
-              status: 'qualified',
-            }),
-            'blank-lead.json': instance('lead', 'Lead', {
-              name: '   ',
-              email: '   ',
-              company: '   ',
-              status: 'qualified',
-            }),
-          },
-        });
-        await visitOperatorMode({ stacks: [[]] });
+      setupUserSubscription();
+      setupAuthEndpoints();
+      await setupAcceptanceTestRealm({
+        realmURL,
+        mockMatrixUtils,
+        contents: {
+          ...SYSTEM_CARD_FIXTURE_CONTENTS,
+          'nameless-lead.json': instance('lead', 'Lead', {
+            name: '',
+            email: '',
+            company: 'Quayside Freight',
+            status: 'qualified',
+          }),
+          'blank-lead.json': instance('lead', 'Lead', {
+            name: '   ',
+            email: '   ',
+            company: '   ',
+            status: 'qualified',
+          }),
+        },
       });
+      await visitOperatorMode({ stacks: [[]] });
+    });
 
-      // The inputs link cards, so each command has to come from the loader the
-      // store builds those cards with.
-      async function load<T>(path: string): Promise<T> {
-        let { default: Command } = (await getService(
-          'loader-service',
-        ).loader.import(`${crm}commands/${path}`)) as { default: T };
-        return Command;
-      }
+    // The inputs link cards, so each command has to come from the loader the
+    // store builds those cards with.
+    async function load<T>(path: string): Promise<T> {
+      let { default: Command } = (await getService(
+        'loader-service',
+      ).loader.import(`${crm}commands/${path}`)) as { default: T };
+      return Command;
+    }
 
-      async function convert(leadId: string) {
-        let Command = await load<typeof ConvertLeadCommand>('convert-lead');
-        let lead = (await getService('store').get(
-          `${realmURL}${leadId}`,
-        )) as Lead;
-        return new Command(getService('tool-service').commandContext).execute({
-          lead,
-          realm: realmURL,
+    async function convert(leadId: string) {
+      let Command = await load<typeof ConvertLeadCommand>('convert-lead');
+      let lead = (await getService('store').get(
+        `${realmURL}${leadId}`,
+      )) as Lead;
+      return new Command(getService('tool-service').commandContext).execute({
+        lead,
+        realm: realmURL,
+      });
+    }
+
+    for (let [leadId, blank, accountName] of [
+      ['nameless-lead', 'empty', 'Quayside Freight'],
+      ['blank-lead', 'whitespace-only', 'New Account'],
+    ]) {
+      test(`convert-lead rerun after an interruption reuses the contact of a lead with ${blank} name and email`, async function (assert) {
+        let first = await convert(leadId);
+        let contactId = first?.contact?.id;
+        assert.ok(contactId, 'the first run makes a contact');
+        assert.strictEqual(first?.account?.name, accountName);
+        assert.strictEqual(
+          first?.opportunity?.name,
+          `${accountName} — first deal`,
+        );
+
+        // A run interrupted before its last step leaves the lead unconverted.
+        await getService('store').patch(`${realmURL}${leadId}`, {
+          attributes: { status: 'qualified' },
         });
-      }
 
-      for (let [leadId, blank, accountName] of [
-        ['nameless-lead', 'empty', 'Quayside Freight'],
-        ['blank-lead', 'whitespace-only', 'New Account'],
-      ]) {
-        test(`convert-lead rerun after an interruption reuses the contact of a lead with ${blank} name and email`, async function (assert) {
-          let first = await convert(leadId);
-          let contactId = first?.contact?.id;
-          assert.ok(contactId, 'the first run makes a contact');
-          assert.strictEqual(first?.account?.name, accountName);
-          assert.strictEqual(
-            first?.opportunity?.name,
-            `${accountName} — first deal`,
-          );
-
-          // A run interrupted before its last step leaves the lead unconverted.
-          await getService('store').patch(`${realmURL}${leadId}`, {
-            attributes: { status: 'qualified' },
-          });
-
-          let second = await convert(leadId);
-          assert.strictEqual(
-            second?.contact?.id,
-            contactId,
-            'the second run finds the same contact instead of making another',
-          );
-          assert.strictEqual(second?.account?.id, first?.account?.id);
-          assert.strictEqual(second?.opportunity?.id, first?.opportunity?.id);
-        });
-      }
-    },
-  );
+        let second = await convert(leadId);
+        assert.strictEqual(
+          second?.contact?.id,
+          contactId,
+          'the second run finds the same contact instead of making another',
+        );
+        assert.strictEqual(second?.account?.id, first?.account?.id);
+        assert.strictEqual(second?.opportunity?.id, first?.opportunity?.id);
+      });
+    }
+  });
 }
