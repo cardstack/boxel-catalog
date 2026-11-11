@@ -10,7 +10,8 @@
       "taxes": ["futa"],
       "cardInfo": {
         "name": "IRS · Form 940 (federal unemployment)"
-      }
+      },
+      "filedThrough": "2026-12-31"
     },
     "relationships": {
       "cardInfo.theme": {

@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Lyric Video\n\nThe film: a 16:9 player on desktop and a 9:16 vertical video on phones, with each sung line arriving, sweeping and leaving on the beat. Links one Song Version per language and carries the credits, photos and fonts.\n\nPart of [Lyric Player](../LyricVideo/just-ask-for-it), the Choreo-animated K-pop lyric video by @ctse.\n",
+      "ref": {
+        "module": "../lyric-video",
+        "name": "LyricVideo"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Lyric Video",
+      "cardDescription": "The film: a 16:9 player on desktop and a 9:16 vertical video on phones, with each sung line arriving, sweeping and leaving on the beat. Links one Song Version per language and carries the credits, photos and fonts.",
+      "cardInfo": {
+        "name": "Lyric Video",
+        "summary": "The film: a 16:9 player on desktop and a 9:16 vertical video on phones, with each sung line arriving, sweeping and leaving on the beat. Links one Song Version per language and carries the credits, photos and fonts."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../LyricVideo/just-ask-for-it"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
