@@ -27,6 +27,7 @@ import { Input } from '@cardstack/pretui/components/input';
 import { AlertDialog } from '@cardstack/pretui/components/alert-dialog';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import { money, toneFor, type Fact } from '../accounting/record-kit';
+import { AllCards } from '../accounting/all-cards';
 import {
   stubFacts,
   labelOf,
@@ -80,11 +81,6 @@ const isNumber = (col: unknown) => (col as { key?: string })?.key === 'number';
 const isAgency = (col: unknown) => (col as { key?: string })?.key === 'agency';
 const isAction = (col: unknown) => (col as { key?: string })?.key === 'action';
 const isStatus = (col: unknown) => (col as { key?: string })?.key === 'status';
-const SETUP_PAGE = 200,
-  TABLE_PAGE = 200,
-  RUN_PAGE = 500,
-  MONTH_PAGE = 100,
-  TIME_PAGE = 500;
 const plural = (n: number, one: string, many = `${one}s`) =>
   `${n} ${n === 1 ? one : many}`;
 const instancesOf = (r: unknown): any[] =>
@@ -283,40 +279,17 @@ export class PayrollPage extends Component<PayrollPageSignature> {
   @tracked stubRun: any;
   isBusy = (key: string | undefined) => !!key && this.busyKey === key;
 
-  query =
-    (module: string, name: string, size = 200) =>
-    () =>
-      ({
-        filter: { type: codeRef(here, module, name) },
-        page: { size },
-      }) as never;
-  setupData = this.args.context?.getCards(
-    this,
-    this.query('../accounting/ledger-payroll', 'PaySetup', SETUP_PAGE),
-    () => this.args.realms,
-    { isLive: true },
-  );
-  tableData = this.args.context?.getCards(
-    this,
-    this.query('../accounting/ledger-payroll', 'PayrollTaxTable', TABLE_PAGE),
-    () => this.args.realms,
-    { isLive: true },
-  );
-  runData = this.args.context?.getCards(
-    this,
-    this.query('../accounting/ledger-cash', 'PayrollRun', RUN_PAGE),
-    () => this.args.realms,
-    { isLive: true },
-  );
-  monthData = this.args.context?.getCards(
-    this,
-    this.query('../accounting/ledger-journal', 'JournalMonth', MONTH_PAGE),
-    () => this.args.realms,
-    { isLive: true },
-  );
-  timeData = this.args.context?.getCards(
-    this,
-    () => {
+  query = (module: string, name: string) => () =>
+    ({ filter: { type: codeRef(here, module, name) } }) as never;
+  all = (getQuery: () => unknown) =>
+    new AllCards(this.args.context, this, getQuery, () => this.args.realms, {
+      isLive: true,
+    });
+  setupData = this.all(this.query('../accounting/ledger-payroll', 'PaySetup'));
+  tableData = this.all(this.query('../accounting/ledger-payroll', 'PayrollTaxTable'));
+  runData = this.all(this.query('../accounting/ledger-cash', 'PayrollRun'));
+  monthData = this.all(this.query('../accounting/ledger-journal', 'JournalMonth'));
+  timeData = this.all(() => {
       let type = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
       return {
         filter: {
@@ -331,39 +304,21 @@ export class PayrollPage extends Component<PayrollPageSignature> {
             },
           ],
         },
-        page: { size: TIME_PAGE },
       } as never;
-    },
-    () => this.args.realms,
-    { isLive: true },
-  );
+  });
 
-  filingData = this.args.context?.getCards(
-    this,
+  filingData = this.all(
     this.query('../accounting/ledger-payroll-filings', 'PayrollFiling'),
-    () => this.args.realms,
-    { isLive: true },
   );
-  agencyData = this.args.context?.getCards(
-    this,
-    this.query('../accounting/ledger-payroll', 'PayrollAgency', 50),
-    () => this.args.realms,
-    { isLive: true },
-  );
-  paymentData = this.args.context?.getCards(
-    this,
-    () => {
+  agencyData = this.all(this.query('../accounting/ledger-payroll', 'PayrollAgency'));
+  paymentData = this.all(() => {
       let type = codeRef(here, '../accounting/ledger-cash', 'BankPayment');
       return {
         filter: {
           every: [{ type }, { on: type, eq: { kind: PAYROLL_TAX_KIND } }],
         },
-        page: { size: 200 },
       } as never;
-    },
-    () => this.args.realms,
-    { isLive: true },
-  );
+  });
   get setups() {
     return instancesOf(this.setupData).sort((a, b) =>
       String(a.name ?? '').localeCompare(String(b.name ?? '')),
@@ -388,21 +343,22 @@ export class PayrollPage extends Component<PayrollPageSignature> {
   // A read that failed, or came back full and may have left records out, would draft or post a run
   // from incomplete history, so both wait until every read is whole.
   get capNotes() {
-    let reads: [unknown, number, string][] = [
-      [this.setupData, SETUP_PAGE, 'pay setups'],
-      [this.tableData, TABLE_PAGE, 'tax tables'],
-      [this.runData, RUN_PAGE, 'payroll runs'],
-      [this.monthData, MONTH_PAGE, 'journal months'],
-      [this.timeData, TIME_PAGE, 'time activities in this period'],
+    let reads: [AllCards, string][] = [
+      [this.setupData, 'pay setups'],
+      [this.tableData, 'tax tables'],
+      [this.runData, 'payroll runs'],
+      [this.monthData, 'journal months'],
+      [this.timeData, 'time activities in this period'],
     ];
-    return [
-      ...reads
-        .filter(([r]) => ((r as any)?.errors ?? []).length)
-        .map(([, , noun]) => `The ${noun} couldn't be read.`),
-      ...reads
-        .filter(([r, size]) => instancesOf(r).length >= size)
-        .map(([, size, noun]) => `There are more than ${size} ${noun}.`),
-    ].join(' ');
+    if (this.loading) return '';
+    return reads
+      .filter(([r]) => !r.isComplete)
+      .map(([r, noun]) =>
+        r.tooMany
+          ? `There are too many ${noun} to read.`
+          : `The ${noun} couldn't be read.`,
+      )
+      .join(' ');
   }
   // The runs that stand: a reversed run's paychecks no longer count toward anyone's year.
   get standing() {
@@ -717,6 +673,21 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         String(a.agencyId ?? '').localeCompare(b.agencyId ?? ''),
     );
   }
+  // An action on a filing waits until its filings, agencies and payments are all read, so a draft
+  // payment that hasn't loaded can't re-offer Pay.
+  get filingsRead() {
+    return (
+      this.filingData.isComplete &&
+      this.agencyData.isComplete &&
+      this.paymentData.isComplete
+    );
+  }
+  get filingNote() {
+    let reads = [this.filingData, this.agencyData, this.paymentData];
+    return reads.some((r) => !r.isLoading && !r.isComplete)
+      ? "The filings, agencies and tax payments couldn't all be read, so no filing action is offered. Reload to try again."
+      : '';
+  }
   get paymentDrafts() {
     return instancesOf(this.paymentData).filter(
       (p) => (p.status ?? 'draft') === 'draft',
@@ -766,7 +737,9 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       due: money(f.dueMinor),
       paid: money(f.paidMinor),
       open: money(f.openMinor),
-      action: this.canFile(f)
+      action: !this.filingsRead
+        ? ''
+        : this.canFile(f)
         ? 'File'
         : this.canPay(f)
           ? 'Pay'
@@ -1059,6 +1032,10 @@ export class PayrollPage extends Component<PayrollPageSignature> {
             {{/each}}
           </ul>
         {{/if}}
+        {{#if this.filingNote}}<Callout
+            @tone='danger'
+            @title="Couldn't read the filings"
+          >{{this.filingNote}}</Callout>{{/if}}
         {{#if this.filingRows.length}}
           <DataTable
             @columns={{this.filingCols}}
@@ -1076,7 +1053,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
                   @appearance='link'
                   @size='s'
                   {{on 'click' (fn this.showForm row)}}
-                >{{text}}</Button>{{else if (isAction col)}}{{#if text}}<Button
+                >{{text}}</Button>{{else if (isAction col)}}{{#if row.action}}<Button
                     @tone='neutral'
                     @appearance='outlined'
                     @size='s'
