@@ -11,11 +11,14 @@ import {
   setupUserSubscription,
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
+  realmConfigCardJSON,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
 import { PayrollRun, AmountLine } from '../../../cards/accounting/ledger-cash';
+import { Ledger } from '../../../cards/accounting/ledger-cards';
+import { payrollPostGuard } from '../../../cards/accounting-desk/payroll-page';
 import {
   Paycheck,
   PaycheckDeduction,
@@ -161,19 +164,43 @@ const DANA: PaySetupData = {
 const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
 const realmURL = 'http://test-realm/payroll/';
 const accounting = `${catalogRealmURL}cards/accounting/`;
-// `post` also stamps `actor()`, which this realm's in-browser dispatch can't supply, so the checks a
-// run with paychecks adds to `post` are run here on their own, as an operation of a PayrollRun subclass.
+// This realm's in-browser dispatch can't supply `actor()`, so the shipped declarations run here
+// with only the line that stamps it taken out: post and journal with their spliced paycheck checks,
+// and the ledger's create with its params and fill.
 const RUN_PROBE = `
   import { operation } from '@cardstack/base/operations';
   import { PayrollRun } from '${accounting}ledger-cash';
-  import { PAYCHECK_CHECKS } from '${accounting}ledger-payroll';
-  export class CheckedRun extends PayrollRun {
-    @operation static checkPaychecks = {
-      base: 'transform',
-      transformations: { $bxl: PAYCHECK_CHECKS },
+  import { Ledger } from '${accounting}ledger-cards';
+  const unstamped = (op) => {
+    if (!op.transformations.$bxl.includes('.postedBy = actor();'))
+      throw new Error('the shipped program no longer stamps postedBy this way');
+    return {
+      ...op,
+      transformations: {
+        $bxl: op.transformations.$bxl.replace('.postedBy = actor();', ''),
+      },
     };
+  };
+  export class CheckedRun extends PayrollRun {
+    @operation static postAsShipped = unstamped(PayrollRun.post);
+    @operation static journalAsShipped = unstamped(PayrollRun.journal);
+  }
+  const { enteredBy: _stamp, ...fill } = Ledger.enterPayrollRun.fill;
+  export class CheckedLedger extends Ledger {
+    @operation static enterRunAsShipped = { ...Ledger.enterPayrollRun, fill };
   }
 `;
+const CHART = [
+  '1000',
+  '2310',
+  '2315',
+  '2320',
+  '2330',
+  '2340',
+  '2350',
+  '6100',
+  '6120',
+];
 
 // `file` stamps `actor()` too, so its checks run here on their own.
 const FILING_PROBE = `
@@ -774,6 +801,20 @@ export function runTests() {
       );
     });
 
+    test("the desk's own post refuses a run with paychecks, and leaves a synced run alone", function (assert) {
+      assert.throws(
+        () => payrollPostGuard(runCard()),
+        /Post this run from Run payroll/,
+      );
+      payrollPostGuard(
+        new PayrollRun({
+          docNo: 'GUSTO-1',
+          wages: [new AmountLine({ account: '6100', amountMinor: 100 })],
+        } as any),
+      );
+      assert.ok(true, 'a synced run posts from the desk as before');
+    });
+
     test('a pay period ends on the pay date', function (assert) {
       assert.deepEqual(periodFor('biweekly', '2026-01-16'), {
         start: '2026-01-03',
@@ -830,8 +871,65 @@ export function runTests() {
           mockMatrixUtils,
           contents: {
             ...SYSTEM_CARD_FIXTURE_CONTENTS,
+            'realm.json': realmConfigCardJSON({
+              name: 'Payroll books',
+              config: { chart: CHART },
+            }),
             'run-probe.gts': RUN_PROBE,
+            'CheckedLedger/books.json': {
+              data: {
+                type: 'card',
+                attributes: { company: 'Payroll books' },
+                meta: {
+                  adoptsFrom: {
+                    module: `${realmURL}run-probe`,
+                    name: 'CheckedLedger',
+                  },
+                },
+              },
+            },
             'CheckedRun/good.json': probe(good),
+            'CheckedRun/fraction.json': probe({
+              ...good,
+              paychecks: [
+                {
+                  ...checks[0],
+                  fitMinor: checks[0].fitMinor + 0.5,
+                  netMinor: checks[0].netMinor - 0.5,
+                },
+                checks[1],
+              ],
+            }),
+            'CheckedRun/section125.json': probe({
+              ...good,
+              paychecks: [
+                {
+                  ...checks[0],
+                  section125Minor: checks[0].section125Minor + 1,
+                },
+                checks[1],
+              ],
+              section125Minor: good.section125Minor + 1,
+            }),
+            'CheckedRun/wages.json': probe({
+              ...good,
+              wages: good.wages.map((w, i) =>
+                i ? w : { ...w, amountMinor: w.amountMinor + 1 },
+              ),
+            }),
+            'CheckedRun/chart.json': probe({
+              ...good,
+              paychecks: [
+                {
+                  ...checks[0],
+                  deductions: checks[0].deductions.map((d) => ({
+                    ...d,
+                    account: d.account === '2350' ? '2399' : d.account,
+                  })),
+                },
+                checks[1],
+              ],
+            }),
             'CheckedRun/short.json': probe({
               ...good,
               paychecks: [
@@ -897,33 +995,109 @@ export function runTests() {
       const refusedWith = (text: string) => (e: any) =>
         String(e?.detail ?? e?.message ?? e).includes(text);
 
-      test('a run whose paychecks add up passes the checks its post makes', async function (assert) {
+      const post = async (path: string) =>
+        (operations(await card(path)) as any).postAsShipped();
+      const stored = async (path: string) =>
+        ((await (operations(await card(path)) as any).read()) as any).data
+          .attributes;
+
+      test('a run drafted through the ledger keeps every paycheck and total it was given', async function (assert) {
+        let attrs: Record<string, any> = {
+          ...runAttrs(),
+          memo: 'Payroll 2026-01-03 to 2026-01-16 (biweekly)',
+        };
+        let declared = Object.keys(
+          ((Ledger as any).enterPayrollRun as { params: object }).params,
+        );
+        let result = await (
+          operations(await card('CheckedLedger/books')) as any
+        ).enterRunAsShipped(
+          Object.fromEntries(declared.map((k) => [k, attrs[k] ?? null])),
+        );
+        let id = result?.id ?? result?.card?.id ?? result?.data?.id;
+        assert.ok(id, 'the run was created');
+        let run = (
+          (await (
+            operations((await getService('store').get(id)) as CardDef) as any
+          ).read()) as any
+        ).data.attributes;
+        let checks = runChecks();
+        assert.strictEqual(run.status, 'draft');
+        assert.strictEqual(run.provider, 'Books');
+        assert.strictEqual(run.schedule, 'biweekly');
+        assert.strictEqual(run.periodEnd, '2026-01-16');
+        assert.deepEqual(
+          run.paychecks.map((p: any) => [
+            p.employeeId,
+            p.grossMinor,
+            p.netMinor,
+          ]),
+          checks.map((p) => [p.employeeId, p.grossMinor, p.netMinor]),
+          'each paycheck',
+        );
+        assert.deepEqual(
+          run.paychecks[0].deductions.map((d: any) => [
+            d.kind,
+            d.account,
+            d.amountMinor,
+          ]),
+          [
+            ['retirement', '2340', 31731],
+            ['section125', '2350', 9500],
+          ],
+          'its deductions',
+        );
+        assert.deepEqual(
+          run.wages.map((w: any) => [w.account, w.cls, w.amountMinor]),
+          attrs.wages.map((w: any) => [w.account, w.cls, w.amountMinor]),
+          'the wage lines',
+        );
+        for (let k of declared.filter((k) => k.endsWith('Minor')))
+          assert.strictEqual(run[k], attrs[k], `the ${k} total`);
+      });
+
+      test('the shipped post takes a run whose paychecks add up', async function (assert) {
+        await post('CheckedRun/good');
+        assert.strictEqual((await stored('CheckedRun/good')).status, 'posted');
+      });
+
+      test('the shipped journal takes a run whose paychecks add up', async function (assert) {
         await (
           operations(await card('CheckedRun/good')) as any
-        ).checkPaychecks();
-        assert.ok(true, 'the run is accepted');
-      });
-
-      test("a paycheck whose gross isn't its net, taxes and deductions is refused", async function (assert) {
-        await assert.rejects(
-          (operations(await card('CheckedRun/short')) as any).checkPaychecks(),
-          refusedWith("Each paycheck's gross must equal its net"),
+        ).journalAsShipped();
+        assert.strictEqual(
+          (await stored('CheckedRun/good')).status,
+          'journaled',
         );
       });
 
-      test("a run whose totals aren't the sums of its paychecks is refused", async function (assert) {
-        await assert.rejects(
-          (operations(await card('CheckedRun/totals')) as any).checkPaychecks(),
-          refusedWith('must be the sums of its paychecks'),
-        );
+      test('the shipped post refuses a run that fails each paycheck check', async function (assert) {
+        for (let [path, text] of [
+          ['negative', "Paycheck amounts can't be negative"],
+          ['fraction', 'Paycheck amounts are in whole cents'],
+          ['short', "Each paycheck's gross must equal its net"],
+          ['deductions', 'must add up to its deductions total'],
+          [
+            'section125',
+            'section 125 total must be its section 125 deductions',
+          ],
+          ['wages', "wages must equal its paychecks' gross"],
+          ['totals', 'must be the sums of its paychecks'],
+          ['chart', "An account a paycheck posts to isn't in the chart"],
+        ])
+          await assert.rejects(
+            post(`CheckedRun/${path}`),
+            refusedWith(text),
+            path,
+          );
       });
 
-      test("a paycheck whose deductions total isn't its deductions is refused", async function (assert) {
+      test('the shipped journal refuses a run whose paychecks do not add up', async function (assert) {
         await assert.rejects(
           (
-            operations(await card('CheckedRun/deductions')) as any
-          ).checkPaychecks(),
-          refusedWith('must add up to its deductions total'),
+            operations(await card('CheckedRun/short')) as any
+          ).journalAsShipped(),
+          refusedWith("Each paycheck's gross must equal its net"),
         );
       });
 
@@ -946,15 +1120,6 @@ export function runTests() {
           ).data.attributes.status,
           'journaled',
           'the posted run is still there',
-        );
-      });
-
-      test('a negative paycheck amount is refused', async function (assert) {
-        await assert.rejects(
-          (
-            operations(await card('CheckedRun/negative')) as any
-          ).checkPaychecks(),
-          refusedWith("Paycheck amounts can't be negative"),
         );
       });
     },
