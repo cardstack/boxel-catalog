@@ -1357,7 +1357,11 @@ export class VendorOnboardingConsole extends Component<
                   </div>
                   {{#if sec.rows.length}}
                     <div class='tw'>
-                      <Table @labelledBy='h-{{sec.id}}' @framed={{false}} @striped={{false}}>
+                      <Table
+                        @labelledBy='h-{{sec.id}}'
+                        @framed={{false}}
+                        @striped={{false}}
+                      >
                         <:head>
                           <tr>
                             {{#each sec.columns as |c|}}

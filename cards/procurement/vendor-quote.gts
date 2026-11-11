@@ -194,7 +194,11 @@ export class VendorQuote extends CardDef {
                 <h2 class='cap' id='vq-lines'>Line items</h2>
                 {{#if this.f.lines.length}}
                   <div class='tw'>
-                    <Table @labelledBy='vq-lines' @framed={{false}} @striped={{false}}>
+                    <Table
+                      @labelledBy='vq-lines'
+                      @framed={{false}}
+                      @striped={{false}}
+                    >
                       <:head>
                         <tr>
                           <th scope='col'>Item</th>

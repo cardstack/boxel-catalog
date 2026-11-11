@@ -790,7 +790,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                     </div>
                     {{#if this.budgetRows.length}}
                       <div class='tw'>
-                        <Table @label='Procurement budgets' @framed={{false}} @striped={{false}}>
+                        <Table
+                          @label='Procurement budgets'
+                          @framed={{false}}
+                          @striped={{false}}
+                        >
                           <:head>
                             <tr>
                               <th scope='col'>Budget</th>
@@ -1025,7 +1029,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                     {{#if this.tableRows.length}}
                       {{#if (eq this.view 'table')}}
                         <div class='tw'>
-                          <Table @label={{this.pageTitle}} @framed={{false}} @striped={{false}}>
+                          <Table
+                            @label={{this.pageTitle}}
+                            @framed={{false}}
+                            @striped={{false}}
+                          >
                             <:head>
                               <tr>
                                 {{#each this.tableColumns as |c|}}
