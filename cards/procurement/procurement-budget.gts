@@ -23,6 +23,7 @@ import { Chip } from '@cardstack/pretui/components/chip';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // POs link TO a budget; a runtime ref keeps purchase-order out of this
 // module's imports (it imports this one).
@@ -169,99 +170,101 @@ export class ProcurementBudget extends CardDef {
     }
     open = (card: CardDef) => this.args.viewCard?.(card);
     <template>
-      <article class='ip'>
-        <header class='ih'>
-          <Avatar @name='Budget' @shape='square' @size={{24}} />
-          <div class='id'>
-            <h1>{{this.f.title}}</h1>
-            <p class='meta'>{{this.f.sub}}</p>
-          </div>
-          <span class='tags'>
-            <Chip
-              @label={{this.f.band}}
-              @tone={{this.f.tone}}
-              @appearance='plain'
+      <IsoFrame>
+        <article class='ip'>
+          <header class='ih'>
+            <Avatar @name='Budget' @shape='square' @size={{24}} />
+            <div class='id'>
+              <h1>{{this.f.title}}</h1>
+              <p class='meta'>{{this.f.sub}}</p>
+            </div>
+            <span class='tags'>
+              <Chip
+                @label={{this.f.band}}
+                @tone={{this.f.tone}}
+                @appearance='plain'
+              />
+              <Chip @label={{this.f.usedText}} @appearance='plain' />
+            </span>
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Budget'
+              @value={{this.f.budgetText}}
+              @roll={{false}}
+              @hint={{@model.period}}
             />
-            <Chip @label={{this.f.usedText}} @appearance='plain' />
-          </span>
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Budget'
-            @value={{this.f.budgetText}}
-            @roll={{false}}
-            @hint={{@model.period}}
-          />
-          <Stat
-            @label='Used'
-            @value={{this.f.pctText}}
-            @roll={{false}}
-            @hint='committed + actual'
-          />
-          <Stat
-            @label='Remaining'
-            @tone='success'
-            @value={{this.f.remainingText}}
-            @roll={{false}}
-            @hint='to commit'
-          />
-        </div>
-        <div class='cols'>
-          <div>
-            <section>
-              <h2>Utilisation</h2>
-              <div class='pad'>
-                <ProgressBar
-                  @value={{this.f.pct}}
-                  @hue={{this.f.hue}}
-                  aria-label='Budget used'
-                />
+            <Stat
+              @label='Used'
+              @value={{this.f.pctText}}
+              @roll={{false}}
+              @hint='committed + actual'
+            />
+            <Stat
+              @label='Remaining'
+              @tone='success'
+              @value={{this.f.remainingText}}
+              @roll={{false}}
+              @hint='to commit'
+            />
+          </div>
+          <div class='cols'>
+            <div>
+              <section>
+                <h2>Utilisation</h2>
+                <div class='pad'>
+                  <ProgressBar
+                    @value={{this.f.pct}}
+                    @hue={{this.f.hue}}
+                    aria-label='Budget used'
+                  />
+                  <KeyValue
+                    @items={{this.f.ledger}}
+                    @divided={{true}}
+                    @labelStyle='eyebrow'
+                    class='kv flush'
+                  />
+                </div>
+              </section>
+              <section>
+                <h2>Charged here</h2>
+                {{#if this.charged.length}}
+                  <ul class='list'>
+                    {{#each this.charged as |po|}}
+                      <li>
+                        <Button
+                          @appearance='plain'
+                          class='po'
+                          {{on 'click' (fn this.open po.card)}}
+                        >
+                          <span class='two'>
+                            <strong>{{po.number}}</strong>
+                            <span class='meta'>{{po.sub}}</span>
+                          </span>
+                          <span class='mono'>{{po.amount}}</span>
+                        </Button>
+                      </li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <p class='empty-note'>No purchase orders charged yet</p>
+                {{/if}}
+              </section>
+            </div>
+            <div>
+              <section>
+                <h2>Details</h2>
                 <KeyValue
-                  @items={{this.f.ledger}}
+                  @items={{this.f.details}}
                   @divided={{true}}
                   @labelStyle='eyebrow'
-                  class='kv flush'
+                  class='kv'
                 />
-              </div>
-            </section>
-            <section>
-              <h2>Charged here</h2>
-              {{#if this.charged.length}}
-                <ul class='list'>
-                  {{#each this.charged as |po|}}
-                    <li>
-                      <Button
-                        @appearance='plain'
-                        class='po'
-                        {{on 'click' (fn this.open po.card)}}
-                      >
-                        <span class='two'>
-                          <strong>{{po.number}}</strong>
-                          <span class='meta'>{{po.sub}}</span>
-                        </span>
-                        <span class='mono'>{{po.amount}}</span>
-                      </Button>
-                    </li>
-                  {{/each}}
-                </ul>
-              {{else}}
-                <p class='empty-note'>No purchase orders charged yet</p>
-              {{/if}}
-            </section>
+              </section>
+            </div>
           </div>
-          <div>
-            <section>
-              <h2>Details</h2>
-              <KeyValue
-                @items={{this.f.details}}
-                @divided={{true}}
-                @labelStyle='eyebrow'
-                class='kv'
-              />
-            </section>
-          </div>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .ip {
           --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
