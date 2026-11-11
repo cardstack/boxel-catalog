@@ -1842,6 +1842,8 @@ export class AssetMaintenanceDesk extends Component<
       }
       .link {
         --pretui-button-h: auto;
+        color: inherit;
+        text-align: start;
       }
       .att:focus-visible {
         outline: 2px solid var(--ring);
