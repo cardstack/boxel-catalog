@@ -9,6 +9,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -74,6 +76,7 @@ export function runTests() {
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
       setupOnSave(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -88,62 +91,68 @@ export function runTests() {
         });
         setupUserSubscription();
         setupAuthEndpoints();
-        await setupAcceptanceTestRealm({
-          realmURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            'acme.json': instance('crm/account', 'Account', { name: 'Acme' }),
-            'dana.json': instance('crm/user', 'User', { name: 'Dana' }),
-            'deal.json': instance(
-              'commerce/deal',
-              'Deal',
-              { name: 'Acme Renewal', stage: 'closed won' },
-              { account: link('acme'), owner: link('dana') },
-            ),
-            'no-account-deal.json': instance('commerce/deal', 'Deal', {
-              name: 'Orphan Deal',
-              stage: 'closed won',
-            }),
-            'won.json': quote('won', 'deal'),
-            'sent.json': quote('sent', 'deal'),
-            'orphan.json': quote('won', 'no-account-deal'),
-            'mixed.json': quote('won', 'deal', [
-              line('Annual plan', 1000, 'USD'),
-              line('Local support', 200, 'EUR'),
-            ]),
-            // An invoice already at the path a converted quote's invoice
-            // takes, and one at a path that belongs to another quote.
-            'converted.json': quote('lost', 'deal'),
-            'Invoice/converted.json': instance(
-              'commerce/invoice',
-              'Invoice',
-              { invoiceNumber: 'INV-2026-EARLIER', status: 'draft' },
-              { quote: link('converted') },
-            ),
-            'taken.json': quote('won', 'deal'),
-            'Invoice/taken.json': instance(
-              'commerce/invoice',
-              'Invoice',
-              { invoiceNumber: 'INV-2026-OTHER', status: 'draft' },
-              { quote: link('elsewhere') },
-            ),
-            'unpriced-currency.json': quote('won', 'deal', [
-              line('Annual plan', 1000, 'USD'),
-              { description: 'Setup', quantity: 1, unitPrice: { amount: 200 } },
-            ]),
-            'california.json': instance(
-              'commerce/tax-jurisdiction',
-              'TaxJurisdiction',
-              { country: 'United States', region: 'California', rate: 7.25 },
-            ),
-            'unrated.json': instance(
-              'commerce/tax-jurisdiction',
-              'TaxJurisdiction',
-              { country: 'Nowhere', region: 'Unset' },
-            ),
-          },
-        });
+        await withCachedRealmSetup(() =>
+          setupAcceptanceTestRealm({
+            realmURL,
+            mockMatrixUtils,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              'acme.json': instance('crm/account', 'Account', { name: 'Acme' }),
+              'dana.json': instance('crm/user', 'User', { name: 'Dana' }),
+              'deal.json': instance(
+                'commerce/deal',
+                'Deal',
+                { name: 'Acme Renewal', stage: 'closed won' },
+                { account: link('acme'), owner: link('dana') },
+              ),
+              'no-account-deal.json': instance('commerce/deal', 'Deal', {
+                name: 'Orphan Deal',
+                stage: 'closed won',
+              }),
+              'won.json': quote('won', 'deal'),
+              'sent.json': quote('sent', 'deal'),
+              'orphan.json': quote('won', 'no-account-deal'),
+              'mixed.json': quote('won', 'deal', [
+                line('Annual plan', 1000, 'USD'),
+                line('Local support', 200, 'EUR'),
+              ]),
+              // An invoice already at the path a converted quote's invoice
+              // takes, and one at a path that belongs to another quote.
+              'converted.json': quote('lost', 'deal'),
+              'Invoice/converted.json': instance(
+                'commerce/invoice',
+                'Invoice',
+                { invoiceNumber: 'INV-2026-EARLIER', status: 'draft' },
+                { quote: link('converted') },
+              ),
+              'taken.json': quote('won', 'deal'),
+              'Invoice/taken.json': instance(
+                'commerce/invoice',
+                'Invoice',
+                { invoiceNumber: 'INV-2026-OTHER', status: 'draft' },
+                { quote: link('elsewhere') },
+              ),
+              'unpriced-currency.json': quote('won', 'deal', [
+                line('Annual plan', 1000, 'USD'),
+                {
+                  description: 'Setup',
+                  quantity: 1,
+                  unitPrice: { amount: 200 },
+                },
+              ]),
+              'california.json': instance(
+                'commerce/tax-jurisdiction',
+                'TaxJurisdiction',
+                { country: 'United States', region: 'California', rate: 7.25 },
+              ),
+              'unrated.json': instance(
+                'commerce/tax-jurisdiction',
+                'TaxJurisdiction',
+                { country: 'Nowhere', region: 'Unset' },
+              ),
+            },
+          }),
+        );
         await visitOperatorMode({ stacks: [[]] });
       });
 

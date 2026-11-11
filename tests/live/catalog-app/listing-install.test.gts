@@ -27,6 +27,8 @@ import {
   verifyFolderWithUUIDInFileTree,
   verifyFileInFileTree,
   setCatalogRealmURL,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -56,6 +58,7 @@ export function runTests() {
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
       setupOnSave(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -74,22 +77,27 @@ export function runTests() {
         setupAuthEndpoints();
         setCatalogRealmURL(mockCatalogURL, catalogRealmURL);
         // this setup test realm is pretending to be a mock catalog
-        await setupAcceptanceTestRealm({
-          realmURL: mockCatalogURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            ...makeMockCatalogContents(mockCatalogURL, catalogRealmURL),
-            ...makeLinkEdgeCaseListingContents(mockCatalogURL, catalogRealmURL),
-          },
-        });
-        await setupAcceptanceTestRealm({
-          mockMatrixUtils,
-          realmURL: testDestinationRealmURL,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            ...makeDestinationRealmContents(),
-          },
+        await withCachedRealmSetup(async () => {
+          await setupAcceptanceTestRealm({
+            realmURL: mockCatalogURL,
+            mockMatrixUtils,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              ...makeMockCatalogContents(mockCatalogURL, catalogRealmURL),
+              ...makeLinkEdgeCaseListingContents(
+                mockCatalogURL,
+                catalogRealmURL,
+              ),
+            },
+          });
+          await setupAcceptanceTestRealm({
+            mockMatrixUtils,
+            realmURL: testDestinationRealmURL,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              ...makeDestinationRealmContents(),
+            },
+          });
         });
       });
 

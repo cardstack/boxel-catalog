@@ -9,6 +9,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -45,6 +47,7 @@ export function runTests() {
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
       setupOnSave(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -59,51 +62,53 @@ export function runTests() {
         });
         setupUserSubscription();
         setupAuthEndpoints();
-        await setupAcceptanceTestRealm({
-          realmURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            'negotiating.json': instance('opportunity', 'Opportunity', {
-              name: 'Harbor Renewal',
-              stage: 'negotiation',
-            }),
-            'won-deal.json': instance('opportunity', 'Opportunity', {
-              name: 'Pier Upgrade',
-              stage: 'closed won',
-            }),
-            'lost-deal.json': instance('opportunity', 'Opportunity', {
-              name: 'Dock Survey',
-              stage: 'closed lost',
-            }),
-            'running.json': instance('campaign', 'Campaign', {
-              name: 'Summer Ads',
-              status: 'running',
-              startDate: '2026-06-01',
-            }),
-            'planned.json': instance('campaign', 'Campaign', {
-              name: 'Spring Expo',
-              status: 'planned',
-            }),
-            'completed.json': instance('campaign', 'Campaign', {
-              name: 'Winter Webinar',
-              status: 'completed',
-              startDate: '2026-01-10',
-            }),
-            'nameless-lead.json': instance('lead', 'Lead', {
-              name: '',
-              email: '',
-              company: 'Quayside Freight',
-              status: 'qualified',
-            }),
-            'blank-lead.json': instance('lead', 'Lead', {
-              name: '   ',
-              email: '   ',
-              company: '   ',
-              status: 'qualified',
-            }),
-          },
-        });
+        await withCachedRealmSetup(() =>
+          setupAcceptanceTestRealm({
+            realmURL,
+            mockMatrixUtils,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              'negotiating.json': instance('opportunity', 'Opportunity', {
+                name: 'Harbor Renewal',
+                stage: 'negotiation',
+              }),
+              'won-deal.json': instance('opportunity', 'Opportunity', {
+                name: 'Pier Upgrade',
+                stage: 'closed won',
+              }),
+              'lost-deal.json': instance('opportunity', 'Opportunity', {
+                name: 'Dock Survey',
+                stage: 'closed lost',
+              }),
+              'running.json': instance('campaign', 'Campaign', {
+                name: 'Summer Ads',
+                status: 'running',
+                startDate: '2026-06-01',
+              }),
+              'planned.json': instance('campaign', 'Campaign', {
+                name: 'Spring Expo',
+                status: 'planned',
+              }),
+              'completed.json': instance('campaign', 'Campaign', {
+                name: 'Winter Webinar',
+                status: 'completed',
+                startDate: '2026-01-10',
+              }),
+              'nameless-lead.json': instance('lead', 'Lead', {
+                name: '',
+                email: '',
+                company: 'Quayside Freight',
+                status: 'qualified',
+              }),
+              'blank-lead.json': instance('lead', 'Lead', {
+                name: '   ',
+                email: '   ',
+                company: '   ',
+                status: 'qualified',
+              }),
+            },
+          }),
+        );
         await visitOperatorMode({ stacks: [[]] });
       });
 

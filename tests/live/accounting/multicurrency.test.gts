@@ -13,6 +13,8 @@ import {
   SYSTEM_CARD_FIXTURE_CONTENTS,
   realmConfigCardJSON,
   settleRealmRenders,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -247,6 +249,7 @@ export function runTests() {
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
       setupOnSave(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -296,72 +299,81 @@ export function runTests() {
         });
         setupUserSubscription();
         setupAuthEndpoints();
-        ({ adapter } = await setupAcceptanceTestRealm({
-          realmURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            'realm.json': realmConfigCardJSON({
-              name: 'Multicurrency books',
-              config: {
-                currency: 'USD',
-                multicurrency: true,
-                currencies: ['EUR'],
-              },
-            }),
-            'Invoice/home.json': doc(
-              salesModule,
-              'Invoice',
-              invoiceAttrs('INV-HOME', {}),
-            ),
-            'Invoice/eur.json': doc(
-              salesModule,
-              'Invoice',
-              invoiceAttrs('INV-EUR', { currency: 'EUR', rateMicros: BOOKED }),
-            ),
-            'fx-probe.gts': FX_PROBE,
-            'FxInvoice/gbp.json': doc(
-              `${realmURL}fx-probe`,
-              'FxInvoice',
-              invoiceAttrs('INV-GBP', {
-                status: 'draft',
-                currency: 'GBP',
-                rateMicros: 1_270_000,
+        ({ adapter } = await withCachedRealmSetup(() =>
+          setupAcceptanceTestRealm({
+            realmURL,
+            mockMatrixUtils,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              'realm.json': realmConfigCardJSON({
+                name: 'Multicurrency books',
+                config: {
+                  currency: 'USD',
+                  multicurrency: true,
+                  currencies: ['EUR'],
+                },
               }),
-            ),
-            'FxInvoice/eur.json': doc(
-              `${realmURL}fx-probe`,
-              'FxInvoice',
-              invoiceAttrs('INV-EUR-D', {
-                status: 'draft',
-                currency: 'EUR',
-                rateMicros: BOOKED,
-              }),
-            ),
-            'FxInvoice/home-rated.json': doc(
-              `${realmURL}fx-probe`,
-              'FxInvoice',
-              invoiceAttrs('INV-HOME-R', {
-                status: 'draft',
-                rateMicros: BOOKED,
-              }),
-            ),
-            'Invoice/gbp.json': doc(
-              salesModule,
-              'Invoice',
-              invoiceAttrs('INV-GBP-P', {
-                currency: 'GBP',
-                rateMicros: 1_270_000,
-              }),
-            ),
-            'Bill/home.json': doc(billsModule, 'Bill', billAttrs('B-HOME', {})),
-            'Bill/eur.json': doc(
-              billsModule,
-              'Bill',
-              billAttrs('B-EUR', { currency: 'EUR', rateMicros: BOOKED }),
-            ),
-          },
-        }));
+              'Invoice/home.json': doc(
+                salesModule,
+                'Invoice',
+                invoiceAttrs('INV-HOME', {}),
+              ),
+              'Invoice/eur.json': doc(
+                salesModule,
+                'Invoice',
+                invoiceAttrs('INV-EUR', {
+                  currency: 'EUR',
+                  rateMicros: BOOKED,
+                }),
+              ),
+              'fx-probe.gts': FX_PROBE,
+              'FxInvoice/gbp.json': doc(
+                `${realmURL}fx-probe`,
+                'FxInvoice',
+                invoiceAttrs('INV-GBP', {
+                  status: 'draft',
+                  currency: 'GBP',
+                  rateMicros: 1_270_000,
+                }),
+              ),
+              'FxInvoice/eur.json': doc(
+                `${realmURL}fx-probe`,
+                'FxInvoice',
+                invoiceAttrs('INV-EUR-D', {
+                  status: 'draft',
+                  currency: 'EUR',
+                  rateMicros: BOOKED,
+                }),
+              ),
+              'FxInvoice/home-rated.json': doc(
+                `${realmURL}fx-probe`,
+                'FxInvoice',
+                invoiceAttrs('INV-HOME-R', {
+                  status: 'draft',
+                  rateMicros: BOOKED,
+                }),
+              ),
+              'Invoice/gbp.json': doc(
+                salesModule,
+                'Invoice',
+                invoiceAttrs('INV-GBP-P', {
+                  currency: 'GBP',
+                  rateMicros: 1_270_000,
+                }),
+              ),
+              'Bill/home.json': doc(
+                billsModule,
+                'Bill',
+                billAttrs('B-HOME', {}),
+              ),
+              'Bill/eur.json': doc(
+                billsModule,
+                'Bill',
+                billAttrs('B-EUR', { currency: 'EUR', rateMicros: BOOKED }),
+              ),
+            },
+          }),
+        ));
       });
 
       const card = async (path: string) =>

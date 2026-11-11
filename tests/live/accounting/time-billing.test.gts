@@ -9,6 +9,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -130,6 +132,7 @@ export function runTests() {
   module('Acceptance | Catalog | accounting - time billing', function (hooks) {
     setupApplicationTest(hooks);
     setupLocalIndexing(hooks);
+    setupRealmCacheTeardown(hooks);
     setupOnSave(hooks);
 
     let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -147,16 +150,18 @@ export function runTests() {
       });
       setupUserSubscription();
       setupAuthEndpoints();
-      await setupAcceptanceTestRealm({
-        realmURL,
-        mockMatrixUtils,
-        contents: {
-          ...SYSTEM_CARD_FIXTURE_CONTENTS,
-          'ta-1.json': time('2027-01-12', 2500),
-          'ta-2.json': time('2027-01-13', 1000),
-          'inv-time.json': draftInvoice(),
-        },
-      });
+      await withCachedRealmSetup(() =>
+        setupAcceptanceTestRealm({
+          realmURL,
+          mockMatrixUtils,
+          contents: {
+            ...SYSTEM_CARD_FIXTURE_CONTENTS,
+            'ta-1.json': time('2027-01-12', 2500),
+            'ta-2.json': time('2027-01-13', 1000),
+            'inv-time.json': draftInvoice(),
+          },
+        }),
+      );
       await visitOperatorMode({ stacks: [[]] });
       // Through the host's loader, so `operations()` recognizes the store's instances.
       let loader = getService('loader-service').loader;

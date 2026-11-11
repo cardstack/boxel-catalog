@@ -6,6 +6,8 @@ import {
   setupCardLogs,
   setupIntegrationTestRealm,
   setupLocalIndexing,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
@@ -48,6 +50,7 @@ export function runTests() {
   module('Catalog | accounting - reconciliation operations', function (hooks) {
     setupRenderingTest(hooks);
     setupLocalIndexing(hooks);
+    setupRealmCacheTeardown(hooks);
 
     let mockMatrixUtils = setupMockMatrix(hooks, {
       loggedInAs: USER,
@@ -65,17 +68,19 @@ export function runTests() {
 
     hooks.beforeEach(async function () {
       hostTransport = (globalThis as any)._CARDSTACK_OPERATIONS_TRANSPORT;
-      ({ adapter } = await setupIntegrationTestRealm({
-        mockMatrixUtils,
-        realmURL,
-        enforcePermissions: true,
-        permissions: { [USER]: ['read', 'write', 'realm-owner'] },
-        contents: {
-          'BankReconciliation/finish.json': reconciliation(),
-          'BankReconciliation/off.json': reconciliation(),
-          'BankReconciliation/draft.json': reconciliation(),
-        },
-      }));
+      ({ adapter } = await withCachedRealmSetup(() =>
+        setupIntegrationTestRealm({
+          mockMatrixUtils,
+          realmURL,
+          enforcePermissions: true,
+          permissions: { [USER]: ['read', 'write', 'realm-owner'] },
+          contents: {
+            'BankReconciliation/finish.json': reconciliation(),
+            'BankReconciliation/off.json': reconciliation(),
+            'BankReconciliation/draft.json': reconciliation(),
+          },
+        }),
+      ));
       let loader: any = getService('loader-service').loader;
       ({ operations } = await loader.import('@cardstack/base/operations'));
       await getService('realm').login(realmURL);
