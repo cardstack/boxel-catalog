@@ -89,14 +89,14 @@ export class PickItemField extends FieldDef {
           align-items: center;
           gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp-2xs) 0;
-          font-size: 0.85rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .done {
           opacity: 0.55;
         }
         .pi-bin {
           font-family: var(--font-mono);
-          font-size: 0.78rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           letter-spacing: 0.06em;
           color: var(--foreground);
@@ -108,12 +108,12 @@ export class PickItemField extends FieldDef {
         }
         .pi-sku {
           font-family: var(--font-mono);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           color: var(--foreground);
         }
         .pi-name {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -127,7 +127,7 @@ export class PickItemField extends FieldDef {
         }
         .pi-flag {
           text-align: right;
-          font-size: 0.7rem;
+          font-size: var(--boxel-eyebrow-font-size);
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: color-mix(in oklch, var(--destructive) 60%, var(--foreground));
@@ -392,13 +392,15 @@ class PickListIsolated extends Component<typeof PickList> {
                 {{on 'keydown' this.handleScanKey}}
               />
               <Button
-                @variant='primary'
+                @tone='primary'
+                @appearance='accent'
                 @size='sm'
                 @disabled={{this.busy}}
                 {{on 'click' this.pickCurrent}}
               >Picked {{@model.nextItem.quantity}}</Button>
               <Button
-                @variant='outline'
+                @tone='neutral'
+                @appearance='outlined'
                 @size='sm'
                 @disabled={{this.busy}}
                 {{on 'click' this.markShort}}
@@ -481,7 +483,7 @@ class PickListIsolated extends Component<typeof PickList> {
       .pl {
         container-type: inline-size;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.4;
         color: var(--card-foreground);
         background-color: var(--card);
@@ -514,7 +516,7 @@ class PickListIsolated extends Component<typeof PickList> {
         border-radius: calc(var(--radius) * 0.6);
         background-color: var(--muted);
         font-family: var(--font-mono);
-        font-size: 0.5625rem;
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 700;
       }
       .id {
@@ -523,14 +525,14 @@ class PickListIsolated extends Component<typeof PickList> {
       .name {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         letter-spacing: normal;
         text-transform: none;
       }
       .meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .bar {
@@ -565,7 +567,7 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .cap {
         font-family: var(--font-mono);
-        font-size: 0.5625rem;
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -587,7 +589,7 @@ class PickListIsolated extends Component<typeof PickList> {
         margin-bottom: -1px;
       }
       .num {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         line-height: 1.15;
         font-variant-numeric: tabular-nums;
@@ -601,7 +603,7 @@ class PickListIsolated extends Component<typeof PickList> {
       .blk h2 {
         margin: 0;
         padding: var(--boxel-sp-sm) var(--boxel-sp-xs) var(--boxel-sp-2xs);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .row {
@@ -626,7 +628,7 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .scan {
@@ -777,7 +779,7 @@ export class PickList extends CardDef {
       <style scoped>
         .emb {
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           color: var(--card-foreground);
           background-color: var(--card);
@@ -797,7 +799,7 @@ export class PickList extends CardDef {
           border-radius: calc(var(--radius) * 0.6);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .id {
@@ -805,13 +807,12 @@ export class PickList extends CardDef {
           min-width: 0;
         }
         h3 {
-          margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -850,7 +851,7 @@ export class PickList extends CardDef {
         .kv dt {
           padding-left: var(--boxel-sp-xs);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -877,7 +878,7 @@ export class PickList extends CardDef {
           gap: var(--boxel-sp-2xs);
           min-width: 0;
           max-width: 100%;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           color: var(--card-foreground);
         }
@@ -890,7 +891,7 @@ export class PickList extends CardDef {
           border-radius: calc(var(--radius) * 0.5);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.5rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .name {
@@ -929,7 +930,7 @@ export class PickList extends CardDef {
           border-radius: calc(var(--radius) * 0.6);
           background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           color: var(--card-foreground);
         }

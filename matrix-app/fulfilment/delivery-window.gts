@@ -194,7 +194,7 @@ export class DeliveryWindowField extends FieldDef {
           color: var(--foreground);
         }
         .dw-rel {
-          font-size: 0.8rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .dw-overdue {
@@ -204,12 +204,12 @@ export class DeliveryWindowField extends FieldDef {
         /* Pret UI Token for the carrier's service code, on the muted ink. */
         .dw .dw-commit {
           --pretui-token-hue: var(--muted-foreground);
-          --pretui-token-font-size: 0.75rem;
+          --pretui-token-font-size: var(--boxel-font-size-xs);
           margin-inline: 0;
         }
         .dw-empty {
           color: var(--muted-foreground);
-          font-size: 0.85rem;
+          font-size: var(--boxel-font-size-sm);
         }
       </style>
     </template>

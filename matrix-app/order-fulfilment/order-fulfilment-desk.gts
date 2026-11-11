@@ -26,6 +26,7 @@ import {
   SidebarTrigger,
 } from '@cardstack/pretui/components/sidebar';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { Table } from '@cardstack/pretui/components/table';
 import { on } from '@ember/modifier';
 import { fn, get } from '@ember/helper';
 import { action } from '@ember/object';
@@ -1418,21 +1419,23 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                         active</p>
                     </div>
                     <div class='tbl-wrap'>
-                      <table class='tbl'>
-                        <thead><tr>
+                      <Table class='tbl' @framed={{false}} @striped={{false}}>
+                        <:head><tr>
                             <th>Pick list</th>
                             <th>Assigned to</th>
                             <th>Next pick</th>
                             <th class='num'>Picked</th>
-                          </tr></thead>
-                        <tbody>
+                          </tr></:head>
+                        <:body>
                           {{#each this.pickLists as |pl|}}
                             <tr>
-                              <td><button
-                                  type='button'
+                              <td><Button
                                   class='link mono'
+                                  @tone='neutral'
+                                  @appearance='link'
+                                  @size='s'
                                   {{on 'click' (fn this.openCard pl)}}
-                                >{{pl.pickListNumber}}</button></td>
+                                >{{pl.pickListNumber}}</Button></td>
                               <td>
                                 {{#if pl.assignedTo}}
                                   <span class='unit'><Avatar
@@ -1456,8 +1459,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                                 {{pl.route.length}}</td>
                             </tr>
                           {{/each}}
-                        </tbody>
-                      </table>
+                        </:body>
+                      </Table>
                     </div>
                   </section>
                 {{/if}}
@@ -1475,16 +1478,18 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                     </div>
                   {{/if}}
                   <div class='tbl-wrap'>
-                    <table class='tbl'>
-                      <tbody>
+                    <Table class='tbl' @framed={{false}} @striped={{false}}>
+                      <:body>
                         {{#each this.warehouseSummary as |w|}}
                           <tr>
                             <td class='mono muted'>{{w.warehouse.code}}</td>
-                            <td><button
-                                type='button'
+                            <td><Button
                                 class='link strong'
+                                @tone='neutral'
+                                @appearance='link'
+                                @size='s'
                                 {{on 'click' (fn this.openCard w.warehouse)}}
-                              >{{w.warehouse.warehouseName}}</button></td>
+                              >{{w.warehouse.warehouseName}}</Button></td>
                             <td class='muted'>{{plural w.skuCount 'SKU'}}
                               {{#if (isNumber w.value)}}
                                 ·
@@ -1503,8 +1508,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                             </td>
                           </tr>
                         {{/each}}
-                      </tbody>
-                    </table>
+                      </:body>
+                    </Table>
                   </div>
                 </section>
 
@@ -1525,8 +1530,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                         /></div>
                     {{else}}
                       <div class='tbl-wrap'>
-                        <table class='tbl'>
-                          <thead><tr>
+                        <Table class='tbl' @framed={{false}} @striped={{false}}>
+                          <:head><tr>
                               <th>SKU</th>
                               <th>Product</th>
                               <th>Warehouse</th>
@@ -1536,15 +1541,17 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                               <th class='num'>Available</th>
                               <th class='num'>Incoming</th>
                               <th>State</th>
-                            </tr></thead>
-                          <tbody>
+                            </tr></:head>
+                          <:body>
                             {{#each this.inventoryRows as |row|}}
                               <tr>
-                                <td><button
-                                    type='button'
+                                <td><Button
                                     class='link mono'
+                                    @tone='neutral'
+                                    @appearance='link'
+                                    @size='s'
                                     {{on 'click' (fn this.openCard row)}}
-                                  >{{row.sku}}</button></td>
+                                  >{{row.sku}}</Button></td>
                                 <td class='strong'>{{row.productName}}</td>
                                 <td
                                   class='mono muted'
@@ -1566,8 +1573,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                                     ></span>{{row.stockStateLabel}}</span></td>
                               </tr>
                             {{/each}}
-                          </tbody>
-                        </table>
+                          </:body>
+                        </Table>
                       </div>
                       {{#unless this.inventoryRows.length}}
                         <EmptyState
@@ -1594,15 +1601,17 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                   </div>
                   {{#if this.ordersAwaitingShipment.length}}
                     <div class='tbl-wrap'>
-                      <table class='tbl'>
-                        <tbody>
+                      <Table class='tbl' @framed={{false}} @striped={{false}}>
+                        <:body>
                           {{#each this.ordersAwaitingShipment as |o|}}
                             <tr>
-                              <td><button
-                                  type='button'
+                              <td><Button
                                   class='link mono'
+                                  @tone='neutral'
+                                  @appearance='link'
+                                  @size='s'
                                   {{on 'click' (fn this.openCard o)}}
-                                >{{o.orderNumber}}</button></td>
+                                >{{o.orderNumber}}</Button></td>
                               <td><span class='unit'><Avatar
                                     @name={{o.customerName}}
                                     @size={{18}}
@@ -1622,8 +1631,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                                 >Create parcel</Button></td>
                             </tr>
                           {{/each}}
-                        </tbody>
-                      </table>
+                        </:body>
+                      </Table>
                     </div>
                   {{else}}
                     <EmptyState
@@ -1682,15 +1691,17 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                       <p class='block-meta'>{{this.needsAttention.length}}</p>
                     </div>
                     <div class='tbl-wrap'>
-                      <table class='tbl'>
-                        <tbody>
+                      <Table class='tbl' @framed={{false}} @striped={{false}}>
+                        <:body>
                           {{#each this.needsAttention as |s|}}
                             <tr>
-                              <td><button
-                                  type='button'
+                              <td><Button
                                   class='link mono'
+                                  @tone='neutral'
+                                  @appearance='link'
+                                  @size='s'
                                   {{on 'click' (fn this.openCard s)}}
-                                >{{s.shipmentNumber}}</button></td>
+                                >{{s.shipmentNumber}}</Button></td>
                               <td class='wide'><span class='status'><span
                                     class='dot'
                                     style={{hue 'var(--destructive)'}}
@@ -1704,8 +1715,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                               >{{s.latestEvent.location}}</td>
                             </tr>
                           {{/each}}
-                        </tbody>
-                      </table>
+                        </:body>
+                      </Table>
                     </div>
                   </section>
                 {{/if}}
@@ -1717,22 +1728,24 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                   </div>
                   {{#if this.transitVisible.length}}
                     <div class='tbl-wrap'>
-                      <table class='tbl'>
-                        <thead><tr>
+                      <Table class='tbl' @framed={{false}} @striped={{false}}>
+                        <:head><tr>
                             <th>Shipment</th>
                             <th>Carrier</th>
                             <th>Status</th>
                             <th>Progress</th>
                             <th>Last event</th>
-                          </tr></thead>
-                        <tbody>
+                          </tr></:head>
+                        <:body>
                           {{#each this.transitVisible as |s|}}
                             <tr>
-                              <td><button
-                                  type='button'
+                              <td><Button
                                   class='link mono'
+                                  @tone='neutral'
+                                  @appearance='link'
+                                  @size='s'
                                   {{on 'click' (fn this.openCard s)}}
-                                >{{s.shipmentNumber}}</button></td>
+                                >{{s.shipmentNumber}}</Button></td>
                               <td class='strong'>{{s.carrierLabel}}
                                 {{s.serviceLevel}}</td>
                               <td><span class='status'><span
@@ -1774,8 +1787,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                               </tr>
                             {{/if}}
                           {{/each}}
-                        </tbody>
-                      </table>
+                        </:body>
+                      </Table>
                     </div>
                     {{#if this.transitHiddenCount}}
                       <div class='block-foot'><Button
@@ -1817,23 +1830,25 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                         /></div>
                     {{else if this.returnsRows.length}}
                       <div class='tbl-wrap'>
-                        <table class='tbl'>
-                          <thead><tr>
+                        <Table class='tbl' @framed={{false}} @striped={{false}}>
+                          <:head><tr>
                               <th>RMA</th>
                               <th>Status</th>
                               <th>Customer · order</th>
                               <th>Reason</th>
                               <th class='num'>Items</th>
                               <th class='num'>Value</th>
-                            </tr></thead>
-                          <tbody>
+                            </tr></:head>
+                          <:body>
                             {{#each this.returnsRows as |rma|}}
                               <tr>
-                                <td><button
-                                    type='button'
+                                <td><Button
                                     class='link mono'
+                                    @tone='neutral'
+                                    @appearance='link'
+                                    @size='s'
                                     {{on 'click' (fn this.openCard rma)}}
-                                  >{{rma.rmaNumber}}</button></td>
+                                  >{{rma.rmaNumber}}</Button></td>
                                 <td><span class='status'><span
                                       class='dot'
                                       style={{hue rma.statusStyle.hue}}
@@ -1858,8 +1873,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                                     }}{{else}}—{{/if}}</td>
                               </tr>
                             {{/each}}
-                          </tbody>
-                        </table>
+                          </:body>
+                        </Table>
                       </div>
                     {{else}}
                       <EmptyState
@@ -1978,10 +1993,9 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         background: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
       }
       p {
-        margin: 0;
       }
       .of-brand {
         display: flex;
@@ -1996,7 +2010,10 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         block-size: 1.75rem;
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        font: 600 0.5625rem/1 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: 600;
+        line-height: 1;
       }
       .of-brand-text {
         display: grid;
@@ -2009,7 +2026,10 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         color: var(--muted-foreground);
       }
       .eyebrow {
-        font: 600 0.5625rem/1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -2052,15 +2072,14 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         gap: var(--boxel-sp-4xs);
       }
       .of-h1 {
-        margin: 0;
         font-family: var(--boxel-heading-font-family, var(--font-sans));
         font-weight: 400;
-        font-size: 2.5rem;
+        font-size: 2.5rem; /* ladder 40px page title: no Boxel display token */
         line-height: 1;
         text-transform: uppercase;
       }
       .of-sub {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .of-search {
@@ -2127,11 +2146,11 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       .block-head h2,
       .aside-head h2 {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .block-meta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .block-body {
@@ -2153,16 +2172,14 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       .tbl-wrap {
         overflow-x: auto;
       }
-      .tbl {
-        inline-size: 100%;
-        border-collapse: collapse;
-      }
       .tbl th {
         padding: var(--boxel-sp-5xs) var(--boxel-sp-sm);
-        border-block-end: 1px solid var(--border);
         text-align: start;
         white-space: nowrap;
-        font: 600 0.5625rem/1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -2170,11 +2187,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       .tbl td {
         block-size: 1.75rem;
         padding: 0 var(--boxel-sp-sm);
-        border-block-start: 1px solid var(--border);
         white-space: nowrap;
-      }
-      .tbl tbody tr:first-child td {
-        border-block-start: 0;
       }
       .tbl .num {
         text-align: end;
@@ -2195,18 +2208,18 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
 
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .strong {
         font-weight: 600;
       }
       .muted {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .neg {
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .unit {
         display: inline-flex;
@@ -2227,20 +2240,16 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         background: var(--dot);
       }
       .link {
-        padding: 0;
-        border: 0;
-        background: none;
         color: inherit;
-        font: inherit;
         text-align: start;
-        text-decoration: none;
-        cursor: pointer;
       }
       .link.mono {
         color: var(--muted-foreground);
       }
-      .link:hover {
-        text-decoration: underline;
+      @media (hover: hover) {
+        .link:hover {
+          text-decoration: underline;
+        }
       }
       .link:focus-visible,
       .row-pick:focus-visible {
@@ -2269,7 +2278,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         margin-inline-start: auto;
       }
       .bc-line {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
 
       .rows {
@@ -2291,7 +2300,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         background: none;
         color: var(--muted-foreground);
         text-align: start;
-        cursor: pointer;
       }
       .row-pick[aria-pressed='true'] {
         border-inline-start-color: var(--foreground);
