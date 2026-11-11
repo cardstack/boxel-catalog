@@ -28,6 +28,7 @@ import { AlertDialog } from '@cardstack/pretui/components/alert-dialog';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import { money, toneFor, type Fact } from '../accounting/record-kit';
 import { AllCards } from '../accounting/all-cards';
+import { escapeGuard } from './escape-guard';
 import {
   stubFacts,
   labelOf,
@@ -1138,6 +1139,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       @onClose={{this.closeForm}}
       @label={{this.formTitle}}
       @placement='end'
+      {{escapeGuard (if this.formFiling true false) this.closeForm}}
     >
       <:title>{{this.formTitle}}</:title>
       <:default>
@@ -1149,6 +1151,11 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         />
         <p class='muted'>Generated for someone to file; nothing is e-filed.</p>
       </:default>
+      <:footer><Button
+          @tone='neutral'
+          @appearance='outlined'
+          {{on 'click' this.closeForm}}
+        >Close</Button></:footer>
     </Drawer>
 
     <Drawer
@@ -1156,6 +1163,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       @onClose={{this.closeStubs}}
       @label={{this.stubTitle}}
       @placement='end'
+      {{escapeGuard (if this.stubRun true false) this.closeStubs}}
     >
       <:title>{{this.stubTitle}}</:title>
       <:default>
@@ -1184,6 +1192,11 @@ export class PayrollPage extends Component<PayrollPageSignature> {
           >Post run</Button>
         {{/if}}
       </:default>
+      <:footer><Button
+          @tone='neutral'
+          @appearance='outlined'
+          {{on 'click' this.closeStubs}}
+        >Close</Button></:footer>
     </Drawer>
 
     <style scoped>

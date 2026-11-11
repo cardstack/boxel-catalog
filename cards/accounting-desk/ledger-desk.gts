@@ -16,7 +16,6 @@ import { realmURL, codeRef, identifyCard } from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { fn, concat } from '@ember/helper';
 import { on } from '@ember/modifier';
-import { modifier } from 'ember-modifier';
 import { eq, or } from '@cardstack/boxel-ui/helpers';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import HouseIcon from '@cardstack/boxel-icons/house';
@@ -232,6 +231,7 @@ import {
 } from '../accounting/ledger-tax-codes';
 import { money, toneFor, Lines, AccordMark } from '../accounting/record-kit';
 import { AllCards, searchAll } from '../accounting/all-cards';
+import { escapeGuard } from './escape-guard';
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
 const here: string = import.meta.url;
@@ -1883,34 +1883,6 @@ const addDays = (day: string, n: number) => {
   let t = Date.parse(day + 'T00:00:00Z');
   return isNaN(t) ? '' : new Date(t + n * 864e5).toISOString().slice(0, 10);
 };
-
-// Inside the Boxel app an Escape that closes a native <dialog> also reaches the card stack and
-// closes the card. While a drawer or the palette is open, take Escape at the window first. With
-// several open, Escape closes the one opened last, as it would close the topmost dialog.
-const escapeLayers: object[] = [];
-const escapeGuard = modifier(
-  (_el: Element, [active, close]: [boolean, () => void]) => {
-    if (!active) return;
-    const layer = {};
-    escapeLayers.push(layer);
-    const onKey = (e: KeyboardEvent) => {
-      if (
-        e.key !== 'Escape' ||
-        escapeLayers[escapeLayers.length - 1] !== layer
-      ) {
-        return;
-      }
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      close();
-    };
-    window.addEventListener('keydown', onKey, true);
-    return () => {
-      window.removeEventListener('keydown', onKey, true);
-      escapeLayers.splice(escapeLayers.indexOf(layer), 1);
-    };
-  },
-);
 
 class LedgerAppView extends Component<typeof LedgerApp> {
   @tracked page = String((this.args.model as any)?.startPage || 'home');
