@@ -374,7 +374,7 @@ export class LoyaltyAccount extends CardDef {
         }
         .kv dt {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -678,7 +678,7 @@ export class LoyaltyAccount extends CardDef {
         }
         .name {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
@@ -715,7 +715,7 @@ export class LoyaltyAccount extends CardDef {
         .label,
         .kv dt {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -755,7 +755,6 @@ export class LoyaltyAccount extends CardDef {
           border-top: 1px solid var(--border);
         }
         h2 {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
@@ -793,13 +792,12 @@ export class LoyaltyAccount extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .pos {
-          color: var(--success);
+          color: var(--success-ink);
         }
         .neg {
-          color: var(--destructive);
+          color: var(--destructive-ink);
         }
         .empty {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border-top: 1px solid var(--border);
         }
@@ -891,10 +889,10 @@ export class PointsTransaction extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .pos {
-          color: var(--success);
+          color: var(--success-ink);
         }
         .neg {
-          color: var(--destructive);
+          color: var(--destructive-ink);
         }
       </style>
     </template>
@@ -979,10 +977,10 @@ export class PointsTransaction extends CardDef {
           white-space: nowrap;
         }
         .pos {
-          color: var(--success);
+          color: var(--success-ink);
         }
         .neg {
-          color: var(--destructive);
+          color: var(--destructive-ink);
         }
         .kv {
           display: grid;
@@ -1001,7 +999,7 @@ export class PointsTransaction extends CardDef {
         }
         .kv dt {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -1044,10 +1042,10 @@ export class PointsTransaction extends CardDef {
           white-space: nowrap;
         }
         .pos {
-          color: var(--success);
+          color: var(--success-ink);
         }
         .neg {
-          color: var(--destructive);
+          color: var(--destructive-ink);
         }
       </style>
     </template>
@@ -1247,7 +1245,7 @@ export class PointsTransaction extends CardDef {
         }
         .name {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
@@ -1285,7 +1283,7 @@ export class PointsTransaction extends CardDef {
         .label,
         .kv dt {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -1327,7 +1325,6 @@ export class PointsTransaction extends CardDef {
           border-top: 1px solid var(--border);
         }
         h2 {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
@@ -1366,10 +1363,10 @@ export class PointsTransaction extends CardDef {
           white-space: nowrap;
         }
         .pos {
-          color: var(--success);
+          color: var(--success-ink);
         }
         .neg {
-          color: var(--destructive);
+          color: var(--destructive-ink);
         }
         .kv {
           display: grid;

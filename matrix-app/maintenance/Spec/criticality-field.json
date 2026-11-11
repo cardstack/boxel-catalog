@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CriticalityField",
+        "module": "../criticality-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Criticality\n\nImpact of the SUBJECT if it fails: low / medium / high / critical. Each level carries a rank (sort), a hue and a response target in hours, defined once in `maintenance-vocabulary.gts` so the register badge, the Home ranking and Raise Work Order (critical → P1 default) never disagree.\n\nDistinct from **Priority** (urgency of one job, catalog `priorityField`). Generic: an Asset, a Vehicle, a Meeting Room or a Vendor can carry it unchanged.\n\n### Consume\n`@field criticality = contains(CriticalityField)`; read `rank` to sort, `responseTargetHours` for due dates, `criticalityToPriority(level)` for the default priority.\n\n### Second consumer\nA vehicle card.",
+      "cardInfo": {
+        "name": "Criticality",
+        "summary": "How much it hurts when this thing fails — low / medium / high / critical, with rank, hue and response target."
+      },
+      "containedExamples": [
+        {
+          "level": "high"
+        },
+        {
+          "level": "critical"
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../criticality-field",
+              "name": "CriticalityField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../criticality-field",
+              "name": "CriticalityField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

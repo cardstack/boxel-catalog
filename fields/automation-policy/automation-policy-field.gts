@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -24,10 +25,12 @@ const RULE_TOKEN_STYLE = htmlSafe(
 
 export const POLICY_OPS = ['is', 'is not', 'gte', 'lte', 'contains'] as const;
 
-export const PolicyOpField = enumField(StringField, {
-  displayName: 'Policy Operator',
-  options: POLICY_OPS as unknown as string[],
-});
+export const PolicyOpField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Policy Operator',
+    options: POLICY_OPS as unknown as string[],
+  }),
+);
 
 export const POLICY_ACTIONS = [
   'assign-round-robin',
@@ -37,10 +40,12 @@ export const POLICY_ACTIONS = [
   'add-tag',
 ] as const;
 
-export const PolicyActionField = enumField(StringField, {
-  displayName: 'Policy Action',
-  options: POLICY_ACTIONS as unknown as string[],
-});
+export const PolicyActionField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Policy Action',
+    options: POLICY_ACTIONS as unknown as string[],
+  }),
+);
 
 /**
  * "Round-robin new P1s; escalate to L2 at 75% SLA" — a when-predicate plus

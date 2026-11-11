@@ -95,8 +95,9 @@ export class FormatPreview extends CardDef {
         }
         h2 {
           flex-basis: 100%;
-          margin: 0;
-          font: 600 var(--boxel-font-size-2xs) var(--font-mono);
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          font-weight: 600;
         }
         .emb {
           inline-size: 25rem;
@@ -105,7 +106,6 @@ export class FormatPreview extends CardDef {
           overflow: hidden;
         }
         .atom {
-          margin: 0;
           inline-size: 12rem;
           font-size: var(--boxel-font-size-xs);
         }

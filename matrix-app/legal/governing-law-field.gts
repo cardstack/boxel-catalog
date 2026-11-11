@@ -109,7 +109,7 @@ export class GoverningLawField extends FieldDef {
       <style scoped>
         .gl {
           display: flex;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
           align-items: flex-start;
           font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
@@ -118,7 +118,7 @@ export class GoverningLawField extends FieldDef {
           width: 1.125rem;
           height: 1.125rem;
           flex: none;
-          margin-top: 0.1rem;
+          margin-top: var(--boxel-sp-6xs);
           color: var(--muted-foreground);
         }
         .gl-body {
@@ -126,7 +126,7 @@ export class GoverningLawField extends FieldDef {
           flex: 1;
         }
         .gl-notes {
-          margin: 0.4rem 0 0;
+          margin: var(--boxel-sp-2xs) 0 0;
           color: var(--muted-foreground);
           line-height: 1.5;
           white-space: pre-line;

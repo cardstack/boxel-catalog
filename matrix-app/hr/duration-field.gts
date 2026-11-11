@@ -144,12 +144,12 @@ export class DurationField extends FieldDef {
            raised to the small body size, so a duration reads as a value
            rather than a tag. */
         .duration-pill {
-          --text-ui-xs: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .duration-body {
           display: inline-flex;
           align-items: center;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
         }
         .duration-icon {
           flex: none;

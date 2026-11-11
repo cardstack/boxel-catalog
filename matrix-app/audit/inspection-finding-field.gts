@@ -101,19 +101,19 @@ export class InspectionFindingField extends FindingField {
           gap: var(--boxel-sp-xs);
         }
         .where {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
         .observed {
           margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.5;
         }
         .foot {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>

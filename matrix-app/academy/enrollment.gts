@@ -137,8 +137,9 @@ class EnrollmentIsolated extends Component<typeof Enrollment> {
           <Button
             type='button'
             @size='xs'
+            @tone='danger'
             @appearance='outlined'
-            @loading={{this.busy}}
+            @busy={{this.busy}}
             @disabled={{this.busy}}
             {{on 'click' this.withdraw}}
           >Withdraw</Button>

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { htmlSafe } from '@ember/template';
 import GlimmerComponent from '@glimmer/component';
 import { Component, StringField } from '@cardstack/base/card-api';
@@ -7,19 +8,19 @@ import AwardIcon from '@cardstack/boxel-icons/award';
 import { Chip } from '@cardstack/pretui/components/chip';
 
 // Tier hues: status colours follow the theme's tokens; metals and categories
-// come from the fixed palette so a ladder never turns into warning colours.
+// come from the theme's chart tones so a ladder never turns into warning colours.
 const TIER_HUE = {
   green: 'var(--success)',
   red: 'var(--destructive)',
   amber: 'var(--warning)',
   orange: 'color-mix(in oklch, var(--warning) 62%, var(--destructive))',
-  teal: 'var(--boxel-dark-teal)',
-  purple: 'var(--boxel-purple)',
-  blue: 'color-mix(in oklch, var(--boxel-purple) 55%, var(--boxel-highlight))',
-  pink: 'color-mix(in oklch, var(--boxel-danger) 60%, var(--boxel-purple))',
+  teal: 'color-mix(in oklch, var(--chart-1) 50%, var(--chart-2))',
+  purple: 'var(--chart-4)',
+  blue: 'var(--chart-1)',
+  pink: 'var(--chart-5)',
   slate: 'var(--muted-foreground)',
-  gold: 'color-mix(in oklch, var(--boxel-yellow) 55%, var(--boxel-amber))',
-  bronze: 'color-mix(in oklch, var(--boxel-orange) 65%, var(--boxel-dark))',
+  gold: 'color-mix(in oklch, var(--chart-3) 80%, var(--foreground))',
+  bronze: 'color-mix(in oklch, var(--chart-3) 60%, var(--foreground))',
 } as const;
 
 export type Hue = keyof typeof TIER_HUE;
@@ -134,7 +135,7 @@ export function loyaltyTierField(config: LoyaltyTierConfig) {
         <style scoped>
           .rungs {
             display: inline-flex;
-            gap: 0.125rem;
+            gap: var(--boxel-sp-6xs);
           }
           .rung {
             width: 0.25rem;
@@ -272,14 +273,16 @@ export class TierBadge extends GlimmerComponent<TierBadgeSignature> {
  * have a program yet. Anything with a real program calls `loyaltyTierField`
  * with its own rungs, colours and multipliers.
  */
-export const LoyaltyTierField = loyaltyTierField({
-  displayName: 'Loyalty Tier',
-  options: [
-    { value: 'Bronze', hue: 'bronze' },
-    { value: 'Silver', hue: 'slate' },
-    { value: 'Gold', hue: 'gold' },
-    { value: 'Platinum', hue: 'teal' },
-  ],
-});
+export const LoyaltyTierField = markDefinition(
+  loyaltyTierField({
+    displayName: 'Loyalty Tier',
+    options: [
+      { value: 'Bronze', hue: 'bronze' },
+      { value: 'Silver', hue: 'slate' },
+      { value: 'Gold', hue: 'gold' },
+      { value: 'Platinum', hue: 'teal' },
+    ],
+  }),
+);
 
 export default LoyaltyTierField;

@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Seller Profile",
+      "cardDescription": "A marketplace seller: a person's identity plus a numeric rating. Extends MarketplaceMember and inherits its views.",
+      "specType": "card",
+      "ref": {
+        "module": "../seller-profile",
+        "name": "SellerProfile"
+      },
+      "readMe": "### A subclass of MarketplaceMember\n\nThe reusable part of this card is the schema: person identity plus `rating`. Extending `MarketplaceMember` inherits its isolated, edit and fitted views; a consumer that wants different views overrides the formats like any card override.\n\n### Split from MarketplaceMember on purpose\n\n`rating` has no meaning on a buyer. A consumer narrows a seller link to `linksTo(SellerProfile)` (`Listing.seller`) and every other person link to `linksTo(MarketplaceMember)`. One person can still be linked from both kinds of field on different cards — a `SellerProfile` instance satisfies a `MarketplaceMember`-typed link too, since it is one via inheritance.\n\n### Non-goals\n\nThis card does not carry review text, only the aggregate numeric rating (written reviews are a separate concept). It does not distinguish a permanent seller identity from a one-off listing — a person becomes \"a seller\" simply by being the target of a `seller` link, not by any flag on this card itself.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Seller Profile",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../SellerProfile/sneakerking"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -183,15 +184,17 @@ function orDash(value?: string) {
   return value || '—';
 }
 
-export const ProjectStatusField = dotEnumField(
-  {
-    options: PROJECT_STATUSES.map((status) => ({
-      value: status,
-      label: status,
-    })),
-    displayName: 'Project Status',
-  },
-  PROJECT_STATUS_HUES,
+export const ProjectStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: PROJECT_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Project Status',
+    },
+    PROJECT_STATUS_HUES,
+  ),
 );
 
 export class Project extends CardDef {

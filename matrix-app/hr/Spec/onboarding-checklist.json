@@ -24,6 +24,11 @@
         "links": {
           "self": "../OnboardingChecklist/sarah-chen-onboarding"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -531,11 +531,17 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         border: 0;
         background: transparent;
         color: var(--foreground);
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: start;
-        cursor: pointer;
       }
-      .rail-btn:hover,
+      @media (hover: hover) {
+        .rail-btn:hover {
+          background: var(--muted);
+        }
+      }
       .rail-btn[data-state='current'] {
         background: var(--muted);
       }
@@ -586,9 +592,8 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .setup-refusal {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .setup-refusal:empty {
         display: none;
@@ -599,8 +604,10 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-4xs);
       }
       .wiz-h {
-        margin: 0;
-        font: 600 0.5625rem/1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -621,7 +628,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
       }
       .wiz-bad {
         margin-inline-start: var(--boxel-sp-4xs);
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .wiz-row {
         display: flex;
@@ -660,7 +667,6 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         background: var(--card);
         color: inherit;
         text-align: start;
-        cursor: pointer;
         overflow: hidden;
       }
       .csv-pick[aria-pressed='true'] {

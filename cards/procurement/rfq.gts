@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -73,13 +74,15 @@ const STATUS_HUES: Record<
   cancelled: 'red',
 };
 
-export const RfqStatusField = enumField(StringField, {
-  options: RFQ_STATUSES.map((value) => ({
-    value,
-    label: RFQ_STATUS_LABELS[value],
-  })),
-  displayName: 'RFQ Status',
-});
+export const RfqStatusField = markDefinition(
+  enumField(StringField, {
+    options: RFQ_STATUSES.map((value) => ({
+      value,
+      label: RFQ_STATUS_LABELS[value],
+    })),
+    displayName: 'RFQ Status',
+  }),
+);
 
 class RfqEdit extends Component<typeof Rfq> {
   @tracked activeSection = 'basics';

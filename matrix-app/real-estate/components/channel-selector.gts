@@ -137,25 +137,22 @@ export class ChannelSelector extends GlimmerComponent<Signature> {
         flex-wrap: wrap;
         align-items: baseline;
         column-gap: var(--boxel-sp-xs);
-        row-gap: 0.125rem;
+        row-gap: var(--boxel-sp-6xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
       }
       .channel + .channel {
-        border-top: 1px solid var(--border);
+        border-block-start: 1px solid var(--border);
       }
       .channel-check {
-        --text-ui-md: 0.8125rem;
-        font-weight: 500;
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 600;
         color: var(--foreground);
       }
-      .required .channel-check {
-        cursor: default;
-      }
       .channel-tag {
-        font-size: 0.6875rem;
+        font-size: 0.5625rem; /* 9px ladder label: no token */
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.13em;
         color: var(--muted-foreground);
       }
       .required .channel-tag {
@@ -166,7 +163,7 @@ export class ChannelSelector extends GlimmerComponent<Signature> {
       .channel-subline {
         flex-basis: 100%;
         padding-inline-start: calc(0.9375rem + var(--boxel-sp-xs));
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
     </style>

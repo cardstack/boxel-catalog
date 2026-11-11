@@ -147,7 +147,7 @@ export class FulfilmentLineItemField extends FieldDef {
           align-items: center;
           gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp-2xs) 0;
-          font-size: 0.85rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .li-id {
           display: flex;
@@ -163,13 +163,13 @@ export class FulfilmentLineItemField extends FieldDef {
         }
         .li-sku {
           min-width: 0;
-          font-size: 0.7rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         /* Pret UI Token for the SKU, on the muted ink at the old 0.7rem. */
         .li-sku .li-sku-token {
           --pretui-token-hue: var(--muted-foreground);
-          --pretui-token-font-size: 0.7rem;
+          --pretui-token-font-size: var(--boxel-font-size-2xs);
           margin-inline: 0;
           max-width: 100%;
           overflow: hidden;

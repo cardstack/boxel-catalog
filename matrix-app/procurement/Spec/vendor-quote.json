@@ -29,6 +29,11 @@
         "links": {
           "self": "../VendorQuote/techsource-laptop-refresh"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -29,6 +29,11 @@
         "links": {
           "self": "../OnboardingTemplate/contractor-onboarding"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

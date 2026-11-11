@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -40,13 +41,15 @@ export const BACKGROUND_CHECK_STATUS_HUES: Record<string, Hue> = {
   flagged: 'red',
 };
 
-export const BackgroundCheckStatusField = enumField(StringField, {
-  options: BACKGROUND_CHECK_STATUSES.map((value) => ({
-    value,
-    label: BACKGROUND_CHECK_STATUS_LABELS[value],
-  })),
-  displayName: 'Background Check Status',
-});
+export const BackgroundCheckStatusField = markDefinition(
+  enumField(StringField, {
+    options: BACKGROUND_CHECK_STATUSES.map((value) => ({
+      value,
+      label: BACKGROUND_CHECK_STATUS_LABELS[value],
+    })),
+    displayName: 'Background Check Status',
+  }),
+);
 
 export class BackgroundCheckField extends FieldDef {
   static displayName = 'Background Check';

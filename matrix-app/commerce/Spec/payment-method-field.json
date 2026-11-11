@@ -24,6 +24,11 @@
         "links": {
           "self": "../../procurement/VendorProfile/acme-supply"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

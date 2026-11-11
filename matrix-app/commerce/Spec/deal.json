@@ -28,6 +28,11 @@
         "links": {
           "self": "../Deal/brightleaf-pilot"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

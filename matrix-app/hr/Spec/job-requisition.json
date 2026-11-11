@@ -24,6 +24,11 @@
         "links": {
           "self": "../JobRequisition/product-manager"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

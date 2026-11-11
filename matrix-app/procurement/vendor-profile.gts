@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   FieldDef,
@@ -211,50 +212,52 @@ export const VENDOR_PROFILE_STATUS_COLORS: Record<string, StateColor> = {
 // deliberately ABSENT — onboarding creates the active Vendor record, so it
 // only happens through OnboardVendorCommand (whose direct patch is not
 // graph-gated), never by dragging a card.
-export const VendorProfileStatusField = statusField({
-  options: [
-    {
-      value: 'intake',
-      label: 'Intake',
-      hue: 'slate',
-      meaning: 'Paperwork received, nobody has looked yet',
+export const VendorProfileStatusField = markDefinition(
+  statusField({
+    options: [
+      {
+        value: 'intake',
+        label: 'Intake',
+        hue: 'slate',
+        meaning: 'Paperwork received, nobody has looked yet',
+      },
+      {
+        value: 'under-review',
+        label: 'Under Review',
+        hue: 'amber',
+        meaning: 'Compliance documents being checked',
+      },
+      {
+        value: 'approved',
+        label: 'Approved',
+        hue: 'blue',
+        meaning: 'Cleared to onboard — run Onboard Vendor to activate',
+      },
+      {
+        value: 'onboarded',
+        label: 'Onboarded',
+        hue: 'green',
+        terminal: true,
+        meaning: 'Active vendor record exists; invitable to RFQs',
+      },
+      {
+        value: 'rejected',
+        label: 'Rejected',
+        hue: 'red',
+        terminal: true,
+        meaning: 'Vetting failed — reasons in notes',
+      },
+    ],
+    transitions: {
+      intake: ['under-review', 'rejected'],
+      'under-review': ['approved', 'rejected', 'intake'],
+      approved: ['under-review', 'rejected'],
+      onboarded: [],
+      rejected: ['intake'],
     },
-    {
-      value: 'under-review',
-      label: 'Under Review',
-      hue: 'amber',
-      meaning: 'Compliance documents being checked',
-    },
-    {
-      value: 'approved',
-      label: 'Approved',
-      hue: 'blue',
-      meaning: 'Cleared to onboard — run Onboard Vendor to activate',
-    },
-    {
-      value: 'onboarded',
-      label: 'Onboarded',
-      hue: 'green',
-      terminal: true,
-      meaning: 'Active vendor record exists; invitable to RFQs',
-    },
-    {
-      value: 'rejected',
-      label: 'Rejected',
-      hue: 'red',
-      terminal: true,
-      meaning: 'Vetting failed — reasons in notes',
-    },
-  ],
-  transitions: {
-    intake: ['under-review', 'rejected'],
-    'under-review': ['approved', 'rejected', 'intake'],
-    approved: ['under-review', 'rejected'],
-    onboarded: [],
-    rejected: ['intake'],
-  },
-  displayName: 'Vendor Profile Status',
-});
+    displayName: 'Vendor Profile Status',
+  }),
+);
 
 // ── Shared derivations for every format ────────────────────────────────
 function fmtDate(d?: Date | null, short = false): string {

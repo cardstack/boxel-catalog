@@ -1,7 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 import { Avatar } from '@cardstack/pretui/components/avatar';
@@ -12,22 +11,21 @@ import { LayoutControl } from '@cardstack/pretui/components/layout-control';
 import { SearchInput } from '@cardstack/pretui/components/search-input';
 
 // Status hues from the catalog status fields, drawn with the theme's tones.
-const HUE_TOKEN: Record<string, string> = {
-  green: 'var(--success)',
-  emerald: 'var(--success)',
-  amber: 'var(--warning)',
-  orange: 'var(--warning)',
-  yellow: 'var(--warning)',
-  red: 'var(--destructive)',
-  rose: 'var(--destructive)',
-  blue: 'var(--primary)',
-  indigo: 'var(--primary)',
+// The dot's colour is set by a scoped `.dot[data-hue]` rule in each template.
+const HUE_TONE: Record<string, string> = {
+  green: 'success',
+  emerald: 'success',
+  amber: 'warning',
+  orange: 'warning',
+  yellow: 'warning',
+  red: 'destructive',
+  rose: 'destructive',
+  blue: 'primary',
+  indigo: 'primary',
 };
 
-export function dotStyle(hue?: string) {
-  return htmlSafe(
-    `--dot: ${(hue && HUE_TOKEN[hue]) || 'var(--muted-foreground)'}`,
-  );
+export function dotHue(hue?: string) {
+  return (hue && HUE_TONE[hue]) || 'muted';
 }
 
 export interface DeskStat {
@@ -48,7 +46,7 @@ export class StatStrip extends GlimmerComponent<{
           <div class='cell'>
             <dt class='cap'><span
                 class='dot'
-                style={{dotStyle s.hue}}
+                data-hue={{dotHue s.hue}}
               ></span>{{s.label}}</dt>
             <dd class='val'>{{s.value}}</dd>
             {{#if s.hint}}<dd class='hint'>{{s.hint}}</dd>{{/if}}
@@ -100,8 +98,20 @@ export class StatStrip extends GlimmerComponent<{
         inline-size: 0.375rem;
         block-size: 0.375rem;
         border-radius: 50%;
-        background: var(--dot);
+        background: var(--muted-foreground);
         flex: none;
+      }
+      .dot[data-hue='success'] {
+        background: var(--success);
+      }
+      .dot[data-hue='warning'] {
+        background: var(--warning);
+      }
+      .dot[data-hue='destructive'] {
+        background: var(--destructive);
+      }
+      .dot[data-hue='primary'] {
+        background: var(--primary);
       }
       .val {
         font-size: var(--boxel-font-size-lg);
@@ -182,7 +192,7 @@ export class DeskList extends GlimmerComponent<ListSignature> {
   isName = (key: string) => Boolean(this.colOf(key)?.name);
   isStatus = (key: string) => Boolean(this.colOf(key)?.status);
   statusLabel = (row: any) => this.args.statusOf?.(row)?.label ?? '—';
-  statusDot = (row: any) => dotStyle(this.args.statusOf?.(row)?.hue);
+  statusDot = (row: any) => dotHue(this.args.statusOf?.(row)?.hue);
   rowKey = (row: any) => row.id;
 
   <template>
@@ -248,7 +258,7 @@ export class DeskList extends GlimmerComponent<ListSignature> {
           @label={{@title}}
           @flush={{true}}
           @striped={{false}}
-          @size='s'
+          @size='xs'
           @sortable={{false}}
           @columnMenu={{false}}
           @emptyTitle='No {{@noun}} match.'
@@ -270,7 +280,7 @@ export class DeskList extends GlimmerComponent<ListSignature> {
             {{else if (this.isStatus col.key)}}
               <span class='status'><span
                   class='dot'
-                  style={{this.statusDot row}}
+                  data-hue={{this.statusDot row}}
                 ></span>{{this.statusLabel row}}</span>
             {{else}}
               <span class={{if (eq text '—') 'dim'}}>{{text}}</span>
@@ -307,10 +317,7 @@ export class DeskList extends GlimmerComponent<ListSignature> {
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
-      /* Pret UI DataTable sizes from --text-ui-*: the compact ladder. */
       .dt {
-        --text-ui-sm: 0.6875rem;
-        --text-ui-md: 0.6875rem;
         overflow-x: auto;
       }
       .name {
@@ -348,7 +355,19 @@ export class DeskList extends GlimmerComponent<ListSignature> {
         inline-size: 0.375rem;
         block-size: 0.375rem;
         border-radius: 50%;
-        background: var(--dot);
+        background: var(--muted-foreground);
+      }
+      .dot[data-hue='success'] {
+        background: var(--success);
+      }
+      .dot[data-hue='warning'] {
+        background: var(--warning);
+      }
+      .dot[data-hue='destructive'] {
+        background: var(--destructive);
+      }
+      .dot[data-hue='primary'] {
+        background: var(--primary);
       }
       .dim {
         color: var(--muted-foreground);

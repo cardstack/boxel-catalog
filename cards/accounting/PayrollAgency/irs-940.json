@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "agencyId": "irs-940",
+      "name": "IRS · Form 940 (federal unemployment)",
+      "form": "940",
+      "frequency": "annual",
+      "liabilityAccount": "2315",
+      "taxes": ["futa"],
+      "cardInfo": {
+        "name": "IRS · Form 940 (federal unemployment)"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PayrollAgency"
+      }
+    }
+  }
+}

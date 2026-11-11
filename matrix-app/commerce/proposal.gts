@@ -98,11 +98,11 @@ export class Proposal extends CardDef {
       </span>
       <style scoped>
         .atom {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
+          gap: var(--boxel-sp-2xs);
           min-inline-size: 0;
         }
         .name {
@@ -195,10 +195,8 @@ export class Proposal extends CardDef {
       </article>
       <style scoped>
         .emb {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
-          --text-stat: 1.375rem;
-          --text-ui-xs: 0.6875rem;
           --boxel-sp-xs: 0.35rem;
           --boxel-sp-lg: 0.75rem;
           --pretui-kv-label-font-size: 0.5625rem;
@@ -206,14 +204,14 @@ export class Proposal extends CardDef {
           border: 1px solid var(--border);
           border-radius: var(--radius);
           overflow: hidden;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.25;
         }
         .eh {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 0.625rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
         .id {
           flex: 1;
@@ -229,15 +227,14 @@ export class Proposal extends CardDef {
         }
         .meta,
         .fact {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .fact {
-          margin: 0;
-          padding: 0 0.625rem 0.5rem;
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
         .kv {
-          padding-inline: 0.625rem;
+          padding-inline: var(--boxel-sp-xs);
           row-gap: 0;
         }
       </style>
@@ -354,10 +351,8 @@ export class Proposal extends CardDef {
       </article>
       <style scoped>
         .pp {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
-          --text-stat: 1.375rem;
-          --text-ui-xs: 0.6875rem;
           --boxel-sp-xs: 0.35rem;
           --boxel-sp-lg: 0.75rem;
           --pretui-kv-label-font-size: 0.5625rem;
@@ -365,15 +360,15 @@ export class Proposal extends CardDef {
           border: 1px solid var(--border);
           border-radius: var(--radius);
           overflow: hidden;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.25;
           color: var(--card-foreground);
         }
         .ph {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
         }
         .id {
           flex: 1;
@@ -381,18 +376,17 @@ export class Proposal extends CardDef {
         }
         h1 {
           font-family: var(--font-sans);
-          margin: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .tags {
           display: flex;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
         }
         .stats {
           display: grid;
@@ -403,7 +397,7 @@ export class Proposal extends CardDef {
           border-inline-start: 1px solid var(--border);
         }
         .stats > * {
-          padding: 0.5rem 0.625rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
         .cols {
           display: grid;
@@ -426,16 +420,15 @@ export class Proposal extends CardDef {
           }
         }
         h2 {
-          margin: 0;
-          padding: 0.625rem 0.625rem 0.25rem;
-          font-size: 0.75rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-4xs);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .pad {
-          padding: 0.625rem;
+          padding: var(--boxel-sp-xs);
         }
         .kv {
-          padding-inline: 0.625rem;
+          padding-inline: var(--boxel-sp-xs);
           row-gap: 0;
         }
       </style>

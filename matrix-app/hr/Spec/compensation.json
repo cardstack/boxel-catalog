@@ -21,6 +21,11 @@
         "links": {
           "self": "../Compensation/mara-2026-promo"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

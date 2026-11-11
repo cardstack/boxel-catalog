@@ -75,7 +75,7 @@ export class SeverityBadgeExample extends CardDef {
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           letter-spacing: 0.06em;
           text-transform: uppercase;
@@ -88,7 +88,7 @@ export class SeverityBadgeExample extends CardDef {
           gap: var(--boxel-sp-sm);
         }
         .hint {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground, var(--boxel-450));
         }
       </style>
@@ -129,7 +129,7 @@ export class SeverityBadgeExample extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

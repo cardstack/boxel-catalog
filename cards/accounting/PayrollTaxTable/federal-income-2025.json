@@ -1,0 +1,174 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "year": 2025,
+      "effectiveFrom": "2025-01-01",
+      "ratePpm": null,
+      "employerRatePpm": null,
+      "wageBaseMinor": null,
+      "thresholdMinor": null,
+      "extraRatePpm": null,
+      "weeklyCapMinor": null,
+      "annualCapMinor": null,
+      "allowanceMinor": null,
+      "brackets": [
+        {
+          "filingStatus": "single",
+          "overMinor": 0,
+          "ratePpm": 0
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 640000,
+          "ratePpm": 100000
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 1832500,
+          "ratePpm": 120000
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 5487500,
+          "ratePpm": 220000
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 10975000,
+          "ratePpm": 240000
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 20370000,
+          "ratePpm": 320000
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 25692500,
+          "ratePpm": 350000
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 63275000,
+          "ratePpm": 370000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 0,
+          "ratePpm": 0
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 1710000,
+          "ratePpm": 100000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 4095000,
+          "ratePpm": 120000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 11405000,
+          "ratePpm": 220000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 22380000,
+          "ratePpm": 240000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 41170000,
+          "ratePpm": 320000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 51815000,
+          "ratePpm": 350000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 76870000,
+          "ratePpm": 370000
+        },
+        {
+          "filingStatus": "head",
+          "overMinor": 0,
+          "ratePpm": 0
+        },
+        {
+          "filingStatus": "head",
+          "overMinor": 1390000,
+          "ratePpm": 100000
+        },
+        {
+          "filingStatus": "head",
+          "overMinor": 3090000,
+          "ratePpm": 120000
+        },
+        {
+          "filingStatus": "head",
+          "overMinor": 7875000,
+          "ratePpm": 220000
+        },
+        {
+          "filingStatus": "head",
+          "overMinor": 11725000,
+          "ratePpm": 240000
+        },
+        {
+          "filingStatus": "head",
+          "overMinor": 21120000,
+          "ratePpm": 320000
+        },
+        {
+          "filingStatus": "head",
+          "overMinor": 26440000,
+          "ratePpm": 350000
+        },
+        {
+          "filingStatus": "head",
+          "overMinor": 64025000,
+          "ratePpm": 370000
+        }
+      ],
+      "statusAmounts": [
+        {
+          "filingStatus": "single",
+          "amountMinor": 860000
+        },
+        {
+          "filingStatus": "married",
+          "amountMinor": 1290000
+        },
+        {
+          "filingStatus": "head",
+          "amountMinor": 860000
+        }
+      ],
+      "tax": "federal-income",
+      "label": "Federal income tax withholding",
+      "agencyId": "irs-941",
+      "source": "IRS Pub. 15-T (2025), annual percentage method worksheet 1A: step 1g amounts and the standard withholding rate schedules, 2020-or-later W-4 with step 2 unchecked",
+      "cardInfo": {
+        "name": "Federal income tax withholding · 2025 figures",
+        "summary": "Demo figures entered by hand, not tax advice."
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PayrollTaxTable"
+      }
+    }
+  }
+}
