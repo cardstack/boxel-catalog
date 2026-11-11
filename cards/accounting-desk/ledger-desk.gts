@@ -204,6 +204,11 @@ import {
   GeneralLedger,
 } from '../accounting/ledger-report-library';
 import {
+  ReportActions,
+  CustomReportRunner,
+  MyReports,
+} from '../accounting/ledger-report-custom';
+import {
   KIND_LABEL,
   seqText,
   EntryPad,
@@ -1162,6 +1167,22 @@ const PAGES: PageDef[] = [
     post: true,
   },
   // Reports
+  {
+    id: 'r-mine',
+    area: 'Reports',
+    label: 'My reports',
+    blurb:
+      'Reports saved with their settings and customization, yours and the ones shared with you.',
+    report: 'mine',
+  },
+  {
+    id: 'r-custom',
+    area: 'Reports',
+    label: 'Custom report',
+    blurb:
+      'Posting lines with the columns you choose, filtered, grouped with subtotals and sorted.',
+    report: 'custom',
+  },
   {
     id: 'r-sales-customer',
     area: 'Reports',
@@ -5721,6 +5742,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
 
   // Launchers: open a view here, or (») beside this one in its own stack, so the books stay in sight.
   launch = (page: string) => this.go(page);
+  get reportPages() {
+    return PAGES.filter((p) => p.report).map((p) => ({
+      id: p.id,
+      label: p.label,
+      report: p.report ?? '',
+    }));
+  }
+  get reportCard() {
+    return (this.args.model as any)?.[this.def.report ?? ''];
+  }
   launchBeside = (page: string) => {
     let card = (this.args.model as any)?.[pageById.get(page)?.report ?? ''];
     if (card)
@@ -7692,6 +7723,24 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 />
               {{/if}}
 
+            {{else if (eq this.page 'r-mine')}}
+              <MyReports
+                @context={{@context}}
+                @realms={{this.realms}}
+                @refRealms={{this.refRealms}}
+                @ledger={{@model.ledger}}
+                @app={{@model}}
+                @pages={{this.reportPages}}
+                @onOpenPage={{this.go}}
+              />
+            {{else if (eq this.page 'r-custom')}}
+              <CustomReportRunner
+                @context={{@context}}
+                @realms={{this.realms}}
+                @refRealms={{this.refRealms}}
+                @ledger={{@model.ledger}}
+                @kind={{this.def.report}}
+              />
             {{else if (eq this.page 'payrun')}}
               <PayrollPage
                 @ledger={{@model.ledger}}
@@ -7701,7 +7750,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @notify={{this.notify}}
               />
             {{else if this.def.report}}
-              <section class='report'>
+              <section class='report' data-report-body>
+                <ReportActions
+                  @context={{@context}}
+                  @ledger={{@model.ledger}}
+                  @kind={{this.page}}
+                  @kindLabel={{this.def.label}}
+                  @card={{this.reportCard}}
+                />
                 {{#if
                   (eq this.def.report 'profitAndLoss')
                 }}<@fields.profitAndLoss @format='isolated' />
