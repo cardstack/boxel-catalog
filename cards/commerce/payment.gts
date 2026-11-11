@@ -21,6 +21,7 @@ import { Money } from '../crm/money';
 import { hasNumber } from '../crm/utils';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Payment Method lives in payment-method-field.gts (Payment Terms reuses it as
 // the preferred rail) and is re-exported here; defining it in this module put
@@ -297,47 +298,55 @@ export class Payment extends CardDef {
       return rows;
     }
     <template>
-      <article class='receipt-wrap'>
-        <div class='receipt'>
-          <header class='r-head'>
-            <p class='r-label'>Payment received</p>
-            <h1 class='r-amount'>{{#if (hasNumber @model.amount.amount)}}<Money
-                  @amount={{@model.amount.amount}}
-                  @code={{@model.amount.currency.code}}
-                />{{else}}—{{/if}}</h1>
-            {{#if @model.method}}
-              <StatePill @label={{@model.method}} />
+      <IsoFrame>
+        <article class='receipt-wrap'>
+          <div class='receipt'>
+            <header class='r-head'>
+              <p class='r-label'>Payment received</p>
+              <h1 class='r-amount'>{{#if
+                  (hasNumber @model.amount.amount)
+                }}<Money
+                    @amount={{@model.amount.amount}}
+                    @code={{@model.amount.currency.code}}
+                  />{{else}}—{{/if}}</h1>
+              {{#if @model.method}}
+                <StatePill @label={{@model.method}} />
+              {{/if}}
+            </header>
+            <div class='tear' aria-hidden='true'></div>
+            {{#if this.rows.length}}
+              <KeyValue
+                class='r-rows kv-pad'
+                @items={{this.rows}}
+                @valueAlign='end'
+              >
+                <:value as |row|>
+                  {{#if (eq row.value 'paidAt')}}
+                    <@fields.paidAt />
+                  {{else if (eq row.value 'reference')}}
+                    <Token
+                      @value={{@model.reference}}
+                      style={{ID_TOKEN_STYLE.sm}}
+                    />
+                  {{else}}
+                    <@fields.invoice @format='atom' />
+                  {{/if}}
+                </:value>
+              </KeyValue>
             {{/if}}
-          </header>
-          <div class='tear' aria-hidden='true'></div>
-          {{#if this.rows.length}}
-            <KeyValue
-              class='r-rows kv-pad'
-              @items={{this.rows}}
-              @valueAlign='end'
-            >
-              <:value as |row|>
-                {{#if (eq row.value 'paidAt')}}
-                  <@fields.paidAt />
-                {{else if (eq row.value 'reference')}}
-                  <Token
-                    @value={{@model.reference}}
-                    style={{ID_TOKEN_STYLE.sm}}
-                  />
-                {{else}}
-                  <@fields.invoice @format='atom' />
-                {{/if}}
-              </:value>
-            </KeyValue>
-          {{/if}}
-        </div>
-      </article>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .kv-pad {
           padding-inline: var(--boxel-sp-sm);
         }
 
         .receipt-wrap {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp-2xl) var(--boxel-sp-lg);
           display: flex;
           justify-content: center;

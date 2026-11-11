@@ -6,6 +6,7 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import WrenchIcon from '@cardstack/boxel-icons/wrench';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Service — a billable, non-recurring unit (implementation, support hours,
 // onboarding). Kept separate from Plan per the domain-neutral rule: Plan is
@@ -230,20 +231,26 @@ export class Service extends CardDef {
 
   static isolated = class Isolated extends Component<typeof Service> {
     <template>
-      <article class='service-page'>
-        <header class='sh'>
-          <WrenchIcon class='avatar-icon' />
-          <div class='sh-id'>
-            <p class='doc-kind'>Service</p>
-            <h1>{{@model.cardTitle}}</h1>
-          </div>
-        </header>
-        {{#if @model.description}}
-          <p class='desc'>{{@model.description}}</p>
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='service-page'>
+          <header class='sh'>
+            <WrenchIcon class='avatar-icon' />
+            <div class='sh-id'>
+              <p class='doc-kind'>Service</p>
+              <h1>{{@model.cardTitle}}</h1>
+            </div>
+          </header>
+          {{#if @model.description}}
+            <p class='desc'>{{@model.description}}</p>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .service-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 40rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);

@@ -10,6 +10,7 @@ import {
 import StarIcon from '@cardstack/boxel-icons/star';
 import { Plan } from './plan';
 import { Service } from './service';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Product Review — customer feedback on a Plan or Service, not on a
 // specific purchase. Deliberately NOT rendered inside RevenueOs (an internal
@@ -188,22 +189,28 @@ export class ProductReview extends CardDef {
       return `Rated ${this.args.model?.rating ?? 0} out of 5`;
     }
     <template>
-      <article class='review-page'>
-        <div class='stars-lg'>
-          <span class='boxel-sr-only'>{{this.ratingLabel}}</span>
-          {{#each this.stars as |star|}}
-            <StarIcon
-              class='star {{if star.on "star-on"}}'
-              aria-hidden='true'
-            />
-          {{/each}}
-        </div>
-        {{#if @model.body}}
-          <p class='body'>{{@model.body}}</p>
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='review-page'>
+          <div class='stars-lg'>
+            <span class='boxel-sr-only'>{{this.ratingLabel}}</span>
+            {{#each this.stars as |star|}}
+              <StarIcon
+                class='star {{if star.on "star-on"}}'
+                aria-hidden='true'
+              />
+            {{/each}}
+          </div>
+          {{#if @model.body}}
+            <p class='body'>{{@model.body}}</p>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .review-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 32rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);

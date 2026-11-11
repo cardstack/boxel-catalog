@@ -10,6 +10,7 @@ import LandmarkIcon from '@cardstack/boxel-icons/landmark';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import { hasNumber } from '../crm/utils';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Tax Jurisdiction — a region with its own tax rate. A lookup table, reused
 // across every invoice for that region, not duplicated per invoice.
@@ -183,20 +184,26 @@ export class TaxJurisdiction extends CardDef {
 
   static isolated = class Isolated extends Component<typeof TaxJurisdiction> {
     <template>
-      <article class='tj-page'>
-        <header class='th'>
-          <LandmarkIcon class='avatar-icon' />
-          <div class='th-id'>
-            <p class='doc-kind'>Tax Jurisdiction</p>
-            <h1>{{@model.cardTitle}}</h1>
-          </div>
-        </header>
-        {{#if (hasNumber @model.rate)}}
-          <p class='rate-line'><RatePercent @rate={{@model.rate}} /> rate</p>
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='tj-page'>
+          <header class='th'>
+            <LandmarkIcon class='avatar-icon' />
+            <div class='th-id'>
+              <p class='doc-kind'>Tax Jurisdiction</p>
+              <h1>{{@model.cardTitle}}</h1>
+            </div>
+          </header>
+          {{#if (hasNumber @model.rate)}}
+            <p class='rate-line'><RatePercent @rate={{@model.rate}} /> rate</p>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .tj-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 32rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);

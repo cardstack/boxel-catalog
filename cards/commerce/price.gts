@@ -12,6 +12,7 @@ import TagIcon from '@cardstack/boxel-icons/tag';
 import { Plan } from './plan';
 import { Service } from './service';
 import { formatMoney } from './line-item-totals';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Price — a specific amount + currency + billing interval for a Plan or a
 // Service. Kept separate from both so a Plan can carry monthly AND annual
@@ -210,23 +211,29 @@ export class Price extends CardDef {
       );
     }
     <template>
-      <article class='price-page'>
-        <header class='ph'>
-          <p class='doc-kind'>Price</p>
-          <h1>{{this.amountDisplay}}</h1>
-          {{#if @model.billingInterval}}
-            <span class='chip'>{{@model.billingInterval}}</span>
+      <IsoFrame>
+        <article class='price-page'>
+          <header class='ph'>
+            <p class='doc-kind'>Price</p>
+            <h1>{{this.amountDisplay}}</h1>
+            {{#if @model.billingInterval}}
+              <span class='chip'>{{@model.billingInterval}}</span>
+            {{/if}}
+          </header>
+          {{#if @model.plan}}
+            <div class='subject'><@fields.plan @format='atom' /></div>
           {{/if}}
-        </header>
-        {{#if @model.plan}}
-          <div class='subject'><@fields.plan @format='atom' /></div>
-        {{/if}}
-        {{#if @model.service}}
-          <div class='subject'><@fields.service @format='atom' /></div>
-        {{/if}}
-      </article>
+          {{#if @model.service}}
+            <div class='subject'><@fields.service @format='atom' /></div>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .price-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 32rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);

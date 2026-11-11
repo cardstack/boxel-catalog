@@ -14,6 +14,7 @@ import { formatMoney } from './line-item-totals';
 import { Money } from '../crm/money';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Forecast — a rolled-up projection of expected revenue for a territory over
 // a period.
@@ -277,39 +278,45 @@ export class Forecast extends CardDef {
       return rows;
     }
     <template>
-      <article class='forecast-page'>
-        <header class='fh'>
-          <div>
-            <p class='doc-kind'>Forecast</p>
-            <h1>{{@model.cardTitle}}</h1>
-          </div>
-          <Money
-            class='amount'
-            @amount={{@model.projectedAmount.amount}}
-            @code={{@model.projectedAmount.currency.code}}
-          />
-        </header>
-        {{#if this.details.length}}
-          <section class='panel'>
-            <h2>Details</h2>
-            <KeyValue class='kv-pad' @items={{this.details}}>
-              <:value as |row|>
-                {{#if (eq row.key 'Territory')}}
-                  <@fields.territory @format='atom' />
-                {{else}}
-                  <@fields.calculatedAt />
-                {{/if}}
-              </:value>
-            </KeyValue>
-          </section>
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='forecast-page'>
+          <header class='fh'>
+            <div>
+              <p class='doc-kind'>Forecast</p>
+              <h1>{{@model.cardTitle}}</h1>
+            </div>
+            <Money
+              class='amount'
+              @amount={{@model.projectedAmount.amount}}
+              @code={{@model.projectedAmount.currency.code}}
+            />
+          </header>
+          {{#if this.details.length}}
+            <section class='panel'>
+              <h2>Details</h2>
+              <KeyValue class='kv-pad' @items={{this.details}}>
+                <:value as |row|>
+                  {{#if (eq row.key 'Territory')}}
+                    <@fields.territory @format='atom' />
+                  {{else}}
+                    <@fields.calculatedAt />
+                  {{/if}}
+                </:value>
+              </KeyValue>
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .kv-pad {
           padding-inline: var(--boxel-sp-sm);
         }
 
         .forecast-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 40rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);

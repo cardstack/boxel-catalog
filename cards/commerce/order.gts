@@ -30,6 +30,7 @@ import {
 import { Table } from '@cardstack/pretui/components/table';
 import { Money } from '../crm/money';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const OrderStatusField = enumField(StringField, {
   options: ['pending', 'paid', 'shipped', 'delivered', 'canceled'],
@@ -400,111 +401,117 @@ export class Order extends CardDef {
       return [{ key: 'Ordered', value: 'orderDate' }];
     }
     <template>
-      <article class='order-doc'>
-        <header class='doc-head'>
-          <div>
-            <p class='doc-kind'>Order</p>
-            <h1>{{this.number}}</h1>
-          </div>
-          {{#if this.isCanceled}}
-            <StatePill
-              class='status'
-              @label='canceled'
-              @hue='red'
-              @dot={{true}}
+      <IsoFrame>
+        <article class='order-doc'>
+          <header class='doc-head'>
+            <div>
+              <p class='doc-kind'>Order</p>
+              <h1>{{this.number}}</h1>
+            </div>
+            {{#if this.isCanceled}}
+              <StatePill
+                class='status'
+                @label='canceled'
+                @hue='red'
+                @dot={{true}}
+              />
+            {{/if}}
+          </header>
+
+          {{#unless this.isCanceled}}
+            <StepList
+              class='stepper'
+              @steps={{this.steps}}
+              @variant='track'
+              @label='Order progress'
             />
-          {{/if}}
-        </header>
+          {{/unless}}
 
-        {{#unless this.isCanceled}}
-          <StepList
-            class='stepper'
-            @steps={{this.steps}}
-            @variant='track'
-            @label='Order progress'
-          />
-        {{/unless}}
-
-        <section class='doc-meta'>
-          <div class='party'>
-            <span class='label'>Account</span>
-            <@fields.account @format='embedded' />
-          </div>
-          <KeyValue class='facts kv-pad' @items={{this.facts}}>
-            <:value>
-              <@fields.orderDate />
-            </:value>
-          </KeyValue>
-        </section>
-
-        <section class='items'>
-          {{#if this.rows.length}}
-            <Table class='lines' @label='Line items'>
-              <:head>
-                <tr>
-                  <th scope='col'>Item</th>
-                  <th scope='col' class='t-num'>Qty</th>
-                  <th scope='col' class='t-num'>Unit</th>
-                  <th scope='col' class='t-num'>Amount</th>
-                </tr>
-              </:head>
-              <:body>
-                {{#each this.rows as |row|}}
-                  <tr>
-                    <td>{{row.description}}</td>
-                    <td class='t-num'>{{row.quantity}}</td>
-                    <td class='t-num'><Money
-                        @amount={{row.unit}}
-                        @code={{row.code}}
-                      /></td>
-                    <td class='t-num t-strong'><Money
-                        @amount={{row.total}}
-                        @code={{row.code}}
-                      /></td>
-                  </tr>
-                {{/each}}
-              </:body>
-            </Table>
-            <KeyValue
-              class='totals kv-pad'
-              @items={{this.totalsFacts}}
-              @valueAlign='end'
-            >
-              <:value as |row|>
-                {{#if (eq row.value 'subtotal')}}
-                  <Money
-                    @amount={{this.totals.subtotal}}
-                    @code={{this.totals.code}}
-                  />
-                {{else if (eq row.value 'tax')}}
-                  <Money
-                    @amount={{this.totals.tax}}
-                    @code={{this.totals.code}}
-                  />
-                {{else}}
-                  <Money
-                    @amount={{this.totals.total}}
-                    @code={{this.totals.code}}
-                  />
-                {{/if}}
+          <section class='doc-meta'>
+            <div class='party'>
+              <span class='label'>Account</span>
+              <@fields.account @format='embedded' />
+            </div>
+            <KeyValue class='facts kv-pad' @items={{this.facts}}>
+              <:value>
+                <@fields.orderDate />
               </:value>
             </KeyValue>
-          {{else}}
-            <EmptyState @size='s' @texture={{false}} @title='No items yet' />
-          {{/if}}
-        </section>
+          </section>
 
-        <section class='ship'>
-          <span class='label'>Ship to</span>
-          <@fields.shippingAddress />
-        </section>
-      </article>
+          <section class='items'>
+            {{#if this.rows.length}}
+              <Table class='lines' @label='Line items'>
+                <:head>
+                  <tr>
+                    <th scope='col'>Item</th>
+                    <th scope='col' class='t-num'>Qty</th>
+                    <th scope='col' class='t-num'>Unit</th>
+                    <th scope='col' class='t-num'>Amount</th>
+                  </tr>
+                </:head>
+                <:body>
+                  {{#each this.rows as |row|}}
+                    <tr>
+                      <td>{{row.description}}</td>
+                      <td class='t-num'>{{row.quantity}}</td>
+                      <td class='t-num'><Money
+                          @amount={{row.unit}}
+                          @code={{row.code}}
+                        /></td>
+                      <td class='t-num t-strong'><Money
+                          @amount={{row.total}}
+                          @code={{row.code}}
+                        /></td>
+                    </tr>
+                  {{/each}}
+                </:body>
+              </Table>
+              <KeyValue
+                class='totals kv-pad'
+                @items={{this.totalsFacts}}
+                @valueAlign='end'
+              >
+                <:value as |row|>
+                  {{#if (eq row.value 'subtotal')}}
+                    <Money
+                      @amount={{this.totals.subtotal}}
+                      @code={{this.totals.code}}
+                    />
+                  {{else if (eq row.value 'tax')}}
+                    <Money
+                      @amount={{this.totals.tax}}
+                      @code={{this.totals.code}}
+                    />
+                  {{else}}
+                    <Money
+                      @amount={{this.totals.total}}
+                      @code={{this.totals.code}}
+                    />
+                  {{/if}}
+                </:value>
+              </KeyValue>
+            {{else}}
+              <EmptyState @size='s' @texture={{false}} @title='No items yet' />
+            {{/if}}
+          </section>
+
+          <section class='ship'>
+            <span class='label'>Ship to</span>
+            <@fields.shippingAddress />
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .kv-pad {
           padding-inline: var(--boxel-sp-sm);
         }
 
         .order-doc {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 46rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);

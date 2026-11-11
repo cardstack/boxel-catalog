@@ -15,6 +15,7 @@ import { Contact } from '../crm/contact';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Subscription } from './subscription';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * The party on the receiving end of subscriptions — who holds them, since
@@ -209,46 +210,54 @@ export class Subscriber extends CardDef {
 
   static isolated = class Isolated extends Component<typeof Subscriber> {
     <template>
-      <article class='sub-page'>
-        <header class='sh'>
-          <div class='sh-id'>
-            <p class='doc-kind'>Subscriber</p>
-            <h1>{{if
-                @model.holder.name
-                @model.holder.name
-                'Unassigned subscriber'
-              }}</h1>
-            {{#if @model.since}}
-              <p class='sh-since'>Subscriber since <@fields.since /></p>
-            {{/if}}
-          </div>
-          <StatePill
-            @label='{{if @model.activeCount @model.activeCount 0}} active'
-            @hue={{if @model.activeCount 'green' 'slate'}}
-            @dot={{true}}
-          />
-        </header>
-        {{#if @model.holder}}
-          <section class='panel'>
-            <h2>Holder</h2>
-            <div class='linked'><@fields.holder @format='embedded' /></div>
-          </section>
-        {{/if}}
-        <section class='panel'>
-          <h2>Subscriptions</h2>
-          {{#if @model.subscriptions.length}}
-            <div class='subs'><@fields.subscriptions @format='embedded' /></div>
-          {{else}}
-            <EmptyState
-              @title='No subscriptions yet'
-              @texture={{false}}
-              @size='s'
+      <IsoFrame>
+        <article class='sub-page'>
+          <header class='sh'>
+            <div class='sh-id'>
+              <p class='doc-kind'>Subscriber</p>
+              <h1>{{if
+                  @model.holder.name
+                  @model.holder.name
+                  'Unassigned subscriber'
+                }}</h1>
+              {{#if @model.since}}
+                <p class='sh-since'>Subscriber since <@fields.since /></p>
+              {{/if}}
+            </div>
+            <StatePill
+              @label='{{if @model.activeCount @model.activeCount 0}} active'
+              @hue={{if @model.activeCount 'green' 'slate'}}
+              @dot={{true}}
             />
+          </header>
+          {{#if @model.holder}}
+            <section class='panel'>
+              <h2>Holder</h2>
+              <div class='linked'><@fields.holder @format='embedded' /></div>
+            </section>
           {{/if}}
-        </section>
-      </article>
+          <section class='panel'>
+            <h2>Subscriptions</h2>
+            {{#if @model.subscriptions.length}}
+              <div class='subs'><@fields.subscriptions
+                  @format='embedded'
+                /></div>
+            {{else}}
+              <EmptyState
+                @title='No subscriptions yet'
+                @texture={{false}}
+                @size='s'
+              />
+            {{/if}}
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .sub-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 40rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);

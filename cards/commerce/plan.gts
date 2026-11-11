@@ -7,6 +7,7 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import LayersIcon from '@cardstack/boxel-icons/layers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Plan — a named, recurring tier of the product (e.g. "Pro", "Enterprise").
 // Deliberately has no price field of its own: a consumer's price records link
@@ -238,30 +239,36 @@ export class Plan extends CardDef {
 
   static isolated = class Isolated extends Component<typeof Plan> {
     <template>
-      <article class='plan-page'>
-        <header class='ph'>
-          <LayersIcon class='avatar-icon' />
-          <div class='ph-id'>
-            <p class='doc-kind'>Plan</p>
-            <h1>{{@model.cardTitle}}</h1>
-          </div>
-        </header>
-        {{#if @model.description}}
-          <p class='desc'>{{@model.description}}</p>
-        {{/if}}
-        {{#if @model.features.length}}
-          <section class='panel'>
-            <h2>Features</h2>
-            <ul>
-              {{#each @model.features as |f|}}
-                <li>{{f}}</li>
-              {{/each}}
-            </ul>
-          </section>
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='plan-page'>
+          <header class='ph'>
+            <LayersIcon class='avatar-icon' />
+            <div class='ph-id'>
+              <p class='doc-kind'>Plan</p>
+              <h1>{{@model.cardTitle}}</h1>
+            </div>
+          </header>
+          {{#if @model.description}}
+            <p class='desc'>{{@model.description}}</p>
+          {{/if}}
+          {{#if @model.features.length}}
+            <section class='panel'>
+              <h2>Features</h2>
+              <ul>
+                {{#each @model.features as |f|}}
+                  <li>{{f}}</li>
+                {{/each}}
+              </ul>
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .plan-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 40rem;
           margin: 0 auto;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
