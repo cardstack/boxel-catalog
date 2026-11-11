@@ -137,3 +137,14 @@ export function isoDate(v: unknown): string {
   let d = v instanceof Date ? v : new Date(v as any);
   return Number.isNaN(d.getTime()) ? '' : d.toISOString();
 }
+
+/** The id of a module next to `base`. `base` is a URL in a deployed realm and a
+ *  bare specifier (`@cardstack/catalog/...`) when the catalog is loaded through
+ *  its alias, where `new URL` throws. */
+export function siblingModule(base: string, relative: string): string {
+  try {
+    return new URL(relative, base).href;
+  } catch {
+    return base.replace(/[^/]*$/, '') + relative.replace(/^\.\//, '');
+  }
+}
