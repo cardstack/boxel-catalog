@@ -337,7 +337,7 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
           @key={{this.rowKey}}
           @rowLabel={{this.rowLabel}}
           @label='Users'
-          @itemNoun='users'
+          @itemNoun='user'
           @size='s'
           @emptyTitle='No one has a role yet'
           @emptyMessage='Give a user a role below.'
