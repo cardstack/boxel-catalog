@@ -25,7 +25,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from '../hr/compact-sheet';
+} from '../shared/compact-sheet';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { formatDate } from '@cardstack/pretui/internal/reading-format';
 

@@ -8,6 +8,8 @@ import { Stat } from '@cardstack/pretui/components/stat';
 import Component from '@glimmer/component';
 import { hash } from '@ember/helper';
 import { on } from '@ember/modifier';
+import { htmlSafe } from '@ember/template';
+import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
 import type { ComponentLike } from '@glint/template';
 import { Button } from '@cardstack/pretui/components/button';
 import {
@@ -74,6 +76,8 @@ export const Sheet: TemplateOnlyComponent<SheetSignature> = <template>
         --pto-mark-size: 2rem;
         --review-mark-size: 2rem;
         --review-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --iso-mark-size: 2.25rem;
+        --iso-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         --pto-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         --meeting-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         flex: none;
@@ -478,6 +482,76 @@ export const IsoHead: TemplateOnlyComponent<IsoHeadSignature> = <template>
   </style>
 </template>;
 
+interface IsoMarkSignature {
+  Blocks: { default: [] };
+  Element: HTMLSpanElement;
+}
+
+/** The square mark at the start of an IsoHead: initials or an icon. */
+export const IsoMark: TemplateOnlyComponent<IsoMarkSignature> = <template>
+  <span class='iso-mark' aria-hidden='true' ...attributes>{{yield}}</span>
+  <style scoped>
+    @layer PretComponent {
+      .iso-mark {
+        display: inline-grid;
+        flex: none;
+        place-items: center;
+        inline-size: var(--iso-mark-size, 2rem);
+        block-size: var(--iso-mark-size, 2rem);
+        border-radius: calc(var(--radius) - 2px);
+        background: var(--card);
+        box-shadow: inset 0 0 0 1px var(--border);
+        color: var(--primary-ink);
+        font-size: var(--iso-mark-font-size, var(--boxel-font-size-xs));
+        font-weight: 600;
+        line-height: 1;
+      }
+    }
+  </style>
+</template>;
+
+interface DotLabelSignature {
+  Args: { label?: string | null; hue?: Hue; color?: string };
+  Element: HTMLSpanElement;
+}
+
+/** A row status as a 7px dot in the hue (or CSS colour) plus its label: no pill. */
+export class DotLabel extends Component<DotLabelSignature> {
+  get dotStyle() {
+    let { hue, color } = this.args;
+    return htmlSafe(
+      `background: ${hue ? stateColor(hue).ring : color || 'var(--muted-foreground)'}`,
+    );
+  }
+  <template>
+    <span class='dot-label' ...attributes><span
+        class='dot'
+        style={{this.dotStyle}}
+        aria-hidden='true'
+      ></span>{{@label}}</span>
+    <style scoped>
+      @layer PretComponent {
+        .dot-label {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          max-inline-size: 100%;
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 600;
+          white-space: nowrap;
+          color: var(--foreground);
+        }
+        .dot {
+          flex: none;
+          inline-size: 0.4375rem;
+          block-size: 0.4375rem;
+          border-radius: 50%;
+        }
+      }
+    </style>
+  </template>
+}
+
 export interface StripItem {
   label: string;
   value?: string | null;
@@ -575,7 +649,7 @@ interface IsoPageSignature {
 export const IsoPage: TemplateOnlyComponent<IsoPageSignature> = <template>
   <article class='iso' ...attributes>
     {{yield to='head'}}
-    <div class='iso-grid'>
+    <div class='iso-grid' data-aside={{if (has-block 'aside') 'true'}}>
       <div class='iso-col'>{{yield to='main'}}</div>
       {{#if (has-block 'aside')}}<aside class='iso-aside'>{{yield
             to='aside'
@@ -592,8 +666,8 @@ export const IsoPage: TemplateOnlyComponent<IsoPageSignature> = <template>
         box-sizing: border-box;
         min-height: 100%;
         padding: var(--boxel-sp-sm);
-        background: var(--card);
-        color: var(--card-foreground);
+        background: var(--background);
+        color: var(--foreground);
         font-family: var(--font-sans);
         font-size: var(--boxel-font-size-xs);
         line-height: 1.35;
@@ -620,16 +694,50 @@ export const IsoPage: TemplateOnlyComponent<IsoPageSignature> = <template>
         border-radius: var(--radius);
       }
       @container iso (width >= 42rem) {
-        .iso-grid {
+        /* with an aside the two columns are ONE card: a single outer frame
+           and one hairline between them; without one the main card takes
+           the full width */
+        .iso-grid[data-aside] {
           grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-          align-items: start;
+          gap: 0;
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
         }
-        /* docked flush: one hairline on its leading edge */
-        .iso-aside {
+        .iso-grid[data-aside] > .iso-col {
+          border: 0;
+          border-radius: 0;
+        }
+        .iso-grid[data-aside] > .iso-aside {
           border-width: 0 0 0 1px;
           border-radius: 0;
-          background: var(--card);
         }
+      }
+    }
+  </style>
+</template>;
+
+interface IsoFrameSignature {
+  Blocks: { default: [] };
+  Element: HTMLElement;
+}
+
+/** The page ground for a card that lays out its own blocks: IsoPage's
+ *  padding, gap and background, without its head and columns. */
+export const IsoFrame: TemplateOnlyComponent<IsoFrameSignature> = <template>
+  <div class='iso-frame' ...attributes>{{yield}}</div>
+  <style scoped>
+    @layer PretComponent {
+      .iso-frame {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        box-sizing: border-box;
+        min-height: 100%;
+        padding: var(--boxel-sp-sm);
+        background: var(--background);
+        color: var(--foreground);
       }
     }
   </style>

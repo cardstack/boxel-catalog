@@ -26,7 +26,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 import type { DescriptionsItem } from '@cardstack/pretui/components/descriptions';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 

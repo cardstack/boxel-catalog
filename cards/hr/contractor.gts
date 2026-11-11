@@ -33,7 +33,7 @@ import {
   Panel,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 // Inside this window the contract window turns amber; past zero it turns red.
 const EXPIRY_WARNING_DAYS = 30;

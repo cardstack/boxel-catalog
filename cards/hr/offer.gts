@@ -54,7 +54,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 export const OFFER_STATUSES = [
   'draft',

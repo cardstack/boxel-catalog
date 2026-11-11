@@ -34,7 +34,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 // Projects link to their team, never the other way round, so a team finds
 // its projects live. The ref is resolved beside this module rather than

@@ -32,7 +32,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 import {
   INTERVIEW_ROUND_LABELS,

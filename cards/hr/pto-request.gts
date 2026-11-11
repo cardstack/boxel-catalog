@@ -43,7 +43,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 import { DotLabel } from './dot-enum-field';
 
 export const PTO_TYPES = ['vacation', 'sick', 'personal', 'parental', 'unpaid'];

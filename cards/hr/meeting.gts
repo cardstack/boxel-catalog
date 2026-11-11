@@ -47,7 +47,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 // ── Shared reads ─────────────────────────────────────────────────────────
 // Every format shows the same chips, byline and facts, so they are derived

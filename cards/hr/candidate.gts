@@ -76,7 +76,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 export const CANDIDATE_STAGES = [
   'applied',

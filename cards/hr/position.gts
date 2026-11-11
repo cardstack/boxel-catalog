@@ -43,7 +43,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 

@@ -24,7 +24,7 @@ import {
   Panel,
   StatStrip,
   type StripItem,
-} from '../hr/compact-sheet';
+} from '../shared/compact-sheet';
 import { DotLabel } from '../hr/dot-enum-field';
 
 // What every format shows, in one place so the formats cannot drift.

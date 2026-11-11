@@ -46,7 +46,7 @@ import {
   SheetSection,
   StatStrip,
   type StripItem,
-} from '../hr/compact-sheet';
+} from '../shared/compact-sheet';
 import { DotLabel } from '../hr/dot-enum-field';
 import { codeRef, realmURL } from '@cardstack/runtime-common';
 import type { BaseDef } from '@cardstack/base/card-api';

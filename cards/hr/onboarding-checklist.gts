@@ -38,7 +38,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 export const ONBOARDING_CHECKLIST_STATUSES = [
   'not-started',

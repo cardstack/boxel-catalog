@@ -36,7 +36,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 // Helper to format salary range display
 function salaryRangeLabel(

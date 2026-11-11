@@ -47,7 +47,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 export const APPLICATION_STATUSES = [
   'new',
