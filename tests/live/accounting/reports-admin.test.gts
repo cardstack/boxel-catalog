@@ -1323,16 +1323,23 @@ export function runTests() {
         Object.defineProperty(card, realmSymbol, { value: new URL(realmURL) });
         return operations(card) as any;
       };
+      // A first call can meet the realm before it has read the card's definition, which answers
+      // unknown-operation; that writes nothing, so it's asked again.
       async function refused(
         assert: Assert,
-        call: Promise<unknown>,
+        call: () => Promise<unknown>,
         what: string,
       ) {
         let error: any;
-        try {
-          await call;
-        } catch (e) {
-          error = e;
+        for (let i = 0; i < 5; i++) {
+          error = undefined;
+          try {
+            await call();
+          } catch (e) {
+            error = e;
+          }
+          if (error?.code !== 'unknown-operation') break;
+          await new Promise((r) => setTimeout(r, 1000));
         }
         assert.ok(error, `${what} is refused`);
         assert.strictEqual(
@@ -1389,7 +1396,7 @@ export function runTests() {
         assert.strictEqual(saved.savedBy, TEST_USER);
         await refused(
           assert,
-          (await ops('Invoice/draft')).post(),
+          async () => (await ops('Invoice/draft')).post(),
           'posting an invoice',
         );
         // The desk hides the button on the same answer.
@@ -1557,7 +1564,7 @@ export function runTests() {
             'changing users',
           ],
         ] as [() => Promise<unknown>, string][])
-          await refused(assert, call(), what);
+          await refused(assert, call, what);
         assert.false(
           await mayUpdatePolicy(),
           'a Standard user is no writer of the realm',
@@ -1570,17 +1577,18 @@ export function runTests() {
           await ops('Customer/harbor')
         ).enterInvoice(invoiceParams);
         assert.ok(result?.id, 'the invoice draft is entered');
-        for (let [call, what] of forged()) await refused(assert, call(), what);
+        for (let [call, what] of forged()) await refused(assert, call, what);
         await refused(
           assert,
-          (await ops('Invoice/draft')).update({
-            attributes: { status: 'posted', postedBy: '@someone:localhost' },
-          }),
+          async () =>
+            (await ops('Invoice/draft')).update({
+              attributes: { status: 'posted', postedBy: '@someone:localhost' },
+            }),
           'editing a draft invoice to posted',
         );
         await refused(
           assert,
-          (await ops('Ledger/books')).enterBill(billParams),
+          async () => (await ops('Ledger/books')).enterBill(billParams),
           'entering a bill',
         );
         let file = await adapter.openFile('Invoice/draft.json');
@@ -1599,12 +1607,13 @@ export function runTests() {
         assert.ok(result?.id, 'the bill draft is entered');
         await refused(
           assert,
-          (await ops('Bill/draft')).post(),
+          async () => (await ops('Bill/draft')).post(),
           'posting a bill',
         );
         await refused(
           assert,
-          (await ops('Customer/harbor')).enterInvoice(invoiceParams),
+          async () =>
+            (await ops('Customer/harbor')).enterInvoice(invoiceParams),
           'entering an invoice',
         );
       });
