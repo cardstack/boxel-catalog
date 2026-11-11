@@ -8,7 +8,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { modifier } from 'ember-modifier';
 import { identifyCard } from '@cardstack/runtime-common';
-import { getComponent, getFields } from '@cardstack/base/card-api';
+import { getFields } from '@cardstack/base/card-api';
 import type { CardContext, CardDef } from '@cardstack/base/card-api';
 import { operations } from '@cardstack/base/operations';
 import { Button } from '@cardstack/pretui/components/button';
@@ -21,8 +21,6 @@ import { Chip } from '@cardstack/pretui/components/chip';
 import { Callout } from '@cardstack/pretui/components/callout';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
-import ArrowLeftIcon from '@cardstack/boxel-icons/arrow-left';
-import { DataTable } from '@cardstack/pretui/components/data-table';
 import {
   StatementTable,
   type StatementColumn as Col,
@@ -40,11 +38,9 @@ import { LedgerAccount, Bill } from './ledger-cards';
 import { Invoice } from './ledger-sales';
 import { OpeningBalances } from './ledger-opening';
 import {
-  SavedReport,
   DIMENSIONS,
   NO_CUSTOMIZATION,
   customizationOf,
-  settingsOfSaved,
   type Customization,
   type SavedLike,
   type SavedSettings,
@@ -56,6 +52,7 @@ export interface DetailLine {
   date: string;
   kind: string;
   doc: string;
+  entry: string;
   party: string;
   customer: string;
   vendor: string;
@@ -99,6 +96,7 @@ export function detailLines(
     date: e.date,
     kind: KIND_LABEL[e.kind] ?? e.kind,
     doc: e.doc,
+    entry: e.entry,
     party: e.party,
     customer: CUSTOMER_KINDS.has(e.kind) ? e.party : '',
     vendor: VENDOR_KINDS.has(e.kind) ? e.party : '',
@@ -222,12 +220,25 @@ export function customTable(
     }
     let label = (k: string) => {
       if (!k) return '(none)';
+      if (custom.groupBy === 'entry') {
+        let doc = by.get(k)![0].doc;
+        return doc && doc !== k ? `${doc} · ${k}` : k;
+      }
       if (custom.groupBy !== 'account') return k;
       let name = lines.find((l) => l.account === k)?.accountName;
       return name ? `${k} ${name}` : k;
     };
     let n = 0;
-    for (let k of [...by.keys()].sort()) {
+    // A journal reads entry by entry in date order; any other grouping in key order.
+    let keys =
+      custom.groupBy === 'entry'
+        ? [...by.keys()].sort(
+            (a, b) =>
+              by.get(a)![0].date.localeCompare(by.get(b)![0].date) ||
+              a.localeCompare(b),
+          )
+        : [...by.keys()].sort();
+    for (let k of keys) {
       let group = by.get(k)!,
         s = sums(group);
       groups.set(k, s);
@@ -548,7 +559,7 @@ export class SaveReportAs extends GlimmerComponent<SaveSignature> {
 }
 
 // Marks the element a report's actions export from: the nearest report body around it.
-const reportBody = modifier(
+export const reportBody = modifier(
   (el: HTMLElement, [setter]: [(el: HTMLElement | undefined) => void]) => {
     setter(el.closest('[data-report-body]') as HTMLElement | undefined);
     return () => setter(undefined);
@@ -628,9 +639,9 @@ export class ReportActions extends GlimmerComponent<ActionsSignature> {
 }
 
 // ── the custom report on the desk ───────────────────────────────────────────
-const instancesOf = (r: unknown): any[] =>
+export const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
-const loadingOf = (r: unknown) => (r as any)?.isLoading !== false;
+export const loadingOf = (r: unknown) => (r as any)?.isLoading !== false;
 /** Whether a search answered a full page, or says more matched than it holds. */
 export const isCapped = (r: unknown, size: number) => {
   let n = instancesOf(r).length,
@@ -646,8 +657,13 @@ const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
 };
-const thisMonth = () => new Date().toISOString().slice(0, 7);
-const GROUPS = [{ value: '', label: 'No grouping' }, ...DIMENSIONS];
+export const thisMonth = () => new Date().toISOString().slice(0, 7);
+const GROUPS = [
+  { value: '', label: 'No grouping' },
+  ...DIMENSIONS,
+  { value: 'party', label: 'Name' },
+  { value: 'entry', label: 'Entry' },
+];
 const SORT_DIRS = [
   { value: 'asc', label: 'Ascending' },
   { value: 'desc', label: 'Descending' },
@@ -665,6 +681,8 @@ export interface DetailPreset {
   columns: string[];
   groupBy?: string;
   sections?: string[]; // only accounts in these chart sections
+  accounts?: string[]; // only these accounts
+  through?: boolean; // a balance: every line up to the period's end, not just those in it
 }
 export const PRESETS: Record<string, DetailPreset> = {
   custom: {
@@ -682,7 +700,100 @@ export const PRESETS: Record<string, DetailPreset> = {
       'credit',
     ],
   },
+  'transaction-detail': {
+    kind: 'transaction-detail',
+    label: 'Transaction detail by account',
+    note: 'Every posting line in the period, account by account, with a subtotal for each.',
+    columns: [
+      'date',
+      'kind',
+      'doc',
+      'party',
+      'cls',
+      'debit',
+      'credit',
+      'amount',
+    ],
+    groupBy: 'account',
+  },
+  journal: {
+    kind: 'journal',
+    label: 'Journal',
+    note: 'Every entry in the period in date order, each with its lines.',
+    columns: [
+      'date',
+      'kind',
+      'party',
+      'account',
+      'accountName',
+      'debit',
+      'credit',
+    ],
+    groupBy: 'entry',
+  },
+  'pnl-detail': {
+    kind: 'pnl-detail',
+    label: 'Profit and loss detail',
+    note: 'The postings behind the profit and loss: income, cost of goods and expense lines by account.',
+    columns: ['date', 'kind', 'doc', 'party', 'cls', 'amount'],
+    groupBy: 'account',
+    sections: ['income', 'cogs', 'expense'],
+  },
+  'bs-detail': {
+    kind: 'bs-detail',
+    label: 'Balance sheet detail',
+    note: 'The postings behind the balance sheet: asset, liability and equity lines by account, up to the period end.',
+    columns: ['date', 'kind', 'doc', 'party', 'amount'],
+    groupBy: 'account',
+    sections: ['asset', 'liability', 'equity'],
+    through: true,
+  },
+  'customer-balance-detail': {
+    kind: 'customer-balance-detail',
+    label: 'Customer balance detail',
+    note: 'What each customer owes: every posting to receivables (1100) up to the period end, by customer.',
+    columns: ['date', 'kind', 'doc', 'amount'],
+    groupBy: 'party',
+    accounts: ['1100'],
+    through: true,
+  },
+  'vendor-balance-detail': {
+    kind: 'vendor-balance-detail',
+    label: 'Vendor balance detail',
+    note: 'What is owed to each vendor: every posting to payables (2000) up to the period end, by vendor. A credit is owed.',
+    columns: ['date', 'kind', 'doc', 'amount'],
+    groupBy: 'party',
+    accounts: ['2000'],
+    through: true,
+  },
 };
+
+/** The lines a preset reads: its chart sections or accounts. */
+export const presetLines = (lines: DetailLine[], p: DetailPreset) =>
+  lines.filter(
+    (l) =>
+      (!p.sections || p.sections.includes(l.section)) &&
+      (!p.accounts || p.accounts.includes(l.account)),
+  );
+/** A preset's report over a period: a balance reads every line up to the period's end. */
+export const presetTable = (
+  lines: DetailLine[],
+  p: DetailPreset,
+  custom: Customization,
+  from: string,
+  to: string,
+) =>
+  customTable(presetLines(lines, p), custom, {
+    from: p.through ? '' : from,
+    to,
+    columns: p.columns,
+  });
+/** A preset's own customization, as the report first opens. */
+export const presetCustomization = (p: DetailPreset): Customization => ({
+  ...NO_CUSTOMIZATION,
+  columns: [...p.columns],
+  groupBy: p.groupBy ?? '',
+});
 
 interface RunnerSignature {
   Args: {
@@ -714,9 +825,14 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
   @tracked savedName = '';
 
   get readFrom() {
-    return this.basis === 'cash' ? '0000-01' : this.fromMonth;
+    return this.basis === 'cash' || this.preset.through
+      ? '0000-01'
+      : this.fromMonth;
   }
+  // A balance reads every line up to its To month, so it has no From.
   get periodError() {
+    if (this.preset.through)
+      return isMonth(this.toMonth) ? '' : 'Enter the month to report through.';
     if (!isMonth(this.fromMonth) || !isMonth(this.toMonth))
       return 'Enter a From and a To month.';
     if (this.fromMonth > this.toMonth)
@@ -847,17 +963,17 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
     };
     let entries =
       this.basis === 'cash' ? cashEntries(src) : accrualEntries(src);
-    let lines = detailLines(entries, this.accounts),
-      sections = this.preset.sections;
-    return sections ? lines.filter((l) => sections.includes(l.section)) : lines;
+    return presetLines(detailLines(entries, this.accounts), this.preset);
   }
   get table() {
     if (this.periodError) return customTable([], this.custom, {});
-    return customTable(this.lines, this.custom, {
-      from: this.fromMonth,
-      to: this.toMonth,
-      columns: this.preset.columns,
-    });
+    return presetTable(
+      this.lines,
+      this.preset,
+      this.custom,
+      this.fromMonth,
+      this.toMonth,
+    );
   }
   get columnOptions() {
     return DETAIL_COLUMNS.map((c) => ({ value: c.key, label: c.label }));
@@ -981,15 +1097,20 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         </div>
       </header>
       <div class='controls'>
-        <Field @label='From' @error={{this.periodError}}>
-          <:default as |id|><Input
-              @controlId={{id}}
-              @type='month'
-              @value={{this.fromMonth}}
-              @onInput={{this.setFrom}}
-            /></:default>
-        </Field>
-        <Field @label='To'>
+        {{#unless this.preset.through}}
+          <Field @label='From'>
+            <:default as |id|><Input
+                @controlId={{id}}
+                @type='month'
+                @value={{this.fromMonth}}
+                @onInput={{this.setFrom}}
+              /></:default>
+          </Field>
+        {{/unless}}
+        <Field
+          @label={{if this.preset.through 'Through' 'To'}}
+          @error={{this.periodError}}
+        >
           <:default as |id|><Input
               @controlId={{id}}
               @type='month'
@@ -1146,244 +1267,6 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         gap: var(--boxel-sp-xs);
       }
       .muted {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-    </style>
-  </template>
-}
-
-// ── My reports ──────────────────────────────────────────────────────────────
-export interface ReportPage {
-  id: string;
-  label: string;
-  report: string; // the desk field holding the statement card
-}
-interface MineSignature {
-  Args: {
-    context?: CardContext;
-    realms: string[];
-    refRealms?: string[];
-    ledger?: CardDef;
-    app: unknown; // the desk card, whose fields hold the statement cards
-    pages: ReportPage[];
-    onOpenPage: (id: string) => void;
-  };
-}
-const eqKey = (a: unknown, b: unknown) => a === b;
-const componentOf = (card: CardDef) => getComponent(card);
-// Back in the list, focus returns to the report the reader opened.
-const focusReturn = modifier(
-  (el: HTMLElement, [id, done]: [string, () => void]) => {
-    if (!id) return;
-    let target = el.querySelector(
-      `[data-saved-report="${CSS.escape(id)}"]`,
-    ) as HTMLElement | null;
-    if (target) {
-      target.focus();
-      Promise.resolve().then(done);
-    }
-  },
-);
-const SAVED_PAGE = 500;
-type SavedRow = {
-  id: string;
-  name: string;
-  kindLabel: string;
-  period: string;
-  savedBy: string;
-  visibility: string;
-  card: SavedLike;
-};
-/** A search row's saved report, as its stored values. */
-export const savedOfEntry = (e: {
-  id: string;
-  item?: { attributes?: Record<string, unknown> } | unknown;
-}): SavedLike => ({
-  ...(((e.item as { attributes?: Record<string, unknown> })?.attributes ??
-    {}) as SavedLike),
-  id: e.id,
-});
-const SAVED_COLUMNS = [
-  { key: 'name', label: 'Name' },
-  { key: 'kindLabel', label: 'Report' },
-  { key: 'period', label: 'Period', mono: true },
-  { key: 'visibility', label: 'Shared' },
-  { key: 'savedBy', label: 'Saved by', mono: true },
-];
-/** The saved reports in the books, each opening with its settings applied. */
-export class MyReports extends GlimmerComponent<MineSignature> {
-  @tracked open: SavedLike | undefined;
-  @tracked statement: CardDef | undefined;
-  @tracked statementKind = '';
-  @tracked statementLabel = '';
-  @tracked openError = '';
-  // The realm answers with the shared reports and the viewer's own unlisted ones.
-  // A journal-only desk saves through the main books' ledger, so its realm is searched too.
-  visible = operations(SavedReport).visibleReports(
-    {},
-    { realms: this.args.refRealms ?? this.args.realms, owner: this },
-  );
-  @tracked returnTo = '';
-  get loading() {
-    return this.visible.isLoading && !this.visible.entries.length;
-  }
-  get capped() {
-    let total = (this.visible.meta as any)?.page?.total;
-    return (
-      this.visible.entries.length >= SAVED_PAGE ||
-      (typeof total === 'number' && total > this.visible.entries.length)
-    );
-  }
-  get rows(): SavedRow[] {
-    return this.visible.entries.map((e) => {
-      let c = savedOfEntry(e);
-      return {
-        id: e.id,
-        name: c.name ?? '',
-        kindLabel: c.kindLabel || c.kind || '',
-        period: c.asOfMonth
-          ? `as of ${c.asOfMonth}`
-          : [c.fromMonth, c.toMonth].filter(Boolean).join(' – '),
-        savedBy: c.savedBy ?? '',
-        visibility:
-          c.visibility === 'private' ? 'Not listed for others' : 'Shared',
-        card: c,
-      };
-    });
-  }
-  rowKey = (r: SavedRow) => r.id;
-  rowLabel = (r: SavedRow) => r.name;
-  isRunner = (kind: string | null | undefined) => !!PRESETS[kind ?? ''];
-  openReport = (r: SavedRow) => {
-    let c = r.card;
-    this.openError = '';
-    if (this.isRunner(c.kind)) {
-      this.returnTo = r.id;
-      this.open = c;
-      return;
-    }
-    let page = this.args.pages.find((p) => p.id === c.kind);
-    let card = page && (this.args.app as any)?.[page.report];
-    if (!page || !card) {
-      this.openError = `Open it from books that show ${c.kindLabel || c.kind || 'this report'}, or save the report again here. “${c.name ?? ''}” is a ${c.kindLabel || c.kind || 'report'} these books don't show.`;
-      return;
-    }
-    this.returnTo = r.id;
-    this.openStatement(card, c, page);
-  };
-  // A saved statement opens as its own unsaved copy, held only while it's shown here.
-  openStatement = async (card: CardDef, c: SavedLike, page: ReportPage) => {
-    this.openError = '';
-    let copy = statementCopy(card, settingsOfSaved(c));
-    try {
-      let store = this.args.context?.store;
-      this.statement = store
-        ? await store.addWithoutPersisting(copy, { realm: this.args.realms[0] })
-        : copy;
-      this.statementKind = page.id;
-      this.statementLabel = c.name || page.label;
-    } catch (e: any) {
-      this.openError = failureText(e);
-    }
-  };
-  back = () => {
-    this.open = undefined;
-    this.statement = undefined;
-  };
-  cleared = () => (this.returnTo = '');
-  <template>
-    {{#if this.openError}}<Callout
-        @tone='danger'
-        @title="The report didn't open"
-      >{{this.openError}}</Callout>{{/if}}
-    {{#if this.statement}}
-      <div class='mine-back'><Button
-          @appearance='plain'
-          @size='s'
-          {{on 'click' this.back}}
-        >
-          <ArrowLeftIcon class='back-icon' aria-hidden='true' />My reports</Button></div>
-      <section class='report' data-report-body>
-        <h2 tabindex='-1' {{focusOnInsert}}>{{this.statementLabel}}</h2>
-        <ReportActions
-          @context={{@context}}
-          @ledger={{@ledger}}
-          @kind={{this.statementKind}}
-          @kindLabel={{this.statementLabel}}
-          @card={{this.statement}}
-        />
-        {{#let (componentOf this.statement) as |Statement|}}<Statement
-            @format='isolated'
-          />{{/let}}
-      </section>
-    {{else if this.open}}
-      <div class='mine-back'><Button
-          @appearance='plain'
-          @size='s'
-          {{on 'click' this.back}}
-        >
-          <ArrowLeftIcon class='back-icon' aria-hidden='true' />My reports</Button></div>
-      <CustomReportRunner
-        @context={{@context}}
-        @realms={{@realms}}
-        @refRealms={{@refRealms}}
-        @ledger={{@ledger}}
-        @kind={{this.open.kind}}
-        @saved={{this.open}}
-      />
-    {{else if this.rows.length}}
-      {{#if this.capped}}<Callout
-          @tone='warning'
-          @title='Not every report is listed'
-        >
-          Only the first
-          {{SAVED_PAGE}}
-          saved reports are listed.
-        </Callout>{{/if}}
-      <p class='muted'>A report saved as not listed for others is left out of
-        their lists, but anyone who can read the books can still open it by its
-        link or find it in a search.</p>
-      <DataTable
-        @columns={{SAVED_COLUMNS}}
-        @rows={{this.rows}}
-        @key={{this.rowKey}}
-        @rowLabel={{this.rowLabel}}
-        @label='My reports'
-        @size='s'
-        @loading={{this.loading}}
-        @loadingLabel='Loading saved reports…'
-        data-saved-reports
-        {{focusReturn this.returnTo this.cleared}}
-      >
-        <:cell as |text row col|>
-          {{#if (eqKey col.key 'name')}}<Button
-              @appearance='link'
-              @tone='neutral'
-              @size='s'
-              data-saved-report={{row.id}}
-              {{on 'click' (fn this.openReport row)}}
-            >{{text}}</Button>{{else}}{{text}}{{/if}}
-        </:cell>
-      </DataTable>
-    {{else if this.loading}}
-      <p class='muted' role='status' aria-busy='true'>Loading saved reports…</p>
-    {{else}}
-      <EmptyState
-        @title='No saved reports yet'
-        @message='Open any report, set it up the way you want it, then choose Save as. It lists here and opens with those settings.'
-      />
-    {{/if}}
-    <style scoped>
-      .mine-back {
-        margin-bottom: var(--boxel-sp-xs);
-      }
-      .back-icon {
-        width: 1em;
-        height: 1em;
-      }
-      .muted {
-        margin-block-end: var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }

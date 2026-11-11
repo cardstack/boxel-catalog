@@ -123,6 +123,7 @@ export interface ReportEntry {
   project: string;
   party: string;
   doc: string; // the document it came from
+  entry: string; // the posting it is a line of: its journal number, or its document
   kind: string; // the kind of document: a journal posting's kind, or invoice, bill, opening
 }
 interface LineLike {
@@ -158,7 +159,13 @@ const entry = (
   project: l.project ?? '',
   party: l.party || party,
   doc: l.doc || doc,
+  entry: l.doc || doc,
   kind,
+});
+// A journal posting's lines belong to that posting, whichever document they name.
+const inJournal = (e: ReportEntry, p: { month: string; seq: number }) => ({
+  ...e,
+  entry: seqText(p.month, p.seq),
 });
 // A posting's document, or its number in the journal when it has none (a journal entry, a schedule).
 const docOf = (p: { source: string; month: string; seq: number }) =>
@@ -171,7 +178,7 @@ export function accrualEntries(src: Sources): ReportEntry[] {
   let out: ReportEntry[] = [];
   for (let p of journalPostings(src.journal))
     for (let l of p.lines)
-      out.push(entry(l, p.date, p.party, 1, docOf(p), p.kind));
+      out.push(inJournal(entry(l, p.date, p.party, 1, docOf(p), p.kind), p));
   for (let [docs, partyKey] of [
     [src.invoices, 'customerId'],
     [src.bills, 'vendorId'],
@@ -256,7 +263,7 @@ export function cashEntries(src: Sources): ReportEntry[] {
   for (let p of journalPostings(src.journal)) {
     if (NOT_CASH.has(p.kind)) continue;
     for (let l of p.lines)
-      out.push(entry(l, p.date, p.party, 1, docOf(p), p.kind));
+      out.push(inJournal(entry(l, p.date, p.party, 1, docOf(p), p.kind), p));
     for (let i of p.items) {
       if (p.kind === 'customer-payment') {
         let d = invoices.get(i.ref);
