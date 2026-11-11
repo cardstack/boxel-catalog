@@ -1,0 +1,38 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "AI app builders at work",
+      "brief": "How do people feel about using an AI app builder like Boxel for real work, and what would make them trust it? We want to know what to lead with when we pitch it to teams.",
+      "questions": [
+        {
+          "text": "I'd use an AI app builder for work, not just for fun.",
+          "scale": "agree",
+          "rungs": null
+        },
+        {
+          "text": "Playful, animated apps make work software feel less like work.",
+          "scale": "agree",
+          "rungs": null
+        },
+        {
+          "text": "How far would you trust an app that an AI built for your team?",
+          "scale": "ladder",
+          "rungs": "a to-do list\na team calendar\na bug tracker\na CRM for sales\nan inventory manager\na financial reporting tool\na patient records system"
+        }
+      ],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../likert-question",
+        "name": "LikertQuestion"
+      }
+    }
+  }
+}

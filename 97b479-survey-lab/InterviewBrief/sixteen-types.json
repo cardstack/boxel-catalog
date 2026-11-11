@@ -1,0 +1,46 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Which of the 16 types are you?",
+      "brief": "Find which of the 16 personality types fits this person, using the four preference pairs: where they get their energy (other people, or time alone), what they notice first (concrete facts, or patterns and possibilities), how they decide (logic, or people and values), and how they like to live (planned, or open and flexible). For each pair, say which side they lean to and how sure we are, with evidence from what they said and did, in as few questions as we can. Give them their type with a short, specific explanation they would want to keep and share. This is for fun and self-reflection, not a diagnosis.",
+      "aims": "Energy: do they recharge with other people or with time alone?\nAttention: do they notice concrete facts and details first, or patterns and possibilities?\nDeciding: do they lean on logic and consistency, or on people and values?\nLiving: do they prefer things planned and settled, or open and flexible?\nGive them a type and an explanation that feels true to them",
+      "mustAsk": "Does the type feel right to them? What would they change about it?",
+      "interviewer": null,
+      "persona": null,
+      "avatar": null,
+      "minutes": 10,
+      "model": "anthropic/claude-sonnet-5.5",
+      "protocol": "{\"purpose\": \"To help you discover your personality type and offer insights for self-reflection.\", \"intro\": \"Welcome! Let's explore your personality and find out which of the 16 types fits you best.\", \"reveal\": \"full\", \"rapport\": \"warm\", \"adapt\": true, \"warmup\": 1, \"showNotes\": true, \"showAims\": false, \"minutes\": 15, \"offerMore\": true, \"tools\": [\"choice\", \"likert\", \"picture\"], \"measures\": [{\"aim\": \"Energy: do they recharge with other people or with time alone?\", \"kind\": \"pair\", \"poles\": [\"Other people\", \"Time alone\"], \"letters\": [\"E\", \"I\"]}, {\"aim\": \"Attention: do they notice concrete facts and details first, or patterns and possibilities?\", \"kind\": \"pair\", \"poles\": [\"Concrete facts\", \"Patterns and possibilities\"], \"letters\": [\"S\", \"N\"]}, {\"aim\": \"Deciding: do they lean on logic and consistency, or on people and values?\", \"kind\": \"pair\", \"poles\": [\"Logic and consistency\", \"People and values\"], \"letters\": [\"T\", \"F\"]}, {\"aim\": \"Living: do they prefer things planned and settled, or open and flexible?\", \"kind\": \"pair\", \"poles\": [\"Planned and settled\", \"Open and flexible\"], \"letters\": [\"J\", \"P\"]}], \"rationale\": \"The 'full' reveal and 'warm' rapport are chosen because this is for fun and self-reflection; participants want to see their results and the reasoning. Allowing the interviewer to 'adapt' and showing 'notes' supports the personal insight goal. 'ShowAims' is false to prevent participants from consciously trying to fit a type. The 'warmup' question helps set a relaxed, conversational tone. 'OfferMore' respects the participant's time and engagement level.\"}",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../interview",
+        "name": "InterviewBrief"
+      }
+    },
+    "relationships": {
+      "hosts.0": {
+        "links": {
+          "self": "../Interviewer/mei"
+        }
+      },
+      "hosts.1": {
+        "links": {
+          "self": "../Interviewer/sam"
+        }
+      },
+      "hosts.2": {
+        "links": {
+          "self": "../Interviewer/pip"
+        }
+      }
+    }
+  }
+}

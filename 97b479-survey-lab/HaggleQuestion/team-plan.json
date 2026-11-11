@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Team plan price",
+      "brief": "What would a small team really pay for a monthly AI app builder plan, and what arguments come up when they push back on price?",
+      "product": "The Boxel Team plan",
+      "details": "Your team builds its own apps and tools with AI: up to 10 people, unlimited apps, shared workspaces.",
+      "currency": "$",
+      "unit": "a month",
+      "listPrice": 299,
+      "floorPrice": 179,
+      "seller": "Sam",
+      "context": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../haggle",
+        "name": "HaggleQuestion"
+      }
+    }
+  }
+}

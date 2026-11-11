@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Mei",
+      "portraitPrompt": "Photorealistic editorial portrait photograph of a fictional woman in her late twenties, East Asian, shoulder-length black hair with a soft side part, small silver stud earrings, wearing a plain cream knit sweater. Head and shoulders, centred, facing the camera directly, looking straight into the lens with a calm, relaxed, neutral expression, lips gently closed, eyes fully open. Soft window light from the left, gentle shadows, warm dark charcoal studio background with subtle falloff. Shot on an 85mm lens at f/2, sharp focus on the eyes, natural skin texture, no retouching, no text, no watermark.",
+      "baseImage": "../Portraits/mei-base.jpg",
+      "blinkImage": "../Portraits/mei-blink.jpg",
+      "mouthAImage": "../Portraits/mei-mouthA.jpg",
+      "mouthOImage": "../Portraits/mei-mouthO.jpg",
+      "smileImage": "../Portraits/mei-smile.jpg",
+      "depthImage": "../Portraits/mei-depth.jpg",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../living-portrait",
+        "name": "LivingPortrait"
+      }
+    }
+  }
+}

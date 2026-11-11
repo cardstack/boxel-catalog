@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Interview\n\nA plain chat. The interviewer asks one question at a time, follows up on real moments, notices contradictions, and pulls up a tool when a measure beats a sentence: Quick pick, Scale and ladders, This or that, Off the top of your head, Haggle, **Picture it** (describe something, the AI draws it, change it until it feels right) and **Watch it** (react to a video, camera optional).\n\nEvery turn is a fresh agent that sees only the brief, the **dossier** (aims, what we know, how to talk to this person, next moves) and recent turns, so an interrupted interview just carries on. A running **verdict** keeps each measure's lean, confidence and evidence; finishing early gives an honest result, with unsure parts left unsure.\n\nThe interviewer's **talking portrait** opens beside the chat and lip-syncs each line; close it any time, and click their picture to bring it back.",
+      "ref": {
+        "module": "../interview",
+        "name": "Interview"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Interview",
+      "cardDescription": "One person's interview: a chat with an AI interviewer who works from the brief, pulls up question tools when talk isn't enough, and keeps a living dossier any agent can carry on from.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
