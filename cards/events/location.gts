@@ -14,6 +14,7 @@ import GeoPointField from '@cardstack/catalog/fields/geo-point/geo-point';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
 import { concat } from '@ember/helper';
 import { FitTile } from '../shared/fit-tile';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Walks `parent` from the root down to `loc`; capped so a cycle can't hang.
 function chain(loc: Location | undefined): Location[] {
@@ -383,133 +384,135 @@ export class Location extends CardDef {
       return placeLabel(this.model);
     }
     <template>
-      <article class='loc-page'>
-        <header class='head'>
-          <span class='mark' aria-hidden='true'><MapPinIcon
-              width='1.125rem'
-              height='1.125rem'
-            /></span>
-          <div class='id'>
-            <h1 class='name'>{{this.name}}</h1>
-            <p class='meta'>{{if
-                this.ancestors
-                this.ancestors
-                (if this.place this.place 'Top-level place')
-              }}</p>
-          </div>
-          {{#if @model.kind}}
-            <span class='dot-text'><span
-                class='dot dot-primary'
-              ></span>{{@model.kind}}</span>
-          {{/if}}
-        </header>
-
-        <dl class='stats' aria-label='Key numbers'>
-          <div class='stat'>
-            <dt class='label'>Depth</dt>
-            <dd class='value'>{{this.path.length}}</dd>
-            <dd class='sub'>{{this.kindsLabel}}</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Kind</dt>
-            <dd class='value'>{{if @model.kind @model.kind '—'}}</dd>
-            <dd class='sub'>{{if
-                @model.parentName
-                (concat 'in ' @model.parentName)
-                'no parent'
-              }}</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Place</dt>
-            <dd class='value'>{{if
-                @model.address.city
-                @model.address.city
-                '—'
-              }}</dd>
-            <dd class='sub'>{{if
-                @model.address.country.name
-                @model.address.country.name
-                '—'
-              }}</dd>
-          </div>
-        </dl>
-
-        <div class='cols'>
-          <div class='main'>
-            <section class='sec'>
-              <h2>Path</h2>
-              <ul class='rows'>
-                {{#each this.path as |p|}}
-                  <li class='row'>
-                    <div class='row-id'>
-                      <span class='row-name'>{{p.name}}</span>
-                    </div>
-                    {{#if p.kind}}
-                      <span class='dot-text'><span
-                          class='dot {{if p.current "dot-primary"}}'
-                        ></span>{{p.kind}}</span>
-                    {{/if}}
-                  </li>
-                {{/each}}
-              </ul>
-            </section>
-            <section class='sec'>
-              <h2>Address</h2>
-              <div class='body'>
-                {{#if @model.address.fullAddress}}
-                  <@fields.address @format='embedded' />
-                {{else}}
-                  <span class='muted'>—</span>
-                {{/if}}
-              </div>
-            </section>
-            {{#if @model.description}}
-              <section class='sec'>
-                <h2>About</h2>
-                <div class='body'><@fields.description /></div>
-              </section>
+      <IsoFrame>
+        <article class='loc-page'>
+          <header class='head'>
+            <span class='mark' aria-hidden='true'><MapPinIcon
+                width='1.125rem'
+                height='1.125rem'
+              /></span>
+            <div class='id'>
+              <h1 class='name'>{{this.name}}</h1>
+              <p class='meta'>{{if
+                  this.ancestors
+                  this.ancestors
+                  (if this.place this.place 'Top-level place')
+                }}</p>
+            </div>
+            {{#if @model.kind}}
+              <span class='dot-text'><span
+                  class='dot dot-primary'
+                ></span>{{@model.kind}}</span>
             {{/if}}
-          </div>
+          </header>
 
-          <aside class='side'>
-            <section class='sec'>
-              <h2>Linked</h2>
-              <dl class='kv'>
-                <dt>Parent</dt>
-                <dd>{{#if @model.parent}}<@fields.parent
-                      @format='atom'
-                    />{{else}}—{{/if}}</dd>
-              </dl>
-            </section>
-            <section class='sec'>
-              <h2>Details</h2>
-              <dl class='kv'>
-                <dt>Kind</dt><dd>{{if @model.kind @model.kind '—'}}</dd>
-                <dt>Parent</dt><dd>{{if
-                    @model.parentName
-                    @model.parentName
-                    '—'
-                  }}</dd>
-                <dt>City</dt><dd>{{if
-                    @model.address.city
-                    @model.address.city
-                    '—'
-                  }}</dd>
-                <dt>Phone</dt><dd class='mono'>{{#if
-                    @model.phone
-                  }}<@fields.phone />{{else}}—{{/if}}</dd>
-                <dt>Website</dt><dd>{{#if @model.website}}<@fields.website
-                    />{{else}}—{{/if}}</dd>
-                <dt>Geo</dt><dd class='mono'>{{if
-                    @model.geo.lat
-                    (concat @model.geo.lat ', ' @model.geo.lon)
-                    '—'
-                  }}</dd>
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+          <dl class='stats' aria-label='Key numbers'>
+            <div class='stat'>
+              <dt class='label'>Depth</dt>
+              <dd class='value'>{{this.path.length}}</dd>
+              <dd class='sub'>{{this.kindsLabel}}</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Kind</dt>
+              <dd class='value'>{{if @model.kind @model.kind '—'}}</dd>
+              <dd class='sub'>{{if
+                  @model.parentName
+                  (concat 'in ' @model.parentName)
+                  'no parent'
+                }}</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Place</dt>
+              <dd class='value'>{{if
+                  @model.address.city
+                  @model.address.city
+                  '—'
+                }}</dd>
+              <dd class='sub'>{{if
+                  @model.address.country.name
+                  @model.address.country.name
+                  '—'
+                }}</dd>
+            </div>
+          </dl>
+
+          <div class='cols'>
+            <div class='main'>
+              <section class='sec'>
+                <h2>Path</h2>
+                <ul class='rows'>
+                  {{#each this.path as |p|}}
+                    <li class='row'>
+                      <div class='row-id'>
+                        <span class='row-name'>{{p.name}}</span>
+                      </div>
+                      {{#if p.kind}}
+                        <span class='dot-text'><span
+                            class='dot {{if p.current "dot-primary"}}'
+                          ></span>{{p.kind}}</span>
+                      {{/if}}
+                    </li>
+                  {{/each}}
+                </ul>
+              </section>
+              <section class='sec'>
+                <h2>Address</h2>
+                <div class='body'>
+                  {{#if @model.address.fullAddress}}
+                    <@fields.address @format='embedded' />
+                  {{else}}
+                    <span class='muted'>—</span>
+                  {{/if}}
+                </div>
+              </section>
+              {{#if @model.description}}
+                <section class='sec'>
+                  <h2>About</h2>
+                  <div class='body'><@fields.description /></div>
+                </section>
+              {{/if}}
+            </div>
+
+            <aside class='side'>
+              <section class='sec'>
+                <h2>Linked</h2>
+                <dl class='kv'>
+                  <dt>Parent</dt>
+                  <dd>{{#if @model.parent}}<@fields.parent
+                        @format='atom'
+                      />{{else}}—{{/if}}</dd>
+                </dl>
+              </section>
+              <section class='sec'>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  <dt>Kind</dt><dd>{{if @model.kind @model.kind '—'}}</dd>
+                  <dt>Parent</dt><dd>{{if
+                      @model.parentName
+                      @model.parentName
+                      '—'
+                    }}</dd>
+                  <dt>City</dt><dd>{{if
+                      @model.address.city
+                      @model.address.city
+                      '—'
+                    }}</dd>
+                  <dt>Phone</dt><dd class='mono'>{{#if
+                      @model.phone
+                    }}<@fields.phone />{{else}}—{{/if}}</dd>
+                  <dt>Website</dt><dd>{{#if @model.website}}<@fields.website
+                      />{{else}}—{{/if}}</dd>
+                  <dt>Geo</dt><dd class='mono'>{{if
+                      @model.geo.lat
+                      (concat @model.geo.lat ', ' @model.geo.lon)
+                      '—'
+                    }}</dd>
+                </dl>
+              </section>
+            </aside>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .loc-page {
           margin: 0.75rem;
