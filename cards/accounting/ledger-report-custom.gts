@@ -829,7 +829,10 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
       ? '0000-01'
       : this.fromMonth;
   }
+  // A balance reads every line up to its To month, so it has no From.
   get periodError() {
+    if (this.preset.through)
+      return isMonth(this.toMonth) ? '' : 'Enter the month to report through.';
     if (!isMonth(this.fromMonth) || !isMonth(this.toMonth))
       return 'Enter a From and a To month.';
     if (this.fromMonth > this.toMonth)
@@ -1094,15 +1097,20 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         </div>
       </header>
       <div class='controls'>
-        <Field @label='From' @error={{this.periodError}}>
-          <:default as |id|><Input
-              @controlId={{id}}
-              @type='month'
-              @value={{this.fromMonth}}
-              @onInput={{this.setFrom}}
-            /></:default>
-        </Field>
-        <Field @label='To'>
+        {{#unless this.preset.through}}
+          <Field @label='From'>
+            <:default as |id|><Input
+                @controlId={{id}}
+                @type='month'
+                @value={{this.fromMonth}}
+                @onInput={{this.setFrom}}
+              /></:default>
+          </Field>
+        {{/unless}}
+        <Field
+          @label={{if this.preset.through 'Through' 'To'}}
+          @error={{this.periodError}}
+        >
           <:default as |id|><Input
               @controlId={{id}}
               @type='month'
@@ -1194,11 +1202,7 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
           data-report-capped
         >{{this.capNote}}</Callout>{{/if}}
       {{#if this.periodError}}
-        <EmptyState
-          @size='s'
-          @title='Choose a period'
-          @message={{this.periodError}}
-        />
+        <EmptyState @size='s' @title='Set the period' />
       {{else if this.loading}}
         <div class='skeletons'><Skeleton @height='2rem' /><Skeleton
             @height='2rem'
@@ -1229,10 +1233,6 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         flex-wrap: wrap;
         justify-content: space-between;
         gap: var(--boxel-sp-sm);
-      }
-      h2 {
-        font-family: var(--font-serif);
-        font-size: var(--boxel-font-size-lg);
       }
       .runner-actions {
         display: flex;
