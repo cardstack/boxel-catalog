@@ -1,0 +1,223 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Rainy Day Table",
+      "summary": "A games cupboard on one table. Every game is data: its parts, its layout and its rules, so new ones are written, not coded. Comes with Blackjack, Chess, Snakes & Ladders and Painted Skin, a card battler made from a sketch. Play against AI opponents that are data too, with every card tracked copy by copy and full undo. Sketch your own game in the Playground (parts, areas, notes, pasted art) and the AI assistant turns it into a playable game with the bundled game authoring skill.",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/game"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/match"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/opponent"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/playground"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/specimen"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Match/blackjack-first-hand"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../Match/chess-vs-rookie"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../Match/snakes-four-player"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../Match/5330e24a-2c09-4eff-b4d4-f15316fb615a"
+        }
+      },
+      "examples.4": {
+        "links": {
+          "self": "../Playground/painted-skin-sketch"
+        }
+      },
+      "examples.5": {
+        "links": {
+          "self": "../PartsSpecimen/toolbox"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/painted-skin.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/blackjack.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../Screenshots/chess.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/snakes.png"
+        }
+      },
+      "images.4": {
+        "links": {
+          "self": "../Screenshots/playground.png"
+        }
+      },
+      "images.5": {
+        "links": {
+          "self": "../Screenshots/parts.png"
+        }
+      },
+      "skills.0": {
+        "links": {
+          "self": "../Skill/game-authoring"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "@cardstack/catalog/Category/video-games-interactive"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "@cardstack/catalog/Category/ai-automation"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/app"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/game"
+        }
+      },
+      "tags.2": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/ai"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/rainy-day-table.png"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/engine"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/bots"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/chess-rules"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/expr"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/layout"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/validate"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/fields"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/parts"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/table"
+        }
+      },
+      "images.6": {
+        "links": {
+          "self": "../Playground/images/lucky-thirteen-gs1rwa.jpg"
+        }
+      },
+      "images.7": {
+        "links": {
+          "self": "../Playground/images/lucky-thirteen-bh85dm.jpg"
+        }
+      },
+      "images.8": {
+        "links": {
+          "self": "../Playground/images/lucky-thirteen-kjgysi.jpg"
+        }
+      },
+      "images.9": {
+        "links": {
+          "self": "../Playground/images/lucky-thirteen-u0xuk0.jpg"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "CardListing"
+      }
+    }
+  }
+}
