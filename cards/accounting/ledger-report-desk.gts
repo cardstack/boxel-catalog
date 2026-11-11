@@ -192,7 +192,7 @@ export class MyReports extends GlimmerComponent<MineSignature> {
     let page = this.args.pages.find((p) => p.id === c.kind);
     let card = page && (this.args.app as any)?.[page.report];
     if (!page || !card) {
-      this.openError = `“${c.name ?? ''}” is a ${c.kindLabel || c.kind || 'report'} these books don't show, so it can't open here.`;
+      this.openError = `Open it from books that show ${c.kindLabel || c.kind || 'this report'}, or save the report again here. “${c.name ?? ''}” is a ${c.kindLabel || c.kind || 'report'} these books don't show.`;
       return;
     }
     this.returnTo = r.id;
