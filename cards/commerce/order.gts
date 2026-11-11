@@ -430,7 +430,7 @@ export class Order extends CardDef {
             <span class='label'>Account</span>
             <@fields.account @format='embedded' />
           </div>
-          <KeyValue class='facts' @items={{this.facts}}>
+          <KeyValue class='facts kv-pad' @items={{this.facts}}>
             <:value>
               <@fields.orderDate />
             </:value>
@@ -466,7 +466,7 @@ export class Order extends CardDef {
               </:body>
             </Table>
             <KeyValue
-              class='totals'
+              class='totals kv-pad'
               @items={{this.totalsFacts}}
               @valueAlign='end'
             >
@@ -500,6 +500,10 @@ export class Order extends CardDef {
         </section>
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         .order-doc {
           max-width: 46rem;
           margin: 0 auto;

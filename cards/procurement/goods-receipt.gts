@@ -313,7 +313,7 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
               @items={{this.receipt}}
               @divided={{true}}
               @labelStyle='eyebrow'
-              class='kv'
+              class='kv kv-pad'
             />
           </section>
           {{#if @model.purchaseOrder}}
@@ -323,7 +323,7 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
                 @items={{LINKED}}
                 @divided={{true}}
                 @labelStyle='eyebrow'
-                class='kv'
+                class='kv kv-pad'
               >
                 <:value><@fields.purchaseOrder
                     @format='atom'
@@ -338,13 +338,17 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
               @items={{this.details}}
               @divided={{true}}
               @labelStyle='eyebrow'
-              class='kv'
+              class='kv kv-pad'
             />
           </section>
         </div>
       </div>
     </article>
     <style scoped>
+      .kv-pad {
+        padding-inline: var(--boxel-sp-sm);
+      }
+
       .gr {
         container-type: inline-size;
         box-sizing: border-box;
@@ -544,7 +548,7 @@ export class GoodsReceipt extends CardDef {
           @items={{this.items}}
           @divided={{true}}
           @labelStyle='eyebrow'
-          class='kv'
+          class='kv kv-pad'
         >
           <:value as |row|>
             {{#if (eq row.key 'Purchase order')}}<@fields.purchaseOrder
@@ -555,6 +559,10 @@ export class GoodsReceipt extends CardDef {
         </KeyValue>
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         .emb {
           font-size: 0.75rem;
           line-height: 1.25;

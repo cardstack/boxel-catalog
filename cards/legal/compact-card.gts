@@ -86,7 +86,17 @@ interface FactsSignature {
   Args: { items: Fact[] };
 }
 export const Facts: TemplateOnlyComponent<FactsSignature> = <template>
-  <KeyValue @items={{@items}} @labelStyle='eyebrow' @divided={{true}} />
+  <KeyValue
+    class='kv-pad'
+    @items={{@items}}
+    @labelStyle='eyebrow'
+    @divided={{true}}
+  />
+  <style scoped>
+    .kv-pad {
+      padding-inline: var(--boxel-sp-sm);
+    }
+  </style>
 </template>;
 
 // ── Rows: equal-height list rows, title + grey line, dot status ──────────

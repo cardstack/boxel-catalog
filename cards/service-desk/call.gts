@@ -205,7 +205,7 @@ export class Call extends CardDef {
         </header>
 
         <KeyValue
-          class='glance'
+          class='glance kv-pad'
           @items={{this.glance}}
           @layout='inline'
           @labelStyle='eyebrow'
@@ -269,6 +269,10 @@ export class Call extends CardDef {
       </article>
 
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         /* Rule 1: an isolated card gets no host container, so it declares its
            own. Without this every @container rule below is dead CSS.
            inline-size, not size — the card scrolls vertically. */

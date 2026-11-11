@@ -202,13 +202,17 @@ export class User extends CardDef {
         {{#if @model.email}}
           <section class='panel'>
             <h2>Contact</h2>
-            <KeyValue @items={{this.contactRows}}>
+            <KeyValue class='kv-pad' @items={{this.contactRows}}>
               <:value><@fields.email /></:value>
             </KeyValue>
           </section>
         {{/if}}
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         .user-page {
           max-width: 40rem;
           margin: 0 auto;

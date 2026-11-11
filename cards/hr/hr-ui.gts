@@ -98,13 +98,17 @@ interface FactListSignature {
  */
 export const FactList: TemplateOnlyComponent<FactListSignature> = <template>
   {{#if (has-block 'value')}}
-    <KeyValue class='hr-facts' @items={{@items}} ...attributes>
+    <KeyValue class='hr-facts kv-pad' @items={{@items}} ...attributes>
       <:value as |item|>{{yield item to='value'}}</:value>
     </KeyValue>
   {{else}}
-    <KeyValue class='hr-facts' @items={{@items}} ...attributes />
+    <KeyValue class='hr-facts kv-pad' @items={{@items}} ...attributes />
   {{/if}}
   <style scoped>
+    .kv-pad {
+      padding-inline: var(--boxel-sp-sm);
+    }
+
     .hr-facts {
       font-size: var(--boxel-font-size-sm);
       column-gap: var(--boxel-sp);

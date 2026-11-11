@@ -204,6 +204,7 @@ export class Asset extends CardDef {
           /></:fact>
         <:default>
           <KeyValue
+            class='kv-pad'
             @items={{summaryRows @model}}
             @labelStyle='eyebrow'
             @divided={{true}}
@@ -211,6 +212,11 @@ export class Asset extends CardDef {
           <LinkedRows @model={{@model}} @fields={{@fields}} />
         </:default>
       </Brief>
+      <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+      </style>
     </template>
   };
 
@@ -423,6 +429,7 @@ export class Asset extends CardDef {
           {{/if}}
           <Section @title='Identity'>
             <KeyValue
+              class='kv-pad'
               @items={{this.identity}}
               @labelStyle='eyebrow'
               @divided={{true}}
@@ -430,6 +437,7 @@ export class Asset extends CardDef {
           </Section>
           <Section @title='Acquisition & warranty'>
             <KeyValue
+              class='kv-pad'
               @items={{this.acquisition}}
               @labelStyle='eyebrow'
               @divided={{true}}
@@ -465,6 +473,7 @@ export class Asset extends CardDef {
           </Section>
           <Section @title='Details'>
             <KeyValue
+              class='kv-pad'
               @items={{this.details}}
               @labelStyle='eyebrow'
               @divided={{true}}
@@ -472,6 +481,11 @@ export class Asset extends CardDef {
           </Section>
         </:side>
       </Sheet>
+      <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+      </style>
     </template>
   };
 }
@@ -553,7 +567,12 @@ function relatedName(title?: string | null) {
 const LinkedRows: TemplateOnlyComponent<{
   Args: { model: Partial<Asset>; fields: any };
 }> = <template>
-  <KeyValue @items={{LINKED}} @labelStyle='eyebrow' @divided={{true}}>
+  <KeyValue
+    class='kv-pad'
+    @items={{LINKED}}
+    @labelStyle='eyebrow'
+    @divided={{true}}
+  >
     <:value as |item|>
       {{#if (eq item.key 'Category')}}
         {{#if @model.category}}<@fields.category
@@ -579,6 +598,10 @@ const LinkedRows: TemplateOnlyComponent<{
     </:value>
   </KeyValue>
   <style scoped>
+    .kv-pad {
+      padding-inline: var(--boxel-sp-sm);
+    }
+
     .person {
       display: inline-flex;
       align-items: center;

@@ -24,7 +24,6 @@ import { formatMoney, moneyText } from './money-format';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { IsoFrame } from '../shared/compact-sheet';
 
 // CollectibleProduct — a catalogue entry for a manufactured collectible: the
 // thing itself, not anyone's copy of it.
@@ -275,150 +274,145 @@ export class CollectibleProduct extends CardDef {
     }
 
     <template>
-      <IsoFrame>
-        <article class='product'>
-          <header class='hero'>
-            <div class='hero-photo'>
-              {{#if @model.images.primaryUrl}}
-                <img
-                  src={{@model.images.primaryUrl}}
-                  alt={{@model.displayTitle}}
-                />
-              {{else}}
-                <div class='photo-empty'>
-                  <ImageOffIcon width='30' height='30' aria-hidden='true' />
-                  <span>No photo yet</span>
-                </div>
+      <article class='product'>
+        <header class='hero'>
+          <div class='hero-photo'>
+            {{#if @model.images.primaryUrl}}
+              <img
+                src={{@model.images.primaryUrl}}
+                alt={{@model.displayTitle}}
+              />
+            {{else}}
+              <div class='photo-empty'>
+                <ImageOffIcon width='30' height='30' aria-hidden='true' />
+                <span>No photo yet</span>
+              </div>
+            {{/if}}
+          </div>
+
+          <div class='hero-body'>
+            <h1 class='title'>{{if
+                @model.displayTitle
+                @model.displayTitle
+                'Untitled product'
+              }}</h1>
+
+            <div class='badges'>
+              {{#if @model.brand}}
+                <span class='badge'><@fields.brand @format='atom' /></span>
+              {{/if}}
+              {{#if @model.silhouette}}
+                <span class='badge'><@fields.silhouette @format='atom' /></span>
+              {{/if}}
+              {{#if @model.sku}}
+                <span class='badge badge--sku'>{{@model.sku}}</span>
               {{/if}}
             </div>
 
-            <div class='hero-body'>
-              <h1 class='title'>{{if
-                  @model.displayTitle
-                  @model.displayTitle
-                  'Untitled product'
-                }}</h1>
-
-              <div class='badges'>
-                {{#if @model.brand}}
-                  <span class='badge'><@fields.brand @format='atom' /></span>
-                {{/if}}
-                {{#if @model.silhouette}}
-                  <span class='badge'><@fields.silhouette
-                      @format='atom'
-                    /></span>
-                {{/if}}
-                {{#if @model.sku}}
-                  <span class='badge badge--sku'>{{@model.sku}}</span>
-                {{/if}}
-              </div>
-
-              {{! THE PLAQUE — real gold surface area, not a hairline accent.
+            {{! THE PLAQUE — real gold surface area, not a hairline accent.
                 Same device the app shell's collection-value figure uses. }}
-              <div class='plaque'>
-                {{#if this.retail}}
-                  <span class='plaque-value'>{{moneyText
-                      @model.retailPrice
-                    }}</span>
-                  <span class='plaque-label'>Retail price</span>
-                {{else}}
-                  <span class='plaque-value plaque-value--unknown'>No retail
-                    price recorded</span>
-                {{/if}}
-              </div>
+            <div class='plaque'>
+              {{#if this.retail}}
+                <span class='plaque-value'>{{moneyText
+                    @model.retailPrice
+                  }}</span>
+                <span class='plaque-label'>Retail price</span>
+              {{else}}
+                <span class='plaque-value plaque-value--unknown'>No retail price
+                  recorded</span>
+              {{/if}}
             </div>
-          </header>
+          </div>
+        </header>
 
-          {{! AT A GLANCE — shape: a wide fact rail. Release date and collab status
+        {{! AT A GLANCE — shape: a wide fact rail. Release date and collab status
             are the two facts a browsing collector scans for before reading the
             description. }}
-          <section class='sec glance'>
-            <h2><CalendarIcon class='sec-icon' aria-hidden='true' />At a glance</h2>
-            <ul class='stats'>
-              <li class='stat'>
-                <span class='stat-k'>Released</span>
-                <span class='stat-v'><@fields.releaseDate
-                    @format='atom'
-                  /></span>
-              </li>
-              <li class='stat'>
-                <span class='stat-k'>Colorway</span>
-                <span class='stat-v'>{{if
-                    @model.colorway
-                    @model.colorway
-                    '—'
-                  }}</span>
-              </li>
-              <li class='stat'>
-                <span class='stat-k'>Collab</span>
-                <span class='stat-v'>{{if
-                    @model.collabPartner
-                    @model.collabPartner
-                    'General release'
-                  }}</span>
-              </li>
-            </ul>
+        <section class='sec glance'>
+          <h2><CalendarIcon class='sec-icon' aria-hidden='true' />At a glance</h2>
+          <ul class='stats'>
+            <li class='stat'>
+              <span class='stat-k'>Released</span>
+              <span class='stat-v'><@fields.releaseDate @format='atom' /></span>
+            </li>
+            <li class='stat'>
+              <span class='stat-k'>Colorway</span>
+              <span class='stat-v'>{{if
+                  @model.colorway
+                  @model.colorway
+                  '—'
+                }}</span>
+            </li>
+            <li class='stat'>
+              <span class='stat-k'>Collab</span>
+              <span class='stat-v'>{{if
+                  @model.collabPartner
+                  @model.collabPartner
+                  'General release'
+                }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <div class='cols'>
+          {{! shape: prose }}
+          <section class='sec prose-sec'>
+            <h2><NotebookPenIcon
+                class='sec-icon'
+                aria-hidden='true'
+              />Description</h2>
+            {{#if @model.productDescription}}
+              <div class='prose'><@fields.productDescription /></div>
+            {{else}}
+              <EmptyState
+                @title='No description written yet.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
+            {{/if}}
           </section>
 
-          <div class='cols'>
-            {{! shape: prose }}
-            <section class='sec prose-sec'>
-              <h2><NotebookPenIcon
-                  class='sec-icon'
-                  aria-hidden='true'
-                />Description</h2>
-              {{#if @model.productDescription}}
-                <div class='prose'><@fields.productDescription /></div>
-              {{else}}
-                <EmptyState
-                  @title='No description written yet.'
-                  @texture={{false}}
-                  style={{COMPACT_EMPTY_STYLE}}
-                />
-              {{/if}}
-            </section>
-
-            {{! shape: chip rows — a different shape from the prose block beside
+          {{! shape: chip rows — a different shape from the prose block beside
               it }}
-            <section class='sec'>
-              <h2><RulerIcon class='sec-icon' aria-hidden='true' />Sizing & tags</h2>
-              {{#if this.hasSpecifics}}
-                <ul class='chips'>
-                  {{#each @model.availableVariants as |v|}}
-                    {{#if v}}
-                      <li><span class='chip-v'>{{v}}</span></li>
+          <section class='sec'>
+            <h2><RulerIcon class='sec-icon' aria-hidden='true' />Sizing & tags</h2>
+            {{#if this.hasSpecifics}}
+              <ul class='chips'>
+                {{#each @model.availableVariants as |v|}}
+                  {{#if v}}
+                    <li><span class='chip-v'>{{v}}</span></li>
+                  {{/if}}
+                {{/each}}
+              </ul>
+              {{#if @model.tags.length}}
+                <ul class='chips tags'>
+                  {{#each @model.tags as |t|}}
+                    {{#if t}}
+                      <li><TagIcon
+                          width='12'
+                          height='12'
+                          aria-hidden='true'
+                        /><span class='chip-v'>{{t}}</span></li>
                     {{/if}}
                   {{/each}}
                 </ul>
-                {{#if @model.tags.length}}
-                  <ul class='chips tags'>
-                    {{#each @model.tags as |t|}}
-                      {{#if t}}
-                        <li><TagIcon
-                            width='12'
-                            height='12'
-                            aria-hidden='true'
-                          /><span class='chip-v'>{{t}}</span></li>
-                      {{/if}}
-                    {{/each}}
-                  </ul>
-                {{/if}}
-              {{else}}
-                <EmptyState
-                  @title='No size run or tags recorded yet.'
-                  @texture={{false}}
-                  style={{COMPACT_EMPTY_STYLE}}
-                />
               {{/if}}
-            </section>
-          </div>
+            {{else}}
+              <EmptyState
+                @title='No size run or tags recorded yet.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
+            {{/if}}
+          </section>
+        </div>
 
-          {{! NO ACTIONS ZONE: "Add to collection" and "Find listings" belong to
+        {{! NO ACTIONS ZONE: "Add to collection" and "Find listings" belong to
             the consuming app, which holds the commands and the reverse Listing
             query. A control that looks live and does nothing here would teach
             the user to distrust every other control on the card. }}
-        </article>
-      </IsoFrame>
+      </article>
+
       <style scoped>
         /* Rule 1: an isolated card gets NO host container — declaring our
            own is what makes every @container rule below live rather than

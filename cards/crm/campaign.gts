@@ -352,7 +352,7 @@ export class Campaign extends CardDef {
 
         <section class='panel'>
           <h2>Details</h2>
-          <KeyValue @items={{this.details}}>
+          <KeyValue class='kv-pad' @items={{this.details}}>
             <:value as |row|>
               {{#if (eq row.value 'startDate')}}
                 <@fields.startDate />
@@ -367,6 +367,10 @@ export class Campaign extends CardDef {
         </section>
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         .campaign-page {
           max-width: 42rem;
           margin: 0 auto;

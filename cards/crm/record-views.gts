@@ -108,12 +108,16 @@ export const RecordEmbedded: TemplateOnlyComponent<{
       @items={{@items}}
       @labelStyle='eyebrow'
       @divided={{true}}
-      class='rv-kv'
+      class='rv-kv kv-pad'
     >
       <:value as |row|>{{yield row to='value'}}</:value>
     </KeyValue>
   </article>
   <style scoped>
+    .kv-pad {
+      padding-inline: var(--boxel-sp-sm);
+    }
+
     .rv-embedded {
       font-size: var(--boxel-font-size-xs);
       line-height: 1.4;
@@ -194,7 +198,7 @@ export const RecordPage: TemplateOnlyComponent<{
             @items={{@lead.items}}
             @labelStyle='eyebrow'
             @divided={{true}}
-            class='rv-kv'
+            class='rv-kv kv-pad'
           >
             <:value as |row|>{{yield row to='value'}}</:value>
           </KeyValue>
@@ -205,7 +209,7 @@ export const RecordPage: TemplateOnlyComponent<{
             @items={{@linked}}
             @labelStyle='eyebrow'
             @divided={{true}}
-            class='rv-kv'
+            class='rv-kv kv-pad'
           >
             <:value as |row|>{{yield row to='value'}}</:value>
           </KeyValue>
@@ -215,7 +219,7 @@ export const RecordPage: TemplateOnlyComponent<{
           @items={{@details}}
           @labelStyle='eyebrow'
           @divided={{true}}
-          class='rv-kv'
+          class='rv-kv kv-pad'
         >
           <:value as |row|>{{yield row to='value'}}</:value>
         </KeyValue>
@@ -223,6 +227,10 @@ export const RecordPage: TemplateOnlyComponent<{
     </div>
   </article>
   <style scoped>
+    .kv-pad {
+      padding-inline: var(--boxel-sp-sm);
+    }
+
     .rv-page {
       font-size: var(--boxel-font-size-xs);
       line-height: 1.4;

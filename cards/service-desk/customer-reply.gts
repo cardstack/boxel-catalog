@@ -207,7 +207,7 @@ export class CustomerReply extends CardDef {
         </header>
         {{#if this.v.quote}}<p class='emb-quote'>{{this.v.quote}}</p>{{/if}}
         <KeyValue
-          class='emb-kv'
+          class='emb-kv kv-pad'
           @items={{this.v.rows}}
           @labelStyle='eyebrow'
           @divided={{true}}
@@ -225,6 +225,10 @@ export class CustomerReply extends CardDef {
         </KeyValue>
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         @layer PretComponent {
           .emb {
             display: grid;
@@ -371,6 +375,7 @@ export class CustomerReply extends CardDef {
             {{#if this.v.linked.length}}
               <Panel @title='Linked' @variant='inspector'>
                 <KeyValue
+                  class='kv-pad'
                   @items={{this.v.linked}}
                   @labelStyle='eyebrow'
                   @divided={{true}}
@@ -389,6 +394,7 @@ export class CustomerReply extends CardDef {
             {{/if}}
             <Panel @title='Details' @variant='inspector'>
               <KeyValue
+                class='kv-pad'
                 @items={{this.v.facts}}
                 @labelStyle='eyebrow'
                 @divided={{true}}
@@ -404,6 +410,10 @@ export class CustomerReply extends CardDef {
         </div>
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         @layer PretComponent {
           .iso {
             container-type: inline-size;

@@ -22,16 +22,20 @@ interface LegalFactsSignature {
  */
 export const LegalFacts: TemplateOnlyComponent<LegalFactsSignature> = <template>
   {{#if (has-block 'value')}}
-    <KeyValue class='legal-facts' @items={{@items}} ...attributes>
+    <KeyValue class='legal-facts kv-pad' @items={{@items}} ...attributes>
       <:value as |item|><span class='legal-val'>{{yield
             item
             to='value'
           }}</span></:value>
     </KeyValue>
   {{else}}
-    <KeyValue class='legal-facts' @items={{@items}} ...attributes />
+    <KeyValue class='legal-facts kv-pad' @items={{@items}} ...attributes />
   {{/if}}
   <style scoped>
+    .kv-pad {
+      padding-inline: var(--boxel-sp-sm);
+    }
+
     /* Doubled class so the alignment outranks KeyValue's own centring
        whatever the stylesheet order: a label sits on its value's first
        line when the value wraps. */

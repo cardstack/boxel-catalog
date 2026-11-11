@@ -429,7 +429,7 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
               @items={{this.delivery}}
               @divided={{true}}
               @labelStyle='eyebrow'
-              class='kv'
+              class='kv kv-pad'
             >
               <:value as |row|><span
                   class={{if (get row 'mono') 'mono'}}
@@ -443,7 +443,7 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
                 @items={{this.linked}}
                 @divided={{true}}
                 @labelStyle='eyebrow'
-                class='kv'
+                class='kv kv-pad'
               >
                 <:value as |row|>
                   {{#if (eq row.key 'Vendor')}}<@fields.vendor
@@ -468,7 +468,7 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
               @items={{this.details}}
               @divided={{true}}
               @labelStyle='eyebrow'
-              class='kv'
+              class='kv kv-pad'
             >
               <:value as |row|><span
                   class={{if (get row 'mono') 'mono'}}
@@ -479,6 +479,10 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       </div>
     </article>
     <style scoped>
+      .kv-pad {
+        padding-inline: var(--boxel-sp-sm);
+      }
+
       .po {
         --pretui-kv-label-font-size: 0.5625rem;
         --pretui-kv-label-color: var(--muted-foreground);
@@ -702,7 +706,7 @@ export class PurchaseOrder extends CardDef {
           @items={{this.rows}}
           @divided={{true}}
           @labelStyle='eyebrow'
-          class='kv'
+          class='kv kv-pad'
         >
           <:value as |row|>
             {{#if (eq (get row 'atom') 'vendor')}}<@fields.vendor
@@ -720,6 +724,10 @@ export class PurchaseOrder extends CardDef {
         </KeyValue>
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         .pe {
           --pretui-kv-label-font-size: 0.5625rem;
           --pretui-kv-label-color: var(--muted-foreground);

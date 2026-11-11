@@ -292,7 +292,7 @@ export class Forecast extends CardDef {
         {{#if this.details.length}}
           <section class='panel'>
             <h2>Details</h2>
-            <KeyValue @items={{this.details}}>
+            <KeyValue class='kv-pad' @items={{this.details}}>
               <:value as |row|>
                 {{#if (eq row.key 'Territory')}}
                   <@fields.territory @format='atom' />
@@ -305,6 +305,10 @@ export class Forecast extends CardDef {
         {{/if}}
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         .forecast-page {
           max-width: 40rem;
           margin: 0 auto;

@@ -470,7 +470,7 @@ export class ReviewCycle extends CardDef {
         {{/if}}
         {{#if this.details.length}}
           <Descriptions
-            class='emb-kv'
+            class='emb-kv kv-pad'
             @items={{this.details}}
             @columns={{3}}
             @layout='vertical'
@@ -479,6 +479,10 @@ export class ReviewCycle extends CardDef {
         {{/if}}
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         @layer PretComponent {
           .emb {
             container-type: inline-size;

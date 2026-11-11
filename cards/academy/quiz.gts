@@ -80,7 +80,11 @@ export class Quiz extends CardDef {
                 class='instr'
               >{{@model.instructions}}</p>{{/if}}
           </div>
-          <KeyValue class='facts' @items={{this.facts}} @layout='stacked' />
+          <KeyValue
+            class='facts kv-pad'
+            @items={{this.facts}}
+            @layout='stacked'
+          />
         </header>
         {{#if @model.questions.length}}
           <ol class='questions'>
@@ -100,6 +104,10 @@ export class Quiz extends CardDef {
         {{/if}}
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         .quiz {
           max-width: 52rem;
           margin: 0 auto;

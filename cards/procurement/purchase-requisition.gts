@@ -286,7 +286,7 @@ export class PurchaseRequisition extends CardDef {
             <section class='card'>
               <h2>Request</h2>
               <KeyValue
-                class='kv'
+                class='kv kv-pad'
                 @items={{this.request}}
                 @divided={{true}}
                 @labelStyle='eyebrow'
@@ -296,7 +296,7 @@ export class PurchaseRequisition extends CardDef {
               <h2>Linked</h2>
               {{#if @model.budget}}
                 <KeyValue
-                  class='kv'
+                  class='kv kv-pad'
                   @items={{BUDGET_ROW}}
                   @divided={{true}}
                   @labelStyle='eyebrow'
@@ -313,7 +313,7 @@ export class PurchaseRequisition extends CardDef {
             <section class='card'>
               <h2>Details</h2>
               <KeyValue
-                class='kv'
+                class='kv kv-pad'
                 @items={{this.details}}
                 @divided={{true}}
                 @labelStyle='eyebrow'
@@ -323,6 +323,10 @@ export class PurchaseRequisition extends CardDef {
         </div>
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         .ip {
           --text-stat: 1.375rem;
           --text-ui-xs: 0.6875rem;
@@ -475,7 +479,7 @@ export class PurchaseRequisition extends CardDef {
             · needed by
             {{this.f.neededBy}}{{/if}}</p>
         <KeyValue
-          class='kv'
+          class='kv kv-pad'
           @items={{this.items}}
           @divided={{true}}
           @labelStyle='eyebrow'
@@ -489,6 +493,10 @@ export class PurchaseRequisition extends CardDef {
         </KeyValue>
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         .emb {
           --pretui-kv-label-font-size: 0.5625rem;
           --pretui-kv-label-color: var(--muted-foreground);

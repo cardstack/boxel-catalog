@@ -259,6 +259,7 @@ class MeterIsolated extends MeterView {
         </Section>
         <Section @title='Thresholds'>
           <KeyValue
+            class='kv-pad'
             @items={{this.thresholds}}
             @labelStyle='eyebrow'
             @divided={{true}}
@@ -275,6 +276,7 @@ class MeterIsolated extends MeterView {
         </Section>
         <Section @title='Details'>
           <KeyValue
+            class='kv-pad'
             @items={{this.details}}
             @labelStyle='eyebrow'
             @divided={{true}}
@@ -283,6 +285,10 @@ class MeterIsolated extends MeterView {
       </:side>
     </Sheet>
     <style scoped>
+      .kv-pad {
+        padding-inline: var(--boxel-sp-sm);
+      }
+
       .log-btn {
         flex: none;
       }
@@ -424,6 +430,7 @@ export class Meter extends CardDef {
           /></:fact>
         <:default>
           <KeyValue
+            class='kv-pad'
             @items={{this.details}}
             @labelStyle='eyebrow'
             @divided={{true}}
@@ -435,6 +442,11 @@ export class Meter extends CardDef {
           />
         </:default>
       </Brief>
+      <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+      </style>
     </template>
   };
 
@@ -494,7 +506,12 @@ const LINKS: KvItem[] = [
 const MeterLinks: TemplateOnlyComponent<{
   Args: { model: Partial<Meter>; fields: any; plan?: MaintenancePlan };
 }> = <template>
-  <KeyValue @items={{LINKS}} @labelStyle='eyebrow' @divided={{true}}>
+  <KeyValue
+    class='kv-pad'
+    @items={{LINKS}}
+    @labelStyle='eyebrow'
+    @divided={{true}}
+  >
     <:value as |item|>
       {{#if (eq item.key 'Asset')}}
         {{#if @model.asset}}<@fields.asset @format='atom' />{{else}}—{{/if}}
@@ -511,6 +528,11 @@ const MeterLinks: TemplateOnlyComponent<{
       {{else}}—{{/if}}
     </:value>
   </KeyValue>
+  <style scoped>
+    .kv-pad {
+      padding-inline: var(--boxel-sp-sm);
+    }
+  </style>
 </template>;
 
 function lastReader(m: Partial<Meter>) {

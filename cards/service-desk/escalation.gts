@@ -393,7 +393,7 @@ export class Escalation extends CardDef {
         </header>
         {{#if this.v.fact}}<p class='emb-fact'>{{this.v.fact}}</p>{{/if}}
         <KeyValue
-          class='emb-kv'
+          class='emb-kv kv-pad'
           @items={{this.rows}}
           @labelStyle='eyebrow'
           @divided={{true}}
@@ -411,6 +411,10 @@ export class Escalation extends CardDef {
         </KeyValue>
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         @layer PretComponent {
           .emb {
             display: grid;
@@ -576,6 +580,7 @@ export class Escalation extends CardDef {
             {{#if this.v.hasSubject}}
               <Panel @title='Linked' @variant='inspector'>
                 <KeyValue
+                  class='kv-pad'
                   @items={{this.subjectRows}}
                   @labelStyle='eyebrow'
                   @divided={{true}}
@@ -588,6 +593,7 @@ export class Escalation extends CardDef {
             {{/if}}
             <Panel @title='Details' @variant='inspector'>
               <KeyValue
+                class='kv-pad'
                 @items={{this.v.detailFacts}}
                 @labelStyle='eyebrow'
                 @divided={{true}}
@@ -603,6 +609,10 @@ export class Escalation extends CardDef {
         </div>
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         @layer PretComponent {
           .iso {
             container-type: inline-size;

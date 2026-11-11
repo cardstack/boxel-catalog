@@ -223,7 +223,7 @@ export class Notification extends CardDef {
         {{/if}}
 
         <KeyValue
-          class='glance'
+          class='glance kv-pad'
           @items={{this.glance}}
           @layout='inline'
           @labelStyle='eyebrow'
@@ -256,7 +256,7 @@ export class Notification extends CardDef {
           {{! Surfaced deliberately: the dedupe key is the field that decides
             whether a retry writes a second copy, and a support question
             about a duplicated alert is answered by reading it. }}
-          <KeyValue @items={{this.delivery}}>
+          <KeyValue class='kv-pad' @items={{this.delivery}}>
             <:value as |item|>
               {{#if (eq item.key 'Dedupe key')}}
                 <Token @value={{item.value}} style={{ID_TOKEN_STYLE.sm}} />
@@ -269,6 +269,10 @@ export class Notification extends CardDef {
       </article>
 
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         /* Rule 1: isolated has no host container — declare our own or every
            @container rule below is inert. */
         .card {

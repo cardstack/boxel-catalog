@@ -1897,7 +1897,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             </div>
             {{! Opened stays read-only: it is a fact about what happened, not
                 a setting. }}
-            <KeyValue class='facts' @items={{this.facts}} />
+            <KeyValue class='facts kv-pad' @items={{this.facts}} />
             {{#if @ticket.tags.length}}
               <ul class='tags'>
                 {{#each @ticket.tags as |tag|}}
@@ -1911,6 +1911,10 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
     </article>
 
     <style scoped>
+      .kv-pad {
+        padding-inline: var(--boxel-sp-sm);
+      }
+
       .ws {
         container-name: ws;
         container-type: inline-size;

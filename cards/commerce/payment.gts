@@ -311,7 +311,11 @@ export class Payment extends CardDef {
           </header>
           <div class='tear' aria-hidden='true'></div>
           {{#if this.rows.length}}
-            <KeyValue class='r-rows' @items={{this.rows}} @valueAlign='end'>
+            <KeyValue
+              class='r-rows kv-pad'
+              @items={{this.rows}}
+              @valueAlign='end'
+            >
               <:value as |row|>
                 {{#if (eq row.value 'paidAt')}}
                   <@fields.paidAt />
@@ -329,6 +333,10 @@ export class Payment extends CardDef {
         </div>
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         .receipt-wrap {
           padding: var(--boxel-sp-2xl) var(--boxel-sp-lg);
           display: flex;
