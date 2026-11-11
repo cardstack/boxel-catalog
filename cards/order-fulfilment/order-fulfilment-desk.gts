@@ -2186,6 +2186,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       }
       .tbl td {
         block-size: 1.75rem;
+        /* Pret UI cells default to the top; a fixed row height needs the middle */
+        vertical-align: middle;
         padding: 0 var(--boxel-sp-sm);
         white-space: nowrap;
       }

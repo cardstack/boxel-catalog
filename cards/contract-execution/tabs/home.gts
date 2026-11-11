@@ -165,6 +165,7 @@ export class HomeTab extends GlimmerComponent<Signature> {
   <template>
     <div class='home'>
       <Block
+        class='home-main'
         @flat={{true}}
         @title='The year ahead'
         @sub='Contracts with a notice deadline inside the next 365 days, soonest first'
@@ -250,6 +251,11 @@ export class HomeTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
         overflow: hidden;
+      }
+      /* a grid item cannot shrink below its content unless told it may */
+      .home-main,
+      .home-side {
+        min-inline-size: 0;
       }
       /* two columns of one block: full-height divider, flat insides */
       .home-side {

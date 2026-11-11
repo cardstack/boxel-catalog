@@ -1778,6 +1778,8 @@ export class AssetMaintenanceDesk extends Component<
       }
       .tbl td {
         block-size: 1.75rem;
+        /* Pret UI cells default to the top; a fixed row height needs the middle */
+        vertical-align: middle;
         padding: 0 var(--boxel-sp-sm);
         border-block-start: 1px solid var(--border);
         white-space: nowrap;

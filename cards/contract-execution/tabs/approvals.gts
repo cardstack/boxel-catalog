@@ -508,6 +508,7 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
   <template>
     <div class='ap'>
       <Block
+        class='ap-main'
         @flat={{true}}
         @title='Waiting on an approver'
         @count={{this.rows.length}}
@@ -703,6 +704,11 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
         overflow: hidden;
+      }
+      /* a grid item cannot shrink below its content unless told it may */
+      .ap-main,
+      .ap-side {
+        min-inline-size: 0;
       }
       .ap-side {
         border-inline-start: 1px solid var(--border);

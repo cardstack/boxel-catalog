@@ -374,6 +374,8 @@ export class VendorQuote extends CardDef {
         }
         td {
           block-size: 1.75rem;
+          /* Pret UI cells default to the top; a fixed row height needs the middle */
+          vertical-align: middle;
         }
         .end {
           text-align: end;
