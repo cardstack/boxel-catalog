@@ -1207,7 +1207,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                   </div>
                   {{#if this.visibleMatches.length}}
                     <div class='tw'>
-                      <Table @labelledBy='h-fixtures' @framed={{false}}>
+                      <Table @labelledBy='h-fixtures' @framed={{false}} @striped={{false}}>
                         <:head>
                           <tr>
                             <th scope='col' class='wide'>Fixture</th>
@@ -1268,7 +1268,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                       </div>
                       {{#if this.visibleBookings.length}}
                         <div class='tw'>
-                          <Table @labelledBy={{hid}} @framed={{false}}>
+                          <Table @labelledBy={{hid}} @framed={{false}} @striped={{false}}>
                             <:head>
                               <tr>
                                 <th scope='col'>Reference</th>
@@ -1781,7 +1781,6 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         padding-inline: var(--boxel-sp-xs);
         --pretui-table-head-height: 1.5rem;
         --inset: var(--card);
-        --stripe: transparent;
       }
       th,
       td {

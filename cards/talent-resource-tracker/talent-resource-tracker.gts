@@ -818,8 +818,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     viewCard(card ?? new URL(id), format);
   };
 
-  // DataTable's @onRowActivate passes (row, index); openCard's second
-  // parameter is a Format, so the index must not reach it.
+  // A row callback such as DataTable's @onActivate passes (row, index);
+  // openCard's second parameter is a Format, so the index must not reach it.
   openRowCard = (row: { id?: string } | undefined) => this.openCard(row);
 
   private cardById(id: string) {

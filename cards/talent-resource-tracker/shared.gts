@@ -256,9 +256,8 @@ export const AlertPill: TemplateOnlyComponent<{
   </style>
 </template>;
 
-// The first-cell text of a table row as a real button: the keyboard path for
-// DataTable's @onRowActivate, which is a mouse shortcut only. It reads as
-// plain text until hovered or focused.
+// The first-cell text of a table row as a real button, so a row opens from the
+// keyboard. It reads as plain text until hovered or focused.
 export const RowOpen: TemplateOnlyComponent<{
   Args: { onOpen: () => void };
   Blocks: { default: [] };

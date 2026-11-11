@@ -194,7 +194,7 @@ export class VendorQuote extends CardDef {
                 <h2 class='cap' id='vq-lines'>Line items</h2>
                 {{#if this.f.lines.length}}
                   <div class='tw'>
-                    <Table @labelledBy='vq-lines' @framed={{false}}>
+                    <Table @labelledBy='vq-lines' @framed={{false}} @striped={{false}}>
                       <:head>
                         <tr>
                           <th scope='col'>Item</th>
@@ -361,7 +361,6 @@ export class VendorQuote extends CardDef {
           padding-inline: var(--boxel-sp-sm);
           --pretui-table-head-height: 1.5rem;
           --inset: var(--card);
-          --stripe: transparent;
         }
         th,
         td {

@@ -1357,7 +1357,7 @@ export class VendorOnboardingConsole extends Component<
                   </div>
                   {{#if sec.rows.length}}
                     <div class='tw'>
-                      <Table @labelledBy='h-{{sec.id}}' @framed={{false}}>
+                      <Table @labelledBy='h-{{sec.id}}' @framed={{false}} @striped={{false}}>
                         <:head>
                           <tr>
                             {{#each sec.columns as |c|}}
@@ -1682,7 +1682,6 @@ export class VendorOnboardingConsole extends Component<
         padding-inline: var(--boxel-sp-xs);
         --pretui-table-head-height: 1.5rem;
         --inset: var(--card);
-        --stripe: transparent;
       }
       th,
       td {
