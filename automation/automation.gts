@@ -1187,10 +1187,10 @@ const RUN_LIMITS = [
   {
     key: 'aiCredits',
     label: 'AI spending',
-    hint: 'Credits a run’s AI requests may cost in all',
+    hint: 'Credits a run’s AI requests may cost',
     editLabel: 'AI spending, in credits',
     editHint:
-      'Boxel counts each AI request at the most the request could cost until the AI provider reports the actual cost, so a long reply needs a higher limit',
+      'Boxel counts each AI request at the request’s highest possible cost',
     noneHint: 'No credits for AI requests',
   },
   {
@@ -1254,7 +1254,9 @@ export class AutomationCaps extends FieldDef {
             ? 'Not set'
             : limit.key === 'seconds'
               ? duration(caps.seconds)
-              : capValue(caps[limit.key]),
+              : limit.key === 'aiCredits' && caps.aiCredits !== 0
+                ? `${count(caps.aiCredits)} credits`
+                : capValue(caps[limit.key]),
       }));
     }
     // The line under each limit's value: what it covers, or what 0 forbids.
@@ -1270,14 +1272,18 @@ export class AutomationCaps extends FieldDef {
       if (caps[key] == null) {
         return NOT_SET_HINT;
       }
-      // Either AI limit at 0 forbids AI requests, so both say so.
-      if (
-        (key === 'resolveCalls' || key === 'aiCredits') &&
-        !allowsAIRequests({ caps: this.args.model })
-      ) {
+      if (caps[key] === 0) {
         return limit.noneHint;
       }
-      return caps[key] === 0 ? limit.noneHint : limit.hint;
+      // Either AI limit at 0 forbids AI requests, so the other AI limit
+      // names the one that stops it.
+      if (key === 'resolveCalls' && caps.aiCredits === 0) {
+        return 'Unused while AI spending is 0';
+      }
+      if (key === 'aiCredits' && caps.resolveCalls === 0) {
+        return 'Unused while AI requests is 0';
+      }
+      return limit.hint;
     };
     get dayCredits() {
       return count(this.args.model.dailyCredits);
