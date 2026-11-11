@@ -1624,6 +1624,7 @@ const WORKSPACES: Workspace[] = [
       'drafts',
       'recurring',
       'currencies',
+      'users',
       'inbox',
       'journalmonths',
       'pads',
@@ -1635,7 +1636,6 @@ const WORKSPACES: Workspace[] = [
       'closes',
       'r-year',
       'r-audit',
-      'users',
     ],
     subject: 'months',
     subjectLabel: 'Months',
@@ -3628,6 +3628,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // operating account. In another currency the payment takes today's rate, and the difference from
   // the document's rate posts as realized gain or loss.
   get canSettle() {
+    return this.canSettleShape && !this.canSettleRefused;
+  }
+  get canSettleShape() {
     let c = this.sel as any;
     return (
       !this.selPosting &&
@@ -6094,6 +6097,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     return !this.selPosting && this.sel?.status === 'draft';
   }
   get canReverse() {
+    return this.canReverseShape && !this.canReverseRefused;
+  }
+  get canReverseShape() {
     let p = this.selPosting,
       m = this.selected?.month as any;
     return (
@@ -6403,6 +6409,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   @tracked voiding = false;
   @tracked voidReason = '';
   get canVoid() {
+    return this.canVoidShape && !this.canVoidRefused;
+  }
+  get canVoidShape() {
     let c = this.sel;
     return (
       !this.selPosting &&
@@ -6554,6 +6563,29 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.busy = false;
     }
   };
+  // The realm's answer for this viewer's role: only a refusal hides an action.
+  refused = (operation: string, target: unknown) =>
+    !!target &&
+    this.args.context?.canInvoke?.(operation, target as CardDef) === false;
+  get canSettleRefused() {
+    return this.refused('applyPayment', this.sel);
+  }
+  get canVoidRefused() {
+    return this.refused('void', this.sel);
+  }
+  get canReverseRefused() {
+    return this.refused('reverse', this.selected?.month);
+  }
+  get roleNote() {
+    let held = [
+      this.canSettleShape && this.canSettleRefused && 'settle',
+      this.canVoidShape && this.canVoidRefused && 'void',
+      this.canReverseShape && this.canReverseRefused && 'reverse',
+    ].filter(Boolean);
+    return held.length
+      ? `Your role can't ${held.join(' or ')} this; a writer of the realm does.`
+      : '';
+  }
   // The realm's answer for this viewer's role; only a refusal hides the button.
   get postRefused() {
     let c = this.sel as CardDef | undefined,
@@ -8286,7 +8318,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             {{#if this.canPost}}{{#if this.postRefused}}<span
                   class='muted'
                   data-post-refused
-                >Your role can't post this.</span>{{else}}<Button
+                >Your role can't post this; a writer of the realm does.</span>{{else}}<Button
                   @tone='primary'
                   @appearance='accent'
                   @busy={{this.busy}}
@@ -8317,6 +8349,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @disabled={{if this.bundleSku false true}}
                 {{on 'click' this.addBundle}}
               >Add bundle</Button>{{/if}}
+            {{#if this.roleNote}}<span
+                class='muted'
+                data-role-note
+              >{{this.roleNote}}</span>{{/if}}
             {{#if this.canSettle}}<Button
                 @tone='primary'
                 @appearance='outlined'

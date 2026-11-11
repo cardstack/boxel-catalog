@@ -23,6 +23,8 @@ import {
   membersOf,
   rolePolicyRules,
   userNamed,
+  usersMentioned,
+  WRITERS_SUMMARY,
   type RoleId,
   type PolicyRuleJSON,
 } from './ledger-roles';
@@ -86,25 +88,38 @@ export function withRole(
   role: RoleId | '',
   moduleOf: (file: string) => string = moduleBy(rules),
 ) {
-  let members = membersOf(rules);
-  let roled = members.filter((m) => m.role !== 'custom') as {
-    user: string;
-    role: RoleId;
-  }[];
-  let next = [
-    ...roled.filter((m) => m.user !== user),
-    ...(role ? [{ user, role }] : []),
-  ];
-  let named = new Set([...roled.map((m) => m.user), user]);
-  // Drop exactly the grants that define those users' roles, in either predicate form; keep the rest.
+  // A grant that names this user beside others can't be rewritten without them by its shape alone.
+  let shared = rules.flatMap((r) =>
+    r.grants
+      .filter((g) => {
+        let who = usersMentioned(g.where);
+        return who.includes(user) && who.length > 1;
+      })
+      .map((g) => `${r.targetType.name}.${g.operation}`),
+  );
+  if (shared.length)
+    throw new SharedGrantError(
+      `${user} is named beside other users in ${shared.join(', ')}. Edit those grants on the policy card; nothing was changed.`,
+    );
+  let roled = membersOf(rules).filter(
+    (m) => m.role !== 'custom' && m.user !== user,
+  ) as { user: string; role: RoleId }[];
+  let next = [...roled, ...(role ? [{ user, role }] : [])];
+  let regenerated = new Set(roled.map((m) => m.user));
+  // Every grant naming this user goes, whatever its shape; the other role holders' are regenerated.
   let kept = rules
     .map((r) => ({
       ...r,
-      grants: r.grants.filter((g) => !named.has(userNamed(g.where) ?? '')),
+      grants: r.grants.filter(
+        (g) =>
+          !usersMentioned(g.where).includes(user) &&
+          !regenerated.has(userNamed(g.where) ?? ''),
+      ),
     }))
     .filter((r) => r.grants.length);
   return [...kept, ...rolePolicyRules(next, moduleOf)];
 }
+export class SharedGrantError extends Error {}
 
 const ROLE_OPTIONS = [
   ...ROLES.map((r) => ({ value: r.id, label: r.label })),
@@ -215,6 +230,8 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
     });
   }
   roleOptions = ROLE_OPTIONS;
+  writersSummary = WRITERS_SUMMARY;
+  statusId = `ledger-users-status-${Math.random().toString(36).slice(2)}`;
   rowOptions = (role: string) =>
     role === 'custom' ? [...ROLE_OPTIONS, CUSTOM_OPTION] : ROLE_OPTIONS;
   @tracked pending: { user: string; role: string } | undefined;
@@ -264,7 +281,7 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
     if (!p || !user) return;
     this.busy = true;
     this.error = '';
-    this.done = '';
+    this.done = `Saving the change for ${user}…`;
     try {
       await (operations(p) as any).update({
         attributes: {
@@ -276,7 +293,8 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
         : `${user} no longer has a role.`;
       if (user === this.newUser) this.newUser = '';
     } catch (e: any) {
-      this.error = failureText(e);
+      this.done = '';
+      this.error = e instanceof SharedGrantError ? e.message : failureText(e);
     } finally {
       this.busy = false;
     }
@@ -293,22 +311,21 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
         Each role is a set of grants in the realm policy the books' realm names:
         the operations the role may invoke on each kind of card, each naming its
         users. Everyone with a role reads the books through the realm's read
-        permission. Admin is not a role this page gives: an Admin is an owner or
-        writer of the books' realm, set in the realm's permissions, and only an
-        Admin can change roles, settings or closes. An Admin listed here under a
-        role still has everything.
+        permission. Roles enter and edit drafts; they never post.
       </p>
+      <p class='muted' data-writers-note>{{this.writersSummary}}
+        A writer listed here under a role still has everything.</p>
       {{#if this.policy}}<p class='muted' data-viewer-admin={{this.isAdmin}}>You
           are
-          {{#if this.isAdmin}}an Admin: a writer of the books' realm.{{else if
-            this.adminUnknown
-          }}being checked for whether you're an Admin…{{else}}not an Admin of
-            these books.{{/if}}</p>{{/if}}
+          {{#if this.isAdmin}}a writer of the books' realm: you post, settle,
+            void and close, and change roles.{{else if this.adminUnknown}}being
+            checked for whether you're a writer of the realm…{{else}}not a
+            writer of these books.{{/if}}</p>{{/if}}
       {{#if this.error}}<Callout
           @tone='danger'
           @title="The realm didn't change the role"
         >{{this.error}}</Callout>{{/if}}
-      <p class='muted' role='status'>{{this.done}}</p>
+      <p class='muted' role='status' id={{this.statusId}}>{{this.done}}</p>
       {{#if this.loading}}
         <p class='muted' role='status' aria-busy='true'>Loading the books'
           users…</p>
@@ -332,6 +349,7 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
                   @options={{this.rowOptions row.role}}
                   @value={{row.role}}
                   aria-disabled={{if this.busy 'true'}}
+                  aria-describedby={{if this.busy this.statusId}}
                   @onValueChange={{fn this.ask row.user}}
                 />{{else}}{{text}}{{/if}}
             {{else}}{{text}}{{/if}}
@@ -364,10 +382,10 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
           </div>
         {{else if this.adminUnknown}}
           <p class='muted' data-roles-locked>Role changes are off until the
-            realm says whether you're an Admin.</p>
+            realm says whether you're a writer of the realm.</p>
         {{else}}
-          <p class='muted' data-roles-locked>Only an Admin, a writer of the
-            books' realm, can change roles.</p>
+          <p class='muted' data-roles-locked>Only a writer of the books' realm
+            can change roles.</p>
         {{/if}}
       {{else}}
         <EmptyState

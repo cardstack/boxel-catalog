@@ -1,13 +1,14 @@
-// The books' roles, as QuickBooks has them, expressed as rules of the realm policy the books' realm
-// names: for each role, the named operations it may invoke on each card type, each grant naming the
-// users who hold the role. A policy only widens what the realm's permissions allow, so every role
-// reads the books through the realm's read permission. Admin is no role here: it is being a writer of
-// the realm, which only the realm's permissions grant, and only a writer can change the policy (the
-// users), the realm's settings, or close and reopen a month. No role is granted a raw `update` of a
-// document, which would let it write the fields only the posting operations may write.
+// The books' roles, expressed as rules of the realm policy the books' realm names: for each role, the
+// named operations it may invoke on each card type, each grant naming the users who hold the role.
+//
+// A policy grants an operation on its own; it can't grant one only inside the batch that keeps the
+// books whole. So a role is granted only operations that are safe called alone with any parameters:
+// they enter or edit drafts, which change no balance, status or journal until a writer posts them.
+// Posting, settling, voiding, journaling, stock draws and closes belong to the realm's writers (its
+// Admins and Accountants), whom only the realm's permissions make. A policy only widens what those
+// permissions allow, so every role reads the books through the realm's read permission.
 
 export type RoleId =
-  | 'accountant'
   | 'standard'
   | 'limited-sales'
   | 'limited-purchases'
@@ -16,11 +17,12 @@ export type RoleId =
 /** The card types the grants name, by the module file they live in. */
 type Grants = Record<string, Record<string, string[]>>; // file -> type -> operations
 
+const REPORTS: Grants = { 'ledger-cards': { Ledger: ['saveReport'] } };
+// Each creates a draft, or edits a draft and refuses anything else.
 const SALES: Grants = {
   'ledger-cards': { Ledger: ['saveReport'] },
   'ledger-sales': {
     Customer: [
-      'update',
       'enterInvoice',
       'enterInvoiceOnTerms',
       'enterSalesReceipt',
@@ -29,33 +31,15 @@ const SALES: Grants = {
       'receivePayment',
     ],
     Invoice: [
-      'post',
       'addLines',
       'removeTimeLine',
       'useCurrency',
       'useTaxCode',
       'calculateTax',
-      'applyPayment',
-      'applyCredit',
-      'unapplyPayment',
-      'unapplyCredit',
-      'enterCredit',
     ],
-    CustomerPayment: ['post', 'journal', 'markDeposited', 'unmarkDeposited'],
-    SalesReceipt: [
-      'post',
-      'journal',
-      'useTaxCode',
-      'calculateTax',
-      'addLines',
-      'markDeposited',
-      'unmarkDeposited',
-    ],
-    RefundReceipt: ['post', 'journal', 'useTaxCode', 'calculateTax'],
-    CreditMemo: ['post', 'journal'],
+    SalesReceipt: ['addLines', 'useTaxCode', 'calculateTax'],
+    RefundReceipt: ['useTaxCode', 'calculateTax'],
   },
-  'ledger-registers': { TaxAgency: ['checkOpen'] },
-  'ledger-time': { TimeActivity: ['markBilled', 'unmarkBilled'] },
 };
 const PURCHASES: Grants = {
   'ledger-cards': {
@@ -67,23 +51,10 @@ const PURCHASES: Grants = {
       'enterPayment',
       'enterVendorCredit',
     ],
-    Bill: [
-      'post',
-      'useCurrency',
-      'applyPayment',
-      'unapplyPayment',
-      'receiveLot',
-    ],
+    Bill: ['useCurrency'],
   },
-  'ledger-payments': { BillPayment: ['post', 'journal'] },
-  'ledger-cash': { VendorCredit: ['post', 'journal'] },
-  'ledger-vendor': { Vendor: ['update'] },
-  'ledger-stock': { StockLot: ['draw', 'restore'] },
 };
-// Posting a document into books kept in a journal appends its entry with JournalMonth.post, which
-// takes the entry's lines from the caller: whoever may invoke it may post any balanced entry.
-const JOURNAL: Grants = { 'ledger-journal': { JournalMonth: ['post'] } };
-const OPERATIONS: Grants = {
+const OTHER_DRAFTS: Grants = {
   'ledger-cards': {
     Ledger: [
       'enterDeposit',
@@ -94,65 +65,23 @@ const OPERATIONS: Grants = {
       'enterTime',
       'enterLoanPayment',
       'enterCardCharge',
-      'enterBankLine',
-      'enterBankImport',
       'enterRoast',
       'enterFulfillment',
       'enterCount',
       'enterLanded',
-    ],
-  },
-  'ledger-sales': { Invoice: ['void'], Deposit: ['post', 'journal'] },
-  'ledger-cash': {
-    Transfer: ['post', 'journal'],
-    BankPayment: ['post', 'journal'],
-    CardCharge: ['post', 'journal'],
-    LoanPayment: ['post', 'journal'],
-    PayrollRun: ['post', 'journal'],
-  },
-  'ledger-bank': {
-    BankTransaction: ['add', 'match', 'unmatch', 'exclude', 'restore'],
-  },
-  'ledger-close': { BankReconciliation: ['record', 'finish'] },
-  'ledger-stock': {
-    RoastBatch: ['post', 'journal', 'produceLot'],
-    Fulfillment: ['post', 'journal', 'useDraws'],
-    CountAdjustment: ['post', 'journal', 'useDraws'],
-    LandedCost: ['post', 'journal'],
-    StockLot: ['addCost', 'removeCost', 'refuseTaken'],
-  },
-};
-const ACCOUNTING: Grants = {
-  'ledger-cards': {
-    Ledger: [
       'enterJournal',
       'enterScheduled',
       'enterDepreciation',
       'enterDisposal',
     ],
-    Bill: ['void'],
   },
-  'ledger-cash': {
-    JournalEntry: ['post', 'journal'],
-    ScheduledEntry: ['post', 'journal'],
-    DepreciationRun: ['post', 'journal'],
-    AssetDisposal: ['post', 'journal'],
+  'ledger-sales': { Invoice: ['enterCredit', 'enterWriteOff'] },
+  'ledger-close': {
+    MonthClose: ['reconcile'],
+    BankReconciliation: ['record'],
   },
-  'ledger-journal': { JournalMonth: ['reverse'], EntryPad: ['clear'] },
-  'ledger-sales': {
-    Invoice: ['applyWriteOff', 'unapplyWriteOff', 'enterWriteOff'],
-    WriteOff: ['post', 'journal'],
-  },
-  'ledger-registers': {
-    TaxAgency: ['markFiled', 'openReturn'],
-    TaxReturn: ['file', 'markPaid', 'unmarkPaid'],
-  },
-  'ledger-recurring': {
-    RecurringTemplate: ['advance', 'ran', 'pause', 'resume'],
-  },
-  'ledger-opening': { OpeningBalances: ['post'] },
 };
-const REPORTS: Grants = { 'ledger-cards': { Ledger: ['saveReport'] } };
+
 const merge = (...gs: Grants[]): Grants => {
   let out: Grants = {};
   for (let g of gs)
@@ -172,41 +101,37 @@ export interface RoleDef {
 }
 export const ROLES: RoleDef[] = [
   {
-    id: 'accountant',
-    label: 'Accountant',
-    summary:
-      'What Standard does, and journal entries, reversals, voids of bills, write-offs, tax filing and recurring entries. Not users, settings or closes: those need a writer of the realm.',
-    grants: merge(SALES, PURCHASES, JOURNAL, OPERATIONS, ACCOUNTING),
-  },
-  {
     id: 'standard',
     label: 'Standard',
     summary:
-      "Enters and posts documents, runs payroll and reconciles. In books kept in a journal it posts each document's entry there, and the journal takes any balanced entry from it. No settings, closes or user changes.",
-    grants: merge(SALES, PURCHASES, JOURNAL, OPERATIONS),
+      'Enters and edits drafts of every kind: sales, purchases, payments, payroll, journal entries and reconciliations. A writer of the realm posts them.',
+    grants: merge(SALES, PURCHASES, OTHER_DRAFTS),
   },
   {
     id: 'limited-sales',
     label: 'Limited · customers and sales',
     summary:
-      'Customers, invoices, receipts and payments received. Posts them where they post as cards; in books kept in a journal it enters them, and someone else posts them.',
+      'Enters and edits sales drafts: invoices, receipts, refunds and payments received. A writer of the realm posts them.',
     grants: SALES,
   },
   {
     id: 'limited-purchases',
     label: 'Limited · vendors and purchases',
     summary:
-      'Vendors, bills and bill payments. Posts them where they post as cards; in books kept in a journal it enters them, and someone else posts them.',
+      'Enters and edits purchase drafts: bills, bill payments and vendor credits. A writer of the realm posts them.',
     grants: PURCHASES,
   },
   {
     id: 'reports-only',
     label: 'Reports only',
-    summary: 'Reads the books and runs and saves reports.',
+    summary: 'Reads the books, runs reports and saves its own.',
     grants: REPORTS,
   },
 ];
 export const roleById = new Map(ROLES.map((r) => [r.id, r]));
+/** What the realm's writers do that no role here can. */
+export const WRITERS_SUMMARY =
+  "Writers of the realm (Admins and Accountants): post, settle, void, journal and close, and change users and settings. The realm's permissions make them, not this page.";
 
 export interface PolicyGrant {
   operation: string;
@@ -224,19 +149,30 @@ export const names = (user: string) => `actor() == ${JSON.stringify(user)}`;
 const NAMED = /^actor\(\) == ("(?:[^"\\]|\\.)*")$/;
 const SAVER =
   /^\(\.savedBy == ("(?:[^"\\]|\\.)*")\) and \(actor\(\) == ("(?:[^"\\]|\\.)*")\)$/;
-/** The user a grant's predicate names, if it is one of the forms the roles write, in either form. */
+// Any user id written in a predicate: a quoted Matrix id.
+const USER_ID = /"(@[^"\\]+)"/g;
+
+/** A grant's predicate as text, in either the string or the snapshot form. */
+export const predicateText = (where: unknown): string =>
+  typeof where === 'string'
+    ? where
+    : typeof (where as { bxl?: unknown })?.bxl === 'string'
+      ? (where as { bxl: string }).bxl
+      : '';
+/** The user a grant's predicate names, if it is one of the forms the roles write. */
 export function userNamed(where: unknown): string | undefined {
-  let text =
-    typeof where === 'string'
-      ? where
-      : typeof (where as { bxl?: unknown })?.bxl === 'string'
-        ? (where as { bxl: string }).bxl
-        : '';
+  let text = predicateText(where);
   let m = NAMED.exec(text);
   if (m) return JSON.parse(m[1]) as string;
   let s = SAVER.exec(text);
   return s && s[1] === s[2] ? (JSON.parse(s[2]) as string) : undefined;
 }
+/** Every user id a grant's predicate mentions, whatever its shape. */
+export const usersMentioned = (where: unknown): string[] => [
+  ...new Set(
+    [...predicateText(where).matchAll(USER_ID)].map((m) => m[1] as string),
+  ),
+];
 
 /**
  * The policy's rules for these users and their roles: one rule per card type, each grant naming a user
@@ -276,42 +212,64 @@ export function rolePolicyRules(
   return [...rules.values()];
 }
 
-/** The operations each user named in a policy's rules may invoke, as "Type.operation". */
+type RuleLike = {
+  targetType?: { module?: string; name?: string } | null;
+  grants?: ({ operation?: string | null; where?: unknown } | null)[] | null;
+};
+// A rule's type as module file and name, so two types of one name in different modules stay apart.
+const typeKey = (r: RuleLike) =>
+  `${(r.targetType?.module ?? '').split('/').pop()}:${r.targetType?.name ?? ''}`;
+
+/**
+ * Each user a policy's grants name: the operations their role-shaped grants give them, keyed by
+ * module, type and operation, and whether any other grant names them too.
+ */
 export function grantsByUser(
-  rules: {
-    targetType?: { name?: string } | null;
-    grants?: ({ operation?: string | null; where?: unknown } | null)[] | null;
-  }[],
-): Map<string, Set<string>> {
-  let out = new Map<string, Set<string>>();
+  rules: RuleLike[],
+): Map<string, { ops: Set<string>; other: boolean }> {
+  let out = new Map<string, { ops: Set<string>; other: boolean }>();
+  let entry = (u: string) => {
+    let e = out.get(u) ?? { ops: new Set<string>(), other: false };
+    out.set(u, e);
+    return e;
+  };
   for (let r of rules ?? [])
     for (let g of r?.grants ?? []) {
-      let user = userNamed(g?.where);
-      if (!user || !g?.operation) continue;
-      let set = out.get(user) ?? new Set<string>();
-      set.add(`${r.targetType?.name ?? ''}.${g.operation}`);
-      out.set(user, set);
+      if (!g?.operation) continue;
+      let user = userNamed(g.where);
+      if (user) entry(user).ops.add(`${typeKey(r)}.${g.operation}`);
+      else for (let u of usersMentioned(g.where)) entry(u).other = true;
     }
   return out;
 }
 
 /** The operations a role's grants name, as "Type.operation". */
 export function roleOperations(role: RoleId): Set<string> {
-  let rules = rolePolicyRules([{ user: '@x', role }], (f) => f);
-  return grantsByUser(rules).get('@x') ?? new Set();
+  let ops = grantsByUser(rolePolicyRules([{ user: '@x', role }], (f) => f)).get(
+    '@x',
+  )?.ops;
+  return new Set([...(ops ?? [])].map((k) => k.slice(k.indexOf(':') + 1)));
 }
 
 /** Each user a policy names, with the role their grants are exactly, or 'custom'. */
 export function membersOf(
-  rules: Parameters<typeof grantsByUser>[0],
+  rules: RuleLike[],
+  moduleOf: (file: string) => string = (f) => f,
 ): { user: string; role: RoleId | 'custom' }[] {
-  let signatures = ROLES.map((r) => ({ id: r.id, ops: roleOperations(r.id) }));
+  let signatures = ROLES.map((r) => ({
+    id: r.id,
+    ops: grantsByUser(
+      rolePolicyRules([{ user: '@x', role: r.id }], moduleOf),
+    ).get('@x')!.ops,
+  }));
   let same = (a: Set<string>, b: Set<string>) =>
     a.size === b.size && [...a].every((x) => b.has(x));
   return [...grantsByUser(rules)]
-    .map(([user, ops]) => ({
+    .map(([user, { ops, other }]) => ({
       user,
-      role: signatures.find((s) => same(s.ops, ops))?.id ?? ('custom' as const),
+      role: other
+        ? ('custom' as const)
+        : (signatures.find((s) => same(s.ops, ops))?.id ?? ('custom' as const)),
     }))
     .sort((a, b) => a.user.localeCompare(b.user));
 }

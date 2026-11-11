@@ -46,6 +46,7 @@ import {
   rolePolicyRules,
   membersOf,
   roleOperations,
+  ROLES,
   names,
   type RoleId,
 } from '../../../cards/accounting/ledger-roles';
@@ -57,7 +58,12 @@ import {
 import { RealmPolicy } from '../../../realm-policy/realm-policy';
 import { RealmConfig } from '@cardstack/base/realm-config';
 import { Ledger, Bill } from '../../../cards/accounting/ledger-cards';
-import { Customer, Invoice } from '../../../cards/accounting/ledger-sales';
+import {
+  Customer,
+  Invoice,
+  SalesReceipt,
+} from '../../../cards/accounting/ledger-sales';
+import { StockLot } from '../../../cards/accounting/ledger-stock';
 import {
   auditEvents,
   filterAudit,
@@ -987,28 +993,40 @@ export function runTests() {
   });
 
   module('Catalog | accounting - roles', function () {
-    test('each role grants what it should and nothing it should not', function (assert) {
+    test('each role is granted only operations that are safe called alone', function (assert) {
       let ops = (r: RoleId) => roleOperations(r);
       assert.true(ops('standard').has('Ledger.enterBill'));
-      assert.true(ops('standard').has('BankReconciliation.finish'));
-      assert.true(ops('standard').has('Ledger.enterPayroll'));
-      for (let role of ['accountant', 'standard'] as RoleId[]) {
-        assert.false(
-          ops(role).has('JournalMonth.close'),
-          `${role} can't close`,
-        );
-        assert.false(ops(role).has('MonthClose.post'), `${role} can't close`);
-        assert.false(ops(role).has('BankReconciliation.undo'));
-      }
-      assert.false(ops('standard').has('JournalMonth.reverse'));
-      assert.false(ops('standard').has('Invoice.update'), 'no raw edits');
-      assert.false(ops('limited-sales').has('JournalMonth.post'));
-      assert.true(ops('standard').has('JournalMonth.post'));
-      assert.true(ops('accountant').has('JournalMonth.reverse'));
-      assert.false(ops('limited-sales').has('Bill.post'));
+      assert.true(ops('standard').has('Ledger.enterJournal'));
+      assert.true(ops('standard').has('BankReconciliation.record'));
+      assert.true(ops('limited-sales').has('Customer.enterInvoice'));
+      assert.true(ops('limited-sales').has('Invoice.addLines'));
+      assert.true(ops('limited-purchases').has('Ledger.enterBill'));
+      let unsafe = [
+        'Invoice.post',
+        'Invoice.applyPayment',
+        'Invoice.unapplyPayment',
+        'Invoice.void',
+        'Bill.post',
+        'Bill.applyPayment',
+        'Bill.unapplyPayment',
+        'SalesReceipt.journal',
+        'SalesReceipt.post',
+        'JournalMonth.post',
+        'JournalMonth.reverse',
+        'JournalMonth.close',
+        'MonthClose.post',
+        'BankReconciliation.finish',
+        'StockLot.draw',
+        'StockLot.restore',
+        'Customer.update',
+        'Vendor.update',
+        'Invoice.update',
+      ];
+      for (let role of ROLES.map((r) => r.id))
+        for (let op of unsafe)
+          assert.false(ops(role).has(op), `${role} isn't granted ${op}`);
       assert.false(ops('limited-sales').has('Ledger.enterBill'));
-      assert.true(ops('limited-sales').has('Invoice.post'));
-      assert.false(ops('limited-purchases').has('Invoice.post'));
+      assert.false(ops('limited-purchases').has('Customer.enterInvoice'));
       assert.deepEqual(
         [...ops('reports-only')],
         ['Ledger.saveReport', 'SavedReport.delete'],
@@ -1028,56 +1046,86 @@ export function runTests() {
         { user: '@a:books', role: 'standard' },
         { user: '@b:books', role: 'reports-only' },
       ]);
-      let next = withRole(rules, '@b:books', 'accountant', mod);
+      let next = withRole(rules, '@b:books', 'limited-sales', mod);
       assert.deepEqual(membersOf(next), [
         { user: '@a:books', role: 'standard' },
-        { user: '@b:books', role: 'accountant' },
+        { user: '@b:books', role: 'limited-sales' },
       ]);
       assert.deepEqual(membersOf(withRole(next, '@a:books', '', mod)), [
-        { user: '@b:books', role: 'accountant' },
+        { user: '@b:books', role: 'limited-sales' },
       ]);
 
-      // A user with grants of their own gets the role in place of them.
+      // A user with grants of their own lists as custom, and a role replaces every grant naming them.
       let withOwn = [
         ...rules,
         {
           targetType: { module: mod('ledger-cards'), name: 'Bill' },
-          grants: [{ operation: 'void', where: names('@c:books') }],
+          grants: [
+            { operation: 'void', where: names('@c:books') },
+            {
+              operation: 'post',
+              where: `(actor() == "@c:books") and (.status == "draft")`,
+            },
+            {
+              operation: 'useCurrency',
+              where: { bxl: names('@c:books'), snapshot: true as const },
+            },
+          ],
         },
       ];
       assert.deepEqual(
         membersOf(withOwn).find((m) => m.user === '@c:books'),
         { user: '@c:books', role: 'custom' },
       );
+      let given = withRole(withOwn, '@c:books', 'reports-only', mod);
       assert.deepEqual(
-        membersOf(withRole(withOwn, '@c:books', 'reports-only', mod)).find(
-          (m) => m.user === '@c:books',
-        ),
+        membersOf(given).find((m) => m.user === '@c:books'),
         { user: '@c:books', role: 'reports-only' },
       );
+      assert.false(
+        given.some((r) =>
+          r.grants.some((g) => ['void', 'post'].includes(g.operation)),
+        ),
+        'every grant naming them went, whatever its shape',
+      );
 
-      // Only the grants that define a role go; a shared custom grant stays, a snapshot-form role grant goes.
-      let shared = {
-        operation: 'read',
-        where: 'actor() == "@a:books" or actor() == "@d:books"',
-      };
-      let snapshot = {
-        operation: 'void',
-        where: { bxl: names('@a:books'), snapshot: true as const },
-      };
-      let mixed = [
+      // A grant naming them beside someone else is refused, and nothing changes.
+      let shared = [
         ...rules,
         {
           targetType: { module: mod('ledger-sales'), name: 'Invoice' },
-          grants: [shared, snapshot],
+          grants: [
+            {
+              operation: 'addLines',
+              where: 'actor() == "@a:books" or actor() == "@d:books"',
+            },
+          ],
         },
       ];
-      let changed = withRole(mixed, '@a:books', 'reports-only', mod);
-      let invoiceGrants = changed
-        .filter((r) => r.targetType.name === 'Invoice')
-        .flatMap((r) => r.grants);
-      assert.true(invoiceGrants.includes(shared), 'the shared grant stays');
-      assert.false(invoiceGrants.includes(snapshot), 'the snapshot grant goes');
+      assert.deepEqual(
+        membersOf(shared).map((m) => m.user),
+        ['@a:books', '@b:books', '@d:books'],
+        'anyone a grant names is listed',
+      );
+      assert.throws(
+        () => withRole(shared, '@a:books', '', mod),
+        /named beside other users in Invoice.addLines/,
+      );
+
+      // A grant on a type of the same name in another module isn't a role's.
+      let elsewhere = [
+        {
+          targetType: { module: '../other/ledger', name: 'Ledger' },
+          grants: [{ operation: 'saveReport', where: names('@e:books') }],
+        },
+        ...rolePolicyRules(
+          [{ user: '@e:books', role: 'reports-only' }],
+          mod,
+        ).filter((r) => r.targetType.name === 'SavedReport'),
+      ];
+      assert.deepEqual(membersOf(elsewhere), [
+        { user: '@e:books', role: 'custom' },
+      ]);
 
       // The policy is the one the realm's own pointer names, matched on its whole id.
       let policies = [
@@ -1087,14 +1135,6 @@ export function runTests() {
       assert.strictEqual(
         policyNamed(policies, 'RealmPolicy/roles', 'http://b.test/books/')?.id,
         'http://b.test/books/RealmPolicy/roles',
-      );
-      assert.strictEqual(
-        policyNamed(
-          policies,
-          'http://a.test/books/RealmPolicy/roles.json',
-          'http://b.test/books/',
-        )?.id,
-        'http://a.test/books/RealmPolicy/roles',
       );
       assert.strictEqual(
         policyNamed(
@@ -1210,6 +1250,33 @@ export function runTests() {
               status: 'draft',
               lines: [{ account: '6100', amountMinor: 5000 }],
             }),
+            'Invoice/posted.json': card('ledger-sales', 'Invoice', {
+              docNo: 'INV-P',
+              date: '2027-01-05',
+              customerId: 'harbor',
+              status: 'posted',
+              paidMinor: 0,
+              creditedMinor: 0,
+              writtenOffMinor: 0,
+              taxMinor: 0,
+              lines: [{ account: '4000', amountMinor: 10000 }],
+            }),
+            'SalesReceipt/draft.json': card('ledger-sales', 'SalesReceipt', {
+              docNo: 'SR-D',
+              date: '2027-01-09',
+              customerId: 'harbor',
+              status: 'draft',
+              lines: [{ account: '4000', amountMinor: 3000 }],
+            }),
+            'StockLot/eth.json': card('ledger-stock', 'StockLot', {
+              sku: 'ETH',
+              lot: 'L1',
+              received: '2027-01-02',
+              qty: 5000,
+              costMinor: 5000,
+              consumedQty: 0,
+              landedMinor: 0,
+            }),
             'JournalMonth/2027-01.json': card(
               'ledger-journal',
               'JournalMonth',
@@ -1247,6 +1314,8 @@ export function runTests() {
         Bill,
         JournalMonth,
         RealmPolicy,
+        SalesReceipt,
+        StockLot,
         realm: RealmConfig,
       };
       const ops = async (path: string) => {
@@ -1366,69 +1435,153 @@ export function runTests() {
         return capabilities.canInvoke('update', policy);
       };
 
-      test('Standard: entering a bill is admitted; closes, settings, users, reversals and journal entries are refused', async function (assert) {
+      const journalEntry = {
+        key: 'je-alone',
+        kind: 'journal',
+        date: '2027-01-15',
+        memo: null,
+        party: null,
+        source: null,
+        lines: [
+          { account: '6100', debitMinor: 100, creditMinor: 0 },
+          { account: '1000', debitMinor: 0, creditMinor: 100 },
+        ],
+        facts: [],
+        items: [],
+        preparer: null,
+        reviewer: null,
+      };
+      // The writes that keep the books whole only inside a writer's batch, each called alone.
+      const forged = () =>
+        [
+          [
+            async () =>
+              (await ops('Invoice/posted')).applyPayment({
+                amountMinor: 1000,
+                paymentNo: 'PMT-X',
+                customerId: 'harbor',
+                currency: null,
+                rateMicros: null,
+              }),
+            'settling an invoice with no payment',
+          ],
+          [
+            async () =>
+              (await ops('Invoice/posted')).unapplyPayment({
+                amountMinor: 1000,
+                paymentNo: 'PMT-X',
+                customerId: 'harbor',
+              }),
+            'unapplying a payment',
+          ],
+          [
+            async () =>
+              (await ops('Invoice/posted')).void({
+                date: '2027-01-20',
+                reason: null,
+              }),
+            'voiding an invoice',
+          ],
+          [
+            async () =>
+              (await ops('SalesReceipt/draft')).journal({ taxLines: [] }),
+            'marking a receipt journaled',
+          ],
+          [
+            async () => (await ops('JournalMonth/2027-01')).post(journalEntry),
+            'posting into the journal',
+          ],
+          [
+            async () => (await ops('Invoice/draft')).post(),
+            'posting an invoice',
+          ],
+          [
+            async () =>
+              (await ops('StockLot/eth')).draw({
+                qty: 1000,
+                costMinor: 100,
+                part5000Minor: 100,
+                part5100Minor: 0,
+                docNo: 'F-X',
+              }),
+            'drawing stock',
+          ],
+        ] as [() => Promise<unknown>, string][];
+
+      test('Standard: draft entry is admitted; posting, voiding and journal posting are refused', async function (assert) {
         await books('standard');
-        let result: any = await (
+        let bill: any = await (await ops('Ledger/books')).enterBill(billParams);
+        assert.ok(bill?.id, 'a bill draft is entered');
+        let entry: any = await (
           await ops('Ledger/books')
-        ).enterBill(billParams);
-        assert.ok(result?.id, 'the bill is entered');
-        await refused(
-          assert,
-          (await ops('JournalMonth/2027-01')).close(),
-          'closing a month',
-        );
-        await refused(
-          assert,
-          (await ops('realm')).update({
-            attributes: { closedThrough: '2027-01-31' },
-          }),
-          'changing the settings',
-        );
-        await refused(
-          assert,
-          (await ops('RealmPolicy/roles')).update({
-            attributes: { rules: [] },
-          }),
-          'changing users',
-        );
-        await refused(
-          assert,
-          (await ops('JournalMonth/2027-01')).reverse(reverseParams),
-          'reversing a posting',
-        );
-        await refused(
-          assert,
-          (await ops('Ledger/books')).enterJournal(journalParams),
-          'entering a journal entry',
-        );
+        ).enterJournal(journalParams);
+        assert.ok(entry?.id, 'a journal entry draft is entered');
+        for (let [call, what] of [
+          [
+            async () => (await ops('JournalMonth/2027-01')).post(journalEntry),
+            'posting into the journal',
+          ],
+          [
+            async () => (await ops('Invoice/draft')).post(),
+            'posting an invoice',
+          ],
+          [
+            async () =>
+              (await ops('Invoice/posted')).void({
+                date: '2027-01-20',
+                reason: null,
+              }),
+            'voiding an invoice',
+          ],
+          [
+            async () => (await ops('JournalMonth/2027-01')).close(),
+            'closing a month',
+          ],
+          [
+            async () =>
+              (await ops('JournalMonth/2027-01')).reverse(reverseParams),
+            'reversing a posting',
+          ],
+          [
+            async () =>
+              (await ops('realm')).update({
+                attributes: { closedThrough: '2027-01-31' },
+              }),
+            'changing the settings',
+          ],
+          [
+            async () =>
+              (await ops('RealmPolicy/roles')).update({
+                attributes: { rules: [] },
+              }),
+            'changing users',
+          ],
+        ] as [() => Promise<unknown>, string][])
+          await refused(assert, call(), what);
         assert.false(
           await mayUpdatePolicy(),
-          'a Standard user is no writer, so not an Admin',
+          'a Standard user is no writer of the realm',
         );
       });
 
-      test('Limited (sales): entering an invoice is admitted; bills, and editing a draft to posted, are refused', async function (assert) {
+      test('Limited (sales): a draft invoice is admitted; every write that needs a batch is refused alone', async function (assert) {
         let adapter = await books('limited-sales');
         let result: any = await (
           await ops('Customer/harbor')
         ).enterInvoice(invoiceParams);
-        assert.ok(result?.id, 'the invoice is entered');
-        await refused(
-          assert,
-          (await ops('Bill/draft')).post(),
-          'posting a bill',
-        );
-        await refused(
-          assert,
-          (await ops('Ledger/books')).enterBill(billParams),
-          'entering a bill',
-        );
+        assert.ok(result?.id, 'the invoice draft is entered');
+        for (let [call, what] of forged()) await refused(assert, call(), what);
         await refused(
           assert,
           (await ops('Invoice/draft')).update({
             attributes: { status: 'posted', postedBy: '@someone:localhost' },
           }),
           'editing a draft invoice to posted',
+        );
+        await refused(
+          assert,
+          (await ops('Ledger/books')).enterBill(billParams),
+          'entering a bill',
         );
         let file = await adapter.openFile('Invoice/draft.json');
         assert.strictEqual(
@@ -1438,41 +1591,21 @@ export function runTests() {
         );
       });
 
-      test('Limited (purchases): entering a bill is admitted; invoices are refused', async function (assert) {
+      test('Limited (purchases): a draft bill is admitted; sales and posting are refused', async function (assert) {
         await books('limited-purchases');
         let result: any = await (
           await ops('Ledger/books')
         ).enterBill(billParams);
-        assert.ok(result?.id, 'the bill is entered');
+        assert.ok(result?.id, 'the bill draft is entered');
         await refused(
           assert,
-          (await ops('Invoice/draft')).post(),
-          'posting an invoice',
+          (await ops('Bill/draft')).post(),
+          'posting a bill',
         );
         await refused(
           assert,
           (await ops('Customer/harbor')).enterInvoice(invoiceParams),
           'entering an invoice',
-        );
-      });
-
-      test('Accountant: entering a journal entry is admitted; closing a month and changing users are refused', async function (assert) {
-        await books('accountant');
-        let result: any = await (
-          await ops('Ledger/books')
-        ).enterJournal(journalParams);
-        assert.ok(result?.id, 'the journal entry is entered');
-        await refused(
-          assert,
-          (await ops('JournalMonth/2027-01')).close(),
-          'closing a month',
-        );
-        await refused(
-          assert,
-          (await ops('RealmPolicy/roles')).update({
-            attributes: { rules: [] },
-          }),
-          'changing users',
         );
       });
 
@@ -1540,20 +1673,14 @@ export function runTests() {
           ).includes('posted by its preparer or its reviewer'),
           'an entry neither its preparer nor its reviewer posts is refused',
         );
-        await month.post(
-          entry('je-reviewed', 200000, '@a:localhost', TEST_USER),
-        );
         await month.post(entry('je-small', 5000, null, null));
         let file = await adapter.openFile('JournalMonth/2027-01.json');
         let postings = JSON.parse(String(file?.content)).data.attributes
           .postings;
         assert.deepEqual(
           postings.map((p: any) => [p.key, p.preparer, p.reviewer, p.postedBy]),
-          [
-            ['je-reviewed', '@a:localhost', TEST_USER, TEST_USER],
-            ['je-small', TEST_USER, null, TEST_USER],
-          ],
-          'the reviewer may post what someone else prepared; with none named, the caller is the preparer',
+          [['je-small', TEST_USER, null, TEST_USER]],
+          'with none named, the caller is the preparer',
         );
       });
     },
