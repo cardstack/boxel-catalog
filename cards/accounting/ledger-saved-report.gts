@@ -11,6 +11,7 @@ import {
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
+import { markDefinition } from '@cardstack/base/mark-definition';
 import BookmarkIcon from '@cardstack/boxel-icons/bookmark';
 import {
   operation,
@@ -30,13 +31,15 @@ export const DIMENSIONS = [
 ] as const;
 export type Dimension = (typeof DIMENSIONS)[number]['value'];
 
-export const ReportVisibilityField = enumField(StringField, {
-  displayName: 'Report visibility',
-  options: [
-    { value: 'shared', label: "Shared with the books' users" },
-    { value: 'private', label: 'Not listed for others' },
-  ],
-});
+export const ReportVisibilityField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Report visibility',
+    options: [
+      { value: 'shared', label: "Shared with the books' users" },
+      { value: 'private', label: 'Not listed for others' },
+    ],
+  }),
+);
 
 export class ReportFilter extends FieldDef {
   static displayName = 'Report filter';
