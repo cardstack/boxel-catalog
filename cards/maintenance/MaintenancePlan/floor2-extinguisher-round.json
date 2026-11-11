@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "Fire extinguisher round — Floor 2",
+      "name": "Fire extinguisher round \u2014 Floor 2",
       "kind": "inspection",
       "trigger": {
         "whicheverFirst": true,
@@ -15,7 +15,7 @@
         "leadDays": 3
       },
       "checklist": {
-        "title": "Fire extinguisher round — Floor 2",
+        "title": "Fire extinguisher round \u2014 Floor 2",
         "items": [
           {
             "label": "Extinguisher present at station",
@@ -81,6 +81,11 @@
       "asset": {
         "links": {
           "self": "../Asset/ast-2026-0301"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

@@ -32,6 +32,13 @@
         "module": "../fulfilment-vendor",
         "name": "FulfilmentVendor"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

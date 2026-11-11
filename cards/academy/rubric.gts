@@ -8,17 +8,16 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import ListCheckIcon from '@cardstack/boxel-icons/list-check';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
-
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 import {
   RubricCriterionField,
   criterionMaxPoints,
   round1,
 } from './rubric-criterion-field';
+import { Mark } from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
 
 /**
  * A reusable grading grid: named criteria, each with a ladder of levels. A
@@ -158,14 +157,6 @@ export class Rubric extends CardDef {
           font-variant-numeric: tabular-nums;
           font-weight: 600;
         }
-        @container (width < 20rem) {
-          .row {
-            grid-template-columns: minmax(0, 1fr) auto;
-          }
-          .meta {
-            display: none;
-          }
-        }
       </style>
     </template>
   };
@@ -185,77 +176,14 @@ export class Rubric extends CardDef {
     </template>
   };
 
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'criteria', label: 'Criteria' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Rubric sections'
-        as |e|
-      >
-        <e.Section @id='identity' @title='Identity' @cols={{2}}>
-          <FieldContainer @label='Title' @vertical={{true}}><@fields.title
-            /></FieldContainer>
-          <FieldContainer @label='Purpose' @vertical={{true}}><@fields.purpose
-            /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='criteria'
-          @title='Criteria'
-          @hint='levels sort by points; weight multiplies them'
-          @cols={{1}}
-        >
-          <FieldContainer @label='Criteria' @vertical={{true}}><@fields.criteria
-            /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-    </template>
-  };
-
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>Rubric · {{@model.totalPoints}} pts</:eyebrow>
+      <FitTile>
+        <:avatar><Mark @text='Rb' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>{{@model.criterionCount}} criteria</:subtitle>
-        <:meta>
-          <ul class='crit'>
-            {{#each @model.criteria as |c|}}
-              <li><span class='name'>{{c.name}}</span><span
-                  class='n'
-                >{{c.maxPoints}}</span></li>
-            {{/each}}
-          </ul>
-        </:meta>
-      </FittedCard>
-      <style scoped>
-        .crit {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: grid;
-          gap: var(--boxel-sp-5xs);
-          font-size: var(--boxel-font-size-xs);
-        }
-        .crit li {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-        }
-        .name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .n {
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
-        }
-      </style>
+        <:subtitle>Rubric · {{@model.totalPoints}} pts</:subtitle>
+        <:fact>{{@model.criterionCount}} criteria</:fact>
+      </FitTile>
     </template>
   };
 }

@@ -14,11 +14,11 @@
       },
       "ownership": {
         "teamName": "Platform",
-        "ownerId": "../../hr/Employee/dana-kim",
-        "ownerName": "Dana Kim",
-        "since": "2026-09-07T12:29:36.067Z",
-        "how": "assigned",
-        "previousOwnerName": null
+        "ownerId": "@cardstack/catalog/cards/hr/Employee/priya-nair",
+        "ownerName": "Priya Nair",
+        "since": "2026-10-28T08:14:48.343Z",
+        "how": "round-robin",
+        "previousOwnerName": "Dana Kim"
       },
       "relationships": {
         "relations": []
@@ -57,6 +57,18 @@
       "adoptsFrom": {
         "module": "../case",
         "name": "Case"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      },
+      "owner": {
+        "links": {
+          "self": "../../hr/Employee/priya-nair"
+        }
       }
     }
   }

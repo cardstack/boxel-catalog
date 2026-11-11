@@ -6,7 +6,6 @@ import {
   field,
 } from 'https://cardstack.com/base/card-api';
 import DateField from 'https://cardstack.com/base/date';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
 import { Token } from '@cardstack/pretui/components/token';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
@@ -195,7 +194,7 @@ export class DeliveryWindowField extends FieldDef {
           color: var(--foreground);
         }
         .dw-rel {
-          font-size: 0.8rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .dw-overdue {
@@ -205,36 +204,12 @@ export class DeliveryWindowField extends FieldDef {
         /* Pret UI Token for the carrier's service code, on the muted ink. */
         .dw .dw-commit {
           --pretui-token-hue: var(--muted-foreground);
-          --pretui-token-font-size: 0.75rem;
+          --pretui-token-font-size: var(--boxel-font-size-xs);
           margin-inline: 0;
         }
         .dw-empty {
           color: var(--muted-foreground);
-          font-size: 0.85rem;
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof DeliveryWindowField> {
-    <template>
-      <div class='dw-edit'>
-        <FieldContainer @label='Earliest' @vertical={{true}}>
-          <@fields.earliest />
-        </FieldContainer>
-        <FieldContainer @label='Latest' @vertical={{true}}>
-          <@fields.latest />
-        </FieldContainer>
-        <FieldContainer @label='Service' @vertical={{true}}>
-          <@fields.commitment />
-        </FieldContainer>
-      </div>
-
-      <style scoped>
-        .dw-edit {
-          display: grid;
-          gap: var(--boxel-sp-xs);
-          grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
+          font-size: var(--boxel-font-size-sm);
         }
       </style>
     </template>

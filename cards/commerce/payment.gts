@@ -9,9 +9,6 @@ import StringField from '@cardstack/base/string';
 import DatetimeField from '@cardstack/base/datetime';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import CreditCardIcon from '@cardstack/boxel-icons/credit-card';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
-import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import {
   KeyValue,
@@ -19,9 +16,9 @@ import {
 } from '@cardstack/pretui/components/key-value';
 import { Token } from '@cardstack/pretui/components/token';
 import { Invoice } from './invoice';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
-import { Money } from '@cardstack/catalog/cards/crm/money';
-import { hasNumber } from '@cardstack/catalog/cards/crm/utils';
+import { formatMoney } from './line-item-totals';
+import { Money } from '../crm/money';
+import { hasNumber } from '../crm/utils';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
@@ -31,164 +28,6 @@ import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 // unresolvable.
 export { PaymentMethodField } from './payment-method-field';
 import { PaymentMethodField } from './payment-method-field';
-
-class PaymentEdit extends Component<typeof Payment> {
-  @tracked activeSection = 'details';
-
-  sections = [
-    { id: 'details', label: 'Payment details' },
-    { id: 'allocation', label: 'Allocation' },
-  ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.payment-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
-
-  <template>
-    <div class='payment-edit'>
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect details
-              {{if (eq this.activeSection "details") "focused"}}'
-            data-sect='details'
-          >
-            <h3>Payment details</h3>
-            <div class='row'>
-              <FieldContainer @label='Amount' @vertical={{true}}>
-                <@fields.amount />
-              </FieldContainer>
-              <FieldContainer @label='Method' @vertical={{true}}>
-                <@fields.method />
-              </FieldContainer>
-              <FieldContainer @label='Paid at' @vertical={{true}}>
-                <@fields.paidAt />
-              </FieldContainer>
-            </div>
-            <FieldContainer @label='Reference' @vertical={{true}}>
-              <@fields.reference />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "allocation") "focused"}}'
-            data-sect='allocation'
-          >
-            <h3>Allocation
-              <span class='sect-hint'>the invoice this payment settles</span></h3>
-            <FieldContainer @label='Invoice' @vertical={{true}}>
-              <@fields.invoice />
-            </FieldContainer>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .payment-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background-color: var(--background);
-        color: var(--foreground);
-        /* family ink, declared ONCE */
-        --pay-ink: var(--procurement-ink, var(--primary-ink));
-        --pay-ink-fg: var(--procurement-ink-fg, var(--card));
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-      }
-      .sect-nav {
-        position: sticky;
-        top: 0;
-        --edit-section-nav-ink: var(--pay-ink);
-        --edit-section-nav-ink-fg: var(--pay-ink-fg);
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      .sect.focused {
-        outline-color: var(--pay-ink);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--pay-ink) 12%, transparent);
-      }
-      .sect.details {
-        border-left: 0.1875rem solid var(--pay-ink);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
-        align-items: start;
-      }
-      @container edit (width < 640px) {
-        .row {
-          grid-template-columns: 1fr;
-        }
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
-        }
-      }
-    </style>
-  </template>
-}
 
 export class Payment extends CardDef {
   static displayName = 'Payment';
@@ -223,9 +62,9 @@ export class Payment extends CardDef {
         .payment {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .icon {
           width: 1.25rem;
@@ -240,9 +79,9 @@ export class Payment extends CardDef {
           flex-shrink: 0;
         }
         .when {
-          margin-left: auto;
+          margin-inline-start: auto;
           color: var(--muted-foreground);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>
@@ -258,9 +97,9 @@ export class Payment extends CardDef {
         .payment-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 600;
           color: var(--foreground);
         }
         .pa-icon {
@@ -369,17 +208,17 @@ export class Payment extends CardDef {
         .figure {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           white-space: nowrap;
         }
         .figure-lg {
-          font-size: 1.25rem;
+          font-size: var(--boxel-font-size-md);
         }
         .chip {
           flex-shrink: 0;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -389,14 +228,14 @@ export class Payment extends CardDef {
         .row {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           min-width: 0;
         }
         .col,
         .info {
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
+          gap: var(--boxel-sp-4xs);
           min-width: 0;
           flex: 1;
         }
@@ -406,8 +245,8 @@ export class Payment extends CardDef {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 0.375rem;
-            padding: 0.5rem;
+            gap: var(--boxel-sp-2xs);
+            padding: var(--boxel-sp-xs);
             text-align: center;
           }
         }
@@ -415,11 +254,11 @@ export class Payment extends CardDef {
           .strip {
             display: flex;
             align-items: center;
-            gap: 0.625rem;
-            padding: 0.625rem 0.75rem;
+            gap: var(--boxel-sp-xs);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           }
           .strip .info {
-            gap: 0.125rem;
+            gap: var(--boxel-sp-6xs);
           }
           .strip .chip {
             align-self: flex-start;
@@ -431,8 +270,8 @@ export class Payment extends CardDef {
             flex-direction: column;
             align-items: flex-start;
             justify-content: center;
-            gap: 0.375rem;
-            padding: 0.875rem;
+            gap: var(--boxel-sp-2xs);
+            padding: var(--boxel-sp-sm);
           }
         }
         @container fitted-card (min-width: 400px) and (min-height: 170px) {
@@ -440,8 +279,8 @@ export class Payment extends CardDef {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
-            padding: 1.25rem;
+            gap: var(--boxel-sp);
+            padding: var(--boxel-sp-lg);
           }
         }
       </style>
@@ -472,7 +311,7 @@ export class Payment extends CardDef {
           </header>
           <div class='tear' aria-hidden='true'></div>
           {{#if this.rows.length}}
-            <KeyValue class='r-rows' @items={{this.rows}}>
+            <KeyValue class='r-rows' @items={{this.rows}} @valueAlign='end'>
               <:value as |row|>
                 {{#if (eq row.value 'paidAt')}}
                   <@fields.paidAt />
@@ -490,14 +329,8 @@ export class Payment extends CardDef {
         </div>
       </article>
       <style scoped>
-        /* A linked card sizes to its content. The card container's base
-           height: 100% would otherwise fill a stretched grid panel and spill
-           past the heading above it. */
-        .receipt-wrap :deep(.field-component-card.embedded-format) {
-          height: auto;
-        }
         .receipt-wrap {
-          padding: 2.5rem 1.5rem;
+          padding: var(--boxel-sp-2xl) var(--boxel-sp-lg);
           display: flex;
           justify-content: center;
         }
@@ -515,12 +348,11 @@ export class Payment extends CardDef {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 0.5rem;
-          padding: 2rem 1.5rem 1.5rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg) var(--boxel-sp-lg);
           text-align: center;
         }
         .r-label {
-          margin: 0;
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -530,15 +362,14 @@ export class Payment extends CardDef {
           color: var(--muted-foreground);
         }
         .r-amount {
-          margin: 0;
-          font-size: 2.25rem;
+          font-size: var(--boxel-font-size-2xl);
           line-height: 1.1;
           font-variant-numeric: tabular-nums;
           font-family: var(--boxel-heading-font-family);
         }
         .tear {
           border-top: 0.125rem dashed var(--border);
-          margin: 0 1rem;
+          margin: 0 var(--boxel-sp);
           position: relative;
         }
         .tear::before,
@@ -558,19 +389,16 @@ export class Payment extends CardDef {
         .tear::after {
           right: -1.5rem;
         }
-        /* Pret UI KeyValue at the receipt's text size and column gap, with
+        /* Pret UI KeyValue rows, spaced for the receipt, with
            the values set against the receipt's right edge. */
         .r-rows {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1.25rem;
-          row-gap: 0.625rem;
-          padding: 1.25rem 1.5rem 1.75rem;
+          row-gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-lg) var(--boxel-sp-lg) var(--boxel-sp-xl);
+          font-weight: 600;
         }
+        /* shortcut: KeyValue has no value min-width knob, so a long value would widen its 1fr column; drop once KeyValue exposes one. */
         .r-rows :deep(dd) {
-          justify-content: flex-end;
           min-width: 0;
-          font-weight: 500;
         }
       </style>
     </template>
@@ -579,5 +407,4 @@ export class Payment extends CardDef {
   // Two-step form matching how a payment is recorded: what money arrived
   // (amount / rail / when / reference) → what it settles. No rail — two
   // sections don't need wayfinding.
-  static edit = PaymentEdit;
 }

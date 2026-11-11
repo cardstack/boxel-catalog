@@ -32,6 +32,11 @@
         "links": {
           "self": "../Case/case-2026-0142"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

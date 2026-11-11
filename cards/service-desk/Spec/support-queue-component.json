@@ -7,9 +7,6 @@
         "module": "../components/support-queue"
       },
       "specType": "component",
-      "isCard": false,
-      "isField": false,
-      "isComponent": true,
       "readMe": "## Support Queue\n\nThe operations queue: rows sorted nearest-breach first by `urgencyRank` from `utils/sla`, the same function the ticket console sorts with, so the two never rank differently.\n\n```gts\n<SupportQueue\n  @rows={{this.rows}}\n  @onOpen={{this.open}}\n  @onClaim={{this.claim}}\n  @onBatch={{this.runBatch}}\n/>\n```\n\nEach row carries a Breach Ring and Live Clock, unowned rows offer Claim, and a multi-select bar hands the chosen cards to `onBatch`. Rows arrive prepared as `QueueRow`s, so the component holds no domain logic.\n\nThe linked example shows the queue over the open payments and platform cases.\n\n### Non-goals\n\nNot the agent's ticket list: Queue View stays that surface.",
       "cardInfo": {
         "name": "Support Queue",
@@ -21,7 +18,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
       }
     },

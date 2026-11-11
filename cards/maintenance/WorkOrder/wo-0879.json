@@ -11,7 +11,7 @@
       "kind": "preventive",
       "priority": "P3",
       "status": "approved",
-      "title": "500-hour service — Forklift 4",
+      "title": "500-hour service \u2014 Forklift 4",
       "requestedByName": "Generate PM Work Orders",
       "requestedAt": "2026-09-09T01:00:00.000Z",
       "scheduledFor": "2026-10-18",
@@ -36,7 +36,7 @@
             "tolerance": 10
           },
           {
-            "label": "Brake test — stopping distance",
+            "label": "Brake test \u2014 stopping distance",
             "kind": "measure",
             "required": true,
             "result": "pending",
@@ -75,6 +75,11 @@
       "plan": {
         "links": {
           "self": "../MaintenancePlan/ast-0211-500h"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

@@ -12,6 +12,13 @@
         "module": "../contract-execution-app",
         "name": "ContractExecutionApp"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

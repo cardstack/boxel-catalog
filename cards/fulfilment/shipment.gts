@@ -12,34 +12,10 @@ import NumberField from 'https://cardstack.com/base/number';
 import BooleanField from 'https://cardstack.com/base/boolean';
 import DatetimeField from 'https://cardstack.com/base/datetime';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
-import { htmlSafe } from '@ember/template';
-import { Money } from './fulfilment-ui';
-import {
-  ALERT_STYLE,
-  COMPACT_EMPTY_STYLE,
-} from '@cardstack/catalog/components/pretui-helpers';
-import { Alert } from '@cardstack/pretui/components/alert';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { KeyValue } from '@cardstack/pretui/components/key-value';
-import { Token } from '@cardstack/pretui/components/token';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { action } from '@ember/object';
 import { on } from '@ember/modifier';
-import { tracked } from '@glimmer/tracking';
-import {
-  Button,
-  BoxelInput,
-  BoxelSelect,
-} from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
 import PackageIcon from '@cardstack/boxel-icons/package';
-import CircleCheck from '@cardstack/boxel-icons/circle-check';
-import MapPin from '@cardstack/boxel-icons/map-pin';
-import Receipt from '@cardstack/boxel-icons/receipt';
-import Route from '@cardstack/boxel-icons/route';
-import Truck from '@cardstack/boxel-icons/truck';
-import TriangleAlert from '@cardstack/boxel-icons/triangle-alert';
-import DispatchShipmentCommand from './dispatch-shipment-command';
-import FulfilOrderCommand from './fulfil-order-command';
+import { FitTile } from '../shared/fit-tile';
 import TrackingNumberField from './tracking-number';
 import ParcelDimensionsField from './parcel-dimensions';
 import DeliveryWindowField from './delivery-window';
@@ -52,8 +28,6 @@ import {
 import { FulfilmentOrder } from './fulfilment-order';
 import { Warehouse } from './warehouse';
 import { Carrier } from './carrier';
-import StatusChip from './fulfilment-status-chip';
-import { ShipmentTracker } from './shipment-tracker';
 
 // One scan on the package's journey. Carriers emit these; we store them
 // verbatim rather than collapsing them into the status, because the sequence is
@@ -124,730 +98,334 @@ export class TrackingEventField extends FieldDef {
 // SNAPSHOTTED onto the shipment when the label is created, not read through the
 // link. A carrier renaming a service two years from now must not rewrite what
 // happened on a package that already arrived.
-const COST_FACTS = [
-  { key: 'Carrier charged', value: 'shippingCost' },
-  { key: 'Customer paid', value: 'customerPaid' },
-  { key: 'Margin', value: 'shippingMargin' },
-];
-
 class ShipmentIsolated extends Component<typeof Shipment> {
-  @tracked trackingInput = '';
-  @tracked podInput = '';
-  @tracked selectedService: string | undefined = undefined;
-  @tracked busy = false;
-  @tracked feedback: string | undefined = undefined;
-  @tracked failed = false;
-
   get model() {
     return this.args.model as Shipment;
   }
-
-  // No tool context means no command runner — in prerender or a read-only
-  // surface the card shows what happened rather than offering buttons that
-  // would do nothing.
-  get canRun() {
-    return Boolean(this.args.context?.toolContext && this.model?.id);
+  get stats() {
+    return stats(this.model);
   }
-
-  get serviceOptions() {
-    return (this.model.carrier?.services ?? []).filter(Boolean).map((s) => ({
-      code: s.code ?? '',
-      label: `${s.serviceName ?? s.code} — ${s.speedLabel ?? ''}`,
-    }));
+  get events() {
+    return sortedEvents(this.model);
   }
-
-  get selectedServiceOption() {
-    return this.serviceOptions.find((o) => o.code === this.selectedService);
+  get parcelRows() {
+    return parcelRows(this.model);
   }
-
-  get isDispatchable() {
-    let status = this.model.status;
-    return !status || status === 'label_created';
+  get offPath() {
+    let s = this.model.status;
+    return s === 'exception' || s === 'returned_to_sender';
   }
-
-  get isDeliverable() {
-    let status = this.model.status;
-    return status === 'in_transit' || status === 'out_for_delivery';
-  }
-
-  // A package in exception has not finished its journey — it has stopped. It
-  // used to fall through to the "nothing further to record" branch, which
-  // told the operator there was nothing to do about the one shipment the app
-  // paints red. The two real exits are: it moved again (re-dispatch with the
-  // carrier's new tracking number), or it came back (returned to sender).
-  get isStalled() {
-    return this.model.status === 'exception';
-  }
-
-  get deliveredRecord() {
-    let at = this.model.deliveredAt;
-    if (!at) {
-      return undefined;
-    }
-    let promised = this.model.deliveryWindow?.latest;
-    return {
-      at,
-      wasLate: promised ? at.getTime() > promised.getTime() : undefined,
-      promised,
-    };
-  }
-
-  // The delivered record's KeyValue rows; the promise row only when there
-  // was a promise to measure against.
-  get deliveredFacts() {
-    let facts = [{ key: 'Delivered', value: 'deliveredAt' }];
-    if (this.deliveredRecord?.promised) {
-      facts.push({ key: 'Against promise', value: 'promise' });
-    }
-    facts.push({ key: 'Proof of delivery', value: 'proofOfDelivery' });
-    return facts;
-  }
-
-  @action setTracking(value: string) {
-    this.trackingInput = value;
-  }
-
-  @action setPod(value: string) {
-    this.podInput = value;
-  }
-
-  @action chooseService(option: { code: string } | null) {
-    this.selectedService = option?.code;
-  }
-
-  @action
-  async dispatch() {
-    let toolContext = this.args.context?.toolContext;
-    if (!toolContext || this.busy) {
-      return;
-    }
-    this.busy = true;
-    this.failed = false;
-    this.feedback = undefined;
-    try {
-      let result = await new DispatchShipmentCommand(toolContext).execute({
-        shipmentId: this.model.id,
-        serviceCode: this.selectedService,
-        trackingNumber: this.trackingInput.trim(),
-      });
-      this.feedback = `Dispatched on ${result.serviceLevel} — quoted ${result.quotedCost} at ${result.billableWeight} kg billable, due ${result.estimatedDelivery}.`;
-      this.trackingInput = '';
-    } catch (e) {
-      this.failed = true;
-      this.feedback = e instanceof Error ? e.message : String(e);
-    } finally {
-      this.busy = false;
-    }
-  }
-
-  // Off-path exit. It is a status write plus a scan, not a fulfilment: no
-  // order is closed, because nothing arrived. Kept as a store patch rather
-  // than a command because there is no second fact to derive from it.
-  @action
-  async markReturnedToSender() {
-    let store = this.args.context?.store;
-    if (!store || !this.model.id || this.busy) {
-      return;
-    }
-    this.busy = true;
-    this.failed = false;
-    this.feedback = undefined;
-    try {
-      let now = new Date().toISOString();
-      let events = (this.model.trackingEvents ?? [])
-        .filter(Boolean)
-        .map((e) => ({
-          occurredAt: e.occurredAt ? e.occurredAt.toISOString() : null,
-          statusCode: e.statusCode ?? null,
-          statusDescription: e.statusDescription ?? null,
-          location: e.location ?? null,
-          isDelivered: e.isDelivered ?? false,
-        }));
-      await store.patch(this.model.id, {
-        attributes: {
-          status: 'returned_to_sender',
-          trackingEvents: [
-            ...events,
-            {
-              occurredAt: now,
-              statusCode: 'RTS',
-              statusDescription: 'Returned to sender',
-              location: null,
-              isDelivered: false,
-            },
-          ],
-        },
-      });
-      this.feedback =
-        'Marked returned to sender. It has left the in-transit list; raise a return if the customer is owed a refund.';
-      this.trackingInput = '';
-    } catch (e) {
-      this.failed = true;
-      this.feedback = e instanceof Error ? e.message : String(e);
-    } finally {
-      this.busy = false;
-    }
-  }
-
-  @action
-  async markDelivered() {
-    let toolContext = this.args.context?.toolContext;
-    if (!toolContext || this.busy) {
-      return;
-    }
-    this.busy = true;
-    this.failed = false;
-    this.feedback = undefined;
-    try {
-      let result = await new FulfilOrderCommand(toolContext).execute({
-        shipmentId: this.model.id,
-        // Empty stays empty: the command omits the attribute entirely rather
-        // than writing null over a note already on the card.
-        proofOfDelivery: this.podInput.trim(),
-      });
-      this.podInput = '';
-      this.feedback = result.orderNumber
-        ? result.wasAlreadyFulfilled
-          ? `Delivered. ${result.orderNumber} was already fulfilled, so its fulfilment date stands.`
-          : `Delivered. ${result.orderNumber} is now fulfilled.`
-        : 'Delivered. This shipment has no order to close.';
-    } catch (e) {
-      this.failed = true;
-      this.feedback = e instanceof Error ? e.message : String(e);
-    } finally {
-      this.busy = false;
-    }
-  }
+  // Re-shipping and raising a return both start from the order, so both
+  // actions open it.
+  openOrder = () => {
+    let order = this.model.order;
+    if (order) this.args.viewCard?.(order as any);
+  };
 
   <template>
     <article class='shp'>
-      <header class='label'>
-        <div class='label-top'>
-          <div>
-            <span class='eyebrow'>Shipment</span>
-            <h1 class='num'>{{@model.shipmentNumber}}</h1>
+      <header class='ihead'>
+        <div class='who'>
+          <span class='mark' aria-hidden='true'>Sh</span>
+          <div class='id'>
+            <h1 class='name'>{{if
+                @model.shipmentNumber
+                @model.shipmentNumber
+                'Untitled shipment'
+              }}</h1>
+            <p class='meta'>{{metaLine @model}}</p>
           </div>
-          <div class='carrier-block'>
-            <span class='carrier'>{{if
-                @model.carrierLabel
-                @model.carrierLabel
-                'No carrier'
-              }}</span>
-            {{#if @model.serviceLevel}}
-              <span class='service'>{{@model.serviceLevel}}</span>
+        </div>
+        <div class='bar'>
+          <span class='st' data-tone={{statusTone @model.status}}><span
+              class='dot'
+            ></span>{{statusText @model}}</span>
+          <span class='st'><span class='dot'></span>{{if
+              @model.isDropship
+              'dropship'
+              'warehouse'
+            }}</span>
+          {{#if @model.order}}
+            {{#if this.offPath}}
+              <Button
+                @variant='primary'
+                @size='sm'
+                {{on 'click' this.openOrder}}
+              >Re-ship</Button>
+              <Button
+                @variant='outline'
+                @size='sm'
+                {{on 'click' this.openOrder}}
+              >Open return</Button>
+            {{else}}
+              <Button
+                @variant='outline'
+                @size='sm'
+                {{on 'click' this.openOrder}}
+              >Open order</Button>
             {{/if}}
-          </div>
-        </div>
-
-        <div class='label-mid'>
-          <div class='tn-block'>
-            <span class='cap'>Tracking</span>
-            <@fields.trackingNumber @format='embedded' />
-          </div>
-          <div class='code' aria-hidden='true'>
-            <span></span><span></span><span></span><span></span><span></span>
-            <span></span><span></span><span></span><span></span><span></span>
-            <span></span><span></span><span></span><span></span><span></span>
-            <span></span><span></span><span></span>
-          </div>
-        </div>
-
-        <div class='label-bot'>
-          <div>
-            <span class='cap'>Order</span>
-            <span class='val'>{{#if @model.orderNumber}}<Token
-                  class='val-token'
-                  @value={{@model.orderNumber}}
-                />{{else}}—{{/if}}</span>
-          </div>
-          <div>
-            <span class='cap'>From</span>
-            <span class='val'>{{#if @model.originCode}}<Token
-                  class='val-token'
-                  @value={{@model.originCode}}
-                />{{else}}—{{/if}}</span>
-          </div>
-          <div>
-            <span class='cap'>Parcel</span>
-            <span class='val'><@fields.parcel @format='atom' /></span>
-          </div>
-          <div>
-            <span class='cap'>Status</span>
-            <span class='val'><StatusChip
-                @label={{@model.statusStyle.label}}
-                @hue={{@model.statusStyle.hue}}
-              /></span>
-          </div>
+          {{/if}}
         </div>
       </header>
 
-      {{#if this.canRun}}
-        <section class='actions'>
-          {{#if this.isDispatchable}}
-            <h2><Truck class='sec-icon' aria-hidden='true' />Dispatch</h2>
-            <p class='act-note'>Choose the service you actually bought and enter
-              the tracking number off the printed label. The rate is quoted from
-              the carrier's own table and stamped onto this shipment.</p>
-            <div class='act-row'>
-              <BoxelSelect
-                @options={{this.serviceOptions}}
-                @selected={{this.selectedServiceOption}}
-                @onChange={{this.chooseService}}
-                @placeholder='Service'
-                @renderInPlace={{true}}
-                class='act-select'
-                as |opt|
-              >{{opt.label}}</BoxelSelect>
-              <BoxelInput
-                @value={{this.trackingInput}}
-                @onInput={{this.setTracking}}
-                @placeholder='Tracking number'
-                class='act-input'
-              />
-              <Button
-                @kind='primary'
-                @disabled={{this.busy}}
-                {{on 'click' this.dispatch}}
-              >Dispatch</Button>
-            </div>
-          {{else if this.isDeliverable}}
-            <h2><MapPin class='sec-icon' aria-hidden='true' />Delivery</h2>
-            <p class='act-note'>Records the delivery and closes the order,
-              stamping its fulfilment date once. Where the parcel was left is
-              the detail a disputed delivery turns on, so it is captured here
-              rather than remembered.</p>
-            <div class='act-row'>
-              <BoxelInput
-                @value={{this.podInput}}
-                @onInput={{this.setPod}}
-                @placeholder='Proof of delivery — signed by, or where left (optional)'
-                class='act-input'
-              />
-              <Button
-                @kind='primary'
-                @disabled={{this.busy}}
-                {{on 'click' this.markDelivered}}
-              >Mark delivered</Button>
-            </div>
-          {{else if this.isStalled}}
-            <h2><TriangleAlert
-                class='sec-icon'
-                aria-hidden='true'
-              />Stalled</h2>
-            <p class='act-note'>This package is not moving. If the carrier has
-              issued a new tracking number, re-dispatch it below; if it is on
-              its way back to you, send it to returned-to-sender so it leaves
-              the in-transit list.</p>
-            <div class='act-row'>
-              <BoxelInput
-                @value={{this.trackingInput}}
-                @onInput={{this.setTracking}}
-                @placeholder='New tracking number'
-                class='act-input'
-              />
-              <Button
-                @kind='primary'
-                @disabled={{this.busy}}
-                {{on 'click' this.dispatch}}
-              >Re-dispatch</Button>
-              <Button
-                @disabled={{this.busy}}
-                {{on 'click' this.markReturnedToSender}}
-              >Returned to sender</Button>
-            </div>
-          {{else}}
-            <h2><CircleCheck class='sec-icon' aria-hidden='true' />Closed</h2>
-            {{#if this.deliveredRecord}}
-              {{! The delivery was recorded and then withheld: deliveredAt and
-                  proofOfDelivery were both written by the command and drawn
-                  by nothing. This is the read side of Mark delivered. }}
-              <KeyValue class='kv delivered-kv' @items={{this.deliveredFacts}}>
-                <:value as |item|>
-                  {{#if (eq item.value 'deliveredAt')}}
-                    <@fields.deliveredAt @format='atom' />
-                  {{else if (eq item.value 'promise')}}
-                    {{#if this.deliveredRecord.wasLate}}
-                      <span class='late-val'>Late — promised
-                        <@fields.deliveryWindow @format='atom' /></span>
-                    {{else}}
-                      On time
-                    {{/if}}
-                  {{else}}
-                    {{#if @model.proofOfDelivery}}{{@model.proofOfDelivery}}
-                    {{else}}<span class='muted'>Not recorded</span>{{/if}}
-                  {{/if}}
-                </:value>
-              </KeyValue>
-            {{else}}
-              <p class='act-note'>This shipment has finished its journey.
-                Nothing further to record.</p>
-            {{/if}}
-          {{/if}}
-
-          {{! One live region, always in the DOM, so the result of a button
-              press is announced whether it succeeded or failed: a region
-              created together with its text is often not read. The Alerts
-              inside drop their own roles so the message is not read twice. }}
-          <div class='act-live' aria-live='polite' aria-atomic='true'>
-            {{#if this.feedback}}
-              {{#if this.failed}}
-                <Alert
-                  class='act-feedback'
-                  @tone='danger'
-                  style={{ALERT_STYLE.danger}}
-                  role='none'
-                >{{this.feedback}}</Alert>
-              {{else}}
-                <Alert
-                  class='act-feedback'
-                  @tone='success'
-                  style={{ALERT_STYLE.success}}
-                  role='none'
-                >{{this.feedback}}</Alert>
-              {{/if}}
-            {{/if}}
+      <div class='stats'>
+        {{#each this.stats as |s|}}
+          <div class='stat'>
+            <span class='st cap' data-tone={{s.tone}}><span
+                class='dot'
+              ></span>{{s.label}}</span>
+            <span class='num'>{{s.value}}</span>
+            <span class='meta'>{{s.meta}}</span>
           </div>
-        </section>
-      {{/if}}
+        {{/each}}
+      </div>
 
-      {{#if @model.isException}}
-        <Alert
-          class='alert'
-          @tone='danger'
-          @title='This package is in exception.'
-          style={{ALERT_STYLE.danger}}
-        >It will not move again until someone acts — check the latest scan below
-          for what the carrier needs.</Alert>
-      {{else if @model.isLate}}
-        <Alert
-          class='alert'
-          @tone='warning'
-          @title='Past its promised delivery window.'
-          style={{ALERT_STYLE.attention}}
-        >The customer has almost certainly noticed.</Alert>
-      {{/if}}
-
-      <section class='sec'>
-        <h2><Route class='sec-icon' aria-hidden='true' />Journey</h2>
-        <ShipmentTracker
-          @status={{@model.status}}
-          @events={{@model.trackingEvents}}
-          @deliveryWindow={{@model.deliveryWindow}}
-          @trackingUrl={{@model.trackingNumber.trackingUrl}}
-        />
+      <section class='blk'>
+        <h2>Tracking</h2>
+        {{#each this.events as |e|}}
+          <div class='row'>
+            <span class='lead'>
+              <span class='st' data-tone={{eventTone e.statusCode}}><span
+                  class='dot'
+                ></span></span>
+              <span class='strong'>{{e.statusDescription}}</span>
+              <span class='meta mono-ish'>{{eventMeta e}}</span>
+            </span>
+            <span class='mono'>{{e.statusCode}}</span>
+          </div>
+        {{else}}
+          <p class='row meta'>No scans yet</p>
+        {{/each}}
       </section>
 
-      <div class='cols'>
-        <section class='sec'>
-          <h2><PackageIcon class='sec-icon' aria-hidden='true' />Contents</h2>
-          {{#if @model.lineItems.length}}
-            <@fields.lineItems @format='embedded' />
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @texture={{false}}
-              @title='No contents recorded on this shipment'
-            />
-          {{/if}}
-        </section>
+      <section class='blk'>
+        <h2>Parcel</h2>
+        <dl class='kv'>
+          {{#each this.parcelRows as |r|}}
+            <dt class='cap'>{{r.k}}</dt>
+            <dd>{{r.v}}</dd>
+          {{/each}}
+        </dl>
+      </section>
 
-        <section class='sec'>
-          <h2><Receipt class='sec-icon' aria-hidden='true' />Cost</h2>
-          <KeyValue class='kv' @items={{COST_FACTS}}>
-            <:value as |item|>
-              {{#if (eq item.value 'shippingCost')}}
-                {{#if @model.shippingCost.amount}}<Money
-                    @amount={{@model.shippingCost.amount}}
-                    @code={{@model.customerPaid.currency.code}}
-                  />{{else}}—{{/if}}
-              {{else if (eq item.value 'customerPaid')}}
-                {{#if @model.customerPaid.amount}}<Money
-                    @amount={{@model.customerPaid.amount}}
-                    @code={{@model.customerPaid.currency.code}}
-                  />{{else}}—{{/if}}
-              {{else}}
-                {{! `shippingMargin` is a NumberField, so it printed raw:
-                    "-1.88" sat under "£6.87" and "£4.99" — three money values
-                    on one card, one of them missing its symbol. Through
-                    `Money` like every other figure in this family. }}
-                {{#if @model.shippingMargin}}<Money
-                    class='{{if @model.isMarginNegative "neg"}}'
-                    @amount={{@model.shippingMargin}}
-                    @code={{@model.customerPaid.currency.code}}
-                  />{{else}}—{{/if}}
-              {{/if}}
-            </:value>
-          </KeyValue>
-        </section>
-      </div>
+      <section class='blk'>
+        <h2>Line items</h2>
+        {{#each @model.lineItems as |l|}}
+          <div class='row'>
+            <span class='lead'>
+              <span class='strong'>{{l.productName}} × {{l.quantity}}</span>
+              <span class='meta'>{{lineMeta l}}</span>
+            </span>
+            <span class='mono'>{{if
+                @model.isDropship
+                'dropship'
+                l.quantityFulfilled
+              }}</span>
+          </div>
+        {{else}}
+          <p class='row meta'>—</p>
+        {{/each}}
+      </section>
+
+      <section class='blk'>
+        <h2>Linked</h2>
+        <dl class='kv'>
+          <dt class='cap'>Order</dt>
+          <dd>{{#if @model.order}}<@fields.order
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+          <dt class='cap'>Origin</dt>
+          <dd>{{#if @model.originWarehouse}}<@fields.originWarehouse
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+          <dt class='cap'>Carrier</dt>
+          <dd>{{#if @model.carrier}}<@fields.carrier
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+        </dl>
+      </section>
     </article>
 
     <style scoped>
       .shp {
-        /* Isolated gets NO container from the host — every ancestor up to the
-           panel is `container-type: normal`, so an `@container` rule here is
-           inert until this declares its own. `inline-size`, not `size`: the
-           card scrolls, and `size` needs a definite block size. */
         container-type: inline-size;
-        container-name: card-iso;
-        --ful-perf: color-mix(in oklch, var(--foreground) 22%, transparent);
-        /* ONE panel primitive. Every full-width tinted block on this card —
-           section, note, alert, callout — takes its ground and inset
-           from here, because a background makes spacing VISIBLE: while
-           sections were separated by whitespace alone, a note padded
-           `sp-sm` and a section padded `sp-lg` looked the same. Tint them
-           both and their text edges no longer line up down the page, and
-           every gap between them reads as a mis-registration rather than a
-           rhythm. The inset is the thing that must agree; the tint only
-           exposed it. */
-        --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-        --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xl);
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp-lg);
-      }
-      /* The hero is the label itself: heavy border, perforated divisions,
-         monospace throughout — the physical object this card stands for. */
-      .label {
-        border: 0.125rem solid var(--ful-perf);
-        border-radius: 0.1875rem;
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        line-height: 1.4;
+        color: var(--foreground);
         background-color: var(--card);
-        color: var(--card-foreground);
-      }
-      .label-top {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp);
-        justify-content: space-between;
-        align-items: flex-start;
-        padding: var(--boxel-sp);
-        border-bottom: 0.125rem dashed var(--ful-perf);
-      }
-      .eyebrow {
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .num {
-        margin: 0.125rem 0 0;
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-xl);
-        line-height: 1;
-      }
-      .carrier-block {
-        text-align: right;
-      }
-      .carrier {
-        display: block;
-        font-size: var(--boxel-font-size);
-        font-weight: 800;
-        letter-spacing: 0.02em;
-      }
-      .service {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .label-mid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp);
-        align-items: center;
-        justify-content: space-between;
-        padding: var(--boxel-sp);
-        border-bottom: 0.125rem dashed var(--ful-perf);
-      }
-      .code {
-        display: flex;
-        align-items: stretch;
-        gap: 0.125rem;
-        height: 2.625rem;
-        flex: 1 1 10rem;
-        max-width: 20rem;
-        justify-content: flex-end;
-      }
-      .code span {
-        display: block;
-        background-color: color-mix(
-          in oklch,
-          var(--card-foreground) 78%,
-          transparent
-        );
-      }
-      .code span:nth-child(3n) {
-        width: 0.3125rem;
-        opacity: 0.5;
-      }
-      .code span:nth-child(3n + 1) {
-        width: 0.125rem;
-      }
-      .code span:nth-child(3n + 2) {
-        width: 0.1875rem;
-        opacity: 0.75;
-      }
-      .label-bot {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(8.125rem, 1fr));
-        gap: var(--boxel-sp);
-        padding: var(--boxel-sp);
-      }
-      .label-bot > div {
-        display: flex;
-        flex-direction: column;
-        gap: 0.1875rem;
-      }
-      .cap {
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .val {
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
-      }
-      /* Pret UI Token for the order number and origin code, on the muted
-         ink. */
-      .val .val-token {
-        --pretui-token-hue: var(--muted-foreground);
-        --pretui-token-font-size: var(--boxel-font-size-sm);
-        margin-inline: 0;
-      }
-      /* Pret UI Alert for the exception and late notes; the tone's inks
-         come from ALERT_STYLE and the size from the body knob. */
-      .alert {
-        --text-ui-md: var(--boxel-font-size-sm);
-        margin: var(--boxel-sp) 0 0;
-      }
-      .actions {
-        margin-top: var(--boxel-sp-lg);
-        padding: var(--panel-pad);
         border: 1px solid var(--border);
-        border-radius: 0.25rem;
+        border-radius: var(--radius);
+        overflow: hidden;
+        --pretui-button-h: 1.625rem;
       }
-      .actions h2 {
-        margin: 0 0 var(--boxel-sp-2xs);
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .act-note {
-        margin: 0 0 var(--boxel-sp-sm);
-        font-size: var(--boxel-font-size-xs);
-        max-width: 60ch;
-        color: var(--muted-foreground);
-      }
-      .act-row {
+      .ihead {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--boxel-sp-xs);
         align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem 0.75rem;
+        padding: 0.5rem 0.625rem;
       }
-      .act-select {
-        flex: 1 1 13.75rem;
-        max-width: 20rem;
-      }
-      .act-input {
-        flex: 1 1 12.5rem;
-        max-width: 17.5rem;
-      }
-      /* Pret UI Alert for an action's result. */
-      .act-feedback {
-        --text-ui-md: var(--boxel-font-size-sm);
-        margin: var(--boxel-sp-sm) 0 0;
-      }
-      .cols {
-        display: grid;
-        gap: var(--boxel-sp-lg);
-        grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
-      }
-      .sec {
-        /* A surface, not just a gap. Sections were told apart only by spacing,
-           and their headings were 12px uppercase muted — pixel-identical to
-           every table column label on the card, so "where does a section
-           start" had no answer. The ground is mixed toward --foreground so it
-           follows the theme in both modes rather than being a grey. */
-        padding: var(--panel-pad);
-        border-radius: var(--radius);
-        background-color: var(--panel-bg);
-      }
-      .sec h2 {
-        /* The section heading is now the loudest uppercase thing on the card:
-           --foreground against the column labels' --muted-foreground. Weight
-           alone (500 vs 400) was not a readable difference. */
+      .who {
         display: flex;
         align-items: center;
-        gap: 0.4375rem;
-        margin: 0 0 var(--boxel-sp-xs);
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
+        gap: 0.5rem;
+        min-width: 0;
+      }
+      .mark {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        width: 1.375rem;
+        height: 1.375rem;
+        border-radius: calc(var(--radius) * 0.6);
+        background-color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 700;
         color: var(--foreground);
       }
-      /* Pret UI KeyValue: label and value sizes and the column gap. Cost
-         figures are mono. */
-      .kv {
-        --text-ui: var(--boxel-font-size-xs);
-        --text-ui-md: var(--boxel-font-size-sm);
-        --space-6: 1.25rem;
+      .id {
+        min-width: 0;
       }
-      .kv :deep(dd) {
+      .name {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        letter-spacing: normal;
+        text-transform: none;
+      }
+      .meta {
+        margin: 0;
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
+      }
+      .bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem 0.75rem;
+      }
+      .st {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-weight: 600;
+        --tone: var(--muted-foreground);
+      }
+      .st[data-tone='bad'] {
+        --tone: var(--destructive);
+      }
+      .st[data-tone='warn'] {
+        --tone: var(--warning);
+      }
+      .st[data-tone='ok'] {
+        --tone: var(--success);
+      }
+      .dot {
+        flex: none;
+        width: 0.4375rem;
+        height: 0.4375rem;
+        border-radius: 50%;
+        background-color: var(--tone);
+      }
+      .cap {
         font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
       }
-      .neg {
-        font-weight: 800;
-        color: var(--destructive-ink);
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border-top: 1px solid var(--border);
+        overflow: hidden;
       }
-      /* The delivered record sits inside the actions section, which has no
-         surface of its own, so it needs its own top margin. Prose, not
-         figures: the POD line is a sentence, so it drops the mono. */
-      .delivered-kv {
-        margin-top: var(--boxel-sp-xs);
+      .stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        padding: 0.5rem 0.625rem;
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        margin-bottom: -1px;
       }
-      .delivered-kv :deep(dd) {
-        font-family: inherit;
-      }
-      .late-val {
+      .num {
+        font-size: 1.375rem;
         font-weight: 700;
-        color: var(--destructive-ink);
+        line-height: 1.15;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
-      .muted {
+      .blk {
+        border-top: 1px solid var(--border);
+      }
+      .blk h2 {
+        margin: 0;
+        padding: 0.625rem 0.625rem 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        min-height: 1.75rem;
+        margin: 0;
+        padding: 0 0.625rem;
+        border-top: 1px solid var(--border);
+      }
+      .lead {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        column-gap: 0.5rem;
+        min-width: 0;
+      }
+      .lead .st {
+        align-self: center;
+      }
+      .strong {
+        font-weight: 600;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
         color: var(--muted-foreground);
       }
-
-      /* Section icons: one size, one muted colour, everywhere. They make the
-         card scannable by shape; they must never compete with the heading. */
-      h2 .sec-icon {
-        width: max(0.875rem, 1em);
-        height: max(0.875rem, 1em);
-        flex: 0 0 auto;
-        color: var(--muted-foreground);
+      .kv {
+        display: grid;
+        grid-template-columns: minmax(7rem, 9.5rem) minmax(0, 1fr);
+        margin: 0;
       }
-
-      /* One collapse stop. The card is rendered in a resizable stack panel, so
-         this fires when a second card opens beside it — not only on a phone. */
-      @container card-iso (width < 720px) {
-        .cols,
-        .two {
-          grid-template-columns: 1fr;
+      .kv dt,
+      .kv dd {
+        display: flex;
+        align-items: center;
+        min-height: 1.75rem;
+        margin: 0;
+        border-top: 1px solid var(--border);
+      }
+      .kv dt {
+        padding-left: 0.625rem;
+      }
+      .kv dd {
+        padding: 0 0.625rem;
+        min-width: 0;
+      }
+      @container (width < 560px) {
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
     </style>
@@ -972,61 +550,130 @@ export class Shipment extends CardDef {
   static isolated = ShipmentIsolated;
 
   static embedded = class Embedded extends Component<typeof Shipment> {
+    get rows() {
+      return embRows(this.args.model as Shipment);
+    }
     <template>
-      <div class='s-emb'>
-        <span class='s-num'>{{#if @model.shipmentNumber}}<Token
-              class='s-token'
-              @value={{@model.shipmentNumber}}
-            />{{/if}}</span>
-        <span class='s-carrier'>{{if
-            @model.carrierName
-            @model.carrierName
-            '—'
-          }}</span>
-        <span class='s-status'><StatusChip
-            @label={{@model.statusStyle.label}}
-            @hue={{@model.statusStyle.hue}}
-          /></span>
-        <span class='s-slot'><@fields.deliveryWindow @format='atom' /></span>
-      </div>
-
+      <article class='emb'>
+        <header>
+          <span class='mark' aria-hidden='true'>Sh</span>
+          <div class='id'>
+            <h3>{{@model.cardTitle}}</h3>
+            <p class='meta'>{{metaLine @model}}</p>
+          </div>
+          <span class='st' data-tone={{statusTone @model.status}}><span
+              class='dot'
+            ></span>{{statusText @model}}</span>
+        </header>
+        <dl class='kv'>
+          {{#each this.rows as |r|}}
+            <dt>{{r.k}}</dt>
+            <dd>{{r.v}}</dd>
+          {{/each}}
+        </dl>
+        <dl class='kv'>
+          <dt>Order</dt>
+          <dd>{{#if @model.order}}<@fields.order
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+          <dt>Origin</dt>
+          <dd>{{#if @model.originWarehouse}}<@fields.originWarehouse
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+        </dl>
+      </article>
       <style scoped>
-        .s-emb {
-          display: grid;
-          grid-template-columns: 8.5rem minmax(0, 1fr) auto 6rem;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          font-size: 0.88rem;
+        .emb {
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          line-height: 1.4;
+          color: var(--foreground);
         }
-        .s-num {
+        header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 0.625rem;
+        }
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1.375rem;
+          height: 1.375rem;
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 700;
+        }
+        .id {
+          flex: 1;
           min-width: 0;
         }
-        /* Pret UI Token for the shipment number, on the primary ink. */
-        .s-num .s-token {
-          --pretui-token-hue: var(--primary-ink);
-          --pretui-token-font-size: 0.88rem;
-          margin-inline: 0;
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
+        h3 {
+          margin: 0;
+          font-size: 0.8125rem;
+          font-weight: 700;
         }
-        .s-carrier {
+        .meta {
+          margin: 0;
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .s-slot {
-          text-align: right;
-          font-size: 0.78rem;
+        .st {
+          flex: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          font-weight: 600;
+          --tone: var(--muted-foreground);
         }
-        @container (width < 400px) {
-          .s-emb {
-            grid-template-columns: 8rem minmax(0, 1fr) auto;
-          }
-          .s-slot {
-            display: none;
-          }
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
+        }
+        .st[data-tone='warn'] {
+          --tone: var(--warning);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
+        }
+        .dot {
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--tone);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          margin: 0;
+        }
+        .kv dt,
+        .kv dd {
+          display: flex;
+          align-items: center;
+          min-height: 1.75rem;
+          margin: 0;
+          border-top: 1px solid var(--border);
+        }
+        .kv dt {
+          padding-left: 0.625rem;
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .kv dd {
+          padding: 0 0.625rem;
+          min-width: 0;
         }
       </style>
     </template>
@@ -1034,12 +681,37 @@ export class Shipment extends CardDef {
 
   static atom = class Atom extends Component<typeof Shipment> {
     <template>
-      <span class='s-atom'>{{@model.shipmentNumber}}</span>
+      <span class='atom'>
+        <span class='mark' aria-hidden='true'>Sh</span>
+        <span class='name'>{{@model.cardTitle}}</span>
+      </span>
       <style scoped>
-        .s-atom {
+        .atom {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          min-width: 0;
+          max-width: 100%;
+          font-size: 0.6875rem;
+          font-weight: 600;
+          color: var(--foreground);
+        }
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1rem;
+          height: 1rem;
+          border-radius: calc(var(--radius) * 0.5);
+          background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.85em;
+          font-size: 0.5rem;
           font-weight: 700;
+        }
+        .name {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
@@ -1047,216 +719,241 @@ export class Shipment extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Shipment> {
     <template>
-      <article class='fit'>
-        <div class='r-head'>
-          <div class='hd-row'>
-            <span class='dot' style={{dotStyle @model.statusStyle.hue}}></span>
-            <span class='num'>{{@model.shipmentNumber}}</span>
-          </div>
-          <span class='carrier'>{{@model.carrierName}}</span>
-        </div>
-
-        <div class='r-body'>
-          <div class='code' aria-hidden='true'>
-            <span></span><span></span><span></span><span></span><span></span>
-            <span></span><span></span><span></span><span></span><span></span>
-            <span></span><span></span>
-          </div>
-          <p class='tn'>{{@model.trackingNumber.number}}</p>
-          <p class='status'>{{@model.statusStyle.label}}</p>
-        </div>
-
-        <div class='r-meta'>
-          <span class='ord'>{{if
-              @model.orderNumber
-              @model.orderNumber
-              ''
-            }}</span>
-          <span class='eta'><@fields.deliveryWindow @format='atom' /></span>
-        </div>
-      </article>
-
+      <FitTile>
+        <:avatar><span class='mark' aria-hidden='true'>Sh</span></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><span class='st' data-tone={{statusTone @model.status}}><span
+              class='dot'
+            ></span><span class='st-text'>{{statusText
+                @model
+              }}</span></span></:status>
+        <:fact>{{@model.trackingNumber.number}} · {{windowLabel @model}}</:fact>
+        <:relations>{{#if @model.order}}<@fields.order
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}{{#if @model.carrier}}<@fields.carrier
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
       <style scoped>
-        .fit {
-          --type-ratio: 1.24;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          /* The block-axis budget. `--type-base` is driven mostly by `cqi`, which
-             is huge in a wide, short cell (a 691x105 strip gave 15px, and the
-             25px number it produced needed a 30px line box in a row that only
-             had 22px — a 12px shear straight through the digits). Capping the
-             SCALE against `cqb` fixes every role at once, where capping each
-             display role individually did not: in a tall cell the cqi term still
-             governs, so tiles are unchanged. */
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            1.0625rem
-          );
-          --meta-size: max(
-            0.6875rem,
-            calc(var(--type-base) / var(--type-ratio))
-          );
-          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
-          /* The identifier is a VALUE, so it must render in full. It is capped
-             against the inline axis as well as the block axis so a real order /
-             RMA / SKU always fits its box — the ellipsis below is a safety net
-             for a pathological identifier, not a truncation strategy. */
-          --num-size: max(
-            0.6875rem,
-            min(
-              calc(var(--type-base) * pow(var(--type-ratio), 2)),
-              26cqb,
-              7.5cqi
-            )
-          );
-          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
-          --perf: color-mix(in oklch, var(--card-foreground) 20%, transparent);
-
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.1875rem;
-          padding: var(--pad);
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-head {
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: 0.375rem;
-        }
-        .r-meta {
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: 0.375rem;
-          padding-top: 0.1875rem;
-          border-top: 1px dashed var(--perf);
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          width: 2rem;
+          height: 2rem;
+          margin-right: 0.5rem;
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: var(--meta-size);
-          color: var(--muted-foreground);
+          font-size: 0.6875rem;
+          font-weight: 700;
+          color: var(--foreground);
         }
-        .hd-row {
-          display: flex;
+        .st {
+          display: inline-flex;
           align-items: center;
-          gap: 0.3125rem;
+          gap: 0.375rem;
           min-width: 0;
+          max-width: 100%;
+          font-weight: 600;
+          white-space: nowrap;
+          --tone: var(--muted-foreground);
+        }
+        .st-text {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
+        }
+        .st[data-tone='warn'] {
+          --tone: var(--warning);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
         }
         .dot {
-          flex: none;
           width: 0.4375rem;
           height: 0.4375rem;
+          flex-shrink: 0;
           border-radius: 50%;
-          background-color: color-mix(
-            in oklch,
-            var(--st-hue, var(--muted-foreground)) 72%,
-            transparent
-          );
-        }
-        .num {
-          font-family: var(--font-mono);
-          font-size: var(--num-size);
-          font-weight: 800;
-          line-height: 1.2;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .carrier {
-          font-size: var(--meta-size);
-          font-weight: 700;
-          white-space: nowrap;
-          color: var(--muted-foreground);
-        }
-        .code {
-          display: flex;
-          align-items: stretch;
-          gap: 0.125rem;
-          height: 1rem;
-          margin-top: 0.25rem;
-        }
-        .code span {
-          display: block;
-          background-color: color-mix(
-            in oklch,
-            var(--card-foreground) 72%,
-            transparent
-          );
-        }
-        .code span:nth-child(3n) {
-          width: 0.25rem;
-          opacity: 0.5;
-        }
-        .code span:nth-child(3n + 1) {
-          width: 0.125rem;
-        }
-        .code span:nth-child(3n + 2) {
-          width: 0.1875rem;
-          opacity: 0.75;
-        }
-        .tn {
-          margin: 0.1875rem 0 0;
-          font-family: var(--font-mono);
-          font-size: var(--meta-size);
-          letter-spacing: 0.12em;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .status {
-          margin: 0.1875rem 0 0;
-          font-size: var(--type-base);
-          font-weight: 700;
-        }
-
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: auto;
-          }
-          .r-body,
-          .r-meta {
-            display: none;
-          }
-        }
-        @container fitted-card (50px < height <= 80px) {
-          .r-body {
-            display: none;
-          }
-        }
-        @container fitted-card (80px < height <= 130px) {
-          .code,
-          .tn {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .carrier {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 110px) {
-          .ord {
-            display: none;
-          }
+          background-color: var(--tone);
         }
       </style>
     </template>
   };
 }
 
-function dotStyle(hue: string | undefined) {
-  return htmlSafe(`--st-hue: ${hue ?? 'var(--muted-foreground)'}`);
+// ── format helpers (tokens for tone, plain strings for text) ─────────────
+type Tone = 'ok' | 'warn' | 'bad' | '';
+
+function statusTone(status: string | undefined): Tone {
+  if (status === 'delivered') return 'ok';
+  if (status === 'exception' || status === 'returned_to_sender') return 'bad';
+  if (status === 'out_for_delivery') return 'warn';
+  return '';
+}
+
+function eventTone(code: string | undefined | null): Tone {
+  if (code === 'RTS') return 'bad';
+  if (code === 'EX' || code === 'EXC') return 'warn';
+  if (code === 'DL' || code === 'OK') return 'ok';
+  return '';
+}
+
+function day(d: Date | undefined | null) {
+  return d
+    ? d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+      })
+    : undefined;
+}
+
+function dayTime(d: Date | undefined | null) {
+  if (!d) return '—';
+  let t = d.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  });
+  return `${day(d)}, ${t}`;
+}
+
+function money(amount: number | null | undefined, code?: string) {
+  if (amount == null) return '—';
+  let s = new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency: code || 'GBP',
+  }).format(Math.abs(amount));
+  return amount < 0 ? `−${s}` : s;
+}
+
+function kg(n: number | null | undefined) {
+  return n == null ? '—' : `${Math.round(n * 100) / 100} kg`;
+}
+
+function windowLabel(m: Partial<Shipment>) {
+  let { earliest: e, latest: l } = m.deliveryWindow ?? ({} as any);
+  if (!e && !l) return '—';
+  if (!e || !l) return day(e ?? l)!;
+  let a = day(e)!;
+  let b = day(l)!;
+  if (a === b) return a;
+  return e.getUTCMonth() === l.getUTCMonth()
+    ? `${a}–${l.getUTCDate()}`
+    : `${a} – ${b}`;
+}
+
+function cityOf(m: Partial<Shipment>) {
+  return m.order?.shippingAddress?.city;
+}
+
+function metaLine(m: Partial<Shipment>) {
+  let carrier = [m.carrierLabel, m.serviceLevel].filter(Boolean).join(' ');
+  let who = [m.order?.customerName, cityOf(m)].filter(Boolean).join(', ');
+  return [carrier, who].filter(Boolean).join(' · ') || '—';
+}
+
+function statusText(m: Partial<Shipment>) {
+  return m.status ? m.status.replace(/_/g, ' ') : 'not shipped';
+}
+
+function sortedEvents(m: Shipment) {
+  return (m.trackingEvents ?? [])
+    .filter(Boolean)
+    .slice()
+    .sort(
+      (a, b) => (b.occurredAt?.getTime() ?? 0) - (a.occurredAt?.getTime() ?? 0),
+    );
+}
+
+function stats(m: Shipment) {
+  let words = statusText(m).split(' ');
+  let first = words[0] ?? '';
+  let last = m.latestEvent?.occurredAt ?? m.deliveredAt ?? m.shippedAt;
+  let rest = [words.slice(1).join(' '), day(last)].filter(Boolean).join(', ');
+  let code = m.customerPaid?.currency?.code ?? m.shippingCost?.currency?.code;
+  let p = m.parcel;
+  let commitment = m.deliveryWindow?.commitment ?? m.serviceLevel;
+  return [
+    {
+      label: 'Status',
+      tone: statusTone(m.status),
+      value: first.charAt(0).toUpperCase() + first.slice(1),
+      meta: rest || '—',
+    },
+    {
+      label: 'Margin',
+      tone: m.isMarginNegative ? 'bad' : m.shippingMargin ? 'ok' : '',
+      value: money(m.shippingMargin, code),
+      meta:
+        m.customerPaid?.amount === 0
+          ? 'free shipping to customer'
+          : `customer paid ${money(m.customerPaid?.amount, code)}`,
+    },
+    {
+      label: 'Billable',
+      tone: '',
+      value: kg(p?.billableWeight),
+      meta: p?.isVolumetric
+        ? `volumetric beats ${kg(p.weight)}`
+        : 'actual weight',
+    },
+    {
+      label: 'Window',
+      tone: m.isLate ? 'warn' : '',
+      value: windowLabel(m),
+      meta:
+        [commitment, m.isLate ? 'missed' : undefined]
+          .filter(Boolean)
+          .join(', ') || '—',
+    },
+  ];
+}
+
+function parcelRows(m: Shipment) {
+  let p = m.parcel;
+  return [
+    { k: 'Dimensions', v: p?.sizeLabel ?? '—' },
+    { k: 'Weight', v: kg(p?.weight) },
+    {
+      k: 'Volumetric weight',
+      v:
+        p?.volumetricWeight == null
+          ? '—'
+          : `${kg(p.volumetricWeight)}${p.dimDivisor ? ` (÷ ${p.dimDivisor})` : ''}`,
+    },
+    { k: 'Billable weight', v: kg(p?.billableWeight) },
+  ];
+}
+
+function embRows(m: Shipment) {
+  let code = m.customerPaid?.currency?.code ?? m.shippingCost?.currency?.code;
+  return [
+    { k: 'Tracking', v: m.trackingNumber?.number ?? '—' },
+    { k: 'Window', v: windowLabel(m) },
+    { k: 'Shipped', v: dayTime(m.shippedAt) },
+    { k: 'Shipping cost', v: money(m.shippingCost?.amount, code) },
+    { k: 'Customer paid', v: money(m.customerPaid?.amount, code) },
+    { k: 'Margin', v: money(m.shippingMargin, code) },
+    { k: 'Parcel', v: m.parcel?.sizeLabel ?? '—' },
+    { k: 'Billable weight', v: kg(m.parcel?.billableWeight) },
+  ];
+}
+
+function lineMeta(l: FulfilmentLineItemField) {
+  return [l.sku, money(l.unitPrice?.amount, l.unitPrice?.currency?.code)]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function eventMeta(e: TrackingEventField) {
+  return [dayTime(e.occurredAt), e.location].filter(Boolean).join(' · ');
 }
 
 export default Shipment;

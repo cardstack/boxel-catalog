@@ -88,7 +88,7 @@ export class WorkHistoryEntryField extends FieldDef {
           display: flex;
           flex-wrap: wrap;
           align-items: baseline;
-          gap: 0.3rem;
+          gap: var(--boxel-sp-3xs);
         }
         .wh-title {
           font-size: var(--boxel-font-size-sm);

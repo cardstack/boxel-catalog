@@ -1,9 +1,10 @@
 import Component from '@glimmer/component';
-import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
 import { BarList } from '@cardstack/pretui/components/bar-list';
-import { Button } from '@cardstack/pretui/components/button';
 import { Chart } from '@cardstack/pretui/components/chart';
+import { LayoutControl } from '@cardstack/pretui/components/layout-control';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { PageHead } from './page-head';
+import { StatStrip } from './stat-strip';
 import { Select } from '@cardstack/pretui/components/select';
 import { Switch } from '@cardstack/pretui/components/switch';
 import type { RevenueOsConsole } from '../revenue-os';
@@ -17,15 +18,43 @@ interface Signature {
 // The Dashboard tab: MRR and its trend, the headline metrics, and open
 // pipeline by stage.
 export class DashboardPane extends Component<Signature> {
+  FORMS = [
+    { name: 'full', minWidth: 11 },
+    { name: 'menu', minWidth: 0 },
+  ];
+  TONES = ['success', 'warning', 'success'];
+
+  get periodStats() {
+    return this.args.console.periodMetrics.map((m, i) => ({
+      label: m.label,
+      value: m.value.startsWith('no closed') ? '—' : m.value,
+      hint: m.value.startsWith('no closed') ? 'no closed deals yet' : m.note,
+      tone: this.TONES[i],
+    }));
+  }
+
+  get secondaryStats() {
+    let tones = ['info', 'neutral', 'danger'];
+    return this.args.console.dash.secondary.map((m, i) => ({
+      label: m.label,
+      value: m.value,
+      tone: tones[i],
+    }));
+  }
+
   <template>
     <section class='pane'>
+      <PageHead @title='Dashboard' />
       {{#if @console.queriesSettled}}
-        <div class='hero'>
-          <div class='hero-metric'>
-            <span class='m-label'>Monthly recurring revenue</span>
-            <span class='hero-value'>{{@console.dash.mrr}}</span>
-            <span class='hero-sub'>{{@console.dash.arr}} annualized</span>
-          </div>
+        <div class='block hero'>
+          <Stat
+            class='hero-stat'
+            @label='Monthly recurring revenue'
+            @tone='neutral'
+            @value={{@console.dash.mrr}}
+            @hint='{{@console.dash.arr}} annualized'
+            @roll={{false}}
+          />
           <div class='hero-chart'>
             <Chart
               @mark='line'
@@ -36,60 +65,55 @@ export class DashboardPane extends Component<Signature> {
               @xLabel='Month'
               @yLabel='MRR'
               @label='Monthly recurring revenue, last eight months'
-              @height={{180}}
+              @height={{150}}
             />
           </div>
         </div>
-        <div class='dash-toolbar'>
-          <div class='owner-select'>
+        <LayoutControl @label='Dashboard filters' as |lc|>
+          <lc.Slot
+            @id='range'
+            @priority={{1}}
+            @forms={{this.FORMS}}
+            @label='Date range'
+          >
             <Select
               @options={{@console.periodOptions}}
               @value={{@console.period}}
               @onValueChange={{@console.setPeriod}}
               @label='Date range'
             />
-          </div>
-          <label class='switch-wrap'>
-            <Switch
-              @checked={{@console.comparePrevious}}
-              @onCheckedChange={{@console.toggleCompare}}
-            />
-            <span class='switch-text'>Compare to previous</span>
-          </label>
+          </lc.Slot>
+          <lc.Slot
+            @id='compare'
+            @priority={{0}}
+            @forms={{this.FORMS}}
+            @label='Compare'
+          >
+            <label class='switch-wrap'>
+              <Switch
+                @checked={{@console.comparePrevious}}
+                @onCheckedChange={{@console.toggleCompare}}
+              />
+              <span class='switch-text'>Compare to previous</span>
+            </label>
+          </lc.Slot>
+        </LayoutControl>
+        <div class='block'>
+          <h2>This period</h2>
+          <StatStrip
+            @stats={{this.periodStats}}
+            @label='This period'
+            class='flat'
+          />
+          <StatStrip
+            @stats={{this.secondaryStats}}
+            @label='Pipeline and balances'
+            class='flat'
+          />
         </div>
-        <div class='metric-grid'>
-          {{#each @console.periodMetrics as |m|}}
-            <div class='metric metric-flat'>
-              <span class='m-label'>{{m.label}}</span>
-              <span class='m-value'>{{m.value}}</span>
-              {{#if m.note}}<span class='m-note'>{{m.note}}</span>{{/if}}
-            </div>
-          {{/each}}
-        </div>
-        <div class='metric-grid'>
-          {{#each @console.dash.secondary as |m|}}
-            {{#if m.tab}}
-              <div class='metric metric-flat'>
-                <Button
-                  class='metric-open'
-                  @appearance='plain'
-                  {{on 'click' (fn @console.drillTo m.tab m.filter)}}
-                >
-                  <span class='m-label'>{{m.label}}</span>
-                  <span class='m-value'>{{m.value}}</span>
-                </Button>
-              </div>
-            {{else}}
-              <div class='metric metric-flat'>
-                <span class='m-label'>{{m.label}}</span>
-                <span class='m-value'>{{m.value}}</span>
-              </div>
-            {{/if}}
-          {{/each}}
-        </div>
-        <div class='dash-cols'>
-          <div class='panel'>
-            <h3>Pipeline by stage</h3>
+        <div class='block'>
+          <h2>Pipeline by stage</h2>
+          <div class='body'>
             <BarList
               @rows={{@console.stageBars}}
               @ranked={{false}}
@@ -103,138 +127,54 @@ export class DashboardPane extends Component<Signature> {
       {{/if}}
     </section>
     <style scoped>
-      .loading {
-        margin: 0;
-        color: var(--muted-foreground);
-      }
       .pane {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: var(--boxel-sp-sm);
+      }
+      .block {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        overflow: hidden;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(12rem, 15rem) 1fr;
+      }
+      .hero-stat {
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      .hero-chart {
+        min-width: 0;
+        box-shadow: -1px 0 0 var(--border);
       }
       h2 {
-        margin: 0;
-        font-size: 1.0625rem;
-        font-family: var(--font-sans);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
+      }
+      .body {
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      .flat {
+        border: 0;
+        border-radius: 0;
       }
       .switch-wrap {
         display: flex;
         align-items: center;
-        gap: 0.4375rem;
+        gap: var(--boxel-sp-xs);
       }
       .switch-text {
-        font-size: 0.8125rem;
-        font-weight: 500;
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 600;
         color: var(--muted-foreground);
         white-space: nowrap;
       }
-      .metric-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-        gap: 0.75rem;
-      }
-      .metric {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 0.875rem 1rem;
-        background: var(--card);
-      }
-      .metric-flat {
-        border: none;
-        background: var(--muted);
-      }
-      .metric-open {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--boxel-sp-4xs);
-        width: 100%;
-      }
-      .hero {
-        display: grid;
-        grid-template-columns: minmax(15rem, 1fr) minmax(20rem, 2fr);
-        gap: 1.5rem;
-        align-items: center;
-        border: 1px solid var(--border);
-        border-radius: 1rem;
-        background: var(--card);
-        padding: 1.5rem 1.75rem;
-        box-shadow: var(--shadow-xs);
-      }
-      .hero-metric {
-        display: flex;
-        flex-direction: column;
-        gap: 0.375rem;
-      }
-      .hero-value {
-        font-size: 3rem;
-        line-height: 1;
-        font-weight: 700;
-        font-family: var(--font-sans);
-        font-variant-numeric: tabular-nums;
-        color: var(--primary-ink);
-      }
-      .hero-sub {
-        font-size: 0.875rem;
+      .loading {
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
-        font-variant-numeric: tabular-nums;
-      }
-      .hero-chart {
-        min-width: 0;
-      }
-      .dash-toolbar {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-      }
-      .m-note {
-        font-size: 0.6875rem;
-        font-weight: 600;
-        color: var(--muted-foreground);
-      }
-      @media (max-width: 48rem) {
-        .hero {
-          grid-template-columns: 1fr;
-        }
-      }
-      .m-label {
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground);
-      }
-      .m-value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        line-height: 1.1;
-      }
-      .dash-cols {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-        gap: 1rem;
-      }
-      .panel {
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 1rem 1.25rem;
-        background: var(--card);
-      }
-      h3 {
-        margin: 0 0 0.75rem;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground);
-      }
-      .owner-select {
-        min-width: 11rem;
       }
     </style>
   </template>

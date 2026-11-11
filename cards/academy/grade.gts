@@ -13,15 +13,13 @@ import NumberField from '@cardstack/base/number';
 import PercentageField from '@cardstack/base/percentage';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import AwardIcon from '@cardstack/boxel-icons/award';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
-
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 import { Submission } from './submission';
 import { Employee } from '../hr/employee';
 import { round1 } from './rubric-criterion-field';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Dot, Mark } from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
 
 /** The grader's pick for one rubric criterion. */
 export class CriterionScoreField extends FieldDef {
@@ -281,7 +279,6 @@ export class Grade extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .empty {
-          margin: 0;
           color: var(--muted-foreground);
           font-style: italic;
         }
@@ -356,99 +353,20 @@ export class Grade extends CardDef {
     </template>
   };
 
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'context', label: 'Context' },
-      { id: 'scores', label: 'Scores' },
-      { id: 'adjust', label: 'Adjustments' },
-      { id: 'feedback', label: 'Feedback' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Grade sections'
-        as |e|
-      >
-        <e.Section
-          @id='context'
-          @title='Context'
-          @hint='set by Grade Submission'
-          @cols={{2}}
-        >
-          <FieldContainer
-            @label='Submission'
-            @vertical={{true}}
-          ><@fields.submission @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Graded by'
-            @vertical={{true}}
-          ><@fields.gradedBy @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Graded at'
-            @vertical={{true}}
-          ><@fields.gradedAt @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Max points'
-            @vertical={{true}}
-          ><@fields.maxPoints @format='atom' /></FieldContainer>
-        </e.Section>
-        <e.Section @id='scores' @title='Scores' @cols={{1}}>
-          <FieldContainer
-            @label='Criterion scores'
-            @vertical={{true}}
-          ><@fields.criterionScores /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='adjust'
-          @title='Adjustments'
-          @hint='set penalty to 0 to waive'
-          @cols={{4}}
-        >
-          <FieldContainer
-            @label='Days late'
-            @vertical={{true}}
-          ><@fields.daysLate /></FieldContainer>
-          <FieldContainer
-            @label='Penalty %'
-            @vertical={{true}}
-          ><@fields.penaltyPct /></FieldContainer>
-          <FieldContainer
-            @label='Override points'
-            @vertical={{true}}
-          ><@fields.overridePoints /></FieldContainer>
-          <FieldContainer @label='Letter' @vertical={{true}}><@fields.letter
-              @format='atom'
-            /></FieldContainer>
-        </e.Section>
-        <e.Section @id='feedback' @title='Feedback' @cols={{1}}>
-          <FieldContainer
-            @label='Feedback to learner'
-            @vertical={{true}}
-          ><@fields.feedback /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-    </template>
-  };
-
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>{{@model.assignmentTitle}}</:eyebrow>
+      <FitTile>
+        <:avatar><Mark @text='Gr' /></:avatar>
         <:title>{{if @model.learnerName @model.learnerName 'Learner'}}</:title>
-        <:subtitle>{{@model.total}}
+        <:subtitle>{{@model.assignmentTitle}}</:subtitle>
+        <:status><Dot>{{if @model.letter @model.letter '—'}}</Dot></:status>
+        <:fact>{{@model.total}}
           /
           {{@model.maxPoints}}
           ·
           {{@model.pct}}%{{#if @model.penaltyPct}}
-            · −{{@model.penaltyPct}}% late{{/if}}</:subtitle>
-        <:badgeRight><StatePill
-            @label={{if @model.letter @model.letter '—'}}
-            @hue='slate'
-          /></:badgeRight>
-        <:footer>{{#if @model.graderName}}{{@model.graderName}}
-            ·
-          {{/if}}{{fmtDate @model.gradedAt}}</:footer>
-      </FittedCard>
+            · −{{@model.penaltyPct}}% late{{/if}}</:fact>
+      </FitTile>
     </template>
   };
 }

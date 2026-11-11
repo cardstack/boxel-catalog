@@ -28,13 +28,18 @@
         }
       ],
       "cardInfo": {
-        "name": "INV N-4471 — TechSource"
+        "name": "INV N-4471 \u2014 TechSource"
       }
     },
     "relationships": {
       "purchaseOrder": {
         "links": {
           "self": "../../procurement/PurchaseOrder/po-2026-0038"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

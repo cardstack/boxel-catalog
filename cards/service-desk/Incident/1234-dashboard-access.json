@@ -58,7 +58,7 @@
           "author": "System",
           "authorRole": "System",
           "visibility": "Public",
-          "body": "First response met — 15m of a 2h target.",
+          "body": "First response met \u2014 15m of a 2h target.",
           "sentAt": "2026-08-12T02:47:00.000Z",
           "isSlaEvent": true
         },
@@ -66,7 +66,7 @@
           "author": "Mike Tan",
           "authorRole": "Agent",
           "visibility": "Internal",
-          "body": "Checked the auth logs — no failed logins at all, which points at SSO rather than the password. Escalating to L2 if she confirms she is on SSO.",
+          "body": "Checked the auth logs \u2014 no failed logins at all, which points at SSO rather than the password. Escalating to L2 if she confirms she is on SSO.",
           "sentAt": "2026-08-12T02:50:00.000Z",
           "isSlaEvent": false
         },
@@ -82,7 +82,7 @@
           "author": "Mike Tan",
           "authorRole": "Agent",
           "visibility": "Public",
-          "body": "Thanks Jane — that confirms it. Okta's clock is drifting past the five-minute tolerance, which expires the SSO assertion in transit. I'm passing this to our identity specialists now; they'll contact your Okta admin with the exact setting to change.",
+          "body": "Thanks Jane \u2014 that confirms it. Okta's clock is drifting past the five-minute tolerance, which expires the SSO assertion in transit. I'm passing this to our identity specialists now; they'll contact your Okta admin with the exact setting to change.",
           "sentAt": "2026-08-12T12:34:47.970Z",
           "isSlaEvent": false
         },
@@ -98,7 +98,7 @@
           "author": "System",
           "authorRole": "System",
           "visibility": "Public",
-          "body": "Status changed from On Hold to Open — the clock is running again.",
+          "body": "Status changed from On Hold to Open \u2014 the clock is running again.",
           "sentAt": "2026-08-13T11:20:43.844Z",
           "isSlaEvent": true
         },
@@ -106,7 +106,7 @@
           "author": "System",
           "authorRole": "System",
           "visibility": "Public",
-          "body": "Status changed from Open to Cancelled — the clock is stopped.",
+          "body": "Status changed from Open to Cancelled \u2014 the clock is stopped.",
           "sentAt": "2026-08-13T11:49:03.283Z",
           "isSlaEvent": true
         },
@@ -114,7 +114,7 @@
           "author": "System",
           "authorRole": "System",
           "visibility": "Public",
-          "body": "Status changed from Cancelled to Open — the clock is running again.",
+          "body": "Status changed from Cancelled to Open \u2014 the clock is running again.",
           "sentAt": "2026-08-13T11:49:22.956Z",
           "isSlaEvent": true
         }
@@ -162,6 +162,11 @@
       "relatedTickets.0": {
         "links": {
           "self": "../Ticket/1288-invoice-download"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

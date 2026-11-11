@@ -9,7 +9,7 @@ import {
 } from '@cardstack/base/card-api';
 import enumField from '@cardstack/base/enum';
 import BuildingIcon from '@cardstack/boxel-icons/building-2';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Field } from '@cardstack/pretui/components/field';
 
 import { LegalEntity } from './legal-entity';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
@@ -94,7 +94,7 @@ export class LegalPartyRoleField extends FieldDef {
         .lp-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
           font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
@@ -153,15 +153,15 @@ export class LegalPartyRoleField extends FieldDef {
         .lp {
           display: flex;
           flex-direction: column;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
         }
         .lp-role {
           display: flex;
           align-items: center;
-          gap: 0.35rem;
+          gap: var(--boxel-sp-3xs);
           font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
           font-weight: var(--boxel-eyebrow-font-weight);
           line-height: var(--boxel-eyebrow-line-height);
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
@@ -177,8 +177,8 @@ export class LegalPartyRoleField extends FieldDef {
           min-width: 0;
           display: grid;
           grid-template-columns: minmax(0, 1fr) auto;
-          gap: 0.1rem 0.75rem;
-          padding: 0.55rem 0.7rem;
+          gap: var(--boxel-sp-6xs) var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           background-color: var(--muted);
@@ -201,7 +201,6 @@ export class LegalPartyRoleField extends FieldDef {
           align-self: center;
         }
         .lp-missing {
-          margin: 0;
           font-size: var(--boxel-font-size-sm);
           font-style: italic;
           color: var(--muted-foreground);
@@ -218,18 +217,15 @@ LegalPartyRoleField.edit = class Edit extends Component<
 > {
   <template>
     <div class='lp-edit'>
-      <FieldContainer @label='Capacity' @vertical={{true}}>
+      <Field @label='Capacity'>
         <@fields.role />
-      </FieldContainer>
-      <FieldContainer @label='Legal entity' @vertical={{true}}>
+      </Field>
+      <Field @label='Legal entity'>
         <@fields.entity />
-      </FieldContainer>
-      <FieldContainer
-        @label='Defined term in the clauses (optional)'
-        @vertical={{true}}
-      >
+      </Field>
+      <Field @label='Defined term in the clauses (optional)'>
         <@fields.definedTerm />
-      </FieldContainer>
+      </Field>
     </div>
     <style scoped>
       .lp-edit {

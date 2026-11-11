@@ -20,6 +20,13 @@
         "module": "../contact",
         "name": "Contact"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

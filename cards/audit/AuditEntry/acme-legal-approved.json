@@ -18,6 +18,11 @@
         "links": {
           "self": "../../hr/Employee/dana-kim"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

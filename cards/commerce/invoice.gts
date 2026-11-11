@@ -1,3 +1,5 @@
+import { Button } from '@cardstack/pretui/components/button';
+import { on } from '@ember/modifier';
 import {
   CardDef,
   Component,
@@ -12,35 +14,33 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import DateField from '@cardstack/base/date';
 import { tracked } from '@glimmer/tracking';
+import { concat } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 // Payment Status is its own module so it is a standalone, Spec-able block;
 // Invoice uses it under the invoice-side name.
 import { PaymentStatusField as InvoiceStatusField } from './payment-status-field';
 import { TaxBreakdownField } from './tax-breakdown-field';
 import FileInvoiceIcon from '@cardstack/boxel-icons/file-invoice';
-import { Account } from '@cardstack/catalog/cards/crm/account';
-import { User } from '@cardstack/catalog/cards/crm/user';
-import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
+import { Account } from '../crm/account';
+import { User } from '../crm/user';
+import { LineItem } from './line-item';
 import { Order } from './order';
 import { Quote } from './quote';
 import { Subscription } from './subscription';
 import { Payment } from './payment';
-import {
-  lineTotal,
-  sumLineItems,
-} from '@cardstack/catalog/cards/commerce/line-item-totals';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { lineTotal, sumLineItems } from './line-item-totals';
+import { realmURL } from '@cardstack/runtime-common';
 import {
   KeyValue,
   type KeyValueItem,
 } from '@cardstack/pretui/components/key-value';
 import { Table } from '@cardstack/pretui/components/table';
-import { Money } from '@cardstack/catalog/cards/crm/money';
-import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { statusHue } from '@cardstack/catalog/fields/status/status';
+import { Money } from '../crm/money';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { formatMoney } from '../crm/utils';
+import { CompactFitted, CompactRow, fmtDate } from './compact-parts';
 import DueDateField from '@cardstack/catalog/fields/due-date/due-date';
 // ---- AP (buy-side) leg.
 import { PurchaseOrder } from '../procurement/purchase-order';
@@ -52,27 +52,6 @@ import {
 } from '../procurement/three-way-match';
 import { ThreeWayMatchPanel } from '../procurement/components/three-way-match-panel';
 
-// The due-date pill states calendar facts it cannot square with the invoice's
-// lifecycle, so terminal invoices render the plain date instead of the field.
-function plainDate(value: Date | null | undefined): string {
-  if (!value) return '';
-  return new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(value);
-}
-
-function isTerminal(status: string | null | undefined): boolean {
-  return ['paid', 'void'].includes(status ?? '');
-}
-
-// The pill hue for what an invoice displays: the status field's own hue, and
-// red for the derived `overdue`, which is not one of the field's options.
-function displayHue(status: string | null | undefined): Hue {
-  return status === 'overdue' ? 'red' : statusHue(InvoiceStatusField, status);
-}
-
 // Overdue is not a state anyone sets — it is what being unpaid past the due
 // date looks like, so it is derived rather than stored and cannot drift from
 // the balance and the calendar. The status vocabulary lives in
@@ -82,240 +61,6 @@ function displayHue(status: string | null | undefined): Hue {
 // legs: the sell-side ladder and the AP match flow (Received → Matching →
 // Matched / Exception → Approved for Payment → Paid).
 export { PaymentStatusField as InvoiceStatusField } from './payment-status-field';
-
-class InvoiceEdit extends Component<typeof Invoice> {
-  @tracked activeSection = 'identity';
-
-  sections = [
-    { id: 'identity', label: 'Invoice' },
-    { id: 'parties', label: 'Parties' },
-    { id: 'items', label: 'Line items' },
-    { id: 'matching', label: 'Matching' },
-    { id: 'payment', label: 'Payment' },
-  ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.invoice-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
-
-  <template>
-    <div class='invoice-edit'>
-      {{! the container element cannot be restyled by its own query —
-          the responsive grid lives on this inner wrapper instead }}
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "identity") "focused"}}'
-            data-sect='identity'
-          >
-            <h3>Invoice</h3>
-            <div class='row identity'>
-              <FieldContainer @label='Invoice number' @vertical={{true}}>
-                <@fields.invoiceNumber />
-              </FieldContainer>
-              <FieldContainer @label='Status' @vertical={{true}}>
-                <@fields.status />
-              </FieldContainer>
-            </div>
-            <div class='row'>
-              <FieldContainer @label='Issued' @vertical={{true}}>
-                <@fields.issueDate />
-              </FieldContainer>
-              <FieldContainer @label='Sent' @vertical={{true}}>
-                <@fields.sentDate />
-              </FieldContainer>
-              <FieldContainer @label='Due' @vertical={{true}}>
-                <@fields.dueDate />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "parties") "focused"}}'
-            data-sect='parties'
-          >
-            <h3>Parties</h3>
-            <div class='row'>
-              <FieldContainer @label='Account (billed to)' @vertical={{true}}>
-                <@fields.account />
-              </FieldContainer>
-              <FieldContainer @label='Owner' @vertical={{true}}>
-                <@fields.owner />
-              </FieldContainer>
-            </div>
-            <div class='row'>
-              <FieldContainer @label='Order' @vertical={{true}}>
-                <@fields.order />
-              </FieldContainer>
-              <FieldContainer @label='Subscription' @vertical={{true}}>
-                <@fields.subscription />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "items") "focused"}}'
-            data-sect='items'
-          >
-            <h3>Line items</h3>
-            <FieldContainer @label='Items' @vertical={{true}}>
-              <@fields.lineItems />
-            </FieldContainer>
-            <FieldContainer @label='Tax breakdown' @vertical={{true}}>
-              <@fields.taxBreakdown />
-            </FieldContainer>
-            <p class='sect-note'>Tax is added to the total; record the
-              calculated amount here.</p>
-          </section>
-
-          <section
-            class='sect matching
-              {{if (eq this.activeSection "matching") "focused"}}'
-            data-sect='matching'
-          >
-            <h3>Matching
-              <span class='sect-hint'>the three-way match reads these</span></h3>
-            <FieldContainer @label='Purchase order' @vertical={{true}}>
-              <@fields.purchaseOrder />
-            </FieldContainer>
-            <FieldContainer @label='Variance resolutions' @vertical={{true}}>
-              <@fields.varianceResolutions />
-            </FieldContainer>
-            <p class='sect-note'>Resolutions are normally written by the Resolve
-              Variance command — edit here only for corrections.</p>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "payment") "focused"}}'
-            data-sect='payment'
-          >
-            <h3>Payment</h3>
-            <FieldContainer @label='Payments applied' @vertical={{true}}>
-              <@fields.payments />
-            </FieldContainer>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .invoice-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background-color: var(--background);
-        color: var(--foreground);
-        /* family ink, declared ONCE — a linked Theme overrides via
-           --procurement-ink */
-        --inv-ink: var(--procurement-ink, var(--primary-ink));
-        --inv-ink-fg: var(--procurement-ink-fg, var(--card));
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-      }
-      /* the root is the scroller, so sticky pins the nav to its top */
-      .sect-nav {
-        position: sticky;
-        top: 0;
-        --edit-section-nav-ink: var(--inv-ink);
-        --edit-section-nav-ink-fg: var(--inv-ink-fg);
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      .sect.focused {
-        outline-color: var(--inv-ink);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--inv-ink) 12%, transparent);
-      }
-      .sect.matching {
-        border-left: 0.1875rem solid var(--inv-ink);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
-      .sect-note {
-        margin: 0;
-        font-size: 0.75rem;
-        font-style: italic;
-        color: var(--muted-foreground);
-      }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
-        align-items: start;
-      }
-      .identity {
-        grid-template-columns: 2fr 1fr;
-      }
-      @container edit (width < 640px) {
-        .row,
-        .identity {
-          grid-template-columns: 1fr;
-        }
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        /* narrow: the rail flips horizontal */
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
-        }
-      }
-    </style>
-  </template>
-}
 
 interface InvoiceLike {
   lineItems?: any[];
@@ -381,6 +126,373 @@ export function invoiceAmounts(invoice?: InvoiceLike | null) {
   };
 }
 
+// What every compact format reads off the invoice, in one place.
+function invoiceFacts(m?: Invoice) {
+  let a = invoiceAmounts(m as any);
+  let code = a.code;
+  let money = (n: number) => formatMoney(n, code);
+  let status = m?.displayStatus ?? '';
+  let days = m?.daysOverdue ?? 0;
+  let tone =
+    status === 'overdue' ? 'danger' : status === 'paid' ? 'success' : 'info';
+  let due = fmtDate(m?.dueDate);
+  let sent = m?.status ? `${m.status}${a.balance > 0 ? ', not paid' : ''}` : '';
+  let rate = m?.taxBreakdown?.rateApplied;
+  let sub = [m?.account?.cardTitle, m?.owner?.cardTitle]
+    .filter(Boolean)
+    .join(' · ');
+  return {
+    a,
+    code,
+    number: m?.invoiceNumber?.trim() || 'Draft',
+    sub,
+    status,
+    days,
+    balance: money(a.balance),
+    total: money(a.total),
+    subtotal: money(a.subtotal),
+    taxText: a.tax ? `${money(a.tax)}${rate ? ` · ${rate}%` : ''}` : '',
+    issued: fmtDate(m?.issueDate),
+    due,
+    fact: [`${money(a.balance)}${due ? ` due ${due}` : ''}`, sent]
+      .filter(Boolean)
+      .join(' · '),
+    tags: [
+      ...(status ? [{ label: status, tone }] : []),
+      ...(days > 0 ? [{ label: `${days} days`, tone: 'danger' }] : []),
+    ] as { label: string; tone: any }[],
+  };
+}
+
+class InvoiceIsolated extends Component<typeof Invoice> {
+  @tracked busy = false;
+  get balance() {
+    let m = this.args.model as Invoice;
+    // Same figure as the Balance due stat and record-payment: tax and variance resolutions included.
+    return invoiceAmounts(m as any).balance;
+  }
+  // Loaded on click: the command imports this module's neighbours, so a
+  // static import would close an import cycle.
+  recordPayment = async () => {
+    let ctx = (this.args.context as any)?.commandContext;
+    let m = this.args.model as any;
+    let realm = m?.[realmURL]?.href;
+    if (!ctx || !realm || this.balance <= 0) return;
+    this.busy = true;
+    try {
+      let { default: RecordPayment } =
+        await import('./commands/record-payment.gts');
+      await new RecordPayment(ctx).execute({
+        invoice: m,
+        amount: this.balance,
+        method: 'bank transfer',
+        reference: `CARD-${Date.now()}`,
+        realm,
+      } as any);
+    } finally {
+      this.busy = false;
+    }
+  };
+  get f() {
+    return invoiceFacts(this.args.model as Invoice);
+  }
+  get rows() {
+    return (this.args.model?.lineItems ?? []).map((item) => ({
+      description: item?.description || '—',
+      quantity: item?.quantity ?? 0,
+      total: lineTotal(item),
+      code: item?.unitPrice?.currency?.code ?? undefined,
+    }));
+  }
+  get linked(): KeyValueItem[] {
+    let m = this.args.model;
+    let rows: KeyValueItem[] = [];
+    if (m?.account) rows.push({ key: 'Account', value: '' });
+    if (m?.quote) rows.push({ key: 'Quote', value: '' });
+    if (m?.owner) rows.push({ key: 'Owner', value: '' });
+    if (m?.order) rows.push({ key: 'Order', value: '' });
+    if (m?.subscription) rows.push({ key: 'Subscription', value: '' });
+    if (m?.taxBreakdown?.jurisdiction) {
+      rows.push({ key: 'Tax jurisdiction', value: '' });
+    }
+    return rows;
+  }
+  get details(): KeyValueItem[] {
+    let m = this.args.model;
+    let rows: KeyValueItem[] = [
+      { key: 'Total', value: this.f.total },
+      { key: 'Balance due', value: this.f.balance },
+      { key: 'Subtotal', value: this.f.subtotal },
+    ];
+    if (this.f.taxText) rows.push({ key: 'Tax', value: this.f.taxText });
+    if (this.f.issued) rows.push({ key: 'Issued', value: this.f.issued });
+    if (this.f.due) rows.push({ key: 'Due', value: this.f.due });
+    if (this.f.days)
+      rows.push({ key: 'Days overdue', value: `${this.f.days}` });
+    if (m?.status) rows.push({ key: 'Status', value: m.status });
+    return rows;
+  }
+  <template>
+    <article class='ip'>
+      <header class='ih'>
+        <Avatar @name='Invoice' @shape='square' @size={{24}} />
+        <div class='id'>
+          <h1>{{this.f.number}}</h1>
+          <p class='meta'>{{this.f.sub}}</p>
+        </div>
+        <span class='tags'>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</span>
+        {{#if this.balance}}
+          <Button
+            @appearance='filled'
+            @disabled={{this.busy}}
+            {{on 'click' this.recordPayment}}
+          >Record payment</Button>
+        {{/if}}
+      </header>
+      <div class='stats'>
+        <Stat
+          @label='Balance due'
+          @tone={{if (eq this.f.status 'overdue') 'danger' 'info'}}
+          @value={{this.f.a.balance}}
+          @style='currency'
+          @currency={{this.f.code}}
+          @maximumFractionDigits={{0}}
+          @roll={{false}}
+          @hint={{if this.f.a.paid 'part paid' 'nothing paid'}}
+        />
+        <Stat
+          @label='Days overdue'
+          @tone={{if this.f.days 'warning'}}
+          @value={{this.f.days}}
+          @roll={{false}}
+          @hint={{if this.f.due (concat 'due ' this.f.due)}}
+        />
+        <Stat
+          @label='Tax'
+          @value={{this.f.a.tax}}
+          @style='currency'
+          @currency={{this.f.code}}
+          @maximumFractionDigits={{0}}
+          @roll={{false}}
+          @hint={{if this.f.taxText this.f.taxText}}
+        />
+      </div>
+      <div class='cols'>
+        <div>
+          <section>
+            <h2>Line items</h2>
+            {{#if this.rows.length}}
+              <Table class='lines' @label='Line items'>
+                <:head>
+                  <tr>
+                    <th scope='col'>Description</th>
+                    <th scope='col' class='num'>Qty</th>
+                    <th scope='col' class='num'>Amount</th>
+                  </tr>
+                </:head>
+                <:body>
+                  {{#each this.rows as |row|}}
+                    <tr>
+                      <td>{{row.description}}</td>
+                      <td class='num'>{{row.quantity}}</td>
+                      <td class='num'><Money
+                          @amount={{row.total}}
+                          @code={{row.code}}
+                        /></td>
+                    </tr>
+                  {{/each}}
+                  {{#if this.f.taxText}}
+                    <tr>
+                      <td>Tax</td>
+                      <td></td>
+                      <td class='num'><Money
+                          @amount={{this.f.a.tax}}
+                          @code={{this.f.code}}
+                        /></td>
+                    </tr>
+                  {{/if}}
+                  <tr class='total'>
+                    <td>Total</td>
+                    <td></td>
+                    <td class='num'>{{this.f.total}}</td>
+                  </tr>
+                </:body>
+              </Table>
+            {{else}}
+              <p class='empty-note'>No line items yet</p>
+            {{/if}}
+          </section>
+          {{#if @model.purchaseOrder}}
+            <section>
+              <h2>Three-way match · vs {{@model.purchaseOrder.poNumber}}</h2>
+              <ThreeWayMatchPanel @invoice={{@model}} @context={{@context}} />
+            </section>
+          {{/if}}
+          <section>
+            <h2>Payments</h2>
+            {{#if @model.payments.length}}
+              <@fields.payments @format='embedded' />
+            {{else}}
+              <p class='empty-note'>No payments recorded</p>
+            {{/if}}
+          </section>
+        </div>
+        <div>
+          <section>
+            <h2>Linked</h2>
+            <KeyValue
+              @items={{this.linked}}
+              @divided={{true}}
+              @labelStyle='eyebrow'
+              class='kv'
+            >
+              <:value as |row|>
+                {{#if (eq row.key 'Account')}}<@fields.account
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else if (eq row.key 'Quote')}}<@fields.quote
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else if (eq row.key 'Owner')}}<@fields.owner
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else if (eq row.key 'Order')}}<@fields.order
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else if (eq row.key 'Subscription')}}<@fields.subscription
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else}}<@fields.taxBreakdown.jurisdiction
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{/if}}
+              </:value>
+            </KeyValue>
+          </section>
+          <section>
+            <h2>Details</h2>
+            <KeyValue
+              @items={{this.details}}
+              @divided={{true}}
+              @labelStyle='eyebrow'
+              class='kv'
+            />
+          </section>
+        </div>
+      </div>
+    </article>
+    <style scoped>
+      .empty-note {
+        margin: 0;
+        padding: 0.4375rem 0.625rem;
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
+      }
+      .ip {
+        font-size: 0.75rem;
+        line-height: 1.4;
+        --text-stat: 1.375rem;
+        --text-ui-xs: 0.6875rem;
+        --boxel-sp-xs: 0.35rem;
+        --boxel-sp-lg: 0.75rem;
+        --pretui-kv-label-font-size: 0.5625rem;
+        --pretui-kv-label-color: var(--muted-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        font-size: 0.75rem;
+        line-height: 1.25;
+        color: var(--card-foreground);
+      }
+      .ih {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.625rem;
+      }
+      .id {
+        flex: 1;
+        min-inline-size: 0;
+      }
+      h1 {
+        font-family: var(--font-sans);
+        margin: 0;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .meta {
+        margin: 0;
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
+      }
+      .tags {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+        border-block-start: 1px solid var(--border);
+      }
+      .stats > :not(:first-child) {
+        border-inline-start: 1px solid var(--border);
+      }
+      .stats > * {
+        padding: 0.5rem 0.625rem;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        border-block-start: 1px solid var(--border);
+      }
+      .cols > div {
+        min-inline-size: 0;
+      }
+      .cols > div + div {
+        border-inline-start: 1px solid var(--border);
+      }
+      @container (width < 40rem) {
+        .cols {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .cols > div + div {
+          border-inline-start: 0;
+          border-block-start: 1px solid var(--border);
+        }
+      }
+      h2 {
+        margin: 0;
+        padding: 0.625rem 0.625rem 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .lines {
+        font-size: 0.6875rem;
+      }
+      .num {
+        text-align: end;
+        font-variant-numeric: tabular-nums;
+      }
+      .total td {
+        font-weight: 700;
+      }
+      .kv {
+        padding-inline: 0.625rem;
+        row-gap: 0;
+      }
+    </style>
+  </template>
+}
+
 export class Invoice extends CardDef {
   static displayName = 'Invoice';
   static icon = FileInvoiceIcon;
@@ -406,6 +518,14 @@ export class Invoice extends CardDef {
   // Optional (not every invoice is taxed); its `taxAmount` is added to the
   // total by `invoiceAmounts`.
   @field taxBreakdown = contains(TaxBreakdownField);
+
+  // What is still owed, tax and variance resolutions included. Cards that
+  // query invoices read it instead of importing `invoiceAmounts`.
+  @field balanceDue = contains(NumberField, {
+    computeVia: function (this: Invoice) {
+      return invoiceAmounts(this as any).balance;
+    },
+  });
 
   @field daysOverdue = contains(NumberField, {
     computeVia: function (this: Invoice) {
@@ -442,75 +562,26 @@ export class Invoice extends CardDef {
     },
   });
 
-  static embedded = class Embedded extends Component<typeof Invoice> {
-    get amounts() {
-      return invoiceAmounts(this.args.model as any);
-    }
-    <template>
-      <div class='invoice-row'>
-        <FileInvoiceIcon class='icon' />
-        <span class='number'>{{@model.cardTitle}}</span>
-        {{#if @model.displayStatus}}
-          <StatePill
-            @label={{@model.displayStatus}}
-            @hue={{displayHue @model.displayStatus}}
-            @dot={{true}}
-          />
-        {{/if}}
-        <Money
-          class='total'
-          @amount={{this.amounts.total}}
-          @code={{this.amounts.code}}
-        />
-      </div>
-      <style scoped>
-        .invoice-row {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
-        }
-        .icon {
-          width: 1.25rem;
-          height: 1.25rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .number {
-          font-weight: 600;
-        }
-        .total {
-          margin-left: auto;
-          font-weight: 600;
-          font-variant-numeric: tabular-nums;
-        }
-      </style>
-    </template>
-  };
-
   static atom = class Atom extends Component<typeof Invoice> {
     <template>
-      <span class='invoice-atom'>
-        <FileInvoiceIcon class='ia-icon' />
-        <span class='ia-name'>{{@model.cardTitle}}</span>
+      <span class='atom'>
+        <Avatar @name='Invoice' @shape='square' @size={{16}} />
+        <span class='name'>{{if
+            @model.invoiceNumber
+            @model.invoiceNumber
+            'Draft'
+          }}</span>
       </span>
       <style scoped>
-        .invoice-atom {
+        .atom {
+          font-size: 0.6875rem;
+          font-weight: 600;
           display: inline-flex;
           align-items: center;
           gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
+          min-inline-size: 0;
         }
-        .ia-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .ia-name {
+        .name {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -520,516 +591,164 @@ export class Invoice extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof Invoice> {
-    get amounts() {
-      return invoiceAmounts(this.args.model as any);
-    }
-    get itemCount() {
-      return this.args.model?.lineItems?.length ?? 0;
-    }
-    get dueLabel() {
-      return plainDate(this.args.model?.dueDate);
+    get f() {
+      return invoiceFacts(this.args.model as Invoice);
     }
     <template>
-      <div class='fitted'>
-        <div class='fmt badge'>
-          <FileInvoiceIcon class='doc-icon' />
-          <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.displayStatus}}
-            <StatePill
-              class='status'
-              @label={{@model.displayStatus}}
-              @hue={{displayHue @model.displayStatus}}
-            />
-          {{/if}}
-        </div>
-        <div class='fmt strip'>
-          <FileInvoiceIcon class='doc-icon' />
-          <div class='info'>
-            <span class='name'>{{@model.cardTitle}}</span>
-            {{#if @model.displayStatus}}
-              <StatePill
-                class='status'
-                @label={{@model.displayStatus}}
-                @hue={{displayHue @model.displayStatus}}
+      <CompactFitted
+        @mark='Invoice'
+        @title={{this.f.number}}
+        @sub={{this.f.sub}}
+        @fact={{this.f.fact}}
+        @big={{this.f.balance}}
+        @bigLabel='Balance due'
+        @tags={{this.f.tags}}
+      >
+        <:rows>
+          <CompactRow @k='Total' @v={{this.f.total}} />
+          <CompactRow @k='Subtotal' @v={{this.f.subtotal}} />
+          {{#if @model.account}}<CompactRow @k='Account'><@fields.account
+                @format='atom'
+                @displayContainer={{false}}
+              /></CompactRow>{{/if}}
+          {{#if this.f.taxText}}<CompactRow
+              @k='Tax'
+              @v={{this.f.taxText}}
+            />{{/if}}
+          {{#if this.f.issued}}<CompactRow
+              @k='Issued'
+              @v={{this.f.issued}}
+            />{{/if}}
+          {{#if @model.quote}}<CompactRow @k='Quote'><@fields.quote
+                @format='atom'
+                @displayContainer={{false}}
+              /></CompactRow>{{/if}}
+          {{#if this.f.due}}<CompactRow @k='Due' @v={{this.f.due}} />{{/if}}
+          {{#if @model.owner}}<CompactRow @k='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></CompactRow>{{/if}}
+          {{#if @model.taxBreakdown.jurisdiction}}<CompactRow
+              @k='Tax jurisdiction'
+            ><@fields.taxBreakdown.jurisdiction
+                @format='atom'
+                @displayContainer={{false}}
+              /></CompactRow>{{/if}}
+        </:rows>
+      </CompactFitted>
+    </template>
+  };
+
+  static embedded = class Embedded extends Component<typeof Invoice> {
+    get f() {
+      return invoiceFacts(this.args.model as Invoice);
+    }
+    get items(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [
+        { key: 'Total', value: this.f.total },
+        { key: 'Subtotal', value: this.f.subtotal },
+      ];
+      if (this.f.taxText) rows.push({ key: 'Tax', value: this.f.taxText });
+      if (this.f.issued) rows.push({ key: 'Issued', value: this.f.issued });
+      if (this.f.due) rows.push({ key: 'Due', value: this.f.due });
+      if (m?.account) rows.push({ key: 'Account', value: '' });
+      if (m?.quote) rows.push({ key: 'Quote', value: '' });
+      if (m?.owner) rows.push({ key: 'Owner', value: '' });
+      return rows;
+    }
+    <template>
+      <article class='emb'>
+        <header class='eh'>
+          <Avatar @name='Invoice' @shape='square' @size={{24}} />
+          <div class='id'>
+            <strong>{{this.f.number}}</strong>
+            <span class='meta'>{{this.f.sub}}</span>
+          </div>
+          {{#each this.f.tags as |t i|}}{{#if (eq i 0)}}<Chip
+                @label={{t.label}}
+                @tone={{t.tone}}
+                @appearance='plain'
+              />{{/if}}{{/each}}
+        </header>
+        <p class='fact'>{{this.f.fact}}</p>
+        <KeyValue
+          @items={{this.items}}
+          @divided={{true}}
+          @labelStyle='eyebrow'
+          class='kv'
+        >
+          <:value as |row|>
+            {{#if (eq row.key 'Account')}}<@fields.account
+                @format='atom'
+                @displayContainer={{false}}
               />
-            {{/if}}
-          </div>
-          <Money
-            class='figure'
-            @amount={{this.amounts.total}}
-            @code={{this.amounts.code}}
-          />
-        </div>
-        <div class='fmt tile'>
-          <div class='row'>
-            <FileInvoiceIcon class='doc-icon' />
-            {{#if @model.displayStatus}}
-              <StatePill
-                class='status'
-                @label={{@model.displayStatus}}
-                @hue={{displayHue @model.displayStatus}}
+            {{else if (eq row.key 'Quote')}}<@fields.quote
+                @format='atom'
+                @displayContainer={{false}}
               />
-            {{/if}}
-          </div>
-          <span class='name'>{{@model.cardTitle}}</span>
-          <Money
-            class='figure figure-lg'
-            @amount={{this.amounts.total}}
-            @code={{this.amounts.code}}
-          />
-          {{#if @model.dueDate}}
-            <span class='meta'>Due {{this.dueLabel}}</span>
-          {{/if}}
-        </div>
-        <div class='fmt card'>
-          <div class='col'>
-            <div class='row'>
-              <FileInvoiceIcon class='doc-icon' />
-              <span class='name name-lg'>{{@model.cardTitle}}</span>
-              {{#if @model.displayStatus}}
-                <StatePill
-                  class='status'
-                  @label={{@model.displayStatus}}
-                  @hue={{displayHue @model.displayStatus}}
-                />
-              {{/if}}
-            </div>
-            {{#if @model.account.name}}
-              <span class='meta'>Billed to {{@model.account.name}}</span>
-            {{/if}}
-            <span class='meta'>{{this.itemCount}}
-              item{{unless (eq this.itemCount 1) 's'}}{{#if @model.dueDate}}
-                · due
-                {{this.dueLabel}}{{/if}}</span>
-          </div>
-          <Money
-            class='figure figure-lg'
-            @amount={{this.amounts.total}}
-            @code={{this.amounts.code}}
-          />
-        </div>
-      </div>
+            {{else if (eq row.key 'Owner')}}<@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              />
+            {{else}}{{row.value}}{{/if}}
+          </:value>
+        </KeyValue>
+      </article>
       <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          color: var(--foreground);
-        }
-        .fmt {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
+        .emb {
+          font-size: 0.75rem;
+          line-height: 1.4;
+          --text-stat: 1.375rem;
+          --text-ui-xs: 0.6875rem;
+          --boxel-sp-xs: 0.35rem;
+          --boxel-sp-lg: 0.75rem;
+          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-color: var(--muted-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           overflow: hidden;
+          font-size: 0.75rem;
+          line-height: 1.25;
         }
-        .doc-icon {
-          width: 1.25rem;
-          height: 1.25rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .name {
-          font-weight: 600;
-          font-size: 0.8125rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .name-lg {
-          font-size: 0.9375rem;
-        }
-        .figure {
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          font-size: 0.875rem;
-          white-space: nowrap;
-        }
-        .figure-lg {
-          font-size: 1.25rem;
-        }
-        .meta {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .status {
-          flex-shrink: 0;
-        }
-        .row {
+        .eh {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          min-width: 0;
+          padding: 0.5rem 0.625rem;
         }
-        .col,
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-          min-width: 0;
+        .id {
           flex: 1;
-        }
-        @container fitted-card (max-width: 150px) and (max-height: 169px) {
-          .badge {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.375rem;
-            padding: 0.5rem;
-            text-align: center;
-          }
-        }
-        @container fitted-card (min-width: 151px) and (max-height: 169px) {
-          .strip {
-            display: flex;
-            align-items: center;
-            gap: 0.625rem;
-            padding: 0.625rem 0.75rem;
-          }
-          .strip .info {
-            gap: 0.125rem;
-          }
-          .strip .status {
-            align-self: flex-start;
-          }
-        }
-        @container fitted-card (max-width: 399px) and (min-height: 170px) {
-          .tile {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 0.375rem;
-            padding: 0.875rem;
-          }
-          .tile .row {
-            width: 100%;
-            justify-content: space-between;
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            padding: 1.25rem;
-          }
-        }
-      </style>
-    </template>
-  };
-
-  static isolated = class Isolated extends Component<typeof Invoice> {
-    get showDueness() {
-      return !isTerminal(this.args.model?.status);
-    }
-    get dueLabel() {
-      return plainDate(this.args.model?.dueDate);
-    }
-    get rows() {
-      return (this.args.model?.lineItems ?? []).map((item) => ({
-        description: item?.description || '—',
-        quantity: item?.quantity ?? 0,
-        unit: item?.unitPrice?.amount ?? undefined,
-        total: lineTotal(item),
-        code: item?.unitPrice?.currency?.code ?? undefined,
-      }));
-    }
-    get amounts() {
-      return invoiceAmounts(this.args.model as any);
-    }
-    get number() {
-      return this.args.model?.invoiceNumber?.trim() || 'Draft';
-    }
-    get paidSum() {
-      let sum = 0;
-      let code: string | undefined;
-      for (let p of this.args.model?.payments ?? []) {
-        sum += p?.amount?.amount ?? 0;
-        code = code ?? p?.amount?.currency?.code ?? undefined;
-      }
-      return { sum, code };
-    }
-    get balance() {
-      let due = this.amounts.total - this.paidSum.sum;
-      return due > 0 ? due : 0;
-    }
-    get balanceCode() {
-      return this.paidSum.code ?? this.amounts.code;
-    }
-    get facts(): KeyValueItem[] {
-      let m = this.args.model;
-      let rows: KeyValueItem[] = [{ key: 'Issued', value: 'issueDate' }];
-      if (m?.sentDate) rows.push({ key: 'Sent', value: 'sentDate' });
-      rows.push({ key: 'Due', value: 'dueDate' });
-      if (m?.owner) rows.push({ key: 'Owner', value: 'owner' });
-      if (m?.order) rows.push({ key: 'Order', value: 'order' });
-      if (m?.quote) rows.push({ key: 'Quote', value: 'quote' });
-      if (m?.subscription) {
-        rows.push({ key: 'Subscription', value: 'subscription' });
-      }
-      return rows;
-    }
-    // The totals block as KeyValue rows; each value names the figure the
-    // <:value> block renders.
-    get totalsFacts(): KeyValueItem[] {
-      let rows: KeyValueItem[] = [{ key: 'Total', value: 'total' }];
-      if (this.paidSum.sum) {
-        rows.push({ key: 'Paid', value: 'paid' });
-        rows.push({ key: 'Balance due', value: 'balance' });
-      }
-      return rows;
-    }
-    <template>
-      <article class='invoice-doc'>
-        <header class='doc-head'>
-          <div>
-            <p class='doc-kind'>Invoice</p>
-            <h1>{{this.number}}</h1>
-          </div>
-          {{#if @model.displayStatus}}
-            <StatePill
-              class='status'
-              @label={{@model.displayStatus}}
-              @hue={{displayHue @model.displayStatus}}
-              @dot={{true}}
-            />
-          {{/if}}
-        </header>
-
-        <section class='doc-meta'>
-          <div class='party'>
-            <span class='label'>Billed to</span>
-            <@fields.account @format='embedded' />
-          </div>
-          <KeyValue class='dates' @items={{this.facts}}>
-            <:value as |row|>
-              {{#if (eq row.value 'issueDate')}}
-                <@fields.issueDate />
-              {{else if (eq row.value 'sentDate')}}
-                <@fields.sentDate />
-              {{else if (eq row.value 'dueDate')}}
-                {{#if this.showDueness}}
-                  <@fields.dueDate />
-                {{else}}
-                  {{this.dueLabel}}
-                {{/if}}
-              {{else if (eq row.value 'owner')}}
-                <@fields.owner @format='atom' />
-              {{else if (eq row.value 'order')}}
-                <@fields.order @format='atom' />
-              {{else if (eq row.value 'quote')}}
-                <@fields.quote @format='atom' />
-              {{else}}
-                <@fields.subscription @format='atom' />
-              {{/if}}
-            </:value>
-          </KeyValue>
-        </section>
-
-        <section class='items'>
-          {{#if this.rows.length}}
-            <Table class='lines' @label='Line items'>
-              <:head>
-                <tr>
-                  <th scope='col'>Description</th>
-                  <th scope='col' class='t-num'>Qty</th>
-                  <th scope='col' class='t-num'>Unit</th>
-                  <th scope='col' class='t-num'>Amount</th>
-                </tr>
-              </:head>
-              <:body>
-                {{#each this.rows as |row|}}
-                  <tr>
-                    <td>{{row.description}}</td>
-                    <td class='t-num'>{{row.quantity}}</td>
-                    <td class='t-num'><Money
-                        @amount={{row.unit}}
-                        @code={{row.code}}
-                      /></td>
-                    <td class='t-num t-strong'><Money
-                        @amount={{row.total}}
-                        @code={{row.code}}
-                      /></td>
-                  </tr>
-                {{/each}}
-              </:body>
-            </Table>
-            <KeyValue class='totals' @items={{this.totalsFacts}}>
-              <:value as |row|>
-                {{#if (eq row.value 'total')}}
-                  <Money
-                    @amount={{this.amounts.total}}
-                    @code={{this.amounts.code}}
-                  />
-                {{else if (eq row.value 'paid')}}
-                  <Money
-                    @amount={{this.paidSum.sum}}
-                    @code={{this.paidSum.code}}
-                  />
-                {{else}}
-                  <Money @amount={{this.balance}} @code={{this.balanceCode}} />
-                {{/if}}
-              </:value>
-            </KeyValue>
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @texture={{false}}
-              @title='No line items yet'
-            />
-          {{/if}}
-        </section>
-
-        {{#if @model.purchaseOrder}}
-          <section class='match'>
-            <span class='label'>Three-way match · vs
-              {{@model.purchaseOrder.poNumber}}</span>
-            <ThreeWayMatchPanel @invoice={{@model}} @context={{@context}} />
-          </section>
-        {{/if}}
-
-        {{#if @model.payments.length}}
-          <section class='payments'>
-            <span class='label'>Payments</span>
-            <@fields.payments @format='embedded' />
-          </section>
-        {{/if}}
-      </article>
-      <style scoped>
-        /* A linked card sizes to its content. The card container's base
-           height: 100% would otherwise fill a stretched grid panel and spill
-           past the heading above it. */
-        .invoice-doc :deep(.field-component-card.embedded-format) {
-          height: auto;
-        }
-        .invoice-doc {
-          max-width: 46rem;
-          margin: 0 auto;
-          padding: 2rem 1.5rem;
+          min-inline-size: 0;
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
         }
-        .doc-head {
-          display: flex;
-          align-items: flex-end;
-          justify-content: space-between;
-          gap: 1rem;
-          border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: 1rem;
-        }
-        .doc-kind {
-          margin: 0 0 0.125rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        h1 {
-          margin: 0;
-          font-size: 1.75rem;
-          line-height: 1.1;
-        }
-        .status {
-          flex-shrink: 0;
-          margin-bottom: 0.25rem;
-        }
-        .doc-meta {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 1.5rem;
-          flex-wrap: wrap;
-        }
-        .party {
-          flex: 1 1 20rem;
-          min-width: 15rem;
-          max-width: 26rem;
-        }
-        .label {
-          display: block;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-          margin-bottom: 0.375rem;
-        }
-        /* Pret UI KeyValue at the document's text size */
-        .dates {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1rem;
-          font-weight: 500;
-        }
-        .items {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-        .lines {
-          font-size: 0.875rem;
-        }
-        .lines :deep(.t-num) {
-          text-align: right;
-          font-variant-numeric: tabular-nums;
+        .id strong,
+        .meta {
+          overflow: hidden;
+          text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .lines :deep(.t-strong) {
-          font-weight: 600;
+        .meta,
+        .fact {
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
         }
-        /* Pret UI KeyValue for the totals, right-aligned under the lines with
-           the grand total set heavier above a rule. */
-        .totals {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1.5rem;
-          justify-content: end;
-          font-variant-numeric: tabular-nums;
+        .fact {
+          margin: 0;
+          padding: 0 0.625rem 0.5rem;
         }
-        .totals :deep(dd) {
-          justify-content: flex-end;
-          font-weight: 500;
-        }
-        .totals :deep(dt:first-of-type),
-        .totals :deep(dd:first-of-type) {
-          padding-top: 0.5rem;
-          border-top: 0.125rem solid var(--foreground);
-          color: var(--foreground);
-          font-size: 1.125rem;
-          font-weight: 700;
-        }
-        /* The rule runs across both columns: both cells fill the row, and the
-           value cell reaches back across the column gap. */
-        .totals :deep(dt:first-of-type) {
-          align-self: stretch;
-        }
-        .totals :deep(dd:first-of-type) {
-          align-self: stretch;
-          margin-inline-start: calc(-1 * var(--space-6));
-          padding-inline-start: var(--space-6);
-        }
-        .totals :deep(dd:nth-of-type(3)) {
-          font-weight: 600;
+        .kv {
+          padding-inline: 0.625rem;
+          row-gap: 0;
         }
       </style>
     </template>
   };
+
+  static isolated = InvoiceIsolated;
 
   // AP/AR document form grouped by how the clerk works the invoice: identify
   // the document → who it involves → what's on it → does it match the PO →
   // how it got paid. Never schema order.
-  static edit = InvoiceEdit;
 }

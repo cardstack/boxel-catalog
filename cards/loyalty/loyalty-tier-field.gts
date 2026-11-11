@@ -1,13 +1,29 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
 import { htmlSafe } from '@ember/template';
 import GlimmerComponent from '@glimmer/component';
-import { Component, StringField } from 'https://cardstack.com/base/card-api';
-import enumField from 'https://cardstack.com/base/enum';
+import { Component, StringField } from '@cardstack/base/card-api';
+import enumField from '@cardstack/base/enum';
 import AwardIcon from '@cardstack/boxel-icons/award';
 
 import { Chip } from '@cardstack/pretui/components/chip';
 
-import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
+// Tier hues: status colours follow the theme's tokens; metals and categories
+// come from the theme's chart tones so a ladder never turns into warning colours.
+const TIER_HUE = {
+  green: 'var(--success)',
+  red: 'var(--destructive)',
+  amber: 'var(--warning)',
+  orange: 'color-mix(in oklch, var(--warning) 62%, var(--destructive))',
+  teal: 'color-mix(in oklch, var(--chart-1) 50%, var(--chart-2))',
+  purple: 'var(--chart-4)',
+  blue: 'var(--chart-1)',
+  pink: 'var(--chart-5)',
+  slate: 'var(--muted-foreground)',
+  gold: 'color-mix(in oklch, var(--chart-3) 80%, var(--foreground))',
+  bronze: 'color-mix(in oklch, var(--chart-3) 60%, var(--foreground))',
+} as const;
+
+export type Hue = keyof typeof TIER_HUE;
 
 /**
  * A member's standing on a ladder — the generic block, not one club's version
@@ -119,7 +135,7 @@ export function loyaltyTierField(config: LoyaltyTierConfig) {
         <style scoped>
           .rungs {
             display: inline-flex;
-            gap: 0.125rem;
+            gap: var(--boxel-sp-6xs);
           }
           .rung {
             width: 0.25rem;
@@ -221,22 +237,17 @@ function slugOf(value?: string): string {
 
 /**
  * The badge is the tier made visible — the one place the ladder's styling
- * lives. The chrome is Pret UI's `Chip`, set to StatePill's checked recipe
- * (14% fill, 62% foreground ink), so a tier pill and a state pill read as
- * one family. The hue routes through a per-tier theme token,
+ * lives. The chrome is Pret UI's `Chip` with a 14% fill and 62% foreground ink,
+ * the same recipe a state pill uses. The hue routes through a per-tier theme token,
  * `--tier-<slug>-hue`, so an app can hand its ladder a metallic treatment in
  * its theme; fill and ink always derive from that one hue by the same
  * recipe, so a theme never sets a fill without its matching ink.
  */
 export class TierBadge extends GlimmerComponent<TierBadgeSignature> {
   get style() {
-    let hue = stateColor(this.args.hue ?? 'slate').ring;
+    let hue = TIER_HUE[this.args.hue ?? 'slate'];
     let slug = slugOf(this.args.value);
-    // `-ring` is the hook's earlier name for the same hue; it stays a fallback
-    // so a theme that sets it keeps working.
-    let chipHue = slug
-      ? `var(--tier-${slug}-hue, var(--tier-${slug}-ring, ${hue}))`
-      : hue;
+    let chipHue = slug ? `var(--tier-${slug}-hue, ${hue})` : hue;
     return htmlSafe(
       `--pretui-chip-hue: ${chipHue}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; max-width: 100%;`,
     );

@@ -14,13 +14,23 @@ import {
   AttendanceStatusField,
   attendanceLabel,
   attendanceHue,
+  countsAsAttended,
 } from './attendance-status-field';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Enrollment } from './enrollment';
 import { Lesson } from './lesson';
 import { Employee } from '../hr/employee';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { FittedCard } from '@cardstack/boxel-ui/components';
+import { FitTile } from '../shared/fit-tile';
+import {
+  AtomChip,
+  Dot,
+  Embed,
+  Kv,
+  Mark,
+  Section,
+  Sheet,
+  Stat,
+} from './components/record-sheet';
 
 /**
  * One learner × one live lesson × one mark. Small on purpose: the Attendance
@@ -64,89 +74,82 @@ export class AttendanceRecord extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     <template>
-      <article class='ar'>
-        <header class='hero'>
-          <div class='hero-text'>
-            <span class='eyebrow'>Attendance ·
-              {{fmtDate @model.sessionDate}}</span>
-            <h1>{{if
-                @model.learnerName
-                @model.learnerName
-                'Unlinked learner'
-              }}</h1>
-            <p class='meta'>
-              <StatePill
-                @label={{@model.statusLabel}}
+      <Sheet @mark='At' @title={{headline @model}} @meta={{metaLine @model}}>
+        <:status>
+          <Dot @hue={{attendanceHue @model.attendanceStatus}}>{{lower
+              @model.statusLabel
+            }}</Dot>
+        </:status>
+        <:stats>
+          <Stat
+            @label='Status'
+            @value={{@model.statusLabel}}
+            @sub={{attendedLine @model.attendanceStatus}}
+          />
+          <Stat
+            @label='Session'
+            @value={{fmtShort @model.sessionDate}}
+            @sub={{@model.lessonTitle}}
+          />
+          <Stat
+            @label='Marked'
+            @value={{fmtShort @model.markedAt}}
+            @sub={{@model.markedBy.name}}
+          />
+        </:stats>
+        <:main>
+          <Section @title='Note'>
+            <p class='note'>{{if @model.note @model.note '—'}}</p>
+          </Section>
+          <Section @title='Record'>
+            <Kv @label='Session date' @mono={{true}}>{{fmtLong
+                @model.sessionDate
+              }}</Kv>
+            <Kv @label='Status'><Dot
                 @hue={{attendanceHue @model.attendanceStatus}}
-                @dot={{true}}
-              />
-              {{#if @model.lesson}}<span><@fields.lesson
-                    @format='atom'
-                  /></span>{{/if}}
-            </p>
-          </div>
-        </header>
-        <dl class='facts'>
-          {{#if @model.markedBy}}<div><dt>Marked by</dt><dd
-              >{{@model.markedBy.name}}</dd></div>{{/if}}
-          {{#if @model.markedAt}}<div><dt>Marked at</dt><dd>{{fmtDateTime
-                  @model.markedAt
-                }}</dd></div>{{/if}}
-          {{#if @model.note}}<div class='wide'><dt>Note</dt><dd
-              >{{@model.note}}</dd></div>{{/if}}
-        </dl>
-      </article>
+              >{{lower @model.statusLabel}}</Dot></Kv>
+            <Kv @label='Marked by'>{{if
+                @model.markedBy
+                @model.markedBy.name
+                '—'
+              }}</Kv>
+            <Kv @label='Marked at' @mono={{true}}>{{fmtDateTime
+                @model.markedAt
+              }}</Kv>
+          </Section>
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <Kv @label='Enrollment'>{{#if @model.enrollment}}<@fields.enrollment
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+            <Kv @label='Lesson'>{{#if @model.lesson}}<@fields.lesson
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+            <Kv @label='Marked by'>{{#if @model.markedBy}}<@fields.markedBy
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+          </Section>
+          <Section @title='Details'>
+            <Kv @label='Learner'>{{dash @model.learnerName}}</Kv>
+            <Kv @label='Lesson'>{{dash @model.lessonTitle}}</Kv>
+            <Kv @label='Session' @mono={{true}}>{{fmtLong
+                @model.sessionDate
+              }}</Kv>
+            <Kv @label='Status'>{{@model.statusLabel}}</Kv>
+            <Kv @label='Marked at' @mono={{true}}>{{fmtDateTime
+                @model.markedAt
+              }}</Kv>
+          </Section>
+        </:side>
+      </Sheet>
       <style scoped>
-        .ar {
-          max-width: 40rem;
-          margin: 0 auto;
-          container-type: inline-size;
-          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
-          display: grid;
-          gap: var(--boxel-sp-lg);
-          color: var(--foreground);
-          background: var(--background);
-        }
-        .eyebrow {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-        }
-        h1 {
-          margin: var(--boxel-sp-4xs) 0 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          line-height: 1.15;
-        }
-        .meta {
-          margin: var(--boxel-sp-xs) 0 0;
-          display: flex;
-          gap: var(--boxel-sp-sm);
-          align-items: center;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .facts {
-          margin: 0;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: var(--boxel-sp-sm);
-          padding: var(--boxel-sp);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          background: var(--card);
-        }
-        .wide {
-          grid-column: 1 / -1;
-        }
-        dt {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        dd {
-          margin: 0;
-          font-weight: 600;
+        .note {
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          border-block-start: 1px solid var(--border);
         }
       </style>
     </template>
@@ -154,72 +157,103 @@ export class AttendanceRecord extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <div class='row'>
-        <div class='text'>
-          <span class='title'>{{if
-              @model.learnerName
-              @model.learnerName
-              'Learner'
-            }}</span>
-          <span class='sub'>{{@model.lessonTitle}}
-            ·
-            {{fmtDate @model.sessionDate}}</span>
-        </div>
-        <StatePill
-          @label={{@model.statusLabel}}
-          @hue={{attendanceHue @model.attendanceStatus}}
-          @dot={{true}}
-        />
-      </div>
-      <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: var(--boxel-sp-xs);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        }
-        .text {
-          display: grid;
-          min-width: 0;
-        }
-        .title {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-      </style>
+      <Embed @mark='At' @title={{headline @model}} @meta={{metaLine @model}}>
+        <:status>
+          <Dot @hue={{attendanceHue @model.attendanceStatus}}>{{lower
+              @model.statusLabel
+            }}</Dot>
+        </:status>
+        <:fact>{{if @model.note @model.note '—'}}</:fact>
+        <:default>
+          <Kv @label='Learner'>{{dash @model.learnerName}}</Kv>
+          <Kv @label='Lesson'>{{dash @model.lessonTitle}}</Kv>
+          <Kv @label='Session' @mono={{true}}>{{fmtLong
+              @model.sessionDate
+            }}</Kv>
+          <Kv @label='Status'>{{@model.statusLabel}}</Kv>
+          <Kv @label='Marked by'>{{#if @model.markedBy}}<@fields.markedBy
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+          <Kv @label='Marked at' @mono={{true}}>{{fmtDateTime
+              @model.markedAt
+            }}</Kv>
+          <Kv @label='Enrollment'>{{#if @model.enrollment}}<@fields.enrollment
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+        </:default>
+      </Embed>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <StatePill
-        @label={{@model.statusLabel}}
-        @hue={{attendanceHue @model.attendanceStatus}}
-      />
+      <AtomChip @mark='At' @title={{headline @model}}><Dot
+          @hue={{attendanceHue @model.attendanceStatus}}
+        >{{lower @model.statusLabel}}</Dot></AtomChip>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>{{@model.lessonTitle}}</:eyebrow>
-        <:title>{{if @model.learnerName @model.learnerName 'Learner'}}</:title>
-        <:subtitle>{{fmtDate @model.sessionDate}}</:subtitle>
-        <:badgeRight><StatePill
-            @label={{@model.statusLabel}}
-            @hue={{attendanceHue @model.attendanceStatus}}
-          /></:badgeRight>
-        <:footer>{{@model.note}}</:footer>
-      </FittedCard>
+      <FitTile>
+        <:avatar><Mark @text='At' /></:avatar>
+        <:title>{{headline @model}}</:title>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><Dot @hue={{attendanceHue @model.attendanceStatus}}>{{lower
+              @model.statusLabel
+            }}</Dot></:status>
+        <:fact>{{if
+            @model.note
+            @model.note
+            (attendedLine @model.attendanceStatus)
+          }}</:fact>
+        <:relations>{{#if @model.enrollment}}<@fields.enrollment
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}{{#if @model.lesson}}<@fields.lesson
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
     </template>
   };
+}
+
+function headline(m?: Partial<AttendanceRecord> | null): string {
+  return (
+    [m?.learnerName, m?.lessonTitle].filter(Boolean).join(' · ') ||
+    'Attendance record'
+  );
+}
+function metaLine(m?: Partial<AttendanceRecord> | null): string {
+  return m?.sessionDate ? fmtLong(m.sessionDate) : 'No session date';
+}
+function attendedLine(v?: string | null): string {
+  if (!v) return 'not marked';
+  return countsAsAttended(v) ? 'counts as attended' : 'does not count';
+}
+function fmtShort(d?: Date | string | null): string {
+  if (!d) return '';
+  return toDate(d)!.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+function fmtLong(d?: Date | string | null): string {
+  if (!d) return '—';
+  return toDate(d)!.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+function dash(v: unknown): string {
+  return v == null || v === '' ? '—' : String(v);
+}
+function lower(v?: string | null) {
+  return (v ?? '').toLowerCase();
 }
 
 export function fmtDate(d?: Date | string | null): string {

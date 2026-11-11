@@ -42,6 +42,11 @@
         "links": {
           "self": "../Shipment/shp-0129"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

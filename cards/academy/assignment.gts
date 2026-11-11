@@ -10,11 +10,10 @@ import BooleanField from '@cardstack/base/boolean';
 import NumberField from '@cardstack/base/number';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import ClipboardListIcon from '@cardstack/boxel-icons/clipboard-list';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { AtomChip, Dot, Mark } from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
-
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 import {
   DueWindowField,
@@ -249,91 +248,16 @@ export class Assignment extends CardDef {
           font-weight: 600;
           font-size: var(--boxel-font-size-sm);
         }
-        @container (width < 24rem) {
-          .row {
-            grid-template-columns: minmax(0, 1fr) auto;
-          }
-          .code,
-          .pts {
-            display: none;
-          }
-        }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom'>{{#if @model.code}}{{@model.code}}
-          ·
-        {{/if}}{{@model.cardTitle}}</span>
-      <style scoped>
-        .atom {
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'brief', label: 'Brief' },
-      { id: 'timing', label: 'Timing' },
-      { id: 'grading', label: 'Grading' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Assignment sections'
-        as |e|
-      >
-        <e.Section @id='identity' @title='Identity' @cols={{3}}>
-          <FieldContainer @label='Title' @vertical={{true}}><@fields.title
-            /></FieldContainer>
-          <FieldContainer @label='Code' @vertical={{true}}><@fields.code
-            /></FieldContainer>
-          <FieldContainer @label='Module' @vertical={{true}}><@fields.module
-            /></FieldContainer>
-          <FieldContainer
-            @label='Required for completion'
-            @vertical={{true}}
-          ><@fields.required /></FieldContainer>
-          <FieldContainer
-            @label='Allow resubmission'
-            @vertical={{true}}
-          ><@fields.allowResubmission /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='brief'
-          @title='Brief'
-          @hint='what to hand in and how it is judged'
-          @cols={{1}}
-        >
-          <FieldContainer @label='Brief' @vertical={{true}}><@fields.brief
-            /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='timing'
-          @title='Timing'
-          @hint='leave hard close empty to use the course late policy'
-          @cols={{1}}
-        >
-          <FieldContainer
-            @label='Due window'
-            @vertical={{true}}
-          ><@fields.dueWindow /></FieldContainer>
-        </e.Section>
-        <e.Section @id='grading' @title='Grading' @cols={{2}}>
-          <FieldContainer @label='Rubric' @vertical={{true}}><@fields.rubric
-            /></FieldContainer>
-          <FieldContainer
-            @label='Max points (empty = rubric total)'
-            @vertical={{true}}
-          ><@fields.maxPoints /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
+      <AtomChip
+        @mark={{if @model.code @model.code 'As'}}
+        @title={{@model.cardTitle}}
+      />
     </template>
   };
 
@@ -342,22 +266,18 @@ export class Assignment extends CardDef {
       return dueWindowState(this.args.model?.dueWindow);
     }
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>{{if @model.code @model.code 'Assignment'}}
+      <FitTile>
+        <:avatar><Mark @text='As' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{if @model.code @model.code 'Assignment'}}
           ·
           {{@model.effectiveMaxPoints}}
-          pts</:eyebrow>
-        <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>{{@model.dueLabel}}</:subtitle>
-        <:badgeRight><StatePill
-            @label={{dueWindowLabel this.state}}
-            @hue={{hueFor this.state}}
-          /></:badgeRight>
-        <:footer>{{#if @model.required}}Required{{else}}Optional{{/if}}{{#if
-            @model.allowResubmission
-          }}
-            · resubmission allowed{{/if}}</:footer>
-      </FittedCard>
+          pts</:subtitle>
+        <:status><Dot @hue={{hueFor this.state}}>{{dueWindowLabel
+              this.state
+            }}</Dot></:status>
+        <:fact>{{@model.dueLabel}}</:fact>
+      </FitTile>
     </template>
   };
 }

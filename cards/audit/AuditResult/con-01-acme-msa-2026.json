@@ -8,7 +8,7 @@
         "regime": {
           "regime": "Contract Policy",
           "version": "2026",
-          "clause": "§2.1",
+          "clause": "\u00a72.1",
           "clauseTitle": "Executed copies"
         },
         "kind": "presence",
@@ -30,7 +30,7 @@
         "sourceVersion": "contract-controls v1"
       },
       "cardInfo": {
-        "name": "CON-01 · acme-msa-2026",
+        "name": "CON-01 \u00b7 acme-msa-2026",
         "summary": "documentUrl holds a value.",
         "notes": null,
         "cardThumbnailURL": null
@@ -50,6 +50,11 @@
       "evaluatedBy": {
         "links": {
           "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

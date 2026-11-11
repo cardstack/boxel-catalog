@@ -1,5 +1,5 @@
-import { Component } from 'https://cardstack.com/base/card-api';
-import NumberField from 'https://cardstack.com/base/number';
+import { Component } from '@cardstack/base/card-api';
+import NumberField from '@cardstack/base/number';
 import CoinsIcon from '@cardstack/boxel-icons/coins';
 import { FormatNumber } from '@cardstack/pretui/components/format-number';
 

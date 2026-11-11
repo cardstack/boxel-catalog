@@ -10,11 +10,23 @@ import {
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import enumField from 'https://cardstack.com/base/enum';
 import BookOpenIcon from '@cardstack/boxel-icons/book-open';
-import GlobeIcon from '@cardstack/boxel-icons/globe';
-import LockIcon from '@cardstack/boxel-icons/lock';
 
 import { TicketCategory } from './ticket-category';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
+import { FitTile } from '../shared/fit-tile';
+import { FittedExtras } from '../procurement/vendor';
+import {
+  RecCard,
+  RecHead,
+  RecStats,
+  RecBody,
+  RecBlock,
+  RecRow,
+  RecText,
+} from './components/record';
+import { eq } from '@cardstack/boxel-ui/helpers';
 
 export const ARTICLE_VISIBILITIES = ['Public', 'Internal'] as const;
 export const ARTICLE_STATUSES = ['Draft', 'Published', 'Archived'] as const;
@@ -169,82 +181,100 @@ export class KnowledgeArticle extends CardDef {
   }
 
   static isolated = class Isolated extends Component<typeof this> {
+    get visLower() {
+      return String(this.args.model?.visibility ?? '').toLowerCase();
+    }
+    get keywordCount() {
+      return (this.args.model?.keywords ?? []).filter(Boolean).length;
+    }
     <template>
-      <article class='iso'>
-        <header class='iso-head'>
-          {{#if @model.categoryName}}
-            <p class='trail'>{{@model.categoryName}}</p>
-          {{/if}}
-          <h1>{{@model.title}}</h1>
-          <div class='badges'>
-            <StatePill
-              @label={{if @model.isInternal 'Internal only' 'Public'}}
-              @hue={{if @model.isInternal 'amber' 'teal'}}
-            />
-            {{#if @model.status}}
-              <StatePill @label={{@model.status}} @hue='slate' />
-            {{/if}}
-          </div>
-          {{#if @model.keywords.length}}
-            <ul class='kw'>
-              {{#each @model.keywords as |keyword|}}
-                <li><StatePill @label={{keyword}} @hue='slate' /></li>
-              {{/each}}
-            </ul>
-          {{/if}}
-        </header>
-
-        <div class='prose'><@fields.body /></div>
-      </article>
+      <RecCard @inset={{true}}>
+        <RecHead
+          @mark='KB'
+          @title={{@model.title}}
+          @sub='{{@model.categoryName}} · {{this.visLower}}'
+        >
+          <:status>
+            {{#if @model.status}}<Chip
+                @appearance='plain'
+                @tone={{if (eq @model.status 'Published') 'success' 'warning'}}
+              >{{@model.status}}</Chip>{{/if}}
+            {{#if @model.visibility}}<Chip
+                @appearance='plain'
+              >{{@model.visibility}}</Chip>{{/if}}
+          </:status>
+        </RecHead>
+        <RecStats>
+          <Stat
+            @label='Status'
+            @tone={{if (eq @model.status 'Published') 'success' 'warning'}}
+            @value={{if @model.status @model.status '—'}}
+            @hint={{@model.visibility}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Category'
+            @tone='neutral'
+            @value={{if @model.categoryName @model.categoryName '—'}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Keywords'
+            @tone='neutral'
+            @value={{this.keywordCount}}
+            @hint={{@model.keywordLabel}}
+            @roll={{false}}
+          />
+        </RecStats>
+        <RecBody>
+          <:main>
+            <RecBlock @title='Article'>
+              <RecText><@fields.body /></RecText>
+            </RecBlock>
+            <RecBlock @title='Keywords'>
+              <RecText><span class='mono'>{{if
+                    @model.keywordLabel
+                    @model.keywordLabel
+                    '—'
+                  }}</span></RecText>
+            </RecBlock>
+          </:main>
+          <:side>
+            <RecBlock @title='Linked'>
+              <RecRow @label='Category'>{{#if @model.category}}<@fields.category
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</RecRow>
+            </RecBlock>
+            <RecBlock @title='Details'>
+              <RecRow @label='Status'>{{if
+                  @model.status
+                  @model.status
+                  '—'
+                }}</RecRow>
+              <RecRow @label='Visibility'>{{if
+                  @model.visibility
+                  @model.visibility
+                  '—'
+                }}</RecRow>
+              <RecRow @label='Category'>{{if
+                  @model.categoryName
+                  @model.categoryName
+                  '—'
+                }}</RecRow>
+              <RecRow @label='Keywords'>{{if
+                  @model.keywordLabel
+                  @model.keywordLabel
+                  '—'
+                }}</RecRow>
+            </RecBlock>
+          </:side>
+        </RecBody>
+      </RecCard>
       <style scoped>
-        .iso {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-          padding: var(--boxel-sp-lg);
-          min-height: 100%;
-        }
-        .iso-head {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          padding-bottom: var(--boxel-sp);
-          border-bottom: 1px solid var(--border);
-        }
-        .trail {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 700;
-          letter-spacing: -0.01em;
-          text-wrap: balance;
-        }
-        .badges {
-          display: flex;
-          gap: var(--boxel-sp-4xs);
-        }
-        .kw {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-4xs);
-        }
-        .kw li {
-          display: flex;
-          max-width: 100%;
-        }
-        /* This is the one thing on the page meant to be READ rather than
-           scanned, so it gets a reading measure instead of the full width. */
-        .prose {
-          max-width: 68ch;
-          font-size: var(--boxel-font-size);
-          line-height: 1.75;
+        .mono {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
         }
       </style>
     </template>
@@ -252,89 +282,67 @@ export class KnowledgeArticle extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <article class='emb'>
-        <div class='emb-top'>
-          <BookOpenIcon class='emb-icon' role='presentation' />
-          <span class='emb-title'>{{@model.title}}</span>
-          {{#if @model.isInternal}}
-            <StatePill @label='Internal' @hue='amber' />
-          {{/if}}
-        </div>
-        {{#if @model.categoryName}}
-          <span class='emb-cat'>{{@model.categoryName}}</span>
-        {{/if}}
-        <p class='emb-ex'>{{@model.excerpt}}</p>
-      </article>
-      <style scoped>
-        .emb {
-          display: flex;
-          flex-direction: column;
-          gap: 0.1875rem;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        .emb-top {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-4xs);
-          min-width: 0;
-        }
-        .emb-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          flex: none;
-          color: var(--muted-foreground);
-        }
-        .emb-title {
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .emb-cat {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .emb-ex {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      </style>
+      <RecCard>
+        <RecHead
+          @mark='KB'
+          @title={{@model.title}}
+          @sub={{@model.categoryName}}
+        >
+          <:status>{{#if @model.status}}<Chip
+                @appearance='plain'
+                @tone={{if (eq @model.status 'Published') 'success' 'warning'}}
+              >{{@model.status}}</Chip>{{/if}}</:status>
+        </RecHead>
+        <RecText>{{@model.excerpt}}</RecText>
+        <RecRow @label='Visibility'>{{if
+            @model.visibility
+            @model.visibility
+            '—'
+          }}</RecRow>
+        <RecRow @label='Category'>{{if
+            @model.categoryName
+            @model.categoryName
+            '—'
+          }}</RecRow>
+        <RecRow @label='Keywords'>{{if
+            @model.keywordLabel
+            @model.keywordLabel
+            '—'
+          }}</RecRow>
+      </RecCard>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='atom'>
-        {{! A drawn icon, never an emoji: emoji render differently on every
-            platform and cannot take a theme colour. }}
-        <BookOpenIcon class='atom-icon' role='presentation' />
-        <span class='atom-title'>{{@model.title}}</span>
+        <span class='mark' aria-hidden='true'>KB</span>
+        <span class='nm'>{{@model.title}}</span>
+        {{#if @model.visibility}}<Chip
+            @appearance='plain'
+          >{{@model.visibility}}</Chip>{{/if}}
       </span>
       <style scoped>
         .atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.3rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: 0.3125rem;
+          min-inline-size: 0;
+          max-inline-size: 100%;
+          font-size: 0.75rem;
         }
-        .atom-icon {
-          width: 0.8125rem;
-          height: 0.8125rem;
+        .mark {
           flex: none;
+          display: grid;
+          place-items: center;
+          inline-size: 1rem;
+          block-size: 1rem;
+          border: 1px solid var(--border);
+          font: 600 0.5625rem/1 var(--font-mono);
           color: var(--muted-foreground);
         }
-        .atom-title {
+        .nm {
+          min-inline-size: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -344,223 +352,48 @@ export class KnowledgeArticle extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    get facts() {
+      let m = this.args.model;
+      return [
+        {
+          key: 'Category',
+          value: String(m?.categoryName ?? '') || '—',
+        },
+        {
+          key: 'Visibility',
+          value: String(m?.visibility ?? '') || '—',
+        },
+        { key: 'Status', value: String(m?.status ?? '') || '—' },
+        {
+          key: 'Keywords',
+          value: String(m?.keywordLabel ?? '') || '—',
+        },
+      ];
+    }
     <template>
-      <article class='fit'>
-        <header class='r-head'>
-          <BookOpenIcon class='fit-glyph' role='presentation' />
-          <h3 class='title'>{{@model.title}}</h3>
-          <span class='badge'>{{@model.status}}</span>
-        </header>
-        <div class='r-body'>
-          <span class='line'>{{@model.categoryName}}</span>
-          <p class='blurb'>{{@model.excerpt}}</p>
-          <span class='tail'>{{@model.keywordLabel}}</span>
-        </div>
-        {{! The status badge above already says "Published". A bare "Public"
-            under it, in the same size and the same muted colour, read as the
-            SAME field wrapped onto two lines — and "Published / Internal" read
-            as a contradiction. So the audience gets a glyph (a different kind of
-            mark, not another grey word) and wording that cannot be mistaken for
-            a lifecycle state. The pair is wrapped because the wide+short quantum
-            turns .r-meta into a column, which would otherwise stack the icon
-            above its own label. }}
-        <footer class='r-meta'>
-          <span class='aud'>
-            {{#if @model.isInternal}}
-              <LockIcon class='meta-glyph' role='presentation' />
-              Internal only
-            {{else}}
-              <GlobeIcon class='meta-glyph' role='presentation' />
-              Customer-facing
-            {{/if}}
-          </span>
-        </footer>
-      </article>
-      <style scoped>
-        /* Same skeleton as ticket.gts: one `.fit` grid, no container declared
-           here (the host provides `fitted-card`), one continuous type scale,
-           and tiers that ADD a row rather than un-crop one. */
-        .fit {
-          width: 100%;
-          height: 100%;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          grid-template-areas: 'head' 'body' 'meta';
-          gap: 0.125rem;
-          padding: 0.4375rem 0.5625rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
-          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
-        }
-        .fit > * {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-head {
-          grid-area: head;
-          display: flex;
-          align-items: baseline;
-          gap: 0.3125rem;
-          min-width: 0;
-        }
-        /* fitted-card Rule 2: the anchor. Without it these cells were a title at
-           weight 600 plus a badge — no image, no glyph, and 600 is not the
-           "decisively loud" type the rule accepts as a substitute, so all 16
-           sizes read as bare text. This is the card's OWN icon, the same one its
-           isolated section headers use, which is what makes it identity rather
-           than decoration.
-
-           Sized in em with a px floor so it never shrinks to a dot; `align-self`
-           because the head is a baseline row and an SVG has no baseline; muted so
-           the title stays the loudest thing in the cell. */
-        .fit-glyph {
-          flex: none;
-          align-self: center;
-          width: max(0.6875rem, 1.1em);
-          height: max(0.6875rem, 1.1em);
-          color: var(--muted-foreground);
-        }
-        .title {
-          flex: 1;
-          min-width: 0;
-          margin: 0;
-          font-size: var(--type-title);
-          font-weight: 600;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .badge {
-          flex: none;
-          margin-left: auto;
-          font-family: var(--font-mono);
-          font-size: var(--type-base);
-          font-weight: 600;
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-        .r-body {
-          grid-area: body;
-          display: none;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
-        }
-        .aud {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          min-width: 0;
-          white-space: nowrap;
-        }
-        .meta-glyph {
-          flex: none;
-          width: max(0.5625rem, 0.95em);
-          height: max(0.5625rem, 0.95em);
-        }
-
-        .line {
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .blurb {
-          display: none;
-          margin: 0;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .tail {
-          display: none;
-          margin-top: auto;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .r-meta {
-          grid-area: meta;
-          display: none;
-          align-items: center;
-          gap: 0.375rem;
-          min-width: 0;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-        }
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 50px) {
-          .r-meta {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 50px) and (height <= 105px) {
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 80px) {
-          .r-body {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 160px) {
-          .blurb {
-            display: -webkit-box;
-          }
-        }
-        @container fitted-card (height > 240px) {
-          .blurb {
-            -webkit-line-clamp: 4;
-          }
-          .tail {
-            display: block;
-          }
-        }
-        @container fitted-card (width > 300px) and (height <= 130px) {
-          .fit {
-            grid-template-columns: minmax(12.5rem, 1fr) auto;
-            grid-template-areas: 'head meta' 'body meta';
-            align-items: center;
-          }
-          .r-meta {
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.0625rem;
-          }
-        }
-        @container fitted-card (width <= 170px) {
-          .fit-glyph {
-            display: none;
-          }
-          /* The glyph is dropped just above, so from here down the anchor is
-             type alone — and fitted-card Rule 2's typographic path wants real
-             weight. Weight only, never size: at 150px the title is one word from
-             wrapping and Rule 1 (nothing clipped) outranks Rule 2. */
-          .title {
-            font-weight: 700;
-          }
-        }
-      </style>
+      <FittedExtras @facts={{this.facts}}>
+        <:default>
+          <FitTile>
+            <:avatar><PretAvatar
+                @name='KB'
+                @shape='square'
+                @size={{32}}
+              /></:avatar>
+            <:title>{{@model.title}}</:title>
+            <:subtitle>{{@model.categoryName}}</:subtitle>
+            <:status>{{#if @model.status}}<Chip
+                  @appearance='plain'
+                  @tone={{if
+                    (eq @model.status 'Published')
+                    'success'
+                    'warning'
+                  }}
+                >{{@model.status}}</Chip>{{/if}}</:status>
+            <:fact>{{@model.excerpt}}</:fact>
+          </FitTile>
+        </:default>
+      </FittedExtras>
     </template>
   };
 }

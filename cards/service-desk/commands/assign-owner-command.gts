@@ -12,8 +12,8 @@ import { loaded } from '../record-helpers';
 import { displayTitle } from '../record-helpers';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { Team } from '@cardstack/catalog/cards/hr/team';
+import { Employee } from '../../hr/employee';
+import { Team } from '../../hr/team';
 
 export class AssignOwnerInput extends CardDef {
   @field card = linksTo(CardDef, {

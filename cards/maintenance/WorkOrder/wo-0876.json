@@ -12,7 +12,7 @@
       "priority": "P3",
       "status": "on-hold",
       "holdReason": "waiting-parts",
-      "title": "Filter change — AHU-3",
+      "title": "Filter change \u2014 AHU-3",
       "description": "AHU-FILT-G4 out of stock; reorder raised.",
       "requestedByName": "Generate PM Work Orders",
       "requestedAt": "2026-08-25T01:00:00.000Z",
@@ -44,7 +44,7 @@
             "completedAt": null
           },
           {
-            "label": "Replace G4 panel filters (×4)",
+            "label": "Replace G4 panel filters (\u00d74)",
             "kind": "check",
             "required": true,
             "expectedValue": null,
@@ -132,6 +132,11 @@
       "plan": {
         "links": {
           "self": "../MaintenancePlan/ast-0090-filter"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

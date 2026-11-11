@@ -4,7 +4,8 @@
       "adoptsFrom": {
         "name": "Contact",
         "module": "../contact"
-      }
+      },
+      "_touched": 1793798669968
     },
     "type": "card",
     "attributes": {
@@ -33,7 +34,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../../Theme/site-tools"
         }
       }
     }

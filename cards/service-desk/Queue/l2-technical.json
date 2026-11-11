@@ -3,7 +3,7 @@
     "type": "card",
     "attributes": {
       "name": "L2 Technical",
-      "description": "Specialists — identity, API, data and anything L1 could not close.",
+      "description": "Specialists \u2014 identity, API, data and anything L1 could not close.",
       "tier": "L2",
       "cardInfo": {
         "name": "L2 Technical",
@@ -24,6 +24,11 @@
       "defaultPolicy": {
         "links": {
           "self": "../SlaPolicy/standard-support"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

@@ -9,7 +9,7 @@ import {
 import { tracked } from '@glimmer/tracking';
 import InboxIcon from '@cardstack/boxel-icons/inbox';
 
-import { Ticket } from '@cardstack/catalog/cards/service-desk/ticket';
+import { Ticket } from '../ticket';
 import { QueueView } from '../components/queue-view';
 import { WorkRail } from '../components/work-rail';
 import type { Lens } from '../utils/queue-lens';
@@ -61,6 +61,8 @@ class TicketQueueExampleIsolated extends Component<typeof TicketQueueExample> {
         padding: var(--boxel-sp-lg);
         display: grid;
         gap: var(--boxel-sp-xl);
+        min-height: 100%;
+        background: var(--canvas);
       }
       section {
         display: grid;

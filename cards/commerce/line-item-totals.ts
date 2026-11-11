@@ -53,4 +53,4 @@ export function orderTotals(
 
 // Currency formatting is the CRM cluster's; re-exported so line-item
 // consumers import one module.
-export { formatMoney } from '@cardstack/catalog/cards/crm/utils';
+export { formatMoney } from '../crm/utils';

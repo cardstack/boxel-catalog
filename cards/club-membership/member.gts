@@ -1,9 +1,13 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
 import { contains, field } from '@cardstack/base/card-api';
 import UsersIcon from '@cardstack/boxel-icons/users';
+import { codeRef } from '@cardstack/runtime-common';
 
 import { LoyaltyAccount } from '../loyalty/loyalty-account';
 import { loyaltyTierField } from '../loyalty/loyalty-tier-field';
+
+// @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
+const moduleURL: string = import.meta.url;
 
 /**
  * The club's ladder. Multipliers are the published earning rates the
@@ -51,6 +55,8 @@ export const MemberTierField = markDefinition(
 export class Member extends LoyaltyAccount {
   static displayName = 'Member';
   static icon = UsersIcon;
+  // A member's match bookings show on the account page (Linked + Bookings stat).
+  static bookingRef = codeRef(moduleURL, '../events/booking', 'Booking');
 
   @field tier = contains(MemberTierField);
 }

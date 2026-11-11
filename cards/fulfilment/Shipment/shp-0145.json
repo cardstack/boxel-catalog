@@ -95,6 +95,11 @@
         "links": {
           "self": "../Carrier/dpd"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

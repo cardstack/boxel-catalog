@@ -31,7 +31,7 @@
           {
             "decision": "approved",
             "decidedAt": "2026-08-04T10:15:00.000Z",
-            "comment": "Acknowledged \u2014 matches what we discussed in the review conversation."
+            "comment": "Acknowledged — matches what we discussed in the review conversation."
           },
           {
             "decision": "approved",
@@ -71,6 +71,11 @@
       "signOff.steps.1.approver": {
         "links": {
           "self": "../Employee/dana-kim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

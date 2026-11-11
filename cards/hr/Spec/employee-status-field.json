@@ -7,9 +7,6 @@
         "module": "../employee"
       },
       "specType": "field",
-      "isCard": false,
-      "isField": true,
-      "isComponent": false,
       "readMe": "## Employment Status\n\n**Consume, don’t rebuild.** The shared `employee.gts` already exports `EmployeeStatusField` (onboarding / active / offboarded) with its color map, plus the sibling `EmployeeEmploymentTypeField` (full-time / part-time / contract / internship). This Spec registers the existing block against the taxonomy row rather than shipping a duplicate enum. A primitive enum cannot carry containedExamples — see the linked Employee (status: active).\n\n### Usage\n\n```ts\nimport { EmployeeStatusField } from '@cardstack/catalog/cards/hr/employee';\n\n@field status = contains(EmployeeStatusField);\n```\n\n`EMPLOYEE_STATUS_COLORS`, exported from the same module, maps each status onto the `StateColor` the pill renders with.\n\n### Non-goals\n\nNo new statuses — widening a stored enum forces every consumer’s switch to grow a case; propose additions on the Employee block itself.",
       "cardInfo": {
         "name": "Employment Status",
@@ -23,11 +20,16 @@
         "links": {
           "self": "../Employee/mara-lindqvist"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
       }
     }

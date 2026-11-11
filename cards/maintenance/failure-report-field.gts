@@ -54,7 +54,12 @@ export class FailureReportField extends FieldDef {
     <template>
       <div class='fr'>
         <header class='fr-head'>
-          <ZapOffIcon class='fr-icon' />
+          <ZapOffIcon
+            class='fr-icon'
+            width='16'
+            height='16'
+            aria-hidden='true'
+          />
           <span class='fr-label'>{{@model.label}}</span>
           {{#if @model.assetDown}}<span class='fr-down'>asset down</span>{{/if}}
           {{#if @model.recurrenceOfId}}<span class='fr-rec'>repeat fault</span>{{/if}}
@@ -79,8 +84,6 @@ export class FailureReportField extends FieldDef {
           flex-wrap: wrap;
         }
         .fr-icon {
-          width: 1rem;
-          height: 1rem;
           color: var(--muted-foreground);
         }
         .fr-label {
@@ -110,7 +113,7 @@ export class FailureReportField extends FieldDef {
           font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          padding-top: 2px;
+          padding-block-start: var(--boxel-sp-6xs);
         }
         .fr-body dd {
           margin: 0;

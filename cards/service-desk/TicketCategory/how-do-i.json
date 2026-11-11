@@ -2,10 +2,10 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "How do I…",
+      "name": "How do I\u2026",
       "defaultPriority": "P4",
       "cardInfo": {
-        "name": "How do I…",
+        "name": "How do I\u2026",
         "summary": "New tickets here start at P4 and land in l1-general."
       }
     },
@@ -13,6 +13,11 @@
       "defaultQueue": {
         "links": {
           "self": "../Queue/l1-general"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

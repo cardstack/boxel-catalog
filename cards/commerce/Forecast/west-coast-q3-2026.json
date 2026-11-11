@@ -22,6 +22,11 @@
         "links": {
           "self": "../Territory/west-coast-enterprise"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -41,7 +41,7 @@
         ]
       },
       "cardInfo": {
-        "name": "Theo Bramwell \u2014 Offer in approval",
+        "name": "Theo Bramwell — Offer in approval",
         "summary": "A three-step chain whose third step is still open, long enough that it reads as the bottleneck.",
         "cardThumbnailURL": null,
         "notes": null
@@ -71,6 +71,11 @@
       "approvalChain.steps.2.approver": {
         "links": {
           "self": "../Employee/sofia-reyes"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

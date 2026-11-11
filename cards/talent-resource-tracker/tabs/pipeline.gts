@@ -1,7 +1,8 @@
+import { tracked } from '@glimmer/tracking';
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
+import { eq, or } from '@cardstack/pretui/helpers';
 import type {
   KanbanColumnConfig,
   KanbanPlacement,
@@ -19,10 +20,16 @@ import { ApproveOfferCommand } from '../../hr/commands/approve-offer-command';
 import { ExtendOfferCommand } from '../../hr/commands/extend-offer-command';
 import { AdvanceToOfferCommand } from '../../hr/commands/advance-to-offer-command';
 import { daysBetween, toLocalDate } from '../dates';
-import { stateColorOf } from '../../../components/state-pill';
-import { getComponent } from '../shared';
+import { stateColorOf } from '@cardstack/catalog/components/state-pill';
+import { getComponent, ListToolbar, TrackerPage, StatusDot } from '../shared';
 import type { TrackerView } from '../talent-resource-tracker';
 import { snapshotCandidate, restoreCandidate } from '../shared';
+
+const TURN_TONE = {
+  red: 'danger',
+  amber: 'warning',
+  green: 'success',
+} as const;
 
 interface Signature {
   Args: {
@@ -47,10 +54,13 @@ export class PipelineTab extends GlimmerComponent<Signature> {
     );
   };
 
+  @tracked search = '';
+  setSearch = (value: string) => (this.search = value);
+
   get kanbanColumns(): KanbanColumnConfig[] {
     return CANDIDATE_STAGES.map((stage, index) => ({
       key: stage,
-      label: stage,
+      label: stage.charAt(0).toUpperCase() + stage.slice(1),
       color: stateColorOf(CANDIDATE_STAGE_COLORS, stage).ring,
       collapsed: false,
       wipLimit: null,
@@ -65,7 +75,11 @@ export class PipelineTab extends GlimmerComponent<Signature> {
   // their existing link order.
   get kanbanPlacements(): KanbanPlacement[] {
     let byColumn = new Map<string, { index: number; order: number }[]>();
+    let q = this.search.trim().toLowerCase();
     this.args.tracker.candidates.forEach((candidate, index) => {
+      if (q && !(candidate.name ?? '').toLowerCase().includes(q)) {
+        return;
+      }
       let columnId = candidate.status ?? CANDIDATE_STAGES[0];
       let column = byColumn.get(columnId);
       if (!column) {
@@ -378,6 +392,8 @@ export class PipelineTab extends GlimmerComponent<Signature> {
   // newlines and indentation are whitespace text nodes, so the div is never
   // truly :empty and its padding still reserves a dead strip under the card.
   // Guarding in the template removes the element outright.
+  turnTone = (tone: 'red' | 'amber' | 'green') => TURN_TONE[tone];
+
   hasCardExtras = (candidate: Candidate | undefined): boolean => {
     let status = candidate?.status;
     if (!status) {
@@ -415,103 +431,126 @@ export class PipelineTab extends GlimmerComponent<Signature> {
   };
 
   <template>
-    <div class='tab-section pipeline-section'>
-      <div class='sec-head'>
-        <div class='htext'>
-          <h2>Candidate Pipeline</h2>
-          <p class='byline'>By stage — screening through offer</p>
-        </div>
-        {{#if @tracker.canCreate}}
-          <Button
-            type='button'
-            @tone='primary'
-            @appearance='accent'
-            class='btn-review'
-            @loading={{@tracker.addCard.isRunning}}
-            {{on 'click' (fn @tracker.addNew Candidate)}}
-          >+ Add candidate</Button>
-        {{/if}}
-      </div>
-      <Board
-        @boardLabel='Candidate Pipeline'
-        @columns={{this.kanbanColumns}}
-        @placements={{this.kanbanPlacements}}
-        @onChange={{this.handleKanbanChange}}
-        @onOpen={{this.openCandidateAt}}
-        @cardSize='triple-strip'
-      >
-        <:card as |placement|>
-          {{#let
-            (getComponent (this.candidateAt placement.index))
-            (this.candidateAt placement.index)
-            (this.statusAt placement.index)
-            as |CandidateField candidateModel candidateStatus|
-          }}
-            {{#if CandidateField}}
-              <CandidateField @format='fitted' @displayContainer={{false}} />
-            {{/if}}
-            {{#if (this.hasCardExtras candidateModel)}}
-              {{! The kanban drag engine claims every pointerdown inside
+    <TrackerPage
+      @group='Hiring'
+      @title='Candidate Pipeline'
+      @subtitle='By stage — screening through offer'
+    >
+      <:default>
+        <ListToolbar
+          @label='Pipeline'
+          @searchValue={{this.search}}
+          @searchPlaceholder='Search candidates…'
+          @onSearch={{this.setSearch}}
+          as |bar|
+        >
+          {{#if @tracker.canCreate}}
+            <bar.Action
+              @id='add'
+              @label='Add candidate'
+              @primary={{true}}
+              @loading={{@tracker.addCard.isRunning}}
+              @onClick={{fn @tracker.addNew Candidate}}
+            />
+          {{/if}}
+        </ListToolbar>
+        <div class='pipeline-section'>
+          <Board
+            @boardLabel='Candidate Pipeline'
+            @columns={{this.kanbanColumns}}
+            @placements={{this.kanbanPlacements}}
+            @onChange={{this.handleKanbanChange}}
+            @onOpen={{this.openCandidateAt}}
+            @cardSize='regular-tile'
+          >
+            <:card as |placement|>
+              {{#let
+                (this.candidateAt placement.index)
+                (this.statusAt placement.index)
+                as |candidateModel candidateStatus|
+              }}
+                {{! The column already says the stage, so the board card
+                    leads with who and the role only — not the Candidate's
+                    fitted tile, whose stage chip would repeat the column. }}
+                {{#if candidateModel}}
+                  <div class='card-head'>
+                    {{#let (getComponent candidateModel) as |Atom|}}{{#if
+                        Atom
+                      }}<Atom
+                          @format='atom'
+                          @displayContainer={{false}}
+                        />{{/if}}{{/let}}
+                    <span class='role'>{{candidateModel.appliedRole}}</span>
+                  </div>
+                {{/if}}
+                {{#if (this.hasCardExtras candidateModel)}}
+                  {{! The kanban drag engine claims every pointerdown inside
                 [data-card-index]; stopping propagation here keeps
                 button presses from becoming drags or card-opens. }}
-              {{! template-lint-disable no-invalid-interactive no-pointer-down-event-binding }}
-              <div
-                class='card-extras'
-                {{on 'pointerdown' this.stopEvent}}
-                {{on 'mousedown' this.stopEvent}}
-                {{on 'click' this.stopEvent}}
-              >
-                {{#let
-                  (this.pipelineAge candidateModel)
-                  (this.avgInterviewScore candidateModel)
-                  as |age avg|
-                }}
-                  {{#if
-                    (or
-                      (eq candidateStatus 'hired')
-                      (eq candidateStatus 'rejected')
-                    )
-                  }}
-                    {{! Terminal stages: nothing left to act on, so
+                  {{! template-lint-disable no-invalid-interactive no-pointer-down-event-binding }}
+                  <div
+                    class='card-extras'
+                    {{on 'pointerdown' this.stopEvent}}
+                    {{on 'mousedown' this.stopEvent}}
+                    {{on 'click' this.stopEvent}}
+                  >
+                    {{#let
+                      (this.pipelineAge candidateModel)
+                      (this.avgInterviewScore candidateModel)
+                      as |age avg|
+                    }}
+                      {{#if
+                        (or
+                          (eq candidateStatus 'hired')
+                          (eq candidateStatus 'rejected')
+                        )
+                      }}
+                        {{! Terminal stages: nothing left to act on, so
                       only the plain age/score chips apply. }}
-                  {{else}}
-                    {{#let (@tracker.whoseTurn candidateModel) as |turn|}}
-                      <span
-                        class='turn-chip turn-{{turn.tone}}'
-                      >{{turn.label}}</span>
+                      {{else}}
+                        {{#let (@tracker.whoseTurn candidateModel) as |turn|}}
+                          <StatusDot
+                            @tone={{this.turnTone turn.tone}}
+                            @label={{turn.label}}
+                          />
+                        {{/let}}
+                      {{/if}}
+                      {{#if age}}
+                        <StatusDot
+                          @tone={{if age.stale 'warning' 'neutral'}}
+                          @label={{age.label}}
+                        />
+                      {{/if}}
+                      {{#if avg}}
+                        <StatusDot @label={{avg.label}} />
+                      {{/if}}
                     {{/let}}
-                  {{/if}}
-                  {{#if age}}
-                    <span
-                      class='age-chip {{if age.stale "stale"}}'
-                    >{{age.label}}</span>
-                  {{/if}}
-                  {{#if avg}}
-                    <span class='avg-chip'>{{avg.label}}</span>
-                  {{/if}}
-                {{/let}}
-                {{! No action button at `applied` — résumé extraction
+                    {{! No action button at `applied` — résumé extraction
                     is a tool with a resume-text precondition, so it
                     lives on the candidate's detail page, not the
                     board. The board only offers HR's next pipeline
                     move. }}
-                {{#if (eq candidateStatus 'screening')}}
-                  <Button
-                    type='button'
-                    @tone='neutral'
-                    @appearance='filled'
-                    class='stage-act'
-                    @disabled={{this.isScheduling candidateModel}}
-                    {{on 'click' (fn this.scheduleInterview candidateModel)}}
-                  >{{if
-                      (this.isScheduling candidateModel)
-                      'Scheduling…'
-                      'Schedule interview'
-                    }}</Button>
-                {{/if}}
-                {{#if (eq candidateStatus 'interviewing')}}
-                  {{#if candidateModel.offerState}}
-                    {{! An offer already exists (this card was dragged
+                    {{#if (eq candidateStatus 'screening')}}
+                      <Button
+                        type='button'
+                        @tone='neutral'
+                        @appearance='link'
+                        @size='xs'
+                        class='stage-act'
+                        @disabled={{this.isScheduling candidateModel}}
+                        {{on
+                          'click'
+                          (fn this.scheduleInterview candidateModel)
+                        }}
+                      >{{if
+                          (this.isScheduling candidateModel)
+                          'Scheduling…'
+                          'Schedule interview'
+                        }}</Button>
+                    {{/if}}
+                    {{#if (eq candidateStatus 'interviewing')}}
+                      {{#if candidateModel.offerState}}
+                        {{! An offer already exists (this card was dragged
                         back, or the data moved around it) — offering
                         "Advance to offer" would create a contradiction
                         and scheduling more rounds past a live offer is
@@ -520,179 +559,163 @@ export class PipelineTab extends GlimmerComponent<Signature> {
                         Guarded on the offerState scalar, not the
                         `offer` linksTo, for the render-race reason
                         documented on openCandidateOffer. }}
-                    <Button
-                      type='button'
-                      @tone='neutral'
-                      @appearance='filled'
-                      class='offer-link'
-                      {{on 'click' (fn this.openCandidateOffer candidateModel)}}
-                    >Offer &middot;
-                      {{this.offerLabel candidateModel}}</Button>
-                  {{else}}
-                    <Button
-                      type='button'
-                      @tone='neutral'
-                      @appearance='filled'
-                      class='stage-act'
-                      @disabled={{this.isScheduling candidateModel}}
-                      {{on 'click' (fn this.scheduleInterview candidateModel)}}
-                    >{{if
-                        (this.isScheduling candidateModel)
-                        'Scheduling…'
-                        (if
-                          (this.hasUpcomingInterview candidateModel)
-                          'Schedule next round'
-                          'Schedule interview'
-                        )
-                      }}</Button>
-                    <Button
-                      type='button'
-                      @tone='primary'
-                      @appearance='accent'
-                      class='stage-act approve'
-                      @disabled={{this.isBusyCandidate candidateModel}}
-                      {{on 'click' (fn this.advanceToOffer candidateModel)}}
-                    >{{if
-                        (this.isBusyWith candidateModel 'create')
-                        'Creating draft…'
-                        'Advance to offer'
-                      }}</Button>
-                  {{/if}}
-                {{/if}}
-                {{#if (eq candidateStatus 'offer')}}
-                  {{! Three states, matching the offer lifecycle:
+                        <Button
+                          type='button'
+                          @tone='neutral'
+                          @appearance='link'
+                          @size='xs'
+                          class='offer-link'
+                          {{on
+                            'click'
+                            (fn this.openCandidateOffer candidateModel)
+                          }}
+                        >Offer &middot;
+                          {{this.offerLabel candidateModel}}</Button>
+                      {{else}}
+                        <Button
+                          type='button'
+                          @tone='neutral'
+                          @appearance='link'
+                          @size='xs'
+                          class='stage-act'
+                          @disabled={{this.isScheduling candidateModel}}
+                          {{on
+                            'click'
+                            (fn this.scheduleInterview candidateModel)
+                          }}
+                        >{{if
+                            (this.isScheduling candidateModel)
+                            'Scheduling…'
+                            (if
+                              (this.hasUpcomingInterview candidateModel)
+                              'Schedule next round'
+                              'Schedule interview'
+                            )
+                          }}</Button>
+                        <Button
+                          type='button'
+                          @tone='primary'
+                          @appearance='link'
+                          @size='xs'
+                          class='stage-act approve'
+                          @disabled={{this.isBusyCandidate candidateModel}}
+                          {{on 'click' (fn this.advanceToOffer candidateModel)}}
+                        >{{if
+                            (this.isBusyWith candidateModel 'create')
+                            'Creating draft…'
+                            'Advance to offer'
+                          }}</Button>
+                      {{/if}}
+                    {{/if}}
+                    {{#if (eq candidateStatus 'offer')}}
+                      {{! Three states, matching the offer lifecycle:
                       1. no offer yet → Create offer (drafts it, no send)
                       2. draft → Edit offer (review terms + letter on the
                          Offer card) and Send offer (the deliberate act)
                       3. sent/answered → status link only; the ball is
                          with the candidate, replies are recorded on the
                          Offer card, hire/reject via drag. }}
-                  {{#if (eq candidateModel.offerState 'draft')}}
-                    <Button
-                      type='button'
-                      @tone='neutral'
-                      @appearance='filled'
-                      class='stage-act'
-                      {{on 'click' (fn this.openCandidateOffer candidateModel)}}
-                    >Edit offer</Button>
-                    <Button
-                      type='button'
-                      @tone='primary'
-                      @appearance='accent'
-                      class='stage-act approve'
-                      @disabled={{this.isBusyCandidate candidateModel}}
-                      {{on 'click' (fn this.extendOffer candidateModel)}}
-                    >{{if
-                        (this.isBusyWith candidateModel 'send')
-                        'Sending…'
-                        'Send offer'
-                      }}</Button>
-                  {{else if candidateModel.offerState}}
-                    <Button
-                      type='button'
-                      @tone='neutral'
-                      @appearance='filled'
-                      class='offer-link'
-                      {{on 'click' (fn this.openCandidateOffer candidateModel)}}
-                    >Offer &middot;
-                      {{this.offerLabel candidateModel}}</Button>
-                  {{else}}
-                    <Button
-                      type='button'
-                      @tone='primary'
-                      @appearance='accent'
-                      class='stage-act approve'
-                      @disabled={{this.isBusyCandidate candidateModel}}
-                      {{on 'click' (fn this.advanceToOffer candidateModel)}}
-                    >{{if
-                        (this.isBusyWith candidateModel 'create')
-                        'Creating…'
-                        'Create offer'
-                      }}</Button>
-                  {{/if}}
+                      {{#if (eq candidateModel.offerState 'draft')}}
+                        <Button
+                          type='button'
+                          @tone='neutral'
+                          @appearance='link'
+                          @size='xs'
+                          class='stage-act'
+                          {{on
+                            'click'
+                            (fn this.openCandidateOffer candidateModel)
+                          }}
+                        >Edit offer</Button>
+                        <Button
+                          type='button'
+                          @tone='primary'
+                          @appearance='link'
+                          @size='xs'
+                          class='stage-act approve'
+                          @disabled={{this.isBusyCandidate candidateModel}}
+                          {{on 'click' (fn this.extendOffer candidateModel)}}
+                        >{{if
+                            (this.isBusyWith candidateModel 'send')
+                            'Sending…'
+                            'Send offer'
+                          }}</Button>
+                      {{else if candidateModel.offerState}}
+                        <Button
+                          type='button'
+                          @tone='neutral'
+                          @appearance='link'
+                          @size='xs'
+                          class='offer-link'
+                          {{on
+                            'click'
+                            (fn this.openCandidateOffer candidateModel)
+                          }}
+                        >Offer &middot;
+                          {{this.offerLabel candidateModel}}</Button>
+                      {{else}}
+                        <Button
+                          type='button'
+                          @tone='primary'
+                          @appearance='link'
+                          @size='xs'
+                          class='stage-act approve'
+                          @disabled={{this.isBusyCandidate candidateModel}}
+                          {{on 'click' (fn this.advanceToOffer candidateModel)}}
+                        >{{if
+                            (this.isBusyWith candidateModel 'create')
+                            'Creating…'
+                            'Create offer'
+                          }}</Button>
+                      {{/if}}
+                    {{/if}}
+                  </div>
                 {{/if}}
-              </div>
-            {{/if}}
-          {{/let}}
-        </:card>
-        <:ghost as |dragIdx|>
-          {{#let (getComponent (this.candidateAt dragIdx)) as |CandidateField|}}
-            {{#if CandidateField}}
-              <CandidateField @format='fitted' @displayContainer={{false}} />
-            {{/if}}
-          {{/let}}
-        </:ghost>
-      </Board>
-    </div>
+              {{/let}}
+            </:card>
+            <:ghost as |dragIdx|>
+              {{#let
+                (getComponent (this.candidateAt dragIdx))
+                as |CandidateField|
+              }}
+                {{#if CandidateField}}
+                  <CandidateField
+                    @format='fitted'
+                    @displayContainer={{false}}
+                  />
+                {{/if}}
+              {{/let}}
+            </:ghost>
+          </Board>
+        </div>
+      </:default>
+    </TrackerPage>
     <style scoped>
-      .sec-head {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp);
-        padding-bottom: var(--boxel-sp);
-        border-bottom: 0.125rem solid var(--card-foreground);
-        margin: 0 0 var(--boxel-sp-lg);
-      }
-      .sec-head .htext {
-        margin-right: auto;
-      }
-      .sec-head .htext h2 {
-        font-family: var(--font-sans);
-        font-weight: 700;
-        font-size: 1.25rem;
-        margin: 0 0 0.1875rem;
-      }
-      .sec-head .htext .byline {
-        font-family: var(--font-mono);
-        font-size: 0.7188rem;
-        letter-spacing: 0.02em;
-        color: var(--muted-foreground);
-        margin: 0;
-      }
-      .offer-link {
-        letter-spacing: 0.03em;
-      }
       .offer-link:focus-visible {
         outline: 0.125rem solid var(--primary);
         outline-offset: 0.125rem;
+      }
+      /* the card's atom on top, the role under it */
+      .card-head {
+        display: grid;
+        gap: var(--boxel-sp-6xs);
+        min-width: 0;
+        padding: var(--trt-py) var(--trt-px) var(--boxel-sp-4xs);
+      }
+      .role {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
       }
       .card-extras {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.375rem;
-        padding: 0.375rem 0.625rem 0.5rem;
+        gap: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+        padding: 0 var(--trt-px) var(--trt-py);
         cursor: default;
-      }
-      .age-chip,
-      .avg-chip {
-        font-family: var(--font-mono);
-        font-size: 0.625rem;
-        font-weight: 600;
-        letter-spacing: 0.03em;
-        padding: 0.125rem 0.4375rem;
-        background: var(--muted);
-        color: var(--muted-foreground);
-        font-variant-numeric: tabular-nums;
-      }
-      .age-chip.stale {
-        background: none;
-        border: 0.125rem solid var(--primary);
-        color: var(--primary-ink);
-        border-radius: 0;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        transform: rotate(-4deg);
-        text-shadow: 0.0312rem 0.0312rem 0 var(--primary);
-      }
-      .turn-chip {
-        font-family: var(--font-mono);
-        font-size: 0.625rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        padding: 0.125rem 0.4375rem;
-        border-radius: 62.4375rem;
       }
       .review {
         border: 1px solid var(--border);
@@ -715,9 +738,6 @@ export class PipelineTab extends GlimmerComponent<Signature> {
         --button-button-disabled-opacity: 0.6;
         cursor: default;
       }
-      .tab-section {
-        animation: tracker-tab-fade-in 0.2s ease-out;
-      }
       @keyframes tracker-tab-fade-in {
         from {
           opacity: 0;
@@ -731,58 +751,15 @@ export class PipelineTab extends GlimmerComponent<Signature> {
           animation: none;
         }
       }
-      .btn-review {
-        margin-bottom: var(--boxel-sp-5xs);
-      }
       .pipeline-section {
-        height: 44.375rem;
+        flex: 1;
+        min-height: 32rem;
         display: flex;
         flex-direction: column;
-        --boxel-kanban-bg: var(--muted);
-        --boxel-kanban-fg: var(--card-foreground);
-        --boxel-kanban-card-bg: var(--card);
-        --boxel-kanban-card-fg: var(--card-foreground);
-        --boxel-kanban-muted-fg: var(--muted-foreground);
-        --boxel-kanban-border: var(--border);
-      }
-      .pipeline-section > .sec-head {
-        flex: none;
       }
       .pipeline-section > *:last-child {
         flex: 1;
         min-height: 0;
-      }
-      .action {
-        border: 1px solid currentColor;
-        border-radius: 0;
-        background: none;
-        padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-        font-family: var(--font-mono);
-        font-size: 0.65rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        cursor: pointer;
-        transition:
-          transform 0.1s ease-out,
-          opacity 0.15s ease-out;
-      }
-      .action:hover:not(:disabled) {
-        transform: translateY(-0.0625rem);
-      }
-      .action:disabled {
-        cursor: wait;
-        pointer-events: none;
-        animation: action-busy-pulse 1s ease-in-out infinite;
-      }
-      @keyframes action-busy-pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.55;
-        }
       }
       @media (prefers-reduced-motion: reduce) {
         .action:disabled {

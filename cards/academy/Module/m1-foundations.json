@@ -37,6 +37,11 @@
         "links": {
           "self": "../Assignment/a1-metric-tree"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

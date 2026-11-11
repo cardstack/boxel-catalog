@@ -19,7 +19,12 @@
     "relationships": {
       "holder": {
         "links": {
-          "self": "../Contact/jason-lim"
+          "self": "../../crm/Contact/jason-lim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

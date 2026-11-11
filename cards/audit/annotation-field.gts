@@ -12,7 +12,7 @@ import DateTimeField from '@cardstack/base/datetime';
 import enumField from '@cardstack/base/enum';
 import MessageSquareQuoteIcon from '@cardstack/boxel-icons/message-square-quote';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { Token } from '@cardstack/pretui/components/token';
@@ -103,12 +103,12 @@ export class AnnotationField extends FieldDef {
           gap: var(--boxel-sp-xs);
         }
         .who {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .text {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.5;
           color: var(--foreground);
         }

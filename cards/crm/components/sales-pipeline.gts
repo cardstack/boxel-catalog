@@ -1,13 +1,14 @@
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import {
+  LayoutControl,
+  type LayoutControlChoice,
+} from '@cardstack/pretui/components/layout-control';
 import { Board, type BoardColumn } from '@cardstack/catalog/components/board';
 import type { CardDef } from '@cardstack/base/card-api';
-import type { Opportunity } from '@cardstack/catalog/cards/crm/opportunity';
-import {
-  PIPELINE_STAGES,
-  STAGE_COLORS,
-} from '@cardstack/catalog/cards/crm/pipeline-stage-field';
+import type { Opportunity } from '../opportunity';
+import { PIPELINE_STAGES, STAGE_COLORS } from '../pipeline-stage-field';
 
 // Sales Pipeline — a Kanban board of Opportunities grouped by pipeline
 // stage, with sort and close-window filtering. It takes `@items` from the
@@ -28,6 +29,15 @@ const WINDOW_OPTIONS = [
   { value: 'week', label: 'This week' },
   { value: 'month', label: 'This month' },
   { value: 'quarter', label: 'This quarter' },
+];
+
+const SORT_FORMS = [
+  { name: 'text', minWidth: 17 },
+  { name: 'menu', minWidth: 0 },
+];
+const WINDOW_FORMS = [
+  { name: 'text', minWidth: 22 },
+  { name: 'menu', minWidth: 0 },
 ];
 
 interface SalesPipelineSignature {
@@ -121,22 +131,54 @@ export default class SalesPipeline extends GlimmerComponent<SalesPipelineSignatu
     this.closeWindow = window as CloseWindow;
   };
 
+  get sortChoices(): LayoutControlChoice[] {
+    return SORT_OPTIONS.map((o) => ({
+      ...o,
+      group: 'sort',
+      checked: o.value === this.sortMode,
+      onSelect: () => this.setSortMode(o.value),
+    }));
+  }
+
+  get windowChoices(): LayoutControlChoice[] {
+    return WINDOW_OPTIONS.map((o) => ({
+      ...o,
+      group: 'window',
+      checked: o.value === this.closeWindow,
+      onSelect: () => this.setCloseWindow(o.value),
+    }));
+  }
+
   <template>
     <div class='sales-pipeline' ...attributes>
-      <div class='sp-controls'>
-        <SegmentedControl
+      <LayoutControl @label='Pipeline controls' class='sp-controls' as |lc|>
+        <lc.Slot
+          @id='sort'
           @label='Sort cards by'
-          @options={{SORT_OPTIONS}}
-          @value={{this.sortMode}}
-          @onValueChange={{this.setSortMode}}
-        />
-        <SegmentedControl
+          @forms={{SORT_FORMS}}
+          @menuItems={{this.sortChoices}}
+        >
+          <SegmentedControl
+            @label='Sort cards by'
+            @options={{SORT_OPTIONS}}
+            @value={{this.sortMode}}
+            @onValueChange={{this.setSortMode}}
+          />
+        </lc.Slot>
+        <lc.Slot
+          @id='window'
           @label='Closing within'
-          @options={{WINDOW_OPTIONS}}
-          @value={{this.closeWindow}}
-          @onValueChange={{this.setCloseWindow}}
-        />
-      </div>
+          @forms={{WINDOW_FORMS}}
+          @menuItems={{this.windowChoices}}
+        >
+          <SegmentedControl
+            @label='Closing within'
+            @options={{WINDOW_OPTIONS}}
+            @value={{this.closeWindow}}
+            @onValueChange={{this.setCloseWindow}}
+          />
+        </lc.Slot>
+      </LayoutControl>
       <Board
         @items={{this.boardItems}}
         @columns={{this.boardColumns}}
@@ -156,10 +198,7 @@ export default class SalesPipeline extends GlimmerComponent<SalesPipelineSignatu
         min-width: 0;
       }
       .sp-controls {
-        display: flex;
-        flex-wrap: wrap;
         justify-content: space-between;
-        gap: var(--boxel-sp-xs);
       }
     </style>
   </template>

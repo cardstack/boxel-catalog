@@ -17,18 +17,18 @@ import DateTimeField from '@cardstack/base/datetime';
 import enumField from '@cardstack/base/enum';
 import FlagIcon from '@cardstack/boxel-icons/flag';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { Task } from '@cardstack/catalog/cards/tasks/task';
+import { Employee } from '../hr/employee';
+import { Task } from '../tasks/task';
 import { ValidationRuleField } from './validation-rule-field';
-import { SeverityField } from '@cardstack/catalog/cards/audit/severity-field';
+import { SeverityField } from './severity-field';
 import {
   ResolutionCodeField,
   RESOLUTION_CODES,
 } from '@cardstack/catalog/fields/resolution-code/resolution-code-field';
-import { ApprovalStepField } from '@cardstack/catalog/cards/hr/approval-step-field';
+import { ApprovalStepField } from '../hr/approval-step-field';
 import { ProofField } from './proof-field';
 import { AnnotationField } from './annotation-field';
-import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severity-badge';
+import { SeverityBadge } from './components/severity-badge';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { closureGap } from './utils/finding-closure';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
@@ -252,19 +252,19 @@ export class FindingField extends FieldDef {
         }
         .required {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .observed {
           margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.5;
         }
         .foot {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .acceptance {
@@ -274,7 +274,7 @@ export class FindingField extends FieldDef {
            colour here would compete with severity for the eye. */
         .blocker {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           color: var(--foreground);
         }

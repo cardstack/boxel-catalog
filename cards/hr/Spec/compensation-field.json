@@ -7,9 +7,6 @@
         "module": "../compensation-field"
       },
       "specType": "field",
-      "isCard": false,
-      "isField": true,
-      "isComponent": false,
       "readMe": "## Compensation — field (Co)\n\nA pay package as one value so every surface renders pay one way and a change can be recorded whole. Computed `summary` gives list rows a one-liner. Domain-neutral: no approval or effective-date semantics — those belong to the record card that contains it (see the Compensation card).\n\n### Non-goals\n\nNo currency conversion (plain USD-denominated numbers). No payroll math — this states the package, it does not run it.",
       "cardInfo": {
         "name": "Compensation",
@@ -28,7 +25,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
       },
       "fields": {
@@ -40,6 +37,13 @@
             }
           }
         ]
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

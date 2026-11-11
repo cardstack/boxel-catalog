@@ -9,7 +9,7 @@
       "resumeText": null,
       "overallScore": null,
       "rejectionReason": null,
-      "boardOrder": 2,
+      "boardOrder": 1,
       "name": "Nadia Fontaine",
       "email": "nadia.fontaine@example.com",
       "phone": null,
@@ -53,6 +53,11 @@
       "hiredAs": {
         "links": {
           "self": "../Employee/37b7de71-f79b-4a10-beba-0657aa47ee2b"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

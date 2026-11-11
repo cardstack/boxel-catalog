@@ -17,7 +17,7 @@ import PriorityField from '@cardstack/catalog/fields/priority/priority';
 import DueDateField from '@cardstack/catalog/fields/due-date/due-date';
 import CreatedAtField from '@cardstack/catalog/fields/created-at/created-at';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { User } from '@cardstack/catalog/cards/crm/user';
+import { User } from '../crm/user';
 
 /**
  * The generic actionable item, not any app's version of one. Composed from
@@ -230,9 +230,15 @@ export class Task extends CardDef {
                 {{this.total}}
                 done</span>{{/if}}</h2>
           {{#if this.total}}
-            <div class='subtask-list'><@fields.subtasks
-                @format='embedded'
-              /></div>
+            <div class='subtask-list'>
+              {{#each @fields.subtasks as |Subtask|}}
+                <Subtask
+                  class='subtask'
+                  @format='embedded'
+                  @displayContainer={{false}}
+                />
+              {{/each}}
+            </div>
           {{else}}
             <p class='empty'>No subtasks — this task stands alone.</p>
           {{/if}}
@@ -313,12 +319,11 @@ export class Task extends CardDef {
           display: flex;
           flex-direction: column;
         }
-        .subtask-list :deep(.boxel-card-container--boundaries) {
-          box-shadow: none;
-          background-color: transparent;
-        }
-        .subtask-list :deep(.task-row) {
+        .subtask {
           border-top: 1px solid var(--border);
+        }
+        .subtask + .subtask {
+          margin-top: var(--boxel-sp);
         }
         .empty {
           margin: 0;

@@ -18,7 +18,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
       }
     },
@@ -26,6 +26,11 @@
       "linkedExamples.0": {
         "links": {
           "self": "../Compensation/mara-2026-promo"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     }

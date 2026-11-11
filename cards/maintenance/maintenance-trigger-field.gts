@@ -74,7 +74,12 @@ export class MaintenanceTriggerField extends FieldDef {
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <div class='trigger'>
-        <RepeatIcon class='trigger-icon' />
+        <RepeatIcon
+          class='trigger-icon'
+          width='16'
+          height='16'
+          aria-hidden='true'
+        />
         <span class='trigger-summary'>{{@model.summary}}</span>
       </div>
       <style scoped>
@@ -88,8 +93,6 @@ export class MaintenanceTriggerField extends FieldDef {
         }
         .trigger-icon {
           flex: none;
-          width: 1rem;
-          height: 1rem;
           color: var(--muted-foreground);
         }
         .trigger-summary {
@@ -107,77 +110,6 @@ export class MaintenanceTriggerField extends FieldDef {
       <style scoped>
         .trigger-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--foreground);
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    <template>
-      <div class='trigger-edit'>
-        <section class='trigger-half'>
-          <h4 class='trigger-h'>Calendar rhythm</h4>
-          <@fields.calendar />
-        </section>
-        <section class='trigger-half'>
-          <h4 class='trigger-h'>Usage rhythm</h4>
-          <div class='trigger-grid'>
-            <label class='trigger-l'>Every <@fields.meterThreshold /></label>
-            <label class='trigger-l'>Unit <@fields.meterUnit /></label>
-          </div>
-          <label class='trigger-l trigger-check'>
-            <@fields.whicheverFirst />
-            <span>Whichever comes first (off = both must arrive)</span>
-          </label>
-        </section>
-        <section class='trigger-half'>
-          <h4 class='trigger-h'>Lead time</h4>
-          <label class='trigger-l'>Raise the work order
-            <@fields.leadDays />
-            days before it is due</label>
-        </section>
-        <p class='trigger-summary-line'>{{@model.summary}}</p>
-      </div>
-      <style scoped>
-        .trigger-edit {
-          display: grid;
-          gap: var(--boxel-sp);
-        }
-        .trigger-half {
-          display: grid;
-          gap: var(--boxel-sp-xs);
-        }
-        .trigger-h {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .trigger-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-          gap: var(--boxel-sp-xs);
-        }
-        .trigger-l {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          color: var(--foreground);
-          flex-wrap: wrap;
-        }
-        .trigger-check {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .trigger-summary-line {
-          margin: 0;
-          padding-top: var(--boxel-sp-xs);
-          border-top: 1px solid var(--border);
-          font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
         }
       </style>

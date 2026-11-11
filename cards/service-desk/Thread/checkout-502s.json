@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "title": "CASE-2026-0142 · checkout 502s",
+      "title": "CASE-2026-0142 \u00b7 checkout 502s",
       "pinned": true,
       "closed": false,
       "posts": [
@@ -45,6 +45,11 @@
       "posts.2.author": {
         "links": {
           "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

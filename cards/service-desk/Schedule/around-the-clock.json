@@ -73,13 +73,20 @@
       "isDefault": false,
       "cardInfo": {
         "name": "Around the Clock",
-        "summary": "24/7 — the clock never stops. Used by the VIP policy."
+        "summary": "24/7 \u2014 the clock never stops. Used by the VIP policy."
       }
     },
     "meta": {
       "adoptsFrom": {
         "module": "../schedule",
         "name": "Schedule"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

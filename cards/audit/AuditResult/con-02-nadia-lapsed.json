@@ -8,7 +8,7 @@
         "regime": {
           "regime": "Contract Policy",
           "version": "2026",
-          "clause": "§3.2",
+          "clause": "\u00a73.2",
           "clauseTitle": "Term"
         },
         "kind": "expiry",
@@ -30,7 +30,7 @@
         "sourceVersion": "contract-controls v1"
       },
       "cardInfo": {
-        "name": "CON-02 · nadia-lapsed",
+        "name": "CON-02 \u00b7 nadia-lapsed",
         "summary": "Expired 113 day(s) ago.",
         "notes": null,
         "cardThumbnailURL": null
@@ -43,7 +43,7 @@
           "regime": {
             "regime": "Contract Policy",
             "version": "2026",
-            "clause": "§3.2",
+            "clause": "\u00a73.2",
             "clauseTitle": "Term"
           },
           "kind": "expiry",
@@ -100,6 +100,11 @@
       "finding.closedBy": {
         "links": {
           "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

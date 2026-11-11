@@ -13,19 +13,15 @@ import { Command, codeRef } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
 
-import { Candidate } from '@cardstack/catalog/cards/hr/candidate';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { Meeting } from '@cardstack/catalog/cards/hr/meeting';
-import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
-import { InterviewRoundField } from '@cardstack/catalog/cards/hr/interview-round-field';
+import { Candidate } from '../candidate';
+import { Employee } from '../employee';
+import { Meeting } from '../meeting';
+import { DurationField } from '../duration-field';
+import { InterviewRoundField } from '../interview-round-field';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
-const meetingRef = codeRef(
-  here,
-  '@cardstack/catalog/cards/hr/meeting',
-  'Meeting',
-);
+const meetingRef = codeRef(here, '../meeting', 'Meeting');
 
 // A Meeting's length in milliseconds, from its DurationField ({ value, unit }).
 // Interviews without an explicit duration block a standard 60-minute slot —

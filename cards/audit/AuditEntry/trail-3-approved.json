@@ -4,10 +4,10 @@
     "attributes": {
       "action": "approved",
       "occurredAt": "2026-09-07T14:00:00.000Z",
-      "subjectTitle": "ISO 9001 Supplier Controls — FY26 H2",
+      "subjectTitle": "ISO 9001 Supplier Controls \u2014 FY26 H2",
       "note": "Reviewed by the compliance lead.",
       "cardInfo": {
-        "name": "approved · ISO 9001 Supplier Controls — FY26 H2",
+        "name": "approved \u00b7 ISO 9001 Supplier Controls \u2014 FY26 H2",
         "summary": "Reviewed by the compliance lead.",
         "notes": null,
         "cardThumbnailURL": null
@@ -23,6 +23,11 @@
       "doneBy": {
         "links": {
           "self": "../../hr/Employee/priya-nair"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

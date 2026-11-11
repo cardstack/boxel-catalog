@@ -27,7 +27,7 @@
             "tolerance": 20
           },
           {
-            "label": "Start on load — transfer within 10 s",
+            "label": "Start on load \u2014 transfer within 10 s",
             "kind": "check",
             "required": true,
             "result": "pending"
@@ -44,7 +44,7 @@
             "required": true,
             "result": "pending",
             "expectedValue": 85,
-            "unit": "°C",
+            "unit": "\u00b0C",
             "tolerance": 10
           },
           {
@@ -67,6 +67,11 @@
       "asset": {
         "links": {
           "self": "../Asset/ast-2026-0330"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

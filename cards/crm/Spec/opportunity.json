@@ -21,12 +21,17 @@
     "relationships": {
       "linkedExamples.0": {
         "links": {
-          "self": "../Opportunity/acme-plant-expansion"
+          "self": "../Opportunity/acme-plant-2-expansion"
         }
       },
       "linkedExamples.1": {
         "links": {
           "self": "../Opportunity/brightleaf-workspace"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

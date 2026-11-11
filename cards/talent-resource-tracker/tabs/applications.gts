@@ -1,20 +1,32 @@
+import type { ComponentLike } from '@glint/template';
 import GlimmerComponent from '@glimmer/component';
+import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
+import { ApplicationStatusField } from '../../hr/application';
+import type { RenderableSearchEntryLike } from '@cardstack/runtime-common';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
-import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
-import ListIcon from '@cardstack/boxel-icons/list';
-import TableIcon from '@cardstack/boxel-icons/table';
-import { htmlSafe } from '@ember/template';
+import { eq, or } from '@cardstack/pretui/helpers';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Button } from '@cardstack/pretui/components/button';
-import { IconButton } from '@cardstack/pretui/components/icon-button';
-import { Input } from '@cardstack/pretui/components/input';
-import { Application, APPLICATION_STATUS_COLORS } from '../../hr/application';
+import {
+  DataTable,
+  type DataColumn,
+} from '@cardstack/pretui/components/data-table';
+import { LoadingState } from '@cardstack/pretui/components/loading-state';
+import { Grid } from '@cardstack/pretui/components/grid';
+import { Application } from '../../hr/application';
 import { ScreenApplicationCommand } from '../../hr/commands/screen-application-command';
-import { stateColorOf } from '../../../components/state-pill';
 import type { TrackerView } from '../talent-resource-tracker';
 import { toLocalDate } from '../dates';
+import {
+  ColumnFit,
+  getComponent,
+  TrackerSection,
+  RowOpen,
+  ListToolbar,
+  TrackerEmpty,
+  TrackerPage,
+} from '../shared';
 
 interface Signature {
   Args: {
@@ -24,9 +36,59 @@ interface Signature {
 }
 
 export class ApplicationsTab extends GlimmerComponent<Signature> {
-  setApplicationsView = (view: 'grid' | 'strip' | 'table') => {
-    this.args.tracker.applicationsView = view;
+  // the status column renders the field's own format: dot + label
+  StatusAtom = ApplicationStatusField.atom as unknown as ComponentLike<{
+    Args: { model: string | undefined };
+  }>;
+  asEntries = (entries: unknown) => entries as RenderableSearchEntryLike[];
+
+  setApplicationsView = (view: string) => {
+    this.args.tracker.applicationsView = view as 'grid' | 'strip' | 'table';
   };
+
+  viewOptions = [
+    { value: 'grid', label: 'Grid' },
+    { value: 'strip', label: 'List' },
+    { value: 'table', label: 'Table' },
+  ];
+
+  columns: DataColumn<Application>[] = [
+    { key: 'name', label: 'Applicant' },
+    { key: 'role', label: 'Role', value: (a) => a.position?.jobTitle },
+    { key: 'source', label: 'Source' },
+    {
+      key: 'applied',
+      label: 'Applied',
+      value: (a) => this.args.tracker.formatDate(a.appliedDate),
+    },
+    { key: 'status', label: 'Status' },
+    { key: 'action', label: '' },
+  ];
+
+  rowKey = (a: Application) => a.id ?? a.name ?? '';
+
+  get tableRows(): Application[] {
+    return this.filteredApplications.map((e) => e.item);
+  }
+
+  get reviewModeLabel(): string {
+    let n = this.args.tracker.applicationsQuery?.isLoading
+      ? '—'
+      : this.reviewQueue.length;
+    return `Review mode (${n})`;
+  }
+
+  get subtitle(): string {
+    return 'Inbound, not yet promoted to the pipeline';
+  }
+
+  get panelMeta(): string {
+    let n = this.tableRows.length;
+    // a live query can report loading while it refreshes; rows on screen win
+    return this.args.tracker.applicationsQuery?.isLoading && !n
+      ? '—'
+      : `${n} ${n === 1 ? 'application' : 'applications'}`;
+  }
 
   setApplicationsSearch = (value: string) => {
     this.args.tracker.debouncedSetApplicationsSearch(value);
@@ -49,11 +111,6 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
       Boolean(application?.id) &&
       this.args.tracker.busyApplicationId === application?.id
     );
-  };
-
-  applicationStatusStyle = (status: string | undefined) => {
-    let color = stateColorOf(APPLICATION_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
   };
 
   // Review mode — a full-screen triage queue instead of clicking Screen on
@@ -192,320 +249,253 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
     }
   };
 
+  fit = new ColumnFit();
+  get visibleColumns(): string[] {
+    return this.fit.pick(this.columns.map((c) => c.key));
+  }
+  get notTable(): boolean {
+    return this.args.tracker.applicationsView !== 'table';
+  }
+
   <template>
-    <div class='tab-section'>
-      <div class='sec-head'>
-        <div class='htext'>
-          <h2>Applications</h2>
-          <p class='byline'>Inbound, not yet promoted to the pipeline</p>
-        </div>
-        {{#unless @tracker.reviewMode}}
-          {{#if @tracker.canCreate}}
-            <Button
-              type='button'
-              @tone='primary'
-              @appearance='accent'
-              class='btn-review'
-              @loading={{@tracker.addCard.isRunning}}
-              {{on 'click' (fn @tracker.addNew Application)}}
-            >+ Add application</Button>
-          {{/if}}
-          {{#if this.reviewQueue.length}}
-            <Button
-              type='button'
-              @tone='primary'
-              @appearance='accent'
-              class='btn-review'
-              {{on 'click' this.startReview}}
-            >Review mode ({{if
-                @tracker.isLoading
-                '—'
-                this.reviewQueue.length
-              }})</Button>
-          {{/if}}
-        {{/unless}}
-      </div>
-      {{#if @tracker.reviewMode}}
-        {{#if this.currentReviewApplication}}
-          {{#let this.currentReviewApplication as |app|}}
-            <div
-              class='review'
-              tabindex='0'
-              {{on 'keydown' this.reviewKeydown}}
-            >
-              <div class='review-bar'>
-                <span class='review-status'>Review mode ·
-                  {{this.reviewPositionLabel}}
-                  · reviewed
-                  {{@tracker.reviewedCount}}</span>
-                <span class='review-keys'>
-                  <kbd>←</kbd><kbd>→</kbd>
-                  navigate ·
-                  <kbd>↵</kbd>
-                  screen ·
-                  <kbd>Esc</kbd>
-                  exit
-                </span>
-                <Button
-                  type='button'
-                  @tone='neutral'
-                  @appearance='outlined'
-                  class='btn-review-exit'
-                  {{on 'click' this.exitReview}}
-                >Exit</Button>
-              </div>
-              <div class='review-panes'>
-                <div class='review-queue'>
-                  {{#each this.reviewQueue as |queued index|}}
-                    <Button
-                      @tone='neutral'
-                      @appearance='plain'
-                      class='review-queue-item
-                        {{if (eq index @tracker.reviewIndex) "on"}}'
-                      {{on 'click' (fn this.reviewGoTo index)}}
-                    >
-                      <span class='review-queue-name'>{{queued.name}}</span>
-                      <span class='review-queue-meta'>{{@tracker.formatDate
-                          queued.appliedDate
-                        }}</span>
-                    </Button>
-                  {{/each}}
-                </div>
-                <div class='review-resume'>
-                  <div class='review-resume-head'>
-                    <strong>{{app.name}}</strong>
-                    <span class='dim'>{{app.position.jobTitle}}</span>
-                  </div>
-                  {{#if app.resumeText}}
-                    <p class='review-resume-text'>{{app.resumeText}}</p>
-                  {{else}}
-                    <p class='empty-note' role='status'>No résumé text on file</p>
-                  {{/if}}
-                </div>
-                <div class='review-actions'>
+    <TrackerPage
+      @group='Hiring'
+      @title='Applications'
+      @subtitle={{this.subtitle}}
+    >
+      <:default>
+        {{#if @tracker.reviewMode}}
+          {{#if this.currentReviewApplication}}
+            {{#let this.currentReviewApplication as |app|}}
+              <div
+                class='review'
+                tabindex='0'
+                {{on 'keydown' this.reviewKeydown}}
+              >
+                <div class='review-bar'>
+                  <span class='review-status'>Review mode ·
+                    {{this.reviewPositionLabel}}
+                    · reviewed
+                    {{@tracker.reviewedCount}}</span>
+                  <span class='review-keys'>
+                    <kbd>←</kbd><kbd>→</kbd>
+                    navigate ·
+                    <kbd>↵</kbd>
+                    screen ·
+                    <kbd>Esc</kbd>
+                    exit
+                  </span>
                   <Button
                     type='button'
-                    @tone='primary'
-                    @appearance='accent'
-                    class='btn-review-primary'
-                    @disabled={{this.isBusyApplication app}}
-                    {{on 'click' (fn this.reviewScreen app)}}
-                  >{{if
-                      (this.isBusyApplication app)
-                      'Screening…'
-                      'Screen → Candidate'
-                    }}</Button>
-                  <Button
-                    type='button'
-                    @tone='danger'
+                    @tone='neutral'
                     @appearance='outlined'
-                    class='btn-review-danger'
-                    @disabled={{this.isBusyApplication app}}
-                    {{on 'click' (fn this.reviewReject app)}}
-                  >Reject</Button>
+                    class='btn-review-exit'
+                    {{on 'click' this.exitReview}}
+                  >Exit</Button>
+                </div>
+                <div class='review-panes'>
+                  <div class='review-queue'>
+                    {{#each this.reviewQueue as |queued index|}}
+                      <Button
+                        @tone='neutral'
+                        @appearance='plain'
+                        class='review-queue-item
+                          {{if (eq index @tracker.reviewIndex) "on"}}'
+                        {{on 'click' (fn this.reviewGoTo index)}}
+                      >
+                        <span class='review-queue-name'>{{queued.name}}</span>
+                        <span class='review-queue-meta'>{{@tracker.formatDate
+                            queued.appliedDate
+                          }}</span>
+                      </Button>
+                    {{/each}}
+                  </div>
+                  <div class='review-resume'>
+                    <div class='review-resume-head'>
+                      <strong>{{app.name}}</strong>
+                      <span class='dim'>{{app.position.jobTitle}}</span>
+                    </div>
+                    {{#if app.resumeText}}
+                      <p class='review-resume-text'>{{app.resumeText}}</p>
+                    {{else}}
+                      <TrackerEmpty>No résumé text on file</TrackerEmpty>
+                    {{/if}}
+                  </div>
+                  <div class='review-actions'>
+                    <Button
+                      type='button'
+                      @tone='primary'
+                      @appearance='accent'
+                      class='btn-review-primary'
+                      @disabled={{this.isBusyApplication app}}
+                      {{on 'click' (fn this.reviewScreen app)}}
+                    >{{if
+                        (this.isBusyApplication app)
+                        'Screening…'
+                        'Screen → Candidate'
+                      }}</Button>
+                    <Button
+                      type='button'
+                      @tone='danger'
+                      @appearance='outlined'
+                      class='btn-review-danger'
+                      @disabled={{this.isBusyApplication app}}
+                      {{on 'click' (fn this.reviewReject app)}}
+                    >Reject</Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          {{/let}}
-        {{else}}
-          <p class='empty-note' role='status'>Queue is empty — every inbound
-            application has been reviewed.</p>
-        {{/if}}
-      {{else}}
-        <div class='list-toolbar'>
-          <div class='list-search'>
-            <Input
-              @type='search'
-              @value={{@tracker.applicationsSearch}}
-              @placeholder='Search applications…'
-              @onInput={{this.setApplicationsSearch}}
-              aria-label='Search applications'
-            />
-          </div>
-          <div class='view-toggle' role='group' aria-label='View'>
-            <IconButton
-              type='button'
-              class='view-btn'
-              @variant={{if
-                (eq @tracker.applicationsView 'grid')
-                'primary'
-                'ghost'
-              }}
-              aria-pressed={{if
-                (eq @tracker.applicationsView 'grid')
-                'true'
-                'false'
-              }}
-              @label='Grid view'
-              {{on 'click' (fn this.setApplicationsView 'grid')}}
-            ><LayoutGridIcon
-                class='view-icon'
-                width='16'
-                height='16'
-              /></IconButton>
-            <IconButton
-              type='button'
-              class='view-btn'
-              @variant={{if
-                (eq @tracker.applicationsView 'strip')
-                'primary'
-                'ghost'
-              }}
-              aria-pressed={{if
-                (eq @tracker.applicationsView 'strip')
-                'true'
-                'false'
-              }}
-              @label='List view'
-              {{on 'click' (fn this.setApplicationsView 'strip')}}
-            ><ListIcon class='view-icon' width='16' height='16' /></IconButton>
-            <IconButton
-              type='button'
-              class='view-btn'
-              @variant={{if
-                (eq @tracker.applicationsView 'table')
-                'primary'
-                'ghost'
-              }}
-              aria-pressed={{if
-                (eq @tracker.applicationsView 'table')
-                'true'
-                'false'
-              }}
-              @label='Table view'
-              {{on 'click' (fn this.setApplicationsView 'table')}}
-            ><TableIcon class='view-icon' width='16' height='16' /></IconButton>
-          </div>
-        </div>
-        {{#if (eq @tracker.applicationsView 'table')}}
-          {{#if this.filteredApplications.length}}
-            <div class='data-table-wrap'>
-              <table class='data-table'>
-                <thead>
-                  <tr>
-                    <th>Applicant</th>
-                    <th>Role</th>
-                    <th>Source</th>
-                    <th>Applied</th>
-                    <th>Status</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {{#each this.filteredApplications as |entry|}}
-                    <tr>
-                      <td>{{entry.item.name}}</td>
-                      <td>{{entry.item.position.jobTitle}}</td>
-                      <td>{{entry.item.source}}</td>
-                      <td>{{@tracker.formatDate entry.item.appliedDate}}</td>
-                      <td>
-                        <span
-                          class='status-pill'
-                          style={{this.applicationStatusStyle
-                            entry.item.status
-                          }}
-                        >{{entry.item.status}}</span>
-                      </td>
-                      <td>
-                        {{#if
-                          (or
-                            (eq entry.item.status 'new')
-                            (eq entry.item.status 'reviewing')
-                          )
-                        }}
-                          <Button
-                            type='button'
-                            @tone='neutral'
-                            @appearance='filled'
-                            class='screen-btn'
-                            @disabled={{this.isBusyApplication entry.item}}
-                            {{on
-                              'click'
-                              (fn this.screenApplication entry.item)
-                            }}
-                          >{{if
-                              (this.isBusyApplication entry.item)
-                              'Screening…'
-                              'Screen → Candidate'
-                            }}</Button>
-                        {{/if}}
-                      </td>
-                    </tr>
-                  {{/each}}
-                </tbody>
-              </table>
-            </div>
-          {{else if @tracker.applicationsQuery.isLoading}}
-            <p class='empty-note' role='status'>Loading…</p>
+            {{/let}}
           {{else}}
-            <p class='empty-note' role='status'>No applications yet</p>
+            <TrackerEmpty>Queue is empty. Every inbound application has been
+              reviewed.</TrackerEmpty>
           {{/if}}
         {{else}}
-          {{! Screening actions live in the table view and Review
+          <ListToolbar
+            @label='Applications'
+            @searchValue={{@tracker.applicationsSearch}}
+            @searchPlaceholder='Search applications…'
+            @onSearch={{this.setApplicationsSearch}}
+            @viewOptions={{this.viewOptions}}
+            @view={{@tracker.applicationsView}}
+            @onView={{this.setApplicationsView}}
+            as |bar|
+          >
+            {{#unless @tracker.reviewMode}}
+              {{#if @tracker.canCreate}}
+                <bar.Action
+                  @id='add-application'
+                  @label='Add application'
+                  @primary={{true}}
+                  @loading={{@tracker.addCard.isRunning}}
+                  @onClick={{fn @tracker.addNew Application}}
+                />
+              {{/if}}
+              {{#if this.reviewQueue.length}}
+                <bar.Action
+                  @id='review-mode'
+                  @label={{this.reviewModeLabel}}
+                  @icon={{ClipboardCheckIcon}}
+                  @priority={{1}}
+                  @onClick={{this.startReview}}
+                />
+              {{/if}}
+            {{/unless}}
+          </ListToolbar>
+          <TrackerSection
+            {{this.fit.measure}}
+            @title='Inbound'
+            @meta={{this.panelMeta}}
+            @padded={{this.notTable}}
+          >
+            {{#if (eq @tracker.applicationsView 'table')}}
+              <DataTable
+                @visibleColumns={{this.visibleColumns}}
+                @loading={{@tracker.applicationsQuery.isLoading}}
+                @columns={{this.columns}}
+                @rows={{this.tableRows}}
+                @key={{this.rowKey}}
+                @label='Applications'
+                @columnMenu={{false}}
+                @sortable={{false}}
+                @flush={{true}}
+                @striped={{false}}
+              >
+                <:empty>{{#if
+                    @tracker.applicationsQuery.isLoading
+                  }}<LoadingState @label='Loading' />{{else}}<TrackerEmpty>No
+                      applications yet</TrackerEmpty>{{/if}}</:empty>
+                <:cell as |text row col|>
+                  {{#if (eq col.key 'name')}}
+                    <RowOpen @onOpen={{fn @tracker.openRowCard row}}>{{#let
+                        (getComponent row)
+                        as |Atom|
+                      }}{{#if Atom}}<Atom
+                            @format='atom'
+                            @displayContainer={{false}}
+                          />{{else}}{{if
+                            text
+                            text
+                            '—'
+                          }}{{/if}}{{/let}}</RowOpen>
+                  {{else if (eq col.key 'status')}}
+                    <this.StatusAtom @model={{row.status}} />
+                  {{else if (eq col.key 'action')}}
+                    {{#if
+                      (or (eq row.status 'new') (eq row.status 'reviewing'))
+                    }}
+                      <Button
+                        type='button'
+                        @tone='neutral'
+                        @appearance='link'
+                        @size='xs'
+                        @disabled={{this.isBusyApplication row}}
+                        {{on 'click' (fn this.screenApplication row)}}
+                      >{{if
+                          (this.isBusyApplication row)
+                          'Screening…'
+                          'Screen → Candidate'
+                        }}</Button>
+                    {{/if}}
+                  {{else}}
+                    {{if text text '—'}}
+                  {{/if}}
+                </:cell>
+              </DataTable>
+            {{else}}
+              {{! Screening actions live in the table view and Review
               mode; the tiles here are the prerendered entry API's —
               hover to hydrate, click to open. }}
-          {{#let (component @context.searchResultsComponent) as |Search|}}
-            <Search
-              @query={{@tracker.applicationsSearchQuery}}
-              @mode='none'
-              as |results|
-            >
-              <div
-                class='tile-grid
-                  {{if (eq @tracker.applicationsView "strip") "strip-view"}}'
-              >
-                {{#each results.entries key='id' as |entry|}}
-                  <div
-                    class='tile
-                      {{if
-                        (eq @tracker.applicationsView "strip")
-                        "strip-tile"
-                      }}'
-                    role={{if @tracker.cardCrudFunctions.viewCard 'button'}}
-                    tabindex={{if @tracker.cardCrudFunctions.viewCard '0'}}
-                    {{on 'click' (fn @tracker.viewEntry entry.id)}}
-                    {{on 'keydown' (fn @tracker.viewEntryOnKeydown entry.id)}}
-                  >
-                    <entry.component />
-                  </div>
-                {{else}}
-                  {{#if results.isLoading}}
-                    <p class='empty-note' role='status'>Loading…</p>
+              {{#let (component @context.searchResultsComponent) as |Search|}}
+                <Search
+                  @query={{@tracker.applicationsSearchQuery}}
+                  @mode='none'
+                  as |results|
+                >
+                  {{#if results.entries.length}}
+                    <Grid
+                      @items={{this.asEntries results.entries}}
+                      @size={{if
+                        (eq @tracker.applicationsView 'strip')
+                        'double-wide-strip'
+                        'regular-tile'
+                      }}
+                      as |entry Item|
+                    >
+                      <Item>
+                        <div
+                          class='tile'
+                          role={{if
+                            @tracker.cardCrudFunctions.viewCard
+                            'button'
+                          }}
+                          tabindex={{if
+                            @tracker.cardCrudFunctions.viewCard
+                            '0'
+                          }}
+                          {{on 'click' (fn @tracker.viewEntry entry.id)}}
+                          {{on
+                            'keydown'
+                            (fn @tracker.viewEntryOnKeydown entry.id)
+                          }}
+                        >
+                          <entry.component />
+                        </div>
+                      </Item>
+                    </Grid>
                   {{else}}
-                    <p class='empty-note' role='status'>No applications yet</p>
+                    {{#if results.isLoading}}<LoadingState
+                        @label='Loading'
+                      />{{else}}<TrackerEmpty>No applications yet</TrackerEmpty>{{/if}}
                   {{/if}}
-                {{/each}}
-              </div>
-            </Search>
-          {{/let}}
+                </Search>
+              {{/let}}
+            {{/if}}
+          </TrackerSection>
         {{/if}}
-      {{/if}}
-    </div>
+      </:default>
+    </TrackerPage>
     <style scoped>
-      .sec-head {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp);
-        padding-bottom: var(--boxel-sp);
-        border-bottom: 0.125rem solid var(--card-foreground);
-        margin: 0 0 var(--boxel-sp-lg);
-      }
-      .sec-head .htext {
-        margin-right: auto;
-      }
-      .sec-head .htext h2 {
-        font-family: var(--font-sans);
-        font-weight: 700;
-        font-size: 1.25rem;
-        margin: 0 0 0.1875rem;
-      }
-      .sec-head .htext .byline {
-        font-family: var(--font-mono);
-        font-size: 0.7188rem;
-        letter-spacing: 0.02em;
-        color: var(--muted-foreground);
-        margin: 0;
-      }
       .dim {
         color: var(--muted-foreground);
       }
@@ -529,18 +519,17 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-xs);
       }
       .review-status {
-        font-weight: 700;
+        font-weight: 600;
       }
       .review-keys {
         margin-left: auto;
         color: var(--muted-foreground);
       }
       .review-keys kbd {
-        font-family: var(--font-mono);
-        font-size: 0.6562rem;
+        font-size: var(--boxel-font-size-xs);
         border: 1px solid var(--border);
-        border-radius: 0.1875rem;
-        padding: 0.0625rem 0.25rem;
+        border-radius: var(--boxel-border-radius-xs);
+        padding: var(--boxel-sp-6xs) var(--boxel-sp-4xs);
         background: var(--card);
       }
       .review-panes {
@@ -563,16 +552,15 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         flex-direction: column;
         width: 100%;
         text-align: left;
-        gap: 0.125rem;
+        gap: var(--boxel-sp-6xs);
         cursor: pointer;
       }
       .review-queue-name {
-        font-weight: 700;
+        font-weight: 600;
         font-size: var(--boxel-font-size-sm);
       }
       .review-queue-meta {
-        font-family: var(--font-mono);
-        font-size: 0.6562rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .review-resume {
@@ -598,13 +586,6 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp);
         border-left: 1px solid var(--border);
       }
-      .screen-btn:focus-visible {
-        outline: 0.125rem solid var(--primary);
-        outline-offset: 0.125rem;
-      }
-      .tab-section {
-        animation: tracker-tab-fade-in 0.2s ease-out;
-      }
       @keyframes tracker-tab-fade-in {
         from {
           opacity: 0;
@@ -618,85 +599,8 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
           animation: none;
         }
       }
-      .data-table {
-        margin-top: 0;
-      }
-      .btn-review {
-        margin-bottom: var(--boxel-sp-5xs);
-      }
-      .empty-note {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        color: var(--muted-foreground);
-      }
-      .tile-grid {
-        margin-top: var(--boxel-sp);
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-        gap: var(--boxel-sp);
-      }
-      .data-table-wrap {
-        margin-top: var(--boxel-sp);
-        overflow-x: auto;
-        border: 1px solid var(--border);
-        border-radius: 1rem;
-        background: var(--card);
-        box-shadow: var(--shadow-xs);
-      }
-      .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .data-table th {
-        text-align: left;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-family: var(--font-mono);
-        font-size: 0.6875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--muted-foreground);
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;
-      }
-      .data-table td {
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;
-      }
-      .data-table tbody tr:last-child td {
-        border-bottom: none;
-      }
-      .data-table tbody tr:hover {
-        background: var(--muted);
-      }
-      .status-pill {
-        display: inline-block;
-        padding: 0.125rem 0.5rem;
-        border-radius: 62.4375rem;
-        font-size: 0.6875rem;
-        text-transform: capitalize;
-        white-space: nowrap;
-      }
       .tile {
-        border: 1px solid var(--border);
-        border-radius: 1.25rem;
-        overflow: hidden;
-
-        height: 13.5rem;
-        background: var(--card);
-        box-shadow: var(--shadow-xs);
-        transition:
-          border-color 0.15s ease-out,
-          box-shadow 0.15s ease-out;
-      }
-      .tile:hover {
-        border-color: var(--primary-ink);
-        box-shadow: var(--shadow-sm);
-      }
-      .tile:focus-within {
-        border-color: var(--primary-ink);
+        height: 100%;
       }
       .tile[role='button'] {
         cursor: pointer;
@@ -704,52 +608,6 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
       .tile[role='button']:focus-visible {
         outline: 0.125rem solid var(--primary);
         outline-offset: 0.125rem;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tile {
-          transition: none;
-        }
-      }
-      .tile-grid.strip-view {
-        grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-        gap: var(--boxel-sp-xs);
-      }
-      .tile.strip-tile {
-        height: 4rem;
-      }
-      .screen-btn {
-        margin: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
-        transition:
-          background-color 0.15s ease-out,
-          color 0.15s ease-out;
-      }
-      .screen-btn:disabled {
-        cursor: not-allowed;
-      }
-      .list-toolbar {
-        margin-top: var(--boxel-sp-lg);
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--boxel-sp);
-        margin-bottom: var(--boxel-sp);
-      }
-      .list-search {
-        flex: 1;
-        min-width: 12rem;
-        max-width: 20rem;
-      }
-      .view-toggle {
-        display: flex;
-        margin-left: auto;
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius);
-        overflow: hidden;
-        flex: none;
-      }
-      .sec-head {
-        flex: none;
       }
       @keyframes action-busy-pulse {
         0%,

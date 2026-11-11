@@ -16,7 +16,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
       }
     },
@@ -24,6 +24,11 @@
       "linkedExamples.0": {
         "links": {
           "self": "../Candidate/offer-tomas"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     }

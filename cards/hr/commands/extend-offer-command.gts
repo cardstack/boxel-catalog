@@ -11,11 +11,11 @@ import NumberField from '@cardstack/base/number';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { Candidate } from '@cardstack/catalog/cards/hr/candidate';
-import { Offer } from '@cardstack/catalog/cards/hr/offer';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { ApprovalChainField } from '@cardstack/catalog/cards/hr/approval-chain-field';
-import { ApprovalStepField } from '@cardstack/catalog/cards/hr/approval-step-field';
+import { Candidate } from '../candidate';
+import { Offer } from '../offer';
+import { Employee } from '../employee';
+import { ApprovalChainField } from '../approval-chain-field';
+import { ApprovalStepField } from '../approval-step-field';
 
 class ExtendOfferInput extends CardDef {
   @field candidate = linksTo(() => Candidate, { searchable: true });

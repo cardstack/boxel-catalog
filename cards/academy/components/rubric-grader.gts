@@ -426,7 +426,6 @@ export class RubricGrader extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .note {
-        margin: 0;
         color: var(--muted-foreground);
         font-style: italic;
       }

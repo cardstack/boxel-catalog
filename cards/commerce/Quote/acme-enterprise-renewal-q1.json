@@ -6,7 +6,7 @@
       "status": "sent",
       "lineItems": [
         {
-          "description": "Enterprise plan — annual",
+          "description": "Enterprise plan \u2014 annual",
           "quantity": 1,
           "unitPrice": {
             "amount": 62000,
@@ -37,6 +37,11 @@
       "proposal": {
         "links": {
           "self": "../Proposal/acme-enterprise-renewal-proposal"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

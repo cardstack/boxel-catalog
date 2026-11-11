@@ -23,6 +23,11 @@
         "links": {
           "self": "../Clause/liability-cap-12-months"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

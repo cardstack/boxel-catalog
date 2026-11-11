@@ -9,16 +9,15 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import NotebookIcon from '@cardstack/boxel-icons/notebook';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
-
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 import { ReleaseRuleField, describeReleaseRule } from './release-rule-field';
 import { Lesson, lessonMinutes, glyphFor } from './lesson';
 import { Assignment } from './assignment';
 import { Quiz } from './quiz';
 import { Course } from './course';
+import { Mark } from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
 
 /**
  * A week-or-so of a course: an ordered bundle of lessons with the assignments
@@ -233,14 +232,6 @@ export class Module extends CardDef {
           display: grid;
           gap: var(--boxel-sp-xs);
         }
-        @container (width < 30rem) {
-          .lessons li {
-            grid-template-columns: auto minmax(0, 1fr) auto;
-          }
-          .l-kind {
-            display: none;
-          }
-        }
       </style>
     </template>
   };
@@ -299,14 +290,6 @@ export class Module extends CardDef {
         .rel {
           white-space: nowrap;
         }
-        @container (width < 20rem) {
-          .row {
-            grid-template-columns: auto minmax(0, 1fr);
-          }
-          .rel {
-            display: none;
-          }
-        }
       </style>
     </template>
   };
@@ -325,69 +308,18 @@ export class Module extends CardDef {
     </template>
   };
 
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'release', label: 'Release' },
-      { id: 'contents', label: 'Contents' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Module sections'
-        as |e|
-      >
-        <e.Section @id='identity' @title='Identity' @cols={{3}}>
-          <FieldContainer @label='Title' @vertical={{true}}><@fields.title
-            /></FieldContainer>
-          <FieldContainer @label='Code' @vertical={{true}}><@fields.code
-            /></FieldContainer>
-          <FieldContainer @label='Order' @vertical={{true}}><@fields.order
-            /></FieldContainer>
-          <FieldContainer @label='Course' @vertical={{true}}><@fields.course
-            /></FieldContainer>
-          <FieldContainer @label='Summary' @vertical={{true}}><@fields.summary
-            /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='release'
-          @title='Release'
-          @hint='the plan; releases themselves are recorded on the cohort'
-          @cols={{1}}
-        >
-          <FieldContainer
-            @label='Release rule'
-            @vertical={{true}}
-          ><@fields.releaseRule /></FieldContainer>
-        </e.Section>
-        <e.Section @id='contents' @title='Contents' @cols={{1}}>
-          <FieldContainer
-            @label='Lessons (in order)'
-            @vertical={{true}}
-          ><@fields.lessons /></FieldContainer>
-          <FieldContainer
-            @label='Assignments'
-            @vertical={{true}}
-          ><@fields.assignments /></FieldContainer>
-          <FieldContainer @label='Quizzes' @vertical={{true}}><@fields.quizzes
-            /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-    </template>
-  };
-
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>{{if @model.code @model.code (orderLabel @model.order)}}
+      <FitTile>
+        <:avatar><Mark @text='Md' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{if @model.code @model.code (orderLabel @model.order)}}
           ·
           {{@model.lessonCount}}
           lessons ·
-          {{minutesLabel @model.totalMinutes}}</:eyebrow>
-        <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>{{@model.summary}}</:subtitle>
-        <:footer>{{@model.releaseLabel}}</:footer>
-      </FittedCard>
+          {{minutesLabel @model.totalMinutes}}</:subtitle>
+        <:fact>{{@model.releaseLabel}}</:fact>
+      </FitTile>
     </template>
   };
 }

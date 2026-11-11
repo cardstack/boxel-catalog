@@ -41,7 +41,7 @@
           "author": "Jane Smith",
           "authorRole": "Customer",
           "visibility": "Public",
-          "body": "We have an analyst starting on the 24th — could we get the standard laptop and a monitor ready before then?",
+          "body": "We have an analyst starting on the 24th \u2014 could we get the standard laptop and a monitor ready before then?",
           "sentAt": "2026-08-12T04:00:00.000Z",
           "isSlaEvent": false
         },
@@ -49,7 +49,7 @@
           "author": "Mike Tan",
           "authorRole": "Agent",
           "visibility": "Public",
-          "body": "Of course. I have raised it for approval — once your manager signs off, procurement takes about five working days.",
+          "body": "Of course. I have raised it for approval \u2014 once your manager signs off, procurement takes about five working days.",
           "sentAt": "2026-08-12T04:30:00.000Z",
           "isSlaEvent": false
         },
@@ -65,14 +65,14 @@
           "author": "System",
           "authorRole": "System",
           "visibility": "Public",
-          "body": "Status changed from Open to Pending — the clock is stopped.",
+          "body": "Status changed from Open to Pending \u2014 the clock is stopped.",
           "sentAt": "2026-08-13T09:03:47.112Z",
           "isSlaEvent": true
         }
       ],
       "cardInfo": {
         "name": "#1256 New laptop request",
-        "summary": "A service request, not an incident — it needs approval before fulfilment starts.",
+        "summary": "A service request, not an incident \u2014 it needs approval before fulfilment starts.",
         "cardThumbnailURL": null,
         "notes": null
       },
@@ -104,6 +104,11 @@
       "slaPolicy": {
         "links": {
           "self": "../SlaPolicy/vip-support"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

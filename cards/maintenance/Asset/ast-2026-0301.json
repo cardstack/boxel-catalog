@@ -63,6 +63,11 @@
         "links": {
           "self": "../Location/northwind-b-floor-2"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

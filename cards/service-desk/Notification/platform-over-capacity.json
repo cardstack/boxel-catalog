@@ -2,9 +2,9 @@
   "data": {
     "type": "card",
     "attributes": {
-      "recipientRef": "lucas",
+      "recipientRef": "desk-lead",
       "subject": "Platform is over capacity",
-      "body": "Sprint 14 — Desk Assignment has 4 people on Platform, which has a ceiling of 3. The draft cannot be committed until that is resolved.",
+      "body": "Sprint 14 \u2014 Desk Assignment has 4 people on Platform, which has a ceiling of 3. The draft cannot be committed until that is resolved.",
       "severity": "critical",
       "dedupeKey": "placement/sprint-14-desk-assignment/over-capacity/platform",
       "createdAt": "2026-09-14T16:20:00.000Z",
@@ -17,6 +17,11 @@
       "subjectCard": {
         "links": {
           "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

@@ -9,9 +9,11 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import MarkdownField from '@cardstack/base/markdown';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
 import TagsIcon from '@cardstack/boxel-icons/tags';
 import WindIcon from '@cardstack/boxel-icons/wind';
 import ForkliftIcon from '@cardstack/boxel-icons/forklift';
@@ -21,9 +23,25 @@ import PlugIcon from '@cardstack/boxel-icons/plug';
 import BoxesIcon from '@cardstack/boxel-icons/boxes';
 
 import CriticalityField from './criticality-field';
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 import { Asset } from './asset';
 import { MaintenancePlan } from './maintenance-plan';
+import { FitTile } from '../shared/fit-tile';
+import {
+  Chip,
+  Brief,
+  Dot,
+  Fact,
+  Head,
+  Mark,
+  Row,
+  Section,
+  Sheet,
+  dash,
+  enumText,
+  join,
+  hueTone,
+  type KvItem,
+} from './card-ui';
 
 /** Icon names a category may pick; anything else falls back to boxes. */
 export const CATEGORY_ICONS: Record<string, unknown> = {
@@ -37,6 +55,55 @@ export const CATEGORY_ICONS: Record<string, unknown> = {
 
 export function categoryIcon(name?: string | null) {
   return (CATEGORY_ICONS[name ?? ''] ?? BoxesIcon) as typeof BoxesIcon;
+}
+
+// The assets in a category, which every format shows (count, in service,
+// the list); a live query because a card cannot search from a computed.
+class CategoryView extends Component<typeof AssetCategory> {
+  private assetQuery: ReturnType<getCards> | undefined;
+
+  constructor(owner: Owner, args: any) {
+    super(owner, args);
+    this.assetQuery = this.args.context?.getCards(
+      this,
+      () => {
+        let ref = identifyCard(Asset);
+        let id = this.args.model?.id;
+        return ref && id
+          ? { filter: { on: ref, every: [{ eq: { 'category.id': id } }] } }
+          : undefined;
+      },
+      () => {
+        let url = (this.args.model as any)?.[realmURL];
+        return url ? [url.href] : undefined;
+      },
+      { isLive: true },
+    );
+  }
+
+  get assets(): Asset[] {
+    return (this.assetQuery?.instances ?? []).filter(Boolean) as Asset[];
+  }
+
+  get inService(): number {
+    return this.assets.filter((a) => a.status === 'in-service').length;
+  }
+
+  get level() {
+    return this.args.model.defaultCriticality?.level;
+  }
+
+  get rows(): KvItem[] {
+    let m = this.args.model;
+    return [
+      { key: 'Code', value: dash(m.code) },
+      { key: 'Expected life', value: lifeYears(m.expectedLifeMonths, true) },
+      { key: 'Criticality', value: capital(this.level) },
+      { key: 'Default team', value: dash(m.defaultTeamName) },
+      { key: 'Assets', value: String(this.assets.length) },
+      { key: 'In service', value: String(this.inService) },
+    ];
+  }
 }
 
 /**
@@ -83,348 +150,240 @@ export class AssetCategory extends CardDef {
   });
 
   static atom = class Atom extends Component<typeof this> {
-    get Icon() {
-      return categoryIcon(this.args.model?.icon);
-    }
     <template>
-      <span class='cat-atom'><this.Icon
-          class='cat-atom-icon'
-        />{{@model.cardTitle}}</span>
-      <style scoped>
-        .cat-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-4xs);
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .cat-atom-icon {
-          width: 0.9rem;
-          height: 0.9rem;
-          color: var(--muted-foreground);
-        }
-      </style>
+      <Chip
+        @bare={{true}}
+        @mark='Ca'
+        @name={{@model.cardTitle}}
+        @meta={{@model.code}}
+      />
     </template>
   };
 
-  static embedded = class Embedded extends Component<typeof this> {
-    get Icon() {
-      return categoryIcon(this.args.model?.icon);
-    }
+  static embedded = class Embedded extends CategoryView {
     <template>
-      <div class='cat'>
-        <span class='cat-disc'><this.Icon class='cat-icon' /></span>
-        <div class='cat-body'>
-          <div class='cat-name'>{{@model.cardTitle}}
-            {{#if @model.code}}<code
-                class='cat-code'
-              >{{@model.code}}</code>{{/if}}</div>
-          <div class='cat-meta'>
-            {{#if @model.expectedLifeLabel}}{{@model.expectedLifeLabel}}{{/if}}
-            {{#if @model.defaultTeamName}}· {{@model.defaultTeamName}}{{/if}}
-          </div>
-        </div>
-        <@fields.defaultCriticality @format='atom' />
-      </div>
-      <style scoped>
-        .cat {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          min-width: 0;
-        }
-        .cat-disc {
-          flex: none;
-          width: 2rem;
-          height: 2rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          background: var(--muted);
-          color: var(--muted-foreground);
-        }
-        .cat-icon {
-          width: 1rem;
-          height: 1rem;
-        }
-        .cat-body {
-          flex: 1;
-          min-width: 0;
-        }
-        .cat-name {
-          font-weight: 600;
-          color: var(--foreground);
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: baseline;
-        }
-        .cat-code {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .cat-meta {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-      </style>
+      <Brief @mark='Ca' @title={{@model.cardTitle}} @meta={{metaLine @model}}>
+        <:status><CategoryDots @model={{@model}} /></:status>
+        <:fact><Fact
+            @lead='Expected life'
+            @strong={{lifeYears @model.expectedLifeMonths true}}
+            @rest={{if @model.defaultTeamName (teamText @model)}}
+          /></:fact>
+        <:default>
+          <KeyValue
+            @items={{this.rows}}
+            @labelStyle='eyebrow'
+            @divided={{true}}
+          />
+          <AssetAtoms @assets={{this.assets}} />
+        </:default>
+      </Brief>
     </template>
   };
 
-  static fitted = class Fitted extends Component<typeof this> {
-    get Icon() {
-      return categoryIcon(this.args.model?.icon);
-    }
+  static fitted = class Fitted extends CategoryView {
     <template>
-      <FittedCard class='fit' @titleTag='h3'>
-        <:placeholder><this.Icon width='24' height='24' /></:placeholder>
-        <:eyebrow><span class='mono'>{{@model.code}}</span></:eyebrow>
+      <FitTile>
+        <:avatar><Mark @text='Ca' @size='lg' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>{{@model.expectedLifeLabel}}{{#if @model.defaultTeamName}}
-            ·
-            {{@model.defaultTeamName}}{{/if}}</:subtitle>
-      </FittedCard>
-      <style scoped>
-        .fit {
-          --fc-title-font-size: var(--boxel-font-size-sm);
-          --fc-subtitle-font-size: var(--boxel-font-size-xs);
-        }
-        .mono {
-          font-family: var(--font-mono);
-        }
-      </style>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><CategoryDots @model={{@model}} /></:status>
+        <:fact><Fact
+            @lead='Expected life'
+            @strong={{lifeYears @model.expectedLifeMonths true}}
+            @rest={{if @model.defaultTeamName (teamText @model)}}
+          /></:fact>
+        <:relations>
+          {{#each this.assets as |a|}}
+            <Chip
+              @bare={{true}}
+              @mark='As'
+              @name={{a.name}}
+              @tone={{hueTone a.statusHue}}
+            />
+          {{/each}}
+        </:relations>
+      </FitTile>
     </template>
   };
 
-  static isolated = class Isolated extends Component<typeof this> {
-    get Icon() {
-      return categoryIcon(this.args.model?.icon);
-    }
-
-    // The two facts a manager actually opens this page for before assigning
-    // an asset to it: how many already use it, and which plan templates
-    // apply. `assetCount` can't be a model-level computeVia (no live search
-    // inside a card's own field), so it's a live query here.
-    assetQuery: ReturnType<getCards> | undefined;
-
-    constructor(owner: Owner, args: any) {
-      super(owner, args);
-      let realmHref = (this.args.model as any)?.[realmURL]?.href;
-      this.assetQuery = this.args.context?.getCards(
-        this,
-        () => {
-          let ref = identifyCard(Asset);
-          return ref ? { filter: { type: ref } } : undefined;
+  static isolated = class Isolated extends CategoryView {
+    get defaults(): KvItem[] {
+      let m = this.args.model;
+      return [
+        { key: 'Code', value: dash(m.code) },
+        {
+          key: 'Expected life',
+          value: m.expectedLifeMonths ? `${m.expectedLifeMonths} months` : '—',
         },
-        () => (realmHref ? [realmHref] : undefined),
-        { isLive: true },
-      );
+        { key: 'Default criticality', value: '' },
+        { key: 'Default team', value: dash(m.defaultTeamName) },
+      ];
     }
 
-    get assetCount(): number {
-      let id = this.args.model.id;
-      if (!id) return 0;
-      return ((this.assetQuery?.instances ?? []) as Asset[]).filter(
-        (a) => a?.category?.id === id,
-      ).length;
+    get details(): KvItem[] {
+      return [...this.rows, { key: 'Icon', value: dash(this.args.model.icon) }];
     }
 
     <template>
-      <article class='iso'>
-        <header class='iso-hero'>
-          <span class='iso-disc'><this.Icon class='iso-icon' /></span>
-          <div class='iso-head'>
-            <h1 class='iso-title'>{{@model.cardTitle}}</h1>
-            <p class='iso-meta'>Asset category
-              {{#if @model.code}}· <code>{{@model.code}}</code>{{/if}}</p>
-          </div>
-          <@fields.defaultCriticality @format='embedded' />
-        </header>
-        <dl class='iso-facts'>
-          <div><dt>Assets in this category</dt><dd
-            >{{this.assetCount}}</dd></div>
-          <div><dt>Expected life</dt><dd>{{if
-                @model.expectedLifeLabel
-                @model.expectedLifeLabel
-                '—'
-              }}</dd></div>
-          <div><dt>Maintained by</dt><dd>{{if
-                @model.defaultTeamName
-                @model.defaultTeamName
-                '—'
-              }}</dd></div>
-        </dl>
-        {{#if @model.defaultPlans.length}}
-          <section class='iso-plans'>
-            <h2>Default maintenance plans</h2>
-            <ul class='iso-plans-list'>
-              {{#each @fields.defaultPlans as |Plan|}}
-                <li><Plan @format='embedded' /></li>
-              {{/each}}
-            </ul>
-          </section>
-        {{else}}
-          <p class='iso-plans-empty'>No default maintenance plan templates yet —
-            every asset in this category will need its own plan.</p>
-        {{/if}}
-        {{#if @model.description}}
-          <section class='iso-desc'><@fields.description /></section>
-        {{/if}}
-      </article>
-      <style scoped>
-        .iso {
-          container-type: inline-size;
-          padding: var(--boxel-sp-lg);
-          display: grid;
-          gap: var(--boxel-sp);
-          color: var(--foreground);
-          background: var(--card);
-        }
-        .iso-hero {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp);
-          flex-wrap: wrap;
-        }
-        .iso-disc {
-          width: 3.5rem;
-          height: 3.5rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          background: var(--muted);
-          color: var(--muted-foreground);
-        }
-        .iso-icon {
-          width: 1.75rem;
-          height: 1.75rem;
-        }
-        .iso-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .iso-meta {
-          margin: var(--boxel-sp-4xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .iso-meta code {
-          font-family: var(--font-mono);
-        }
-        .iso-title {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          text-wrap: balance;
-        }
-        .iso-facts {
-          margin: 0;
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-          gap: var(--boxel-sp-sm);
-        }
-        .iso-facts dt {
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground);
-        }
-        .iso-facts dd {
-          margin: 0;
-          font-size: var(--boxel-font-size);
-          font-weight: 600;
-        }
-        .iso-desc {
-          border-top: 1px solid var(--border);
-          padding-top: var(--boxel-sp);
-        }
-        .iso-plans {
-          border-top: 1px solid var(--border);
-          padding-top: var(--boxel-sp);
-        }
-        .iso-plans h2 {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground);
-        }
-        .iso-plans-list {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: grid;
-          gap: var(--boxel-sp-4xs);
-        }
-        .iso-plans-empty {
-          border-top: 1px solid var(--border);
-          padding-top: var(--boxel-sp);
-          color: var(--muted-foreground);
-          font-size: var(--boxel-font-size-sm);
-          font-style: italic;
-        }
-      </style>
+      <Sheet>
+        <:head>
+          <Head
+            @mark='Ca'
+            @title={{@model.cardTitle}}
+            @meta={{metaLine @model}}
+          >
+            <:status><CategoryDots @model={{@model}} /></:status>
+          </Head>
+        </:head>
+        <:stats>
+          <Stat
+            @label='Assets'
+            @value={{this.assets.length}}
+            @hint='{{this.inService}} in service'
+            @roll={{false}}
+          />
+          <Stat
+            @label='Expected life'
+            @value={{lifeYears @model.expectedLifeMonths}}
+            @hint={{if
+              @model.expectedLifeMonths
+              (concat @model.expectedLifeMonths ' months')
+              '—'
+            }}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Criticality'
+            @value={{capital this.level}}
+            @hint='default for new assets'
+            @roll={{false}}
+          />
+        </:stats>
+        <:main>
+          {{#if @model.description}}
+            <Section @title='Description'><p
+              >{{@model.description}}</p></Section>
+          {{/if}}
+          <Section @title='Defaults'>
+            <KeyValue
+              @items={{this.defaults}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+            >
+              <:value as |item|>
+                {{#if item.value}}{{item.value}}{{else if this.level}}<Dot
+                    @tone={{criticalityTone this.level}}
+                    @label={{this.level}}
+                  />{{else}}—{{/if}}
+              </:value>
+            </KeyValue>
+          </Section>
+          <Section @title='Assets'>
+            {{#each this.assets as |a|}}
+              <Row
+                @title={{a.name}}
+                @meta={{join a.tag (shortPlace a.location.name)}}
+                @tone={{hueTone a.statusHue}}
+                @state={{enumText a.status}}
+              />
+            {{else}}
+              <Row @title='No assets in this category yet' />
+            {{/each}}
+          </Section>
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <AssetAtoms @assets={{this.assets}} />
+          </Section>
+          <Section @title='Details'>
+            <KeyValue
+              @items={{this.details}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+            />
+          </Section>
+        </:side>
+      </Sheet>
     </template>
   };
+}
 
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'defaults', label: 'Defaults' },
-      { id: 'plans', label: 'Default plans' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Category sections'
-        as |e|
-      >
-        <e.Section @id='identity' @title='Identity' @cols={{2}}>
-          <FieldContainer @label='Name' @vertical={{true}}><@fields.name
-            /></FieldContainer>
-          <FieldContainer @label='Code' @vertical={{true}}><@fields.code
-            /></FieldContainer>
-          <FieldContainer @label='Icon' @vertical={{true}}><@fields.icon
-            /></FieldContainer>
-          <FieldContainer
-            @label='Description'
-            @vertical={{true}}
-          ><@fields.description /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='defaults'
-          @title='Defaults'
-          @hint='inherited by every asset of this kind'
-          @cols={{2}}
-        >
-          <FieldContainer
-            @label='Expected life (months)'
-            @vertical={{true}}
-          ><@fields.expectedLifeMonths /></FieldContainer>
-          <FieldContainer
-            @label='Maintained by (team)'
-            @vertical={{true}}
-          ><@fields.defaultTeamName /></FieldContainer>
-          <FieldContainer
-            @label='Default criticality'
-            @vertical={{true}}
-          ><@fields.defaultCriticality /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='plans'
-          @title='Default maintenance plans'
-          @hint='templates a new asset in this category can adopt'
-        >
-          <FieldContainer
-            @label='Plan templates'
-            @vertical={{true}}
-          ><@fields.defaultPlans /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-    </template>
-  };
+function concat(...parts: unknown[]) {
+  return parts.join('');
+}
+
+function capital(s?: string | null) {
+  return s ? s[0].toUpperCase() + s.slice(1) : '—';
+}
+
+function criticalityTone(level?: string | null) {
+  return level === 'critical' ? 'bad' : level === 'high' ? 'warn' : undefined;
+}
+
+/** 180 → "15 yrs" (or "15 years" long); months under a year stay months */
+function lifeYears(months?: number | null, long = false) {
+  if (!months) return '—';
+  if (months % 12) return `${months} months`;
+  return `${months / 12} ${long ? 'years' : 'yrs'}`;
+}
+
+function teamText(m: Partial<AssetCategory>) {
+  return `team ${m.defaultTeamName}`;
+}
+
+function metaLine(m: Partial<AssetCategory>) {
+  return join(m.code, m.description);
+}
+
+/** "Room 214 — Compressor Room" → "Room 214" */
+function shortPlace(name?: string | null) {
+  return name ? name.split(' — ')[0] : undefined;
+}
+
+const CategoryDots: TemplateOnlyComponent<{
+  Args: { model: Partial<AssetCategory> };
+}> = <template>
+  {{#if @model.code}}<Dot @label={{@model.code}} />{{/if}}
+  {{#if @model.defaultCriticality.level}}
+    <Dot
+      @tone={{criticalityTone @model.defaultCriticality.level}}
+      @label={{@model.defaultCriticality.level}}
+    />
+  {{/if}}
+</template>;
+
+const AssetAtoms: TemplateOnlyComponent<{ Args: { assets: Asset[] } }> =
+  <template>
+    <KeyValue
+      @items={{assetItems @assets}}
+      @labelStyle='eyebrow'
+      @divided={{true}}
+    >
+      <:value as |item|>
+        <Chip
+          @bare={{true}}
+          @mark='As'
+          @name={{item.value}}
+          @tone={{hueTone (itemHue @assets item)}}
+          @meta={{enumText (itemStatus @assets item)}}
+        />
+      </:value>
+    </KeyValue>
+  </template>;
+
+// KeyValue items are strings; a row finds its asset again by name.
+function assetItems(assets: Asset[]): KvItem[] {
+  return assets.map((a) => ({ key: 'Asset', value: a.name ?? a.tag ?? '—' }));
+}
+function itemOf(assets: Asset[], item: KvItem) {
+  return assets.find((a) => (a.name ?? a.tag ?? '—') === item.value);
+}
+function itemHue(assets: Asset[], item: KvItem) {
+  return itemOf(assets, item)?.statusHue;
+}
+function itemStatus(assets: Asset[], item: KvItem) {
+  return itemOf(assets, item)?.status;
 }
 
 export default AssetCategory;

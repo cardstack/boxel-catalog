@@ -26,7 +26,7 @@
             "tolerance": 10
           },
           {
-            "label": "Brake test — stopping distance",
+            "label": "Brake test \u2014 stopping distance",
             "kind": "measure",
             "required": true,
             "result": "pending",
@@ -65,6 +65,11 @@
       "asset": {
         "links": {
           "self": "../Asset/ast-2026-0211"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

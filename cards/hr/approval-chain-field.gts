@@ -9,11 +9,10 @@ import {
 import DateTimeField from 'https://cardstack.com/base/datetime';
 import NumberField from 'https://cardstack.com/base/number';
 
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-
 import { ApprovalStepField } from './approval-step-field';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { daysBetween } from './utils';
+import { DotLabel } from './dot-enum-field';
+import { Avatar } from '@cardstack/pretui/components/avatar';
 
 // A pending step this many days or more past its predecessor's decision (or
 // past the chain's start, for step 0) is flagged as a bottleneck in the
@@ -114,107 +113,101 @@ export class ApprovalChainField extends FieldDef {
         : undefined;
     };
 
+    shortDate = (d?: Date | string | null): string | undefined => {
+      if (!d) {
+        return undefined;
+      }
+      let t = new Date(d);
+      return isNaN(t.getTime())
+        ? undefined
+        : t.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          });
+    };
+
+    // One flat 28px row per step: approver, date · comment, decision.
     <template>
-      <div class='approval-chain'>
-        <div class='chain-head'>
-          <span class='chain-status'>{{this.statusLabel}}</span>
-        </div>
-        {{#if @model.steps.length}}
-          <ol class='steps'>
-            {{#each @fields.steps as |StepComponent index|}}
-              <li
-                class='step {{if (this.isCurrentPendingIndex index) "current"}}'
-              >
-                <span class='step-index'>{{index}}</span>
-                <div class='step-body'>
-                  <StepComponent
-                    @format='embedded'
-                    @displayContainer={{false}}
-                  />
-                  <StatePill
-                    class='bottleneck'
-                    @label={{this.bottleneckLabel index}}
-                    @hue='attention'
-                    @dot={{true}}
-                  />
-                </div>
-              </li>
-            {{/each}}
-          </ol>
+      <ol class='steps' aria-label='Approval chain: {{this.statusLabel}}'>
+        {{#each @model.steps as |step index|}}
+          <li
+            class='step'
+            data-current={{if (this.isCurrentPendingIndex index) 'true'}}
+          >
+            <span class='who'><Avatar
+                @name={{if step.approver.name step.approver.name '?'}}
+                @src={{step.approver.photo.resolvedUrl}}
+                @size={{18}}
+                aria-hidden='true'
+              /><strong>{{if
+                  step.approver.name
+                  step.approver.name
+                  'Unassigned'
+                }}</strong></span>
+            <span class='meta'>{{#if (this.shortDate step.decidedAt)}}<span
+                  class='mono'
+                >{{this.shortDate step.decidedAt}}</span>{{/if}}{{#if
+                step.comment
+              }}
+                ·
+                {{step.comment}}{{/if}}{{#if (this.bottleneckLabel index)}}
+                ·
+                {{this.bottleneckLabel index}}{{/if}}</span>
+            <span class='decision'>{{#if step.decision}}<DotLabel
+                  @label={{step.decision}}
+                  @hue={{this.decisionHue step.decision}}
+                />{{/if}}</span>
+          </li>
         {{else}}
-          <EmptyState
-            class='empty'
-            @texture={{false}}
-            @title='No approval chain configured'
-            @message='This record proceeds without a sign-off gate.'
-          />
-        {{/if}}
-      </div>
+          <li class='step'><span class='meta'>No approval chain configured. This
+              record proceeds without a sign-off gate.</span></li>
+        {{/each}}
+      </ol>
       <style scoped>
-        .approval-chain {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-        }
-        .chain-head {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .chain-status {
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-        }
         .steps {
-          list-style: none;
           margin: 0;
           padding: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0;
+          list-style: none;
         }
         .step {
           display: flex;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xs) 0;
-          border-bottom: 1px solid var(--border);
-        }
-        .step:last-child {
-          border-bottom: 0;
-        }
-        .step-index {
-          flex: none;
-          width: 1.25rem;
-          height: 1.25rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-4xs) var(--boxel-sp-sm);
+          min-height: 1.75rem;
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+          box-sizing: border-box;
+          border-top: 1px solid var(--border);
           font-size: var(--boxel-font-size-xs);
+        }
+        .who {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
           font-weight: 700;
-          background-color: var(--muted);
+        }
+        .meta {
+          flex: 1 1 10rem;
+          min-width: 0;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
-        .step.current .step-index {
-          background-color: var(--primary);
-          color: var(--primary-foreground);
+        .mono {
+          font-family: var(--font-mono);
         }
-        .step-body {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0.3rem;
-        }
-        .bottleneck {
-          align-self: flex-start;
-        }
-        .empty {
-          --space-9: var(--boxel-sp);
-          --space-6: var(--boxel-sp);
-          --text-heading: var(--boxel-font-size);
+        .decision {
+          margin-left: auto;
         }
       </style>
     </template>
+
+    decisionHue = (decision?: string | null) =>
+      (decision === 'approved'
+        ? 'green'
+        : decision === 'rejected'
+          ? 'red'
+          : 'amber') as 'green' | 'red' | 'amber';
   };
 
   static isolated = ApprovalChainField.embedded;

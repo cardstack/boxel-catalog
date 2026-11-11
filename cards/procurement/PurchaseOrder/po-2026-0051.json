@@ -39,7 +39,7 @@
           {
             "decision": "approved",
             "decidedAt": "2026-09-03T11:30:00.000Z",
-            "comment": "OK — commit against Q1 hardware.",
+            "comment": "OK \u2014 commit against Q1 hardware.",
             "openedAt": "2026-09-02T10:15:00.000Z"
           }
         ]
@@ -58,6 +58,11 @@
       "budget": {
         "links": {
           "self": "../ProcurementBudget/it-hardware-fy26q1"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

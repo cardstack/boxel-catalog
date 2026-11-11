@@ -12,25 +12,25 @@ import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import TextAreaField from '@cardstack/base/text-area';
 import enumField from '@cardstack/base/enum';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
 
-import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
+import { LineItem } from '../commerce/line-item';
 import { ProcurementBudget } from './procurement-budget';
-import { sumLineItems } from '@cardstack/catalog/cards/commerce/line-item-totals';
-import { Money } from '@cardstack/catalog/cards/crm/money';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { sumLineItems } from '../commerce/line-item-totals';
+import { concat } from '@ember/helper';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { List } from '@cardstack/pretui/components/list';
+import { Item } from '@cardstack/pretui/components/item';
+import { CompactFitted, CompactRow } from '../commerce/compact-parts';
 import {
   KeyValue,
   type KeyValueItem,
 } from '@cardstack/pretui/components/key-value';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import {
   stateColor,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
 
 export const REQUISITION_STATUSES = [
@@ -54,12 +54,83 @@ export const REQUISITION_STATUS_COLORS: Record<string, StateColor> = {
   rejected: stateColor('red'),
 };
 
-const STATUS_HUES: Record<string, 'slate' | 'amber' | 'green' | 'red'> = {
-  draft: 'slate',
-  submitted: 'amber',
-  'converted-to-rfq': 'green',
-  rejected: 'red',
+const STATUS_TONES: Record<
+  string,
+  'neutral' | 'warning' | 'success' | 'danger'
+> = {
+  draft: 'neutral',
+  submitted: 'warning',
+  'converted-to-rfq': 'success',
+  rejected: 'danger',
 };
+
+const BUDGET_ROW = [{ key: 'Budget', value: '' }];
+
+const usd = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+});
+
+// DateField yields local midnight, so format in local time (compact-parts'
+// fmtDate formats in UTC and shows the day before east of UTC).
+function fmtDate(d?: Date | string | null, year = true): string {
+  if (!d) return '';
+  let date = d instanceof Date ? d : new Date(d);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: year ? 'numeric' : undefined,
+  });
+}
+
+// What every format reads off the requisition, in one place.
+function reqFacts(m?: PurchaseRequisition) {
+  let status = m?.status || 'draft';
+  let label = REQUISITION_STATUS_LABELS[status] ?? 'Draft';
+  let items = (m?.lineItems ?? []).filter(Boolean);
+  let lines = items.map((li) => {
+    let qty = li?.quantity ?? 0;
+    let unit = li?.unitPrice?.amount ?? 0;
+    return {
+      description: li?.description || '—',
+      each: `${qty} × ${usd.format(unit)}`,
+      total: usd.format(qty * unit),
+    };
+  });
+  let neededBy = fmtDate(m?.neededBy);
+  let neededShort = fmtDate(m?.neededBy, false);
+  let total = usd.format(m?.estimatedTotal ?? 0);
+  let n = items.length;
+  return {
+    name: m?.cardInfo?.name?.trim() || m?.title || 'Untitled Requisition',
+    sub: [m?.requester, m?.department].filter(Boolean).join(' · '),
+    requester: m?.requester ?? '',
+    department: m?.department ?? '',
+    status,
+    statusLabel: label,
+    statusShort: label.split(' ')[0].toLowerCase(),
+    statusWord: label.split(' ')[0],
+    statusHint: label.split(' ').slice(1).join(' '),
+    tone: STATUS_TONES[status] ?? 'neutral',
+    total,
+    neededBy,
+    neededShort,
+    neededYear: m?.neededBy ? `${new Date(m.neededBy).getFullYear()}` : '',
+    fact: `Est. ${total}${neededShort ? ` · needed by ${neededShort}` : ''}`,
+    quantity: items.reduce((a, li) => a + (li?.quantity ?? 0), 0),
+    lineCount: n,
+    linesCountText: `${n}`,
+    linesLabel: `${n} line${n === 1 ? '' : 's'}`,
+    lines,
+    // one ruled row per line, keyed by the line's first word ("Laptop 40 × $1,180")
+    lineKv: lines.map((l) => ({
+      key: l.description.split(' ')[0],
+      value: l.each,
+    })),
+  };
+}
 
 export const RequisitionStatusField = markDefinition(
   enumField(StringField, {
@@ -70,188 +141,6 @@ export const RequisitionStatusField = markDefinition(
     displayName: 'Requisition Status',
   }),
 );
-
-class PurchaseRequisitionEdit extends Component<typeof PurchaseRequisition> {
-  @tracked activeSection = 'whats-needed';
-
-  sections = [
-    { id: 'whats-needed', label: "What's Needed" },
-    { id: 'line-items', label: 'Line Items' },
-    { id: 'justification', label: 'Justification & Budget' },
-  ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.req-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
-
-  <template>
-    <div class='req-edit'>
-      {{! the container element cannot be restyled by its own query — the responsive grid lives on
-          this inner wrapper instead }}
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "whats-needed") "focused"}}'
-            data-sect='whats-needed'
-          >
-            <h3>What's Needed</h3>
-            <div class='row'>
-              <FieldContainer @label='Requester' @vertical={{true}}>
-                <@fields.requester />
-              </FieldContainer>
-              <FieldContainer @label='Department' @vertical={{true}}>
-                <@fields.department />
-              </FieldContainer>
-              <FieldContainer @label='Needed by' @vertical={{true}}>
-                <@fields.neededBy />
-              </FieldContainer>
-              <FieldContainer @label='Status' @vertical={{true}}>
-                <@fields.status />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect items
-              {{if (eq this.activeSection "line-items") "focused"}}'
-            data-sect='line-items'
-          >
-            <h3>Line Items
-              <span class='sect-hint'>the estimated total is computed from these
-                lines</span></h3>
-            <FieldContainer
-              @label='Items (description, qty, unit price)'
-              @vertical={{true}}
-            >
-              <@fields.lineItems />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect
-              {{if (eq this.activeSection "justification") "focused"}}'
-            data-sect='justification'
-          >
-            <h3>Justification &amp; Budget</h3>
-            <FieldContainer @label='Business justification' @vertical={{true}}>
-              <@fields.justification />
-            </FieldContainer>
-            <FieldContainer @label='Budget to draw against' @vertical={{true}}>
-              <@fields.budget />
-            </FieldContainer>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .req-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background: var(--background);
-        color: var(--foreground);
-        /* the procurement family's brand ink, declared ONCE — a linked
-           Theme overrides via --procurement-ink */
-        --pr-ink: var(--procurement-ink, var(--primary-ink));
-        --pr-ink-fg: var(--procurement-ink-fg, var(--card));
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect-nav {
-        position: sticky;
-        top: 0;
-        --edit-section-nav-ink: var(--pr-ink);
-        --edit-section-nav-ink-fg: var(--pr-ink-fg);
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      .sect.focused {
-        outline-color: var(--pr-ink);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--pr-ink) 12%, transparent);
-      }
-      .sect.items {
-        border-left: 0.1875rem solid var(--pr-ink);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-family: var(--font-sans);
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
-        align-items: start;
-      }
-      @container edit (width < 640px) {
-        .row {
-          grid-template-columns: 1fr;
-        }
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
-        }
-      }
-    </style>
-  </template>
-}
 
 // The internal "I need to buy X" request that starts the Procure-to-Pay
 // audit trail. No vendor is involved yet: a requisition names what is
@@ -290,197 +179,259 @@ export class PurchaseRequisition extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
+    get f() {
+      return reqFacts(this.args.model as PurchaseRequisition);
     }
-    get statusLabel() {
-      return (
-        REQUISITION_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft'
-      );
+    get request(): KeyValueItem[] {
+      return [
+        { key: 'Requester', value: this.f.requester || '—' },
+        { key: 'Department', value: this.f.department || '—' },
+        { key: 'Needed by', value: this.f.neededBy || '—' },
+        { key: 'Estimated total', value: this.f.total },
+      ];
     }
-    get total() {
-      return this.args.model?.estimatedTotal ?? 0;
-    }
-    get timeline(): KeyValueItem[] {
-      return [{ key: 'Needed by', value: this.neededByLabel }];
-    }
-    get neededByLabel() {
-      let d = this.args.model?.neededBy;
-      return d
-        ? d.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })
-        : '—';
+    get details(): KeyValueItem[] {
+      return [
+        { key: 'Estimated total', value: this.f.total },
+        { key: 'Needed by', value: this.f.neededBy || '—' },
+        { key: 'Requester', value: this.f.requester || '—' },
+        { key: 'Department', value: this.f.department || '—' },
+        ...this.f.lineKv,
+        { key: 'Lines', value: `${this.f.lineCount}` },
+        { key: 'Status', value: this.f.statusLabel },
+      ];
     }
     <template>
-      <article class='pr'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Purchase Requisition</p>
-            <h1>{{@model.title}}</h1>
-            <p class='sub'>{{@model.requester}} · {{@model.department}}</p>
-          </div>
-          <div class='head-right'>
-            <StatePill
-              @label={{this.statusLabel}}
-              @hue={{this.statusHue}}
-              @emphatic={{true}}
-            />
-            <Money class='total' @amount={{this.total}} @code='USD' />
-            <span class='total-label'>estimated</span>
-          </div>
-        </header>
-
-        <div class='grid'>
-          <section class='panel span'>
-            <h2>Requested Items</h2>
-            <div class='lines'>
-              {{#each @fields.lineItems as |Line|}}
-                <Line />
-              {{else}}
-                <EmptyState
-                  style={{COMPACT_EMPTY_STYLE}}
-                  @texture={{false}}
-                  @title='No items added yet'
-                />
-              {{/each}}
+      <article class='ip'>
+        <section class='card'>
+          <header class='ih'>
+            <Avatar @name='Pr' @shape='square' @size={{24}} />
+            <div class='id'>
+              <h1>{{this.f.name}}</h1>
+              <p class='meta'>{{this.f.sub}}</p>
             </div>
-          </section>
-
-          <section class='panel'>
-            <h2>Timeline</h2>
-            <KeyValue class='facts' @items={{this.timeline}} />
-          </section>
-
-          <section class='panel'>
-            <h2>Budget</h2>
-            {{#if @model.budget}}
-              <@fields.budget @format='atom' />
-            {{else}}
-              <EmptyState
-                style={{COMPACT_EMPTY_STYLE}}
-                @texture={{false}}
-                @title='No budget linked'
+            <span class='tags'>
+              <Chip
+                @label={{this.f.status}}
+                @tone={{this.f.tone}}
+                @appearance='plain'
               />
-            {{/if}}
-          </section>
-
-          {{#if @model.justification}}
-            <section class='panel span'>
+              <Chip @label={{this.f.linesLabel}} @appearance='plain' />
+            </span>
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Estimated total'
+              @value={{this.f.total}}
+              @roll={{false}}
+              @hint={{this.f.linesLabel}}
+            />
+            <Stat
+              @label='Needed by'
+              @value={{if this.f.neededShort this.f.neededShort '—'}}
+              @roll={{false}}
+              @hint={{this.f.neededYear}}
+            />
+            <Stat
+              @label='Quantity'
+              @value={{this.f.quantity}}
+              @roll={{false}}
+              @hint={{concat 'units across ' this.f.linesLabel}}
+            />
+            <Stat
+              @label='Status'
+              @tone={{this.f.tone}}
+              @value={{this.f.statusWord}}
+              @roll={{false}}
+              @hint={{this.f.statusHint}}
+            />
+          </div>
+        </section>
+        <div class='cols'>
+          <div class='col'>
+            <section class='card'>
               <h2>Justification</h2>
-              <p class='just'>{{@model.justification}}</p>
+              <p class='body'>{{if
+                  @model.justification
+                  @model.justification
+                  '—'
+                }}</p>
             </section>
-          {{/if}}
+            <section class='card'>
+              <h2>Line items</h2>
+              {{#if this.f.lines.length}}
+                <List
+                  class='lines'
+                  @items={{this.f.lines}}
+                  @size='xs'
+                  @label='Line items'
+                >
+                  <:item as |line|>
+                    <Item
+                      @title={{line.description}}
+                      @description={{line.each}}
+                    >
+                      <:trailing><span
+                          class='mono'
+                        >{{line.total}}</span></:trailing>
+                    </Item>
+                  </:item>
+                </List>
+              {{else}}
+                <p class='body muted'>No items added yet</p>
+              {{/if}}
+            </section>
+          </div>
+          <div class='col'>
+            <section class='card'>
+              <h2>Request</h2>
+              <KeyValue
+                class='kv'
+                @items={{this.request}}
+                @divided={{true}}
+                @labelStyle='eyebrow'
+              />
+            </section>
+            <section class='card'>
+              <h2>Linked</h2>
+              {{#if @model.budget}}
+                <KeyValue
+                  class='kv'
+                  @items={{BUDGET_ROW}}
+                  @divided={{true}}
+                  @labelStyle='eyebrow'
+                >
+                  <:value><@fields.budget
+                      @format='atom'
+                      @displayContainer={{false}}
+                    /></:value>
+                </KeyValue>
+              {{else}}
+                <p class='body muted'>No budget linked</p>
+              {{/if}}
+            </section>
+            <section class='card'>
+              <h2>Details</h2>
+              <KeyValue
+                class='kv'
+                @items={{this.details}}
+                @divided={{true}}
+                @labelStyle='eyebrow'
+              />
+            </section>
+          </div>
         </div>
       </article>
       <style scoped>
-        /* A linked card sizes to its content. The card container's base
-           height: 100% would otherwise fill a stretched grid panel and spill
-           past the heading above it. */
-        .pr :deep(.field-component-card.embedded-format) {
-          height: auto;
-        }
-        .pr {
+        .ip {
+          --text-stat: 1.375rem;
+          --text-ui-xs: 0.6875rem;
+          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-color: var(--muted-foreground);
+          --boxel-sp-xs: 0.35rem;
           container-type: inline-size;
-          padding: var(--boxel-sp-lg);
-        }
-        .head {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border);
-          padding-bottom: var(--boxel-sp);
-          margin-bottom: var(--boxel-sp-lg);
-        }
-        .kicker {
-          margin: 0;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        h1 {
-          margin: var(--boxel-sp-5xs) 0;
-          font-size: 1.5rem;
-          line-height: 1.2;
-        }
-        .sub {
-          margin: 0;
-          color: var(--muted-foreground);
-        }
-        .head-right {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: var(--boxel-sp-5xs);
-        }
-        .total {
-          font-size: 1.25rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
-        .total-label {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: var(--boxel-sp);
+          gap: 0.5rem;
+          padding: 0.75rem;
+          font-size: 0.75rem;
+          line-height: 1.25;
+          color: var(--card-foreground);
         }
-        .panel {
+        .card {
+          min-inline-size: 0;
           border: 1px solid var(--border);
           border-radius: var(--radius);
-          padding: var(--boxel-sp);
           background: var(--card);
+          overflow-x: auto;
         }
-        .panel.span {
-          grid-column: 1 / -1;
+        .ih {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 0.625rem;
+          padding: 0.625rem;
         }
-        h2 {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
+        .id {
+          flex: 1;
+          min-inline-size: 8rem;
+        }
+        h1 {
+          margin: 0;
+          font-family: var(--font-sans);
+          font-size: 0.8125rem;
+          font-weight: 700;
+        }
+        .meta {
+          margin: 0;
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
-        /* Pret UI KeyValue at the panel's key and value sizes */
-        .facts {
-          --text-ui: 0.8125rem;
-          --text-ui-md: 0.875rem;
+        .tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.625rem;
         }
-        .lines {
+        .stats {
           display: grid;
-          gap: var(--boxel-sp-5xs);
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          border-block-start: 1px solid var(--border);
         }
-        .just {
+        .stats > * {
+          padding: 0.5rem 0.625rem;
+          box-shadow:
+            1px 0 0 var(--border),
+            0 1px 0 var(--border);
+        }
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+          gap: 0.5rem;
+          align-items: start;
+        }
+        .col {
+          display: grid;
+          gap: 0.5rem;
+          min-inline-size: 0;
+        }
+        h2 {
           margin: 0;
-          font-size: 0.875rem;
+          padding: 0.4375rem 0.625rem;
+          border-block-end: 1px solid var(--border);
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+        .body {
+          margin: 0;
+          padding: 0.4375rem 0.625rem;
           white-space: pre-wrap;
         }
-        @container (max-width: 560px) {
-          .grid {
-            grid-template-columns: 1fr;
+        .muted {
+          color: var(--muted-foreground);
+        }
+        .lines {
+          padding-inline: 0.625rem;
+          font-size: 0.75rem;
+        }
+        .mono,
+        .kv {
+          font-variant-numeric: tabular-nums;
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+        }
+        .kv {
+          padding: 0.25rem 0.625rem;
+          row-gap: 0;
+        }
+        @container (width < 40rem) {
+          .cols,
+          .stats {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
           }
-          .head {
-            flex-direction: column;
-          }
-          .head-right {
-            align-items: flex-start;
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
           }
         }
       </style>
@@ -488,164 +439,184 @@ export class PurchaseRequisition extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
+    get f() {
+      return reqFacts(this.args.model as PurchaseRequisition);
     }
-    get statusLabel() {
-      return (
-        REQUISITION_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft'
-      );
-    }
-    get total() {
-      return this.args.model?.estimatedTotal ?? 0;
+    get items(): KeyValueItem[] {
+      let rows: KeyValueItem[] = [
+        { key: 'Estimated total', value: this.f.total },
+        { key: 'Needed by', value: this.f.neededBy || '—' },
+        { key: 'Requester', value: this.f.requester || '—' },
+        { key: 'Department', value: this.f.department || '—' },
+        ...this.f.lineKv,
+      ];
+      if (this.args.model?.budget) rows.push(BUDGET_ROW[0]);
+      return rows;
     }
     <template>
-      <div class='row'>
-        <div class='who'>
-          <span class='name'>{{@model.title}}</span>
-          <span class='meta'>{{@model.requester}}
-            ·
-            {{@model.department}}</span>
-        </div>
-        <Money class='amount' @amount={{this.total}} @code='USD' />
-        <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
-      </div>
+      <article class='emb'>
+        <header class='eh'>
+          <div class='eh1'>
+            <Avatar @name='Pr' @shape='square' @size={{20}} />
+            <strong class='nm'>{{this.f.name}}</strong>
+            <Chip
+              @label={{this.f.status}}
+              @tone={{this.f.tone}}
+              @appearance='plain'
+            />
+          </div>
+          <div class='eh2'>
+            <span class='meta'>{{this.f.sub}}</span>
+            <Chip @label={{this.f.linesLabel}} @appearance='plain' />
+          </div>
+        </header>
+        <p class='fact'>Est.
+          <strong>{{this.f.total}}</strong>{{#if this.f.neededBy}}
+            · needed by
+            {{this.f.neededBy}}{{/if}}</p>
+        <KeyValue
+          class='kv'
+          @items={{this.items}}
+          @divided={{true}}
+          @labelStyle='eyebrow'
+        >
+          <:value as |row|>
+            {{#if (eq row.key 'Budget')}}<@fields.budget
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}{{row.value}}{{/if}}
+          </:value>
+        </KeyValue>
+      </article>
       <style scoped>
-        .row {
+        .emb {
+          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-color: var(--muted-foreground);
+          --boxel-sp-xs: 0.35rem;
+          font-size: 0.75rem;
+          line-height: 1.25;
+          color: var(--card-foreground);
+        }
+        .eh {
           display: grid;
-          grid-template-columns: 1fr auto auto;
-          gap: var(--boxel-sp-sm);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          gap: 0.25rem;
+          padding: 0.4375rem 0.625rem;
+          border-block-end: 1px solid var(--border);
         }
-        .who {
+        .eh1,
+        .eh2 {
           display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 0.375rem 0.625rem;
         }
-        .name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        .nm {
+          flex: 1;
+          min-inline-size: 6rem;
+          font-weight: 700;
+        }
+        .eh2 {
+          justify-content: space-between;
         }
         .meta {
-          font-size: 0.8125rem;
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
-        .amount {
-          font-weight: 600;
+        .fact {
+          margin: 0;
+          padding: 0.4375rem 0.625rem;
+          border-block-end: 1px solid var(--border);
+        }
+        .kv {
+          padding: 0.25rem 0.625rem;
+          row-gap: 0;
           font-variant-numeric: tabular-nums;
-          min-width: 5.5rem;
-          text-align: right;
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
+    get f() {
+      return reqFacts(this.args.model as PurchaseRequisition);
+    }
     <template>
-      <span class='atom'>{{@model.title}}</span>
+      <span class='atom'>
+        <Avatar @name='Pr' @shape='square' @size={{16}} />
+        <span class='name'>{{this.f.name}}</span>
+        <Chip
+          class='st'
+          @label={{this.f.statusShort}}
+          @tone={{this.f.tone}}
+          @appearance='plain'
+        />
+      </span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          min-inline-size: 0;
+          max-inline-size: 100%;
+          font-size: 0.6875rem;
+          font-weight: 600;
+        }
+        .name {
+          min-inline-size: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .st {
+          flex: none;
+          font-weight: 400;
+          color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
+    get f() {
+      return reqFacts(this.args.model as PurchaseRequisition);
     }
-    get statusLabel() {
-      return (
-        REQUISITION_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft'
-      );
-    }
-    get total() {
-      return this.args.model?.estimatedTotal ?? 0;
-    }
-    get itemCount() {
-      return (this.args.model?.lineItems ?? []).length;
+    get tags() {
+      return [{ label: this.f.status, tone: this.f.tone }];
     }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.title}}</span>
-        <span class='fit-sub'>{{@model.requester}}
-          ·
-          {{this.itemCount}}
-          items</span>
-        <div class='fit-foot'>
-          <Money class='fit-total' @amount={{this.total}} @code='USD' />
-          <StatePill
-            class='fit-status'
-            @label={{this.statusLabel}}
-            @hue={{this.statusHue}}
-          />
-        </div>
-      </div>
-      <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .fit-sub {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fit-foot {
-          margin-top: auto;
-          display: none;
-          justify-content: space-between;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          font-size: 0.8125rem;
-        }
-        .fit-total {
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-status {
-          min-width: 0;
-        }
-        @container fitted-card (height > 110px) {
-          .fit-foot {
-            display: flex;
-          }
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-sub {
-            display: none;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-      </style>
+      <CompactFitted
+        @mark='Pr'
+        @title={{this.f.name}}
+        @sub={{this.f.sub}}
+        @fact={{this.f.fact}}
+        @big={{this.f.total}}
+        @bigLabel='Est. total'
+        @tags={{this.tags}}
+      >
+        <:rows>
+          {{#if this.f.neededBy}}<CompactRow
+              @k='Needed by'
+              @v={{this.f.neededBy}}
+            />{{/if}}
+          {{#if this.f.requester}}<CompactRow
+              @k='Requester'
+              @v={{this.f.requester}}
+            />{{/if}}
+          {{#if this.f.department}}<CompactRow
+              @k='Department'
+              @v={{this.f.department}}
+            />{{/if}}
+          {{#each this.f.lineKv as |row|}}<CompactRow
+              @k={{row.key}}
+              @v={{row.value}}
+            />{{/each}}
+          <CompactRow @k='Lines' @v={{this.f.linesCountText}} />
+          {{#each this.f.lines as |line|}}<CompactRow
+              @k={{line.description}}
+              @v={{line.total}}
+            />{{/each}}
+        </:rows>
+      </CompactFitted>
     </template>
   };
 
@@ -654,5 +625,4 @@ export class PurchaseRequisition extends CardDef {
   // schema order. Three sections — no nav rail needed.
   // estimatedTotal and title are computed (computeVia) and deliberately
   // excluded from the form.
-  static edit = PurchaseRequisitionEdit;
 }

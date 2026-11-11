@@ -33,6 +33,11 @@
         "links": {
           "self": "../Account/brightleaf-studio"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

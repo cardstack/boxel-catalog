@@ -4,178 +4,16 @@ import {
   field,
   contains,
   linksTo,
-  linksToMany,
   StringField,
 } from '@cardstack/base/card-api';
-import { tracked } from '@glimmer/tracking';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { Field } from '@cardstack/pretui/components/field';
 import HeadsetIcon from '@cardstack/boxel-icons/headset';
-
-import { AppConfigurationField } from '../../fields/app-configuration/app-configuration-field';
+import { DeskSettingsField } from '../service-desk/desk-settings-field';
 import { Employee } from '../hr/employee';
-import { Role } from '../service-desk/role';
 import { Workflow } from '../service-desk/workflow';
-import { EditSectionNav } from '../../components/edit-section-nav';
-
 import { SupportDesk } from './components/support-desk';
-
-class SupportCaseAppEdit extends Component<typeof SupportCaseApp> {
-  @tracked activeSection = 'identity';
-
-  sections = [
-    { id: 'identity', label: 'Desk' },
-    { id: 'config', label: 'Configuration' },
-    { id: 'links', label: 'Process & people' },
-  ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.desk-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
-
-  <template>
-    <div class='desk-edit'>
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "identity") "focused"}}'
-            data-sect='identity'
-          >
-            <h3>Desk</h3>
-            <Field @label='Name'>
-              <@fields.appName />
-            </Field>
-            <Field @label='Operator (who is at the desk)'>
-              <@fields.operator />
-            </Field>
-          </section>
-          <section
-            class='sect {{if (eq this.activeSection "config") "focused"}}'
-            data-sect='config'
-          >
-            <h3>Configuration
-              <span class='sect-hint'>the Setup tab edits this step by step</span></h3>
-            {{! The id counter and setup progress are written by the desk and
-                the import, so only the settings an admin owns are editable. }}
-            <Field @label='Case ID pattern'>
-              <@fields.config.idPattern />
-            </Field>
-            <Field @label='Business hours'>
-              <@fields.config.defaultSlaWindow />
-            </Field>
-            <Field @label='Integrations'>
-              <@fields.config.integrations />
-            </Field>
-            <Field @label='Automation policies'>
-              <@fields.config.policies />
-            </Field>
-          </section>
-          <section
-            class='sect {{if (eq this.activeSection "links") "focused"}}'
-            data-sect='links'
-          >
-            <h3>Process & people</h3>
-            <Field @label='Default workflow'>
-              <@fields.defaultWorkflow />
-            </Field>
-            <Field @label='Roles'>
-              <@fields.roles />
-            </Field>
-            <Field @label='Round-robin pool'>
-              <@fields.candidatePool />
-            </Field>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      /* Same edit shell as Case / Escalation in this kit (edit-card Rule 1):
-         the root is the named container AND the scroller, so the rail can
-         be sticky and the query below can actually fire. */
-      .desk-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background: var(--background);
-        color: var(--foreground);
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        gap: var(--boxel-sp);
-        align-items: start;
-      }
-      .sect-nav {
-        position: sticky;
-        top: 0;
-      }
-      @container edit (width < 640px) {
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        .sect-nav {
-          position: static;
-        }
-      }
-      .sects {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-        padding: var(--boxel-sp);
-        scroll-margin-top: var(--boxel-sp);
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-      }
-      /* the section the rail points at mirrors the rail's active state */
-      .sect.focused {
-        outline-color: var(--foreground);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--foreground) 12%, transparent);
-      }
-      .sect h3 {
-        margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
-    </style>
-  </template>
-}
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { FitTile } from '../shared/fit-tile';
+import { StatusChip } from '@cardstack/pretui/components/status-chip';
 
 /**
  * Support Ops Command Center — the operations layer ABOVE the ServiceDesk
@@ -193,14 +31,10 @@ export class SupportCaseApp extends CardDef {
   static prefersWideFormat = true;
 
   @field appName = contains(StringField);
-  @field config = contains(AppConfigurationField);
+  @field config = contains(DeskSettingsField);
   @field defaultWorkflow = linksTo(() => Workflow);
   @field operator = linksTo(() => Employee, {
     description: 'Who is at the desk — claims and acks are attributed to them.',
-  });
-  @field roles = linksToMany(() => Role);
-  @field candidatePool = linksToMany(() => Employee, {
-    description: 'Round-robin pool: commands take caller-loaded lists.',
   });
 
   @field title = contains(StringField, {
@@ -230,7 +64,106 @@ export class SupportCaseApp extends CardDef {
   });
 
   static isolated = SupportDesk;
-  static edit = SupportCaseAppEdit;
+
+  static embedded = class Embedded extends Component<typeof SupportCaseApp> {
+    <template>
+      <div class='sc-emb'>
+        <Avatar
+          @name={{if @model.title @model.title ''}}
+          @hue='var(--primary)'
+          @size={{32}}
+          aria-hidden='true'
+        />
+        <span class='sc-emb-who'>
+          <strong class='sc-emb-name'>{{@model.title}}</strong>
+          <span class='sc-emb-sub'>Clocks, ladders, ownership and workflow</span>
+        </span>
+      </div>
+      <style scoped>
+        .sc-emb {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          min-width: 0;
+        }
+        .sc-emb-who {
+          flex: 1;
+          display: grid;
+          min-width: 0;
+        }
+        .sc-emb-name,
+        .sc-emb-sub {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .sc-emb-name {
+          font-weight: 600;
+        }
+        .sc-emb-sub {
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground);
+        }
+      </style>
+    </template>
+  };
+
+  static atom = class Atom extends Component<typeof SupportCaseApp> {
+    <template>
+      <span class='sc-atom'>{{@model.title}}</span>
+      <style scoped>
+        .sc-atom {
+          white-space: nowrap;
+        }
+      </style>
+    </template>
+  };
+
+  // Fitted, in FITTED-RULE priority: who (desk), setup state, the one fact that
+  // explains the desk's numbering, then the operator and the default workflow
+  // in their own atom formats.
+  static fitted = class Fitted extends Component<typeof SupportCaseApp> {
+    get setupState(): string {
+      let c = this.args.model?.config;
+      return c?.setupCompletedAt
+        ? 'Configured'
+        : `Setup step ${c?.setupStep ?? 1}`;
+    }
+    get numbering(): string | undefined {
+      let c = this.args.model?.config;
+      let parts = [
+        c?.identifierSeq != null ? `Next case no. ${c.identifierSeq + 1}` : '',
+        c?.timeZone ?? '',
+      ].filter(Boolean);
+      return parts.length ? parts.join(' · ') : undefined;
+    }
+    <template>
+      <FitTile>
+        <:avatar><Avatar
+            @name={{if @model.title @model.title ''}}
+            @hue='var(--primary)'
+            @size={{32}}
+            aria-hidden='true'
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>Clocks, ladders, ownership and workflow</:subtitle>
+        <:status><StatusChip @value={{this.setupState}} /></:status>
+        <:fact>{{this.numbering}}</:fact>
+        <:relations>
+          {{#if @model.operator}}
+            <@fields.operator @format='atom' @displayContainer={{false}} />
+          {{/if}}
+          {{#if @model.defaultWorkflow}}
+            <@fields.defaultWorkflow
+              @format='atom'
+              @displayContainer={{false}}
+            />
+          {{/if}}
+        </:relations>
+      </FitTile>
+    </template>
+  };
 }
 
 export default SupportCaseApp;

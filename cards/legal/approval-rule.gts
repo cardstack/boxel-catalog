@@ -13,20 +13,25 @@ import TextAreaField from '@cardstack/base/text-area';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import enumField from '@cardstack/base/enum';
 import GavelIcon from '@cardstack/boxel-icons/gavel';
-import ScaleIcon from '@cardstack/boxel-icons/scale';
-import UsersIcon from '@cardstack/boxel-icons/users';
-import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 
+import { ContractTypeField, contractTypeLabel } from './contract-type';
+import { formatMoney } from '../commerce/line-item-totals';
 import {
-  ContractTypeField,
-  contractTypeLabel,
-} from '@cardstack/catalog/cards/legal/contract-type';
-import { add } from '@cardstack/boxel-ui/helpers';
-import { Alert } from '@cardstack/pretui/components/alert';
-
-import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
+  AtomLayout,
+  EmbLayout,
+  Facts,
+  FitLayout,
+  IsoLayout,
+  Mark,
+  Rows,
+  Section,
+  Text,
+  stats,
+  type Dot,
+  type Fact,
+  type Row,
+} from './compact-card';
+import { cap, longMoney, shortMoney } from '../shared/compact-format';
 
 /**
  * APPROVAL RULE — a declarative approval-routing engine.
@@ -112,326 +117,87 @@ export class ApprovalRule extends CardDef {
     },
   });
 
-  /**
-   * The domain question: "when does this fire, and who does it summon?"
-   *
-   * So the IF and the THEN are the whole card, rendered as the two halves of
-   * one sentence — the chain is the hero because that is the consequence, and
-   * the conditions sit above it because that is the trigger. A reader checking
-   * whether a rule is too broad reads the top; one checking whether it routes
-   * correctly reads the bottom.
-   */
   static isolated = class Isolated extends Component<typeof ApprovalRule> {
-    get roles(): string[] {
-      return (this.args.model?.requiredRoles ?? []).filter(Boolean) as string[];
-    }
-    get inactive() {
-      return this.args.model?.isActive === false;
+    get v() {
+      return ruleView(this.args.model);
     }
     <template>
-      <article class='ar-page'>
-        <header class='hero'>
-          <div class='hero-id'>
-            <p class='kicker'><GavelIcon role='presentation' />Approval rule</p>
-            <h1>{{@model.cardTitle}}</h1>
-            <div class='hero-pills'>
-              {{#if this.inactive}}
-                <StatePill @label='Inactive' @hue='slate' @dot={{true}} />
-              {{else}}
-                <StatePill @label='Active' @hue='green' @dot={{true}} />
-              {{/if}}
-              {{#if @model.isParallel}}
-                <StatePill @label='Parallel' @hue='blue' />
-              {{else}}
-                <StatePill @label='Sequential' @hue='slate' />
-              {{/if}}
-            </div>
-          </div>
-          <div class='hero-figure'>
-            <span class='fig-n'>{{this.roles.length}}</span>
-            <span class='fig-u'>approvers</span>
-          </div>
-        </header>
-
-        <section class='panel'>
-          <h2><ScaleIcon role='presentation' />Fires when</h2>
-          <p class='cond'>{{describeRule @model}}</p>
-          <p class='fine'>Conditions are AND-ed — every populated one must hold.
-            To express OR, write a second rule; a rule with nested boolean
-            groups is unreadable at exactly the moment someone is working out
-            why they were asked to approve something.</p>
-        </section>
-
-        <section class='panel'>
-          <h2><UsersIcon role='presentation' />Then require</h2>
-          {{#if this.roles}}
-            <ol class='chain'>
-              {{#each this.roles as |r i|}}
-                <li class='step'>
-                  <span class='step-n'>{{if
-                      @model.isParallel
-                      'Any order'
-                      (add i 1)
-                    }}</span>
-                  <span class='step-who'>{{r}}</span>
-                </li>
-              {{/each}}
-            </ol>
-            <p class='fine'>{{if
-                @model.isParallel
-                'Parallel — none blocks the others, and all must clear before signature.'
-                'Sequential — each approver is asked only once the previous has cleared.'
-              }}</p>
-          {{else}}
-            <Alert
-              @tone='attention'
-              @title='No approvers listed'
-              style={{ALERT_STYLE.attention}}
-            >A rule that fires and summons nobody blocks a contract with no way
-              forward. Add at least one role, or deactivate the rule.</Alert>
+      <IsoLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @statuses={{this.v.statuses}}
+        @stats={{this.v.stats}}
+      >
+        <:mark><Mark @text='AR' @size='lg' /></:mark>
+        <:main>
+          {{#if @model.guidance}}
+            <Section @title='Guidance'><Text
+              >{{@model.guidance}}</Text></Section>
           {{/if}}
-        </section>
+          <Section @title='Required approvers' @flush={{true}}>
+            {{#if this.v.steps.length}}
+              <Rows @rows={{this.v.steps}} />
+            {{else}}
+              <Text>No approvers listed. A rule that fires and summons nobody
+                blocks the contract; add a role or deactivate the rule.</Text>
+            {{/if}}
+          </Section>
+          <Section @title='Applies when'><Facts
+              @items={{this.v.conditions}}
+            /></Section>
+        </:main>
+        <:side>
+          <Section @title='Details'><Facts
+              @items={{this.v.details}}
+            /></Section>
+        </:side>
+      </IsoLayout>
+    </template>
+  };
 
-        {{#if @model.guidance}}
-          <section class='panel'>
-            <h2><ShieldCheckIcon role='presentation' />Guidance</h2>
-            <p class='fine is-body'>{{@model.guidance}}</p>
-          </section>
-        {{/if}}
-      </article>
-
-      <style scoped>
-        .ar-page {
-          container-type: inline-size;
-          container-name: ar-page;
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-          color: var(--foreground);
-          font-family: var(--font-sans);
-        }
-        .hero {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: var(--boxel-sp-lg);
-          border-bottom: 2px solid var(--foreground);
-          padding-bottom: var(--boxel-sp);
-        }
-        .hero-id {
-          display: flex;
-          flex-direction: column;
-          gap: 0.375rem;
-          min-width: 0;
-        }
-        .hero-pills {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.375rem;
-        }
-        .kicker {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .kicker :deep(svg) {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-        }
-        /* The heading is the one shout. The figure on the right supports it
-           and is deliberately smaller — a card is opened for the thing it IS,
-           and the number qualifies that rather than replacing it. */
-        .hero h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          line-height: 1.15;
-          letter-spacing: -0.015em;
-        }
-        .hero-figure {
-          flex: none;
-          text-align: right;
-          line-height: 1;
-        }
-        .fig-n {
-          display: block;
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-size: 1.45rem;
-          font-weight: 600;
-          letter-spacing: -0.03em;
-        }
-        .fig-u {
-          display: block;
-          margin-top: 0.25rem;
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground);
-        }
-        .panel {
-          padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          border-radius: var(--radius);
-          background: var(--panel-bg);
-        }
-        .panel h2 {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-        }
-        .panel h2 :deep(svg) {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          color: var(--muted-foreground);
-        }
-        .cond {
-          margin: 0;
-          font-size: var(--boxel-font-size);
-          line-height: 1.55;
-          max-width: 68ch;
-        }
-        .chain {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-          gap: var(--boxel-sp-xs) var(--boxel-sp);
-        }
-        .step {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          padding-top: 0.4375rem;
-          border-top: 4px solid var(--foreground);
-          min-width: 0;
-        }
-        .step-n {
-          font-family: var(--font-mono);
-          font-size: 0.625rem;
-          letter-spacing: 0.09em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .step-who {
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 620;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fine {
-          margin: var(--boxel-sp-xs) 0 0;
-          font-size: var(--boxel-font-size-xs);
-          line-height: 1.5;
-          color: var(--muted-foreground);
-          max-width: 68ch;
-        }
-        .fine.is-body {
-          font-size: var(--boxel-font-size-sm);
-          color: var(--foreground);
-        }
-        @container ar-page (width < 560px) {
-          .hero {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: var(--boxel-sp);
-          }
-          .hero-figure {
-            text-align: left;
-          }
-          .chain {
-            grid-template-columns: 1fr;
-          }
-        }
-      </style>
+  static embedded = class Embedded extends Component<typeof ApprovalRule> {
+    get v() {
+      return ruleView(this.args.model);
+    }
+    <template>
+      <EmbLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.chain}}
+        @facts={{this.v.embFacts}}
+      >
+        <:mark><Mark @text='AR' /></:mark>
+      </EmbLayout>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof ApprovalRule> {
-    get roleLine(): string {
-      let r = (this.args.model?.requiredRoles ?? []).filter(Boolean);
-      return r.length ? r.join(' \u2192 ') : 'No approvers';
+    get v() {
+      return ruleView(this.args.model);
     }
     <template>
-      <article class='fit'>
-        <span class='r-head'>
-          {{#if @model.isActive}}
-            <StatePill @label='Active' @hue='green' @dot={{true}} />
-          {{else}}
-            <StatePill @label='Inactive' @hue='slate' @dot={{true}} />
-          {{/if}}
-        </span>
-        <span class='r-body'>{{@model.cardTitle}}</span>
-        <span class='r-meta'>{{this.roleLine}}</span>
-      </article>
-
-      <style scoped>
-        .fit {
-          width: 100%;
-          height: 100%;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 2px;
-          padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
-          overflow: hidden;
-          font-family: var(--font-sans);
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb), 10cqb),
-            0.9375rem
-          );
-        }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-body {
-          font-size: calc(var(--type-base) * 1.2);
-          font-weight: 650;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-        }
-        .r-meta {
-          font-size: var(--type-base);
-          line-height: 1.25;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        @container fitted-card (height <= 65px) {
-          .r-meta {
-            display: none;
-          }
-        }
-        @container fitted-card (height <= 45px) {
-          .r-head {
-            display: none;
-          }
-        }
-      </style>
+      <FitLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.chain}}
+        @facts={{this.v.embFacts}}
+        @stats={{this.v.fitStats}}
+      >
+        <:mark><Mark @text='AR' /></:mark>
+      </FitLayout>
     </template>
   };
 
+  static atom = class Atom extends Component<typeof ApprovalRule> {
+    <template>
+      <AtomLayout @title={{@model.cardTitle}}><:mark><Mark
+            @text='AR'
+            @size='sm'
+          /></:mark></AtomLayout>
+    </template>
+  };
   /** The rule rendered as the sentence it will be explained with. */
   @field cardDescription = contains(StringField, {
     computeVia: function (this: ApprovalRule) {
@@ -515,4 +281,91 @@ export function evaluateRules(rules: any[], subject: RuleSubject) {
       roles: (r?.requiredRoles ?? []).filter(Boolean) as string[],
       isParallel: Boolean(r?.isParallel),
     }));
+}
+
+/** The strings every ApprovalRule format shows, read once from the model. */
+function ruleView(m?: Partial<ApprovalRule>) {
+  let roles = (m?.requiredRoles ?? []).filter(Boolean) as string[];
+  let parallel = Boolean(m?.isParallel);
+  let order = parallel ? 'parallel' : 'sequential';
+  let types = ((m?.appliesToTypes ?? []).filter(Boolean) as string[]).map((t) =>
+    contractTypeLabel(t),
+  );
+  let min = m?.minValue?.amount;
+  let code = m?.minValue?.currency?.code;
+  let active = m?.isActive !== false;
+  let priority = typeof m?.priority === 'number' ? String(m.priority) : '—';
+  let details: Fact[] = [
+    { key: 'Minimum value', value: longMoney(min, code), mono: true },
+    { key: 'Applies to', value: types.length ? types.join(', ') : 'Any type' },
+    { key: 'Approvers', value: roles.length ? roles.join(', ') : '—' },
+    { key: 'Order', value: cap(order) },
+    { key: 'Priority', value: priority, mono: true },
+    { key: 'Status', value: active ? 'Active' : 'Inactive' },
+  ];
+  return {
+    title: m?.cardTitle ?? 'Untitled rule',
+    subtitle: `Priority ${priority} · ${order} · ${roles.length} approver${
+      roles.length === 1 ? '' : 's'
+    }`,
+    state: {
+      label: active ? 'active' : 'inactive',
+      tone: active ? 'success' : 'neutral',
+    } as Dot,
+    statuses: [
+      {
+        label: active ? 'active' : 'inactive',
+        tone: active ? 'success' : 'neutral',
+      },
+      ...types.map((t) => ({ label: t.toLowerCase() })),
+    ] as Dot[],
+    stats: stats([
+      {
+        label: 'Threshold',
+        value: shortMoney(min, code),
+        hint: types.length
+          ? `${types.join(', ').toLowerCase()} contracts`
+          : 'any contract',
+      },
+      {
+        label: 'Approvers',
+        value: String(roles.length),
+        hint: roles.join(', '),
+      },
+      { label: 'Priority', value: priority, hint: order },
+    ]),
+    fitStats: [
+      { key: 'Threshold', value: shortMoney(min, code) },
+      { key: 'Approvers', value: String(roles.length) },
+      { key: 'Priority', value: priority },
+    ],
+    chain: roles.length
+      ? `${roles.join(' → ')}${parallel ? ', in any order' : ', one after another'}`
+      : 'No approvers',
+    steps: roles.map((r, i) => ({
+      title: parallel ? r : `${i + 1} · ${r}`,
+      dot: { label: parallel ? 'any order' : `step ${i + 1}`, tone: 'info' },
+    })) as Row[],
+    conditions: [
+      { key: 'Contract type', value: types.length ? types.join(', ') : 'any' },
+      {
+        key: 'Value at least',
+        value: typeof min === 'number' ? longMoney(min, code) : 'any',
+        mono: typeof min === 'number',
+      },
+      {
+        key: 'Risk at least',
+        value: m?.minRiskGrade ? cap(m.minRiskGrade) : 'any',
+      },
+      {
+        key: 'Sensitive data',
+        value: m?.requiresSensitiveData ? 'required' : 'any',
+      },
+    ] as Fact[],
+    details: [
+      ...details,
+      ...roles.map((r, i) => ({ key: `Step ${i + 1}`, value: r })),
+    ],
+    embFacts: details,
+  };
 }

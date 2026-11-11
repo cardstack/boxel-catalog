@@ -7,8 +7,8 @@
       "homeAway": "Home",
       "competition": "Cup",
       "kind": "Match",
-      "startsAt": "2099-10-03T16:30:00.000Z",
-      "endsAt": "2099-10-03T18:30:00.000Z",
+      "startsAt": "2026-10-03T14:00:00.000Z",
+      "endsAt": "2026-10-03T16:00:00.000Z",
       "status": "Scheduled",
       "ticketsSold": 52000,
       "capacity": {
@@ -44,7 +44,12 @@
     "relationships": {
       "venue": {
         "links": {
-          "self": "../Location/meridian-park-stadium"
+          "self": "../../events/Location/meridian-park-stadium"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },
@@ -52,8 +57,7 @@
       "adoptsFrom": {
         "module": "../match",
         "name": "Match"
-      },
-      "_touched": 1787195054921
+      }
     }
   }
 }

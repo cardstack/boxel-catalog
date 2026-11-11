@@ -66,6 +66,11 @@
         "links": {
           "self": "../Location/northwind-b-f2-r220"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

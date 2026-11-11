@@ -3,14 +3,8 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import MarkdownField from '@cardstack/base/markdown';
 
-import {
-  Clause,
-  CLAUSE_EDIT_SECTIONS,
-  ClauseEditSections,
-} from '@cardstack/catalog/cards/legal/clause';
+import { Clause } from './clause';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 // A confidentiality (NDA) clause as a typed library entry. Extends the
 // shared Clause additively — the base card owns text, risk, and review
@@ -32,71 +26,6 @@ export class ConfidentialityClause extends Clause {
     description:
       'What is NOT confidential: public knowledge, independently developed, legally compelled…',
   });
-
-  /**
-   * Edit — a Clause plus the typed confidentiality terms.
-   * Grouped by task, not schema order; SectionedEdit gives it the
-   * section rail.
-   */
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      ...CLAUSE_EDIT_SECTIONS,
-      { id: 'confidentiality', label: 'Confidentiality terms' },
-    ];
-
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Confidentiality Clause sections'
-        as |e|
-      >
-        <ClauseEditSections @section={{e.Section}} @fields={{@fields}} />
-        <e.Section
-          @id='confidentiality'
-          @title='Confidentiality terms'
-          @hint='the typed fields the Navigator and Generate Document read'
-        >
-          <div class='row cols-3'>
-            <FieldContainer @label='Term (years)' @vertical={{true}}>
-              <@fields.termYears />
-            </FieldContainer>
-            <FieldContainer @label='Mutual' @vertical={{true}}>
-              <@fields.isMutual />
-            </FieldContainer>
-            <FieldContainer @label='Survives termination' @vertical={{true}}>
-              <@fields.survivesTermination />
-            </FieldContainer>
-          </div>
-          <FieldContainer @label='Carve-outs' @vertical={{true}}>
-            <@fields.carveOuts />
-          </FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-      <style scoped>
-        .row {
-          display: grid;
-          gap: var(--boxel-sp-sm);
-          align-items: start;
-        }
-        .row.cols-2 {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-        .row.cols-3 {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-        .row.cols-4 {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-        @container edit (width < 640px) {
-          .row.cols-2,
-          .row.cols-3,
-          .row.cols-4 {
-            grid-template-columns: 1fr;
-          }
-        }
-      </style>
-    </template>
-  };
 
   static embedded = class Embedded extends Component<typeof this> {
     get termLabel() {
@@ -128,15 +57,15 @@ export class ConfidentialityClause extends Clause {
         .who {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: var(--boxel-sp-6xs);
           min-width: 0;
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .meta {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>

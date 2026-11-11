@@ -7,9 +7,6 @@
         "module": "../customer-reply"
       },
       "specType": "card",
-      "isCard": true,
-      "isField": false,
-      "isComponent": false,
       "readMe": "## Customer Reply\n\nDirection, channel, body, attribution, sentAt. Resolve Case reads it: a case cannot be resolved until at least one OUTBOUND reply linked to that case exists, so a customer is never closed on without an answer. `case` links the reply up to its case.\n\n```ts\nimport { CustomerReply } from '@cardstack/catalog/cards/service-desk/customer-reply';\n\n@field reply = linksTo(() => CustomerReply);\n```\n\n### Non-goals\n\nNo mail/chat transport (no inbound webhook surface exists) — replies are recorded by agents or imported. Not the ticket-thread TicketMessageField, which lives inside Ticket; this is a standalone, queryable record.",
       "cardInfo": {
         "name": "Customer Reply",
@@ -21,7 +18,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
       }
     },

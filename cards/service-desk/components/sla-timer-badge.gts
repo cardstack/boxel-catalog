@@ -1,6 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { Chip } from '@cardstack/pretui/components/chip';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { nameProgress } from '@cardstack/catalog/components/pretui-helpers';
 
@@ -105,6 +106,8 @@ interface Signature {
     live?: boolean;
     /** Show the proportional bar under the chip. */
     showBar?: boolean;
+    /** Dot and text only, for dense rows: no icon, no fill. */
+    plain?: boolean;
   };
   Element: HTMLElement;
 }
@@ -146,6 +149,19 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
 
   get isBreached() {
     return this.state === 'breached';
+  }
+
+  get plainTone(): PretuiToneArg {
+    return (
+      {
+        breached: 'danger',
+        urgent: 'warning',
+        warning: 'warning',
+        paused: 'info',
+        met: 'success',
+        healthy: 'success',
+      } as Record<string, PretuiToneArg>
+    )[this.state];
   }
 
   // A breach paints its own fill, so its chip takes no hue.
@@ -197,12 +213,19 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
         {{#if @caption}}
           <span class='sla-caption'>{{@caption}}</span>
         {{/if}}
-        <TimerChip
-          @hue={{this.chipHue}}
-          @breached={{this.isBreached}}
-          @icon={{this.icon}}
-          @label={{this.snapshot.shortLabel}}
-        />
+        {{#if @plain}}
+          <Chip
+            @appearance='plain'
+            @tone={{this.plainTone}}
+          >{{this.snapshot.shortLabel}}</Chip>
+        {{else}}
+          <TimerChip
+            @hue={{this.chipHue}}
+            @breached={{this.isBreached}}
+            @icon={{this.icon}}
+            @label={{this.snapshot.shortLabel}}
+          />
+        {{/if}}
         {{#if this.isBreached}}
           <span class='boxel-sr-only'>SLA breached</span>
         {{/if}}

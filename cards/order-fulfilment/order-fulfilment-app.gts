@@ -6,7 +6,7 @@ import {
   contains,
   field,
 } from '@cardstack/base/card-api';
-import { FittedCard } from '@cardstack/boxel-ui/components';
+import { FitTile } from '../shared/fit-tile';
 import PackageIcon from '@cardstack/boxel-icons/package';
 
 export class OrderFulfilmentApp extends CardDef {
@@ -69,26 +69,15 @@ export class OrderFulfilmentApp extends CardDef {
 
   static fitted = class Fitted extends Component<typeof OrderFulfilmentApp> {
     <template>
-      <FittedCard class='fit' @titleTag='h3'>
-        <:placeholder><PackageIcon
-            class='glyph'
-            role='presentation'
-          /></:placeholder>
-        <:eyebrow>Fulfilment</:eyebrow>
-        <:title>{{@model.operationName}}</:title>
-        <:subtitle>{{if
+      <FitTile>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>Order fulfilment</:subtitle>
+        <:fact>{{if
             @model.cardInfo.summary
             @model.cardInfo.summary
-            'Board · Inventory · Ship · Transit · Returns'
-          }}</:subtitle>
-      </FittedCard>
-      <style scoped>
-        .glyph {
-          width: 1.5rem;
-          height: 1.5rem;
-          color: var(--primary-ink);
-        }
-      </style>
+            'Board · Inventory · Ship desk · In transit · Returns'
+          }}</:fact>
+      </FitTile>
     </template>
   };
 }

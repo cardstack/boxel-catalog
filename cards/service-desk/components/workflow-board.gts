@@ -9,16 +9,13 @@ import { Input } from '@cardstack/pretui/components/input';
 import type { CardDef } from '@cardstack/base/card-api';
 
 import { Board, type BoardColumn } from '@cardstack/catalog/components/board';
-import { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock';
+import { slaClock } from '../utils/sla-clock';
 import { BreachRing } from './breach-ring';
 import { LiveClock } from './live-clock';
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { workflowKindColor } from '@cardstack/catalog/fields/workflow-state/workflow-state-field';
-import {
-  timerSnapshot,
-  sortByUrgency,
-} from '@cardstack/catalog/cards/service-desk/utils/sla';
+import { timerSnapshot, sortByUrgency } from '../utils/sla';
 
 export interface BoardCard {
   card: any;
@@ -288,7 +285,7 @@ export class WorkflowBoard extends GlimmerComponent<Signature> {
       }
       .wfb-subject {
         font-size: var(--boxel-font-size);
-        font-weight: 500;
+        font-weight: 600;
         line-height: 1.35;
         flex: 1;
         overflow: hidden;

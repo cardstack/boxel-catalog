@@ -1,97 +1,194 @@
-import { htmlSafe } from '@ember/template';
-import GlimmerComponent from '@glimmer/component';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
   Component,
   contains,
   field,
+  getComponent,
   linksTo,
   realmURL,
-} from 'https://cardstack.com/base/card-api';
-import { identifyCard, type getCards } from '@cardstack/runtime-common';
-import StringField from 'https://cardstack.com/base/string';
-import NumberField from 'https://cardstack.com/base/number';
-import DateField from 'https://cardstack.com/base/date';
-import DateTimeField from 'https://cardstack.com/base/datetime';
+} from '@cardstack/base/card-api';
+import {
+  getField,
+  identifyCard,
+  type getCards,
+  type ResolvedCodeRef,
+} from '@cardstack/runtime-common';
+import StringField from '@cardstack/base/string';
+import NumberField from '@cardstack/base/number';
+import DateField from '@cardstack/base/date';
+import DateTimeField from '@cardstack/base/datetime';
 import AwardIcon from '@cardstack/boxel-icons/award';
 import ArrowsExchangeIcon from '@cardstack/boxel-icons/arrows-exchange';
+import { Avatar } from '@cardstack/pretui/components/avatar';
 
-import { Contact } from '@cardstack/catalog/cards/crm/contact';
-import LoyaltyTierField from './loyalty-tier-field';
+import { Contact } from '../crm/contact';
+import { FitTile } from '../shared/fit-tile';
+import LoyaltyTierField, { type TierOption } from './loyalty-tier-field';
 import MemberNumberField from './member-number-field';
 import PointsBalanceField from './points-balance-field';
 import { MembershipStatusField } from './membership-status-field';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { Delta } from '@cardstack/pretui/components/delta';
-import { Stat } from '@cardstack/pretui/components/stat';
-import { KeyValue } from '@cardstack/pretui/components/key-value';
-import { LoadingState } from '@cardstack/pretui/components/loading-state';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { Token } from '@cardstack/pretui/components/token';
-import { FormatDate } from '@cardstack/pretui/components/format-date';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { validDate } from '../../utils/valid-date';
 
-/** `+1,200`, `-500`, `0`: the sign on earns, through the kit's own number formatter. */
+const NUM = new Intl.NumberFormat();
 const SIGNED = new Intl.NumberFormat(undefined, { signDisplay: 'exceptZero' });
-const LONG_DATE = new Intl.DateTimeFormat(undefined, { dateStyle: 'long' });
+const DAY = new Intl.DateTimeFormat(undefined, {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+const DAY_MONTH = new Intl.DateTimeFormat(undefined, {
+  day: 'numeric',
+  month: 'short',
+});
+const WHEN = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 
-function signedPoints(n: number): string {
-  return SIGNED.format(n);
+function asDate(value?: Date | string | null): Date | undefined {
+  let d = value ? new Date(value) : undefined;
+  return d && !Number.isNaN(d.getTime()) ? d : undefined;
 }
 
-// Delta reads its own `--pretui-destructive-ink` knob for a fall; a rise has
-// no knob, so the rise's ink is set from PointsDelta's wrapper instead.
-const POINTS_INK = htmlSafe(
-  '--pretui-destructive-ink: var(--destructive-ink);',
-);
-
-/** A date fact as the Date field's own long preset prints it; empty when unset, so `Stat` shows its dash. */
-function longDate(value?: Date | null): string {
-  let date = validDate(value);
-  return date ? LONG_DATE.format(date) : '';
+function num(n?: number | null): string {
+  return n == null ? '—' : NUM.format(n);
+}
+function signed(n?: number | null): string {
+  return SIGNED.format(n ?? 0);
+}
+function day(d?: Date | string | null): string {
+  let v = asDate(d);
+  return v ? DAY.format(v) : '—';
+}
+function dayMonth(d?: Date | string | null): string {
+  let v = asDate(d);
+  return v ? DAY_MONTH.format(v) : '';
+}
+function when(d?: Date | string | null): string {
+  let v = asDate(d);
+  return v ? WHEN.format(v) : '—';
+}
+function year(d?: Date | string | null): string {
+  return asDate(d)?.getFullYear().toString() ?? '';
+}
+function sign(n?: number | null): string {
+  return (n ?? 0) < 0 ? 'neg' : 'pos';
 }
 
-const TRANSACTION_FACTS = [
-  { key: 'Occurred', value: 'occurredAt' },
-  { key: 'Expires', value: 'expiresAt' },
-];
-
-interface PointsDeltaSignature {
-  Args: { amount?: number | null };
-  Element: HTMLSpanElement;
+/** The dot colour for a membership standing. */
+function statusTone(status?: string | null): string {
+  return status === 'Active' ? 'success' : status ? 'warning' : 'muted';
 }
 
-/**
- * A signed points movement: Pret UI `Delta`, earns green and deductions red —
- * the one place every ledger view formats and colours an amount. Size comes
- * from Delta's `--text-ui-sm` knob at each call site.
- */
-class PointsDelta extends GlimmerComponent<PointsDeltaSignature> {
-  get value(): number {
-    return this.args.amount ?? 0;
-  }
+/** "NBF-2019-00002214 · member since 2019" */
+function accountMeta(m?: LoyaltyAccount): string {
+  let since = year(m?.memberSince);
+  return [m?.memberNumber, since && `member since ${since}`]
+    .filter(Boolean)
+    .join(' · ');
+}
 
+function holderName(m?: LoyaltyAccount): string {
+  return m?.holder?.name || m?.memberNumber || 'Unassigned account';
+}
+
+function reasonOf(t?: { reason?: string | null }): string {
+  return t?.reason || 'Points adjustment';
+}
+
+/** "Survey · Sun 19 Apr 2026, 10:05" */
+function txMeta(t?: {
+  source?: string | null;
+  occurredAt?: Date | null;
+}): string {
+  return [t?.source, t?.occurredAt ? when(t.occurredAt) : '']
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/** The ladder the account's own `tier` field declares (a club redeclares it). */
+function tierOptions(m?: LoyaltyAccount): TierOption[] {
+  if (!m) return [];
+  let cls = getField(m, 'tier')?.card as unknown as
+    | { tierOptions?: TierOption[] }
+    | undefined;
+  return cls?.tierOptions ?? [];
+}
+
+function tierLine(m?: LoyaltyAccount): string {
+  let opt = tierOptions(m).find((o) => o.value === m?.tier);
+  if (!m?.tier) return '—';
+  return opt?.multiplier ? `${m.tier} · ${opt.multiplier}× points` : m.tier;
+}
+
+/** A status as dot + text: the one state treatment every format uses. */
+const DotText: TemplateOnlyComponent<{
+  Args: { label?: string | null; tone?: string };
+}> = <template>
+  {{#if @label}}
+    <span class='dot-text'><span
+        class='dot'
+        data-tone={{@tone}}
+      ></span>{{@label}}</span>
+  {{/if}}
+  <style scoped>
+    .dot-text {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--boxel-sp-4xs);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .dot {
+      flex-shrink: 0;
+      width: 0.4375rem;
+      height: 0.4375rem;
+      border-radius: 50%;
+      background-color: var(--muted-foreground);
+    }
+    .dot[data-tone='primary'] {
+      background-color: var(--primary);
+    }
+    .dot[data-tone='success'] {
+      background-color: var(--success);
+    }
+    .dot[data-tone='warning'] {
+      background-color: var(--warning);
+    }
+    .dot[data-tone='destructive'] {
+      background-color: var(--destructive);
+    }
+  </style>
+</template>;
+
+/** The ledger mark: a muted square holding the transaction icon. */
+const TxMark: TemplateOnlyComponent<{ Args: { size?: 'sm' | 'lg' } }> =
   <template>
-    <span class='points-delta' ...attributes>
-      <Delta
-        @value={{this.value}}
-        @format={{signedPoints}}
-        style={{POINTS_INK}}
-      />
+    <span class='tx-mark' data-size={{@size}} aria-hidden='true'>
+      <ArrowsExchangeIcon width='0.75rem' height='0.75rem' />
     </span>
     <style scoped>
-      .points-delta {
-        display: inline-block;
+      .tx-mark {
+        display: inline-grid;
+        place-items: center;
+        flex-shrink: 0;
+        width: 1.125rem;
+        height: 1.125rem;
+        border-radius: 0.25rem;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
       }
-      /* A rise reads as the success ink on a neutral surface, not the fill. */
-      .points-delta :deep(.pretui-delta[data-sign='up']) {
-        color: var(--success-ink);
+      .tx-mark[data-size='lg'] {
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 0.375rem;
       }
     </style>
-  </template>
-}
+  </template>;
 
 /**
  * A membership in a loyalty program — the account that accumulates standing,
@@ -111,6 +208,13 @@ class PointsDelta extends GlimmerComponent<PointsDeltaSignature> {
 export class LoyaltyAccount extends CardDef {
   static displayName = 'Loyalty Account';
   static icon = AwardIcon;
+
+  /**
+   * A program whose holders book things (a club's match bookings) names the
+   * booking card here; the isolated view then lists the holder's bookings.
+   * The card must link its holder as `holder`.
+   */
+  static bookingRef: ResolvedCodeRef | undefined;
 
   @field memberNumber = contains(MemberNumberField);
   @field holder = linksTo(Contact);
@@ -132,87 +236,152 @@ export class LoyaltyAccount extends CardDef {
   });
 
   static atom = class Atom extends Component<typeof LoyaltyAccount> {
+    get name() {
+      return holderName(this.args.model as LoyaltyAccount);
+    }
     <template>
-      <span class='la-atom'>
-        <AwardIcon class='la-icon' />
-        <span class='la-number'>{{if
-            @model.memberNumber
-            @model.memberNumber
-            'No member number'
-          }}</span>
+      <span class='atom'>
+        <Avatar @name={{this.name}} @size={{16}} />
+        <span class='name'>{{this.name}}</span>
+        {{#if @model.tier}}<span class='tier'>{{@model.tier}}</span>{{/if}}
       </span>
       <style scoped>
-        .la-atom {
+        .atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.25rem;
-          font-size: 0.8125rem;
+          gap: var(--boxel-sp-3xs);
+          max-width: 100%;
+          min-width: 0;
+          font-size: var(--boxel-font-size-xs);
+          color: var(--card-foreground);
         }
-        .la-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          flex-shrink: 0;
-          color: var(--muted-foreground);
-        }
-        .la-number {
-          font-family: var(--font-mono);
-          letter-spacing: 0.04em;
+        .name {
+          min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          font-weight: 600;
+        }
+        .tier {
+          flex-shrink: 0;
+          color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof LoyaltyAccount> {
+    get model() {
+      return this.args.model as LoyaltyAccount;
+    }
+    get name() {
+      return holderName(this.model);
+    }
+    get meta() {
+      return accountMeta(this.model);
+    }
+    get tierLine() {
+      return tierLine(this.model);
+    }
     <template>
-      <div class='la-row'>
-        <div class='la-id'>
-          <span class='la-name'>{{if
-              @model.holder.name
-              @model.holder.name
-              'Unassigned account'
-            }}</span>
-          <span class='la-number'><@fields.memberNumber /></span>
-        </div>
-        <span class='la-tier'><@fields.tier /></span>
-        <span class='la-balance'><@fields.pointsBalance /></span>
-      </div>
+      <article class='emb'>
+        <header class='head'>
+          <Avatar @name={{this.name}} @size={{24}} />
+          <div class='id'>
+            <p class='name'>{{this.name}}</p>
+            {{#if this.meta}}<p class='meta'>{{this.meta}}</p>{{/if}}
+          </div>
+          <div class='tags'>
+            <DotText @label={{@model.tier}} @tone='primary' />
+            <DotText
+              @label={{@model.status}}
+              @tone={{statusTone @model.status}}
+            />
+          </div>
+        </header>
+        <dl class='kv'>
+          <dt>Points balance</dt><dd class='num'>{{num
+              @model.pointsBalance
+            }}</dd>
+          <dt>Lifetime points</dt><dd class='num'>{{num
+              @model.lifetimePoints
+            }}</dd>
+          <dt>Tier</dt><dd>{{this.tierLine}}</dd>
+          <dt>Tier since</dt><dd>{{day @model.tierSince}}</dd>
+          <dt>Member since</dt><dd>{{day @model.memberSince}}</dd>
+          <dt>Status</dt><dd>{{if @model.status @model.status '—'}}</dd>
+          {{#if @model.holder}}
+            <dt>Holder</dt><dd><@fields.holder
+                @format='atom'
+                @displayContainer={{false}}
+              /></dd>
+          {{/if}}
+        </dl>
+      </article>
       <style scoped>
-        .la-row {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.875rem;
-        }
-        .la-id {
-          min-width: 0;
-          flex: 1;
+        .emb {
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-3xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
-        .la-name {
-          font-weight: 600;
-          font-size: 0.875rem;
+        .head {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          min-width: 0;
+        }
+        .id {
+          flex: 1;
+          min-width: 0;
+        }
+        .name,
+        .meta {
+          margin: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .la-number {
-          font-size: 0.75rem;
+        .name {
+          font-weight: 700;
+        }
+        .meta {
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
-        .la-tier {
+        .tags {
+          display: flex;
           flex-shrink: 0;
+          gap: var(--boxel-sp-xs);
         }
-        /* Constant-width slot so account rows column-align in lists whether
-           or not a balance exists yet. */
-        .la-balance {
-          width: 5.5rem;
-          text-align: right;
-          flex-shrink: 0;
+        .kv {
+          display: grid;
+          grid-template-columns: 7rem minmax(0, 1fr);
+          margin: 0;
+        }
+        .kv dt,
+        .kv dd {
+          margin: 0;
+          padding: var(--boxel-sp-3xs) 0;
+          border-top: 1px solid var(--border);
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .kv dt {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+          align-self: center;
+        }
+        .num {
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -220,93 +389,45 @@ export class LoyaltyAccount extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof LoyaltyAccount> {
+    get model() {
+      return this.args.model as LoyaltyAccount;
+    }
+    get name() {
+      return holderName(this.model);
+    }
+    get meta() {
+      return accountMeta(this.model);
+    }
+    get fact() {
+      let m = this.model;
+      return `${num(m?.pointsBalance)} pts · ${num(m?.lifetimePoints)} lifetime`;
+    }
     <template>
-      <div class='fitted'>
-        <div class='top'>
-          {{#if @model.memberNumber}}
-            <Token class='number' @value={{@model.memberNumber}} />
-          {{else}}
-            <span class='number no-number'>No member number</span>
-          {{/if}}
-          <span class='tier line-tier'><@fields.tier @format='atom' /></span>
-        </div>
-        <span class='balance line-balance'><@fields.pointsBalance /></span>
-        {{#if @model.memberSince}}
-          <span class='meta line-since'>Member since
-            <@fields.memberSince /></span>
-        {{/if}}
-      </div>
-      <style scoped>
-        .fitted {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: 0.25rem;
-          width: 100%;
-          height: 100%;
-          padding: 0.625rem 0.75rem;
-          box-sizing: border-box;
-          overflow: hidden;
-          color: var(--foreground);
-        }
-        .top {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          min-width: 0;
-        }
-        /* Pret UI Token for the id; it never wraps, so it truncates here. */
-        .number {
-          --pretui-token-hue: var(--muted-foreground);
-          min-width: 0;
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .no-number {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-        }
-        .tier {
-          flex-shrink: 0;
-        }
-        .meta {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-        }
-        .line-tier,
-        .line-balance,
-        .line-since {
-          display: none;
-        }
-        /* Badge degradation: strip height keeps only the first line. */
-        @container fitted-card (max-height: 50px) {
-          .fitted {
-            padding: 0.25rem 0.5rem;
-            gap: 0.125rem;
-          }
-        }
-        @container fitted-card (min-height: 65px) {
-          .line-tier {
-            display: inline-flex;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .line-balance {
-            display: inline-flex;
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .line-since {
-            display: block;
-          }
-        }
-      </style>
+      <FitTile>
+        <:avatar><Avatar @name={{this.name}} @size={{32}} /></:avatar>
+        <:title>{{this.name}}</:title>
+        <:subtitle>{{this.meta}}</:subtitle>
+        <:status>
+          <DotText @label={{@model.tier}} @tone='primary' />
+          <DotText
+            @label={{@model.status}}
+            @tone={{statusTone @model.status}}
+          />
+        </:status>
+        <:fact>{{this.fact}}</:fact>
+        <:relations>{{#if @model.holder}}<@fields.holder
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
     </template>
   };
 
   static isolated = class Isolated extends Component<typeof LoyaltyAccount> {
     private ledgerQuery: ReturnType<getCards> | undefined;
+    // Unpaged, so the Expiring total covers every transaction, not the ten shown.
+    private expiringQuery: ReturnType<getCards> | undefined;
+    private bookingQuery: ReturnType<getCards> | undefined;
 
     constructor(owner: unknown, args: any) {
       super(owner as never, args as never);
@@ -324,269 +445,384 @@ export class LoyaltyAccount extends CardDef {
               }
             : undefined;
         },
-        () => {
-          let url = this.args.model?.[realmURL]?.href;
-          return url ? [url] : [];
-        },
+        () => this.realms,
         { isLive: true },
       );
+      this.expiringQuery = this.args.context?.getCards(
+        this,
+        () => {
+          let ref = identifyCard(PointsTransaction);
+          let id = this.args.model?.id;
+          return ref && id
+            ? { filter: { on: ref, eq: { 'account.id': id } } }
+            : undefined;
+        },
+        () => this.realms,
+        { isLive: true },
+      );
+      this.bookingQuery = this.args.context?.getCards(
+        this,
+        () => {
+          let ref = (this.args.model?.constructor as typeof LoyaltyAccount)
+            ?.bookingRef;
+          let holder = this.args.model?.holder?.id;
+          return ref && holder
+            ? { filter: { on: ref, eq: { 'holder.id': holder } } }
+            : undefined;
+        },
+        () => this.realms,
+        { isLive: true },
+      );
+    }
+
+    get realms(): string[] {
+      let url = this.args.model?.[realmURL]?.href;
+      return url ? [url] : [];
+    }
+
+    get model() {
+      return this.args.model as LoyaltyAccount;
+    }
+    get name() {
+      return holderName(this.model);
+    }
+    get meta() {
+      return accountMeta(this.model);
+    }
+    get tierLine() {
+      return tierLine(this.model);
     }
 
     get ledger(): PointsTransaction[] {
       return (this.ledgerQuery?.instances ?? []) as PointsTransaction[];
     }
 
-    get ledgerLoading(): boolean {
-      return Boolean(this.ledgerQuery?.isLoading);
+    get bookings(): CardDef[] {
+      return (this.bookingQuery?.instances ?? []) as CardDef[];
     }
 
-    /** A context without a query provider yields no resource; hide the panel rather than claim an empty ledger. */
-    get hasLedgerQuery(): boolean {
-      return Boolean(this.ledgerQuery);
+    get hasBookings(): boolean {
+      return Boolean(
+        (this.model?.constructor as typeof LoyaltyAccount)?.bookingRef,
+      );
     }
 
-    // Stat takes a bare value; an empty string renders its dash.
-    get pointsBalance(): number | string {
-      return this.args.model?.pointsBalance ?? '';
+    get ladder() {
+      return tierOptions(this.model).map((o) => ({
+        ...o,
+        current: o.value === this.model?.tier,
+      }));
     }
 
-    get lifetimePoints(): number | string {
-      return this.args.model?.lifetimePoints ?? '';
-    }
-
-    get memberSince(): string {
-      return longDate(this.args.model?.memberSince);
-    }
-
-    get tierSince(): string {
-      return longDate(this.args.model?.tierSince);
+    /** Earned points that still carry an expiry ahead: "25 pts · 31 Oct". */
+    get expiring(): string {
+      let now = Date.now();
+      let open = (
+        (this.expiringQuery?.instances ?? []) as PointsTransaction[]
+      ).filter(
+        (t) =>
+          (t.amount ?? 0) > 0 && (asDate(t.expiresAt)?.getTime() ?? 0) > now,
+      );
+      if (!open.length) return '—';
+      let total = open.reduce((a, t) => a + (t.amount ?? 0), 0);
+      let soonest = open
+        .map((t) => asDate(t.expiresAt)!)
+        .sort((a, b) => +a - +b)[0];
+      return `${num(total)} pts · ${dayMonth(soonest)}`;
     }
 
     <template>
-      <article class='la-page'>
-        <header class='lh'>
-          <div class='lh-id'>
-            <p class='doc-kind'>Loyalty Account</p>
-            <h1>{{if
-                @model.holder.name
-                @model.holder.name
-                'Unassigned account'
-              }}</h1>
-            <p class='lh-number'><@fields.memberNumber /></p>
+      <article class='page'>
+        <header class='head'>
+          <Avatar @name={{this.name}} @size={{28}} />
+          <div class='id'>
+            <h1 class='name'>{{this.name}}</h1>
+            {{#if this.meta}}<p class='meta'>{{this.meta}}</p>{{/if}}
           </div>
-          <div class='lh-standing'>
-            <@fields.tier />
-            {{#if @model.status}}
-              <@fields.status @format='embedded' />
-            {{/if}}
+          <div class='tags'>
+            <DotText @label={{@model.tier}} @tone='primary' />
+            <DotText
+              @label={{@model.status}}
+              @tone={{statusTone @model.status}}
+            />
           </div>
         </header>
-        <section class='stats'>
-          <Stat
-            class='stat'
-            @label='Points balance'
-            @value={{this.pointsBalance}}
-          />
-          <Stat
-            class='stat'
-            @label='Lifetime earned'
-            @value={{this.lifetimePoints}}
-          />
-          <Stat
-            class='stat stat-date'
-            @label='Member since'
-            @value={{this.memberSince}}
-            @roll={{false}}
-          />
-          <Stat
-            class='stat stat-date'
-            @label='Tier since'
-            @value={{this.tierSince}}
-            @roll={{false}}
-          />
-        </section>
-        {{#if this.hasLedgerQuery}}
-          <section class='panel'>
-            <h2>Ledger</h2>
-            {{#if this.ledgerLoading}}
-              <LoadingState
-                class='ledger-loading'
-                @label='Loading points activity'
-              />
-            {{else if this.ledger.length}}
-              <ol class='ledger'>
-                {{#each this.ledger key='id' as |transaction|}}
-                  <li class='ledger-row'>
-                    <PointsDelta
-                      class='ledger-amount'
-                      @amount={{transaction.amount}}
-                    />
-                    <span class='ledger-reason'>{{if
-                        transaction.reason
-                        transaction.reason
-                        'Points adjustment'
-                      }}</span>
-                    <StatePill
-                      class='ledger-source'
-                      @label={{transaction.source}}
-                    />
-                    <span class='ledger-when'><FormatDate
-                        @date={{transaction.occurredAt}}
-                        @month='short'
-                        @day='numeric'
-                        @year='numeric'
-                        @placeholder=''
-                      /></span>
-                  </li>
-                {{/each}}
-              </ol>
-            {{else}}
-              <EmptyState
-                style={{COMPACT_EMPTY_STYLE}}
-                @title='No points activity yet'
-                @message='It starts with the first earn.'
-                @texture={{false}}
-              />
+
+        <dl class='stats' aria-label='Key numbers'>
+          <div class='stat'>
+            <dt class='label'>Balance</dt>
+            <dd class='value'>{{num @model.pointsBalance}}</dd>
+            <dd class='sub'>redeemable points</dd>
+          </div>
+          <div class='stat'>
+            <dt class='label'>Lifetime</dt>
+            <dd class='value'>{{num @model.lifetimePoints}}</dd>
+            <dd class='sub'>points earned</dd>
+          </div>
+          <div class='stat'>
+            <dt class='label'>Tier</dt>
+            <dd class='value'>{{if @model.tier @model.tier '—'}}</dd>
+            <dd class='sub'>since {{day @model.tierSince}}</dd>
+          </div>
+          {{#if this.hasBookings}}
+            <div class='stat'>
+              <dt class='label'>Bookings</dt>
+              <dd class='value'>{{this.bookings.length}}</dd>
+              <dd class='sub'>for this holder</dd>
+            </div>
+          {{/if}}
+        </dl>
+
+        <div class='cols'>
+          <div class='main'>
+            <section class='sec'>
+              <h2>Recent activity</h2>
+              {{#if this.ledger.length}}
+                <ul class='rows'>
+                  {{#each this.ledger key='id' as |t|}}
+                    <li class='row'>
+                      <span class='date'>{{day t.occurredAt}}</span>
+                      <span class='what'><strong>{{reasonOf t}}</strong>
+                        <span class='muted'>{{#if t.source}}·
+                            {{t.source}}{{/if}}{{#if t.expiresAt}}
+                            · expires
+                            {{dayMonth t.expiresAt}}{{/if}}</span></span>
+                      <span class='amt {{sign t.amount}}'>{{signed
+                          t.amount
+                        }}</span>
+                    </li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <p class='empty'>No points activity yet</p>
+              {{/if}}
+            </section>
+            {{#if this.ladder.length}}
+              <section class='sec'>
+                <h2>Tier ladder</h2>
+                <dl class='kv'>
+                  {{#each this.ladder as |o|}}
+                    <dt>{{o.value}}{{if o.current ' (current)'}}</dt>
+                    <dd>{{if o.meaning o.meaning '—'}}{{#if o.multiplier}}
+                        ·
+                        {{o.multiplier}}×{{/if}}</dd>
+                  {{/each}}
+                </dl>
+              </section>
             {{/if}}
-          </section>
-        {{/if}}
-        {{#if @model.holder}}
-          <section class='panel'>
-            <h2>Holder</h2>
-            <div class='holder'><@fields.holder @format='embedded' /></div>
-          </section>
-        {{/if}}
+          </div>
+
+          <aside class='side'>
+            <section class='sec'>
+              <h2>Linked</h2>
+              <dl class='kv'>
+                <dt>Holder</dt>
+                <dd>{{#if @model.holder}}<@fields.holder
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                {{#each this.bookings as |b|}}
+                  <dt>Booking</dt>
+                  <dd>{{#let (getComponent b) as |B|}}<B
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{/let}}</dd>
+                {{/each}}
+              </dl>
+            </section>
+            <section class='sec'>
+              <h2>Details</h2>
+              <dl class='kv'>
+                <dt>Points balance</dt><dd class='num'>{{num
+                    @model.pointsBalance
+                  }}</dd>
+                <dt>Lifetime points</dt><dd class='num'>{{num
+                    @model.lifetimePoints
+                  }}</dd>
+                <dt>Tier</dt><dd>{{this.tierLine}}</dd>
+                <dt>Tier since</dt><dd>{{day @model.tierSince}}</dd>
+                <dt>Member since</dt><dd>{{day @model.memberSince}}</dd>
+                <dt>Status</dt><dd>{{if @model.status @model.status '—'}}</dd>
+                <dt>Expiring</dt><dd>{{this.expiring}}</dd>
+                <dt>Member no.</dt><dd class='mono'>{{if
+                    @model.memberNumber
+                    @model.memberNumber
+                    '—'
+                  }}</dd>
+              </dl>
+            </section>
+          </aside>
+        </div>
       </article>
       <style scoped>
-        .la-page {
-          max-width: 40rem;
-          margin: 0 auto;
-          padding: 2rem 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.25rem;
+        .page {
+          margin: var(--boxel-sp-sm);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          font-size: var(--boxel-font-size-xs);
+          overflow: hidden;
         }
-        .lh {
+        .head {
           display: flex;
           align-items: center;
-          gap: 1rem;
-          border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: 1.25rem;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm);
+          border-bottom: 1px solid var(--border);
         }
-        .lh-id {
-          flex: 1;
+        .id {
+          flex: 1 1 10rem;
           min-width: 0;
         }
-        .doc-kind {
-          margin: 0 0 0.125rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
+        .name {
+          margin: 0;
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .meta {
+          margin: 0;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
-        h1 {
-          font-size: 1.625rem;
-          line-height: 1.1;
-        }
-        .lh-number {
-          margin: 0.25rem 0 0;
-        }
-        .lh-standing {
+        .tags {
           display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 0.375rem;
-          flex-shrink: 0;
+          gap: var(--boxel-sp-sm);
+          margin-left: auto;
         }
         .stats {
+          margin: 0;
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-          gap: 0.75rem;
+          grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+          border-bottom: 1px solid var(--border);
+          overflow: hidden;
         }
-        /* Pret UI Stat in a bordered tile; its headline size knob sets the
-           tile's 18px figure and 15px date. */
         .stat {
-          --text-stat: 1.125rem;
-          border: 1px solid var(--border);
-          border-radius: 0.75rem;
-          padding: 0.875rem 1rem;
-          background-color: var(--card);
-          color: var(--card-foreground);
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-6xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          margin: 0 -1px -1px 0;
+          border-right: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
+          min-width: 0;
         }
-        .stat-date {
-          --text-stat: 0.9375rem;
+        .stat dt,
+        .stat dd {
+          margin: 0;
         }
-        .panel {
-          border: 1px solid var(--border);
-          border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        h2 {
-          margin: 0 0 0.75rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        .label,
+        .kv dt {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .holder {
-          border: 1px solid var(--border);
-          border-radius: 0.5rem;
+        .value {
+          font-size: var(--boxel-font-size-lg);
+          font-weight: 700;
+          line-height: 1.2;
+          font-variant-numeric: tabular-nums;
         }
-        .ledger {
-          list-style: none;
+        .sub,
+        .muted,
+        .empty {
+          color: var(--muted-foreground);
+        }
+        .sub {
+          font-size: var(--boxel-font-size-2xs);
+        }
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+        .main {
+          border-right: 1px solid var(--border);
+        }
+        @container (max-width: 44rem) {
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .main {
+            border-right: 0;
+            border-bottom: 1px solid var(--border);
+          }
+        }
+        .sec + .sec {
+          border-top: 1px solid var(--border);
+        }
+        h2 {
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .rows {
           margin: 0;
           padding: 0;
+          list-style: none;
+        }
+        .row {
           display: flex;
-          flex-direction: column;
+          align-items: center;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-sm);
+          border-top: 1px solid var(--border);
         }
-        .ledger-row {
-          display: flex;
-          align-items: baseline;
-          gap: 0.625rem;
-          padding: 0.375rem 0;
-          border-bottom: 1px solid var(--border);
-          font-size: 0.8125rem;
-        }
-        .ledger-row:last-child {
-          border-bottom: none;
-        }
-        /* Constant-width signed column so the ledger reads as a column of
-           numbers, not a ragged list. */
-        .ledger-amount {
-          --text-ui-sm: 0.8125rem;
-          width: 4.25rem;
-          text-align: right;
+        .date {
           flex-shrink: 0;
+          width: 6rem;
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
         }
-        .ledger-reason {
-          min-width: 0;
+        .what {
           flex: 1;
+          min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .ledger-source {
+        .amt {
           flex-shrink: 0;
+          font-family: var(--font-mono);
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
         }
-        .ledger-when {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          flex-shrink: 0;
+        .pos {
+          color: var(--success-ink);
         }
-        /* Pret UI LoadingState: its dim shimmer stop (--ink-3) falls back to
-           a 2.2:1 grey, so it is pointed at the muted foreground. */
-        .ledger-loading {
-          --ink-3: var(--muted-foreground);
-          --text-ui-md: 0.875rem;
+        .neg {
+          color: var(--destructive-ink);
+        }
+        .empty {
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          border-top: 1px solid var(--border);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 8rem minmax(0, 1fr);
+          margin: 0;
+          padding: 0 var(--boxel-sp-sm) var(--boxel-sp-3xs);
+        }
+        .kv dt,
+        .kv dd {
+          margin: 0;
+          padding: var(--boxel-sp-3xs) 0;
+          border-top: 1px solid var(--border);
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .num {
+          font-variant-numeric: tabular-nums;
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
         }
       </style>
     </template>
@@ -624,14 +860,39 @@ export class PointsTransaction extends CardDef {
 
   static atom = class Atom extends Component<typeof PointsTransaction> {
     <template>
-      <span class='ptx-atom'><PointsDelta @amount={{@model.amount}} />
-        pts</span>
+      <span class='atom'>
+        <TxMark />
+        <span class='name'>{{reasonOf @model}}</span>
+        <span class='amt {{sign @model.amount}}'>{{signed @model.amount}}</span>
+      </span>
       <style scoped>
-        .ptx-atom {
-          --text-ui-sm: 0.75rem;
-          font-variant-numeric: tabular-nums;
-          font-size: 0.75rem;
+        .atom {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-3xs);
+          max-width: 100%;
+          min-width: 0;
+          font-size: var(--boxel-font-size-xs);
+          color: var(--card-foreground);
+        }
+        .name {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
           font-weight: 600;
+        }
+        .amt {
+          flex-shrink: 0;
+          font-family: var(--font-mono);
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
+        }
+        .pos {
+          color: var(--success-ink);
+        }
+        .neg {
+          color: var(--destructive-ink);
         }
       </style>
     </template>
@@ -639,229 +900,492 @@ export class PointsTransaction extends CardDef {
 
   static embedded = class Embedded extends Component<typeof PointsTransaction> {
     <template>
-      <div class='ptx'>
-        <PointsDelta class='ptx-amount' @amount={{@model.amount}} />
-        <div class='ptx-what'>
-          <span class='ptx-reason'>{{if
-              @model.reason
-              @model.reason
-              'Points adjustment'
-            }}</span>
-          <StatePill class='ptx-source' @label={{@model.source}} />
-        </div>
-        <span class='ptx-when'>{{#if @model.occurredAt}}<@fields.occurredAt
-            />{{else}}—{{/if}}</span>
-      </div>
+      <article class='emb'>
+        <header class='head'>
+          <TxMark @size='lg' />
+          <div class='id'>
+            <p class='name'>{{reasonOf @model}}</p>
+            <p class='meta'>{{txMeta @model}}</p>
+          </div>
+          <div class='amount'>
+            <span class='amt {{sign @model.amount}}'>{{signed @model.amount}}
+              pts</span>
+            {{#if @model.expiresAt}}<span class='meta'>expires
+                {{dayMonth @model.expiresAt}}</span>{{/if}}
+          </div>
+        </header>
+        <dl class='kv'>
+          <dt>Amount</dt><dd class='num'>{{signed @model.amount}}</dd>
+          <dt>Source</dt><dd>{{if @model.source @model.source '—'}}</dd>
+          <dt>Occurred</dt><dd>{{day @model.occurredAt}}</dd>
+          <dt>Expires</dt><dd>{{if
+              @model.expiresAt
+              (day @model.expiresAt)
+              'Never'
+            }}</dd>
+          {{#if @model.account}}
+            <dt>Account</dt><dd><@fields.account
+                @format='atom'
+                @displayContainer={{false}}
+              /></dd>
+          {{/if}}
+        </dl>
+      </article>
       <style scoped>
-        .ptx {
+        .emb {
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-3xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
+          background-color: var(--card);
+          color: var(--card-foreground);
+        }
+        .head {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.5rem 0.875rem;
-          font-size: 0.8125rem;
-        }
-        /* Constant-width signed column so ledger rows align. */
-        .ptx-amount {
-          --text-ui-sm: 0.8125rem;
-          width: 4.25rem;
-          text-align: right;
-          flex-shrink: 0;
-        }
-        .ptx-what {
+          gap: var(--boxel-sp-xs);
           min-width: 0;
-          flex: 1;
-          display: flex;
-          align-items: baseline;
-          gap: 0.5rem;
         }
-        .ptx-reason {
+        .id {
+          flex: 1;
+          min-width: 0;
+        }
+        .name,
+        .meta {
+          margin: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .ptx-source {
+        .name {
+          font-weight: 700;
+        }
+        .meta {
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
+        }
+        .amount {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
           flex-shrink: 0;
         }
-        .ptx-when {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
+        .amt {
+          font-family: var(--font-mono);
+          font-weight: 700;
           white-space: nowrap;
-          flex-shrink: 0;
+        }
+        .pos {
+          color: var(--success-ink);
+        }
+        .neg {
+          color: var(--destructive-ink);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 7rem minmax(0, 1fr);
+          margin: 0;
+        }
+        .kv dt,
+        .kv dd {
+          margin: 0;
+          padding: var(--boxel-sp-3xs) 0;
+          border-top: 1px solid var(--border);
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .kv dt {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+          align-self: center;
+        }
+        .num {
+          font-variant-numeric: tabular-nums;
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof PointsTransaction> {
+    get fact() {
+      let m = this.args.model as PointsTransaction;
+      let who = m?.account?.holder?.name;
+      return `${signed(m?.amount)} points${who ? ` to ${who}` : ''}`;
+    }
     <template>
-      <div class='ptx-fitted'>
-        <div class='ptx-head'>
-          <PointsDelta class='ptx-amount' @amount={{@model.amount}} />
-          <span class='ptx-unit'>pts</span>
-        </div>
-        <span class='ptx-reason'>{{if
-            @model.reason
-            @model.reason
-            'Points adjustment'
-          }}</span>
-        <div class='ptx-meta'>
-          <StatePill @label={{@model.source}} />
-          {{#if @model.occurredAt}}
-            <span class='ptx-when'><@fields.occurredAt /></span>
-          {{/if}}
-        </div>
-      </div>
+      <FitTile>
+        <:avatar><TxMark @size='lg' /></:avatar>
+        <:title>{{reasonOf @model}}</:title>
+        <:subtitle>{{txMeta @model}}</:subtitle>
+        <:status><span class='amt {{sign @model.amount}}'>{{signed
+              @model.amount
+            }}
+            pts</span></:status>
+        <:fact>{{this.fact}}</:fact>
+        <:relations>{{#if @model.account}}<@fields.account
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
       <style scoped>
-        .ptx-fitted {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: 0.25rem;
-          padding: 0.5rem 0.75rem;
-          overflow: hidden;
-        }
-        .ptx-head {
-          display: flex;
-          align-items: baseline;
-          gap: 0.25rem;
-        }
-        .ptx-amount {
-          --text-ui-sm: 1.25rem;
-          line-height: 1;
-        }
-        .ptx-unit {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-        }
-        .ptx-reason {
-          font-size: 0.8125rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
+        .amt {
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          font-weight: 700;
           white-space: nowrap;
         }
-        .ptx-meta {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
+        .pos {
+          color: var(--success-ink);
         }
-        .ptx-when {
-          white-space: nowrap;
-        }
-        @container fitted-card (max-height: 50px) {
-          .ptx-fitted {
-            flex-direction: row;
-            align-items: center;
-            gap: 0.5rem;
-          }
-          .ptx-amount {
-            --text-ui-sm: 0.9375rem;
-          }
-          .ptx-meta {
-            display: none;
-          }
-        }
-        @container fitted-card (max-width: 150px) {
-          .ptx-meta {
-            display: none;
-          }
+        .neg {
+          color: var(--destructive-ink);
         }
       </style>
     </template>
   };
 
   static isolated = class Isolated extends Component<typeof PointsTransaction> {
+    private ledgerQuery: ReturnType<getCards> | undefined;
+
+    constructor(owner: unknown, args: any) {
+      super(owner as never, args as never);
+      this.ledgerQuery = this.args.context?.getCards(
+        this,
+        () => {
+          let ref = identifyCard(PointsTransaction);
+          let account = this.args.model?.account?.id;
+          return ref && account
+            ? {
+                filter: { on: ref, eq: { 'account.id': account } },
+                sort: [{ on: ref, by: 'occurredAt', direction: 'desc' }],
+              }
+            : undefined;
+        },
+        () => {
+          let url = this.args.model?.[realmURL]?.href;
+          return url ? [url] : [];
+        },
+        { isLive: true },
+      );
+    }
+
+    get model() {
+      return this.args.model as PointsTransaction;
+    }
+
+    get ledger(): PointsTransaction[] {
+      return (this.ledgerQuery?.instances ?? []) as PointsTransaction[];
+    }
+
+    get sameAccount(): PointsTransaction[] {
+      return this.ledger.filter((t) => t.id !== this.model?.id).slice(0, 5);
+    }
+
+    get amountHint(): string {
+      return (this.model?.amount ?? 0) < 0
+        ? 'points debited'
+        : 'points credited';
+    }
+
+    /** The account balance once this movement landed: today's balance less every later movement. */
+    get balanceAfter(): string {
+      let balance = this.model?.account?.pointsBalance;
+      let at = asDate(this.model?.occurredAt)?.getTime();
+      if (balance == null || at == null || !this.ledger.length) return '—';
+      let later = this.ledger
+        .filter((t) => (asDate(t.occurredAt)?.getTime() ?? 0) > at)
+        .reduce((a, t) => a + (t.amount ?? 0), 0);
+      return num(balance - later);
+    }
+
     <template>
-      <article class='ptx-page'>
-        <header class='ptx-hero'>
-          <PointsDelta class='ptx-amount' @amount={{@model.amount}} />
-          <span class='ptx-unit'>points</span>
-          <h1 class='ptx-title'>{{if
-              @model.reason
-              @model.reason
-              'Points adjustment'
-            }}</h1>
-          <StatePill class='ptx-source' @label={{@model.source}} />
+      <article class='page'>
+        <header class='head'>
+          <TxMark @size='lg' />
+          <div class='id'>
+            <h1 class='name'>{{reasonOf @model}}</h1>
+            <p class='meta'>{{txMeta @model}}</p>
+          </div>
+          <div class='tags'>
+            <span class='amt {{sign @model.amount}}'>{{signed @model.amount}}
+              pts</span>
+            {{#if @model.expiresAt}}<DotText
+                @label={{dayMonth @model.expiresAt}}
+                @tone='warning'
+              />{{/if}}
+          </div>
         </header>
-        <section class='panel'>
-          <h2>When</h2>
-          <KeyValue class='facts' @items={{TRANSACTION_FACTS}}>
-            <:value as |row|>
-              {{#if (eq row.value 'occurredAt')}}
-                {{#if @model.occurredAt}}<@fields.occurredAt />{{else}}—{{/if}}
-              {{else if @model.expiresAt}}
-                <@fields.expiresAt />
-              {{else}}
-                Never
-              {{/if}}
-            </:value>
-          </KeyValue>
-        </section>
-        {{#if @model.account}}
-          <section class='panel'>
-            <h2>Account</h2>
-            <div class='linked'><@fields.account @format='embedded' /></div>
-          </section>
-        {{/if}}
+
+        <dl class='stats' aria-label='Key numbers'>
+          <div class='stat'>
+            <dt class='label'>Amount</dt>
+            <dd class='value {{sign @model.amount}}'>{{signed
+                @model.amount
+              }}</dd>
+            <dd class='sub'>{{this.amountHint}}</dd>
+          </div>
+          <div class='stat'>
+            <dt class='label'>Source</dt>
+            <dd class='value'>{{if @model.source @model.source '—'}}</dd>
+            <dd class='sub'>{{reasonOf @model}}</dd>
+          </div>
+          <div class='stat'>
+            <dt class='label'>Expires</dt>
+            <dd class='value'>{{if
+                @model.expiresAt
+                (dayMonth @model.expiresAt)
+                'Never'
+              }}</dd>
+            <dd class='sub'>{{if
+                @model.expiresAt
+                (when @model.expiresAt)
+                'no expiry'
+              }}</dd>
+          </div>
+        </dl>
+
+        <div class='cols'>
+          <div class='main'>
+            <section class='sec'>
+              <h2>Transaction</h2>
+              <dl class='kv'>
+                <dt>Reason</dt><dd>{{reasonOf @model}}</dd>
+                <dt>Source</dt><dd>{{if @model.source @model.source '—'}}</dd>
+                <dt>Amount</dt><dd class='num'>{{signed @model.amount}}
+                  points</dd>
+                <dt>Occurred</dt><dd>{{when @model.occurredAt}}</dd>
+                <dt>Expires</dt><dd>{{if
+                    @model.expiresAt
+                    (when @model.expiresAt)
+                    'Never'
+                  }}</dd>
+              </dl>
+            </section>
+            {{#if this.sameAccount.length}}
+              <section class='sec'>
+                <h2>Same account</h2>
+                <ul class='rows'>
+                  {{#each this.sameAccount key='id' as |t|}}
+                    <li class='row'>
+                      <span class='date'>{{day t.occurredAt}}</span>
+                      <span class='what'><strong>{{reasonOf t}}</strong>
+                        {{#if t.source}}<span class='muted'>·
+                            {{t.source}}</span>{{/if}}</span>
+                      <span class='amt {{sign t.amount}}'>{{signed
+                          t.amount
+                        }}</span>
+                    </li>
+                  {{/each}}
+                </ul>
+              </section>
+            {{/if}}
+          </div>
+
+          <aside class='side'>
+            <section class='sec'>
+              <h2>Linked</h2>
+              <dl class='kv'>
+                <dt>Account</dt>
+                <dd>{{#if @model.account}}<@fields.account
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+              </dl>
+            </section>
+            <section class='sec'>
+              <h2>Details</h2>
+              <dl class='kv'>
+                <dt>Amount</dt><dd class='num'>{{signed @model.amount}}</dd>
+                <dt>Source</dt><dd>{{if @model.source @model.source '—'}}</dd>
+                <dt>Occurred</dt><dd>{{day @model.occurredAt}}</dd>
+                <dt>Expires</dt><dd>{{if
+                    @model.expiresAt
+                    (day @model.expiresAt)
+                    'Never'
+                  }}</dd>
+                <dt>Account</dt><dd>{{if
+                    @model.account.holder.name
+                    @model.account.holder.name
+                    '—'
+                  }}</dd>
+                <dt>Balance after</dt><dd class='num'>{{this.balanceAfter}}</dd>
+              </dl>
+            </section>
+          </aside>
+        </div>
       </article>
       <style scoped>
-        .ptx-page {
-          display: grid;
-          gap: 1rem;
-          padding: 1.5rem;
-          max-width: 40rem;
+        .page {
+          margin: var(--boxel-sp-sm);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          font-size: var(--boxel-font-size-xs);
+          overflow: hidden;
         }
-        .ptx-hero {
-          display: grid;
-          grid-template-columns: auto auto;
-          align-items: baseline;
-          column-gap: 0.375rem;
-          row-gap: 0.5rem;
+        .head {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm);
+          border-bottom: 1px solid var(--border);
         }
-        .ptx-amount {
-          --text-ui-sm: 2.5rem;
-          line-height: 1;
+        .id {
+          flex: 1 1 10rem;
+          min-width: 0;
         }
-        .ptx-unit {
-          font-size: 0.875rem;
+        .name {
+          margin: 0;
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .meta {
+          margin: 0;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
-        .ptx-title {
-          grid-column: 1 / -1;
-          font-size: 1.125rem;
+        .tags {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-sm);
+          margin-left: auto;
+        }
+        .stats {
+          margin: 0;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+          border-bottom: 1px solid var(--border);
+          overflow: hidden;
+        }
+        .stat {
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-6xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          margin: 0 -1px -1px 0;
+          border-right: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
+          min-width: 0;
+        }
+        .stat dt,
+        .stat dd {
+          margin: 0;
+        }
+        .label,
+        .kv dt {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
-        }
-        .ptx-source {
-          grid-column: 1 / -1;
-          justify-self: start;
-        }
-        .panel {
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          padding: 1rem;
-        }
-        .panel h2 {
-          margin: 0 0 0.5rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
+          letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        /* Pret UI KeyValue at the panel's label and value sizes */
-        .facts {
-          --text-ui: 0.75rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1rem;
+        .value {
+          font-size: var(--boxel-font-size-lg);
+          font-weight: 700;
+          line-height: 1.2;
+          font-variant-numeric: tabular-nums;
         }
-        .linked {
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
+        .sub,
+        .muted {
+          color: var(--muted-foreground);
+        }
+        .sub {
+          font-size: var(--boxel-font-size-2xs);
           overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+        .main {
+          border-right: 1px solid var(--border);
+        }
+        @container (max-width: 44rem) {
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .main {
+            border-right: 0;
+            border-bottom: 1px solid var(--border);
+          }
+        }
+        .sec + .sec {
+          border-top: 1px solid var(--border);
+        }
+        h2 {
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .rows {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+        }
+        .row {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-sm);
+          border-top: 1px solid var(--border);
+        }
+        .date {
+          flex-shrink: 0;
+          width: 6rem;
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
+        }
+        .what {
+          flex: 1;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .amt {
+          flex-shrink: 0;
+          font-family: var(--font-mono);
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
+          white-space: nowrap;
+        }
+        .pos {
+          color: var(--success-ink);
+        }
+        .neg {
+          color: var(--destructive-ink);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 8rem minmax(0, 1fr);
+          margin: 0;
+          padding: 0 var(--boxel-sp-sm) var(--boxel-sp-3xs);
+        }
+        .kv dt,
+        .kv dd {
+          margin: 0;
+          padding: var(--boxel-sp-3xs) 0;
+          border-top: 1px solid var(--border);
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .num {
+          font-variant-numeric: tabular-nums;
         }
       </style>
     </template>

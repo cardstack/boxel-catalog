@@ -15,6 +15,11 @@
         "links": {
           "self": "../Candidate/jon-ferreira"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -4,12 +4,10 @@ import { fn } from '@ember/helper';
 
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import type { ContractClause } from '@cardstack/catalog/cards/legal/contract-clause';
-import { CLAUSE_TYPE_LABELS } from '@cardstack/catalog/cards/legal/clause';
-import { DEVIATION_SEVERITY_HUE } from '@cardstack/catalog/cards/legal/contract-clause';
+import type { ContractClause } from '../contract-clause';
+import { CLAUSE_TYPE_LABELS } from '../clause';
+import { DEVIATION_SEVERITY_HUE } from '../contract-clause';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 
 // Clause Navigator — the table of contents a reviewer actually needs: a
@@ -67,13 +65,16 @@ export class ClauseNavigator extends GlimmerComponent<Signature> {
     this.args.onOpen?.(clause);
   };
 
+  get summary() {
+    let n = this.clauses.length;
+    let d = this.deviationCount;
+    return `${n} ${n === 1 ? 'clause' : 'clauses'} · ${d} ${d === 1 ? 'deviates' : 'deviate'} from standard`;
+  }
+
   <template>
     <nav class='navigator' aria-label='Contract clauses' ...attributes>
       {{#if this.clauses.length}}
-        <p class='summary'>{{this.clauses.length}}
-          clauses ·
-          {{this.deviationCount}}
-          deviate from standard</p>
+        <p class='summary'>{{this.summary}}</p>
         {{#each this.groups as |group|}}
           <section class='group'>
             <h3>{{group.label}}</h3>
@@ -101,7 +102,7 @@ export class ClauseNavigator extends GlimmerComponent<Signature> {
         <EmptyState
           @title='No clauses recorded for this contract yet.'
           @texture={{false}}
-          style={{COMPACT_EMPTY_STYLE}}
+          @size='s'
         />
       {{/if}}
     </nav>
@@ -109,17 +110,16 @@ export class ClauseNavigator extends GlimmerComponent<Signature> {
       .navigator {
         display: grid;
         gap: var(--boxel-sp-sm);
-        font-size: 0.875rem;
+        font-size: var(--boxel-font-size-sm);
       }
       .summary {
-        margin: 0;
         color: var(--muted-foreground);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
         font-variant-numeric: tabular-nums;
       }
       .group h3 {
         margin: 0 0 var(--boxel-sp-5xs);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.08em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -129,7 +129,7 @@ export class ClauseNavigator extends GlimmerComponent<Signature> {
         margin: 0;
         padding: 0;
         display: grid;
-        gap: 2px;
+        gap: var(--boxel-sp-6xs);
       }
       .clause-row {
         display: flex;
@@ -142,8 +142,10 @@ export class ClauseNavigator extends GlimmerComponent<Signature> {
         border-radius: calc(var(--radius) / 1.5);
         background: transparent;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-        cursor: pointer;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         color: inherit;
       }
       .clause-row:hover {

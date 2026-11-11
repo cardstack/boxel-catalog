@@ -9,14 +9,14 @@ import {
 import CoordinateField from '@cardstack/base/coordinate';
 import ClipboardListIcon from '@cardstack/boxel-icons/clipboard-list';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 import {
   FindingField,
   FINDING_STATE_LABELS,
   FINDING_STATE_HUE,
 } from './finding-field';
 import { ProofField } from './proof-field';
-import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severity-badge';
+import { SeverityBadge } from './components/severity-badge';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Token } from '@cardstack/pretui/components/token';
 import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
@@ -101,19 +101,19 @@ export class InspectionFindingField extends FindingField {
           gap: var(--boxel-sp-xs);
         }
         .where {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
         .observed {
           margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.5;
         }
         .foot {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>

@@ -12,13 +12,21 @@ import TimeField from 'https://cardstack.com/base/time';
 import BooleanField from 'https://cardstack.com/base/boolean';
 import enumField from 'https://cardstack.com/base/enum';
 import CalendarCogIcon from '@cardstack/boxel-icons/calendar-cog';
-import CalendarOffIcon from '@cardstack/boxel-icons/calendar-off';
-import { htmlSafe } from '@ember/template';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { Stat } from '@cardstack/pretui/components/stat';
-
 import type { BusinessSchedule, DayWindow } from './utils/sla';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
+import { FitTile } from '../shared/fit-tile';
+import { FittedExtras } from '../procurement/vendor';
+import {
+  RecCard,
+  RecHead,
+  RecStats,
+  RecBody,
+  RecBlock,
+  RecRow,
+  RecLine,
+} from './components/record';
 
 export const WEEKDAYS = [
   'Sunday',
@@ -141,35 +149,6 @@ export class DayWindowField extends FieldDef {
   // renders the 24-hour picker and writes back through the model, so the
   // hand-wired BoxelInput pair this replaced was the same control built a
   // second time.
-  static edit = class Edit extends Component<typeof this> {
-    <template>
-      <div class='dw-edit'>
-        <@fields.day />
-        <@fields.opensAt />
-        <span class='dw-dash'>to</span>
-        <@fields.closesAt />
-      </div>
-      <style scoped>
-        .dw-edit {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          flex-wrap: wrap;
-        }
-        .dw-dash {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-      </style>
-    </template>
-  };
-}
-
-interface StripDay {
-  short: string;
-  isOpen: boolean;
-  label: string;
-  barStyle: ReturnType<typeof htmlSafe>;
 }
 
 /**
@@ -217,9 +196,8 @@ export class Schedule extends CardDef {
     },
   });
 
-  // The fitted footer used to repeat `summary`, which the body already showed —
-  // measured against a real instance the hours string printed THREE times in one
-  // cell. Whether this is the schedule new queues inherit is the one fact about a
+  // The fitted footer does not repeat `summary`, which the body already shows.
+  // Whether this is the schedule new queues inherit is the one fact about a
   // Schedule that nothing else on the card states, so the footer carries it. Both
   // branches return text: an empty footer at 14 of 16 sizes is its own defect.
   @field defaultLabel = contains(StringField, {
@@ -259,262 +237,177 @@ export class Schedule extends CardDef {
   }
 
   static isolated = class Isolated extends Component<typeof this> {
-    get strip(): StripDay[] {
-      let windows = this.args.model?.windows ?? [];
-      return SHORT_DAYS.map((short, index) => {
-        let match = windows.find(
-          (w) => WEEKDAYS.indexOf(w?.day as never) === index,
-        );
-        if (!match) {
-          return {
-            short,
-            isOpen: false,
-            label: 'Closed',
-            barStyle: htmlSafe('display:none'),
-          };
-        }
-        let open = minutesOfClock(match.opensAt?.value);
-        let close = minutesOfClock(match.closesAt?.value);
-        let span = Math.max(0, close - open);
+    // Minutes between two 'HH:MM' times; anything unparseable counts as 0.
+    private mins(t: unknown): number {
+      let m = /^(\d{1,2}):(\d{2})/.exec(clockOf(t as any) ?? '');
+      return m ? Number(m[1]) * 60 + Number(m[2]) : 0;
+    }
+    get open() {
+      return (this.args.model?.windows ?? []).filter(
+        (w) => w && this.mins(w.closesAt) > this.mins(w.opensAt),
+      );
+    }
+    get hoursPerWeek() {
+      let total = this.open.reduce(
+        (n, w) => n + this.mins(w.closesAt) - this.mins(w.opensAt),
+        0,
+      );
+      return `${Math.round(total / 6) / 10}h`;
+    }
+    get dayHint() {
+      let n = new Set(this.open.map((w) => w.day)).size;
+      return `${n} working ${n === 1 ? 'day' : 'days'}`;
+    }
+    get days() {
+      const WEEK = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+      ];
+      let byDay = new Map(this.open.map((w) => [w.day, w]));
+      return WEEK.map((day) => {
+        let w = byDay.get(day as any);
         return {
-          short,
-          isOpen: span > 0,
-          label: `${clockOf(match.opensAt)}–${clockOf(match.closesAt)}`,
-          // Drawn to scale on a 24-hour axis, so a Saturday half-day is
-          // something you see rather than something you read.
-          barStyle: htmlSafe(
-            `top:${((open / (24 * 60)) * 100).toFixed(2)}%;height:${((span / (24 * 60)) * 100).toFixed(2)}%`,
-          ),
+          day,
+          hours: w
+            ? `${clockOf(w.opensAt as any)}–${clockOf(w.closesAt as any)}`
+            : 'closed',
         };
       });
     }
-
+    get holidayList() {
+      return (this.args.model?.holidays ?? [])
+        .filter(Boolean)
+        .map((d) => new Date(d as any))
+        .sort((a, b) => a.getTime() - b.getTime())
+        .map((d) => ({
+          date: d.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+          weekday: d.toLocaleDateString('en-US', { weekday: 'long' }),
+        }));
+    }
+    get holidayTotal() {
+      return (this.args.model?.holidays ?? []).filter(Boolean).length;
+    }
+    get nextHoliday() {
+      let now = Date.now();
+      let next = (this.args.model?.holidays ?? [])
+        .map((d) => (d ? new Date(d as any) : undefined))
+        .filter((d): d is Date => !!d && d.getTime() >= now)
+        .sort((a, b) => a.getTime() - b.getTime())[0];
+      return next
+        ? `next ${next.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}`
+        : 'none ahead';
+    }
+    get zoneShort() {
+      let z = this.args.model?.timeZone ?? '';
+      if (!z.includes('/')) return z || '—';
+      let city = z.split('/').pop() ?? '';
+      return (
+        city
+          .split('_')
+          .map((w) => w[0] ?? '')
+          .join('')
+          .toUpperCase() || '—'
+      );
+    }
     <template>
-      <article class='iso'>
-        <header class='iso-head'>
-          <div class='iso-id'>
-            <h1>{{@model.title}}</h1>
-            <p class='iso-sub'>{{@model.summary}}</p>
-          </div>
-          {{! Pret UI Stat for the header figures. Every value is a word or
-              a pre-formatted count, so none of them rolls. }}
-          <div class='iso-facts'>
-            <Stat
-              class='fact'
-              @label='Time zone'
-              @value={{if @model.timeZone @model.timeZone 'UTC'}}
-              @roll={{false}}
-            />
-            <Stat
-              class='fact'
-              @label='Holidays'
-              @value={{if @model.holidayCount @model.holidayCount ''}}
-              @roll={{false}}
-            />
-            {{#if @model.isDefault}}
-              <Stat
-                class='fact'
-                @label='Role'
-                @value='Realm default'
-                @roll={{false}}
-              />
-            {{/if}}
-          </div>
-        </header>
-
-        <section class='week' aria-label='Working week'>
-          <h2 class='sr-only'>Working week</h2>
-          <div class='week-axis' aria-hidden='true'>
-            <span>00</span><span>06</span><span>12</span><span>18</span><span
-            >24</span>
-          </div>
-          <ul class='week-days'>
-            {{#each this.strip as |day|}}
-              <li class='day {{unless day.isOpen "day-closed"}}'>
-                <span class='day-track'>
-                  <span class='day-bar' style={{day.barStyle}}></span>
-                </span>
-                <span class='day-name'>{{day.short}}</span>
-                <span class='day-hours'>{{day.label}}</span>
-              </li>
-            {{/each}}
-          </ul>
-        </section>
-
-        <section class='holidays'>
-          <h2><CalendarOffIcon
-              class='sec-icon'
-              role='presentation'
-            />Holidays</h2>
-          {{#if @model.holidays.length}}
-            <ul class='holiday-list'>
-              {{#each @fields.holidays as |Holiday|}}
-                <li><Holiday /></li>
+      <RecCard @inset={{true}}>
+        <RecHead @mark='BH' @title={{@model.title}} @sub={{@model.summary}}>
+          <:status>{{#if @model.isDefault}}<Chip
+                @appearance='plain'
+                @tone='info'
+              >default</Chip>{{/if}}<Chip
+              @appearance='plain'
+            >{{this.holidayTotal}} holidays</Chip></:status>
+        </RecHead>
+        <RecStats>
+          <Stat
+            @label='Hours / week'
+            @tone='neutral'
+            @value={{this.hoursPerWeek}}
+            @hint={{this.dayHint}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Holidays'
+            @tone='neutral'
+            @value={{this.holidayTotal}}
+            @hint={{this.nextHoliday}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Time zone'
+            @tone='neutral'
+            @value={{this.zoneShort}}
+            @hint={{@model.timeZone}}
+            @roll={{false}}
+          />
+        </RecStats>
+        <RecBody>
+          <:main>
+            <RecBlock @title='Working hours'>
+              {{#each this.days as |d|}}
+                <RecLine><:default><b>{{d.day}}</b></:default><:end><span
+                      class='mono dim'
+                    >{{d.hours}}</span></:end></RecLine>
               {{/each}}
-            </ul>
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @title='No holidays set'
-              @message='The clock will tick on public holidays — add them here so it stops.'
-              @texture={{false}}
-            />
-          {{/if}}
-        </section>
-      </article>
-
+            </RecBlock>
+            <RecBlock @title='Holidays'>
+              {{#each this.holidayList as |h|}}
+                <RecLine><:default><span
+                      class='mono'
+                    >{{h.date}}</span></:default><:end><span
+                      class='dim'
+                    >{{h.weekday}}</span></:end></RecLine>
+              {{else}}
+                <RecLine><span class='dim'>No holidays.</span></RecLine>
+              {{/each}}
+            </RecBlock>
+          </:main>
+          <:side>
+            <RecBlock @title='Details'>
+              <RecRow @label='Time zone'>{{if
+                  @model.timeZone
+                  @model.timeZone
+                  '—'
+                }}</RecRow>
+              {{#each this.days as |d|}}
+                <RecRow @label={{d.day}} @mono={{true}}>{{d.hours}}</RecRow>
+              {{/each}}
+              <RecRow
+                @label='Hours / week'
+                @mono={{true}}
+              >{{this.hoursPerWeek}}</RecRow>
+              <RecRow
+                @label='Holidays'
+                @mono={{true}}
+              >{{this.holidayTotal}}</RecRow>
+              <RecRow @label='Next holiday'>{{this.nextHoliday}}</RecRow>
+              <RecRow @label='Default'>{{if
+                  @model.isDefault
+                  'Yes'
+                  'No'
+                }}</RecRow>
+            </RecBlock>
+          </:side>
+        </RecBody>
+      </RecCard>
       <style scoped>
-        .iso {
-          container-name: iso;
-          container-type: inline-size;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-lg);
-          padding: var(--boxel-sp-lg);
-          min-height: 100%;
+        .mono {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
         }
-        .iso-head {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: space-between;
-          gap: var(--boxel-sp);
-          padding-bottom: var(--boxel-sp);
-          border-bottom: 1px solid var(--border);
-        }
-        .iso-head h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-        .iso-sub {
-          margin: 0;
+        .dim {
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
-          font-size: var(--boxel-font-size-sm);
-        }
-        .iso-facts {
-          display: flex;
-          gap: var(--boxel-sp-lg);
-        }
-        /* Pret UI Stat: the knob keeps each value at its old 14px size. */
-        .fact {
-          --text-stat: var(--boxel-font-size-sm);
-          min-width: 0;
-          overflow-wrap: anywhere;
-        }
-        .week-axis {
-          display: flex;
-          justify-content: space-between;
-          font-size: 0.625rem;
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-          max-width: 3.5rem;
-          flex-direction: column;
-          height: 8rem;
-        }
-        .week {
-          display: flex;
-          gap: var(--boxel-sp-sm);
-          align-items: stretch;
-        }
-        .week-days {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          gap: var(--boxel-sp-xs);
-          flex: 1;
-          min-width: 0;
-        }
-        .day {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .day-track {
-          position: relative;
-          width: 100%;
-          height: 8rem;
-          border-radius: 0.1875rem;
-          background-color: var(--muted);
-          border: 1px solid var(--border);
-          overflow: hidden;
-        }
-        .day-bar {
-          position: absolute;
-          left: 0;
-          right: 0;
-          background-color: color-mix(
-            in oklch,
-            var(--primary) 55%,
-            var(--card)
-          );
-        }
-        .day-name {
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-        }
-        .day-hours {
-          font-size: 0.625rem;
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-          text-align: center;
-        }
-        .day-closed .day-name,
-        .day-closed .day-hours {
-          color: var(--muted-foreground);
-          opacity: 0.6;
-        }
-        .holidays h2 {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-        }
-        /* Rule 5: one icon per section header, quiet by design — muted colour and
-           ~1em with a px floor, so it identifies the section without competing
-           with it. Same size in every header, which is what makes the card
-           scannable by shape on a second visit. */
-        .sec-icon {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          flex: 0 0 auto;
-          color: var(--muted-foreground);
-        }
-        .holiday-list {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-xs);
-        }
-        .holiday-list li {
-          padding: 0.15rem 0.5rem;
-          border: 1px solid var(--border);
-          border-radius: 0.1875rem;
-          font-size: var(--boxel-font-size-xs);
-          font-variant-numeric: tabular-nums;
-        }
-        .sr-only {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          overflow: hidden;
-          clip: rect(0 0 0 0);
-        }
-        @container iso (max-width: 34rem) {
-          .week-axis {
-            display: none;
-          }
-          .day-hours {
-            display: none;
-          }
         }
       </style>
     </template>
@@ -522,251 +415,108 @@ export class Schedule extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <div class='sch-emb'>
-        <span class='sch-name'>{{@model.title}}</span>
-        <span class='sch-sum'>{{@model.summary}}</span>
-        <span class='sch-meta'>{{if @model.timeZone @model.timeZone 'UTC'}}
-          ·
-          {{@model.holidayCount}}</span>
-      </div>
-      <style scoped>
-        .sch-emb {
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        .sch-name {
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-        }
-        .sch-sum {
-          font-size: var(--boxel-font-size-xs);
-          font-variant-numeric: tabular-nums;
-        }
-        .sch-meta {
-          font-size: 0.625rem;
-          color: var(--muted-foreground);
-        }
-      </style>
+      <RecCard>
+        <RecHead @mark='BH' @title={{@model.title}} @sub={{@model.summary}}>
+          <:status>{{#if @model.isDefault}}<Chip
+                @appearance='plain'
+                @tone='info'
+              >default</Chip>{{/if}}{{#if @model.holidayCount}}<Chip
+                @appearance='plain'
+              >{{@model.holidayCount}}</Chip>{{/if}}</:status>
+        </RecHead>
+        <RecRow @label='Time zone'>{{if
+            @model.timeZone
+            @model.timeZone
+            '—'
+          }}</RecRow>
+        <RecRow @label='Open' @mono={{true}}>{{if
+            @model.summary
+            @model.summary
+            '—'
+          }}</RecRow>
+        <RecRow @label='Holidays' @mono={{true}}>{{if
+            @model.holidayCount
+            @model.holidayCount
+            '—'
+          }}</RecRow>
+      </RecCard>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='sch-atom'>{{@model.title}}{{#if @model.timeZone}}
-          <span class='tz'>({{@model.timeZone}})</span>
-        {{/if}}</span>
+      <span class='atom'>
+        <span class='mark' aria-hidden='true'>BH</span>
+        <span class='nm'>{{@model.title}}</span>
+        {{#if @model.timeZone}}<Chip
+            @appearance='plain'
+          >{{@model.timeZone}}</Chip>{{/if}}
+      </span>
       <style scoped>
-        .sch-atom {
+        .atom {
           display: inline-flex;
-          gap: 0.25rem;
-          align-items: baseline;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          align-items: center;
+          gap: 0.3125rem;
+          min-inline-size: 0;
+          max-inline-size: 100%;
+          font-size: 0.75rem;
         }
-        .tz {
+        .mark {
+          flex: none;
+          display: grid;
+          place-items: center;
+          inline-size: 1rem;
+          block-size: 1rem;
+          border: 1px solid var(--border);
+          font: 600 0.5625rem/1 var(--font-mono);
           color: var(--muted-foreground);
-          font-size: 0.6875rem;
+        }
+        .nm {
+          min-inline-size: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    get facts() {
+      let m = this.args.model;
+      return [
+        { key: 'Time zone', value: String((m as any)?.timeZone ?? '') || '—' },
+        { key: 'Open', value: String((m as any)?.summary ?? '') || '—' },
+        {
+          key: 'Holidays',
+          value: String((m as any)?.holidayCount ?? '') || '—',
+        },
+        {
+          key: 'Default',
+          value: String((m as any)?.defaultLabel ?? '') || '—',
+        },
+      ];
+    }
     <template>
-      <article class='fit'>
-        <header class='r-head'>
-          <CalendarCogIcon class='fit-glyph' role='presentation' />
-          <h3 class='title'>{{@model.title}}</h3>
-          <span class='badge'>{{@model.timeZone}}</span>
-        </header>
-        {{! Five slots, five DISTINCT values. Previously `summary` filled .line,
-            .blurb and .r-meta while `holidayCount` filled .line-2 and .tail, so
-            11 of the 16 sizes repeated themselves. }}
-        <div class='r-body'>
-          <span class='line'>{{@model.summary}}</span>
-          <p class='blurb'>{{@model.cardInfo.summary}}</p>
-          <span class='tail'>{{@model.holidayCount}}</span>
-        </div>
-        <footer class='r-meta'>{{@model.defaultLabel}}</footer>
-      </article>
-      <style scoped>
-        /* Same skeleton as ticket.gts: one `.fit` grid, no container declared
-           here (the host provides `fitted-card`), one continuous type scale,
-           and tiers that ADD a row rather than un-crop one. */
-        .fit {
-          width: 100%;
-          height: 100%;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          grid-template-areas: 'head' 'body' 'meta';
-          gap: 0.125rem;
-          padding: 0.4375rem 0.5625rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
-          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
-        }
-        .fit > * {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-head {
-          grid-area: head;
-          display: flex;
-          align-items: baseline;
-          gap: 0.3125rem;
-          min-width: 0;
-        }
-        /* fitted-card Rule 2: the anchor. Without it these cells were a title at
-           weight 600 plus a badge — no image, no glyph, and 600 is not the
-           "decisively loud" type the rule accepts as a substitute, so all 16
-           sizes read as bare text. This is the card's OWN icon, the same one its
-           isolated section headers use, which is what makes it identity rather
-           than decoration.
-
-           Sized in em with a px floor so it never shrinks to a dot; `align-self`
-           because the head is a baseline row and an SVG has no baseline; muted so
-           the title stays the loudest thing in the cell. */
-        .fit-glyph {
-          flex: none;
-          align-self: center;
-          width: max(0.6875rem, 1.1em);
-          height: max(0.6875rem, 1.1em);
-          color: var(--muted-foreground);
-        }
-        .title {
-          flex: 1;
-          min-width: 0;
-          margin: 0;
-          font-size: var(--type-title);
-          font-weight: 600;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .badge {
-          flex: none;
-          margin-left: auto;
-          font-family: var(--font-mono);
-          font-size: var(--type-base);
-          font-weight: 600;
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-        .r-body {
-          grid-area: body;
-          display: none;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
-        }
-        .line {
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .blurb {
-          display: none;
-          margin: 0;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .tail {
-          display: none;
-          margin-top: auto;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .r-meta {
-          grid-area: meta;
-          display: none;
-          align-items: center;
-          gap: 0.375rem;
-          min-width: 0;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-        }
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 50px) {
-          .r-meta {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 50px) and (height <= 105px) {
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 80px) {
-          .r-body {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 160px) {
-          .blurb {
-            display: -webkit-box;
-          }
-        }
-        @container fitted-card (height > 240px) {
-          .blurb {
-            -webkit-line-clamp: 4;
-          }
-          .tail {
-            display: block;
-          }
-        }
-        @container fitted-card (width > 300px) and (height <= 130px) {
-          .fit {
-            grid-template-columns: minmax(12.5rem, 1fr) auto;
-            grid-template-areas: 'head meta' 'body meta';
-            align-items: center;
-          }
-          .r-meta {
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.0625rem;
-          }
-        }
-        @container fitted-card (width <= 170px) {
-          .fit-glyph {
-            display: none;
-          }
-          /* The glyph is dropped just above, so from here down the anchor is
-             type alone — and fitted-card Rule 2's typographic path wants real
-             weight. Weight only, never size: at 150px the title is one word from
-             wrapping and Rule 1 (nothing clipped) outranks Rule 2. */
-          .title {
-            font-weight: 700;
-          }
-        }
-      </style>
+      <FittedExtras @facts={{this.facts}}>
+        <:default>
+          <FitTile>
+            <:avatar><PretAvatar
+                @name='BH'
+                @shape='square'
+                @size={{32}}
+              /></:avatar>
+            <:title>{{@model.title}}</:title>
+            <:subtitle>{{@model.timeZone}}</:subtitle>
+            <:status>{{#if @model.isDefault}}<Chip
+                  @appearance='plain'
+                  @tone='info'
+                >default</Chip>{{/if}}</:status>
+            <:fact>{{@model.summary}}</:fact>
+          </FitTile>
+        </:default>
+      </FittedExtras>
     </template>
   };
 }

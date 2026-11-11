@@ -1,5 +1,6 @@
 import Component from '@glimmer/component';
 import type { BoxComponent, CardDef } from '@cardstack/base/card-api';
+import { eq } from '@cardstack/pretui/helpers';
 import { List } from '@cardstack/pretui/components/list';
 
 interface Signature {
@@ -10,6 +11,9 @@ interface Signature {
     onOpen: (card: CardDef) => void;
     emptyMessage?: string;
     loading?: boolean;
+    format?: 'embedded' | 'atom' | 'fitted';
+    // fitted rows: 'sm' is a 2.75rem strip, 'md' a 4rem row (title, meta, status)
+    rowSize?: 'sm' | 'md';
     selected?: string;
     onSelect?: (card: CardDef) => void;
   };
@@ -59,7 +63,15 @@ export class CardList extends Component<Signature> {
       <:item as |card|>
         <div class='row'>
           {{#let (@cardComponent card) as |C|}}
-            <C @format='embedded' class='row-card' />
+            <C
+              @format={{if @format @format 'embedded'}}
+              @displayContainer={{false}}
+              class='row-card'
+              data-fitted={{if
+                (eq @format 'fitted')
+                (if (eq @rowSize 'md') 'md' 'sm')
+              }}
+            />
           {{/let}}
           {{#if (has-block 'actions')}}
             <div class='row-actions'>{{yield card to='actions'}}</div>
@@ -77,6 +89,12 @@ export class CardList extends Component<Signature> {
       .row-card {
         flex: 1;
         min-width: 0;
+      }
+      .row-card[data-fitted='sm'] {
+        block-size: 2.75rem;
+      }
+      .row-card[data-fitted='md'] {
+        block-size: 4rem;
       }
       .row-actions {
         display: flex;

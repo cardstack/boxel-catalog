@@ -19,6 +19,13 @@
         "module": "../termination-clause",
         "name": "TerminationClause"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

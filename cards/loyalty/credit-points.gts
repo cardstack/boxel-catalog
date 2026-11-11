@@ -1,12 +1,7 @@
-import {
-  CardDef,
-  contains,
-  field,
-  linksTo,
-} from 'https://cardstack.com/base/card-api';
-import StringField from 'https://cardstack.com/base/string';
-import NumberField from 'https://cardstack.com/base/number';
-import DateTimeField from 'https://cardstack.com/base/datetime';
+import { CardDef, contains, field, linksTo } from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import NumberField from '@cardstack/base/number';
+import DateTimeField from '@cardstack/base/datetime';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';

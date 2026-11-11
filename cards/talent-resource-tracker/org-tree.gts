@@ -1,21 +1,18 @@
 import GlimmerComponent from '@glimmer/component';
-import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { on } from '@ember/modifier';
+import type { CardDef } from '@cardstack/base/card-api';
+import { getComponent, StatusDot } from './shared';
 
-import { Avatar } from '@cardstack/pretui/components/avatar';
-import { Button } from '@cardstack/pretui/components/button';
-import { Chip } from '@cardstack/pretui/components/chip';
-
-import { Tree, type TreeNode, type TreeRowMeta } from '../../components/tree';
-import { stateColorOf } from '../../components/state-pill';
-import { EMPLOYEE_STATUS_COLORS } from '../hr/employee';
+import { Tree, type TreeNode } from '@cardstack/catalog/components/tree';
 
 export interface OrgTreeItem {
   id?: string;
   name?: string;
   role?: string;
-  initials?: string;
   photoUrl?: string;
+  /** the person's card, shown as its own atom */
+  card?: CardDef;
   status?: string;
   openReqs?: number;
 }
@@ -28,107 +25,106 @@ interface Signature {
   Element: HTMLElement;
 }
 
+function openReqLabel(n: number): string {
+  return `${n} Open Req${n === 1 ? '' : 's'}`;
+}
+
+const isActive = (status: string) => status === 'active';
+const isOnboarding = (status: string) => status === 'onboarding';
+
+function statusLabel(status: string): string {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
 /**
- * The reporting tree, on the catalog Tree. Each manager row rolls up its whole
- * team and the open requisitions under it, which is why this is a hiring view
- * rather than an org poster: a manager whose team is about to double is the
- * one whose interview load is full.
+ * The reporting tree: one node per person (their atom, role) hanging off its
+ * manager's guide line. A node carries the person's open requisitions as
+ * hiring manager, and their status when it is anything but active.
  */
 export class OrgTree extends GlimmerComponent<Signature> {
-  get openReqRollups(): Map<string, number> {
-    let map = new Map<string, number>();
-    let walk = (node: TreeNode<OrgTreeItem>): number => {
-      let total =
-        (node.item.openReqs ?? 0) +
-        node.children.reduce((sum, child) => sum + walk(child), 0);
-      if (node.item.id) map.set(node.item.id, total);
-      return total;
-    };
-    (this.args.roots ?? []).forEach(walk);
-    return map;
-  }
-
-  openReqsFor = (item: OrgTreeItem): number =>
-    this.openReqRollups.get(item.id ?? '') ?? item.openReqs ?? 0;
-
-  hueFor = (item: OrgTreeItem): string =>
-    stateColorOf(EMPLOYEE_STATUS_COLORS, item.status).ring;
-
   select = (item: OrgTreeItem) => {
-    this.args.onSelect?.(item);
+    this.args.onSelect?.({ id: item.id });
   };
 
   <template>
     <nav class='org-tree' aria-label='Reporting lines' ...attributes>
       <Tree @roots={{@roots}} @emptyMessage='No employees yet.'>
-        <:row as |item meta|>
-          <div class='org-row'>
-            <Avatar
-              @name={{if item.name item.name ''}}
-              @src={{item.photoUrl}}
-              @hue={{this.hueFor item}}
-              @size={{28}}
-            />
-            <Button
-              type='button'
-              @tone='neutral'
-              @appearance='plain'
-              class='org-label'
-              {{on 'click' (fn this.select item)}}
-            >
-              <span class='org-name'>{{item.name}}</span>
-              <span class='org-role'>{{item.role}}</span>
-            </Button>
-            <OrgRollup @meta={{meta}} @openReqs={{this.openReqsFor item}} />
-          </div>
+        <:row as |item|>
+          <button
+            type='button'
+            class='org-node'
+            aria-label={{item.name}}
+            {{on 'click' (fn this.select item)}}
+          >
+            {{#let (getComponent item.card) as |Atom|}}{{#if Atom}}<Atom
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}<strong>{{item.name}}</strong>{{/if}}{{/let}}
+            <span class='org-role'>{{item.role}}</span>
+            <span class='org-flags'>
+              {{#if item.openReqs}}
+                <StatusDot
+                  @tone='primary'
+                  @label={{openReqLabel item.openReqs}}
+                />
+              {{/if}}
+              {{#if item.status}}
+                {{#unless (isActive item.status)}}
+                  <StatusDot
+                    @tone={{if (isOnboarding item.status) 'warning' 'neutral'}}
+                    @label={{statusLabel item.status}}
+                  />
+                {{/unless}}
+              {{/if}}
+            </span>
+          </button>
         </:row>
       </Tree>
     </nav>
     <style scoped>
-      .org-row {
-        display: flex;
+      /* The guide sits under the atom's 20px mark; each level steps in by
+         that much plus a gap. Rows are flat 28px lines, no inner cards. */
+      .org-tree {
+        --tree-guide-x: calc(var(--trt-px) + 0.625rem);
+        --tree-indent: calc(var(--tree-guide-x) + var(--boxel-sp-lg));
+        --tree-row-pad: 0;
+      }
+      /* the mock's ruled rows: name, role in a middle column, flags right */
+      .org-node {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
         align-items: center;
         gap: var(--boxel-sp-xs);
-        min-width: 0;
+        min-height: var(--trt-rowh);
+        inline-size: 100%;
+        border-block-end: 1px solid var(--border);
+        padding: 0 var(--trt-px);
+        border-inline: 0;
+        border-block-start: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
       }
-      .org-label {
+      .org-node:hover {
+        background: var(--hover);
+      }
+      .org-node:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: -0.125rem;
+      }
+      .org-flags {
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        min-width: 0;
-        text-align: start;
-      }
-      .org-name {
-        font-weight: 600;
-        color: var(--foreground);
+        gap: var(--boxel-sp-xs);
+        justify-content: flex-end;
       }
       .org-role {
-        font-size: var(--boxel-font-size-xs);
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         color: var(--muted-foreground);
-      }
-    </style>
-  </template>
-}
-
-interface RollupSignature {
-  Args: { meta: TreeRowMeta; openReqs: number };
-}
-
-class OrgRollup extends GlimmerComponent<RollupSignature> {
-  <template>
-    <span class='rollup'>
-      {{#if @meta.hasChildren}}
-        <Chip @dot={{false}}>Team {{@meta.descendantCount}}</Chip>
-      {{/if}}
-      {{#if @openReqs}}
-        <Chip @hue='var(--primary)'>Hiring {{@openReqs}}</Chip>
-      {{/if}}
-    </span>
-    <style scoped>
-      .rollup {
-        display: inline-flex;
-        gap: var(--boxel-sp-4xs);
-        margin-inline-start: auto;
       }
     </style>
   </template>

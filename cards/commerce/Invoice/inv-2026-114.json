@@ -8,7 +8,7 @@
       "status": "sent",
       "lineItems": [
         {
-          "description": "Implementation services — August",
+          "description": "Implementation services \u2014 August",
           "quantity": 40,
           "unitPrice": {
             "amount": 165,
@@ -26,6 +26,13 @@
       "adoptsFrom": {
         "module": "../invoice",
         "name": "Invoice"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

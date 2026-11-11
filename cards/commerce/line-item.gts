@@ -2,8 +2,8 @@ import { FieldDef, Component, contains, field } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
-import { Money } from '@cardstack/catalog/cards/crm/money';
-import { hasNumber } from '@cardstack/catalog/cards/crm/utils';
+import { Money } from '../crm/money';
+import { hasNumber } from '../crm/utils';
 import { lineTotal } from './line-item-totals';
 
 export class LineItem extends FieldDef {
@@ -38,10 +38,10 @@ export class LineItem extends FieldDef {
         .line-item {
           display: grid;
           grid-template-columns: 1fr auto auto;
-          gap: 1rem;
+          gap: var(--boxel-sp);
           align-items: baseline;
-          font-size: 0.875rem;
-          padding: 0.25rem 0;
+          font-size: var(--boxel-font-size-sm);
+          padding: var(--boxel-sp-4xs) 0;
         }
         .qty {
           color: var(--muted-foreground);

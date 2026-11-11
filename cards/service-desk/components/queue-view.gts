@@ -4,38 +4,42 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { consume } from 'ember-provide-consume-context';
 import { debounce } from 'lodash-es';
-import { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock';
-import { concat } from '@ember/helper';
+import { slaClock } from '../utils/sla-clock';
 import { array } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { SearchInput } from '@cardstack/pretui/components/search-input';
+import { LayoutControl } from '@cardstack/pretui/components/layout-control';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Checkbox } from '@cardstack/pretui/components/checkbox';
+import { Chip } from '@cardstack/pretui/components/chip';
+import PlusIcon from '@cardstack/boxel-icons/plus';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
 import { CardCrudFunctionsContextName } from '@cardstack/runtime-common';
 import type { CardCrudFunctions } from '@cardstack/base/card-api';
 
-import { TransitionTicketStatusCommand } from '@cardstack/catalog/cards/service-desk/commands/transition-ticket-status-command';
-import { AutoAssignTicketCommand } from '@cardstack/catalog/cards/service-desk/commands/auto-assign-ticket-command';
+import { TransitionTicketStatusCommand } from '../commands/transition-ticket-status-command';
+import { AutoAssignTicketCommand } from '../commands/auto-assign-ticket-command';
 import type { CardContext } from '@cardstack/base/card-api';
 
-import type { Ticket } from '@cardstack/catalog/cards/service-desk/ticket';
-import { SlaTimerBadge } from '@cardstack/catalog/cards/service-desk/components/sla-timer-badge';
+import type { Ticket } from '../ticket';
+import { SlaTimerBadge } from './sla-timer-badge';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
 } from '@cardstack/catalog/components/pretui-helpers';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { priorityOption } from '@cardstack/catalog/fields/priority/priority';
-import Popover from '@cardstack/catalog/46f065-popover/popover';
 import { guidFor } from '@ember/object/internals';
 import {
   TicketStatusField,
   TicketPriorityField,
   ticketPriorityRank,
-} from '@cardstack/catalog/cards/service-desk/ticket-taxonomy';
+} from '../ticket-taxonomy';
 import { LENSES, matchesLens, type Lens } from '../utils/queue-lens';
 
 interface StatCell {
@@ -72,6 +76,9 @@ interface Signature {
     /** Restrict to one queue. Owned by the rail when the rail is present. */
     queueName?: string;
     onClearQueue?: () => void;
+    onQueue?: (queueName: string | undefined) => void;
+    onNew?: (event: Event) => void;
+    creating?: boolean;
     /** The search term, when the console's header owns the search box. */
     search?: string;
     onClearSearch?: () => void;
@@ -97,7 +104,87 @@ interface Signature {
  *     screens. Collapsing them into "No results were found" tells the reader
  *     nothing about which situation they are in.
  */
+const F = (...forms: [string, number][]) =>
+  forms.map(([name, minWidth]) => ({ name, minWidth }));
+const SEARCH_FORMS = F(['field', 12], ['field-s', 8], ['icon', 2], ['menu', 0]);
+const QUEUE_FORMS = F(['chips', 24], ['menu', 0]);
+const ADD_FORMS = F(['label', 8], ['icon', 2]);
+
+const TONE_BY_HUE: Record<string, PretuiToneArg> = {
+  red: 'danger',
+  orange: 'warning',
+  amber: 'warning',
+  yellow: 'warning',
+  green: 'success',
+  blue: 'info',
+};
+
 export class QueueView extends GlimmerComponent<Signature> {
+  get lensLabel(): string {
+    return (
+      LENSES.find((l) => l.key === this.lens)?.label.toLowerCase() ??
+      'in progress'
+    );
+  }
+
+  get queues() {
+    let counts = new Map<string, number>();
+    for (let t of this.all) {
+      if (!matchesLens(t, 'open')) continue;
+      let name = t.queueName?.trim() || 'Unrouted';
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }
+
+  get queueChoices() {
+    return this.queues.map((q) => ({
+      label: `${q.name} (${q.count})`,
+      value: q.name,
+      group: 'queue',
+      checked: q.name === this.args.queueName,
+      onSelect: () => this.pickQueue(q.name),
+    }));
+  }
+
+  get queueOptions() {
+    return [
+      { value: '', label: 'All queues' },
+      ...this.queues.map((q) => ({
+        value: q.name,
+        label: `${q.name} ${q.count}`,
+      })),
+    ];
+  }
+
+  setQueue = (name: string) => {
+    if (name) {
+      this.pickQueue(name);
+    } else {
+      this.clearQueue();
+    }
+  };
+
+  pickQueue = (name: string, _event?: Event) => {
+    this.args.onQueue?.(this.args.queueName === name ? undefined : name);
+  };
+
+  clearQueue = (_event?: Event) => {
+    this.args.onClearQueue?.();
+  };
+
+  priorityTone = (ticket: Ticket): PretuiToneArg =>
+    TONE_BY_HUE[this.priorityHueOf(ticket)] ?? 'neutral';
+
+  priorityText = (ticket: Ticket) => {
+    return (
+      priorityOption(TicketPriorityField, ticket.priority)?.label ??
+      ticket.priority
+    );
+  };
+
   searchId = `${guidFor(this)}-search`;
 
   @consume(CardCrudFunctionsContextName)
@@ -293,9 +380,8 @@ export class QueueView extends GlimmerComponent<Signature> {
   /**
    * Everything except the lens.
    *
-   * The counts used to run over `this.all` while the list ran over `rows`,
-   * which also applies search, priority and queue — so the strip could read
-   * "Overdue 3" while pressing it rendered "Nothing matches these filters".
+   * The counts run over the same set as the list (search, priority and
+   * queue applied), so "Overdue 3" never opens onto an empty list.
    * A count is a promise about what you get when you click it, and the only
    * way to keep that promise is to count the same set the click will show.
    */
@@ -471,7 +557,7 @@ export class QueueView extends GlimmerComponent<Signature> {
   isPicked = (ticket: Ticket) =>
     Boolean(ticket.id && this.selected.has(ticket.id));
 
-  togglePick = (ticket: Ticket, _event?: Event) => {
+  togglePick = (ticket: Ticket) => {
     if (!ticket.id) {
       return;
     }
@@ -603,8 +689,6 @@ export class QueueView extends GlimmerComponent<Signature> {
       .join(' · ');
 
   <template>
-    {{! tabindex='-1' so the section can hold focus for the shortcuts without
-        entering the tab order as a stop of its own. }}
     <section
       class='qv'
       aria-label='Ticket queue'
@@ -612,105 +696,66 @@ export class QueueView extends GlimmerComponent<Signature> {
       {{on 'keydown' this.handleKey}}
       ...attributes
     >
-      {{! Only when nothing outside owns the lens. With the console's rail
-          present these same six counts already stand to the left, and drawing
-          them twice makes the reader check whether the two agree.
-          Raw <button>: a stat is a two-line composite (big tabular figure +
-          caption) acting as a toggle, which is not what boxel-ui's Button
-          renders. Every plain action below uses Button. }}
-      {{#if this.ownsStrip}}
-        <div class='stats' role='group' aria-label='Filter by state'>
-          {{#each this.stats as |stat|}}
-            <button
-              type='button'
-              class='stat
-                {{if stat.tone (concat "tone-" stat.tone)}}
-                {{if (eq stat.key this.lens) "stat-on"}}'
-              aria-pressed={{if (eq stat.key this.lens) 'true' 'false'}}
-              {{on 'click' (fn this.setLens stat.key)}}
-            >
-              <span class='stat-n'>{{stat.count}}</span>
-              <span class='stat-l'>{{stat.label}}</span>
-            </button>
-          {{/each}}
-        </div>
-      {{/if}}
+      <header class='qv-head'>
+        <h2>Tickets · {{this.lensLabel}}</h2>
+        <span class='mono'>{{this.rows.length}} rows</span>
+      </header>
 
-      <div class='filters'>
-        {{#if this.ownsSearch}}
-          <label class='sr-only' for={{this.searchId}}>Search tickets</label>
-          <SearchInput
-            class='qsearch'
-            @controlId={{this.searchId}}
-            @value={{this.search}}
-            @onInput={{this.setSearch}}
-            @placeholder='Search subject, customer, reference…'
-          />
-        {{/if}}
-        {{#if @queueName}}
-          <span class='scope'>{{@queueName}}</span>
-        {{/if}}
-        <div class='chips' role='group' aria-label='Filter by priority'>
-          {{#each this.priorities key='value' as |option|}}
-            <Button
-              class='pchip'
-              data-bx-popover-anchor={{this.anchorFor option.value}}
-              @tone={{if
-                (eq option.value this.priorityFilter)
-                'primary'
-                'neutral'
-              }}
-              @appearance={{if
-                (eq option.value this.priorityFilter)
-                'accent'
-                'outlined'
-              }}
-              @size='xs'
-              aria-pressed={{if
-                (eq option.value this.priorityFilter)
-                'true'
-                'false'
-              }}
-              {{on 'click' (fn this.setPriority option.value)}}
-              {{on 'mouseenter' (fn this.showPriority option.value)}}
-              {{on 'mouseleave' this.hidePriority}}
-              {{on 'focus' (fn this.showPriority option.value)}}
-              {{on 'blur' this.hidePriority}}
-            >{{option.value}}</Button>
-          {{/each}}
-        </div>
-        {{! One popover, re-anchored to whichever chip is hovered — four
-            popovers would be four floating-UI subscriptions for a thing only
-            one of which can ever be open. }}
-        <Popover
-          @anchor={{this.hoveredAnchor}}
-          @open={{if this.hoveredPriority true false}}
-          @kind='details'
-          @anchoring='beside'
-          @placement='bottom-start'
-          @size='auto'
-          @autoFocus={{false}}
-          @label='Priority meaning'
+      <div class='qtools'>
+        <LayoutControl
+          @label='Ticket filters'
+          @controlHeight='1.625rem'
+          as |lc|
         >
-          <:details>
-            <div class='pinfo'>
-              <b class='pinfo-h'>{{this.hoveredOption.label}}</b>
-              <p class='pinfo-p'>{{this.hoveredOption.meaning}}</p>
-              {{#if this.hoveredFactor}}
-                <p class='pinfo-f'>{{this.hoveredFactor}}</p>
-              {{/if}}
-            </div>
-          </:details>
-        </Popover>
-
-        {{#if this.hasFilters}}
-          <Button
-            @tone='neutral'
-            @appearance='plain'
-            @size='xs'
-            {{on 'click' this.clearFilters}}
-          >Clear</Button>
-        {{/if}}
+          <lc.Slot
+            @id='search'
+            @priority={{1}}
+            @forms={{SEARCH_FORMS}}
+            @label='Search'
+          >
+            <div class='sbox'><SearchInput
+                class='qsearch'
+                @controlId={{this.searchId}}
+                @value={{this.search}}
+                @onInput={{this.setSearch}}
+                @placeholder='Subject, customer, company'
+              /></div>
+          </lc.Slot>
+          <lc.Slot
+            @id='queues'
+            @priority={{2}}
+            @forms={{QUEUE_FORMS}}
+            @label='Queue'
+            @menuItems={{this.queueChoices}}
+          >
+            <SegmentedControl
+              @label='Filter by queue'
+              @options={{this.queueOptions}}
+              @value={{if @queueName @queueName ''}}
+              @onValueChange={{this.setQueue}}
+            />
+          </lc.Slot>
+          {{#if @onNew}}
+            <lc.Slot
+              @id='new'
+              @priority={{0}}
+              @pinned={{true}}
+              @forms={{ADD_FORMS}}
+              @label='New ticket'
+            >
+              <Button
+                @icon={{PlusIcon}}
+                @tone='primary'
+                @appearance='accent'
+                @size='s'
+                @busy={{@creating}}
+                {{on 'click' @onNew}}
+              >
+                New ticket
+              </Button>
+            </lc.Slot>
+          {{/if}}
+        </LayoutControl>
       </div>
 
       {{#if @error}}
@@ -721,19 +766,10 @@ export class QueueView extends GlimmerComponent<Signature> {
         >{{@error}}</Alert>
 
       {{else if this.showSkeleton}}
-        {{! Skeleton rows at the real row height, so nothing shifts when the
-            data lands. A spinner would tell the reader less and move more. }}
         <ul class='rows' aria-busy='true' aria-label='Loading tickets'>
           {{#each (array 1 2 3 4 5) as |placeholder|}}
-            {{! boxel-ui's placeholder rather than three hand-drawn grey
-                spans — it already owns the shimmer, and it stops animating
-                when the reader has asked the OS to stop animating. }}
-            <li class='row row-skeleton' data-key={{placeholder}}>
-              <Skeleton @width='2.6rem' @height='0.55rem' class='sk-ref' />
-              <span class='sk-main'>
-                <Skeleton @width='55%' @height='0.6rem' />
-                <Skeleton @width='78%' @height='0.5rem' />
-              </span>
+            <li class='row-wrap' data-key={{placeholder}}>
+              <Skeleton @width='100%' @height='0.6rem' />
             </li>
           {{/each}}
         </ul>
@@ -752,12 +788,8 @@ export class QueueView extends GlimmerComponent<Signature> {
 
       {{else if this.rows.length}}
         {{#if this.hasSelection}}
-          {{! Replaces nothing — it appears above the list only while a
-              selection exists, so the toolbar is never chrome you scroll
-              past on the way to the work. }}
           <div class='bulk' role='group' aria-label='Bulk actions'>
-            <span class='bulk-n'>{{this.selectedTickets.length}}
-              selected</span>
+            <span class='bulk-n'>{{this.selectedTickets.length}} selected</span>
             <Button
               @tone='neutral'
               @appearance='outlined'
@@ -792,81 +824,68 @@ export class QueueView extends GlimmerComponent<Signature> {
           </div>
         {{/if}}
         {{#if this.bulkProblem}}
-          {{! Partial success is the normal outcome — a transition the state
-              machine refuses is not a crash, and the reader needs to know
-              which ones did not move. }}
           <p class='bulk-bad' role='alert'>{{this.bulkProblem}}</p>
         {{/if}}
+        <div class='cols cap' aria-hidden='true'>
+          <span></span><span>Ticket</span><span>Customer</span><span
+            class='hide-s'
+          >Priority</span><span class='hide-s'>Queue</span><span
+            class='right'
+          >Time left</span>
+        </div>
         <ul
           class='rows {{if this.isRefreshing "rows-busy"}}'
           aria-busy={{if this.isRefreshing 'true' 'false'}}
         >
           {{#each this.rows key='id' as |ticket|}}
-            <li class='row-wrap'>
-              {{! A real checkbox, outside the row button — nesting an input
-                  inside a button is invalid markup and unreachable by
-                  keyboard. }}
-              <label class='pick'>
-                <span class='sr-only'>Select {{ticket.subject}}</span>
-                <input
-                  type='checkbox'
-                  checked={{this.isPicked ticket}}
-                  {{on 'change' (fn this.togglePick ticket)}}
-                />
-              </label>
-              {{! Also raw: a list row is a row, not a control with a control's
-                  padding and chrome. Button would fight the row layout. }}
+            <li class='row-wrap {{if (this.isSelected ticket) "row-on"}}'>
+              <Checkbox
+                class='pick'
+                @checked={{this.isPicked ticket}}
+                @onCheckedChange={{fn this.togglePick ticket}}
+              ><span class='sr-only'>Select {{ticket.subject}}</span></Checkbox>
               <button
                 type='button'
-                class='row {{if (this.isSelected ticket) "row-on"}}'
+                class='row'
                 data-ticket-id={{ticket.id}}
                 aria-current={{if (this.isSelected ticket) 'true' 'false'}}
                 {{on 'click' (fn this.open ticket)}}
               >
-                <span class='row-spine'></span>
-                <span class='row-main'>
-                  <span class='row-line'>
-                    <span class='row-ref'>{{ticket.reference}}</span>
-                    <span class='row-subject'>{{ticket.subject}}</span>
-                  </span>
-                  <span class='row-line'>
-                    <StatePill
-                      @label={{ticket.priority}}
-                      @hue={{this.priorityHueOf ticket}}
-                      @emphatic={{true}}
-                    />
-                    <SlaTimerBadge
-                      @facts={{ticket.governingTimer}}
-                      @live={{true}}
-                    />
-                    <span class='row-context'>{{ticket.customerName}}</span>
-                  </span>
-                  <span class='row-line'>
-                    <span class='row-context'>{{this.secondaryOf ticket}}</span>
-                  </span>
+                <span class='c-ticket'>
+                  <span class='mono dim'>{{ticket.reference}}</span>
+                  <b class='ell'>{{ticket.subject}}</b>
+                </span>
+                <span class='c-cust'>
+                  {{#if ticket.customerName}}
+                    <Avatar @name={{ticket.customerName}} @size={{18}} />
+                  {{/if}}
+                  <b class='ell name'>{{ticket.customerName}}</b>
+                  <span class='dim ell hide-m'>{{ticket.customerCompany}}</span>
+                </span>
+                <span class='c-pri hide-s'>
+                  <Chip
+                    @appearance='plain'
+                    @tone={{this.priorityTone ticket}}
+                  >{{this.priorityText ticket}}</Chip>
+                </span>
+                <span class='c-queue ell hide-s'>{{ticket.queueName}}</span>
+                <span class='c-time'>
+                  <SlaTimerBadge
+                    @facts={{ticket.governingTimer}}
+                    @live={{true}}
+                    @plain={{true}}
+                  />
                 </span>
               </button>
             </li>
           {{/each}}
         </ul>
-        <p class='count'>{{this.rows.length}}
+        <p class='count mono'>{{this.rows.length}}
           shown ·
           {{this.all.length}}
-          in the realm
-          <span class='count-keys'>·
-            <kbd>J</kbd>
-            <kbd>K</kbd>
-            to move</span></p>
+          in the realm · J / K to move</p>
 
       {{else}}
-        {{! Two different empties: one is a filter problem, the other is good
-            news, and they must not look the same. }}
-        {{! The priority popover is NOT repeated here. It already lives beside
-            the chips, which render whether or not the list has rows, so a
-            second copy mounted two floating-UI subscriptions on the same
-            anchor with the same open state — two popovers stacked on one
-            chip, which is the exact duplication its own comment warns
-            against. }}
         {{#if this.hasFilters}}
           <EmptyState
             @title='Nothing matches these filters'
@@ -898,352 +917,170 @@ export class QueueView extends GlimmerComponent<Signature> {
 
     <style scoped>
       .qv {
+        container-type: inline-size;
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp-xs);
         font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-xs);
         color: var(--foreground);
       }
-
-      .stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius-sm);
-        overflow: hidden;
-        background: var(--card);
-      }
-      .stat {
+      .qv-head {
         display: flex;
-        flex-direction: column;
-        gap: 1px;
-        align-items: flex-start;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: none;
-        border-right: 1px solid var(--border);
-        background: none;
-        color: inherit;
-        font-family: inherit;
-        cursor: pointer;
-        min-height: 2.75rem;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs) 0;
       }
-      .stat:last-child {
-        border-right: none;
-      }
-      .stat:active {
-        transform: scale(0.98);
-      }
-      .stat:hover {
-        background: var(--muted);
-      }
-      .stat:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: -2px;
-      }
-      .stat-on {
-        background: color-mix(in oklch, var(--primary) 12%, var(--card));
-        box-shadow: inset 0 -2px 0 var(--primary);
-      }
-      .stat-n {
-        font-family: var(--font-mono);
-        font-size: 1.15rem;
+      h2 {
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-        line-height: 1.1;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
-      .stat-l {
-        font-size: 0.5625rem;
-        letter-spacing: 0.08em;
+      .dim {
+        color: var(--muted-foreground);
+      }
+      .cap {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
-      .tone-bad .stat-n {
-        color: var(--destructive-ink);
+      .ell {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
-      .tone-warn .stat-n {
-        color: var(--warning-ink);
+      .right {
+        text-align: end;
       }
-      .tone-ok .stat-n {
-        color: var(--success-ink);
+      .sbox {
+        inline-size: 16rem;
+        max-inline-size: 100%;
       }
-      .tone-hold .stat-n {
-        color: var(--muted-foreground);
+      .qtools {
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       }
-
-      .filters {
-        display: flex;
+      .cols,
+      .row-wrap {
+        display: grid;
+        grid-template-columns:
+          1.75rem minmax(0, 2.2fr) minmax(0, 1.6fr)
+          7rem 7rem 6rem;
         align-items: center;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
+        column-gap: var(--boxel-sp-xs);
       }
-      .qsearch {
-        flex: 1;
-        min-width: 12rem;
+      .cols {
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs) var(--boxel-sp-4xs) 0;
+        border-block-start: 1px solid var(--border);
+        border-block-end: 1px solid var(--border);
       }
-      .chips {
-        display: flex;
-        gap: var(--boxel-sp-5xs);
-      }
-      /* An unpressed filter had no border and a pale grey fill, which is what
-         a DISABLED control looks like — so four live toggles read as four
-         dead ones. An outline is what says "pressable"; the fill is what says
-         "pressed". Re-skinned through Button's own knobs, not around it. */
-      /* `.chips .pchip` rather than `.pchip`: Button's own `.kind-secondary`
-         sets --boxel-button-border at the same specificity, and a tie is
-         decided by stylesheet order — which is not something to bet a border
-         on. */
-      .chips .pchip {
-        --boxel-button-border: 1px solid var(--border);
-        --boxel-button-secondary-background: var(--card);
-        --boxel-button-min-width: 2.75rem;
-        font-variant-numeric: tabular-nums;
-      }
-      .chips .pchip[aria-pressed='true'] {
-        --boxel-button-border: 1px solid var(--primary);
-      }
-      /* The queue the rail narrowed to, restated where the rows are — the rail
-         is far enough away that "why is this list short" is otherwise a
-         question the reader has to go and answer. */
-      .scope {
-        padding: 0.1em 0.45em;
-        border-radius: 3px;
-        background: var(--muted);
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-      }
-
-      /* A list, not a stack of cards. Boxing every row is the "borders quietly
-         proliferated" failure: forty tickets became forty competing rectangles,
-         and the eye spent its first pass on the boxes instead of the work. One
-         border on the container, hairline dividers between rows. */
       .rows {
         list-style: none;
         margin: 0;
         padding: 0;
-        display: flex;
-        flex-direction: column;
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius-sm);
-        overflow: hidden;
-        background: var(--card);
-      }
-      /* Refreshing, not empty: the rows stay readable and just lose a little
-         contrast, so the reader can tell an update is landing without losing
-         the thing they were reading. */
-      .rows-busy {
-        opacity: 0.72;
       }
       .row-wrap {
-        display: flex;
-        align-items: stretch;
-        min-width: 0;
+        block-size: 1.75rem;
+        border-block-end: 1px solid var(--border);
       }
-      /* A <label> wrapping the row checkbox, so the whole strip is the hit area.
-         The focus ring is the checkbox's own — the label is not focusable — but
-         the hit area still needs to show itself, or a pointer sitting on it gets
-         `cursor: pointer` and nothing else. */
+      @media (hover: hover) {
+        .row-wrap:hover {
+          background: var(--muted);
+        }
+      }
+      .row-on {
+        background: var(--muted);
+      }
       .pick {
+        display: grid;
+        place-items: center;
+      }
+      .row {
+        all: unset;
+        cursor: pointer;
+        display: grid;
+        grid-column: 2 / -1;
+        grid-template-columns: subgrid;
+        align-items: center;
+        column-gap: var(--boxel-sp-xs);
+        block-size: 100%;
+        min-width: 0;
+        padding-inline-end: var(--boxel-sp-xs);
+      }
+      .row:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: -2px;
+      }
+      .c-ticket,
+      .c-cust {
         display: flex;
         align-items: center;
-        padding-left: var(--boxel-sp-xs);
-        cursor: pointer;
+        gap: var(--boxel-sp-2xs);
+        min-width: 0;
       }
-      .pick:hover {
-        background: color-mix(in oklch, var(--foreground) 5%, transparent);
+      .c-cust .name {
+        flex: 0 1 auto;
       }
-      /* The checkbox inside is what takes focus, so the visible ring is drawn
-         from here when it does. */
-      .pick:focus-within {
-        outline: 2px solid var(--primary);
-        outline-offset: -2px;
+      .c-cust .dim {
+        flex: 1 1 0;
+      }
+      .c-ticket b {
+        font-weight: 700;
+      }
+      .c-time {
+        display: flex;
+        justify-content: flex-end;
       }
       .bulk {
         display: flex;
         align-items: center;
-        gap: var(--boxel-sp-4xs);
-        flex-wrap: wrap;
-        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-        border: 1px solid var(--primary);
-        border-radius: var(--boxel-border-radius-sm);
-        background: color-mix(in oklch, var(--primary) 8%, var(--background));
-      }
-      .bulk-n {
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
+        gap: var(--boxel-sp-2xs);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        border-block-start: 1px solid var(--border);
       }
       .bulk-grow {
         flex: 1;
       }
+      .bulk-n {
+        font-weight: 600;
+      }
       .bulk-bad {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
+        padding: 0 var(--boxel-sp-xs);
         color: var(--destructive-ink);
       }
-      .row {
-        display: flex;
-        align-items: flex-start;
-        gap: var(--boxel-sp-4xs);
-        width: 100%;
-        padding: 0.5rem var(--boxel-sp-sm);
-        border: none;
-        border-bottom: 1px solid var(--border);
-        overflow: hidden;
-        background: none;
-        color: inherit;
-        font-family: inherit;
-        text-align: start;
-        cursor: pointer;
-        transition: background 0.1s ease-out;
-      }
-      .rows li:last-child .row {
-        border-bottom: none;
-      }
-      .row:active {
-        transform: scale(0.995);
-      }
-      .row:hover {
-        background: var(--muted);
-      }
-      /* Selection has to survive alongside hover — the selected row stays
-         marked while the pointer wanders down the list. */
-      .row-on {
-        background: color-mix(in oklch, var(--primary) 12%, var(--card));
-        box-shadow: inset 2px 0 0 var(--primary);
-      }
-      .row-line {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-4xs);
-        min-width: 0;
-      }
-      .row:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: -2px;
-      }
-      .row-spine {
-        width: 0.1875rem;
-        height: 2.125rem;
-        flex: none;
-        border-radius: 1px;
-        background: var(--primary);
-      }
-      .row-ref {
-        flex: none;
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-        font-variant-numeric: tabular-nums;
-      }
-      .row-main {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-      }
-      .row-subject {
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.3;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .row-context {
-        font-size: var(--boxel-font-size-xs);
-        line-height: 1.3;
-        color: var(--muted-foreground);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .row-skeleton {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-4xs);
-        height: 2.875rem;
-        padding: 0 var(--boxel-sp-xs);
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius-sm);
-      }
-      .sk-ref {
-        flex: none;
-      }
-      .sk-main {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-      }
-
-      /* An emptied queue is good news and has to look like good news. */
-
       .count {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-        font-variant-numeric: tabular-nums;
-      }
-      .pinfo {
-        display: flex;
-        flex-direction: column;
-        gap: 0.1875rem;
-        max-width: 24rem;
-        padding: var(--boxel-sp-xs);
-      }
-      .pinfo-h {
-        font-size: var(--boxel-font-size-sm);
-      }
-      .pinfo-p,
-      .pinfo-f {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        line-height: 1.55;
-      }
-      /* The consequence, set apart: it is the part nobody can infer.
-         It used to be set apart by `color: var(--primary)` — an accent used as
-         TEXT, which boxel-theming §2 forbids for a structural reason: a theme
-         guarantees the PAIR (`--primary` with `--primary-foreground`), and nobody
-         ever checked `--primary` against `--background`. Teal-on-white was a
-         contrast gamble here and could vanish entirely under a dark theme.
-         The accent survives as a MARK — a rule down the left edge, which §2
-         explicitly allows — while the text itself sits on `--foreground`, and the
-         weight does the emphasis. */
-      .pinfo-f {
-        color: var(--foreground);
-        font-weight: 600;
-        padding-left: var(--boxel-sp-xxs);
-        border-left: 2px solid
-          color-mix(in oklch, var(--primary) 55%, transparent);
-      }
-      .count-keys {
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         color: var(--muted-foreground);
       }
-      /* A hint, not a second label — same treatment as the workspace's. */
-      kbd {
-        padding: 0.1em 0.32em;
-        border-radius: 3px;
-        background: var(--muted);
-        color: var(--muted-foreground);
-        font-family: var(--font-mono);
-        font-size: 0.5625rem;
+      .rows-busy {
+        opacity: 0.6;
       }
       .sr-only {
         position: absolute;
-        width: 1px;
-        height: 1px;
+        inline-size: 1px;
+        block-size: 1px;
         overflow: hidden;
-        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
       }
-
-      /* Motion here is confirmation, never decoration — a hover tint, a
-         pressed nudge. Someone who has asked the OS to stop animating gets
-         the same interface with the confirmation delivered instantly. */
-      @media (prefers-reduced-motion: reduce) {
-        * {
-          transition: none !important;
-          animation: none !important;
+      @container (width <= 44rem) {
+        .cols,
+        .row-wrap {
+          grid-template-columns: 1.75rem minmax(0, 1.6fr) minmax(0, 1fr) 5.5rem;
+        }
+        .hide-s {
+          display: none;
+        }
+      }
+      @container (width <= 30rem) {
+        .hide-m {
+          display: none;
         }
       }
     </style>

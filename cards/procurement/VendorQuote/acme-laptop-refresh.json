@@ -28,7 +28,7 @@
       "validUntil": "2027-06-30",
       "notes": "Includes on-site asset tagging.",
       "cardInfo": {
-        "name": "Quote — Acme Supply"
+        "name": "Quote \u2014 Acme Supply"
       }
     },
     "relationships": {
@@ -45,6 +45,11 @@
       "vendorProfile": {
         "links": {
           "self": "../VendorProfile/acme-supply"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

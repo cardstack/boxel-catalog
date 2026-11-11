@@ -20,7 +20,7 @@
       "contactPerson": "Trafford 3PL desk",
       "contactEmail": "ops@trafford3pl.example",
       "contactPhone": "+44 161 496 0188",
-      "operatingHours": "Mon–Fri 07:00–19:00",
+      "operatingHours": "Mon\u2013Fri 07:00\u201319:00",
       "totalBins": 180,
       "occupiedBins": 140,
       "zones": [
@@ -35,6 +35,13 @@
       "adoptsFrom": {
         "module": "../warehouse",
         "name": "Warehouse"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

@@ -21,7 +21,7 @@
           }
         ],
         "recommendation": null,
-        "overallNotes": "Draft pending the accessibility audit \u2014 Craft score and final summary to follow."
+        "overallNotes": "Draft pending the accessibility audit — Craft score and final summary to follow."
       },
       "selfAssessment": "The component library refresh was my biggest lift this half. I underestimated the design-system freeze impact and want to get better at flagging scope risk earlier.",
       "managerSummary": "Solid half with clear ownership of the component library. Final summary pending the accessibility audit outcome.",
@@ -71,6 +71,11 @@
       "signOff.steps.1.approver": {
         "links": {
           "self": "../Employee/dana-kim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

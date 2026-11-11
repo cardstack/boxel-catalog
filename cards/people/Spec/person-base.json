@@ -19,14 +19,14 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
       }
     },
     "relationships": {
       "linkedExamples.0": {
         "links": {
-          "self": "../../service-desk/SupportAgent/priya-raman"
+          "self": "../../hr/Employee/dana-kim"
         }
       }
     }

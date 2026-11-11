@@ -16,10 +16,7 @@ import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import { Table } from '@cardstack/pretui/components/table';
 
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
 
 /**
  * Whole calendar days from `asOf` to `now`, counted on local calendar dates
@@ -81,7 +78,7 @@ export class RateEntryField extends FieldDef {
         .rate-meta {
           color: var(--muted-foreground);
           font-size: var(--boxel-font-size-xs);
-          text-align: right;
+          text-align: end;
         }
       </style>
     </template>
@@ -95,7 +92,6 @@ export class RateEntryField extends FieldDef {
 // keeping rates as dated data instead of calling a live API.
 export class CurrencyRegistry extends CardDef {
   static displayName = 'Currency Registry';
-  static headerColor = '#3e4e88';
 
   @field baseCurrency = contains(StringField, {
     description: 'ISO code the books are kept in, e.g. USD',
@@ -192,7 +188,7 @@ export class CurrencyRegistry extends CardDef {
               @title='No rates recorded'
               @message='Resolve Currency refuses every conversion until the book has rows.'
               @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
+              @size='s'
             />
           {{/if}}
         </section>
@@ -212,7 +208,6 @@ export class CurrencyRegistry extends CardDef {
         }
         .kicker,
         h2 {
-          margin: 0;
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -336,55 +331,4 @@ export class CurrencyRegistry extends CardDef {
   // The book's policy first (base currency + how old a rate may be), then
   // the rate rows themselves. Two sections, no rail. Computed cardTitle is
   // excluded.
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'identity', label: 'Registry identity' },
-      { id: 'rates', label: 'Rates' },
-    ];
-
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Currency Registry sections'
-        as |e|
-      >
-        <e.Section @id='identity' @title='Registry identity'>
-          <div class='row'>
-            <FieldContainer @label='Base currency (ISO)' @vertical={{true}}>
-              <@fields.baseCurrency />
-            </FieldContainer>
-            <FieldContainer @label='Stale after (days)' @vertical={{true}}>
-              <@fields.staleAfterDays />
-            </FieldContainer>
-          </div>
-        </e.Section>
-        <e.Section
-          @id='rates'
-          @title='Rates'
-          @hint='rates older than the staleness policy make Resolve Currency refuse to convert'
-        >
-          <FieldContainer
-            @label='Dated rates (1 unit → base)'
-            @vertical={{true}}
-          >
-            <@fields.rates />
-          </FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-      <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: var(--boxel-sp-sm);
-          align-items: start;
-        }
-        @container (width < 40rem) {
-          .row,
-          .row[class*='cols-'] {
-            grid-template-columns: 1fr;
-          }
-        }
-      </style>
-    </template>
-  };
 }

@@ -19,6 +19,13 @@
         "module": "../confidentiality-clause",
         "name": "ConfidentialityClause"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

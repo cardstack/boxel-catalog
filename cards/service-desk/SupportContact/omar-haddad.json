@@ -17,6 +17,13 @@
         "module": "../support-contact",
         "name": "SupportContact"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

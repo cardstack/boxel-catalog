@@ -9,7 +9,7 @@
       "revokedReason": null,
       "learnerName": "Amara Osei",
       "courseTitle": "Product Analytics Foundations",
-      "cohortName": "PAF-101 · Spring 2026 · Cohort A",
+      "cohortName": "PAF-101 \u00b7 Spring 2026 \u00b7 Cohort A",
       "creditHours": 3,
       "finalLetter": "B"
     },
@@ -22,6 +22,11 @@
       "issuedBy": {
         "links": {
           "self": "../../hr/Employee/sofia-reyes"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

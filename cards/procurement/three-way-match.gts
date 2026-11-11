@@ -10,7 +10,7 @@ import NumberField from '@cardstack/base/number';
 import DateTimeField from '@cardstack/base/datetime';
 import enumField from '@cardstack/base/enum';
 
-import { lineTotal } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { lineTotal } from '../commerce/line-item-totals';
 
 // The three-way match as data + pure functions: pay only when what the
 // vendor invoiced equals what we ordered and what actually arrived, within
@@ -308,7 +308,7 @@ export class VarianceResolutionField extends FieldDef {
           grid-template-columns: auto auto 1fr;
           gap: var(--boxel-sp-xs);
           align-items: baseline;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           padding: var(--boxel-sp-5xs) 0;
         }
         .res-line {

@@ -11,7 +11,7 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import QuantityField from '@cardstack/catalog/fields/quantity/quantity';
 import PackageIcon from '@cardstack/boxel-icons/package';
 
-import { formatMoneyDisplay } from '@cardstack/catalog/components/money-display';
+import { money } from './card-ui';
 
 /**
  * A spare part consumed by one job — which part, how many, at what unit
@@ -53,12 +53,17 @@ export class PartUsageField extends FieldDef {
     get cost() {
       let m = this.args.model;
       return m.cost != null
-        ? formatMoneyDisplay(m.cost, m.unitCost?.currency?.code)
+        ? money(m.cost, m.unitCost?.currency?.code)
         : undefined;
     }
     <template>
       <div class='pu'>
-        <PackageIcon class='pu-icon' />
+        <PackageIcon
+          class='pu-icon'
+          width='14'
+          height='14'
+          aria-hidden='true'
+        />
         <code class='pu-pn'>{{@model.partNumber}}</code>
         <span class='pu-name'>{{@model.partName}}</span>
         <span class='pu-qty'>× {{@model.quantity}}</span>
@@ -75,8 +80,6 @@ export class PartUsageField extends FieldDef {
           color: var(--foreground);
         }
         .pu-icon {
-          width: 0.9rem;
-          height: 0.9rem;
           color: var(--muted-foreground);
         }
         .pu-pn {

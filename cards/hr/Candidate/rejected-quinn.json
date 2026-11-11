@@ -54,6 +54,11 @@
         "links": {
           "self": "../Skill/php"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

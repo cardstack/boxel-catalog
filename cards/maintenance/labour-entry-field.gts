@@ -11,7 +11,7 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import ClockIcon from '@cardstack/boxel-icons/clock';
 
 import { hoursBetween, roundHours, formatHours } from './utils/maintenance';
-import { formatMoneyDisplay } from '@cardstack/catalog/components/money-display';
+import { money } from './card-ui';
 
 /**
  * Time one person spent on one job, and what it cost.
@@ -23,7 +23,7 @@ import { formatMoneyDisplay } from '@cardstack/catalog/components/money-display'
  * task, a support case or a lesson tomorrow.
  */
 export class LabourEntryField extends FieldDef {
-  static displayName = 'Labour Entry';
+  static displayName = 'Labor Entry';
   static icon = ClockIcon;
 
   @field workerId = contains(StringField, {
@@ -78,9 +78,7 @@ export class LabourEntryField extends FieldDef {
     }
     get cost() {
       let m = this.args.model;
-      return m.cost != null
-        ? formatMoneyDisplay(m.cost, m.rate?.currency?.code)
-        : undefined;
+      return m.cost != null ? money(m.cost, m.rate?.currency?.code) : undefined;
     }
     <template>
       <div class='le'>

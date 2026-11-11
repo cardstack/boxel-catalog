@@ -4,16 +4,22 @@ import {
   contains,
   field,
   linksTo,
+  realmURL,
   StringField,
 } from '@cardstack/base/card-api';
+import {
+  identifyCard,
+  type getCards,
+  type Query,
+  type ResolvedCodeRef,
+} from '@cardstack/runtime-common';
+import type Owner from '@ember/owner';
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import DateField from '@cardstack/base/date';
-import { on } from '@ember/modifier';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
-import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
+import { FitTile } from '../shared/fit-tile';
 
 import { Asset } from './asset';
 import { AssetCategory } from './asset-category';
@@ -23,14 +29,24 @@ import {
   PlanKindField,
   WorkOrderPriorityField,
 } from './maintenance-vocabulary';
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 import {
   nextOccurrence,
-  toDay,
+  triggerSummary,
   type MaintenanceTriggerData,
   type NextOccurrence,
 } from './utils/recurrence';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
+import {
+  Chip,
+  Dot,
+  Head,
+  Mark,
+  Row,
+  Kv,
+  KvRow,
+  Section,
+  Stats,
+  fmtDay,
+} from './card-ui';
 
 /**
  * Plain-data view of a plan's trigger, for `nextOccurrence`. Shared with the
@@ -80,13 +96,6 @@ export function planNext(
   });
 }
 
-export function dueHue(n: NextOccurrence): Hue {
-  if (n.isDue) return 'orange';
-  if (n.daysUntil != null && n.daysUntil <= 14) return 'amber';
-  if (n.decidedBy === 'none') return 'slate';
-  return 'green';
-}
-
 function dueText(n: NextOccurrence, unit?: string | null): string {
   if (n.decidedBy === 'none') return 'No rhythm set';
   let parts: string[] = [];
@@ -110,6 +119,60 @@ function dueText(n: NextOccurrence, unit?: string | null): string {
   }
   return parts.join(' · ');
 }
+
+// Work orders raised from this plan: open → next work, closed → history.
+class PlanWork extends Component<typeof MaintenancePlan> {
+  query: ReturnType<getCards> | undefined;
+
+  constructor(owner: Owner, args: any) {
+    super(owner, args);
+    let model = this.args.model as any;
+    let realmHref = model?.[realmURL]?.href;
+    // Work Order lives beside this module; resolving it from the plan's own
+    // module avoids importing work-order here (it imports this file).
+    let planRef = identifyCard(MaintenancePlan) as
+      | { module: string }
+      | undefined;
+    let on = planRef
+      ? ({
+          module: new URL('./work-order', planRef.module).href,
+          name: 'WorkOrder',
+        } as ResolvedCodeRef)
+      : undefined;
+    let query: Query | undefined =
+      model?.id && on
+        ? { filter: { on, eq: { planId: model.id } } }
+        : undefined;
+    this.query = this.args.context?.getCards(
+      this,
+      () => query,
+      () => (realmHref ? [realmHref] : undefined),
+      { isLive: true },
+    );
+  }
+
+  get next() {
+    return planNext(this.args.model as MaintenancePlan);
+  }
+  get workOrders(): any[] {
+    return ((this.query?.instances ?? []) as any[]).filter(Boolean);
+  }
+  get history(): any[] {
+    return this.workOrders
+      .filter((w) => DONE.has(w.status))
+      .sort((a, b) => stamp(b.completedAt) - stamp(a.completedAt));
+  }
+  get lastWork() {
+    return this.history[0];
+  }
+  get nextWork() {
+    return this.workOrders
+      .filter((w) => !DONE.has(w.status) && w.status !== 'cancelled')
+      .sort((a, b) => stamp(a.scheduledFor) - stamp(b.scheduledFor))[0];
+  }
+}
+
+const DONE = new Set(['completed', 'closed']);
 
 /**
  * Preventive maintenance as data: WHAT to do (checklist template), on WHAT
@@ -213,342 +276,219 @@ export class MaintenancePlan extends CardDef {
     },
   });
 
-  static isolated = class Isolated extends Component<typeof MaintenancePlan> {
-    get next() {
-      return planNext(this.args.model as MaintenancePlan);
+  static isolated = class Isolated extends PlanWork {
+    get stats() {
+      let m = this.args.model;
+      let n = this.next;
+      let items = m.checklist?.items ?? [];
+      let meter = n.dueMeter != null ? meterText(m, n.dueMeter) : '';
+      return [
+        {
+          label: 'Next due',
+          value: n.dueDate ? fmtDay(n.dueDate) : meter || '—',
+          meta:
+            n.dueDate && meter
+              ? `or ${meter}${m.trigger?.whicheverFirst === false ? '' : ', whichever first'}`
+              : m.isOverdue
+                ? 'overdue'
+                : '',
+        },
+        {
+          label: 'Estimate',
+          value: m.estimatedHours != null ? `${m.estimatedHours} h` : '—',
+          meta: [m.priority, m.assignTeamName].filter(Boolean).join(' · '),
+        },
+        {
+          label: 'Checklist',
+          value: String(items.length),
+          meta: `${items.filter((i) => i?.required).length} required`,
+        },
+      ];
     }
-    get hue() {
-      return dueHue(this.next);
-    }
-    get due() {
-      return dueText(this.next, this.args.model.trigger?.meterUnit);
-    }
-    get lastLabel() {
-      let d = toDay(this.args.model.lastCompletedAt);
-      if (!d) return 'never';
-      let s = d.toLocaleDateString(undefined, {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      });
-      let m = this.args.model.lastCompletedMeter;
-      return m != null
-        ? `${s} at ${m.toLocaleString()} ${this.args.model.trigger?.meterUnit ?? ''}`.trim()
-        : s;
-    }
-    get nextLabel() {
-      let d = this.next.dueDate;
-      return d
-        ? d.toLocaleDateString(undefined, {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-          })
-        : '—';
-    }
-    // `viewCard` is a top-level component arg on every card, never
-    // `context.actions`.
-    openAsset = () => {
-      let asset = this.args.model.asset;
-      if (asset) this.args.viewCard?.(asset);
-    };
     <template>
-      <article class='plan'>
-        <header class='hero'>
-          <div class='hero-main'>
-            <span class='kind'>{{if @model.kind @model.kind 'plan'}}{{#if
-                @model.isTemplate
-              }} · template{{/if}}</span>
-            <h1 class='name'>{{@model.name}}</h1>
-            <p class='rhythm'><RepeatIcon class='ic' />
-              {{@model.trigger.summary}}</p>
-            <div class='subject'>
-              {{#if @model.asset}}
-                <button
-                  type='button'
-                  class='subject-link'
-                  {{on 'click' this.openAsset}}
-                >
-                  <@fields.asset @format='atom' />
-                </button>
-              {{else if @model.category}}
-                <@fields.category @format='atom' />
+      <article class='mp'>
+        <Head @mark='Pl' @title={{@model.name}} @meta={{subjectLine @model}}>
+          <PlanDots @model={{@model}} />
+        </Head>
+        <Stats @items={{this.stats}} />
+        <div class='cols'>
+          <div class='col'>
+            <Section @title='Trigger'>
+              <Kv>
+                <KvRow @label='Calendar' @value={{calendarLine @model}} />
+                <KvRow @label='Meter' @value={{meterLine @model}} />
+                <KvRow @label='Rule' @value={{ruleLine @model}} />
+                <KvRow
+                  @label='Raise ahead'
+                  @value={{days @model.trigger.leadDays}}
+                />
+                <KvRow
+                  @label='Compliance window'
+                  @value={{days @model.complianceWindowDays}}
+                />
+              </Kv>
+            </Section>
+            <Section @title='Checklist'>
+              {{#each @model.checklist.items as |i|}}
+                <Row
+                  @title={{i.label}}
+                  @meta={{itemSub i}}
+                  @tone={{if i.required 'info' 'muted'}}
+                  @state={{if i.required 'required' 'optional'}}
+                />
               {{else}}
-                <span class='muted'>No subject yet</span>
-              {{/if}}
-              {{#if @model.assignTeamName}}<span class='muted'>·
-                  {{@model.assignTeamName}}</span>{{/if}}
-              {{#if @model.priority}}<@fields.priority @format='atom' />{{/if}}
-            </div>
+                <p class='empty'>No steps yet</p>
+              {{/each}}
+            </Section>
+            <Section @title='History'>
+              {{#each this.history as |w|}}
+                <Row
+                  @title={{w.cardTitle}}
+                  @meta={{historySub w}}
+                  @tone={{woTone w.status}}
+                  @state={{woLabel w.status}}
+                />
+              {{else}}
+                <p class='empty'>Not done yet</p>
+              {{/each}}
+            </Section>
           </div>
-          <aside class='due-card'>
-            <StatePill
-              @label={{if @model.isOverdue 'Overdue' 'Next due'}}
-              @hue={{this.hue}}
-              @dot={{true}}
-            />
-            <div class='due-date'>{{this.nextLabel}}</div>
-            <div class='due-text'>{{this.due}}</div>
-            <dl class='due-facts'>
-              <dt>Last done</dt><dd>{{this.lastLabel}}</dd>
-              <dt>Estimate</dt><dd>{{if
-                  @model.estimatedHours
-                  (concat @model.estimatedHours ' h')
-                  '—'
-                }}</dd>
-              <dt>Window</dt><dd>±
-                {{if @model.complianceWindowDays @model.complianceWindowDays 0}}
-                d</dd>
-              <dt>Active</dt><dd>{{if @model.active 'yes' 'no'}}</dd>
-            </dl>
+          <aside class='col side'>
+            <Section @title='Linked'>
+              <Kv>
+                {{#if @model.asset}}
+                  <KvRow @label='Asset'><@fields.asset @format='atom' /></KvRow>
+                {{else}}
+                  <KvRow @label='Category'>{{#if
+                      @model.category
+                    }}<@fields.category
+                        @format='atom'
+                      />{{else}}—{{/if}}</KvRow>
+                {{/if}}
+                <KvRow @label='Next work'>{{#if this.nextWork}}<WoChip
+                      @wo={{this.nextWork}}
+                    />{{else}}—{{/if}}</KvRow>
+              </Kv>
+            </Section>
+            <Section @title='Details'>
+              <PlanDetails @model={{@model}} />
+            </Section>
           </aside>
-        </header>
-        <section class='sec'>
-          <h2><ClipboardCheckIcon class='ic' /> Procedure template</h2>
-          {{#if @model.checklist.items.length}}
-            <@fields.checklist />
-          {{else}}
-            <p class='muted'>No steps yet — add the checklist that defines
-              “done”.</p>
-          {{/if}}
-        </section>
+        </div>
       </article>
       <style scoped>
-        .plan {
+        .mp {
           container-type: inline-size;
-          display: grid;
-          gap: var(--boxel-sp-lg);
-          padding: var(--boxel-sp-lg);
-          color: var(--foreground);
-          background: var(--background);
-        }
-        .hero {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 16rem;
-          gap: var(--boxel-sp-lg);
-          align-items: start;
-        }
-        .hero-main {
-          display: grid;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-        }
-        .kind {
+          min-block-size: 100%;
+          box-sizing: border-box;
+          font-family: var(--font-sans);
           font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
         }
-        .name {
-          margin: 0;
-          font-size: 2rem;
-          line-height: 1.1;
-          font-weight: 700;
-          text-wrap: balance;
-        }
-        .rhythm {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size);
-          color: var(--foreground);
-        }
-        .subject {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          flex-wrap: wrap;
-          font-size: var(--boxel-font-size-sm);
-        }
-        .subject-link {
-          border: none;
-          background: none;
-          padding: 0;
-          margin: 0;
-          font: inherit;
-          color: inherit;
-          cursor: pointer;
-          border-radius: var(--boxel-border-radius-sm);
-        }
-        .subject-link:hover,
-        .subject-link:focus-visible {
-          text-decoration: underline;
-          outline: 2px solid var(--primary);
-          outline-offset: 2px;
-        }
-        .muted {
-          color: var(--muted-foreground);
-        }
-        .due-card {
+        .cols {
           display: grid;
-          gap: var(--boxel-sp-4xs);
-          padding: var(--boxel-sp);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          background: var(--card);
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         }
-        .due-date {
-          font-size: 1.5rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
+        .col {
+          min-inline-size: 0;
         }
-        .due-text {
-          font-size: var(--boxel-font-size-sm);
+        .side {
+          border-inline-start: 1px solid var(--border);
+        }
+        .empty {
+          padding-block: var(--boxel-sp-5xs);
           color: var(--muted-foreground);
-        }
-        .due-facts {
-          margin: var(--boxel-sp-xs) 0 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 2px var(--boxel-sp-sm);
-          font-size: var(--boxel-font-size-xs);
-        }
-        .due-facts dt {
-          color: var(--muted-foreground);
-        }
-        .due-facts dd {
-          margin: 0;
-          font-variant-numeric: tabular-nums;
-        }
-        .sec {
-          display: grid;
-          gap: var(--boxel-sp-sm);
-        }
-        .sec h2 {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .ic {
-          width: 1rem;
-          height: 1rem;
-          flex: none;
         }
         @container (width < 40rem) {
-          .hero {
-            grid-template-columns: 1fr;
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .side {
+            border-inline-start: 0;
+            border-block-start: 1px solid var(--border);
           }
         }
       </style>
     </template>
   };
 
-  static embedded = class Embedded extends Component<typeof MaintenancePlan> {
-    get next() {
-      return planNext(this.args.model as MaintenancePlan);
-    }
-    get hue() {
-      return dueHue(this.next);
-    }
+  static embedded = class Embedded extends PlanWork {
     <template>
-      <div class='plan-emb'>
-        <RepeatIcon class='ic' />
+      <article class='emb'>
+        <Head @mark='Pl' @title={{@model.name}} @meta={{subjectLine @model}} />
         <div class='body'>
-          <div class='row'>
-            <span class='name'>{{@model.name}}</span>
-            {{#if @model.assetTag}}<code
-                class='tag'
-              >{{@model.assetTag}}</code>{{/if}}
-          </div>
-          <div class='meta'>{{@model.dueLabel}}</div>
+          <div class='dots'><PlanDots @model={{@model}} /></div>
+          <p class='fact'>{{dueFact @model}}</p>
+          <Kv>
+            <KvRow @label='Trigger' @value={{@model.trigger.summary}} />
+            <KvRow @label='Lead time' @value={{days @model.trigger.leadDays}} />
+            <KvRow @label='Estimate' @value={{hours @model.estimatedHours}} />
+            <KvRow @label='Priority' @value={{@model.priority}} />
+            <KvRow @label='Team' @value={{@model.assignTeamName}} />
+            <KvRow
+              @label='Window'
+              @value={{days @model.complianceWindowDays}}
+            />
+            {{#if @model.asset}}
+              <KvRow @label='Asset'><@fields.asset @format='atom' /></KvRow>
+            {{/if}}
+            <KvRow @label='Next work'>{{#if this.nextWork}}<WoChip
+                  @wo={{this.nextWork}}
+                />{{else}}—{{/if}}</KvRow>
+            <KvRow @label='Last work'>{{#if this.lastWork}}<WoChip
+                  @wo={{this.lastWork}}
+                />{{else}}—{{/if}}</KvRow>
+          </Kv>
         </div>
-        <StatePill
-          @label={{if
-            @model.isOverdue
-            'overdue'
-            (if @model.kind @model.kind 'plan')
-          }}
-          @hue={{this.hue}}
-          @dot={{true}}
-        />
-      </div>
+      </article>
       <style scoped>
-        .plan-emb {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          min-width: 0;
-        }
-        .ic {
-          width: 1rem;
-          height: 1rem;
-          color: var(--muted-foreground);
-          flex: none;
+        .emb {
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
         }
         .body {
-          flex: 1;
-          min-width: 0;
           display: grid;
-          gap: 2px;
-        }
-        .row {
-          display: flex;
-          align-items: baseline;
           gap: var(--boxel-sp-xs);
-          min-width: 0;
+          padding: 0 var(--boxel-sp-sm) var(--boxel-sp-xs);
         }
-        .name {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .tag {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .meta {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        .dots {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof MaintenancePlan> {
-    get next() {
-      return planNext(this.args.model as MaintenancePlan);
-    }
-    get hue() {
-      return dueHue(this.next);
-    }
-    get due() {
-      return dueText(this.next, this.args.model.trigger?.meterUnit);
-    }
     <template>
-      <FittedCard class='fit' @titleTag='h3'>
-        <:eyebrow>{{@model.trigger.summary}}</:eyebrow>
+      <FitTile class='fit'>
+        <:avatar><Mark @text='Pl' @size='lg' /></:avatar>
         <:title>{{@model.name}}</:title>
-        <:subtitle>{{this.due}}</:subtitle>
-        <:meta>{{@model.assetTag}} {{@model.assetName}}</:meta>
-        <:badge><StatePill
-            @label={{if
-              @model.isOverdue
-              'overdue'
-              (if @model.kind @model.kind 'plan')
-            }}
-            @hue={{this.hue}}
-            @dot={{true}}
-          /></:badge>
-      </FittedCard>
+        <:subtitle>{{subjectLine @model}}</:subtitle>
+        <:status><span class='dots'><PlanDots
+              @model={{@model}}
+            /></span></:status>
+        <:fact>{{dueFact @model}}</:fact>
+        <:relations>{{#if @model.asset}}<@fields.asset
+              @format='atom'
+            />{{/if}}</:relations>
+      </FitTile>
       <style scoped>
         .fit {
-          --fc-title-font-size: var(--boxel-font-size-sm);
-          --fc-subtitle-font-size: var(--boxel-font-size-xs);
+          color: var(--card-foreground);
+          background-color: var(--card);
         }
-        .mono {
-          font-family: var(--font-mono);
+        .dots {
+          display: inline-flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>
@@ -556,107 +496,132 @@ export class MaintenancePlan extends CardDef {
 
   static atom = class Atom extends Component<typeof MaintenancePlan> {
     <template>
-      <span class='plan-atom'><RepeatIcon class='ic' /> {{@model.name}}</span>
-      <style scoped>
-        .plan-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 500;
-        }
-        .ic {
-          width: 0.85rem;
-          height: 0.85rem;
-          color: var(--muted-foreground);
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof MaintenancePlan> {
-    sections = [
-      { id: 'plan', label: 'Plan' },
-      { id: 'subject', label: 'Subject & team' },
-      { id: 'rhythm', label: 'Rhythm' },
-      { id: 'procedure', label: 'Procedure' },
-      { id: 'history', label: 'History' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Maintenance plan sections'
-        as |e|
-      >
-        <e.Section @id='plan' @title='Plan' @cols={{2}}>
-          <FieldContainer @label='Name' @vertical={{true}}><@fields.name
-            /></FieldContainer>
-          <FieldContainer @label='Kind' @vertical={{true}}><@fields.kind
-            /></FieldContainer>
-          <FieldContainer
-            @label='Priority of generated work'
-            @vertical={{true}}
-          ><@fields.priority /></FieldContainer>
-          <FieldContainer
-            @label='Estimated hours'
-            @vertical={{true}}
-          ><@fields.estimatedHours /></FieldContainer>
-          <FieldContainer @label='Active' @vertical={{true}}><@fields.active
-            /></FieldContainer>
-          <FieldContainer
-            @label='Compliance window (± days)'
-            @vertical={{true}}
-          ><@fields.complianceWindowDays /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='subject'
-          @title='Subject & team'
-          @hint='An asset, or a category for a template'
-          @cols={{2}}
-        >
-          <FieldContainer @label='Asset' @vertical={{true}}><@fields.asset
-            /></FieldContainer>
-          <FieldContainer
-            @label='Category (template)'
-            @vertical={{true}}
-          ><@fields.category /></FieldContainer>
-          <FieldContainer
-            @label='Assign to team'
-            @vertical={{true}}
-          ><@fields.assignTeamName /></FieldContainer>
-        </e.Section>
-        <e.Section @id='rhythm' @title='Rhythm'>
-          <@fields.trigger />
-        </e.Section>
-        <e.Section
-          @id='procedure'
-          @title='Procedure'
-          @hint='Template — copied onto each work order'
-        >
-          <@fields.checklist />
-        </e.Section>
-        <e.Section
-          @id='history'
-          @title='History'
-          @hint='Stamped by Complete Work Order'
-          @cols={{2}}
-        >
-          <FieldContainer
-            @label='Last completed'
-            @vertical={{true}}
-          ><@fields.lastCompletedAt @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Meter at last completion'
-            @vertical={{true}}
-          ><@fields.lastCompletedMeter @format='atom' /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
+      <Chip
+        @bare={{true}}
+        @mark='Pl'
+        @name={{@model.name}}
+        @tone={{if @model.active 'ok' 'muted'}}
+        @meta={{if @model.active 'active' 'paused'}}
+      />
     </template>
   };
 }
 
+function stamp(d?: Date | string | null): number {
+  return d ? new Date(d).getTime() || 0 : 0;
+}
+function woTone(status?: string) {
+  return DONE.has(status ?? '') ? 'ok' : 'muted';
+}
+function woLabel(status?: string) {
+  return (status ?? '').replace(/-/g, ' ');
+}
+function historySub(w: any): string {
+  let when = fmtDay(w.completedAt ?? w.closedAt, true);
+  return [when ? `Closed ${when}` : '', w.ownership?.ownerName]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function subjectLine(m: Partial<MaintenancePlan>): string {
+  if (m.asset) return [m.assetName, m.assetTag].filter(Boolean).join(' · ');
+  let c = (m.category as any)?.name;
+  return c ? `${c} · template` : 'No subject yet';
+}
+function meterText(m: Partial<MaintenancePlan>, v: number): string {
+  return `${v.toLocaleString('en-US')} ${m.trigger?.meterUnit ?? ''}`.trim();
+}
+function dueFact(m: Partial<MaintenancePlan>): string {
+  let n = planNext(m as MaintenancePlan);
+  let parts: string[] = [];
+  if (n.dueDate) parts.push(`Next due ${fmtDay(n.dueDate, true)}`);
+  if (n.dueMeter != null) {
+    parts.push(
+      `${n.dueDate ? 'or ' : 'Next due '}at ${meterText(m, n.dueMeter)}`,
+    );
+  }
+  return parts.join(' · ') || 'No rhythm set';
+}
+function calendarLine(m: Partial<MaintenancePlan>): string {
+  let c = m.trigger?.calendar;
+  if (!c?.pattern || c.pattern === 'none') return '';
+  let data = planTriggerData(m as MaintenancePlan);
+  let s = triggerSummary(
+    data ? { ...data, meterThreshold: undefined, leadDays: undefined } : data,
+  );
+  return c.startDate ? `${s} from ${fmtDay(c.startDate, true)}` : s;
+}
+function meterLine(m: Partial<MaintenancePlan>): string {
+  let t = m.trigger;
+  return t?.meterThreshold
+    ? `Every ${t.meterThreshold.toLocaleString('en-US')} ${t.meterUnit ?? ''}`.trim()
+    : '';
+}
+function ruleLine(m: Partial<MaintenancePlan>): string {
+  let t = m.trigger;
+  if (!t?.meterThreshold || !t?.calendar?.pattern) return '';
+  return t.whicheverFirst === false
+    ? 'Both must be due'
+    : 'Whichever comes first';
+}
+function days(n?: number | null): string {
+  return n != null ? `${n} day${n === 1 ? '' : 's'}` : '';
+}
+function hours(n?: number | null): string {
+  return n != null ? `${n} h` : '';
+}
+function itemSub(i: any): string {
+  if (i?.kind === 'measure' && i?.expectedValue != null) {
+    let tol = i.tolerance != null ? ` ± ${i.tolerance}` : '';
+    return `measure · ${i.expectedValue} ${i.unit ?? ''}${tol}`.trim();
+  }
+  return i?.kind ?? 'check';
+}
+
+const PlanDots: TemplateOnlyComponent<{
+  Args: { model: Partial<MaintenancePlan> };
+}> = <template>
+  <Dot
+    @tone={{if @model.isOverdue 'bad' (if @model.active 'ok' 'muted')}}
+    @label={{if
+      @model.isOverdue
+      'overdue'
+      (if @model.active 'active' 'paused')
+    }}
+  />
+  {{#if @model.kind}}<Dot @tone='info' @label={{@model.kind}} />{{/if}}
+  {{#if @model.priority}}<Dot @label={{@model.priority}} />{{/if}}
+</template>;
+
+const PlanDetails: TemplateOnlyComponent<{
+  Args: { model: Partial<MaintenancePlan> };
+}> = <template>
+  <Kv>
+    <KvRow @label='Trigger' @value={{@model.trigger.summary}} />
+    <KvRow @label='Lead time' @value={{days @model.trigger.leadDays}} />
+    <KvRow @label='Estimate' @value={{hours @model.estimatedHours}} />
+    <KvRow @label='Priority' @value={{@model.priority}} />
+    <KvRow @label='Team' @value={{@model.assignTeamName}} />
+    <KvRow @label='Window' @value={{days @model.complianceWindowDays}} />
+    <KvRow @label='Last done' @value={{fmtDay @model.lastCompletedAt true}} />
+    <KvRow
+      @label='Checklist'
+      @value={{concat @model.checklist.items.length ' items'}}
+    />
+  </Kv>
+</template>;
+
+const WoChip: TemplateOnlyComponent<{ Args: { wo: any } }> = <template>
+  <Chip
+    @mark='WO'
+    @name={{@wo.cardTitle}}
+    @tone={{woTone @wo.status}}
+    @meta={{woLabel @wo.status}}
+  />
+</template>;
+
 function concat(a: unknown, b: unknown) {
-  return `${a ?? ''}${b ?? ''}`;
+  return `${a ?? 0}${b ?? ''}`;
 }
 
 export default MaintenancePlan;

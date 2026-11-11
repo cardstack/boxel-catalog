@@ -16,7 +16,7 @@
           "regime": {
             "regime": "Contract Policy",
             "version": "2026",
-            "clause": "§2.1",
+            "clause": "\u00a72.1",
             "clauseTitle": "Executed copies"
           },
           "kind": "presence",
@@ -33,7 +33,7 @@
           "regime": {
             "regime": "Contract Policy",
             "version": "2026",
-            "clause": "§3.2",
+            "clause": "\u00a73.2",
             "clauseTitle": "Term"
           },
           "kind": "expiry",
@@ -50,7 +50,7 @@
           "regime": {
             "regime": "Contract Policy",
             "version": "2026",
-            "clause": "§4.1",
+            "clause": "\u00a74.1",
             "clauseTitle": "Signing limits"
           },
           "kind": "threshold",
@@ -67,7 +67,7 @@
           "regime": {
             "regime": "Contract Policy",
             "version": "2026",
-            "clause": "§5.3",
+            "clause": "\u00a75.3",
             "clauseTitle": "Governing law"
           },
           "kind": "predicate",
@@ -92,6 +92,11 @@
       "runsAs": {
         "links": {
           "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

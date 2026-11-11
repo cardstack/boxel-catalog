@@ -63,6 +63,11 @@
         "links": {
           "self": "../Location/northwind-a-it-store"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

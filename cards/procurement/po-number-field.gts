@@ -38,11 +38,17 @@ export class PONumberField extends StringField {
 }
 
 // Sequence helper used by the single writers that stamp a number at issue
-// time. Year-scoped, random tail — collision-tolerant for demo scale; a
-// production system would allocate from a counter service.
+// time. Year-scoped; the tail is the issue time in base-36 plus a random
+// suffix, so two numbers collide only when issued in the same millisecond
+// and the suffix also matches. shortcut: no uniqueness check against stored
+// POs; upgrade to a counter service when issuance is concurrent at scale.
 export function nextPoNumber(now: Date = new Date()): string {
-  let tail = String(Math.floor(Math.random() * 9000) + 1000);
-  return `PO-${now.getFullYear()}-${tail}`;
+  let time = now.getTime().toString(36).toUpperCase();
+  let salt = Math.floor(Math.random() * 36 ** 3)
+    .toString(36)
+    .toUpperCase()
+    .padStart(3, '0');
+  return `PO-${now.getFullYear()}-${time}${salt}`;
 }
 
 export default PONumberField;

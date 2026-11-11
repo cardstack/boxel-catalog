@@ -12,7 +12,7 @@ import DateTimeField from '@cardstack/base/datetime';
 import UrlField from '@cardstack/base/url';
 import QuantityField from '@cardstack/catalog/fields/quantity/quantity';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Dot, hueTone } from './card-ui';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { htmlSafe } from '@ember/template';
 
@@ -71,10 +71,8 @@ export class ChecklistItemField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
-    get hue() {
-      return (
-        CHECKLIST_RESULT_HUE[this.args.model.result ?? 'pending'] ?? 'slate'
-      );
+    get tone() {
+      return hueTone(CHECKLIST_RESULT_HUE[this.args.model.result ?? 'pending']);
     }
     get expectation() {
       let m = this.args.model;
@@ -84,9 +82,9 @@ export class ChecklistItemField extends FieldDef {
     }
     <template>
       <div class='ci {{if @model.isOutOfTolerance "ci--oot"}}'>
-        <StatePill
+        <Dot
+          @tone={{this.tone}}
           @label={{if @model.result @model.result 'pending'}}
-          @hue={{this.hue}}
         />
         <span class='ci-label'>{{@model.label}}{{#if @model.required}}<span
               class='ci-req'
@@ -126,7 +124,7 @@ export class ChecklistItemField extends FieldDef {
         }
         .ci-req {
           color: var(--destructive-ink);
-          margin-left: 2px;
+          margin-inline-start: var(--boxel-sp-6xs);
         }
         .ci-measure {
           font-variant-numeric: tabular-nums;
@@ -283,7 +281,7 @@ export class ChecklistField extends FieldDef {
         }
         .cl-bar {
           height: 0.25rem;
-          border-radius: 2px;
+          border-radius: var(--boxel-border-radius-xs);
           background: var(--muted);
           overflow: hidden;
         }

@@ -19,12 +19,12 @@
     "relationships": {
       "holder": {
         "links": {
-          "self": "../Contact/marcus-obi"
+          "self": "../../crm/Contact/marcus-obi"
         }
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../../Theme/site-tools"
         }
       }
     },

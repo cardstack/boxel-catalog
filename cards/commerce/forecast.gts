@@ -9,9 +9,9 @@ import {
 import DateField from '@cardstack/base/date';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import TargetIcon from '@cardstack/boxel-icons/target';
-import { Territory } from '@cardstack/catalog/cards/commerce/territory';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
-import { Money } from '@cardstack/catalog/cards/crm/money';
+import { Territory } from './territory';
+import { formatMoney } from './line-item-totals';
+import { Money } from '../crm/money';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { eq } from '@cardstack/boxel-ui/helpers';
 
@@ -53,9 +53,9 @@ export class Forecast extends CardDef {
         .forecast-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
+          gap: var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-xs);
-          font-weight: 500;
+          font-weight: 600;
           color: var(--foreground);
         }
         .fa-icon {
@@ -96,8 +96,8 @@ export class Forecast extends CardDef {
         .forecast-row {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           font-size: var(--boxel-font-size-sm);
         }
         .icon {
@@ -109,7 +109,7 @@ export class Forecast extends CardDef {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
         }
         .name {
           font-weight: 600;
@@ -214,14 +214,14 @@ export class Forecast extends CardDef {
         .row {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           min-width: 0;
         }
         .col,
         .info {
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
+          gap: var(--boxel-sp-4xs);
           min-width: 0;
           flex: 1;
         }
@@ -231,8 +231,8 @@ export class Forecast extends CardDef {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 0.375rem;
-            padding: 0.5rem;
+            gap: var(--boxel-sp-2xs);
+            padding: var(--boxel-sp-xs);
             text-align: center;
           }
         }
@@ -240,8 +240,8 @@ export class Forecast extends CardDef {
           .strip {
             display: flex;
             align-items: center;
-            gap: 0.625rem;
-            padding: 0.625rem 0.75rem;
+            gap: var(--boxel-sp-xs);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           }
         }
         @container fitted-card (max-width: 399px) and (min-height: 170px) {
@@ -250,8 +250,8 @@ export class Forecast extends CardDef {
             flex-direction: column;
             align-items: flex-start;
             justify-content: center;
-            gap: 0.375rem;
-            padding: 0.875rem;
+            gap: var(--boxel-sp-2xs);
+            padding: var(--boxel-sp-sm);
           }
         }
         @container fitted-card (min-width: 400px) and (min-height: 170px) {
@@ -259,8 +259,8 @@ export class Forecast extends CardDef {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
-            padding: 1.25rem;
+            gap: var(--boxel-sp);
+            padding: var(--boxel-sp-lg);
           }
         }
       </style>
@@ -308,21 +308,21 @@ export class Forecast extends CardDef {
         .forecast-page {
           max-width: 40rem;
           margin: 0 auto;
-          padding: 2rem 1.5rem;
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: var(--boxel-sp-lg);
         }
         .fh {
           display: flex;
           align-items: flex-end;
           justify-content: space-between;
-          gap: 1rem;
+          gap: var(--boxel-sp);
           border-bottom: 2px solid var(--foreground);
-          padding-bottom: 1.25rem;
+          padding-bottom: var(--boxel-sp-lg);
         }
         .doc-kind {
-          margin: 0 0 0.125rem;
+          margin: 0 0 var(--boxel-sp-6xs);
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -330,9 +330,6 @@ export class Forecast extends CardDef {
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
           color: var(--muted-foreground);
-        }
-        h1 {
-          margin: 0;
         }
         .amount {
           font-size: var(--boxel-font-size-lg);
@@ -342,12 +339,12 @@ export class Forecast extends CardDef {
         .panel {
           border: 1px solid var(--border);
           border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
+          padding: var(--boxel-sp) var(--boxel-sp-lg);
           background: var(--card);
           color: var(--card-foreground);
         }
         h2 {
-          margin: 0 0 0.75rem;
+          margin: 0 0 var(--boxel-sp-sm);
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);

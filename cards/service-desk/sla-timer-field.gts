@@ -10,11 +10,8 @@ import NumberField from 'https://cardstack.com/base/number';
 import DateTimeField from 'https://cardstack.com/base/datetime';
 import enumField from 'https://cardstack.com/base/enum';
 import TimerIcon from '@cardstack/boxel-icons/timer';
-import { BoxelInput } from '@cardstack/boxel-ui/components';
-import { not } from '@cardstack/boxel-ui/helpers';
-
 import { SlaTimerBadge } from './components/sla-timer-badge';
-import { formatMinutes, timerSnapshot } from './utils/sla';
+import { timerSnapshot } from './utils/sla';
 
 export const TIMER_KINDS = [
   'First response',
@@ -103,100 +100,5 @@ export class SlaTimerField extends FieldDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template><SlaTimerBadge @facts={{@model}} @live={{false}} /></template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    get targetLabel() {
-      let minutes = this.args.model.targetMinutes;
-      return typeof minutes === 'number' ? formatMinutes(minutes) : '—';
-    }
-
-    setTarget = (value: string) => {
-      let parsed = Number(value);
-      this.args.model.targetMinutes = Number.isFinite(parsed)
-        ? parsed
-        : undefined;
-    };
-
-    <template>
-      <div class='timer-edit'>
-        <div class='timer-row'>
-          <span class='timer-lbl'>Kind</span>
-          <@fields.kind />
-        </div>
-        <div class='timer-row'>
-          <span class='timer-lbl'>Target</span>
-          <span class='timer-target'>
-            <BoxelInput
-              @type='number'
-              @value={{@model.targetMinutes}}
-              @onInput={{this.setTarget}}
-              @disabled={{not @canEdit}}
-            />
-            <span class='timer-hint'>minutes — {{this.targetLabel}}</span>
-          </span>
-        </div>
-        {{! Everything below is owned by the lifecycle commands. Editing a
-            deadline by hand would let a ticket claim it met a target it
-            missed, so these are shown as facts, not inputs. }}
-        <div class='timer-readonly'>
-          <SlaTimerBadge
-            @facts={{@model}}
-            @caption='Current state'
-            @live={{true}}
-            @showBar={{true}}
-          />
-          <p class='timer-note'>
-            Started, deadline, pause and breach times are set by the ticket's
-            actions — reply, set pending, resolve — so the clock always matches
-            what actually happened.
-          </p>
-        </div>
-      </div>
-      <style scoped>
-        .timer-edit {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          color: var(--foreground);
-        }
-        .timer-row {
-          display: grid;
-          grid-template-columns: 5.5rem 1fr;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-        }
-        .timer-lbl {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .timer-target {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-        }
-        .timer-hint {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-        }
-        .timer-readonly {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          padding-top: var(--boxel-sp-xs);
-          border-top: 1px dashed var(--border);
-        }
-        .timer-note {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          line-height: 1.45;
-          color: var(--muted-foreground);
-          max-width: 46ch;
-        }
-      </style>
-    </template>
   };
 }

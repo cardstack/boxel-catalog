@@ -70,6 +70,13 @@
         "module": "../carrier",
         "name": "Carrier"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

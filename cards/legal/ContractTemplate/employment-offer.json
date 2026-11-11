@@ -7,10 +7,21 @@
       "useCase": "New hire",
       "isPublished": true,
       "lastReviewedAt": "2026-04-20",
-      "requiredInputs": ["Candidate", "Salary", "Start date", "Reporting line"],
+      "requiredInputs": [
+        "Candidate",
+        "Salary",
+        "Start date",
+        "Reporting line"
+      ],
       "guidance": "People team owns this one. Legal reviews only non-standard terms."
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "../contract-template",

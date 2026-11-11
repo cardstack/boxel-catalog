@@ -4,7 +4,7 @@
     "attributes": {
       "orderNumber": "ORD-2026-1000",
       "source": "manual",
-      "customerName": "Tomás Ferreira",
+      "customerName": "Tom\u00e1s Ferreira",
       "customerEmail": "tomas.f@example.com",
       "shippingAddress": {
         "addressLine1": "3 Beckford Close",
@@ -65,6 +65,11 @@
       "allocatedWarehouse": {
         "links": {
           "self": "../Warehouse/wh-main"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

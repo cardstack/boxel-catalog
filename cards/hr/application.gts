@@ -1,4 +1,8 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { tracked } from '@glimmer/tracking';
+import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { ScreenApplicationCommand } from './commands/screen-application-command';
 import {
   Component,
   field,
@@ -9,28 +13,41 @@ import {
 import DateField from '@cardstack/base/date';
 import PhoneNumberField from '@cardstack/base/phone-number';
 import TextAreaField from '@cardstack/base/text-area';
-import enumField from '@cardstack/base/enum';
+import { dotEnumField } from './dot-enum-field';
 import { FileDef } from '@cardstack/base/file-api';
 import InboxIcon from '@cardstack/boxel-icons/inbox';
-import { htmlSafe } from '@ember/template';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
-import { Stat } from '@cardstack/pretui/components/stat';
+import { type DescriptionsItem } from '@cardstack/pretui/components/descriptions';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 
-import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
-import { Position } from '@cardstack/catalog/cards/hr/position';
+import { PersonBase } from '../people/person-base';
+import { Position } from './position';
 import {
-  StatePill,
   stateColor,
-  stateColorOf,
   type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { daysBetween } from '@cardstack/catalog/cards/hr/utils';
-import { QUIET_AVATAR_HUE, hueOf } from '@cardstack/catalog/cards/hr/hr-ui';
-import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
-import FileDownloadLink from '@cardstack/catalog/cards/hr/components/file-download-link';
+import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import { daysBetween } from './utils';
+import {
+  ALERT_STYLE,
+  AVATAR_HUE,
+} from '@cardstack/catalog/components/pretui-helpers';
+import FileDownloadLink from './components/file-download-link';
+import {
+  EmbCard,
+  FitCard,
+  FitRow,
+  IsoHead,
+  IsoPage,
+  Kv,
+  kv,
+  Panel,
+  SheetLine,
+  StatStrip,
+  type StripItem,
+} from './compact-sheet';
 
 export const APPLICATION_STATUSES = [
   'new',
@@ -61,14 +78,263 @@ export const APPLICATION_STATUS_COLORS: Record<string, StateColor> =
   );
 
 export const ApplicationStatusField = markDefinition(
-  enumField(StringField, {
-    options: APPLICATION_STATUSES.map((status) => ({
-      value: status,
-      label: status,
-    })),
-    displayName: 'Application Status',
-  }),
+  dotEnumField(
+    {
+      options: APPLICATION_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Application Status',
+    },
+    APPLICATION_STATUS_HUES,
+  ),
 );
+
+// The status chip's tone, shared with the Applications tab: a new
+// application is neutral, one in review warning, a converted one success,
+// and a rejected one neutral again (it is closed, not an alarm).
+const APPLICATION_STATUS_TONES: Record<string, PretuiToneArg> = {
+  new: 'neutral',
+  reviewing: 'warning',
+  converted: 'success',
+  rejected: 'neutral',
+};
+
+export function statusTone(status?: string | null): PretuiToneArg {
+  return (status && APPLICATION_STATUS_TONES[status]) || 'neutral';
+}
+
+export function statusWord(status?: string | null): string {
+  return status ? status.charAt(0).toUpperCase() + status.slice(1) : '—';
+}
+
+// Where the review stands, beside the applied date.
+const REVIEW_NOTES: Record<string, string> = {
+  new: 'not yet reviewed',
+  reviewing: 'in review',
+  converted: 'converted to candidate',
+  rejected: 'rejected',
+};
+
+function reviewNote(status?: string | null): string {
+  return (status && REVIEW_NOTES[status]) || 'no status';
+}
+
+function subLine(m?: Partial<Application>): string {
+  let parts = [
+    m?.positionTitle || 'No position',
+    m?.source ? `via ${m.source}` : undefined,
+  ].filter(Boolean);
+  return parts.join(' · ');
+}
+
+// The facts every format draws from, in the mockup's order; isolated shows
+// them all, embedded the first six. The file rows read the link only, so
+// they say "not attached" until the file loads.
+function applicationFacts(m?: Partial<Application>): DescriptionsItem[] {
+  return [
+    {
+      label: 'Applied',
+      value: m?.appliedDate ? formatDay(m.appliedDate) : '—',
+    },
+    { label: 'Source', value: m?.source || '—' },
+    { label: 'Position', value: m?.positionTitle || '—' },
+    { label: 'Email', value: m?.email || '—' },
+    { label: 'Phone', value: m?.phone || '—' },
+    { label: 'Résumé', value: m?.resumeFile ? 'attached' : 'not attached' },
+    {
+      label: 'Cover letter',
+      value: m?.coverLetterFile ? 'attached' : 'not attached',
+    },
+  ];
+}
+
+// Hoisted out of `static isolated = class {…}`: decorators are not valid in a
+// class expression under the catalog type-check.
+class ApplicationIsolated extends Component<typeof Application> {
+  get contactFacts(): DescriptionsItem[] {
+    let m = this.args.model;
+    return [
+      { label: 'Email', value: m?.email || '—' },
+      { label: 'Phone', value: m?.phone || '—' },
+    ];
+  }
+
+  // The file rows render a download link when a file is attached.
+  applicationRows: DescriptionsItem[] = [
+    { label: 'Position' },
+    { label: 'Source' },
+    { label: 'Applied' },
+    { label: 'Résumé' },
+    { label: 'Cover letter' },
+  ];
+
+  get details(): DescriptionsItem[] {
+    return applicationFacts(this.args.model);
+  }
+
+  get appliedValue(): string {
+    let d = this.args.model?.appliedDate;
+    return d ? formatDay(d) : '—';
+  }
+
+  get waitHint(): string | undefined {
+    let d = daysBetween(this.args.model?.appliedDate);
+    return d == null ? undefined : `${d} days in queue`;
+  }
+
+  get referrerHint(): string {
+    let name = this.args.model?.referrerName;
+    return name ? `referred by ${name}` : 'no referrer';
+  }
+
+  get strip(): StripItem[] {
+    let m = this.args.model;
+    return [
+      {
+        label: 'Status',
+        value: statusWord(m?.status),
+        hint: reviewNote(m?.status),
+        tone: 'info',
+      },
+      { label: 'Applied', value: this.appliedValue, hint: this.waitHint },
+      {
+        label: 'Source',
+        value: m?.source || '—',
+        hint: this.referrerHint,
+      },
+    ];
+  }
+  linked = [{ key: 'Position', value: '' }];
+
+  @tracked busy: 'convert' | 'reject' | undefined;
+  @tracked actionError: string | undefined;
+
+  get canAct(): boolean {
+    let status = this.args.model?.status;
+    return status !== 'converted' && status !== 'rejected';
+  }
+
+  convert = () => this.act('convert');
+  reject = () => this.act('reject');
+
+  private async act(kind: 'convert' | 'reject') {
+    let ctx = this.args.context?.commandContext;
+    let model = this.args.model as Application | undefined;
+    if (!ctx || !model) {
+      this.actionError = 'Commands are unavailable in this mode';
+      return;
+    }
+    this.busy = kind;
+    this.actionError = undefined;
+    try {
+      if (kind === 'convert') {
+        await new ScreenApplicationCommand(ctx).execute({
+          application: model,
+        });
+      } else {
+        model.status = 'rejected';
+        await new SaveCardCommand(ctx).execute({ card: model });
+      }
+    } catch (e: any) {
+      this.actionError = e?.message ?? String(e);
+    } finally {
+      this.busy = undefined;
+    }
+  }
+  applicationKv = [
+    { key: 'Position', value: '' },
+    { key: 'Source', value: '' },
+    { key: 'Applied', value: '' },
+    { key: 'Résumé', value: '' },
+    { key: 'Cover letter', value: '' },
+  ];
+
+  <template>
+    <IsoPage>
+      <:head>
+        <IsoHead @title={{@model.title}} @meta={{subLine @model}}>
+          <:mark><Avatar
+              @name={{if @model.name @model.name '?'}}
+              @src={{@model.photo.resolvedUrl}}
+              @hue={{AVATAR_HUE}}
+              @size={{36}}
+              aria-hidden='true'
+            /></:mark>
+          <:aside>{{#if @model.status}}<@fields.status
+                @format='atom'
+                @displayContainer={{false}}
+              />{{/if}}</:aside>
+          <:actions as |bar|>{{#if this.canAct}}
+              <bar.Action
+                @id='convert'
+                @label='Convert to candidate'
+                @primary={{true}}
+                @loading={{eq this.busy 'convert'}}
+                @onClick={{this.convert}}
+              />
+              <bar.Action
+                @id='reject'
+                @label='Reject'
+                @loading={{eq this.busy 'reject'}}
+                @onClick={{this.reject}}
+              />
+            {{/if}}</:actions>
+          <:stats><StatStrip @items={{this.strip}} /></:stats>
+        </IsoHead>
+        {{#if this.actionError}}<Alert
+            @tone='danger'
+            style={{ALERT_STYLE.danger}}
+          >{{this.actionError}}</Alert>{{/if}}
+      </:head>
+      <:main>
+        <Panel @title='Contact'><Kv @items={{kv this.contactFacts}} /></Panel>
+        <Panel @title='Application'>
+          <Kv @items={{this.applicationKv}}>
+            <:value as |item|>
+              {{#if (eq item.key 'Position')}}
+                {{if @model.positionTitle @model.positionTitle '—'}}
+              {{else if (eq item.key 'Source')}}
+                {{if @model.source @model.source '—'}}
+              {{else if (eq item.key 'Applied')}}
+                {{this.appliedValue}}
+              {{else if (eq item.key 'Résumé')}}
+                {{#if @model.resumeFile}}
+                  <FileDownloadLink @file={{@model.resumeFile}} />
+                {{else}}not attached{{/if}}
+              {{else if (eq item.key 'Cover letter')}}
+                {{#if @model.coverLetterFile}}
+                  <FileDownloadLink @file={{@model.coverLetterFile}} />
+                {{else}}not attached{{/if}}
+              {{/if}}
+            </:value>
+          </Kv>
+        </Panel>
+        {{#if @model.resumeText}}
+          <Panel @title='Résumé text'><SheetLine><span
+                class='prose'
+              >{{@model.resumeText}}</span></SheetLine></Panel>
+        {{/if}}
+      </:main>
+      <:aside>
+        <Panel @title='Linked'>
+          <Kv @items={{this.linked}}>
+            <:value>{{#if @model.position}}<@fields.position
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}none linked{{/if}}</:value>
+          </Kv>
+        </Panel>
+        <Panel @title='Details'><Kv @items={{kv this.details}} /></Panel>
+      </:aside>
+    </IsoPage>
+    <style scoped>
+      .prose {
+        white-space: pre-line;
+      }
+    </style>
+  </template>
+}
 
 export class Application extends PersonBase {
   static displayName = 'Application';
@@ -110,608 +376,143 @@ export class Application extends PersonBase {
     },
   });
 
-  static isolated = class Isolated extends Component<typeof this> {
-    get statusHue() {
-      return hueOf(APPLICATION_STATUS_HUES, this.args.model?.status);
-    }
-    // The status ring sits on a wrapper: Avatar writes its own inline style,
-    // and a caller's `style` would replace it.
-    get avatarRingStyle() {
-      let c = stateColorOf(APPLICATION_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`--status-ring: ${c.ring}`);
-    }
-    get referrerLabel(): string | undefined {
-      let name = this.args.model?.referrerName;
-      return name ? `referred by ${name}` : undefined;
-    }
-    get resumeWordCount(): number | undefined {
-      let text = this.args.model?.resumeText?.trim();
-      if (!text) {
-        return undefined;
-      }
-      return text.split(/\s+/).filter(Boolean).length;
-    }
-    get waitLabel(): string | undefined {
-      let d = daysBetween(this.args.model?.appliedDate);
-      return d == null ? undefined : `${d} days in queue`;
-    }
-
-    // An application nobody has screened is the one thing this card can
-    // legitimately claim needs action.
-    get needsScreening(): boolean {
-      let st = this.args.model?.status;
-      return st === 'new' || st === 'reviewing';
-    }
-
-    <template>
-      <article class='application-isolated'>
-        <header class='hero'>
-          <span class='avatar-ring' style={{this.avatarRingStyle}}>
-            <Avatar
-              @name={{if @model.name @model.name '?'}}
-              @src={{@model.photo.resolvedUrl}}
-              @hue={{AVATAR_HUE}}
-              @size={{52}}
-              aria-hidden='true'
-            />
-          </span>
-          <div class='hero-text'>
-            <h1>{{@model.title}}</h1>
-            <p class='byline'>
-              {{#if @model.positionTitle}}applied for
-                {{@model.positionTitle}}{{else}}No position linked{{/if}}
-              {{#if @model.appliedDate}}
-                <span class='sep-dot'>&middot;</span>
-                <@fields.appliedDate />
-              {{/if}}
-            </p>
-            <div class='pill-row'>
-              <StatePill
-                @label={{@model.status}}
-                @hue={{this.statusHue}}
-                @dot={{true}}
-              />
-              {{#if this.needsScreening}}
-                <StatePill
-                  @label={{this.waitLabel}}
-                  @hue='attention'
-                  @dot={{true}}
-                />
-              {{else}}
-                <StatePill @label={{this.waitLabel}} />
-              {{/if}}
-              <StatePill @label={{this.referrerLabel}} />
-            </div>
-          </div>
-          {{#if this.resumeWordCount}}
-            <div class='hero-money'>
-              <Stat
-                class='money'
-                @label='Resume words'
-                @value={{this.resumeWordCount}}
-                @roll={{false}}
-              />
-            </div>
-          {{/if}}
-        </header>
-
-        <div class='body'>
-          <div class='main'>
-            <h2 class='panel-title'>Resume</h2>
-            {{#if @model.resumeFile}}
-              <div class='attach'>
-                <FileDownloadLink @file={{@model.resumeFile}} />
-              </div>
-            {{else}}
-              <EmptyState
-                class='empty'
-                @texture={{false}}
-                @title='No resume file attached'
-              />
-            {{/if}}
-            {{#if @model.resumeText}}
-              <p class='prose'>{{@model.resumeText}}</p>
-            {{else}}
-              <EmptyState
-                class='empty'
-                @texture={{false}}
-                @title='No resume text on file'
-                @message='This is what a Screen conversion and any later AI parsing on the resulting Candidate both read.'
-              />
-            {{/if}}
-
-            <h2 class='panel-title spaced'>Cover letter</h2>
-            {{#if @model.coverLetterFile}}
-              <div class='attach'>
-                <FileDownloadLink @file={{@model.coverLetterFile}} />
-              </div>
-            {{else}}
-              <EmptyState
-                class='empty'
-                @texture={{false}}
-                @title='No cover letter attached'
-              />
-            {{/if}}
-          </div>
-
-          <aside class='side'>
-            <h2 class='panel-title'>Applicant</h2>
-            <dl class='stacked'>
-              <dt>Email</dt>
-              <dd>{{if @model.email @model.email '—'}}</dd>
-              <dt>Phone</dt>
-              <dd>{{#if @model.phone}}<@fields.phone
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>Source</dt>
-              <dd>{{if @model.source @model.source '—'}}</dd>
-              <dt>Referrer</dt>
-              <dd>{{if @model.referrerName @model.referrerName '—'}}</dd>
-            </dl>
-
-            <h2 class='panel-title spaced'>Requisition</h2>
-            <dl class='stacked'>
-              <dt>Position</dt>
-              <dd>{{#if @model.position}}<@fields.position
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>Applied</dt>
-              <dd>{{#if @model.appliedDate}}<@fields.appliedDate
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>In queue</dt>
-              <dd>{{if this.waitLabel this.waitLabel '—'}}</dd>
-            </dl>
-          </aside>
-        </div>
-      </article>
-      <style scoped>
-        .application-isolated {
-          container-type: inline-size;
-          container-name: iso;
-          height: 100%;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-        }
-        .avatar-ring {
-          flex: none;
-          display: inline-flex;
-          border-radius: 50%;
-          box-shadow:
-            0 0 0 0.1875rem var(--background),
-            0 0 0 0.3125rem var(--status-ring);
-        }
-        .attach {
-          font-size: var(--boxel-font-size-sm);
-        }
-        .hero {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp);
-          padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border);
-        }
-        .hero-text {
-          flex: 1;
-          min-width: 0;
-        }
-        h1 {
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 750;
-          letter-spacing: -0.02em;
-          line-height: 1.2;
-          overflow-wrap: anywhere;
-        }
-        .byline {
-          margin: var(--boxel-sp-5xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .sep-dot {
-          margin: 0 0.25rem;
-        }
-        .pill-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-5xs);
-          margin-top: var(--boxel-sp-xs);
-        }
-        .hero-money {
-          flex: none;
-          text-align: right;
-        }
-        .money {
-          --text-stat: 1.5rem;
-          justify-items: end;
-        }
-        .body {
-          display: grid;
-          grid-template-columns: 1fr 17rem;
-          /* Fill whatever height is left so the aside's surface reaches the
-             bottom edge. Without this the grid is only as tall as its content
-             and the panel stops mid-card, reading as a cut-off seam. */
-          flex: 1;
-          min-height: 0;
-          align-content: start;
-        }
-        .main {
-          padding: var(--boxel-sp-lg);
-          min-width: 0;
-        }
-        .side {
-          padding: var(--boxel-sp-lg);
-          border-left: 1px solid var(--border);
-          background-color: var(--muted);
-          color: var(--foreground);
-        }
-        .panel-title {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-        }
-        .panel-title.spaced {
-          margin-top: var(--boxel-sp-lg);
-        }
-        .prose {
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.65;
-          max-width: 56ch;
-          max-height: 16rem;
-          overflow-y: auto;
-        }
-        .stacked {
-          margin: 0;
-          display: grid;
-        }
-        .stacked dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-          padding: 0.45rem var(--boxel-sp-xs) 0 0;
-        }
-        .stacked dd {
-          margin: 0;
-          padding: 0.1rem 0 0.45rem;
-          font-size: var(--boxel-font-size-sm);
-          border-bottom: 1px solid var(--border);
-          overflow-wrap: anywhere;
-          font-variant-numeric: tabular-nums;
-        }
-        .empty {
-          --space-9: var(--boxel-sp);
-          --space-6: var(--boxel-sp);
-          --text-heading: var(--boxel-font-size);
-        }
-        @container iso (max-width: 40rem) {
-          .body {
-            grid-template-columns: 1fr;
-          }
-          .side {
-            border-left: 0;
-            border-top: 1px solid var(--border);
-          }
-          .hero {
-            flex-wrap: wrap;
-          }
-          .hero-money {
-            text-align: left;
-          }
-          .money {
-            justify-items: start;
-          }
-        }
-      </style>
-    </template>
-  };
+  static isolated = ApplicationIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusHue() {
-      return hueOf(APPLICATION_STATUS_HUES, this.args.model?.status);
-    }
-    get sourceLine() {
-      let source = this.args.model?.source;
-      return source ? `via ${source}` : undefined;
+    get rows() {
+      return [
+        ...kv(applicationFacts(this.args.model).slice(0, 6)),
+        { key: 'Position link', value: '' },
+      ];
     }
     <template>
-      <div class='application-embedded'>
-        <EntityDisplay
-          class='entity'
-          @title={{@model.title}}
-          @subtitle={{this.sourceLine}}
-          @center={{true}}
-        >
-          <:visual>
-            <Avatar
-              @name={{if @model.name @model.name '?'}}
-              @src={{@model.photo.resolvedUrl}}
-              @hue={{QUIET_AVATAR_HUE}}
-              @size={{30}}
-              aria-hidden='true'
-            />
-          </:visual>
-        </EntityDisplay>
-        <StatePill
-          class='ae-status'
-          @label={{@model.status}}
-          @hue={{this.statusHue}}
-        />
-      </div>
-      <style scoped>
-        .application-embedded {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.75rem;
-          font-size: 0.8125rem;
-        }
-        /* EntityDisplay's name and secondary line keep the row's sizes. */
-        .entity {
-          flex: 1;
-          --pretui-entity-visual-size: 1.875rem;
-          --text-ui-md: 0.8125rem;
-          --text-ui-sm: 0.6875rem;
-          --space-3: 0.625rem;
-        }
-        .ae-status {
-          flex-shrink: 0;
-          text-transform: capitalize;
-        }
-      </style>
+      <EmbCard @title={{@model.title}} @meta={{subLine @model}}>
+        <:mark><Avatar
+            @name={{if @model.name @model.name '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{24}}
+            aria-hidden='true'
+          /></:mark>
+        <:aside>{{#if @model.status}}<@fields.status
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:aside>
+        <:default>
+          <Kv @items={{this.rows}}>
+            <:value as |item|>{{#if (eq item.key 'Position link')}}{{#if
+                  @model.position
+                }}<@fields.position
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}{{else}}{{item.value}}{{/if}}</:value>
+          </Kv>
+        </:default>
+      </EmbCard>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='application-atom'>
-        <InboxIcon class='application-atom-icon' />
-        <span class='application-atom-name'>{{@model.title}}</span>
+        <Avatar
+          @name={{if @model.name @model.name '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue={{AVATAR_HUE}}
+          @size={{20}}
+          aria-hidden='true'
+        />
+        <span class='name'>{{@model.title}}</span>
       </span>
       <style scoped>
-        .application-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .application-atom-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .application-atom-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        @layer PretComponent {
+          .application-atom {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-2xs);
+            max-width: 100%;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
+            line-height: 1;
+            white-space: nowrap;
+            color: var(--foreground);
+          }
+          .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get statusHue() {
-      return hueOf(APPLICATION_STATUS_HUES, this.args.model?.status);
-    }
-    get waitLabel(): string | undefined {
-      let d = daysBetween(this.args.model?.appliedDate);
-      return d == null ? undefined : `${d}d waiting`;
-    }
-
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <Avatar
+      <FitCard @title={{@model.title}}>
+        <:mark><Avatar
             @name={{if @model.name @model.name '?'}}
             @src={{@model.photo.resolvedUrl}}
             @hue={{AVATAR_HUE}}
-            @size={{26}}
+            @size={{20}}
             aria-hidden='true'
-          />
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
-            {{! Reads the denormalized own-attribute, not position.title —
-                a linksTo read here rendered "applying for " with nothing
-                after it in prerendered fitted. }}
-            {{#if @model.positionTitle}}
-              <span class='fit-eb'>{{@model.positionTitle}}</span>
-            {{/if}}
-          </div>
-          <StatePill
-            class='fit-pill'
-            @label={{@model.status}}
-            @hue={{this.statusHue}}
-            @dot={{true}}
-          />
-        </div>
-
-        <div class='fit-mid'>
-          {{#if this.waitLabel}}
-            <span class='money'>{{this.waitLabel}}</span>
+          /></:mark>
+        <:status>{{#if @model.status}}<@fields.status
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:status>
+        <:default>
+          <FitRow @left={{true}}><span class='meta'>{{subLine
+                @model
+              }}</span></FitRow>
+          <FitRow @label='Applied'><span class='mono'>{{if
+                @model.appliedDate
+                (formatDay @model.appliedDate)
+                '—'
+              }}</span></FitRow>
+          <FitRow @label='Source'>{{if
+              @model.source
+              @model.source
+              '—'
+            }}</FitRow>
+          {{#if @model.position}}
+            <FitRow @label='Position' @left={{true}}><@fields.position
+                @format='atom'
+                @displayContainer={{false}}
+              /></FitRow>
           {{/if}}
-          {{#if @model.source}}
-            <span class='fit-sub'>via {{@model.source}}</span>
-          {{/if}}
-        </div>
-
-        <dl class='fit-add'>
-          {{#if @model.email}}
-            <div><dt>Email</dt><dd>{{@model.email}}</dd></div>
-          {{/if}}
-          {{#if @model.referrerName}}
-            <div><dt>Ref</dt><dd>{{@model.referrerName}}</dd></div>
-          {{/if}}
-          {{#if @model.appliedDate}}
-            <div><dt>Applied</dt><dd><@fields.appliedDate /></dd></div>
-          {{/if}}
-          {{#if @model.source}}
-            <div><dt>Source</dt><dd>{{@model.source}}</dd></div>
-          {{/if}}
-        </dl>
-      </article>
+          <FitRow @label='Email'><span
+              class='mono'
+            >{{@model.email}}</span></FitRow>
+          <FitRow @label='Phone'><span
+              class='mono'
+            >{{@model.phone}}</span></FitRow>
+          <FitRow @label='Résumé'>{{if
+              @model.resumeFile
+              'attached'
+              'not attached'
+            }}</FitRow>
+          <FitRow @label='Cover letter'>{{if
+              @model.coverLetterFile
+              'attached'
+              'not attached'
+            }}</FitRow>
+        </:default>
+      </FitCard>
       <style scoped>
-        /* Four tiers, each ADDING fields. 11px floor. Status never hidden. */
-        .fit {
-          height: 100%;
-          /* Flex, not a three-row grid: with `minmax(0, 1fr)` in the middle
-             a taller bottom block squeezed the middle row and clipped its
-             text. Here the middle keeps its natural height and the extras
-             block is pushed to the bottom by `margin-top: auto`. */
-          display: flex;
-          flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
-          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.4rem;
-          flex-wrap: wrap;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          display: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
+        .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-        .fit-pill {
-          flex: none;
-          align-self: flex-start;
-        }
-        .fit-mid {
-          flex: none;
-          display: none;
-          flex-direction: column;
-          gap: 0.0625rem;
-        }
-        .money {
-          font-size: calc(var(--fit-name) * 1.15);
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-sub {
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          margin-top: auto;
-          padding-top: 0.3rem;
-          border-top: 1px dashed var(--border);
-          grid-template-columns: 1fr 1fr;
-          gap: 0.05rem 0.5rem;
-        }
-        .fit-add > div {
-          display: flex;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .fit-add dt {
-          flex: none;
-          font-size: var(--fit-small);
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
-        .fit-add dd {
-          margin: 0;
-          font-size: var(--fit-small);
-          font-weight: 600;
-          white-space: nowrap;
+        .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-variant-numeric: tabular-nums;
-        }
-
-        /* TIER 2 — add the secondary line. Container queries have no `or`,
-           so this is reached either by height (tile) or width (strip). */
-        @container fitted-card (height > 80px) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        @container fitted-card (width > 240px) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        /* TIER 3 — add the headline figure block. */
-        @container fitted-card (height > 130px) and (width > 180px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        /* TIER 4 — width-driven extra facts, so a large tile shows more
-           than a small one. */
-        @container fitted-card (height > 150px) and (width > 180px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-        }
-        @container fitted-card (width > 340px) and (height > 130px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        /* Short strip: horizontal, single-line name. */
-        @container fitted-card (height <= 90px) {
-          .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
-          }
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
-          }
-          .fit-pill {
-            align-self: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        /* Smallest tier: secondary line goes, the status pill stays. */
-        @container fitted-card (height <= 50px) {
-          .fit-eb {
-            display: none;
-          }
+          font-weight: 500;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

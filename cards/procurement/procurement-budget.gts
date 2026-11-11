@@ -6,187 +6,97 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
+import { on } from '@ember/modifier';
+import { fn } from '@ember/helper';
+import { htmlSafe } from '@ember/template';
+import { codeRef, realmURL } from '@cardstack/runtime-common';
 
-import { BudgetUtilizationField } from './budget-utilization-field';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
-import { Money } from '@cardstack/catalog/cards/crm/money';
-import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { Alert } from '@cardstack/pretui/components/alert';
+import {
+  BudgetUtilizationField,
+  utilizationBandOf,
+} from './budget-utilization-field';
+import { formatMoney } from '../commerce/line-item-totals';
+import { CompactFitted, CompactRow } from '../commerce/compact-parts';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Button } from '@cardstack/pretui/components/button';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { tracked } from '@glimmer/tracking';
-import { eq } from '@cardstack/boxel-ui/helpers';
 
-class ProcurementBudgetEdit extends Component<typeof ProcurementBudget> {
-  @tracked activeSection = 'envelope';
+// POs link TO a budget; a runtime ref keeps purchase-order out of this
+// module's imports (it imports this one).
+// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+const here: string = import.meta.url;
+const purchaseOrderRef = codeRef(here, './purchase-order', 'PurchaseOrder');
 
-  sections = [
-    { id: 'envelope', label: 'Budget envelope' },
-    { id: 'ledger', label: 'Commitment ledger' },
+const money = (n: number) => formatMoney(n, 'USD').replace(/\.00$/, '');
+
+const BAND_TONE = {
+  healthy: 'success',
+  warning: 'warning',
+  critical: 'danger',
+  over: 'danger',
+} as const;
+
+function budgetFacts(m?: ProcurementBudget) {
+  let budget = m?.budgetAmount ?? 0;
+  let committed = m?.committed ?? 0;
+  let actual = m?.actual ?? 0;
+  let pct = budget > 0 ? Math.round(((committed + actual) / budget) * 100) : 0;
+  let band = utilizationBandOf(pct);
+  let tone = BAND_TONE[band];
+  let remaining = budget - committed - actual;
+  let pctText = `${pct}%`;
+  let budgetText = money(budget);
+  let committedText = money(committed);
+  let remainingText = money(remaining);
+  let kv = (key: string, value: string) => ({ key, value });
+  let base = [
+    kv('Budget', budgetText),
+    kv('Committed', committedText),
+    kv('Actual', money(actual)),
   ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.budget-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  return {
+    title: m?.title ?? 'Untitled Budget',
+    sub: `Budget ${budgetText} · ${pctText} used`,
+    band,
+    tone,
+    hue: `var(--${tone})`,
+    dotStyle: htmlSafe(`--dot: var(--${tone})`),
+    tags: [{ label: band, tone }],
+    pct,
+    pctText,
+    usedText: `${pctText} used`,
+    budgetText,
+    committedText,
+    remainingText,
+    factText: `${remainingText} left · ${committedText} committed`,
+    ledger: [
+      kv('Committed', committedText),
+      kv('Actual', money(actual)),
+      kv('Used', `${pctText} · ${band}`),
+    ],
+    fittedRows: [
+      ...base,
+      kv('Used', pctText),
+      kv('Department', m?.department ?? '—'),
+      kv('Period', m?.period ?? '—'),
+    ],
+    embeddedRows: [
+      ...base,
+      kv('Remaining', remainingText),
+      kv('Used', pctText),
+      kv('Department', m?.department ?? '—'),
+    ],
+    details: [
+      ...base,
+      kv('Remaining', remainingText),
+      kv('Used', pctText),
+      kv('Department', m?.department ?? '—'),
+      kv('Period', m?.period ?? '—'),
+    ],
   };
-
-  <template>
-    <div class='budget-edit'>
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "envelope") "focused"}}'
-            data-sect='envelope'
-          >
-            <h3>Budget envelope</h3>
-            <div class='row'>
-              <FieldContainer @label='Department' @vertical={{true}}>
-                <@fields.department />
-              </FieldContainer>
-              <FieldContainer @label='Period' @vertical={{true}}>
-                <@fields.period />
-              </FieldContainer>
-              <FieldContainer @label='Budget amount' @vertical={{true}}>
-                <@fields.budgetAmount />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect ledger
-              {{if (eq this.activeSection "ledger") "focused"}}'
-            data-sect='ledger'
-          >
-            <h3>Commitment ledger
-              <span class='sect-hint'>maintained by Approve PO / Receive Goods —
-                edit only to correct</span></h3>
-            <div class='row two'>
-              <FieldContainer
-                @label='Committed (approved POs)'
-                @vertical={{true}}
-              >
-                <@fields.committed />
-              </FieldContainer>
-              <FieldContainer
-                @label='Actual (goods received)'
-                @vertical={{true}}
-              >
-                <@fields.actual />
-              </FieldContainer>
-            </div>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .budget-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background-color: var(--background);
-        color: var(--foreground);
-        /* family ink, declared ONCE; a linked Theme sets --procurement-ink */
-        --pb-ink: var(--procurement-ink, var(--primary-ink));
-        --pb-ink-fg: var(--procurement-ink-fg, var(--card));
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-      }
-      .sect-nav {
-        position: sticky;
-        top: 0;
-        --edit-section-nav-ink: var(--pb-ink);
-        --edit-section-nav-ink-fg: var(--pb-ink-fg);
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      .sect.focused {
-        outline-color: var(--pb-ink);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--pb-ink) 12%, transparent);
-      }
-      .sect.ledger {
-        border-left: 0.1875rem solid var(--pb-ink);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
-        align-items: start;
-      }
-      .row.two {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      @container edit (width < 640px) {
-        .row,
-        .row.two {
-          grid-template-columns: 1fr;
-        }
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
-        }
-      }
-    </style>
-  </template>
 }
 
 // A department's spending envelope for one period, tracked with commitment
@@ -198,7 +108,6 @@ class ProcurementBudgetEdit extends Component<typeof ProcurementBudget> {
 // the events that produced them.
 export class ProcurementBudget extends CardDef {
   static displayName = 'Procurement Budget';
-  static headerColor = '#3e4e88';
 
   @field department = contains(StringField);
   @field period = contains(StringField, {
@@ -230,237 +139,424 @@ export class ProcurementBudget extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get budgetLabel() {
-      return formatMoney(this.args.model?.budgetAmount ?? 0, 'USD');
+    get f() {
+      return budgetFacts(this.args.model as ProcurementBudget);
     }
-    get overCommitted() {
-      return (this.args.model?.utilization?.percent ?? 0) > 100;
+    // POs link TO the budget, so they are found by live query.
+    poQuery = this.args.context?.getCards(
+      this,
+      () => {
+        let id = this.args.model?.id;
+        return id
+          ? { filter: { on: purchaseOrderRef, eq: { 'budget.id': id } } }
+          : undefined;
+      },
+      () => {
+        let url = (this.args.model as any)?.[realmURL]?.href;
+        return url ? [url] : [];
+      },
+      { isLive: true },
+    );
+    get charged() {
+      return ((this.poQuery?.instances ?? []) as any[]).map((po) => ({
+        card: po,
+        number: po.poNumber || 'Draft PO',
+        sub: [po.lineItems?.[0]?.description, po.vendor?.name]
+          .filter(Boolean)
+          .join(' · '),
+        amount: `${money(po.totalAmount ?? 0)} ${po.status ?? ''}`.trim(),
+      }));
     }
+    open = (card: CardDef) => this.args.viewCard?.(card);
     <template>
-      <article class='budget'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Procurement Budget</p>
-            <h1>{{@model.department}}</h1>
-            <p class='sub'>{{@model.period}}</p>
+      <article class='ip'>
+        <header class='ih'>
+          <Avatar @name='Budget' @shape='square' @size={{24}} />
+          <div class='id'>
+            <h1>{{this.f.title}}</h1>
+            <p class='meta'>{{this.f.sub}}</p>
           </div>
-          <Stat
-            class='amount'
-            @label='Period budget'
-            @value={{this.budgetLabel}}
-            @roll={{false}}
-          />
+          <span class='tags'>
+            <Chip
+              @label={{this.f.band}}
+              @tone={{this.f.tone}}
+              @appearance='plain'
+            />
+            <Chip @label={{this.f.usedText}} @appearance='plain' />
+          </span>
         </header>
-
-        {{#if this.overCommitted}}
-          <Alert
-            class='over-banner'
-            @tone='danger'
-            @title='Over budget'
-            style={{ALERT_STYLE.danger}}
-          >
-            <:default>Commitments exceed the envelope.</:default>
-          </Alert>
-        {{/if}}
-
-        <section class='panel'>
-          <@fields.utilization @format='embedded' />
-        </section>
+        <div class='stats'>
+          <Stat
+            @label='Budget'
+            @value={{this.f.budgetText}}
+            @roll={{false}}
+            @hint={{@model.period}}
+          />
+          <Stat
+            @label='Used'
+            @value={{this.f.pctText}}
+            @roll={{false}}
+            @hint='committed + actual'
+          />
+          <Stat
+            @label='Remaining'
+            @tone='success'
+            @value={{this.f.remainingText}}
+            @roll={{false}}
+            @hint='to commit'
+          />
+        </div>
+        <div class='cols'>
+          <div>
+            <section>
+              <h2>Utilisation</h2>
+              <div class='pad'>
+                <ProgressBar
+                  @value={{this.f.pct}}
+                  @hue={{this.f.hue}}
+                  aria-label='Budget used'
+                />
+                <KeyValue
+                  @items={{this.f.ledger}}
+                  @divided={{true}}
+                  @labelStyle='eyebrow'
+                  class='kv flush'
+                />
+              </div>
+            </section>
+            <section>
+              <h2>Charged here</h2>
+              {{#if this.charged.length}}
+                <ul class='list'>
+                  {{#each this.charged as |po|}}
+                    <li>
+                      <Button
+                        @appearance='plain'
+                        class='po'
+                        {{on 'click' (fn this.open po.card)}}
+                      >
+                        <span class='two'>
+                          <strong>{{po.number}}</strong>
+                          <span class='meta'>{{po.sub}}</span>
+                        </span>
+                        <span class='mono'>{{po.amount}}</span>
+                      </Button>
+                    </li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <p class='empty-note'>No purchase orders charged yet</p>
+              {{/if}}
+            </section>
+          </div>
+          <div>
+            <section>
+              <h2>Details</h2>
+              <KeyValue
+                @items={{this.f.details}}
+                @divided={{true}}
+                @labelStyle='eyebrow'
+                class='kv'
+              />
+            </section>
+          </div>
+        </div>
       </article>
       <style scoped>
-        /* A linked card sizes to its content. The card container's base
-           height: 100% would otherwise fill a stretched grid panel and spill
-           past the heading above it. */
-        .budget :deep(.field-component-card.embedded-format) {
-          height: auto;
-        }
-        .budget {
+        .ip {
+          --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
+          --pretui-kv-label-color: var(--muted-foreground);
           container-type: inline-size;
-          padding: var(--boxel-sp-lg);
-        }
-        .head {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-          gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border);
-          padding-bottom: var(--boxel-sp);
-          margin-bottom: var(--boxel-sp);
-        }
-        .kicker {
-          margin: 0;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        h1 {
-          margin: var(--boxel-sp-5xs) 0;
-          font-size: 1.75rem;
-          line-height: 1.15;
-        }
-        .sub {
-          margin: 0;
-          color: var(--muted-foreground);
-        }
-        .amount {
-          flex: none;
-          white-space: nowrap;
-        }
-        .over-banner {
-          margin-bottom: var(--boxel-sp);
-        }
-        .panel {
           border: 1px solid var(--border);
           border-radius: var(--radius);
-          padding: var(--boxel-sp);
-          background-color: var(--card);
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.25;
           color: var(--card-foreground);
+          background-color: var(--card);
         }
-        @container (max-width: 480px) {
-          .head {
-            flex-direction: column;
-            align-items: flex-start;
+        .ih {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
+        }
+        .id {
+          flex: 1;
+          min-inline-size: 0;
+        }
+        h1 {
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .meta {
+          margin: 0;
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
+        }
+        .tags {
+          display: flex;
+          gap: var(--boxel-sp-xs);
+        }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+          border-block-start: 1px solid var(--border);
+          --text-stat: var(--boxel-font-size-lg);
+        }
+        .stats > * {
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
+        }
+        .stats > :not(:first-child) {
+          border-inline-start: 1px solid var(--border);
+        }
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+          border-block-start: 1px solid var(--border);
+        }
+        .cols > div {
+          min-inline-size: 0;
+        }
+        .cols > div + div {
+          border-inline-start: 1px solid var(--border);
+        }
+        section + section {
+          border-block-start: 1px solid var(--border);
+        }
+        @container (width < 40rem) {
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
           }
+          .cols > div + div {
+            border-inline-start: 0;
+            border-block-start: 1px solid var(--border);
+          }
+        }
+        h2 {
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-4xs);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .pad {
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs) var(--boxel-sp-2xs);
+        }
+        .kv {
+          /* KeyValue pads divided rows with --boxel-sp-xs: 0.35rem gives 28px rows */
+          --boxel-sp-xs: 0.35rem;
+          --boxel-sp-lg: 0.75rem;
+          padding-inline: var(--boxel-sp-xs);
+          row-gap: 0;
+        }
+        .kv.flush {
+          padding-inline: 0;
+          margin-block-start: var(--boxel-sp-xs);
+        }
+        .list {
+          list-style: none;
+          margin: 0;
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
+        }
+        .list li + li {
+          border-block-start: 1px solid var(--border);
+        }
+        .po {
+          all: unset;
+          box-sizing: border-box;
+          inline-size: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--boxel-sp-xs);
+          min-block-size: 2.25rem;
+          padding-block: var(--boxel-sp-4xs);
+          cursor: pointer;
+        }
+        .po:focus-visible {
+          outline: 2px solid var(--ring);
+        }
+        .two {
+          display: flex;
+          flex-direction: column;
+          min-inline-size: 0;
+        }
+        .two .meta {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .mono {
+          flex: none;
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          font-variant-numeric: tabular-nums;
+        }
+        .empty-note {
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs) var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get budgetAmount() {
-      return this.args.model?.budgetAmount ?? 0;
+    get f() {
+      return budgetFacts(this.args.model as ProcurementBudget);
     }
     <template>
-      <div class='row'>
-        <div class='who'>
-          <span class='name'>{{@model.department}}</span>
-          <span class='period'>{{@model.period}}
-            ·
-            <Money @amount={{this.budgetAmount}} @code='USD' /></span>
-        </div>
-        <div class='bar-cell'>
-          <@fields.utilization @format='embedded' />
-        </div>
-      </div>
+      <article class='emb'>
+        <header class='eh'>
+          <Avatar @name='Budget' @shape='square' @size={{24}} />
+          <div class='id'>
+            <strong>{{this.f.title}}</strong>
+            <span class='meta'>{{this.f.sub}}</span>
+          </div>
+          <Chip
+            @label={{this.f.band}}
+            @tone={{this.f.tone}}
+            @appearance='plain'
+          />
+        </header>
+        <p class='fact'><strong>{{this.f.remainingText}}</strong>
+          left ·
+          {{this.f.committedText}}
+          committed</p>
+        <KeyValue
+          @items={{this.f.embeddedRows}}
+          @divided={{true}}
+          @labelStyle='eyebrow'
+          class='kv'
+        />
+      </article>
       <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: minmax(8rem, 14rem) 1fr;
-          gap: var(--boxel-sp);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        .emb {
+          --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
+          --pretui-kv-label-color: var(--muted-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.25;
+          color: var(--card-foreground);
+          background-color: var(--card);
         }
-        .who {
+        .eh {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
+        }
+        .id {
+          flex: 1;
+          min-inline-size: 0;
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
         }
-        .name {
-          font-weight: 600;
-          font-size: 0.9375rem;
+        .id strong,
+        .meta {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
-        .period {
-          font-size: 0.8125rem;
+        .meta {
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
         }
-        .bar-cell {
-          min-width: 0;
+        .fact {
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+          border-block-start: 1px solid var(--border);
         }
-        @container (max-width: 480px) {
-          .row {
-            grid-template-columns: 1fr;
-          }
+        .kv {
+          /* KeyValue pads divided rows with --boxel-sp-xs: 0.35rem gives 28px rows */
+          --boxel-sp-xs: 0.35rem;
+          --boxel-sp-lg: 0.75rem;
+          padding-inline: var(--boxel-sp-xs);
+          padding-block-end: var(--boxel-sp-4xs);
+          row-gap: 0;
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
+    get f() {
+      return budgetFacts(this.args.model as ProcurementBudget);
+    }
     <template>
-      <span class='atom'>{{@model.department}}
-        <@fields.utilization @format='atom' /></span>
+      <span class='atom'>
+        <Avatar @name='Budget' @shape='square' @size={{16}} />
+        <span class='name'>{{this.f.title}}</span>
+        <span class='pct'>{{this.f.pctText}}</span>
+        <span
+          class='dot'
+          style={{this.f.dotStyle}}
+          aria-label={{this.f.band}}
+        ></span>
+      </span>
       <style scoped>
         .atom {
           display: inline-flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-5xs);
-          font-size: 0.8125rem;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          min-inline-size: 0;
+          max-inline-size: 100%;
+          font-size: var(--boxel-font-size-2xs);
+          font-weight: 600;
+        }
+        .name {
+          min-inline-size: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .pct {
+          flex: none;
+          font-weight: 400;
+          color: var(--muted-foreground);
+        }
+        .dot {
+          flex: none;
+          inline-size: 0.375rem;
+          block-size: 0.375rem;
+          border-radius: 50%;
+          background-color: var(--dot);
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get budgetAmount() {
-      return this.args.model?.budgetAmount ?? 0;
+    get f() {
+      return budgetFacts(this.args.model as ProcurementBudget);
     }
     <template>
-      <div class='fit'>
-        <div class='fit-head'>
-          <span class='fit-name'>{{@model.department}}</span>
-          <@fields.utilization @format='atom' />
-        </div>
-        <span class='fit-sub'>{{@model.period}}
-          ·
-          <Money @amount={{this.budgetAmount}} @code='USD' /></span>
-        <div class='fit-bar'>
-          <@fields.utilization @format='embedded' />
-        </div>
-      </div>
+      <CompactFitted
+        @mark='Budget'
+        @title={{this.f.title}}
+        @sub={{this.f.sub}}
+        @fact={{this.f.factText}}
+        @tags={{this.f.tags}}
+      >
+        <:rows>
+          <div class='bar'><ProgressBar
+              @value={{this.f.pct}}
+              @hue={{this.f.hue}}
+              aria-label='Budget used'
+            /></div>
+          {{#each this.f.fittedRows as |r|}}
+            <CompactRow @k={{r.key}} @v={{r.value}} />
+          {{/each}}
+        </:rows>
+      </CompactFitted>
       <style scoped>
-        .fit {
-          height: 100%;
+        .bar {
           display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
+          align-items: center;
         }
-        .fit-head {
-          display: flex;
-          justify-content: space-between;
-          align-items: baseline;
-          gap: var(--boxel-sp-5xs);
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fit-sub {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fit-bar {
-          display: none;
-          margin-top: auto;
-        }
-        @container fitted-card (height > 140px) and (width > 250px) {
-          .fit-bar {
-            display: block;
-          }
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-sub {
-            display: none;
-          }
+        .bar > * {
+          flex: 1;
         }
       </style>
     </template>
@@ -470,5 +566,4 @@ export class ProcurementBudget extends CardDef {
   // ledger — which is command-maintained, so it carries a warning. Two
   // sections, no rail. Computed utilization/title are display-only and
   // excluded.
-  static edit = ProcurementBudgetEdit;
 }

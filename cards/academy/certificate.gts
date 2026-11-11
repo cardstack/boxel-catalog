@@ -10,14 +10,12 @@ import {
 import DateTimeField from '@cardstack/base/datetime';
 import NumberField from '@cardstack/base/number';
 import CertificateIcon from '@cardstack/boxel-icons/certificate';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
 import { Input } from '@cardstack/pretui/components/input';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
 
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 import RevokeCertificateCommand from './commands/revoke-certificate-command';
 
 import {
@@ -25,13 +23,22 @@ import {
   statusHue,
   type StatusOption,
 } from '@cardstack/catalog/fields/status/status';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { CertificateNumberField } from './certificate-number-field';
 import { CertificationAuthority } from '../audit/certification-authority';
 import { Enrollment } from './enrollment';
 import { Employee } from '../hr/employee';
-import { CertificateView } from './components/certificate-view';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import { FitTile } from '../shared/fit-tile';
+import {
+  AtomChip,
+  Dot,
+  Embed,
+  Kv,
+  Mark,
+  Section,
+  Sheet,
+  Stat,
+} from './components/record-sheet';
 
 export const CERTIFICATE_STATUSES: StatusOption[] = [
   {
@@ -58,20 +65,36 @@ export const CertificateStatusField = markDefinition(
 );
 
 class CertificateIsolated extends Component<typeof Certificate> {
+  @tracked reason = '';
+  @tracked busy = false;
+  @tracked revoking = false;
+  @tracked error: string | undefined;
+  @tracked notice: string | undefined;
   get hue() {
     return statusHue(CertificateStatusField, this.args.model?.certStatus);
   }
-  @tracked reason = '';
-  @tracked busy = false;
-  @tracked error: string | undefined;
-  @tracked notice: string | undefined;
   get canRevoke() {
     return (
       this.args.model?.certStatus !== 'revoked' &&
       !!this.args.context?.commandContext
     );
   }
+  get issuedYear() {
+    let d = this.args.model?.issuedAt;
+    return d ? String(toDate(d)!.getFullYear()) : '';
+  }
   setReason = (v: string) => (this.reason = v);
+  toggleRevoke = () => (this.revoking = !this.revoking);
+  copyVerify = async () => {
+    let url = this.args.model?.verifyUrl;
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      this.notice = 'Verify link copied.';
+    } catch (e: any) {
+      this.error = e?.message ?? String(e);
+    }
+  };
   revoke = async () => {
     let ctx = this.args.context?.commandContext;
     if (!ctx) return;
@@ -85,6 +108,7 @@ class CertificateIsolated extends Component<typeof Certificate> {
       } as any)) as any;
       this.notice = res?.message;
       this.reason = '';
+      this.revoking = false;
     } catch (e: any) {
       this.error = e?.message ?? String(e);
     } finally {
@@ -92,160 +116,152 @@ class CertificateIsolated extends Component<typeof Certificate> {
     }
   };
   <template>
-    <article class='cert-page'>
-      <header class='bar'>
-        <div>
-          <span class='eyebrow'>Certificate</span>
-          <h1 class='num'>{{if @model.number @model.number 'Unnumbered'}}</h1>
-        </div>
-        <div class='bar-right'>
-          <StatePill
-            @label={{@model.statusLabel}}
-            @hue={{this.hue}}
-            @dot={{true}}
-          />
-          {{#if @model.revokedReason}}<span
-              class='reason'
-            >{{@model.revokedReason}}</span>{{/if}}
-        </div>
-      </header>
-      <CertificateView
-        @number={{@model.number}}
-        @learnerName={{@model.learnerName}}
-        @courseTitle={{@model.courseTitle}}
-        @cohortName={{@model.cohortName}}
-        @creditHours={{@model.creditHours}}
-        @finalLetter={{@model.finalLetter}}
-        @issuedAt={{@model.issuedAt}}
-        @authorityName={{@model.authorityName}}
-        @signatoryName={{@model.authority.signatoryName}}
-        @signatoryTitle={{@model.authority.signatoryTitle}}
-        @sealUrl={{@model.authority.seal.resolvedUrl}}
-        @verificationCode={{@model.verificationCode}}
-        @verifyUrl={{@model.verifyUrl}}
-        @revoked={{eqRevoked @model.certStatus}}
-      />
-      <dl class='facts'>
-        {{#if @model.issuedBy}}<div><dt>Issued by</dt><dd
-            >{{@model.issuedBy.name}}</dd></div>{{/if}}
-        {{#if @model.enrollment}}<div><dt>Enrollment</dt><dd><@fields.enrollment
-                @format='atom'
-              /></dd></div>{{/if}}
-        {{#if @model.revokedAt}}<div><dt>Revoked</dt><dd>{{fmtDate
-                @model.revokedAt
-              }}</dd></div>{{/if}}
-      </dl>
-      {{#if this.canRevoke}}
-        <section class='revoke'>
-          <h2>Revoke</h2>
-          <p class='revoke-hint'>Revocation keeps the number and prints the
-            reason on the record. It cannot be undone.</p>
-          <div class='revoke-row'>
-            <Input
-              @value={{this.reason}}
-              @onInput={{this.setReason}}
-              @placeholder='Reason (required)'
-              aria-label='Revocation reason'
-            />
-            <Button
-              class='cta'
+    <Sheet
+      @mark='Ce'
+      @title={{if @model.number @model.number 'Unnumbered'}}
+      @meta={{headline @model}}
+    >
+      <:status>
+        <Dot @hue={{this.hue}}>{{lower @model.statusLabel}}</Dot>
+        {{#if @model.finalLetter}}<Dot @hue='blue'>final
+            {{@model.finalLetter}}</Dot>{{/if}}
+      </:status>
+      <:actions>
+        {{#if @model.verifyUrl}}
+          <Button
+            @size='s'
+            @tone='primary'
+            @appearance='accent'
+            {{on 'click' this.copyVerify}}
+          >Copy verify link</Button>
+        {{/if}}
+        {{#if this.canRevoke}}
+          <Button
+            @size='s'
+            @tone='neutral'
+            @appearance='outlined'
+            {{on 'click' this.toggleRevoke}}
+          >Revoke</Button>
+        {{/if}}
+      </:actions>
+      <:stats>
+        <Stat
+          @label='Final grade'
+          @value={{@model.finalLetter}}
+          @sub='final letter'
+        />
+        <Stat
+          @label='Credit'
+          @value={{hours @model.creditHours}}
+          @sub={{@model.cohortName}}
+        />
+        <Stat
+          @label='Issued'
+          @value={{fmtShort @model.issuedAt}}
+          @sub={{this.issuedYear}}
+        />
+      </:stats>
+      <:main>
+        {{#if this.revoking}}
+          <Section @title='Revoke'>
+            <div class='revoke'>
+              <p class='hint'>Revocation keeps the number and prints the reason
+                on the record. It cannot be undone.</p>
+              <div class='revoke-row'>
+                <Input
+                  @value={{this.reason}}
+                  @onInput={{this.setReason}}
+                  @placeholder='Reason (required)'
+                  aria-label='Revocation reason'
+                />
+                <Button
+                  @size='s'
+                  @tone='danger'
+                  @appearance='accent'
+                  @busy={{this.busy}}
+                  @disabled={{or this.busy (not this.reason)}}
+                  {{on 'click' this.revoke}}
+                >Revoke certificate</Button>
+              </div>
+            </div>
+          </Section>
+        {{/if}}
+        {{#if this.error}}<div class='alert'><Alert
               @tone='danger'
-              @appearance='accent'
-              @busy={{this.busy}}
-              @disabled={{or this.busy (not this.reason)}}
-              {{on 'click' this.revoke}}
-            >Revoke certificate</Button>
-          </div>
-          {{#if this.error}}<Alert @tone='danger'>{{this.error}}</Alert>{{/if}}
-          {{#if this.notice}}<Alert
+            >{{this.error}}</Alert></div>{{/if}}
+        {{#if this.notice}}<div class='alert'><Alert
               @tone='success'
-            >{{this.notice}}</Alert>{{/if}}
-        </section>
-      {{/if}}
-    </article>
+            >{{this.notice}}</Alert></div>{{/if}}
+        <Section @title='Certificate'>
+          <Kv @label='Number' @mono={{true}}>{{dash @model.number}}</Kv>
+          <Kv @label='Learner'>{{dash @model.learnerName}}</Kv>
+          <Kv @label='Course'>{{dash @model.courseTitle}}</Kv>
+          <Kv @label='Cohort'>{{dash @model.cohortName}}</Kv>
+          <Kv @label='Final grade'>{{dash @model.finalLetter}}</Kv>
+          <Kv @label='Credit hours' @mono={{true}}>{{dash
+              @model.creditHours
+            }}</Kv>
+        </Section>
+        <Section @title='Verification'>
+          <Kv @label='Verify URL'>{{dash @model.verifyUrl}}</Kv>
+          <Kv @label='Code' @mono={{true}}>{{dash @model.verificationCode}}</Kv>
+          <Kv @label='Signatory'>{{signatory @model.authority}}</Kv>
+          <Kv @label='Status'><Dot @hue={{this.hue}}>{{lower
+                @model.statusLabel
+              }}</Dot></Kv>
+          {{#if @model.revokedReason}}
+            <Kv @label='Reason'>{{@model.revokedReason}}</Kv>
+          {{/if}}
+        </Section>
+      </:main>
+      <:side>
+        <Section @title='Linked'>
+          <Kv @label='Authority'>{{#if @model.authority}}<@fields.authority
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+          <Kv @label='Issued by'>{{#if @model.issuedBy}}<@fields.issuedBy
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+          {{#if @model.enrollment}}
+            <Kv @label='Enrollment'><@fields.enrollment
+                @format='atom'
+                @displayContainer={{false}}
+              /></Kv>
+          {{/if}}
+        </Section>
+        <Section @title='Details'>
+          <Kv @label='Learner'>{{dash @model.learnerName}}</Kv>
+          <Kv @label='Course'>{{dash @model.courseTitle}}</Kv>
+          <Kv @label='Cohort'>{{dash @model.cohortName}}</Kv>
+          <Kv @label='Final'>{{dash @model.finalLetter}}</Kv>
+          <Kv @label='Credit' @mono={{true}}>{{hoursLong
+              @model.creditHours
+            }}</Kv>
+          <Kv @label='Issued' @mono={{true}}>{{fmtDate @model.issuedAt}}</Kv>
+          <Kv @label='Revoked' @mono={{true}}>{{fmtDate @model.revokedAt}}</Kv>
+        </Section>
+      </:side>
+    </Sheet>
     <style scoped>
-      .cta {
-        min-height: 2.75rem;
-      }
       .revoke {
         display: grid;
         gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp);
-        border: 1px solid var(--border);
-        border-left: 0.25rem solid var(--destructive);
-        border-radius: var(--radius);
-        background: var(--card);
+        padding: 0 var(--boxel-sp-sm) var(--boxel-sp-xs);
       }
-      .revoke h2 {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--muted-foreground);
-      }
-      .revoke-hint {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
+      .hint {
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .revoke-row {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: var(--boxel-sp-xs);
         align-items: center;
       }
-      .cert-page {
-        max-width: 60rem;
-        margin: 0 auto;
-        container-type: inline-size;
-        padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
-        display: grid;
-        gap: var(--boxel-sp-lg);
-        color: var(--foreground);
-        background: var(--background);
-      }
-      .bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        gap: var(--boxel-sp);
-      }
-      .eyebrow {
-        font-size: var(--boxel-font-size-xs);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--muted-foreground);
-      }
-      .num {
-        margin: 0;
-        font-size: var(--boxel-font-size-xl);
-        font-weight: 700;
-        font-family: var(--font-mono);
-        letter-spacing: 0.04em;
-      }
-      .bar-right {
-        display: grid;
-        justify-items: end;
-        gap: var(--boxel-sp-4xs);
-      }
-      .reason {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .facts {
-        margin: 0;
-        display: flex;
-        gap: var(--boxel-sp-lg);
-        flex-wrap: wrap;
-        font-size: var(--boxel-font-size-sm);
-      }
-      dt {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      dd {
-        margin: 0;
-        font-weight: 600;
+      .alert {
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm) 0;
       }
     </style>
   </template>
@@ -318,159 +334,51 @@ export class Certificate extends CardDef {
       return statusHue(CertificateStatusField, this.args.model?.certStatus);
     }
     <template>
-      <div class='row'>
-        <span class='seal' aria-hidden='true'>{{if
-            @model.finalLetter
-            @model.finalLetter
-            '✓'
-          }}</span>
-        <div class='text'>
-          <span class='title'>{{@model.learnerName}}
-            ·
-            {{@model.courseTitle}}</span>
-          <span class='sub mono'>{{@model.number}}{{#if @model.issuedAt}}
-              ·
-              {{fmtDate @model.issuedAt}}{{/if}}</span>
-        </div>
-        <StatePill @label={{@model.statusLabel}} @hue={{this.hue}} />
-      </div>
-      <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: auto 1fr auto;
-          gap: var(--boxel-sp-xs);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        }
-        .seal {
-          width: 2.25rem;
-          height: 2.25rem;
-          display: grid;
-          place-items: center;
-          border-radius: 50%;
-          background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          font-size: var(--boxel-font-size);
-          font-weight: 800;
-        }
-        .text {
-          display: grid;
-          min-width: 0;
-        }
-        .title {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .mono {
-          font-family: var(--font-mono);
-        }
-      </style>
+      <Embed
+        @mark='Ce'
+        @title={{if @model.number @model.number 'Certificate'}}
+        @meta={{headline @model}}
+      >
+        <:status>
+          <Dot @hue={{this.hue}}>{{lower @model.statusLabel}}</Dot>
+          {{#if @model.finalLetter}}<Dot @hue='blue'>final
+              {{@model.finalLetter}}</Dot>{{/if}}
+        </:status>
+        <:fact>Issued
+          <strong>{{fmtDate @model.issuedAt}}</strong>
+          ·
+          {{creditLine @model.creditHours}}</:fact>
+        <:default>
+          <Kv @label='Learner'>{{dash @model.learnerName}}</Kv>
+          <Kv @label='Course'>{{dash @model.courseTitle}}</Kv>
+          <Kv @label='Cohort'>{{dash @model.cohortName}}</Kv>
+          <Kv @label='Final'>{{dash @model.finalLetter}}</Kv>
+          <Kv @label='Credit' @mono={{true}}>{{hoursLong
+              @model.creditHours
+            }}</Kv>
+          <Kv @label='Issued' @mono={{true}}>{{fmtDate @model.issuedAt}}</Kv>
+          <Kv @label='Authority'>{{#if @model.authority}}<@fields.authority
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+          <Kv @label='Issued by'>{{#if @model.issuedBy}}<@fields.issuedBy
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+        </:default>
+      </Embed>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
+    get hue() {
+      return statusHue(CertificateStatusField, this.args.model?.certStatus);
+    }
     <template>
-      <span class='atom'>{{if @model.number @model.number 'Certificate'}}</span>
-      <style scoped>
-        .atom {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.04em;
-          white-space: nowrap;
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'record', label: 'Record' },
-      { id: 'snapshots', label: 'Printed facts' },
-      { id: 'revocation', label: 'Revocation' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Certificate sections'
-        as |e|
-      >
-        <e.Section
-          @id='record'
-          @title='Record'
-          @hint='set by Issue Certificate'
-          @cols={{3}}
-        >
-          <FieldContainer @label='Number' @vertical={{true}}><@fields.number
-              @format='atom'
-            /></FieldContainer>
-          <FieldContainer @label='Status' @vertical={{true}}><@fields.certStatus
-              @format='atom'
-            /></FieldContainer>
-          <FieldContainer
-            @label='Issued at'
-            @vertical={{true}}
-          ><@fields.issuedAt @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Authority'
-            @vertical={{true}}
-          ><@fields.authority @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Issued by'
-            @vertical={{true}}
-          ><@fields.issuedBy @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Enrollment'
-            @vertical={{true}}
-          ><@fields.enrollment @format='atom' /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='snapshots'
-          @title='Printed facts'
-          @hint='snapshotted at issue; a record, not a mirror'
-          @cols={{3}}
-        >
-          <FieldContainer
-            @label='Learner name'
-            @vertical={{true}}
-          ><@fields.learnerName @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Course title'
-            @vertical={{true}}
-          ><@fields.courseTitle @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Cohort name'
-            @vertical={{true}}
-          ><@fields.cohortName @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Credit hours'
-            @vertical={{true}}
-          ><@fields.creditHours @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Final letter'
-            @vertical={{true}}
-          ><@fields.finalLetter @format='atom' /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='revocation'
-          @title='Revocation'
-          @hint='set by Revoke Certificate; the number is never reused'
-          @cols={{2}}
-        >
-          <FieldContainer
-            @label='Revoked at'
-            @vertical={{true}}
-          ><@fields.revokedAt @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Reason'
-            @vertical={{true}}
-          ><@fields.revokedReason @format='atom' /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
+      <AtomChip
+        @mark='Ce'
+        @title={{if @model.number @model.number 'Certificate'}}
+      ><Dot @hue={{this.hue}}>{{lower @model.statusLabel}}</Dot></AtomChip>
     </template>
   };
 
@@ -479,20 +387,25 @@ export class Certificate extends CardDef {
       return statusHue(CertificateStatusField, this.args.model?.certStatus);
     }
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>{{@model.number}}</:eyebrow>
-        <:title>{{if @model.learnerName @model.learnerName 'Unnamed'}}</:title>
-        <:subtitle>{{@model.courseTitle}}{{#if @model.finalLetter}}
-            · final
-            {{@model.finalLetter}}{{/if}}</:subtitle>
-        <:badgeRight><StatePill
-            @label={{@model.statusLabel}}
-            @hue={{this.hue}}
-          /></:badgeRight>
-        <:footer>{{@model.cohortName}}
-          · issued
-          {{fmtDate @model.issuedAt}}</:footer>
-      </FittedCard>
+      <FitTile>
+        <:avatar><Mark @text='Ce' /></:avatar>
+        <:title>{{if @model.number @model.number 'Certificate'}}</:title>
+        <:subtitle>{{headline @model}}</:subtitle>
+        <:status><Dot @hue={{this.hue}}>{{lower
+              @model.statusLabel
+            }}</Dot></:status>
+        <:fact>Issued
+          {{fmtDate @model.issuedAt}}
+          ·
+          {{creditLine @model.creditHours}}</:fact>
+        <:relations>{{#if @model.authority}}<@fields.authority
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}{{#if @model.issuedBy}}<@fields.issuedBy
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
     </template>
   };
 }
@@ -512,9 +425,6 @@ export function verificationCode(
   return h.toString(36).toUpperCase().padStart(7, '0');
 }
 
-function eqRevoked(v?: string | null) {
-  return v === 'revoked';
-}
 function or(...v: unknown[]) {
   return v.some(Boolean);
 }
@@ -525,10 +435,39 @@ function not(v: unknown) {
 function fmtDate(d?: Date | string | null): string {
   if (!d) return '—';
   return toDate(d)!.toLocaleDateString(undefined, {
-    month: 'long',
+    month: 'short',
     day: 'numeric',
     year: 'numeric',
   });
+}
+function fmtShort(d?: Date | string | null): string {
+  if (!d) return '';
+  return toDate(d)!.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+function headline(m?: Partial<Certificate> | null): string {
+  return [m?.learnerName, m?.courseTitle].filter(Boolean).join(' · ');
+}
+function signatory(a?: CertificationAuthority | null): string {
+  let parts = [a?.signatoryName, a?.signatoryTitle].filter(Boolean);
+  return parts.length ? parts.join(', ') : '—';
+}
+function hours(n?: number | null): string {
+  return n == null ? '' : `${n} h`;
+}
+function hoursLong(n?: number | null): string {
+  return n == null ? '—' : `${n} ${n === 1 ? 'hour' : 'hours'}`;
+}
+function creditLine(n?: number | null): string {
+  return n == null ? '' : `${n} credit ${n === 1 ? 'hour' : 'hours'}`;
+}
+function dash(v: unknown): string {
+  return v == null || v === '' ? '—' : String(v);
+}
+function lower(v?: string | null) {
+  return (v ?? '').toLowerCase();
 }
 
 export default Certificate;

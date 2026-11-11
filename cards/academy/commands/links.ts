@@ -3,7 +3,7 @@ import { realmURL } from '@cardstack/base/card-api';
 import type { CommandContext } from '@cardstack/runtime-common';
 
 import { getCard } from '@cardstack/catalog/utils/find-card';
-import { isCardOfType } from '../../../utils/card-type';
+import { isCardOfType } from '@cardstack/catalog/utils/card-type';
 import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
 
 // A command runs outside a render, so a fetched card's links may not have

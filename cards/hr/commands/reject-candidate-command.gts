@@ -8,8 +8,8 @@ import {
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { Candidate } from '@cardstack/catalog/cards/hr/candidate';
-import { RejectionReasonField } from '@cardstack/catalog/cards/hr/rejection-reason-field';
+import { Candidate } from '../candidate';
+import { RejectionReasonField } from '../rejection-reason-field';
 
 class RejectCandidateInput extends CardDef {
   @field candidate = linksTo(() => Candidate, { searchable: true });

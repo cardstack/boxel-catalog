@@ -15,7 +15,7 @@ import {
   ceremonyState,
 } from '../signature-block-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { formatMoney } from '../../commerce/line-item-totals';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Token } from '@cardstack/pretui/components/token';
@@ -288,13 +288,12 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
     <style scoped>
       .ceremony {
         /* The seal is the strip's one accent: the theme's primary, as ink. */
-        --cy-seal: var(--primary-ink);
         display: flex;
         flex-direction: column;
-        gap: 0.9rem;
-        padding: 1rem 1.1rem 0.9rem;
+        gap: var(--boxel-sp);
+        padding: var(--boxel-sp) var(--boxel-sp) var(--boxel-sp);
         border: 1px solid var(--border);
-        border-top: 0.1875rem solid var(--cy-seal);
+        border-top: 0.1875rem solid var(--primary-ink);
         border-radius: var(--boxel-border-radius);
         background-color: var(--card);
         color: var(--card-foreground);
@@ -303,19 +302,18 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
       .cy-head {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        gap: var(--boxel-sp-xs);
       }
       .cy-icon {
         width: 1.125rem;
         height: 1.125rem;
-        color: var(--cy-seal);
+        color: var(--primary-ink);
         flex: none;
       }
       .cy-title {
-        margin: 0;
         flex: 1;
         font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* 9px ladder label: no token */
         font-weight: var(--boxel-eyebrow-font-weight);
         line-height: var(--boxel-eyebrow-line-height);
         letter-spacing: var(--boxel-eyebrow-letter-spacing);
@@ -327,12 +325,12 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
         padding: 0;
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-        gap: 0.9rem;
+        gap: var(--boxel-sp);
       }
       .cy-line {
         display: flex;
         flex-direction: column;
-        gap: 0.35rem;
+        gap: var(--boxel-sp-3xs);
         min-width: 0;
         /* Lines rise onto the page in signing order — slow and deliberate, the
            pace of a document being passed down the table. Data carries the
@@ -373,9 +371,9 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
       .cl-party {
         display: flex;
         align-items: baseline;
-        gap: 0.4rem;
+        gap: var(--boxel-sp-2xs);
         font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* 9px ladder label: no token */
         font-weight: var(--boxel-eyebrow-font-weight);
         line-height: var(--boxel-eyebrow-line-height);
         letter-spacing: var(--boxel-eyebrow-letter-spacing);
@@ -397,8 +395,8 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
       .cl-card {
         display: flex;
         flex-direction: column;
-        gap: 0.3rem;
-        padding: 0.7rem 0.8rem;
+        gap: var(--boxel-sp-3xs);
+        padding: var(--boxel-sp-sm) var(--boxel-sp-sm);
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
         background-color: var(--background);
@@ -421,8 +419,7 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
       }
       .cl-signer {
         font-family: var(--boxel-heading-font-family);
-        margin: 0;
-        font-size: 1.05rem;
+        font-size: var(--boxel-font-size);
         line-height: 1.3;
       }
       .cl-name {
@@ -432,10 +429,9 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .cl-auth {
-        margin: 0;
         display: flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: var(--boxel-sp-3xs);
         font-size: var(--boxel-font-size-xs);
         font-variant-numeric: tabular-nums;
         color: var(--muted-foreground);
@@ -456,10 +452,10 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
         flex: none;
       }
       .cl-status {
-        margin: 0.1rem 0 0;
+        margin: var(--boxel-sp-6xs) 0 0;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
@@ -473,15 +469,15 @@ export class SignatureBlockView extends GlimmerComponent<Signature> {
         text-overflow: ellipsis;
       }
       .cl-problems {
-        margin: 0.2rem 0 0;
-        padding-left: 1rem;
+        margin: var(--boxel-sp-5xs) 0 0;
+        padding-left: var(--boxel-sp);
         font-size: var(--boxel-font-size-xs);
         color: var(--destructive-ink);
         line-height: 1.45;
       }
       .cy-global {
         margin: 0;
-        padding-left: 1rem;
+        padding-left: var(--boxel-sp);
         line-height: 1.45;
       }
       @container (max-width: 420px) {

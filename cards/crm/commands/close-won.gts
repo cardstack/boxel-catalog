@@ -4,18 +4,15 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import CurrencyField from '@cardstack/base/currency';
 import { Command, realmURL } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import { Opportunity } from '@cardstack/catalog/cards/crm/opportunity';
-import {
-  PipelineStageField,
-  canTransition,
-} from '@cardstack/catalog/cards/crm/pipeline-stage-field';
-import { Subscription } from '@cardstack/catalog/cards/commerce/subscription';
-import { Invoice } from '@cardstack/catalog/cards/commerce/invoice';
-import { Contract } from '@cardstack/catalog/cards/legal/contract';
-import { Account } from '@cardstack/catalog/cards/crm/account';
-import { User } from '@cardstack/catalog/cards/crm/user';
-import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
-import { nextInvoiceNumber } from '@cardstack/catalog/cards/commerce/invoice-number-field';
+import { Opportunity } from '../opportunity';
+import { PipelineStageField, canTransition } from '../pipeline-stage-field';
+import { Subscription } from '../../commerce/subscription';
+import { Invoice } from '../../commerce/invoice';
+import { Contract } from '../../legal/contract';
+import { Account } from '../account';
+import { User } from '../user';
+import { LineItem } from '../../commerce/line-item';
+import { nextInvoiceNumber } from '../../commerce/invoice-number-field';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import {
   findCard,

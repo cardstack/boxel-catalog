@@ -138,16 +138,20 @@ export class SalaryBandField extends FieldDef {
           color: var(--foreground);
         }
         .range {
-          font: 600 var(--boxel-font);
+          font-weight: 600;
+          font-size: var(--boxel-font-size);
+          line-height: var(--boxel-line-height);
           font-variant-numeric: tabular-nums;
         }
         .meta {
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
+          line-height: var(--boxel-line-height-xs);
           color: var(--muted-foreground);
         }
         .derived {
-          font: var(--boxel-font-xs);
-          color: var(--warning);
+          font-size: var(--boxel-font-size-xs);
+          line-height: var(--boxel-line-height-xs);
+          color: var(--warning-ink);
         }
       </style>
     </template>
@@ -296,14 +300,17 @@ export class WorkAuthorizationField extends FieldDef {
           color: var(--foreground);
         }
         .status {
-          font: 600 var(--boxel-font-sm);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-sm);
+          line-height: var(--boxel-line-height-sm);
         }
         .status.no {
-          color: var(--destructive);
+          color: var(--destructive-ink);
         }
         .meta,
         .restr {
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
+          line-height: var(--boxel-line-height-xs);
           color: var(--muted-foreground);
         }
       </style>

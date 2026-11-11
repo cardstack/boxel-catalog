@@ -17,8 +17,18 @@ import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
 import { Enrollment } from './enrollment';
 import { Quiz } from './quiz';
 import { scoreAnswer } from './quiz-question-field';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { FittedCard } from '@cardstack/boxel-ui/components';
+import { concat } from '@ember/helper';
+import { FitTile } from '../shared/fit-tile';
+import {
+  AtomChip,
+  Dot,
+  Embed,
+  Kv,
+  Mark,
+  Section,
+  Sheet,
+  Stat,
+} from './components/record-sheet';
 
 /** One recorded answer: which question, which option keys, or free text. */
 export class QuizAnswerField extends FieldDef {
@@ -98,167 +108,118 @@ export class QuizAttempt extends CardDef {
       return perQuestion(this.args.model);
     }
     <template>
-      <article class='attempt'>
-        <header class='hero'>
-          <div class='score-box {{if @model.passed "pass" "fail"}}'>
-            <span class='score'>{{@model.scorePct}}%</span>
-            <span class='verdict'>{{if
-                @model.passed
-                'Passed'
-                'Not passed'
-              }}</span>
-          </div>
-          <div class='hero-text'>
-            <span class='eyebrow'>Attempt
-              {{if @model.attemptNumber @model.attemptNumber 1}}
-              ·
-              {{#if @model.quiz}}<@fields.quiz @format='atom' />{{/if}}</span>
-            <h1>{{if
-                @model.learnerName
-                @model.learnerName
-                'Unlinked learner'
-              }}</h1>
-            <p class='meta'>
-              <span>{{@model.correctCount}}
-                of
-                {{@model.quiz.questionCount}}
-                correct ·
-                {{@model.scorePoints}}
-                /
-                {{@model.quiz.totalPoints}}
-                pts</span>
-              {{#if @model.submittedAt}}<span>submitted
-                  {{fmtDateTime @model.submittedAt}}</span>{{/if}}
-              {{#if @model.quiz.passMarkPct}}<span>pass mark
-                  {{@model.quiz.passMarkPct}}%</span>{{/if}}
-            </p>
-          </div>
-        </header>
-        <ol class='results'>
-          {{#each this.results as |r|}}
-            <li class='{{if r.correct "ok" "miss"}}'>
-              <span class='mark'>{{if r.correct '✓' '✕'}}</span>
-              <div class='r-body'>
-                <span class='r-prompt'>{{r.prompt}}</span>
-                <span class='r-given'>Answered: {{r.given}}</span>
-                {{#unless r.correct}}<span class='r-correct'>Correct:
-                    {{r.expected}}</span>{{/unless}}
+      <Sheet @mark='Qz' @title={{headline @model}} @meta={{metaLine @model}}>
+        <:status>
+          <Dot @hue={{if @model.passed 'green' 'red'}}>{{if
+              @model.passed
+              'passed'
+              'not passed'
+            }}</Dot>
+          <Dot @hue='blue'>{{@model.scorePct}}%</Dot>
+        </:status>
+        <:stats>
+          <Stat
+            @label='Score'
+            @value={{concat @model.scorePct '%'}}
+            @sub={{concat
+              @model.scorePoints
+              ' of '
+              (dash @model.quiz.totalPoints)
+              ' points'
+            }}
+          />
+          <Stat
+            @label='Correct'
+            @value={{concat
+              @model.correctCount
+              ' / '
+              (dash @model.quiz.questionCount)
+            }}
+            @sub='questions'
+          />
+          <Stat
+            @label='Time'
+            @value={{elapsed @model}}
+            @sub='start to submit'
+          />
+        </:stats>
+        <:main>
+          <Section @title='Answers'>
+            {{#each this.results as |r i|}}
+              <div class='ans'>
+                <span class='q'>
+                  <span class='prompt'>{{inc i}}
+                    ·
+                    {{r.prompt}}</span>
+                  <span class='given'>{{r.given}}{{#unless r.correct}}
+                      · expected
+                      {{r.expected}}{{/unless}}</span>
+                </span>
+                <Dot @hue={{if r.correct 'green' 'red'}}>{{r.earned}}
+                  /
+                  {{r.points}}</Dot>
               </div>
-              <span class='r-pts'>{{r.earned}}/{{r.points}}</span>
-            </li>
-          {{else}}
-            <p class='empty'>No answers recorded.</p>
-          {{/each}}
-        </ol>
-      </article>
+            {{else}}
+              <p class='empty'>No questions on the linked quiz.</p>
+            {{/each}}
+          </Section>
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <Kv @label='Enrollment'>{{#if @model.enrollment}}<@fields.enrollment
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+            <Kv @label='Quiz'>{{#if @model.quiz}}<@fields.quiz
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+          </Section>
+          <Section @title='Details'>
+            <Kv @label='Quiz'>{{dash @model.quizTitle}}</Kv>
+            <Kv @label='Attempt' @mono={{true}}>{{attemptOf @model}}</Kv>
+            <Kv @label='Score' @mono={{true}}>{{@model.scorePoints}}
+              /
+              {{dash @model.quiz.totalPoints}}</Kv>
+            <Kv @label='Correct' @mono={{true}}>{{@model.correctCount}}
+              of
+              {{dash @model.quiz.questionCount}}</Kv>
+            <Kv @label='Started' @mono={{true}}>{{fmtDateTime
+                @model.startedAt
+              }}</Kv>
+            <Kv @label='Submitted' @mono={{true}}>{{fmtDateTime
+                @model.submittedAt
+              }}</Kv>
+            <Kv @label='Pass mark' @mono={{true}}>{{passMark @model}}</Kv>
+          </Section>
+        </:side>
+      </Sheet>
       <style scoped>
-        .attempt {
-          max-width: 48rem;
-          margin: 0 auto;
-          container-type: inline-size;
-          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
-          display: grid;
-          gap: var(--boxel-sp-lg);
-          color: var(--foreground);
-          background: var(--background);
-        }
-        .hero {
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: var(--boxel-sp);
-          align-items: center;
-        }
-        .score-box {
-          width: 5.5rem;
-          height: 5rem;
-          display: grid;
-          place-content: center;
-          justify-items: center;
-          border-radius: var(--radius);
-          background: var(--muted);
-        }
-        .score-box.pass {
-          background: color-mix(in oklab, var(--success) 14%, var(--card));
-        }
-        .score-box.fail {
-          background: color-mix(in oklab, var(--destructive) 14%, var(--card));
-        }
-        .score {
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 800;
-          line-height: 1;
-          font-variant-numeric: tabular-nums;
-        }
-        .verdict {
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-        .eyebrow {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        h1 {
-          margin: var(--boxel-sp-4xs) 0 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          line-height: 1.15;
-        }
-        .meta {
-          margin: var(--boxel-sp-xs) 0 0;
+        .ans {
           display: flex;
+          align-items: center;
+          justify-content: space-between;
           gap: var(--boxel-sp-sm);
-          flex-wrap: wrap;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
+          min-block-size: 1.75rem;
+          padding: var(--boxel-sp-5xs) var(--boxel-sp-sm);
+          border-block-start: 1px solid var(--border);
         }
-        .results {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: grid;
-          gap: var(--boxel-sp-xs);
+        .q {
+          display: flex;
+          flex-direction: column;
+          min-inline-size: 0;
         }
-        .results li {
-          display: grid;
-          grid-template-columns: auto 1fr auto;
-          gap: var(--boxel-sp-sm);
-          align-items: start;
-          padding: var(--boxel-sp-sm) var(--boxel-sp);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          background: var(--card);
-        }
-        .mark {
-          font-weight: 800;
-        }
-        .ok .mark {
-          color: var(--success-ink);
-        }
-        .miss .mark {
-          color: var(--destructive-ink);
-        }
-        .r-body {
-          display: grid;
-          gap: 0.125rem;
-          font-size: var(--boxel-font-size-sm);
-        }
-        .r-prompt {
+        .prompt {
           font-weight: 600;
         }
-        .r-given,
-        .r-correct {
+        .given {
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
-          font-size: var(--boxel-font-size-xs);
-        }
-        .r-pts {
-          font-variant-numeric: tabular-nums;
-          font-weight: 600;
         }
         .empty {
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          border-block-start: 1px solid var(--border);
           color: var(--muted-foreground);
-          font-style: italic;
         }
       </style>
     </template>
@@ -266,98 +227,77 @@ export class QuizAttempt extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <div class='row'>
-        <span class='n'>#{{if
-            @model.attemptNumber
-            @model.attemptNumber
-            1
-          }}</span>
-        <div class='text'>
-          <span class='title'>{{if
-              @model.learnerName
-              @model.learnerName
-              'Learner'
-            }}
-            ·
-            {{@model.quizTitle}}</span>
-          <span class='sub'>{{@model.scorePoints}}
-            pts ·
-            {{fmtDateTime @model.submittedAt}}</span>
-        </div>
-        <StatePill
-          @label='{{@model.scorePct}}%'
-          @hue={{if @model.passed 'green' 'red'}}
-          @dot={{true}}
-        />
-      </div>
-      <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: auto 1fr auto;
-          gap: var(--boxel-sp-xs);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        }
-        .n {
-          min-width: 2.25rem;
-          height: 2.25rem;
-          display: grid;
-          place-items: center;
-          border-radius: var(--boxel-border-radius-sm);
-          background: var(--muted);
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          font-family: var(--font-mono);
-        }
-        .text {
-          display: grid;
-          min-width: 0;
-        }
-        .title {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-      </style>
+      <Embed @mark='Qz' @title={{headline @model}} @meta={{metaLine @model}}>
+        <:status>
+          <Dot @hue={{if @model.passed 'green' 'red'}}>{{if
+              @model.passed
+              'passed'
+              'not passed'
+            }}</Dot>
+          <Dot @hue='blue'>{{@model.scorePct}}%</Dot>
+        </:status>
+        <:fact><strong>{{@model.scorePoints}}
+            /
+            {{dash @model.quiz.totalPoints}}</strong>
+          points · pass mark
+          {{passMark @model}}</:fact>
+        <:default>
+          <Kv @label='Quiz'>{{dash @model.quizTitle}}</Kv>
+          <Kv @label='Attempt' @mono={{true}}>{{attemptOf @model}}</Kv>
+          <Kv @label='Correct' @mono={{true}}>{{@model.correctCount}}
+            of
+            {{dash @model.quiz.questionCount}}</Kv>
+          <Kv @label='Started' @mono={{true}}>{{fmtDateTime
+              @model.startedAt
+            }}</Kv>
+          <Kv @label='Submitted' @mono={{true}}>{{fmtDateTime
+              @model.submittedAt
+            }}</Kv>
+          <Kv @label='Enrollment'>{{#if @model.enrollment}}<@fields.enrollment
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+          <Kv @label='Quiz'>{{#if @model.quiz}}<@fields.quiz
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+        </:default>
+      </Embed>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom'>{{@model.quizTitle}}
-        ·
-        {{@model.scorePct}}%
-        {{if @model.passed '✓' '✕'}}</span>
-      <style scoped>
-        .atom {
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-      </style>
+      <AtomChip @mark='Qz' @title={{headline @model}}><Dot
+          @hue={{if @model.passed 'green' 'red'}}
+        >{{@model.scorePct}}%</Dot></AtomChip>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>{{@model.quizTitle}}
-          · attempt
-          {{if @model.attemptNumber @model.attemptNumber 1}}</:eyebrow>
-        <:title>{{if @model.learnerName @model.learnerName 'Learner'}}</:title>
-        <:subtitle>{{@model.scorePct}}% ·
-          {{@model.scorePoints}}
-          points</:subtitle>
-        <:badgeRight><StatePill
-            @label={{if @model.passed 'Passed' 'Not passed'}}
-            @hue={{if @model.passed 'green' 'red'}}
-          /></:badgeRight>
-        <:footer>{{fmtDateTime @model.submittedAt}}</:footer>
-      </FittedCard>
+      <FitTile>
+        <:avatar><Mark @text='Qz' /></:avatar>
+        <:title>{{headline @model}}</:title>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><Dot @hue={{if @model.passed 'green' 'red'}}>{{if
+              @model.passed
+              'passed'
+              'not passed'
+            }}</Dot></:status>
+        <:fact>{{@model.scorePoints}}
+          /
+          {{dash @model.quiz.totalPoints}}
+          points · pass mark
+          {{passMark @model}}</:fact>
+        <:relations>{{#if @model.enrollment}}<@fields.enrollment
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}{{#if @model.quiz}}<@fields.quiz
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
     </template>
   };
 }
@@ -441,6 +381,48 @@ function fmtDateTime(d?: Date | string | null): string {
     hour: 'numeric',
     minute: '2-digit',
   });
+}
+
+function headline(m?: Partial<QuizAttempt> | null): string {
+  return (
+    [m?.learnerName, m?.quizTitle].filter(Boolean).join(' · ') || 'Quiz attempt'
+  );
+}
+function metaLine(m?: Partial<QuizAttempt> | null): string {
+  let parts = [`Attempt ${m?.attemptNumber ?? 1}`];
+  if (m?.submittedAt) {
+    parts.push(
+      new Date(m.submittedAt).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+    );
+  }
+  let t = elapsed(m);
+  if (t !== '—') parts.push(t);
+  return parts.join(' · ');
+}
+function elapsed(m?: Partial<QuizAttempt> | null): string {
+  if (!m?.startedAt || !m?.submittedAt) return '—';
+  let s = Math.round(
+    (new Date(m.submittedAt).getTime() - new Date(m.startedAt).getTime()) /
+      1000,
+  );
+  if (s < 0) return '—';
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+function attemptOf(m?: Partial<QuizAttempt> | null): string {
+  let n = m?.attemptNumber ?? 1;
+  let of = (m?.quiz as any)?.attemptsAllowed;
+  return of ? `${n} of ${of}` : String(n);
+}
+function passMark(m?: Partial<QuizAttempt> | null): string {
+  let p = (m?.quiz as any)?.passMarkPct;
+  return p == null ? '—' : `${p}%`;
+}
+function dash(v: unknown): string {
+  return v == null || v === '' ? '—' : String(v);
 }
 
 function inc(n?: number | null) {

@@ -12,16 +12,35 @@ import WebsiteField from 'https://cardstack.com/base/website';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import GeoPointField from '@cardstack/catalog/fields/geo-point/geo-point';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
-import {
-  KeyValue,
-  type KeyValueItem,
-} from '@cardstack/pretui/components/key-value';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { concat } from '@ember/helper';
+import { FitTile } from '../shared/fit-tile';
 
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+// Walks `parent` from the root down to `loc`; capped so a cycle can't hang.
+function chain(loc: Location | undefined): Location[] {
+  let out: Location[] = [];
+  let seen = new Set<Location>();
+  for (let n = loc; n && !seen.has(n) && out.length < 12; n = n.parent) {
+    seen.add(n);
+    out.unshift(n);
+  }
+  return out;
+}
+
+function ancestorsLabel(loc: Location | undefined): string {
+  return chain(loc)
+    .slice(0, -1)
+    .map((l) => l.name ?? 'Unnamed')
+    .join(' › ');
+}
+
+function placeLabel(loc: Location | undefined): string {
+  let a = loc?.address;
+  return [a?.city, a?.country?.name ?? a?.state].filter(Boolean).join(', ');
+}
+
+function nameOf(loc: Location | undefined): string {
+  return loc?.name?.trim() || 'Unnamed Location';
+}
 
 /**
  * A named physical place — somewhere things happen, ship to, or are held at.
@@ -82,101 +101,202 @@ export class Location extends CardDef {
   });
 
   static atom = class Atom extends Component<typeof Location> {
+    get name() {
+      return nameOf(this.args.model as Location);
+    }
     <template>
       <span class='loc-atom'>
-        <MapPinIcon class='pin' />
-        <span class='loc-name'>{{if
-            @model.name
-            @model.name
-            'Unnamed Location'
-          }}</span>
+        <span class='mark' aria-hidden='true'><MapPinIcon
+            width='0.75rem'
+            height='0.75rem'
+          /></span>
+        <span class='name'>{{this.name}}</span>
+        {{#if @model.kind}}
+          <span class='dot-text'><span class='dot'></span>{{@model.kind}}</span>
+        {{/if}}
       </span>
       <style scoped>
         .loc-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.25rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: 0.375rem;
+          max-width: 100%;
+          min-width: 0;
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
           color: var(--foreground);
         }
-        .pin {
-          width: 0.875rem;
-          height: 0.875rem;
+        .mark {
+          display: inline-grid;
+          place-items: center;
           flex-shrink: 0;
-          color: var(--muted-foreground);
+          width: 1.125rem;
+          height: 1.125rem;
+          border-radius: 0.25rem;
+          background-color: var(--muted);
         }
-        .loc-name {
+        .name {
+          min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          font-weight: 600;
+        }
+        .dot-text {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+          flex-shrink: 0;
+          color: var(--muted-foreground);
+        }
+        .dot {
+          width: 0.375rem;
+          height: 0.375rem;
+          border-radius: 50%;
+          background-color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof Location> {
+    get name() {
+      return nameOf(this.args.model as Location);
+    }
+    get ancestors() {
+      return ancestorsLabel(this.args.model as Location);
+    }
     get place() {
-      let a = this.args.model?.address;
-      return [a?.city, a?.country?.name ?? a?.state].filter(Boolean).join(', ');
+      return placeLabel(this.args.model as Location);
     }
     <template>
-      <div class='loc'>
-        <EntityDisplay
-          class='loc-entity'
-          @title={{if @model.name @model.name 'Unnamed'}}
-          @center={{true}}
-        >
-          <:visual>
-            <span class='pin-disc'><MapPinIcon class='pin' /></span>
-          </:visual>
-          <:meta>
-            {{#if this.place}}
-              {{this.place}}
-            {{else}}
-              <span class='muted-em'>No address on file</span>
-            {{/if}}
-          </:meta>
-        </EntityDisplay>
-        <StatePill class='loc-kind' @label={{@model.kind}} />
-      </div>
+      <article class='loc-emb'>
+        <header class='head'>
+          <span class='mark' aria-hidden='true'><MapPinIcon
+              width='0.875rem'
+              height='0.875rem'
+            /></span>
+          <div class='id'>
+            <p class='name'>{{this.name}}</p>
+            {{#if this.ancestors}}<p class='meta'>{{this.ancestors}}</p>{{/if}}
+          </div>
+        </header>
+        {{#if @model.kind}}
+          <p class='status'><span class='dot'></span>{{@model.kind}}</p>
+        {{/if}}
+        <p class='fact'>{{if this.place this.place '—'}}</p>
+        <dl class='kv'>
+          <dt>Kind</dt><dd>{{if @model.kind @model.kind '—'}}</dd>
+          <dt>Parent</dt><dd>{{if @model.parentName @model.parentName '—'}}</dd>
+          <dt>Street</dt><dd>{{if
+              @model.address.addressLine1
+              @model.address.addressLine1
+              '—'
+            }}</dd>
+          <dt>Phone</dt><dd class='mono'>{{if
+              @model.phone
+              @model.phone
+              '—'
+            }}</dd>
+          {{#if @model.parent}}
+            <dt>Parent</dt><dd><@fields.parent
+                @format='atom'
+                @displayContainer={{false}}
+              /></dd>
+          {{/if}}
+        </dl>
+      </article>
       <style scoped>
-        /* The kind sits outside EntityDisplay, pinned to the row's right
-           edge: EntityDisplay's tag wraps under a long name. */
-        .loc {
+        .loc-emb {
+          display: flex;
+          flex-direction: column;
+          gap: 0.375rem;
+          padding: 0.625rem 0.75rem;
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          color: var(--card-foreground);
+        }
+        .head {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.875rem;
+          gap: 0.5rem;
+          min-width: 0;
         }
-        /* Pret UI EntityDisplay: the pin disc in its visual slot, title and
-           meta at the row's sizes. */
-        .loc-entity {
-          --pretui-entity-visual-size: 2rem;
-          --space-3: 0.625rem;
-          --text-ui-md: 0.875rem;
-          --text-ui-sm: 0.75rem;
-          flex: 1;
-        }
-        .loc-kind {
+        .mark {
+          display: inline-grid;
+          place-items: center;
           flex-shrink: 0;
+          width: 1.5rem;
+          height: 1.5rem;
+          border-radius: 0.25rem;
+          background-color: var(--muted);
         }
-        /* EntityDisplay sizes the slot's svg to 100%, so the disc's padding
-           is what keeps the pin at half the disc. */
-        .pin-disc {
+        .id {
+          min-width: 0;
+        }
+        .name {
+          margin: 0;
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          font-weight: 700;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .meta {
+          margin: 0;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .status,
+        .fact {
+          margin: 0;
+        }
+        .status {
           display: inline-flex;
           align-items: center;
-          justify-content: center;
-          box-sizing: border-box;
-          width: 100%;
-          height: 100%;
-          padding: 25%;
-          border-radius: 50%;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
+          gap: 0.25rem;
+          font-weight: 600;
         }
-        .muted-em {
-          font-style: italic;
+        .dot {
+          width: 0.375rem;
+          height: 0.375rem;
+          border-radius: 50%;
+          background-color: var(--muted-foreground);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 5.5rem minmax(0, 1fr);
+          margin: 0.25rem 0 0;
+        }
+        .kv dt,
+        .kv dd {
+          margin: 0;
+          padding: 0.3125rem 0;
+          border-top: 1px solid var(--border);
+          min-width: 0;
+        }
+        .kv dt {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+          align-self: center;
+        }
+        .kv dd {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          font-variant-numeric: tabular-nums;
         }
       </style>
     </template>
@@ -184,262 +304,394 @@ export class Location extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Location> {
     get name() {
-      return this.args.model?.name?.trim() || 'Unnamed Location';
+      return nameOf(this.args.model as Location);
+    }
+    get ancestors() {
+      return ancestorsLabel(this.args.model as Location);
     }
     get place() {
-      let a = this.args.model?.address;
-      return [a?.city, a?.country?.name ?? a?.state].filter(Boolean).join(', ');
-    }
-    get street() {
-      return this.args.model?.address?.addressLine1;
+      return placeLabel(this.args.model as Location);
     }
     <template>
-      <div class='fitted'>
-        <span class='pin-disc'><MapPinIcon class='pin' /></span>
-        <div class='info'>
-          <span class='name'>{{this.name}}</span>
-          {{#if @model.kind}}
-            <span class='meta line-kind'>{{@model.kind}}</span>
-          {{/if}}
-          {{#if this.place}}
-            <span class='meta line-place'>{{this.place}}</span>
-          {{/if}}
-          {{#if this.street}}
-            <span class='meta line-street'>{{this.street}}</span>
-          {{/if}}
-        </div>
-      </div>
+      <FitTile>
+        <:avatar><span class='mark' aria-hidden='true'><MapPinIcon
+              width='0.875rem'
+              height='0.875rem'
+            /></span></:avatar>
+        <:title>{{this.name}}</:title>
+        <:subtitle>{{if this.ancestors this.ancestors this.place}}</:subtitle>
+        <:status>{{#if @model.kind}}<span class='dot-text'><span
+                class='dot'
+              ></span>{{@model.kind}}</span>{{/if}}</:status>
+        <:fact>{{if this.place this.place '—'}}</:fact>
+        <:relations>{{#if @model.parent}}<@fields.parent
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
       <style scoped>
-        .fitted {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          width: 100%;
-          height: 100%;
-          padding: 0.625rem 0.75rem;
-          box-sizing: border-box;
-          overflow: hidden;
-          color: var(--foreground);
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          width: 1.5rem;
+          height: 1.5rem;
+          border-radius: 0.25rem;
+          background-color: var(--muted);
         }
-        .pin-disc {
+        .dot-text {
           display: inline-flex;
           align-items: center;
-          justify-content: center;
-          width: 1.75rem;
-          height: 1.75rem;
-          border-radius: 50%;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .pin {
-          width: 0.875rem;
-          height: 0.875rem;
-        }
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
-        }
-        .name {
-          font-weight: 600;
-          font-size: 0.8125rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .meta {
+          gap: 0.25rem;
           font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
+          font-weight: 600;
           white-space: nowrap;
         }
-        .line-kind,
-        .line-place,
-        .line-street {
-          display: none;
-        }
-        /* Badge degradation: strip height keeps only the first line. */
-        @container fitted-card (max-height: 50px) {
-          .fitted {
-            padding: 0.25rem 0.5rem;
-            gap: 0.125rem;
-          }
-        }
-        @container fitted-card (min-height: 65px) {
-          .line-place {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .fitted {
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            padding: 0.875rem;
-          }
-          .pin-disc {
-            width: 2.25rem;
-            height: 2.25rem;
-          }
-          .line-kind {
-            display: block;
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .line-street {
-            display: block;
-          }
+        .dot {
+          width: 0.375rem;
+          height: 0.375rem;
+          border-radius: 50%;
+          background-color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static isolated = class Isolated extends Component<typeof Location> {
+    get model() {
+      return this.args.model as Location;
+    }
     get name() {
-      return this.args.model?.name?.trim() || 'Unnamed Location';
+      return nameOf(this.model);
     }
-    get hasGeo() {
-      return (
-        this.args.model?.geo?.lat != null && this.args.model?.geo?.lon != null
-      );
+    get path() {
+      let all = chain(this.model);
+      return all.map((l, i) => ({
+        name: nameOf(l),
+        kind: l.kind,
+        current: i === all.length - 1,
+      }));
     }
-    get reach(): KeyValueItem[] {
-      let m = this.args.model;
-      let rows: KeyValueItem[] = [];
-      if (m?.phone) rows.push({ key: 'Phone', value: 'phone' });
-      if (m?.website) rows.push({ key: 'Website', value: 'website' });
-      return rows;
+    get ancestors() {
+      return ancestorsLabel(this.model);
+    }
+    get kindsLabel() {
+      return chain(this.model)
+        .map((l) => l.kind ?? '—')
+        .join(' › ');
+    }
+    get place() {
+      return placeLabel(this.model);
     }
     <template>
       <article class='loc-page'>
-        <header class='lh'>
-          <span class='pin-disc'><MapPinIcon class='pin' /></span>
-          <div class='lh-id'>
-            <p class='doc-kind'>Location</p>
-            <h1>{{this.name}}</h1>
+        <header class='head'>
+          <span class='mark' aria-hidden='true'><MapPinIcon
+              width='1.125rem'
+              height='1.125rem'
+            /></span>
+          <div class='id'>
+            <h1 class='name'>{{this.name}}</h1>
+            <p class='meta'>{{if
+                this.ancestors
+                this.ancestors
+                (if this.place this.place 'Top-level place')
+              }}</p>
           </div>
-          <StatePill @label={{@model.kind}} />
-        </header>
-        {{#if this.hasGeo}}
-          <div class='map'><@fields.geo @format='embedded' /></div>
-        {{/if}}
-        <section class='panel'>
-          <h2>Address</h2>
-          {{#if @model.address.fullAddress}}
-            <div class='addr'><@fields.address @format='embedded' /></div>
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @title='No address on file'
-              @texture={{false}}
-            />
+          {{#if @model.kind}}
+            <span class='dot-text'><span
+                class='dot dot-primary'
+              ></span>{{@model.kind}}</span>
           {{/if}}
-        </section>
-        {{#if this.reach.length}}
-          <section class='panel'>
-            <h2>Reach</h2>
-            <KeyValue class='details' @items={{this.reach}}>
-              <:value as |row|>
-                {{#if (eq row.value 'phone')}}
-                  <@fields.phone />
+        </header>
+
+        <dl class='stats' aria-label='Key numbers'>
+          <div class='stat'>
+            <dt class='label'>Depth</dt>
+            <dd class='value'>{{this.path.length}}</dd>
+            <dd class='sub'>{{this.kindsLabel}}</dd>
+          </div>
+          <div class='stat'>
+            <dt class='label'>Kind</dt>
+            <dd class='value'>{{if @model.kind @model.kind '—'}}</dd>
+            <dd class='sub'>{{if
+                @model.parentName
+                (concat 'in ' @model.parentName)
+                'no parent'
+              }}</dd>
+          </div>
+          <div class='stat'>
+            <dt class='label'>Place</dt>
+            <dd class='value'>{{if
+                @model.address.city
+                @model.address.city
+                '—'
+              }}</dd>
+            <dd class='sub'>{{if
+                @model.address.country.name
+                @model.address.country.name
+                '—'
+              }}</dd>
+          </div>
+        </dl>
+
+        <div class='cols'>
+          <div class='main'>
+            <section class='sec'>
+              <h2>Path</h2>
+              <ul class='rows'>
+                {{#each this.path as |p|}}
+                  <li class='row'>
+                    <div class='row-id'>
+                      <span class='row-name'>{{p.name}}</span>
+                    </div>
+                    {{#if p.kind}}
+                      <span class='dot-text'><span
+                          class='dot {{if p.current "dot-primary"}}'
+                        ></span>{{p.kind}}</span>
+                    {{/if}}
+                  </li>
+                {{/each}}
+              </ul>
+            </section>
+            <section class='sec'>
+              <h2>Address</h2>
+              <div class='body'>
+                {{#if @model.address.fullAddress}}
+                  <@fields.address @format='embedded' />
                 {{else}}
-                  <@fields.website />
+                  <span class='muted'>—</span>
                 {{/if}}
-              </:value>
-            </KeyValue>
-          </section>
-        {{/if}}
-        {{#if @model.description}}
-          <section class='panel'>
-            <h2>About</h2>
-            <div class='about'><@fields.description /></div>
-          </section>
-        {{/if}}
+              </div>
+            </section>
+            {{#if @model.description}}
+              <section class='sec'>
+                <h2>About</h2>
+                <div class='body'><@fields.description /></div>
+              </section>
+            {{/if}}
+          </div>
+
+          <aside class='side'>
+            <section class='sec'>
+              <h2>Linked</h2>
+              <dl class='kv'>
+                <dt>Parent</dt>
+                <dd>{{#if @model.parent}}<@fields.parent
+                      @format='atom'
+                    />{{else}}—{{/if}}</dd>
+              </dl>
+            </section>
+            <section class='sec'>
+              <h2>Details</h2>
+              <dl class='kv'>
+                <dt>Kind</dt><dd>{{if @model.kind @model.kind '—'}}</dd>
+                <dt>Parent</dt><dd>{{if
+                    @model.parentName
+                    @model.parentName
+                    '—'
+                  }}</dd>
+                <dt>City</dt><dd>{{if
+                    @model.address.city
+                    @model.address.city
+                    '—'
+                  }}</dd>
+                <dt>Phone</dt><dd class='mono'>{{#if
+                    @model.phone
+                  }}<@fields.phone />{{else}}—{{/if}}</dd>
+                <dt>Website</dt><dd>{{#if @model.website}}<@fields.website
+                    />{{else}}—{{/if}}</dd>
+                <dt>Geo</dt><dd class='mono'>{{if
+                    @model.geo.lat
+                    (concat @model.geo.lat ', ' @model.geo.lon)
+                    '—'
+                  }}</dd>
+              </dl>
+            </section>
+          </aside>
+        </div>
       </article>
       <style scoped>
         .loc-page {
-          max-width: 40rem;
-          margin: 0 auto;
-          padding: 2rem 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.25rem;
+          margin: 0.75rem;
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          overflow: hidden;
         }
-        .lh {
+        .head {
           display: flex;
           align-items: center;
-          gap: 1rem;
-          border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: 1.25rem;
+          gap: 0.625rem;
+          padding: 0.75rem 0.625rem;
+          border-bottom: 1px solid var(--border);
         }
-        .pin-disc {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 3.5rem;
-          height: 3.5rem;
-          border-radius: 50%;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
+        .mark {
+          display: inline-grid;
+          place-items: center;
           flex-shrink: 0;
+          width: 2rem;
+          height: 2rem;
+          border-radius: 0.375rem;
+          background-color: var(--muted);
         }
-        .pin {
-          width: 1.625rem;
-          height: 1.625rem;
-        }
-        .lh-id {
+        .id {
           flex: 1;
           min-width: 0;
         }
-        .doc-kind {
-          margin: 0 0 0.125rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        .name {
+          margin: 0;
+          font-family: var(--font-sans);
+          font-size: 0.8125rem;
+          font-weight: 700;
+        }
+        .meta {
+          margin: 0;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .dot-text {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3125rem;
+          flex-shrink: 0;
+          font-weight: 600;
+        }
+        .dot {
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--muted-foreground);
+        }
+        .dot-primary {
+          background-color: var(--primary);
+        }
+        .stats {
+          margin: 0;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+          overflow: hidden;
+          border-bottom: 1px solid var(--border);
+        }
+        .stat dt,
+        .stat dd {
+          margin: 0;
+        }
+        .stat {
+          display: flex;
+          flex-direction: column;
+          gap: 0.125rem;
+          padding: 0.5rem 0.625rem;
+          margin: 0 -1px -1px 0;
+          border-right: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
+          min-width: 0;
+        }
+        .label,
+        h2,
+        .kv dt {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        h1 {
-          font-size: 1.625rem;
-          line-height: 1.1;
+        .value {
+          font-size: 1.375rem;
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
+          line-height: 1.2;
         }
-        .map {
-          border: 1px solid var(--border);
-          border-radius: 0.75rem;
+        .sub {
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
           overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
-        .panel {
-          border: 1px solid var(--border);
-          border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
-          background-color: var(--card);
-          color: var(--card-foreground);
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+        .main {
+          border-right: 1px solid var(--border);
+        }
+        @container (max-width: 44rem) {
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .main {
+            border-right: 0;
+            border-bottom: 1px solid var(--border);
+          }
+        }
+        .sec + .sec {
+          border-top: 1px solid var(--border);
         }
         h2 {
-          margin: 0 0 0.75rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
+          margin: 0;
+          padding: 0.5rem 0.625rem 0.375rem;
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 0;
+          text-transform: none;
+          color: var(--card-foreground);
+        }
+        .rows {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+        }
+        .row {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          min-height: 1.75rem;
+          padding: 0.3125rem 0.625rem;
+          border-top: 1px solid var(--border);
+        }
+        .row-id {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          min-width: 0;
+        }
+        .row-name {
+          font-weight: 700;
+        }
+        .body {
+          padding: 0.375rem 0.625rem 0.625rem;
+          border-top: 1px solid var(--border);
+          line-height: 1.5;
+        }
+        .muted {
           color: var(--muted-foreground);
         }
-        /* Pret UI KeyValue at the panel's text size and column gap */
-        .details {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1.25rem;
-          overflow-wrap: anywhere;
+        .kv {
+          display: grid;
+          grid-template-columns: 8rem minmax(0, 1fr);
+          margin: 0;
+          padding: 0 0.625rem 0.375rem;
         }
-        .about {
-          font-size: 0.875rem;
-          line-height: 1.6;
+        .kv dt,
+        .kv dd {
+          margin: 0;
+          padding: 0.375rem 0;
+          border-top: 1px solid var(--border);
+          min-width: 0;
+          align-self: stretch;
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          font-variant-numeric: tabular-nums;
         }
       </style>
     </template>

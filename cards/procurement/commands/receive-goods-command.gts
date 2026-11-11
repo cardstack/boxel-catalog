@@ -13,7 +13,7 @@ import { GoodsReceipt } from '../goods-receipt';
 import { PurchaseOrder } from '../purchase-order';
 import { ProcurementBudget } from '../procurement-budget';
 import { lineKey } from '../three-way-match';
-import { lineTotal } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { lineTotal } from '../../commerce/line-item-totals';
 
 // Receive Goods — posts a draft Goods Receipt against its PO: the two-way
 // match. Receipts accumulate (partial receiving): the PO carries
@@ -141,20 +141,46 @@ export default class ReceiveGoodsCommand extends Command<
       (l, i) => newReceived[i] >= (l.quantity ?? 0),
     );
 
-    await new PatchCardInstanceCommand(this.commandContext, {
-      cardType: PurchaseOrder,
-    }).execute({
-      cardId: po.id,
-      patch: {
-        attributes: {
-          receivedQuantities: newReceived,
-          status: fullyReceived ? 'received' : 'partially-received',
+    // Claim the receipt first: once it is posted a retry is refused, so the
+    // PO quantities and the budget can never be applied twice. If the PO write
+    // fails nothing was applied yet, so the claim is released.
+    let patchReceipt = (posted: boolean) =>
+      new PatchCardInstanceCommand(this.commandContext, {
+        cardType: GoodsReceipt,
+      }).execute({
+        cardId: receipt.id,
+        patch: {
+          attributes: posted ? { posted, lines: snapshotLines } : { posted },
         },
-      },
-    });
+      });
+    await patchReceipt(true);
 
-    let budget = po.budget as ProcurementBudget | undefined;
-    if (budget?.id && movedValue > 0) {
+    try {
+      await new PatchCardInstanceCommand(this.commandContext, {
+        cardType: PurchaseOrder,
+      }).execute({
+        cardId: po.id,
+        patch: {
+          attributes: {
+            receivedQuantities: newReceived,
+            status: fullyReceived ? 'received' : 'partially-received',
+          },
+        },
+      });
+    } catch (e) {
+      await patchReceipt(false);
+      throw e;
+    }
+
+    let budgetRef = po.budget as ProcurementBudget | undefined;
+    if (budgetRef?.id && movedValue > 0) {
+      // shortcut: committed/actual are read then written, so two concurrent
+      // writers can lose an update (no atomic increment command); re-read just
+      // before the write to keep the window small, and move to a server-side
+      // increment when one exists.
+      let budget = (await new GetCardCommand(this.commandContext).execute({
+        cardId: budgetRef.id,
+      })) as ProcurementBudget;
       await new PatchCardInstanceCommand(this.commandContext, {
         cardType: ProcurementBudget,
       }).execute({
@@ -167,18 +193,6 @@ export default class ReceiveGoodsCommand extends Command<
         },
       });
     }
-
-    await new PatchCardInstanceCommand(this.commandContext, {
-      cardType: GoodsReceipt,
-    }).execute({
-      cardId: receipt.id,
-      patch: {
-        attributes: {
-          posted: true,
-          lines: snapshotLines,
-        },
-      },
-    });
 
     return new ReceiveGoodsResult({
       message: fullyReceived

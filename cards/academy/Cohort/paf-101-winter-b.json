@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "PAF-101 · Winter 2027 · Cohort B",
+      "name": "PAF-101 \u00b7 Winter 2027 \u00b7 Cohort B",
       "term": {
         "start": "2027-01-11",
         "end": "2027-02-21"
@@ -27,6 +27,11 @@
       "instructors.0.instructor": {
         "links": {
           "self": "../../hr/Employee/marcus-webb"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

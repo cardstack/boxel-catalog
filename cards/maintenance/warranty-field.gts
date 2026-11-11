@@ -10,7 +10,7 @@ import BooleanField from '@cardstack/base/boolean';
 import NumberField from '@cardstack/base/number';
 import TextAreaField from '@cardstack/base/text-area';
 import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Dot, hueTone } from './card-ui';
 
 import { WarrantyKindField } from './maintenance-vocabulary';
 import { toDay, daysBetweenDays } from './utils/recurrence';
@@ -96,11 +96,7 @@ export class WarrantyField extends FieldDef {
     <template>
       <div class='warranty'>
         <div class='warranty-row'>
-          <StatePill
-            @label={{this.pillLabel}}
-            @hue={{this.hue}}
-            @dot={{true}}
-          />
+          <Dot @tone={{hueTone this.hue}} @label={{this.pillLabel}} />
           <span class='warranty-label'>{{@model.label}}</span>
         </div>
         {{#if @model.isActive}}
@@ -143,7 +139,6 @@ export class WarrantyField extends FieldDef {
           color: var(--foreground);
         }
         .warranty-terms {
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           white-space: pre-wrap;
@@ -163,7 +158,7 @@ export class WarrantyField extends FieldDef {
       if (!m.endsOn || m.kind === 'none') return 'No warranty';
       return m.isActive ? 'Covered' : 'Expired';
     }
-    <template><StatePill @label={{this.text}} @hue={{this.hue}} /></template>
+    <template><Dot @tone={{hueTone this.hue}} @label={{this.text}} /></template>
   };
 }
 

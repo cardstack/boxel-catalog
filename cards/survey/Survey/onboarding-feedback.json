@@ -28,6 +28,13 @@
         "module": "../survey",
         "name": "Survey"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

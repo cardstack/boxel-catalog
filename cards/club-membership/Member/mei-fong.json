@@ -19,12 +19,12 @@
     "relationships": {
       "holder": {
         "links": {
-          "self": "../Contact/mei-fong"
+          "self": "../../crm/Contact/mei-fong"
         }
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../../Theme/site-tools"
         }
       }
     },

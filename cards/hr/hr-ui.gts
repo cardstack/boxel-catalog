@@ -92,10 +92,8 @@ interface FactListSignature {
 
 /**
  * A card's facts as Pret UI `KeyValue` rows, with the keys in the eyebrow
- * role every HR detail view uses for its labels. KeyValue's key text takes
- * only a size (`--text-ui`, which it shares with the rest of the kit) and has
- * no key block, so the eyebrow's family, weight, tracking and case reach its
- * `dt` from here — the one rule every card's fact list goes through. An
+ * role every HR detail view uses for its labels, set through KeyValue's
+ * label knobs. An
  * optional `value` block renders a row's value, as it does on KeyValue.
  */
 export const FactList: TemplateOnlyComponent<FactListSignature> = <template>
@@ -108,17 +106,14 @@ export const FactList: TemplateOnlyComponent<FactListSignature> = <template>
   {{/if}}
   <style scoped>
     .hr-facts {
-      --text-ui-md: var(--boxel-font-size-sm);
-      --space-6: var(--boxel-sp);
+      font-size: var(--boxel-font-size-sm);
+      column-gap: var(--boxel-sp);
+      --pretui-kv-label-font-size: var(--boxel-eyebrow-font-size);
+      --pretui-kv-label-font-weight: var(--boxel-eyebrow-font-weight);
+      --pretui-kv-label-line-height: var(--boxel-eyebrow-line-height);
+      --pretui-kv-label-letter-spacing: var(--boxel-eyebrow-letter-spacing);
+      --pretui-kv-label-text-transform: uppercase;
       font-variant-numeric: tabular-nums;
-    }
-    .hr-facts :deep(dt) {
-      font-family: var(--boxel-eyebrow-font-family);
-      font-size: var(--boxel-eyebrow-font-size);
-      font-weight: var(--boxel-eyebrow-font-weight);
-      line-height: var(--boxel-eyebrow-line-height);
-      letter-spacing: var(--boxel-eyebrow-letter-spacing);
-      text-transform: uppercase;
     }
   </style>
 </template>;

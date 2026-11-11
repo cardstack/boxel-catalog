@@ -10,11 +10,10 @@ import BooleanField from '@cardstack/base/boolean';
 import NumberField from '@cardstack/base/number';
 import PercentageField from '@cardstack/base/percentage';
 import HelpCircleIcon from '@cardstack/boxel-icons/help-circle';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { AtomChip, Mark } from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
-
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 import { DurationField } from '../hr/duration-field';
 import { QuizQuestionField, pointsOf } from './quiz-question-field';
@@ -203,101 +202,27 @@ export class Quiz extends CardDef {
           font-variant-numeric: tabular-nums;
           font-weight: 600;
         }
-        @container (width < 20rem) {
-          .row {
-            grid-template-columns: minmax(0, 1fr) auto;
-          }
-          .meta {
-            display: none;
-          }
-        }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
-    <template>
-      <span class='atom'>? {{@model.cardTitle}}</span>
-      <style scoped>
-        .atom {
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'rules', label: 'Rules' },
-      { id: 'instructions', label: 'Instructions' },
-      { id: 'questions', label: 'Questions' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Quiz sections'
-        as |e|
-      >
-        <e.Section @id='identity' @title='Identity' @cols={{1}}>
-          <FieldContainer @label='Title' @vertical={{true}}><@fields.title
-            /></FieldContainer>
-        </e.Section>
-        <e.Section @id='rules' @title='Rules' @cols={{2}}>
-          <FieldContainer
-            @label='Pass mark %'
-            @vertical={{true}}
-          ><@fields.passMarkPct /></FieldContainer>
-          <FieldContainer
-            @label='Attempts allowed (0 = unlimited)'
-            @vertical={{true}}
-          ><@fields.attemptsAllowed /></FieldContainer>
-          <FieldContainer
-            @label='Time limit'
-            @vertical={{true}}
-          ><@fields.timeLimit /></FieldContainer>
-          <FieldContainer
-            @label='Shuffle questions'
-            @vertical={{true}}
-          ><@fields.shuffleQuestions /></FieldContainer>
-        </e.Section>
-        <e.Section @id='instructions' @title='Instructions' @cols={{1}}>
-          <FieldContainer
-            @label='Shown before the first question'
-            @vertical={{true}}
-          ><@fields.instructions /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='questions'
-          @title='Questions'
-          @hint='mark at least one option correct per question'
-          @cols={{1}}
-        >
-          <FieldContainer
-            @label='Questions'
-            @vertical={{true}}
-          ><@fields.questions /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-    </template>
+    <template><AtomChip @mark='Qz' @title={{@model.cardTitle}} /></template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>Quiz ·
-          {{@model.questionCount}}
-          questions</:eyebrow>
+      <FitTile>
+        <:avatar><Mark @text='Qz' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>{{@model.instructions}}</:subtitle>
-        <:footer>Pass
+        <:subtitle>Quiz · {{@model.questionCount}} questions</:subtitle>
+        <:fact>Pass
           {{if @model.passMarkPct @model.passMarkPct 0}}% ·
           {{attemptsLabel @model.attemptsAllowed}}
           attempts{{#if @model.timeLimit.value}}
             ·
-            {{concatDuration @model.timeLimit}}{{/if}}</:footer>
-      </FittedCard>
+            {{concatDuration @model.timeLimit}}{{/if}}</:fact>
+      </FitTile>
     </template>
   };
 }

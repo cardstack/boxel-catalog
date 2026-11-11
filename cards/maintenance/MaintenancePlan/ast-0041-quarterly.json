@@ -54,7 +54,7 @@
             "required": true,
             "result": "pending",
             "expectedValue": 90,
-            "unit": "°C",
+            "unit": "\u00b0C",
             "tolerance": 5
           },
           {
@@ -77,6 +77,11 @@
       "asset": {
         "links": {
           "self": "../Asset/ast-2026-0041"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

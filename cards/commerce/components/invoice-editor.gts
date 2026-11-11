@@ -13,12 +13,9 @@ import { MoneyInput } from '@cardstack/pretui/components/money-input';
 import { NumberInput } from '@cardstack/pretui/components/number-input';
 import { Table } from '@cardstack/pretui/components/table';
 
-import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
-import {
-  lineTotal,
-  sumLineItems,
-} from '@cardstack/catalog/cards/commerce/line-item-totals';
-import { Money } from '@cardstack/catalog/cards/crm/money';
+import { LineItem } from '../line-item';
+import { lineTotal, sumLineItems } from '../line-item-totals';
+import { Money } from '../../crm/money';
 
 // Invoice Editor — the line items of an invoice before it is sent, as an
 // editing surface: add, remove and adjust rows with a running total. It
@@ -173,7 +170,8 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
               <td class='action'>
                 <IconButton
                   @label='Remove line {{row.number}}'
-                  @variant='ghost'
+                  @tone='neutral'
+                  @appearance='plain'
                   @size='xs'
                   {{on 'click' (fn this.removeRow row.index)}}
                 ><XIcon /></IconButton>
@@ -184,10 +182,11 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
       </Table>
       <div class='foot'>
         <Button
+          @icon={{PlusIcon}}
           @appearance='outlined'
           @size='s'
           {{on 'click' this.addRow}}
-        ><PlusIcon class='btn-icon' />Add line item</Button>
+        >Add line item</Button>
         <p class='total'>
           <span class='total-label'>Total</span>
           <Money @amount={{this.total}} @code={{this.currency}} />
@@ -200,7 +199,6 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
         gap: var(--boxel-sp-sm);
       }
       .caption {
-        margin: 0;
         font-family: var(--boxel-eyebrow-font-family);
         font-size: var(--boxel-eyebrow-font-size);
         font-weight: var(--boxel-eyebrow-font-weight);
@@ -237,12 +235,7 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
         justify-content: space-between;
         gap: var(--boxel-sp-sm);
       }
-      .btn-icon {
-        width: 1em;
-        height: 1em;
-      }
       .total {
-        margin: 0;
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);

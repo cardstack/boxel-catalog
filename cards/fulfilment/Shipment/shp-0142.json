@@ -59,7 +59,7 @@
         {
           "occurredAt": "2026-08-13T11:12:00.000Z",
           "statusCode": "EX",
-          "statusDescription": "Delivery attempted — nobody home",
+          "statusDescription": "Delivery attempted \u2014 nobody home",
           "location": "Cardiff, GB",
           "isDelivered": false
         },
@@ -112,6 +112,11 @@
       "carrier": {
         "links": {
           "self": "../Carrier/dhl"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

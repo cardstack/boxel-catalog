@@ -26,6 +26,11 @@
         "links": {
           "self": null
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

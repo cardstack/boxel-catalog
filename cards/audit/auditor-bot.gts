@@ -11,7 +11,7 @@ import NumberField from '@cardstack/base/number';
 import DateTimeField from '@cardstack/base/datetime';
 import BotIcon from '@cardstack/boxel-icons/bot';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 import { RegimeMetadataField } from './regime-metadata-field';
 import { ValidationRuleField } from './validation-rule-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
@@ -19,7 +19,6 @@ import { parametersAreValid } from './utils/rule-evaluation';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { AuditFacts } from './audit-ui';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Each value renders in the `value` block, which picks the row by key.
 const FACTS = [
@@ -139,7 +138,7 @@ export class AuditorBot extends CardDef {
               @title='No rules yet'
               @message='A bot with no rules passes everything, which is worse than no bot.'
               @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
+              @size='s'
             />
           {{/if}}
         </section>
@@ -166,8 +165,7 @@ export class AuditorBot extends CardDef {
           color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
@@ -184,7 +182,7 @@ export class AuditorBot extends CardDef {
           flex-wrap: wrap;
           align-items: center;
           gap: var(--boxel-sp-xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
         }
         .meta,
         .muted {
@@ -192,8 +190,8 @@ export class AuditorBot extends CardDef {
         }
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.8125rem;
-          overflow-wrap: anywhere;
+          font-size: var(--boxel-font-size-xs);
+          overflow-wrap: break-word;
         }
       </style>
     </template>
@@ -235,10 +233,10 @@ export class AuditorBot extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .sub {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -253,7 +251,7 @@ export class AuditorBot extends CardDef {
       <span class='atom'>{{@model.name}}</span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
       </style>
@@ -288,7 +286,7 @@ export class AuditorBot extends CardDef {
         }
         .fit-name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.2;
           overflow: hidden;
           display: -webkit-box;
@@ -297,7 +295,7 @@ export class AuditorBot extends CardDef {
         }
         .fit-sub,
         .row {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
@@ -306,7 +304,7 @@ export class AuditorBot extends CardDef {
         .tier-tile {
           display: none;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
           margin-top: auto;
           padding-top: var(--boxel-sp-5xs);
           border-top: 1px solid var(--border);

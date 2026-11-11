@@ -13,37 +13,23 @@
         "summary": "Min/mid/max for a grade in one currency and market, with the midpoint set deliberately and compa-ratio as a free function."
       },
       "containedExamples": [
-        {
-          "grade": "L4 Senior",
-          "currency": {
-            "code": "GBP"
-          },
-          "location": "London",
-          "minimum": 85000,
-          "midpoint": 102000,
-          "maximum": 120000,
-          "effectiveFrom": "2026-04-01",
-          "source": "Radford UK Tech 2026H1"
-        },
-        {
-          "grade": "L4 Senior",
-          "currency": {
-            "code": "GBP"
-          },
-          "location": "Manchester",
-          "minimum": 72000,
-          "maximum": 101000,
-          "effectiveFrom": "2026-04-01",
-          "source": "Radford UK Tech 2026H1"
-        }
+        {},
+        {}
       ],
       "cardTitle": "Salary Band Field",
       "cardDescription": "A salary band for a grade and location: minimum, midpoint and maximum, with spread and effective dates."
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

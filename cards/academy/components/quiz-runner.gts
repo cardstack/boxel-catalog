@@ -1,11 +1,11 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { htmlSafe } from '@ember/template';
 import { tracked } from '@glimmer/tracking';
 import { realmURL } from '@cardstack/runtime-common';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 
 import { QuizQuestionInput, type QuestionValue } from './quiz-question-input';
 import TakeQuizCommand, {
@@ -101,11 +101,6 @@ export class QuizRunner extends GlimmerComponent<Signature> {
   }
   get timeLow() {
     return this.remainingMs != null && this.remainingMs < 60_000;
-  }
-  get progressStyle() {
-    return htmlSafe(
-      `width: ${this.total ? Math.round(((this.current + 1) / this.total) * 100) : 0}%`,
-    );
   }
 
   get preview() {
@@ -247,10 +242,12 @@ export class QuizRunner extends GlimmerComponent<Signature> {
 
       {{else if (eq this.phase 'running')}}
         <header class='bar'>
-          <div class='track' aria-hidden='true'><span
-              class='fill'
-              style={{this.progressStyle}}
-            ></span></div>
+          <ProgressBar
+            class='track'
+            @value={{inc this.current}}
+            @max={{this.total}}
+            aria-label='Quiz progress'
+          />
           <div class='bar-row'>
             <span class='count'>Question
               {{inc this.current}}
@@ -285,7 +282,10 @@ export class QuizRunner extends GlimmerComponent<Signature> {
               class='dot
                 {{if (eq i this.current) "here"}}
                 {{if (has this.answers i) "filled"}}'
-              aria-label='Question {{inc i}}'
+              aria-label='Question {{inc i}}{{if
+                (has this.answers i)
+                ", answered"
+              }}'
               aria-current={{if (eq i this.current) 'true' 'false'}}
               {{on 'click' (fn this.go i)}}
             >{{inc i}}</button>
@@ -376,12 +376,10 @@ export class QuizRunner extends GlimmerComponent<Signature> {
         justify-items: start;
       }
       h2 {
-        margin: 0;
         font-size: var(--boxel-font-size-lg);
         font-weight: 700;
       }
       .instr {
-        margin: 0;
         color: var(--muted-foreground);
       }
       .rules {
@@ -399,21 +397,11 @@ export class QuizRunner extends GlimmerComponent<Signature> {
         font-weight: 600;
       }
       .warn {
-        margin: 0;
         font-size: var(--boxel-font-size-sm);
         color: var(--destructive-ink);
       }
       .track {
-        height: 0.25rem;
-        border-radius: 0.125rem;
-        background: var(--muted);
-        overflow: hidden;
-      }
-      .fill {
-        display: block;
-        height: 100%;
-        background: var(--primary);
-        transition: width 200ms ease;
+        inline-size: 100%;
       }
       .bar-row {
         display: flex;
@@ -450,16 +438,17 @@ export class QuizRunner extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        cursor: pointer;
       }
+      /* answered: solid ink edge and bold number, not only the tint */
       .dot.filled {
+        border-color: var(--foreground);
         background: color-mix(in oklab, var(--primary) 14%, var(--card));
         color: var(--foreground);
+        font-weight: 700;
       }
       .dot.here {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 2px
-          color-mix(in oklab, var(--primary) 30%, transparent);
+        border-color: var(--primary-ink);
+        box-shadow: 0 0 0 2px var(--primary-ink);
       }
       .dot:focus-visible {
         outline: 2px solid var(--ring);
@@ -501,7 +490,6 @@ export class QuizRunner extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-sm);
       }
       .msg {
-        margin: 0;
         font-size: var(--boxel-font-size-sm);
         color: var(--muted-foreground);
       }

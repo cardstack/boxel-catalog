@@ -1,21 +1,56 @@
+import type { ComponentLike } from '@glint/template';
+import { BarList } from '@cardstack/pretui/components/bar-list';
+import { Team } from '../../hr/team';
+import { Project } from '../../projects/project';
+import { Vendor } from '../../procurement/vendor';
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
-import { htmlSafe } from '@ember/template';
+import { eq } from '@cardstack/pretui/helpers';
 import { Employee } from '../../hr/employee';
-import { Candidate } from '../../hr/candidate';
-import { Team } from '../../hr/team';
-import { Project, PROJECT_STATUS_COLORS } from '../../projects/project';
-import { Vendor } from '../../procurement/vendor';
-import { BarList } from '@cardstack/pretui/components/bar-list';
+import { Candidate, CandidateStatusField } from '../../hr/candidate';
 import { Button } from '@cardstack/pretui/components/button';
+import {
+  DataTable,
+  type DataColumn,
+} from '@cardstack/pretui/components/data-table';
+import { LoadingState } from '@cardstack/pretui/components/loading-state';
 import { DateRangePicker } from '@cardstack/pretui/components/date-range-picker';
 import { Application } from '../../hr/application';
 import { durationInDays } from '../../hr/duration-field';
 import { daysBetween, isoDay, localDay, toLocalDate } from '../dates';
-import { stateColorOf } from '../../../components/state-pill';
 import type { TrackerView } from '../talent-resource-tracker';
+import {
+  AlertPill,
+  getComponent,
+  TrackerPage,
+  TrackerSection,
+  TrackerEmpty,
+  StatusDot,
+  type TrackerStat,
+} from '../shared';
+import { tracked } from '@glimmer/tracking';
+import { modifier } from 'ember-modifier';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import { Menu } from '@cardstack/pretui/components/menu';
+import type { MenuSignature } from '@cardstack/pretui/components/menu';
+import CalendarIcon from '@cardstack/boxel-icons/calendar';
+import PlusIcon from '@cardstack/boxel-icons/plus';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
+import { UpcomingList } from '../upcoming-list';
+
+type MenuEntry = MenuSignature['Args']['items'][number];
+
+type LoadRow = TrackerView['interviewerLoad'][number];
+type CalRow = DashboardTab['calibration'][number];
+interface PipeRow {
+  candidate: Candidate;
+  name: string;
+  role: string;
+  stage: string;
+  days: number;
+  turn: { tone: 'red' | 'amber' | 'green'; label: string };
+}
 
 function median(values: number[]): number {
   let sorted = [...values].sort((a, b) => a - b);
@@ -32,6 +67,115 @@ interface Signature {
 }
 
 export class DashboardTab extends GlimmerComponent<Signature> {
+  // the stage column renders the field's own format: dot + label
+  StageAtom = CandidateStatusField.atom as unknown as ComponentLike<{
+    Args: { model: string | undefined };
+  }>;
+  // ── Range control: the mock's 7 days / 30 days / Quarter / Custom ──────
+  rangeOptions = [
+    { value: '7', label: '7 days' },
+    { value: '30', label: '30 days' },
+    { value: '90', label: 'Quarter' },
+    { value: 'custom', label: 'Custom' },
+  ];
+  rangeForms = [
+    { name: 'segments', minWidth: 20 },
+    { name: 'dropdown', minWidth: 6.5 },
+    { name: 'icon', minWidth: 1.625 },
+  ];
+  calendarIcon = CalendarIcon;
+  plusIcon = PlusIcon;
+
+  // which preset the current range is, matched on its length ending today
+  get rangePreset(): string {
+    let { start, end } = this.args.tracker.dashboardRange;
+    if (this.args.tracker.dashboardCustomPicked || !start) {
+      return this.args.tracker.dashboardCustomPicked ? 'custom' : '';
+    }
+    let days = Math.round(daysBetween(start, end ?? new Date()) ?? 0);
+    return ['7', '30', '90'].find((d) => Number(d) === days) ?? 'custom';
+  }
+  get rangeCurrent(): string {
+    return (
+      this.rangeOptions.find((o) => o.value === this.rangePreset)?.label ??
+      'All time'
+    );
+  }
+  pickRange = (value: string) => {
+    let t = this.args.tracker;
+    if (value === 'custom') {
+      this.args.tracker.dashboardCustomPicked = true;
+      t.dashboardFilterOpen = true;
+      return;
+    }
+    this.args.tracker.dashboardCustomPicked = false;
+    let end = new Date();
+    let start = new Date(end);
+    start.setDate(end.getDate() - Number(value));
+    t.dashboardRange = { start, end };
+    t.dashboardFilterOpen = false;
+  };
+  get rangeItems(): MenuEntry[] {
+    return this.rangeOptions.map((o) => ({
+      kind: 'radio' as const,
+      group: 'range',
+      label: o.label,
+      checked: this.rangePreset === o.value,
+      onSelect: () => this.pickRange(o.value),
+    }));
+  }
+
+  // ── Needs attention: one line when wide, one summary row when narrow ────
+  @tracked alertsOpen = false;
+  toggleAlerts = () => (this.alertsOpen = !this.alertsOpen);
+  get attentionCount(): number {
+    return this.expiringContractorCount + this.ptoAwaitingApprovalCount;
+  }
+
+  // ── Pipeline by name: columns drop by the section's width ──────────────
+  @tracked pipelineWidth = 0;
+  measurePipeline = modifier((el: HTMLElement) => {
+    let ro = new ResizeObserver(([e]) => {
+      this.pipelineWidth = e?.contentRect.width ?? 0;
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  });
+  pipelineColumns: DataColumn<PipeRow>[] = [
+    { key: 'name', label: 'Candidate' },
+    { key: 'role', label: 'Role' },
+    { key: 'stage', label: 'Stage' },
+    { key: 'days', label: 'Days', align: 'end', mono: true },
+    { key: 'next', label: 'Next' },
+  ];
+  get pipelineVisible(): string[] {
+    let w = this.pipelineWidth;
+    let keys = ['name'];
+    if (w >= 480) keys.push('role');
+    keys.push('stage', 'days');
+    if (w >= 640) keys.push('next');
+    return keys;
+  }
+  get pipelineRows(): PipeRow[] {
+    let t = this.args.tracker;
+    let now = new Date();
+    return t.candidates
+      .filter((c) => c.status !== 'hired' && c.status !== 'rejected')
+      .map((c) => ({
+        candidate: c,
+        name: c.name ?? '',
+        role: c.appliedRole ?? '',
+        stage: c.status
+          ? c.status.charAt(0).toUpperCase() + c.status.slice(1)
+          : '',
+        days: Math.round(daysBetween(c.appliedDate, now) ?? 0),
+        turn: t.whoseTurn(c),
+      }))
+      .sort((a, b) => b.days - a.days);
+  }
+  pipelineKey = (row: PipeRow) => row.candidate.id ?? row.name;
+  turnTone = (tone: 'red' | 'amber' | 'green') => this.loadTone(tone);
+
   // ── Dashboard "needs attention" counts ─────────────────────────────────
   get ptoAwaitingApprovalCount(): number {
     return this.args.tracker.ptoRequests.filter(
@@ -64,28 +208,6 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       end: localDay(range.end),
     };
   };
-
-  clearDashboardRange = () => {
-    this.args.tracker.dashboardRange = { start: undefined, end: undefined };
-    this.args.tracker.dashboardFilterOpen = false;
-  };
-
-  toggleDashboardFilter = () => {
-    this.args.tracker.dashboardFilterOpen =
-      !this.args.tracker.dashboardFilterOpen;
-  };
-
-  get dashboardRangeLabel(): string {
-    let { start, end } = this.args.tracker.dashboardRange;
-    if (!start && !end) {
-      return 'All time';
-    }
-    let fmt = (d?: Date) =>
-      d
-        ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        : '…';
-    return `${fmt(start)} – ${fmt(end)}`;
-  }
 
   // Application → Candidate has no persisted link (converting an
   // application creates an independent Candidate — see
@@ -171,11 +293,6 @@ export class DashboardTab extends GlimmerComponent<Signature> {
     ).length;
   }
 
-  get openReqs(): number {
-    return this.args.tracker.positions.filter((p) => p.status === 'open')
-      .length;
-  }
-
   get dashboardPipelinePreview(): {
     key: string;
     label: string;
@@ -184,7 +301,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
     let previewStages = ['applied', 'screening', 'interviewing', 'offer'];
     return previewStages.map((stage) => ({
       key: stage,
-      label: stage,
+      label: stage.charAt(0).toUpperCase() + stage.slice(1),
       candidates: this.args.tracker.candidates.filter(
         (c) => c.status === stage,
       ),
@@ -229,15 +346,12 @@ export class DashboardTab extends GlimmerComponent<Signature> {
   // A simplified funnel over CURRENT candidate state (this app has no
   // stage-transition history to build a true historical cohort funnel from):
   // each stage counts candidates who have reached that stage or further,
-  // excluding anyone rejected. Pass-through % is the ratio to the stage
-  // before it; dwell is the average days-since-applied for whoever is
+  // excluding anyone rejected. Dwell is the average days-since-applied for whoever is
   // sitting AT that exact stage right now.
   get funnelStages(): Array<{
     key: string;
     label: string;
     count: number;
-    barPct: number;
-    passThroughPct: number | null;
     dwellDays: number | null;
   }> {
     let applications = this.args.tracker.applications.filter((a) =>
@@ -262,13 +376,8 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       offer: reached(['offer', 'hired']),
       hired: reached(['hired']),
     };
-    let maxCount = Math.max(1, ...Object.values(counts));
-    let prev: number | null = null;
     return order.map(({ key, label }) => {
       let count = counts[key];
-      let passThroughPct =
-        prev != null && prev > 0 ? Math.round((count / prev) * 100) : null;
-      prev = count;
       let atStage =
         key === 'applied'
           ? applications.filter((a) => a.status !== 'converted')
@@ -281,21 +390,17 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         )
         .filter((d): d is number => d != null && d >= 0);
       let dwellDays = days.length ? Math.round(median(days)) : null;
-      let barPct = Math.max(4, Math.round((count / maxCount) * 100));
-      return { key, label, count, barPct, passThroughPct, dwellDays };
+      return { key, label, count, dwellDays };
     });
   }
 
-  // Count per stage, in stage order. Pass-through and dwell time ride in the
-  // name, since a BarList value prints the number alone.
+  // Count per stage, in stage order. Dwell time rides in the name, since a
+  // BarList value prints the number alone.
   get funnelChartData(): Array<{ name: string; value: number }> {
     return this.funnelStages.map((stage) => {
       let parts = [stage.label];
-      if (stage.passThroughPct != null) {
-        parts.push(`${stage.passThroughPct}% pass-through`);
-      }
       if (stage.dwellDays != null) {
-        parts.push(`${stage.dwellDays}d median`);
+        parts.push(`${stage.dwellDays} d median`);
       }
       return { name: parts.join(' · '), value: stage.count };
     });
@@ -369,917 +474,796 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
   }
 
-  projectDotStyle = (status?: string | null) => {
-    let color = stateColorOf(PROJECT_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.ring};`);
-  };
-
-  get upcomingMeetings(): Array<{
-    id?: string;
-    title: string;
-    day: string;
-    month: string;
-    timeLabel: string;
-  }> {
-    let now = new Date();
-    return this.args.tracker.calendarEvents
-      .filter((event) => event.date.getTime() >= now.getTime())
-      .slice(0, 5)
-      .map((event) => ({
-        id: event.id,
-        title: event.title,
-        day: String(event.date.getDate()),
-        month: event.date
-          .toLocaleDateString('en-US', { month: 'short' })
-          .toUpperCase(),
-        timeLabel: event.date.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-        }),
-      }));
+  get subtitle(): string {
+    let loading = this.args.tracker.isLoading;
+    let t = this.args.tracker;
+    return `${t.rangeLabel} · ${loading ? '—' : this.openPipeline} active candidates across ${loading ? '—' : t.positions.length} open roles · ${loading ? '—' : this.headcount} people.`;
   }
 
+  // Headline numbers for the PageScaffold stat row.
+  get stats(): TrackerStat[] {
+    let slowest = this.slowestFunnelStage;
+    let overdue = this.overdueFeedbackCount;
+    return [
+      {
+        label: 'Offer ratio',
+        dot: 'success',
+        value: this.offerRatioLabel,
+        hint: 'Applications per hire',
+      },
+      {
+        label: 'Median hiring cycle',
+        dot: 'info',
+        value: this.avgTimeToHire,
+        hint: 'Median of hires in range',
+      },
+      {
+        label: 'Slowest stage',
+        dot: 'warning',
+        value: slowest ? slowest.label : '—',
+        hint: slowest
+          ? `${slowest.dwellDays} days median`
+          : 'No active candidates',
+        hintTone: slowest ? 'danger' : undefined,
+      },
+      {
+        label: 'Needs us',
+        dot: 'destructive',
+        value: this.args.tracker.isLoading ? '—' : this.needsUsCount,
+        hint: overdue ? `${overdue} feedback overdue` : 'Across the pipeline',
+        hintTone: overdue ? 'danger' : undefined,
+      },
+    ];
+  }
+
+  loadKey = (row: LoadRow) => row.employee.id ?? row.employee.name ?? '';
+  // both dashboard tables carry the card as row.employee
+
+  calibrationKey = (row: CalRow) => row.employee.id ?? row.employee.name ?? '';
+
+  loadColumns: DataColumn<LoadRow>[] = [
+    { key: 'name', label: 'Interviewer' },
+    { key: 'hours', label: 'Hours', align: 'end' },
+    { key: 'capacity', label: 'Capacity' },
+  ];
+  calibrationColumns: DataColumn<CalRow>[] = [
+    { key: 'name', label: 'Interviewer' },
+    { key: 'avg', label: 'Avg · n', align: 'end' },
+    { key: 'calibration', label: 'Calibration' },
+  ];
+
+  loadTone = (
+    tone: 'red' | 'amber' | 'green',
+  ): 'danger' | 'warning' | 'success' =>
+    tone === 'red' ? 'danger' : tone === 'amber' ? 'warning' : 'success';
+  loadLabel = (tone: 'red' | 'amber' | 'green'): string =>
+    tone === 'red'
+      ? 'Over capacity'
+      : tone === 'amber'
+        ? 'Near capacity'
+        : 'Has room';
+
+  calibrationTone = (tone: 'amber' | 'green'): 'warning' | 'success' =>
+    tone === 'amber' ? 'warning' : 'success';
+
   <template>
-    <div class='tab-section'>
-      <div class='sec-head'>
-        <div class='htext'>
-          <h2>Dashboard</h2>
-          <p class='byline'>{{@tracker.todayLabel}}
-            ·
-            {{if @tracker.isLoading '—' this.headcount}}
-            people,
-            {{this.openReqs}}
-            open roles</p>
-        </div>
-      </div>
+    <div class='dash'>
+      <TrackerPage
+        @group='Hiring'
+        @title='Dashboard'
+        @subtitle={{this.subtitle}}
+        @stats={{this.stats}}
+      >
+        <:actions as |bar|>
+          <bar.Slot
+            @id='range'
+            @priority={{1}}
+            @forms={{this.rangeForms}}
+            as |form|
+          >
+            {{#if (eq form 'segments')}}
+              <span class='dash-asof'>As of</span>
+              <SegmentedControl
+                @options={{this.rangeOptions}}
+                @value={{this.rangePreset}}
+                @onValueChange={{this.pickRange}}
+                @label='Range'
+              />
+            {{else}}
+              <Menu @items={{this.rangeItems}} @label='Range'>
+                <:trigger as |_open toggle|>
+                  {{#if (eq form 'icon')}}
+                    <IconButton
+                      @label='Range: {{this.rangeCurrent}}'
+                      @icon={{this.calendarIcon}}
+                      {{on 'click' toggle}}
+                    />
+                  {{else}}
+                    <Button
+                      type='button'
+                      @size='xs'
+                      @tone='neutral'
+                      @appearance='outlined'
+                      {{on 'click' toggle}}
+                    >{{this.rangeCurrent}}</Button>
+                  {{/if}}
+                </:trigger>
+              </Menu>
+            {{/if}}
+          </bar.Slot>
+        </:actions>
+        <:alerts>
+          {{#if @tracker.dashboardFilterOpen}}
+            <div class='dash-range'>
+              <DateRangePicker
+                @value={{this.dashboardRangeSelected}}
+                @onValueChange={{this.onDashboardRangeSelect}}
+              />
+            </div>
+          {{/if}}
+        </:alerts>
+        <:default>
+          {{#if this.attentionCount}}
+            <div class='dash-attn'>
+              <button
+                type='button'
+                class='dash-attn-short'
+                aria-expanded={{if this.alertsOpen 'true' 'false'}}
+                {{on 'click' this.toggleAlerts}}
+              ><span
+                  class='dash-dot'
+                  aria-hidden='true'
+                ></span>{{this.attentionCount}}
+                need attention<span class='dash-attn-sum'>contracts
+                  {{this.expiringContractorCount}}
+                  · PTO
+                  {{this.ptoAwaitingApprovalCount}}
+                  ▾</span></button>
+              <div
+                class='dash-alerts'
+                role='group'
+                aria-label='Needs attention'
+                data-open={{if this.alertsOpen 'true'}}
+              >
+                <span class='dash-cap'>Needs attention</span>
+                {{#if this.expiringContractorCount}}
+                  <AlertPill
+                    @tone='warning'
+                    @onClick={{fn @tracker.setTab 'Contractors'}}
+                  >{{this.expiringContractorCount}}
+                    contractor
+                    {{if
+                      (eq this.expiringContractorCount 1)
+                      'contract ends'
+                      'contracts end'
+                    }}
+                    within 30 days</AlertPill>
+                {{/if}}
+                {{#if this.ptoAwaitingApprovalCount}}
+                  <AlertPill
+                    @tone='danger'
+                    @onClick={{fn @tracker.setTab 'PTO'}}
+                  >{{this.ptoAwaitingApprovalCount}}
+                    PTO
+                    {{if
+                      (eq this.ptoAwaitingApprovalCount 1)
+                      'request'
+                      'requests'
+                    }}
+                    awaiting approval</AlertPill>
+                {{/if}}
+              </div>
+            </div>
+          {{/if}}
 
-      <div class='dashboard-filters'>
-        <Button
-          type='button'
-          @tone='primary'
-          @appearance='accent'
-          class='btn-review'
-          aria-expanded='{{@tracker.dashboardFilterOpen}}'
-          {{on 'click' this.toggleDashboardFilter}}
-        >Filter: {{this.dashboardRangeLabel}}</Button>
-        {{#if @tracker.dashboardRange.start}}
-          <Button
-            type='button'
-            @appearance='link'
-            class='board-link'
-            {{on 'click' this.clearDashboardRange}}
-          >Clear</Button>
-        {{/if}}
-        {{#if @tracker.dashboardFilterOpen}}
-          <div class='dashboard-range-popover'>
-            <DateRangePicker
-              @value={{this.dashboardRangeSelected}}
-              @onValueChange={{this.onDashboardRangeSelect}}
-            />
+          <div class='dash-grid'>
+            <TrackerSection @title='Candidate pipeline' @meta='by stage'>
+              <:aside>
+                <Button
+                  type='button'
+                  @size='xs'
+                  @tone='neutral'
+                  @appearance='link'
+                  {{on 'click' (fn @tracker.setTab 'Pipeline')}}
+                >Full board</Button>
+              </:aside>
+              <:default>
+                <div class='dash-board'>
+                  {{#each this.dashboardPipelinePreview as |col|}}
+                    <section class='dash-col' aria-label={{col.label}}>
+                      <h3 class='dash-col-head'>
+                        <span>{{col.label}}</span>
+                        <span class='dash-n'>{{if
+                            @tracker.isLoading
+                            '—'
+                            col.candidates.length
+                          }}</span>
+                      </h3>
+                      <ul class='dash-col-list'>
+                        {{#each col.candidates as |c|}}
+                          <li><Button
+                              type='button'
+                              @tone='neutral'
+                              @appearance='plain'
+                              @size='xs'
+                              class='dash-person'
+                              {{on 'click' (fn @tracker.openCard c)}}
+                            >{{#let (getComponent c) as |Atom|}}{{#if
+                                  Atom
+                                }}<Atom
+                                    @format='atom'
+                                    @displayContainer={{false}}
+                                  />{{/if}}{{/let}}</Button></li>
+                        {{/each}}
+                      </ul>
+                    </section>
+                  {{/each}}
+                </div>
+              </:default>
+            </TrackerSection>
+            <div class='dash-stack'>
+              <TrackerSection
+                @title='Funnel'
+                @meta='{{this.openPipeline}} active'
+                @padded={{true}}
+              >
+                <BarList
+                  @rows={{this.funnelChartData}}
+                  @ranked={{false}}
+                  @label='Hiring funnel'
+                />
+              </TrackerSection>
+            </div>
           </div>
-        {{/if}}
-      </div>
 
-      <div class='dashboard-top'>
-        <div class='dashboard-left'>
-          <div class='stats-row'>
-            <div class='stat-card hero'>
-              <div class='stat-label'>Offer Ratio</div>
-              <div class='stat-value'>{{this.offerRatioLabel}}</div>
-              <div class='stat-trend'>Applications per hire</div>
-            </div>
-            <div class='stat-card'>
-              <div class='stat-label'>Median Hiring Cycle</div>
-              <div class='stat-value'>{{this.avgTimeToHire}}</div>
-              <div class='stat-trend'>Median of hires in range</div>
-            </div>
-            <div class='stat-card'>
-              <div class='stat-label'>Slowest Stage</div>
-              {{#if this.slowestFunnelStage}}
-                <div class='stat-value stat-value-sm'>
-                  {{this.slowestFunnelStage.label}}
-                </div>
-                <div class='stat-trend stat-trend-bad'>
-                  {{this.slowestFunnelStage.dwellDays}}
-                  days median
-                </div>
-              {{else}}
-                <div class='stat-value'>—</div>
-                <div class='stat-trend'>No active candidates</div>
-              {{/if}}
-            </div>
-            <div class='stat-card'>
-              <div class='stat-label'>Needs Us</div>
-              <div class='stat-value'>{{if
+          <div class='dash-trio'>
+            <TrackerSection @title='Interviewer load' @meta='this week'>
+              <:default>
+                <DataTable
+                  @loading={{@tracker.isLoading}}
+                  @columns={{this.loadColumns}}
+                  @rows={{@tracker.interviewerLoad}}
+                  @key={{this.loadKey}}
+                  @label='Interviewer load this week'
+                  @columnMenu={{false}}
+                  @sortable={{false}}
+                  @striped={{false}}
+                  @flush={{true}}
+                  @size='xs'
+                >
+                  <:empty>{{#if @tracker.isLoading}}<LoadingState
+                        @label='Loading'
+                      />{{else}}<TrackerEmpty>No interviews scheduled this week</TrackerEmpty>{{/if}}</:empty>
+                  <:cell as |text row col|>
+                    {{#if (eq col.key 'name')}}
+                      <Button
+                        type='button'
+                        @tone='neutral'
+                        @appearance='plain'
+                        @size='xs'
+                        class='dash-person'
+                        {{on 'click' (fn @tracker.openCard row.employee)}}
+                      >{{#let (getComponent row.employee) as |Atom|}}{{#if
+                            Atom
+                          }}<Atom
+                              @format='atom'
+                              @displayContainer={{false}}
+                            />{{/if}}{{/let}}</Button>
+                    {{else if (eq col.key 'hours')}}
+                      {{row.hours}}h
+                    {{else if (eq col.key 'capacity')}}
+                      <StatusDot
+                        @tone={{this.loadTone row.tone}}
+                        @label={{this.loadLabel row.tone}}
+                      />
+                    {{else}}
+                      {{text}}
+                    {{/if}}
+                  </:cell>
+                </DataTable>
+              </:default>
+            </TrackerSection>
+            <TrackerSection
+              @title='Score calibration'
+              @meta='scored interviews'
+            >
+              <:default>
+                <DataTable
+                  @loading={{@tracker.isLoading}}
+                  @columns={{this.calibrationColumns}}
+                  @rows={{this.calibration}}
+                  @key={{this.calibrationKey}}
+                  @label='Score calibration'
+                  @columnMenu={{false}}
+                  @sortable={{false}}
+                  @striped={{false}}
+                  @flush={{true}}
+                  @size='xs'
+                >
+                  <:empty>{{#if @tracker.isLoading}}<LoadingState
+                        @label='Loading'
+                      />{{else}}<TrackerEmpty>No scored interviews yet</TrackerEmpty>{{/if}}</:empty>
+                  <:cell as |text row col|>
+                    {{#if (eq col.key 'name')}}
+                      <Button
+                        type='button'
+                        @tone='neutral'
+                        @appearance='plain'
+                        @size='xs'
+                        class='dash-person'
+                        {{on 'click' (fn @tracker.openCard row.employee)}}
+                      >{{#let (getComponent row.employee) as |Atom|}}{{#if
+                            Atom
+                          }}<Atom
+                              @format='atom'
+                              @displayContainer={{false}}
+                            />{{/if}}{{/let}}</Button>
+                    {{else if (eq col.key 'avg')}}
+                      <span class='dash-avg'>★{{row.avgScore}}
+                        ·
+                        {{row.count}}</span>
+                    {{else if (eq col.key 'calibration')}}
+                      <StatusDot
+                        @tone={{this.calibrationTone row.tone}}
+                        @label={{row.label}}
+                      />
+                    {{else}}
+                      {{text}}
+                    {{/if}}
+                  </:cell>
+                </DataTable>
+              </:default>
+            </TrackerSection>
+            <TrackerSection @title='Upcoming'>
+              <:aside><Button
+                  type='button'
+                  @size='xs'
+                  @tone='neutral'
+                  @appearance='link'
+                  {{on 'click' (fn @tracker.setTab 'Calendar')}}
+                >Calendar</Button></:aside>
+              <:default><UpcomingList
+                  @meetings={{@tracker.meetings}}
+                  @loading={{@tracker.isLoading}}
+                  @onOpen={{@tracker.openCard}}
+                /></:default>
+            </TrackerSection>
+          </div>
+
+          <TrackerSection @title='Source effectiveness' @padded={{true}}>
+            <:aside>
+              <span class='dash-meta'>{{if
                   @tracker.isLoading
                   '—'
-                  this.needsUsCount
-                }}</div>
-              {{#if this.overdueFeedbackCount}}
-                <div class='stat-trend stat-trend-bad'>
-                  {{this.overdueFeedbackCount}}
-                  feedback overdue
-                </div>
+                  this.sourceEffectiveness.length
+                }}
+                sources</span>
+            </:aside>
+            <:default>
+              {{#if this.sourceEffectiveness.length}}
+                <BarList
+                  @rows={{this.sourceEffectivenessChartData}}
+                  @format={{this.formatPercent}}
+                  @label='Source effectiveness'
+                />
               {{else}}
-                <div class='stat-trend'>Across the pipeline</div>
+                {{#if @tracker.isLoading}}<LoadingState
+                    @label='Loading'
+                  />{{else}}<TrackerEmpty>No applications in this range</TrackerEmpty>{{/if}}
               {{/if}}
+            </:default>
+          </TrackerSection>
+
+          <div {{this.measurePipeline}}>
+            <TrackerSection
+              @title='Pipeline by name'
+              @meta='{{this.pipelineRows.length}} active'
+            >
+              <:aside>
+                <Button
+                  type='button'
+                  @size='xs'
+                  @tone='neutral'
+                  @appearance='link'
+                  {{on 'click' (fn @tracker.setTab 'Pipeline')}}
+                >Full board</Button>
+              </:aside>
+              <:default>
+                <DataTable
+                  @loading={{@tracker.isLoading}}
+                  @columns={{this.pipelineColumns}}
+                  @visibleColumns={{this.pipelineVisible}}
+                  @rows={{this.pipelineRows}}
+                  @key={{this.pipelineKey}}
+                  @label='Pipeline by name'
+                  @columnMenu={{false}}
+                  @sortable={{false}}
+                  @striped={{false}}
+                  @flush={{true}}
+                  @size='xs'
+                >
+                  <:empty>{{#if @tracker.isLoading}}<LoadingState
+                        @label='Loading'
+                      />{{else}}<TrackerEmpty>No active candidates</TrackerEmpty>{{/if}}</:empty>
+                  <:cell as |text row col|>
+                    {{#if (eq col.key 'name')}}
+                      <Button
+                        type='button'
+                        @tone='neutral'
+                        @appearance='plain'
+                        @size='xs'
+                        class='dash-person'
+                        {{on 'click' (fn @tracker.openCard row.candidate)}}
+                      >{{#let (getComponent row.candidate) as |Atom|}}{{#if
+                            Atom
+                          }}<Atom
+                              @format='atom'
+                              @displayContainer={{false}}
+                            />{{/if}}{{/let}}</Button>
+                    {{else if (eq col.key 'next')}}
+                      <StatusDot
+                        @tone={{this.turnTone row.turn.tone}}
+                        @label={{row.turn.label}}
+                      />
+                    {{else if (eq col.key 'stage')}}
+                      <this.StageAtom @model={{row.candidate.status}} />
+                    {{else if (eq col.key 'role')}}
+                      <span class='dash-muted'>{{text}}</span>
+                    {{else}}
+                      {{text}}
+                    {{/if}}
+                  </:cell>
+                </DataTable>
+              </:default>
+            </TrackerSection>
+          </div>
+
+          <div class='dash-joined'>
+            <TrackerSection class='dash-part' @title='Teams'>
+              <:aside>
+                {{#if @tracker.canCreate}}
+                  <Button
+                    type='button'
+                    @size='xs'
+                    @tone='neutral'
+                    @appearance='link'
+                    @loading={{@tracker.addCard.isRunning}}
+                    @icon={{this.plusIcon}}
+                    {{on 'click' (fn @tracker.addNew Team)}}
+                  >Add team</Button>
+                {{/if}}
+              </:aside>
+              <:default>
+                {{#if @tracker.teams.length}}
+                  <ul class='dash-rows'>
+                    {{#each @tracker.teams as |c|}}
+                      <li><Button
+                          type='button'
+                          @tone='neutral'
+                          @appearance='plain'
+                          @size='xs'
+                          class='dash-person'
+                          {{on 'click' (fn @tracker.openCard c)}}
+                        >{{#let (getComponent c) as |Atom|}}{{#if Atom}}<Atom
+                                @format='atom'
+                                @displayContainer={{false}}
+                              />{{/if}}{{/let}}</Button></li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  {{#if @tracker.teamsQuery.isLoading}}<LoadingState
+                      @label='Loading'
+                    />{{else}}<TrackerEmpty>No teams yet</TrackerEmpty>{{/if}}
+                {{/if}}
+              </:default>
+            </TrackerSection>
+
+            <div class='dash-pair'>
+              <TrackerSection class='dash-part' @title='Projects'>
+                <:aside>
+                  {{#if @tracker.canCreate}}
+                    <Button
+                      type='button'
+                      @size='xs'
+                      @tone='neutral'
+                      @appearance='link'
+                      @loading={{@tracker.addCard.isRunning}}
+                      @icon={{this.plusIcon}}
+                      {{on 'click' (fn @tracker.addNew Project)}}
+                    >Add project</Button>
+                  {{/if}}
+                </:aside>
+                <:default>
+                  {{#if @tracker.projects.length}}
+                    <ul class='dash-rows'>
+                      {{#each @tracker.projects as |c|}}
+                        <li><Button
+                            type='button'
+                            @tone='neutral'
+                            @appearance='plain'
+                            @size='xs'
+                            class='dash-person'
+                            {{on 'click' (fn @tracker.openCard c)}}
+                          >{{#let (getComponent c) as |Atom|}}{{#if Atom}}<Atom
+                                  @format='atom'
+                                  @displayContainer={{false}}
+                                />{{/if}}{{/let}}</Button></li>
+                      {{/each}}
+                    </ul>
+                  {{else}}
+                    {{#if @tracker.projectsQuery.isLoading}}<LoadingState
+                        @label='Loading'
+                      />{{else}}<TrackerEmpty>No projects yet</TrackerEmpty>{{/if}}
+                  {{/if}}
+                </:default>
+              </TrackerSection>
+
+              <TrackerSection class='dash-part' @title='Vendors'>
+                <:aside>
+                  {{#if @tracker.canCreate}}
+                    <Button
+                      type='button'
+                      @size='xs'
+                      @tone='neutral'
+                      @appearance='link'
+                      @loading={{@tracker.addCard.isRunning}}
+                      @icon={{this.plusIcon}}
+                      {{on 'click' (fn @tracker.addNew Vendor)}}
+                    >Add vendor</Button>
+                  {{/if}}
+                </:aside>
+                <:default>
+                  {{#if @tracker.vendors.length}}
+                    <ul class='dash-rows'>
+                      {{#each @tracker.vendors as |c|}}
+                        <li><Button
+                            type='button'
+                            @tone='neutral'
+                            @appearance='plain'
+                            @size='xs'
+                            class='dash-person'
+                            {{on 'click' (fn @tracker.openCard c)}}
+                          >{{#let (getComponent c) as |Atom|}}{{#if Atom}}<Atom
+                                  @format='atom'
+                                  @displayContainer={{false}}
+                                />{{/if}}{{/let}}</Button></li>
+                      {{/each}}
+                    </ul>
+                  {{else}}
+                    {{#if @tracker.vendorsQuery.isLoading}}<LoadingState
+                        @label='Loading'
+                      />{{else}}<TrackerEmpty>No vendors yet</TrackerEmpty>{{/if}}
+                  {{/if}}
+                </:default>
+              </TrackerSection>
             </div>
           </div>
 
-          {{#if
-            (or this.expiringContractorCount this.ptoAwaitingApprovalCount)
-          }}
-            <div class='attn-row' role='group' aria-label='Needs attention'>
-              {{#if this.expiringContractorCount}}
-                <Button
-                  type='button'
-                  @tone='neutral'
-                  @appearance='plain'
-                  class='attn-chip attn-amber'
-                  {{on 'click' (fn @tracker.setTab 'Contractors')}}
-                >{{this.expiringContractorCount}}
-                  contractor
-                  {{if
-                    (eq this.expiringContractorCount 1)
-                    'contract'
-                    'contracts'
-                  }}
-                  ending ≤30d →</Button>
-              {{/if}}
-              {{#if this.ptoAwaitingApprovalCount}}
-                <Button
-                  type='button'
-                  @tone='neutral'
-                  @appearance='plain'
-                  class='attn-chip attn-red'
-                  {{on 'click' (fn @tracker.setTab 'PTO')}}
-                >{{this.ptoAwaitingApprovalCount}}
-                  PTO
-                  {{if
-                    (eq this.ptoAwaitingApprovalCount 1)
-                    'request'
-                    'requests'
-                  }}
-                  awaiting approval →</Button>
-              {{/if}}
-            </div>
-          {{/if}}
-
-          <div class='board-head'>
-            <h2>Candidate Pipeline</h2>
-            <Button
-              type='button'
-              @appearance='link'
-              class='board-link'
-              {{on 'click' (fn @tracker.setTab 'Pipeline')}}
-            >View full board →</Button>
-          </div>
-          <div class='board-preview'>
-            {{#each this.dashboardPipelinePreview as |col|}}
-              <div class='pcol'>
-                <div class='pcol-head'>
-                  <span>{{col.label}}</span>
-                  <span class='pcol-count'>{{if
-                      @tracker.isLoading
-                      '—'
-                      col.candidates.length
-                    }}</span>
-                </div>
-                {{#each col.candidates as |candidate|}}
-                  <Button
-                    @tone='neutral'
-                    @appearance='filled'
-                    class='kcard'
-                    {{on 'click' (fn @tracker.openCard candidate)}}
-                  >
-                    <span class='kavatar'>{{candidate.initials}}</span>
-                    <span class='kmeta'>
-                      <span class='kname'>{{candidate.name}}</span>
-                      <span class='krole'>{{candidate.appliedRole}}</span>
-                    </span>
-                  </Button>
-                {{/each}}
-              </div>
-            {{/each}}
-          </div>
-        </div>
-
-        <div class='chart-card'>
-          <div class='chart-card-head'>
-            <span class='chart-title'>Funnel</span>
-            <span class='chart-total'>{{this.openPipeline}}
-              active</span>
-          </div>
-          <BarList
-            @rows={{this.funnelChartData}}
-            @ranked={{false}}
-            @label='Hiring funnel'
-          />
-        </div>
-      </div>
-
-      <div class='chart-card source-effectiveness-card'>
-        <div class='chart-card-head'>
-          <span class='chart-title'>Source Effectiveness</span>
-          <span class='chart-total'>{{if
-              @tracker.isLoading
-              '—'
-              this.sourceEffectiveness.length
-            }}
-            sources</span>
-        </div>
-        {{#if this.sourceEffectiveness.length}}
-          <BarList
-            @rows={{this.sourceEffectivenessChartData}}
-            @format={{this.formatPercent}}
-            @label='Source effectiveness'
-          />
-        {{else}}
-          <p class='empty-note' role='status'>No applications in this range</p>
-        {{/if}}
-      </div>
-
-      <div class='ops-row'>
-        <div class='ops-col'>
-          <div class='col-h'>Interviewer Load · This Week</div>
-          {{#if @tracker.interviewerLoad.length}}
-            <table class='data-table'>
-              <tbody>
-                {{#each @tracker.interviewerLoad as |row|}}
-                  <tr>
-                    <td>{{row.employee.name}}</td>
-                    <td class='num'>{{row.hours}}h</td>
-                    <td>
-                      <span class='status-pill pill-{{row.tone}}'>
-                        {{if
-                          (eq row.tone 'red')
-                          'Over capacity'
-                          (if (eq row.tone 'amber') 'Near capacity' 'Has room')
-                        }}
-                      </span>
-                    </td>
-                  </tr>
-                {{/each}}
-              </tbody>
-            </table>
-          {{else}}
-            <p class='empty-note' role='status'>No interviews scheduled this
-              week</p>
-          {{/if}}
-        </div>
-        <div class='ops-col'>
-          <div class='col-h'>Score Calibration · Scored Interviews</div>
-          {{#if this.calibration.length}}
-            <table class='data-table'>
-              <tbody>
-                {{#each this.calibration as |row|}}
-                  <tr>
-                    <td>{{row.employee.name}}</td>
-                    <td class='num'>★{{row.avgScore}}
-                      avg ·
-                      {{row.count}}</td>
-                    <td>
-                      <span class='status-pill pill-{{row.tone}}'>
-                        {{row.label}}
-                      </span>
-                    </td>
-                  </tr>
-                {{/each}}
-              </tbody>
-            </table>
-          {{else}}
-            <p class='empty-note' role='status'>No scored interviews yet</p>
-          {{/if}}
-        </div>
-      </div>
-
-      <div class='upcoming-card'>
-        <div class='board-head'>
-          <h2>Upcoming</h2>
-          <Button
-            type='button'
-            @appearance='link'
-            class='board-link'
-            {{on 'click' (fn @tracker.setTab 'Calendar')}}
-          >Open calendar →</Button>
-        </div>
-        {{#if this.upcomingMeetings.length}}
-          <div class='upcoming-list'>
-            {{#each this.upcomingMeetings as |meeting|}}
-              <Button
-                @tone='neutral'
-                @appearance='filled'
-                class='upcoming-row'
-                {{on 'click' (fn @tracker.openCard meeting)}}
-              >
-                <span class='upcoming-date'>
-                  <span class='upcoming-day'>{{meeting.day}}</span>
-                  <span class='upcoming-month'>{{meeting.month}}</span>
-                </span>
-                <span class='upcoming-info'>
-                  <span class='upcoming-title'>{{meeting.title}}</span>
-                  <span class='upcoming-time'>{{meeting.timeLabel}}</span>
-                </span>
-              </Button>
-            {{/each}}
-          </div>
-        {{else}}
-          <p class='empty-note' role='status'>Nothing scheduled</p>
-        {{/if}}
-      </div>
-
-      <div class='accounts'>
-        <section class='account-col'>
-          <div class='account-col-head'>
-            <h2>Teams</h2>
-            {{#if @tracker.canCreate}}
-              <Button
-                type='button'
-                @tone='primary'
-                @appearance='accent'
-                class='btn-review'
-                @loading={{@tracker.addCard.isRunning}}
-                {{on 'click' (fn @tracker.addNew Team)}}
-              >+ Add</Button>
-            {{/if}}
-          </div>
-          {{#if @tracker.teams.length}}
-            <ul class='account-list'>
-              {{#each @tracker.teams as |team|}}
-                <li>
-                  <Button
-                    @tone='neutral'
-                    @appearance='plain'
-                    class='account-row'
-                    {{on 'click' (fn @tracker.openCard team)}}
-                  >
-                    <span class='account-name'>{{team.title}}</span>
-                    <span class='account-meta'>{{team.headcount}}</span>
-                  </Button>
-                </li>
-              {{/each}}
-            </ul>
-          {{else if @tracker.teamsQuery.isLoading}}
-            <p class='empty-note' role='status'>Loading…</p>
-          {{else}}
-            <p class='empty-note' role='status'>No teams yet</p>
-          {{/if}}
-        </section>
-        <section class='account-col'>
-          <div class='account-col-head'>
-            <h2>Projects</h2>
-            {{#if @tracker.canCreate}}
-              <Button
-                type='button'
-                @tone='primary'
-                @appearance='accent'
-                class='btn-review'
-                @loading={{@tracker.addCard.isRunning}}
-                {{on 'click' (fn @tracker.addNew Project)}}
-              >+ Add</Button>
-            {{/if}}
-          </div>
-          {{#if @tracker.projects.length}}
-            <ul class='account-list'>
-              {{#each @tracker.projects as |project|}}
-                <li>
-                  <Button
-                    @tone='neutral'
-                    @appearance='plain'
-                    class='account-row'
-                    {{on 'click' (fn @tracker.openCard project)}}
-                  >
-                    <span
-                      class='dot'
-                      style={{this.projectDotStyle project.status}}
-                    ></span>
-                    <span class='account-name'>{{project.title}}</span>
-                    <span class='account-meta'>{{project.status}}</span>
-                  </Button>
-                </li>
-              {{/each}}
-            </ul>
-          {{else if @tracker.projectsQuery.isLoading}}
-            <p class='empty-note' role='status'>Loading…</p>
-          {{else}}
-            <p class='empty-note' role='status'>No projects yet</p>
-          {{/if}}
-        </section>
-        <section class='account-col'>
-          <div class='account-col-head'>
-            <h2>Vendors</h2>
-            {{#if @tracker.canCreate}}
-              <Button
-                type='button'
-                @tone='primary'
-                @appearance='accent'
-                class='btn-review'
-                @loading={{@tracker.addCard.isRunning}}
-                {{on 'click' (fn @tracker.addNew Vendor)}}
-              >+ Add</Button>
-            {{/if}}
-          </div>
-          {{#if @tracker.vendors.length}}
-            <ul class='account-list'>
-              {{#each @tracker.vendors as |vendor|}}
-                <li>
-                  <Button
-                    @tone='neutral'
-                    @appearance='plain'
-                    class='account-row'
-                    {{on 'click' (fn @tracker.openCard vendor)}}
-                  >
-                    <span class='account-name'>{{vendor.title}}</span>
-                    <span class='account-meta'>{{vendor.serviceCategory}}</span>
-                  </Button>
-                </li>
-              {{/each}}
-            </ul>
-          {{else if @tracker.vendorsQuery.isLoading}}
-            <p class='empty-note' role='status'>Loading…</p>
-          {{else}}
-            <p class='empty-note' role='status'>No vendors yet</p>
-          {{/if}}
-        </section>
-      </div>
+        </:default>
+      </TrackerPage>
     </div>
     <style scoped>
-      .sec-head {
+      /* the page fills the tab and scrolls itself */
+      .dash {
         display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp);
-        padding-bottom: var(--boxel-sp);
-        border-bottom: 0.125rem solid var(--card-foreground);
-        margin: 0 0 var(--boxel-sp-lg);
-      }
-      .sec-head .htext {
-        margin-right: auto;
-      }
-      .sec-head .htext h2 {
-        font-family: var(--font-sans);
-        font-weight: 700;
-        font-size: 1.25rem;
-        margin: 0 0 0.1875rem;
-      }
-      .sec-head .htext .byline {
-        font-family: var(--font-mono);
-        font-size: 0.7188rem;
-        letter-spacing: 0.02em;
-        color: var(--muted-foreground);
-        margin: 0;
-      }
-      .attn-row {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-        margin-bottom: var(--boxel-sp);
-      }
-      .attn-chip {
-        letter-spacing: 0.02em;
-        cursor: pointer;
+        height: 100%;
         min-height: 0;
       }
-      .attn-amber {
-        color: color-mix(in oklch, var(--warning) 38%, var(--card-foreground));
+      .dash > :first-child {
+        flex: 1;
+        min-width: 0;
       }
-      .attn-red {
-        color: color-mix(
-          in oklch,
-          var(--destructive) 38%,
-          var(--card-foreground)
-        );
+      .dash-asof {
+        margin-inline-end: var(--boxel-sp-2xs);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--subtle-foreground);
       }
-      .account-row:focus-visible {
-        outline: 0.125rem solid var(--primary);
+      .dash-cap {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--subtle-foreground);
+      }
+      /* one alerts line between two hairlines; one summary row when narrow */
+      .dash-alerts {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp-4xs) var(--boxel-sp-lg);
+        padding: var(--trt-py) 0;
+        border-block: 1px solid var(--border);
+      }
+      /* a native button: a Pret UI Button can't be a full-width row whose
+         dot and summary are flex items */
+      .dash-attn-short {
+        display: none;
+        align-items: center;
+        gap: var(--boxel-sp-2xs);
+        inline-size: 100%;
+        block-size: 2.125rem;
+        padding: 0;
+        border: 0;
+        border-block: 1px solid var(--border);
+        background: none;
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .dash-attn-short:focus-visible {
+        outline: 2px solid var(--ring);
         outline-offset: 0.125rem;
       }
-      .tab-section {
-        animation: tracker-tab-fade-in 0.2s ease-out;
+      .dash-dot {
+        inline-size: 0.4375rem;
+        block-size: 0.4375rem;
+        border-radius: 50%;
+        background: var(--destructive);
       }
-      @keyframes tracker-tab-fade-in {
-        from {
-          opacity: 0;
+      .dash-attn-sum {
+        margin-inline-start: auto;
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        color: var(--muted-foreground);
+      }
+      @container (width < 40rem) {
+        .dash-attn-short {
+          display: flex;
         }
-        to {
-          opacity: 1;
+        .dash-alerts {
+          display: none;
+          border-top: 0;
+        }
+        .dash-alerts[data-open] {
+          display: flex;
         }
       }
-      @media (prefers-reduced-motion: reduce) {
-        .tab-section {
-          animation: none;
-        }
-      }
-      .dashboard-top {
+      /* the mock's two-column grid: the board beside Funnel */
+      .dash-grid {
         display: grid;
-        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-        gap: var(--boxel-sp);
-        margin-bottom: var(--boxel-sp-lg);
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: var(--trt-gap);
         align-items: start;
       }
-      @container tracker (max-width: 48rem) {
-        .dashboard-top {
+      .dash-stack {
+        display: grid;
+        gap: var(--trt-gap);
+        min-width: 0;
+      }
+      /* the mock's middle row: Interviewer load, Score calibration, Upcoming */
+      .dash-trio {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--trt-gap);
+        align-items: stretch;
+      }
+      @container (width < 52rem) {
+        .dash-trio,
+        .dash-grid {
           grid-template-columns: minmax(0, 1fr);
         }
       }
-      .dashboard-left {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-lg);
-        min-height: 100%;
-      }
-      .stats-row {
+      /* Teams / Projects / Vendors: one card, three hairline-split parts */
+      .dash-joined {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
-        gap: var(--boxel-sp);
-      }
-      .stat-card {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         background: var(--card);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: var(--shadow-xs);
+        overflow: hidden;
       }
-      .stat-card.hero {
-        background: var(--primary);
-        border-color: var(--primary);
-        color: var(--primary-foreground);
+      .dash-joined .dash-pair {
+        display: contents;
       }
-      .stat-card.hero .stat-label,
-      .stat-card.hero .stat-value,
-      .stat-card.hero .stat-trend {
-        color: var(--primary-foreground);
+      .dash-part {
+        border: 0;
+        border-radius: 0;
+        border-inline-start: 1px solid var(--border);
       }
-      .stat-card.hero .stat-label,
-      .stat-card.hero .stat-trend {
-        opacity: 0.8;
+      .dash-part:first-child {
+        border-inline-start: 0;
       }
-      .stat-label {
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-        color: var(--muted-foreground);
+      @container (width < 48rem) {
+        .dash-joined {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .dash-part {
+          border-inline-start: 0;
+          border-block-start: 1px solid var(--border);
+        }
+        .dash-part:first-child {
+          border-block-start: 0;
+        }
       }
-      .stat-value {
-        margin-top: var(--boxel-sp-4xs);
-        font-family: var(--font-sans);
-        font-size: 1.75rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        line-height: 1;
+      /* the name cell is the row's open control; the atom carries the look */
+      .dash-person {
+        --pretui-button-h: 0;
+        --pretui-button-px: 0;
+        --employee-atom-avatar-size: 1.25rem;
+      }
+      .dash-range {
+        margin-bottom: var(--trt-gap);
+      }
+      .dash-avg {
+        white-space: nowrap;
         font-variant-numeric: tabular-nums;
-        color: var(--card-foreground);
       }
-      .stat-trend {
-        margin-top: var(--boxel-sp-4xs);
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        color: var(--success-ink);
-      }
-      .chart-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: var(--shadow-xs);
-      }
-      .chart-card-head {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        margin-bottom: var(--boxel-sp-xs);
-      }
-      .chart-title {
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 700;
-      }
-      .chart-total {
-        font-size: var(--boxel-font-size-xs);
+      .dash-meta,
+      .dash-muted {
         color: var(--muted-foreground);
+        font-size: var(--boxel-font-size-2xs);
       }
-      .stat-value-sm {
-        font-size: 1.1rem;
+      .dash-n {
+        color: var(--muted-foreground);
+        font-weight: 400;
+        font-variant-numeric: tabular-nums;
       }
-      .stat-trend-bad {
-        color: color-mix(
-          in oklch,
-          var(--destructive) 38%,
-          var(--card-foreground)
-        );
-      }
-      .dashboard-filters {
-        position: relative;
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        margin-bottom: var(--boxel-sp);
-      }
-      .dashboard-range-popover {
-        position: absolute;
-        top: calc(100% + var(--boxel-sp-4xs));
-        left: 0;
-        z-index: 2;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow-lg);
-        padding: var(--boxel-sp);
-      }
-      .source-effectiveness-card {
-        margin-bottom: var(--boxel-sp-lg);
-      }
-      .ops-row {
+      .dash-board {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
-        gap: var(--boxel-sp);
-        margin-bottom: var(--boxel-sp-lg);
-      }
-      .ops-col {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: var(--shadow-xs);
-      }
-      .ops-col .col-h {
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 700;
-        margin-bottom: var(--boxel-sp-xs);
-      }
-      .ops-col .data-table {
-        margin-top: 0;
-      }
-      .board-head {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        margin: 0 0 var(--boxel-sp);
-      }
-      .board-head h2 {
-        margin: 0;
-        font-family: var(--font-sans);
-        font-size: var(--boxel-font-size);
-        font-weight: 700;
-      }
-      .board-preview {
-        display: flex;
-        gap: var(--boxel-sp);
+        grid-template-columns: repeat(4, minmax(7rem, 1fr));
         overflow-x: auto;
-        padding-bottom: var(--boxel-sp-4xs);
+        border-top: 1px solid var(--border);
       }
-      .pcol {
+      /* flat columns split by a hairline: never rounded inside rounded */
+      .dash-col {
         display: flex;
         flex-direction: column;
-        flex: 1 0 11.25rem;
-        min-width: 11.25rem;
-        gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp-sm);
-        border-radius: 0.85rem;
-        background: var(--muted);
-      }
-      .pcol-head {
-        display: flex;
-        align-items: center;
         gap: var(--boxel-sp-4xs);
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        color: var(--muted-foreground);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-      .pcol-count {
-        background: var(--card);
-        border-radius: 62.4375rem;
-        padding: 0.05rem 0.5rem;
-        font-weight: 700;
-      }
-      .kcard {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        color: inherit;
-        cursor: pointer;
-        text-align: left;
-      }
-      .kavatar {
-        width: 1.9rem;
-        height: 1.9rem;
-        border-radius: 50%;
-        background: var(--primary-ink);
-        color: var(--card);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.72rem;
-        flex: none;
-      }
-      .kmeta {
-        display: flex;
-        flex-direction: column;
         min-width: 0;
+        padding: var(--trt-py) var(--trt-px);
+        border-inline-start: 1px solid var(--border);
       }
-      .kname {
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      .dash-col:first-child {
+        border-inline-start: 0;
       }
-      .krole {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .upcoming-card {
-        margin-top: var(--boxel-sp-lg);
-        padding: var(--boxel-sp);
-        border: 1px solid var(--border);
-        border-radius: 1.25rem;
-        background: var(--card);
-        box-shadow: var(--shadow-xs);
-      }
-      .upcoming-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
-        gap: var(--boxel-sp-xs);
-      }
-      .upcoming-row {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        color: inherit;
-        cursor: pointer;
-        text-align: left;
-      }
-      .upcoming-date {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 2.5rem;
-        height: 2.5rem;
-        flex: none;
-        border-radius: 0.5rem;
-        background: var(--card);
-        border: 1px solid var(--border);
-      }
-      .upcoming-day {
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1;
-      }
-      .upcoming-month {
-        font-size: 0.5625rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--muted-foreground);
-      }
-      .upcoming-info {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-      }
-      .upcoming-title {
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .upcoming-time {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .accounts {
-        margin-top: var(--boxel-sp-xl);
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
-        gap: var(--boxel-sp-lg);
-      }
-      .account-col h2 {
-        font-family: var(--font-sans);
-        font-size: 0.875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        margin: 0 0 var(--boxel-sp-xs);
-        padding-bottom: var(--boxel-sp-5xs);
-        border-bottom: 1px solid var(--card-foreground);
-      }
-      .account-col-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--boxel-sp-xs);
-        border-bottom: 1px solid var(--card-foreground);
-        margin-bottom: var(--boxel-sp-xs);
-      }
-      .account-col-head h2 {
-        border-bottom: none;
-        margin-bottom: 0;
-      }
-      .account-col-head .btn-review {
-        margin-bottom: var(--boxel-sp-5xs);
-      }
-      .account-list {
-        list-style: none;
+      /* the mock's joined lists: 30px rows split by hairlines */
+      .dash-rows {
         margin: 0;
         padding: 0;
+        list-style: none;
       }
-      .account-list li {
-        border-bottom: 1px dotted var(--border);
-      }
-      .account-list li:last-child {
-        border-bottom: none;
-      }
-      .account-row {
-        width: 100%;
+      .dash-rows li {
         display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        color: inherit;
-        cursor: pointer;
-        text-align: left;
-        transition: color 0.15s ease-out;
+        align-items: center;
+        min-height: 1.875rem;
+        padding: 0 var(--trt-px);
+        border-top: 1px solid var(--border);
+        min-width: 0;
+        overflow: hidden;
       }
-      .account-row:hover {
-        color: var(--primary-ink);
+      .dash-col-list {
+        display: grid;
+        margin: 0;
+        padding: 0;
+        list-style: none;
       }
-      .dot {
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: 50%;
-        flex: none;
-        margin-top: 0.3rem;
+      .dash-col-list li {
+        display: flex;
+        align-items: center;
+        min-height: var(--trt-rowh);
+        min-width: 0;
+        overflow: hidden;
       }
-      .account-name {
+      .dash-col-head {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
         font-weight: 600;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .account-meta {
-        font-family: var(--font-mono);
-        font-size: 0.6562rem;
-        color: var(--muted-foreground);
-        margin-left: auto;
-        white-space: nowrap;
-        text-transform: capitalize;
-      }
-      .empty-note {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        color: var(--muted-foreground);
-      }
-      .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .data-table th {
-        text-align: left;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        line-height: 1.3;
+        letter-spacing: 0.13em;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--muted-foreground);
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;
-      }
-      .data-table td {
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;
-      }
-      .data-table tbody tr:last-child td {
-        border-bottom: none;
-      }
-      .data-table tbody tr:hover {
-        background: var(--muted);
-      }
-      .status-pill {
-        display: inline-block;
-        padding: 0.125rem 0.5rem;
-        border-radius: 62.4375rem;
-        font-size: 0.6875rem;
-        text-transform: capitalize;
-        white-space: nowrap;
-      }
-      .sec-head {
-        flex: none;
-      }
-      @keyframes action-busy-pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.55;
-        }
+        color: var(--subtle-foreground);
       }
     </style>
   </template>

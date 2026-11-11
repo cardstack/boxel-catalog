@@ -14,17 +14,15 @@ import { FileDef } from '@cardstack/base/file-api';
 import { DocumentInfoField } from '@cardstack/base/file-formats/metadata-fields';
 import Tag from '@cardstack/base/tag';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { StatusChip } from '@cardstack/pretui/components/status-chip';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Employee } from '../hr/employee';
+import { FitTile } from '../shared/fit-tile';
 import { DocumentPreview } from './components/document-preview';
 import { shortHash } from './utils/evidence-hash';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
-import { Token } from '@cardstack/pretui/components/token';
-import { AuditFacts } from './audit-ui';
-import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 export const DOCUMENT_KINDS = [
   'policy',
@@ -53,6 +51,50 @@ export const DOCUMENT_KIND_HUE: Record<string, Hue> = {
   other: 'slate',
 };
 
+/** A Hue from the shared vocabularies, folded onto the theme's four status tones. */
+export type Tone = 'success' | 'danger' | 'warning' | 'info' | undefined;
+
+export function hueTone(hue?: string | null): Tone {
+  switch (hue) {
+    case 'green':
+      return 'success';
+    case 'red':
+      return 'danger';
+    case 'amber':
+    case 'orange':
+    case 'gold':
+      return 'warning';
+    case 'blue':
+    case 'teal':
+    case 'purple':
+      return 'info';
+    default:
+      return undefined;
+  }
+}
+
+const KIND_TONE: Record<string, Tone> = {
+  policy: 'info',
+  procedure: 'info',
+  evidence: 'warning',
+};
+
+export function kindTone(kind?: string | null): Tone {
+  return KIND_TONE[kind ?? ''];
+}
+
+// A neutral StatusChip hashes its dot colour; status here is grey when it has no tone.
+export const Status: TemplateOnlyComponent<{
+  Args: { value: string; tone?: Tone };
+}> = <template>
+  <StatusChip
+    @value={{@value}}
+    @tone={{@tone}}
+    @appearance='plain'
+    @hue={{unless @tone 'var(--muted-foreground)'}}
+  />
+</template>;
+
 export const DocumentKindField = markDefinition(
   enumField(StringField, {
     displayName: 'Document Kind',
@@ -62,6 +104,48 @@ export const DocumentKindField = markDefinition(
     })),
   }),
 );
+
+const DAY = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+});
+const STAMP = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+  timeZone: 'UTC',
+});
+
+function day(d?: Date | null) {
+  return d ? DAY.format(new Date(d)) : '';
+}
+function stamp(d?: Date | null) {
+  return d ? `${STAMP.format(new Date(d))} UTC` : '—';
+}
+function kindLabel(kind?: string | null) {
+  return DOCUMENT_KIND_LABELS[kind ?? ''] ?? '—';
+}
+function metaLine(doc: Document) {
+  return [kindLabel(doc.kind), doc.info?.subject].filter(Boolean).join(' · ');
+}
+function hashed(doc: Document) {
+  return Boolean((doc.contentHash ?? '').trim());
+}
+/** "Hashed Aug 20, 2026 · 02987499…", or "Not hashed". */
+function hashLine(doc: Document) {
+  if (!hashed(doc)) {
+    return 'Not hashed';
+  }
+  let when = day(doc.hashedAt);
+  return `Hashed${when ? ` ${when}` : ''} · ${shortHash(doc.contentHash)}`;
+}
+function dash(v?: string | null) {
+  return v && v.trim() ? v : '—';
+}
 
 /**
  * A document as a record: the artefact plus who owns it, which version it is,
@@ -105,176 +189,415 @@ export class Document extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get kindLabel() {
-      return DOCUMENT_KIND_LABELS[this.args.model?.kind ?? ''] ?? '';
+    get doc() {
+      return this.args.model as Document;
     }
-    get kindHue() {
-      return DOCUMENT_KIND_HUE[this.args.model?.kind ?? ''] ?? 'slate';
+    get stats() {
+      let d = this.doc;
+      let prev = d.supersedes?.version;
+      return [
+        {
+          label: 'Version',
+          value: dash(d.version),
+          hint: prev ? `supersedes v${prev}` : 'first version',
+        },
+        {
+          label: 'Hash',
+          value: hashed(d) ? shortHash(d.contentHash) : 'None',
+          tone: hashed(d) ? 'success' : 'warning',
+          hint: hashed(d)
+            ? `SHA-256 · ${day(d.hashedAt) || 'date not recorded'}`
+            : 'not yet evidence',
+        },
+        {
+          label: 'Artefact',
+          value: d.file ? 'Attached' : 'None',
+          tone: d.file ? 'success' : undefined,
+          hint: d.file
+            ? (d.file.name ?? 'file linked')
+            : 'no file attached yet',
+        },
+      ];
     }
-    get tagList() {
-      return (this.args.model?.tags ?? []).filter(Boolean);
-    }
-    // The rows only: each value renders a field in the `value` block.
-    get facts(): KeyValueItem[] {
-      let model = this.args.model;
-      let rows: KeyValueItem[] = [];
-      if (model?.hashedAt) {
-        rows.push({ key: 'Hashed', value: '' });
-      }
-      if (model?.supersedes) {
-        rows.push({ key: 'Supersedes', value: '' });
-      }
-      return rows;
+    get hasTags() {
+      return Boolean(this.doc.tags?.length);
     }
     <template>
       <article class='doc'>
-        <header>
-          <p class='kicker'>{{this.kindLabel}}</p>
-          <h1>{{@model.title}}</h1>
-          <div class='head-meta'>
-            <StatePill @label={{this.kindLabel}} @hue={{this.kindHue}} />
-            {{#if @model.version}}
-              <span class='meta'>version {{@model.version}}</span>
-            {{/if}}
-            {{#if @model.owner}}
-              <span class='meta'>owner
-                <@fields.owner @format='atom' /></span>
-            {{/if}}
+        <header class='head'>
+          <span class='mark' aria-hidden='true'>Dc</span>
+          <div class='id'>
+            <h1>{{@model.cardTitle}}</h1>
+            <p class='meta'>{{metaLine this.doc}}</p>
+          </div>
+          <div class='states'>
+            <Status
+              @value={{kindLabel @model.kind}}
+              @tone={{kindTone @model.kind}}
+            /><Status
+              @value={{if (hashed this.doc) 'hashed' 'not hashed'}}
+              @tone={{if (hashed this.doc) 'success' 'warning'}}
+            />
           </div>
         </header>
 
-        <DocumentPreview
-          @document={{@model}}
-          @fileField={{@fields.file}}
-          @format='embedded'
-        />
+        <section class='stats' aria-label='Key facts'>
+          {{#each this.stats as |st|}}
+            <div class='stat'>
+              <Stat
+                @label={{st.label}}
+                @value={{st.value}}
+                @tone={{st.tone}}
+                @hint={{st.hint}}
+                @roll={{false}}
+              />
+            </div>
+          {{/each}}
+        </section>
 
-        {{#if this.tagList.length}}
-          <div class='tags'><@fields.tags @format='atom' /></div>
-        {{/if}}
+        <div class='cols'>
+          <div class='main'>
+            <section class='sec'>
+              <h2>Preview</h2>
+              <DocumentPreview
+                @document={{@model}}
+                @fileField={{@fields.file}}
+                @format='embedded'
+                @bare={{true}}
+              />
+            </section>
+            <section class='sec'>
+              <h2>Facts</h2>
+              <dl class='kv'>
+                <dt>Hashed</dt>
+                <dd>{{stamp @model.hashedAt}}</dd>
+                <dt>Supersedes</dt>
+                <dd>{{#if @model.supersedes}}<@fields.supersedes
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+              </dl>
+            </section>
+            <section class='sec'>
+              <h2>File metadata</h2>
+              <dl class='kv'>
+                <dt>Title</dt>
+                <dd>{{dash @model.info.title}}</dd>
+                <dt>Author</dt>
+                <dd>{{dash @model.info.author}}</dd>
+                <dt>Subject</dt>
+                <dd>{{dash @model.info.subject}}</dd>
+              </dl>
+            </section>
+            <section class='sec'>
+              <h2>Content hash</h2>
+              <p class='mono hash'>{{dash @model.contentHash}}</p>
+            </section>
+          </div>
 
-        {{#if this.facts.length}}
-          <AuditFacts @items={{this.facts}}>
-            <:value as |item|>
-              {{#if (eq item.key 'Hashed')}}
-                <@fields.hashedAt />
-              {{else}}
-                <@fields.supersedes @format='atom' />
-              {{/if}}
-            </:value>
-          </AuditFacts>
-        {{/if}}
-
-        {{#if @model.info}}
-          <section>
-            <h2>File metadata</h2>
-            <@fields.info />
-          </section>
-        {{/if}}
+          <aside class='side'>
+            <section class='sec'>
+              <h2>Linked</h2>
+              <dl class='kv'>
+                <dt>Supersedes</dt>
+                <dd>{{#if @model.supersedes}}<@fields.supersedes
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                <dt>Owner</dt>
+                <dd>{{#if @model.owner}}<@fields.owner
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}not set{{/if}}</dd>
+              </dl>
+            </section>
+            <section class='sec'>
+              <h2>Details</h2>
+              <dl class='kv'>
+                <dt>Kind</dt>
+                <dd>{{kindLabel @model.kind}}</dd>
+                <dt>Version</dt>
+                <dd>{{dash @model.version}}</dd>
+                <dt>Content hash</dt>
+                <dd class='mono'>{{if
+                    (hashed this.doc)
+                    (shortHash @model.contentHash)
+                    '—'
+                  }}</dd>
+                <dt>Hashed at</dt>
+                <dd>{{stamp @model.hashedAt}}</dd>
+                <dt>Artefact</dt>
+                <dd>{{if @model.file 'attached' 'none attached'}}</dd>
+                <dt>Author</dt>
+                <dd>{{dash @model.info.author}}</dd>
+                <dt>Subject</dt>
+                <dd>{{dash @model.info.subject}}</dd>
+                <dt>Tags</dt>
+                <dd>{{#if this.hasTags}}<@fields.tags
+                      @format='atom'
+                    />{{else}}none{{/if}}</dd>
+              </dl>
+            </section>
+          </aside>
+        </div>
       </article>
       <style scoped>
         .doc {
-          padding: var(--boxel-sp-lg);
-          display: grid;
-          gap: var(--boxel-sp-lg);
-          max-width: 52rem;
+          margin: var(--boxel-sp-sm);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.4;
+          container-type: inline-size;
         }
-        header {
-          display: grid;
-          gap: var(--boxel-sp-xs);
-        }
-        .kicker {
-          margin: 0;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        h1 {
-          margin: 0;
-          font-size: 1.5rem;
-        }
-        h2 {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .head-meta {
+        .head {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
           gap: var(--boxel-sp-xs);
-          font-size: 0.8125rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        }
+        .mark {
+          display: grid;
+          place-items: center;
+          flex: none;
+          inline-size: 1.75rem;
+          block-size: 1.75rem;
+          border-radius: var(--radius);
+          background: var(--muted);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1;
+          font-family: var(--font-mono);
+        }
+        .id {
+          flex: 1;
+          min-inline-size: 0;
+        }
+        h1 {
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 700;
         }
         .meta {
+          margin: 0;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
-        .tags {
+        .states {
+          display: flex;
+          gap: var(--boxel-sp-sm);
+          font-weight: 600;
+        }
+        .stats {
+          --text-stat: 1.375rem;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          border-block: 1px solid var(--border);
+        }
+        .stat {
+          min-inline-size: 0;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        }
+        .stat + .stat {
+          border-inline-start: 1px solid var(--border);
+        }
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        }
+        .side {
+          border-inline-start: 1px solid var(--border);
+        }
+        @container (width < 40rem) {
+          .stats,
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .stat + .stat {
+            border-inline-start: 0;
+            border-block-start: 1px solid var(--border);
+          }
+          .side {
+            border-inline-start: 0;
+            border-block-start: 1px solid var(--border);
+          }
+        }
+        .sec {
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        }
+        .sec + .sec {
+          border-block-start: 1px solid var(--border);
+        }
+        h2 {
+          margin: 0 0 var(--boxel-sp-4xs);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1.3;
+          font-family: var(--font-mono);
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 8rem minmax(0, 1fr);
+          margin: 0;
+        }
+        dt,
+        dd {
+          margin: 0;
+          padding: var(--boxel-sp-4xs) 0;
+          border-block-start: 1px solid var(--border);
+        }
+        dt {
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1.8;
+          font-family: var(--font-mono);
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        dd {
           display: flex;
           flex-wrap: wrap;
-          gap: var(--boxel-sp-xs);
+          min-inline-size: 0;
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+        }
+        .hash {
+          margin: 0;
+          overflow-wrap: break-word;
         }
       </style>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get kindLabel() {
-      return DOCUMENT_KIND_LABELS[this.args.model?.kind ?? ''] ?? '';
-    }
-    get kindHue() {
-      return DOCUMENT_KIND_HUE[this.args.model?.kind ?? ''] ?? 'slate';
-    }
-    get hashLabel() {
-      return shortHash(this.args.model?.contentHash);
+    get doc() {
+      return this.args.model as Document;
     }
     <template>
-      <div class='row'>
-        <div class='what'>
-          <span class='name'>{{@model.cardTitle}}</span>
-          {{#if this.hashLabel}}
-            <span><Token
-                style={{ID_TOKEN_STYLE.xs}}
-                title={{@model.contentHash}}
-              >{{this.hashLabel}}</Token></span>
-          {{else}}
-            <span class='sub'>not hashed</span>
-          {{/if}}
-        </div>
-        <StatePill @label={{this.kindLabel}} @hue={{this.kindHue}} />
-      </div>
+      <article class='emb'>
+        <header>
+          <span class='mark' aria-hidden='true'>Dc</span>
+          <div class='id'>
+            <h3>{{@model.cardTitle}}</h3>
+            <p class='meta'>{{metaLine this.doc}}</p>
+          </div>
+        </header>
+        <p class='fact'>{{hashLine this.doc}}</p>
+        <dl class='kv'>
+          <dt>State</dt>
+          <dd class='states'>
+            <Status
+              @value={{kindLabel @model.kind}}
+              @tone={{kindTone @model.kind}}
+            /><Status
+              @value={{if (hashed this.doc) 'hashed' 'not hashed'}}
+              @tone={{if (hashed this.doc) 'success' 'warning'}}
+            />
+          </dd>
+          <dt>Version</dt>
+          <dd>{{dash @model.version}}</dd>
+          <dt>Hashed at</dt>
+          <dd>{{stamp @model.hashedAt}}</dd>
+          <dt>Artefact</dt>
+          <dd>{{if @model.file 'attached' 'none attached'}}</dd>
+          <dt>Author</dt>
+          <dd>{{dash @model.info.author}}</dd>
+          <dt>Owner</dt>
+          <dd>{{#if @model.owner}}<@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}not set{{/if}}</dd>
+          <dt>Supersedes</dt>
+          <dd>{{#if @model.supersedes}}<@fields.supersedes
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+        </dl>
+      </article>
       <style scoped>
-        .row {
+        .emb {
           display: grid;
-          grid-template-columns: 1fr auto;
-          gap: var(--boxel-sp-sm);
-          align-items: center;
+          gap: var(--boxel-sp-4xs);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.4;
         }
-        .what {
+        header {
           display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
+          gap: var(--boxel-sp-xs);
+          align-items: flex-start;
         }
-        .name {
+        .mark {
+          display: grid;
+          place-items: center;
+          flex: none;
+          inline-size: 1.5rem;
+          block-size: 1.5rem;
+          border-radius: var(--radius);
+          background: var(--muted);
           font-weight: 600;
-          font-size: 0.9375rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1;
+          font-family: var(--font-mono);
         }
-        .sub {
-          font-size: 0.75rem;
+        .id {
+          min-inline-size: 0;
+        }
+        h3 {
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 700;
+        }
+        .meta,
+        .fact {
+          margin: 0;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
+        }
+        .fact {
+          font-family: var(--font-mono);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 8rem minmax(0, 1fr);
+          margin: 0;
+        }
+        dt,
+        dd {
+          margin: 0;
+          padding: var(--boxel-sp-4xs) 0;
+          border-block-start: 1px solid var(--border);
+        }
+        dt {
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1.8;
+          font-family: var(--font-mono);
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        dd {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
+          min-inline-size: 0;
+        }
+        .states {
+          font-weight: 600;
         }
       </style>
     </template>
@@ -282,133 +605,75 @@ export class Document extends CardDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom'>{{@model.cardTitle}}</span>
+      <span class='atom'><span class='mark' aria-hidden='true'>Dc</span><span
+          class='name'
+        >{{@model.cardTitle}}</span></span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-4xs);
+          max-inline-size: 100%;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
+        }
+        .mark {
+          flex: none;
+          padding: 0 var(--boxel-sp-5xs);
+          border-radius: var(--radius);
+          background: var(--muted);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1.6;
+          font-family: var(--font-mono);
+        }
+        .name {
+          min-inline-size: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get kindLabel() {
-      return DOCUMENT_KIND_LABELS[this.args.model?.kind ?? ''] ?? '';
+    get doc() {
+      return this.args.model as Document;
     }
-    get hashLabel() {
-      return shortHash(this.args.model?.contentHash);
-    }
-    get artefactLabel() {
-      return this.args.model?.file ? 'artefact attached' : 'no artefact';
-    }
-    get versionLabel() {
-      let v = this.args.model?.version;
-      return v ? `Version ${v}` : null;
-    }
-    get supersedesLabel() {
-      let t = this.args.model?.supersedes?.cardTitle;
-      return t ? `Supersedes ${t}` : null;
-    }
-
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.cardTitle}}</span>
-        <span class='fit-kind'>{{this.kindLabel}}</span>
-
-        <div class='tier-tile'>
-          <span class='row mono'>{{if
-              this.hashLabel
-              this.hashLabel
-              'not hashed'
-            }}</span>
-          <span class='row'>{{this.artefactLabel}}</span>
-        </div>
-
-        <div class='tier-card'>
-          {{#if this.versionLabel}}
-            <span class='row'>{{this.versionLabel}}</span>
-          {{/if}}
-          {{#if this.supersedesLabel}}
-            <span class='row clamp'>{{this.supersedesLabel}}</span>
-          {{/if}}
-        </div>
-      </div>
+      <FitTile>
+        <:avatar><span class='mark' aria-hidden='true'>Dc</span></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{metaLine this.doc}}</:subtitle>
+        <:status><Status
+            @value={{kindLabel @model.kind}}
+            @tone={{kindTone @model.kind}}
+          /><Status
+            @value={{if (hashed this.doc) 'hashed' 'not hashed'}}
+            @tone={{if (hashed this.doc) 'success' 'warning'}}
+          /></:status>
+        <:fact><span class='mono'>{{hashLine this.doc}}</span></:fact>
+        <:relations>{{#if @model.supersedes}}<@fields.supersedes
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
       <style scoped>
-        /* Progressive: a badge shows what it is, a tile adds the evidence
-           facts, a card adds the version chain. Every tier ADDS — none of
-           them leaves the box mostly empty, which is what a bottom-pinned
-           single line was doing at tile size. */
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          inline-size: 2rem;
+          block-size: 2rem;
+          border-radius: var(--radius);
+          background: var(--muted);
           font-weight: 600;
-          font-size: 0.9375rem;
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .fit-kind,
-        .row {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .clamp {
-          white-space: normal;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1;
+          font-family: var(--font-mono);
         }
         .mono {
           font-family: var(--font-mono);
-        }
-        .tier-tile,
-        .tier-card {
-          display: none;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-height: 0;
-        }
-        .tier-tile {
-          margin-top: auto;
-          padding-top: var(--boxel-sp-5xs);
-          border-top: 1px solid var(--border);
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 120px) {
-          .tier-tile {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 210px) {
-          .tier-card {
-            display: flex;
-          }
-        }
-        @container fitted-card (width > 400px) and (height > 120px) {
-          .tier-card {
-            display: flex;
-          }
         }
       </style>
     </template>

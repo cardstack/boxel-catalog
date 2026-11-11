@@ -97,6 +97,11 @@
         "links": {
           "self": "../Location/northwind-a-office-2"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

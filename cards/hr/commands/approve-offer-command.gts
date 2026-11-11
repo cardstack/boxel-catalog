@@ -12,8 +12,8 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
 
-import { Candidate } from '@cardstack/catalog/cards/hr/candidate';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Candidate } from '../candidate';
+import { Employee } from '../employee';
 import { OnboardingTemplate } from '../onboarding-template';
 import { CreateOnboardingChecklistCommand } from './create-onboarding-checklist-command';
 import HireCandidateCommand from './hire-candidate-command';

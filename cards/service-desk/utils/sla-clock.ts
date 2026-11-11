@@ -9,7 +9,7 @@ import { tracked } from '@glimmer/tracking';
  * subscription means the interval only exists while something is watching, so
  * a queue scrolled off-screen costs nothing.
  *
- * It lives in `utils/` rather than beside the badge because it is no longer
+ * It lives in `utils/` rather than beside the badge because it is not
  * only the badge's. The lens predicates — which decide whether a ticket counts
  * as "at risk" or "overdue" — need the same instant the badge is drawing, or
  * the rail's count and the row's badge disagree in front of the reader.

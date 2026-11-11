@@ -10,7 +10,7 @@
     "attributes": {
       "obligationType": "compliance",
       "description": "Annual review of the Schedule 4 sub-processor list",
-      "consequence": "Bespoke clause with no approved standard — unreviewed exposure if skipped.",
+      "consequence": "Bespoke clause with no approved standard \u2014 unreviewed exposure if skipped.",
       "firstDueDate": "2026-08-01",
       "recurrence": {
         "pattern": "yearly",
@@ -26,6 +26,11 @@
       "owner": {
         "links": {
           "self": "../../hr/Employee/priya-nair"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     }

@@ -4,7 +4,7 @@
     "attributes": {
       "name": "Theo Bramwell",
       "status": "interviewing",
-      "boardOrder": 3,
+      "boardOrder": 2,
       "appliedRole": "Frontend Engineer",
       "appliedDate": "2026-07-28",
       "resumeText": null,
@@ -130,6 +130,11 @@
       "offer": {
         "links": {
           "self": "../Offer/theo-bramwell-offer"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

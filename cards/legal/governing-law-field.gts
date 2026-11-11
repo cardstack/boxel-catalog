@@ -7,7 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import TextAreaField from '@cardstack/base/text-area';
 import GavelIcon from '@cardstack/boxel-icons/gavel';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Field } from '@cardstack/pretui/components/field';
 import { htmlSafe } from '@ember/template';
 import { Chip } from '@cardstack/pretui/components/chip';
 import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
@@ -109,7 +109,7 @@ export class GoverningLawField extends FieldDef {
       <style scoped>
         .gl {
           display: flex;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
           align-items: flex-start;
           font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
@@ -118,7 +118,7 @@ export class GoverningLawField extends FieldDef {
           width: 1.125rem;
           height: 1.125rem;
           flex: none;
-          margin-top: 0.1rem;
+          margin-top: var(--boxel-sp-6xs);
           color: var(--muted-foreground);
         }
         .gl-body {
@@ -126,7 +126,7 @@ export class GoverningLawField extends FieldDef {
           flex: 1;
         }
         .gl-notes {
-          margin: 0.4rem 0 0;
+          margin: var(--boxel-sp-2xs) 0 0;
           color: var(--muted-foreground);
           line-height: 1.5;
           white-space: pre-line;
@@ -142,24 +142,15 @@ GoverningLawField.edit = class Edit extends Component<
 > {
   <template>
     <div class='gl-edit'>
-      <FieldContainer
-        @label='Governing law (whose law reads the words)'
-        @vertical={{true}}
-      >
+      <Field @label='Governing law (whose law reads the words)'>
         <@fields.jurisdiction />
-      </FieldContainer>
-      <FieldContainer
-        @label='Venue (where a dispute is heard)'
-        @vertical={{true}}
-      >
+      </Field>
+      <Field @label='Venue (where a dispute is heard)'>
         <@fields.venue />
-      </FieldContainer>
-      <FieldContainer
-        @label='Dispute procedure, rules, language'
-        @vertical={{true}}
-      >
+      </Field>
+      <Field @label='Dispute procedure, rules, language'>
         <@fields.notes />
-      </FieldContainer>
+      </Field>
     </div>
     <style scoped>
       .gl-edit {

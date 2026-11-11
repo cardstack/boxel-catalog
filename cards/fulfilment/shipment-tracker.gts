@@ -102,15 +102,14 @@ export class TrackingStatusView extends GlimmerComponent<RailSignature> {
         gap: var(--boxel-sp-xs);
       }
       /* StepList knobs: a completed stage's check reads the success ink rather
-         than the fill, and the labels sit at the rail's old caption size. */
+         than the fill. */
       .stages {
-        --text-ui: 0.75rem;
         --pretui-step-complete-marker-fg: var(--success-ink);
       }
       .promise,
       .exception {
         margin: 0;
-        font-size: 0.8rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .promise strong {
@@ -225,7 +224,7 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
         display: none;
       }
       .marker {
-        margin-top: 0.25rem;
+        margin-top: var(--boxel-sp-4xs);
         width: 0.5rem;
         height: 0.5rem;
         border-radius: 50%;
@@ -238,8 +237,8 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
       .event.latest .marker {
         width: 0.75rem;
         height: 0.75rem;
-        margin-top: 0.125rem;
-        margin-left: -0.125rem;
+        margin-top: var(--boxel-sp-6xs);
+        margin-left: calc(-1 * var(--boxel-sp-6xs));
         background-color: color-mix(
           in oklch,
           var(--foreground) 60%,
@@ -253,11 +252,11 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
       }
       .when {
         font-family: var(--font-mono);
-        font-size: 0.72rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .what {
-        font-size: 0.88rem;
+        font-size: var(--boxel-font-size-sm);
         font-weight: 600;
         color: var(--foreground);
       }
@@ -265,7 +264,7 @@ export class TrackingEventFeed extends GlimmerComponent<FeedSignature> {
         font-weight: 800;
       }
       .where {
-        font-size: 0.78rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
     </style>
@@ -321,7 +320,7 @@ export class ShipmentTracker extends GlimmerComponent<TrackerSignature> {
       }
       .out {
         justify-self: start;
-        font-size: 0.8rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--foreground);
         text-decoration: underline;
         text-underline-offset: 0.1875rem;
