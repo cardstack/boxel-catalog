@@ -49,7 +49,11 @@ import {
   names,
   type RoleId,
 } from '../../../cards/accounting/ledger-roles';
-import { withRole, rulesOf } from '../../../cards/accounting/ledger-users';
+import {
+  withRole,
+  rulesOf,
+  policyNamed,
+} from '../../../cards/accounting/ledger-users';
 import { RealmPolicy } from '../../../realm-policy/realm-policy';
 import { RealmConfig } from '@cardstack/base/realm-config';
 import { Ledger, Bill } from '../../../cards/accounting/ledger-cards';
@@ -1052,6 +1056,33 @@ export function runTests() {
         .flatMap((r) => r.grants);
       assert.true(invoiceGrants.includes(shared), 'the shared grant stays');
       assert.false(invoiceGrants.includes(snapshot), 'the snapshot grant goes');
+
+      // The policy is the one the realm's own pointer names, matched on its whole id.
+      let policies = [
+        { id: 'http://a.test/books/RealmPolicy/roles' },
+        { id: 'http://b.test/books/RealmPolicy/roles' },
+      ];
+      assert.strictEqual(
+        policyNamed(policies, 'RealmPolicy/roles', 'http://b.test/books/')?.id,
+        'http://b.test/books/RealmPolicy/roles',
+      );
+      assert.strictEqual(
+        policyNamed(
+          policies,
+          'http://a.test/books/RealmPolicy/roles.json',
+          'http://b.test/books/',
+        )?.id,
+        'http://a.test/books/RealmPolicy/roles',
+      );
+      assert.strictEqual(
+        policyNamed(
+          policies,
+          'http://c.test/books/RealmPolicy/roles',
+          'http://b.test/books/',
+        ),
+        undefined,
+        'no other policy stands in for the one named',
+      );
 
       // A grant's other settings come through rulesOf unchanged.
       let read = rulesOf({

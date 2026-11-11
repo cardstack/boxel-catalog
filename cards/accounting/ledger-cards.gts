@@ -1358,7 +1358,7 @@ export class Ledger extends CardDef {
       docNo: params('docNo'),
       date: params('date'),
       memo: params('memo'),
-      preparer: params('preparer'),
+      preparer: actor(), // whoever enters it; the param is kept for callers that send it
       reviewer: params('reviewer'),
       support: params('support'),
       lines: params('lines'),

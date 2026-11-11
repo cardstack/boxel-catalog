@@ -362,6 +362,9 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
               {{on 'click' this.add}}
             >Give this role</Button>
           </div>
+        {{else if this.adminUnknown}}
+          <p class='muted' data-roles-locked>Role changes are off until the
+            realm says whether you're an Admin.</p>
         {{else}}
           <p class='muted' data-roles-locked>Only an Admin, a writer of the
             books' realm, can change roles.</p>
