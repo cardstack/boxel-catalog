@@ -1190,7 +1190,7 @@ const RUN_LIMITS = [
     hint: 'Credits a run’s AI requests may cost',
     editLabel: 'AI spending, in credits',
     editHint:
-      'Boxel counts each AI request at the request’s highest possible cost',
+      'Boxel counts each AI request at the request’s highest possible cost¹',
     noneHint: 'No credits for AI requests',
   },
   {
@@ -1453,6 +1453,8 @@ export class AutomationCaps extends FieldDef {
           </Field>
         {{/each}}
       </div>
+      <p class='automation-caps-edit__footnote'>¹ Boxel charges the actual
+        amount once the AI provider reports the amount.</p>
       <div class='automation-caps-edit automation-caps-edit--credits'>
         {{#each this.creditLimits as |limit|}}
           <Field
@@ -1477,6 +1479,11 @@ export class AutomationCaps extends FieldDef {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
           gap: var(--boxel-sp-xs) var(--boxel-sp);
+        }
+        .automation-caps-edit__footnote {
+          margin: var(--boxel-sp-xs) 0 var(--boxel-sp);
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground);
         }
         /* Spending gets a row of its own: a day and a month side by side. */
         .automation-caps-edit--credits {
