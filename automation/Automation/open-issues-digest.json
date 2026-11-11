@@ -25,7 +25,7 @@
           "label": "release-weeks",
           "expression": "0 13,17 * * 2,4",
           "timeZone": "America/New_York",
-          "untilDate": "2026-12-18",
+          "untilDate": "2030-12-20",
           "untilTime": null,
           "count": null,
           "date": null,
@@ -46,7 +46,7 @@
           "untilDate": null,
           "untilTime": null,
           "count": null,
-          "date": "2026-11-16",
+          "date": "2030-11-18",
           "time": "09:00",
           "webhookPath": null,
           "params": []

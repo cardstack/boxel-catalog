@@ -6,7 +6,7 @@
 // the repository card to read and the file to write; a trigger's params
 // override the automation's own.
 
-await realm.progress.plan(['Fetch open issues', 'Group by label', 'Write digest']);
+await realm.plan(['Fetch open issues', 'Group by label', 'Write digest']);
 
 const {
   repository = 'automation/examples/GitHubRepository/boxel',
@@ -14,18 +14,20 @@ const {
 } = realm.current?.automation?.params ?? {};
 
 await realm.activity({ message: 'Fetching open issues', current: 1, total: 3 });
-const { body: issues } = await realm.operations.invoke(
+const { body: items } = await realm.operations.invoke(
   repository,
   'openIssues',
   {},
 );
+// GitHub lists pull requests as issues too; they carry a `pull_request` key.
+const issues = items.filter((item) => !item.pull_request);
 
 await realm.activity({ message: 'Grouping by label', current: 2, total: 3 });
 const byLabel = new Map();
 for (const issue of issues) {
   const labels = issue.labels.length
     ? issue.labels.map((l) => l.name)
-    : ['unlabelled'];
+    : ['unlabeled'];
   for (const label of labels) {
     byLabel.set(label, [...(byLabel.get(label) ?? []), issue]);
   }
@@ -41,5 +43,5 @@ const sections = [...byLabel.entries()]
   );
 await realm.fs.writeText(
   reportPath,
-  ['# Open issues in cardstack/boxel', '', ...sections, ''].join('\n'),
+  [`# Open issues in ${repository}`, '', ...sections, ''].join('\n'),
 );

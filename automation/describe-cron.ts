@@ -92,7 +92,13 @@ function parseField(
       let to = value(range[2]);
       // Sunday is both 0 and 7, so a range of days that ends on Sunday
       // (FRI-SUN, 5-7) runs up to 7 and wraps back to 0.
-      if (names === DAY_NAMES && to === 0 && from !== undefined && from > 0) {
+      // `0-7` names every day, so a 7 at the end of a range stays a 7.
+      if (
+        names === DAY_NAMES &&
+        to === 0 &&
+        from !== undefined &&
+        (from > 0 || range[2] === '7')
+      ) {
         to = 7;
       }
       if (from === undefined || to === undefined || to < from) {
@@ -111,6 +117,41 @@ function parseField(
   }
   return { any: false, values: [...values].sort((a, b) => a - b) };
 }
+
+// "A", "A and B", "A, B and C".
+function listOf(items: string[]): string {
+  return items.length < 2
+    ? (items[0] ?? '')
+    : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+// The first plain number in `field` outside `min`..`max`, if any. Names
+// (MON, JAN) and steps are left to the full parse.
+function outOfRange(
+  field: string,
+  min: number,
+  max: number,
+): string | undefined {
+  for (let part of field.split(',')) {
+    for (let piece of part.split('/')[0].split('-')) {
+      if (/^\d+$/.test(piece)) {
+        let n = Number(piece);
+        if (n < min || n > max) {
+          return piece;
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
+const FIELD_RANGES: [label: string, min: number, max: number][] = [
+  ['minute', 0, 59],
+  ['hour', 0, 23],
+  ['day of the month', 1, 31],
+  ['month', 1, 12],
+  ['day of the week', 0, 7],
+];
 
 function ordinal(n: number): string {
   let tens = n % 100;
@@ -404,6 +445,15 @@ export function describeCron(
       ? `${days.phrase}, ${time.phrase}`
       : `${days.phrase} ${time.phrase}`;
   }
+  // Restricted months qualify the summary, so a short reading never says
+  // "every day" for a schedule that runs only part of the year.
+  if (months) {
+    let values = month.values;
+    let phrase = isRun(values)
+      ? `from ${MONTHS[values[0] - 1]} through ${MONTHS[values[values.length - 1] - 1]}`
+      : `in ${listOf(values.map((m) => MONTHS[m - 1]))}`;
+    summary = `${summary}, ${phrase}`;
+  }
   let groups = [time.list, days.list, months].filter(
     (g): g is CronDescriptionGroup => Boolean(g),
   );
@@ -425,6 +475,12 @@ export function cronProblem(
   let fields = (MACROS[source.toLowerCase()] ?? source).split(/\s+/);
   if (fields.length !== 5) {
     return 'A cron expression has five fields: minute, hour, day of the month, month and day of the week';
+  }
+  for (let [i, [label, min, max]] of FIELD_RANGES.entries()) {
+    let bad = outOfRange(fields[i], min, max);
+    if (bad !== undefined) {
+      return `The ${label} is ${min} to ${max}, so ${bad} is out of range`;
+    }
   }
   let minute = parseField(fields[0], 0, 59);
   let hour = parseField(fields[1], 0, 23);

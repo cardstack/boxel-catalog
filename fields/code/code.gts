@@ -50,9 +50,14 @@ interface CodeEditSignature {
     code?: string | null;
     language?: CodeLanguage;
     onInput: (code: string) => void;
-    // For a `Field`'s `<label for>`.
+    // An id on the editable element, for other elements to point at. A
+    // `<label for>` can't name it: use `labelledBy` for that.
     controlId?: string;
-    // The editor's accessible name when no label points at it.
+    // The ids of the elements that name and describe the editor, such as a
+    // `Field`'s span label and message line.
+    labelledBy?: string;
+    describedBy?: string;
+    // The editor's accessible name when no element names it.
     label?: string;
     minLines?: number;
     maxLines?: number;
@@ -68,6 +73,8 @@ export class CodeEdit extends GlimmerComponent<CodeEditSignature> {
       @language={{@language}}
       @onInput={{@onInput}}
       @controlId={{@controlId}}
+      @labelledBy={{@labelledBy}}
+      @describedBy={{@describedBy}}
       @label={{@label}}
       @readOnly={{@readOnly}}
       @minLines={{if @minLines @minLines 8}}
@@ -100,10 +107,18 @@ export class CodeField extends StringField {
       return (this.args.configuration as CodeConfiguration | undefined)
         ?.language;
     }
+    // The field's label can't name the editor, so the editor carries the
+    // field's name itself.
+    get label() {
+      return typeof this.args.fieldName === 'string'
+        ? this.args.fieldName
+        : 'Code';
+    }
     <template>
       <CodeEdit
         @code={{@model}}
         @language={{this.language}}
+        @label={{this.label}}
         @onInput={{@set}}
         @readOnly={{if @canEdit false true}}
       />

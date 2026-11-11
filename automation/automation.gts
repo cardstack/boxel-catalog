@@ -13,6 +13,7 @@ import {
   contains,
   containsMany,
   field,
+  instanceRealmId,
   linksTo,
   type CardContext,
 } from '@cardstack/base/card-api';
@@ -34,6 +35,9 @@ import {
   chooseFile,
   identifyCard,
   realmURL,
+  RealmPaths,
+  ri,
+  rri,
   subscribeToRealm,
   type ResolvedCodeRef,
 } from '@cardstack/runtime-common';
@@ -51,6 +55,7 @@ import { DatePicker } from '@cardstack/pretui/components/date-picker';
 import { Descriptions } from '@cardstack/pretui/components/descriptions';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Field } from '@cardstack/pretui/components/field';
+import { FieldError } from '@cardstack/pretui/components/field-error';
 import { RadioGroup } from '@cardstack/pretui/components/radio-group';
 import { InputGroup } from '@cardstack/pretui/components/input-group';
 import { Fieldset } from '@cardstack/pretui/components/fieldset';
@@ -63,6 +68,7 @@ import { NumberInput } from '@cardstack/pretui/components/number-input';
 import { PanelSection } from '@cardstack/pretui/components/panel-section';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Switch } from '@cardstack/pretui/components/switch';
+import { Table } from '@cardstack/pretui/components/table';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
 import { Token } from '@cardstack/pretui/components/token';
 import { eq } from '@cardstack/pretui/helpers';
@@ -96,13 +102,40 @@ export const AutomationTriggerKind = markDefinition(
   }),
 );
 
-let timeZoneOptions: { value: string; label: string }[] | undefined;
-function timeZones() {
-  timeZoneOptions ??= Intl.supportedValuesOf('timeZone').map((zone) => ({
-    value: zone,
-    label: zone.replaceAll('_', ' '),
-  }));
+type TimeZoneOption = { value: string; label: string };
+function timeZoneOption(zone: string): TimeZoneOption {
+  return { value: zone, label: zone.replaceAll('_', ' ') };
+}
+// Every zone this runtime knows. Some engines leave UTC out of
+// `supportedValuesOf`, though they accept it, so it's added here.
+let timeZoneOptions: TimeZoneOption[] | undefined;
+function timeZones(): TimeZoneOption[] {
+  if (!timeZoneOptions) {
+    let zones = Intl.supportedValuesOf('timeZone');
+    timeZoneOptions = (zones.includes('UTC') ? zones : ['UTC', ...zones]).map(
+      timeZoneOption,
+    );
+  }
   return timeZoneOptions;
+}
+
+// A problem with a list as a whole, in Pret UI's issue shape.
+function listIssue(targetPath: string, message: string) {
+  return { targetPath, severity: 'error' as const, message };
+}
+// Params need a name each, and no two may share one.
+function paramsIssue(
+  params: { name?: string | null }[] | undefined,
+  targetPath: string,
+) {
+  let names = (params ?? []).map((p) => (p.name ?? '').trim());
+  if (names.some((name) => !name)) {
+    return listIssue(targetPath, 'Every param needs a name');
+  }
+  let repeated = names.find((name, i) => names.indexOf(name) !== i);
+  return repeated
+    ? listIssue(targetPath, `Two params share the name “${repeated}”`)
+    : undefined;
 }
 
 // DateField holds a local Date; the date controls speak `yyyy-mm-dd`.
@@ -350,15 +383,15 @@ class CronHelp extends GlimmerComponent<{
               runs at 8:30 AM, Monday through Friday.
             </figcaption>
           </figure>
-          <table class='cron-help__table'>
-            <thead>
+          <Table @label='What each position sets'>
+            <:head>
               <tr>
                 <th scope='col'>Position</th>
                 <th scope='col'>Sets</th>
                 <th scope='col'>Values</th>
               </tr>
-            </thead>
-            <tbody>
+            </:head>
+            <:body>
               {{#each this.fields as |field|}}
                 <tr>
                   <td>{{field.position}}</td>
@@ -366,21 +399,21 @@ class CronHelp extends GlimmerComponent<{
                   <td>{{field.values}}</td>
                 </tr>
               {{/each}}
-            </tbody>
-          </table>
-          <table class='cron-help__table'>
-            <thead>
+            </:body>
+          </Table>
+          <Table @label='What each symbol means'>
+            <:head>
               <tr><th scope='col'>Symbol</th><th scope='col'>Means</th></tr>
-            </thead>
-            <tbody>
+            </:head>
+            <:body>
               {{#each this.symbols as |row|}}
                 <tr>
                   <td><Token @value={{row.symbol}} /></td>
                   <td>{{row.meaning}}</td>
                 </tr>
               {{/each}}
-            </tbody>
-          </table>
+            </:body>
+          </Table>
           <h3 class='cron-help__heading'>Common schedules</h3>
           <ul class='cron-help__examples'>
             {{#each this.examples as |example|}}
@@ -409,9 +442,6 @@ class CronHelp extends GlimmerComponent<{
         display: grid;
         gap: var(--boxel-sp);
       }
-      .cron-help__lead {
-        margin: 0;
-      }
       .cron-help__anatomy {
         display: grid;
         gap: var(--boxel-sp-sm);
@@ -436,35 +466,16 @@ class CronHelp extends GlimmerComponent<{
       .cron-help__value {
         width: 100%;
         padding: var(--boxel-sp-4xs) 0;
-        border-bottom: 2px solid var(--primary, var(--boxel-highlight));
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
+        border-bottom: 2px solid var(--primary-ink);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-lg);
         font-weight: 600;
       }
       .cron-help__label {
         color: var(--muted-foreground);
       }
-      .cron-help__table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .cron-help__table th {
-        padding: 0 var(--boxel-sp-xs) var(--boxel-sp-xs) 0;
-        border-bottom: 1px solid var(--border);
-        text-align: start;
-        font-weight: 600;
-        color: var(--muted-foreground);
-      }
-      .cron-help__table td {
-        padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-xs) 0;
-        border-bottom: 1px solid var(--border);
-        vertical-align: top;
-      }
       .cron-help__heading {
         margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size);
-        font-weight: 600;
       }
       .cron-help__examples {
         display: grid;
@@ -515,7 +526,6 @@ class CronReading extends GlimmerComponent<{
         gap: var(--boxel-sp-2xs);
       }
       .cron-reading__summary {
-        margin: 0;
         font-weight: 600;
       }
       .cron-reading__group {
@@ -725,9 +735,6 @@ export class AutomationTrigger extends FieldDef {
         .automation-trigger__params {
           margin-top: var(--boxel-sp);
         }
-        .automation-trigger__sentence {
-          margin: 0;
-        }
         .automation-trigger__list {
           margin: 0 0 var(--boxel-sp-4xs);
           padding-inline-start: var(--boxel-sp-lg);
@@ -764,8 +771,14 @@ export class AutomationTrigger extends FieldDef {
         }
       });
     }
+    // The trigger's own zone is always among the options, so the picker
+    // shows it even when this runtime doesn't list it.
     get timeZones() {
-      return timeZones();
+      let zone = this.args.model.timeZone;
+      let all = timeZones();
+      return zone && !all.some((option) => option.value === zone)
+        ? [timeZoneOption(zone), ...all]
+        : all;
     }
     // What's wrong with each field, shown under it as the author types. The
     // server checks the same and more when the automation is turned on; these
@@ -835,6 +848,9 @@ export class AutomationTrigger extends FieldDef {
         (_, i) => i !== index,
       );
     };
+    get paramsIssue() {
+      return paramsIssue(this.args.model.params, 'params');
+    }
     // Switching to a schedule or a one-time run brings a time zone along.
     setKind = (kind: string) => {
       this.assign('kind', kind);
@@ -862,10 +878,13 @@ export class AutomationTrigger extends FieldDef {
             @hint='Boxel counts this trigger’s runs under this name'
             @error={{this.problems.label}}
             @required={{true}}
-            as |id|
+            as |id msgId|
           >
             <Input
               @controlId={{id}}
+              @required={{true}}
+              @invalid={{if this.problems.label true false}}
+              @describedBy={{msgId}}
               @value={{@model.label}}
               @onInput={{fn this.setText 'label'}}
             />
@@ -879,11 +898,14 @@ export class AutomationTrigger extends FieldDef {
                 @hint='Five fields, such as 0 7 * * MON, or a macro like @daily'
                 @error={{this.problems.expression}}
                 @required={{true}}
-                as |id|
+                as |id msgId|
               >
                 <div class='automation-trigger-edit__mono'>
                   <Input
                     @controlId={{id}}
+                    @required={{true}}
+                    @invalid={{if this.problems.expression true false}}
+                    @describedBy={{msgId}}
                     @value={{@model.expression}}
                     @placeholder='0 7 * * MON'
                     @onInput={{fn this.setText 'expression'}}
@@ -898,6 +920,8 @@ export class AutomationTrigger extends FieldDef {
                 as |_id _msg labelId|
               >
                 <Combobox
+                  @label='Time zone'
+                  @invalid={{if this.problems.timeZone true false}}
                   @options={{this.timeZones}}
                   @value={{@model.timeZone}}
                   @placeholder='America/Chicago'
@@ -996,6 +1020,8 @@ export class AutomationTrigger extends FieldDef {
               as |_id _msg labelId|
             >
               <Combobox
+                @label='Time zone'
+                @invalid={{if this.problems.timeZone true false}}
                 @options={{this.timeZones}}
                 @value={{@model.timeZone}}
                 @placeholder='America/Chicago'
@@ -1010,11 +1036,14 @@ export class AutomationTrigger extends FieldDef {
             @hint='One of this workspace’s incoming webhooks'
             @error={{this.problems.webhookPath}}
             @required={{true}}
-            as |id|
+            as |id msgId|
           >
             <div class='automation-trigger-edit__mono'>
               <Input
                 @controlId={{id}}
+                @required={{true}}
+                @invalid={{if this.problems.webhookPath true false}}
+                @describedBy={{msgId}}
                 @value={{@model.webhookPath}}
                 @onInput={{fn this.setText 'webhookPath'}}
               />
@@ -1057,6 +1086,12 @@ export class AutomationTrigger extends FieldDef {
               {{on 'click' this.addParam}}
             >Add a param</Button>
           </div>
+          {{#if this.paramsIssue}}
+            <FieldError
+              @issue={{this.paramsIssue}}
+              data-test-automation-trigger-params-problem
+            />
+          {{/if}}
         </Fieldset>
       </div>
       <style scoped>
@@ -1381,12 +1416,9 @@ export class AutomationCaps extends FieldDef {
           display: grid;
           gap: var(--boxel-sp);
         }
-        .automation-limits__month {
-          margin: 0;
-        }
         .automation-limits__value {
           display: block;
-          font-size: var(--boxel-font-size-med);
+          font-size: var(--boxel-font-size-md);
           font-weight: 600;
           font-variant-numeric: tabular-nums;
         }
@@ -1465,6 +1497,8 @@ export class AutomationCaps extends FieldDef {
           >
             <NumberInput
               @controlId={{id}}
+              @required={{true}}
+              @invalid={{if (this.runProblem limit.key) true false}}
               @value={{this.shown limit}}
               @min={{0}}
               @max={{this.maxOf limit}}
@@ -1484,6 +1518,7 @@ export class AutomationCaps extends FieldDef {
           >
             <NumberInput
               @controlId={{id}}
+              @invalid={{if (this.creditProblem limit.key) true false}}
               @value={{this.value limit.key}}
               @min={{0}}
               @precision={{0}}
@@ -1523,6 +1558,7 @@ function scriptText(
   args: () => {
     url: string | undefined;
     realm: string | undefined;
+    realmId: string | undefined;
     tools: Tools | undefined;
   },
 ) {
@@ -1534,7 +1570,7 @@ function scriptText(
         failure: undefined,
         loading: false,
       });
-      let { url, realm, tools } = args();
+      let { url, realm, realmId, tools } = args();
       if (!url || !tools) {
         return state;
       }
@@ -1562,7 +1598,7 @@ function scriptText(
       read();
       // The realm reports changed files by URL; the link may be a URL or a
       // prefix-form identifier, so the two meet at the path in the realm.
-      let path = realm ? pathInRealm(url, realm) : undefined;
+      let path = realmId ? pathInRealm(url, realmId) : undefined;
       let unsubscribe =
         realm && path
           ? subscribeToRealm(realm, (event) => {
@@ -1584,16 +1620,13 @@ function scriptText(
   );
 }
 
-// A file's path within its realm, from its URL or from a prefix-form
-// identifier (`@scope/realm/path`).
-function pathInRealm(id: string, realm: string): string | undefined {
-  if (id.startsWith(realm)) {
-    return id.slice(realm.length);
-  }
-  if (id.startsWith('@')) {
-    return id.split('/').slice(2).join('/');
-  }
-  return undefined;
+// A file's path within its realm, or undefined when it's in another realm.
+// `realmId` is the realm in the same form as the card's ids (see
+// `instanceRealmId`), so the two compare without the realm mappings.
+function pathInRealm(id: string, realmId: string): string | undefined {
+  let paths = new RealmPaths(ri(realmId));
+  let file = rri(id);
+  return paths.inRealm(file) ? paths.local(file) : undefined;
 }
 
 function toolsOf(context: CardContext | undefined): Tools | undefined {
@@ -1609,12 +1642,14 @@ class ScriptView extends GlimmerComponent<{
   Args: {
     url: string | undefined;
     realm: string | undefined;
+    realmId: string | undefined;
     context: CardContext | undefined;
   };
 }> {
   private script = scriptText(this, () => ({
     url: this.args.url,
     realm: this.args.realm,
+    realmId: this.args.realmId,
     tools: toolsOf(this.args.context),
   }));
   get state() {
@@ -1644,6 +1679,7 @@ class ScriptEditor extends GlimmerComponent<{
   Args: {
     url: string | undefined;
     realm: string | undefined;
+    realmId: string | undefined;
     context: CardContext | undefined;
   };
 }> {
@@ -1653,6 +1689,7 @@ class ScriptEditor extends GlimmerComponent<{
   private script = scriptText(this, () => ({
     url: this.args.url,
     realm: this.args.realm,
+    realmId: this.args.realmId,
     tools: toolsOf(this.args.context),
   }));
   get state() {
@@ -1674,13 +1711,20 @@ class ScriptEditor extends GlimmerComponent<{
     }
     this.saving = true;
     this.saveFailure = undefined;
+    let content = this.draft;
     try {
       await new WriteTextFileTool(tools).execute({
         path: this.args.url,
-        content: this.draft,
+        content,
         overwrite: true,
       });
-      this.draft = undefined;
+      // The file now holds what was saved; the realm's index event re-reads
+      // the same text. Anything typed while the save was in flight stays a
+      // draft on top of it.
+      this.state.text = content;
+      if (this.draft === content) {
+        this.draft = undefined;
+      }
     } catch (e) {
       this.saveFailure = e instanceof Error ? e.message : String(e);
     } finally {
@@ -1778,6 +1822,9 @@ class Isolated extends Component<typeof Automation> {
   get realmHref() {
     return this.args.model[realmURL]?.href;
   }
+  get realmId() {
+    return instanceRealmId(this.args.model as Automation);
+  }
   <template>
     <article class='automation'>
       <header class='automation__header'>
@@ -1809,6 +1856,7 @@ class Isolated extends Component<typeof Automation> {
           <ScriptView
             @url={{this.scriptURL}}
             @realm={{this.realmHref}}
+            @realmId={{this.realmId}}
             @context={{@context}}
           />
         {{else}}
@@ -1887,15 +1935,18 @@ class Isolated extends Component<typeof Automation> {
         <EmptyState
           @size='s'
           @texture={{false}}
-          @title='No runs yet'
-          @message='The steps the script reports as it runs show here after its first run.'
+          @title='Shown from runs'
+          @message='The steps the script reports as it runs will show here.'
         />
       </PanelSection>
     </article>
     <style scoped>
       .automation {
         display: grid;
+        align-content: start;
         gap: var(--boxel-sp-lg);
+        height: 100%;
+        overflow-y: auto;
         padding: var(--boxel-sp-xl);
         container-type: inline-size;
       }
@@ -1914,20 +1965,14 @@ class Isolated extends Component<typeof Automation> {
         background-color: var(--primary);
         color: var(--primary-foreground);
       }
-      .automation__intro > * {
-        margin: 0;
-      }
       .automation__eyebrow {
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-        letter-spacing: var(--boxel-lsp-lg);
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
-      }
-      .automation__title {
-        font-size: var(--boxel-font-size-xl);
-        font-weight: 600;
-        line-height: 1.2;
       }
       .automation__summary {
         margin-top: var(--boxel-sp-4xs);
@@ -1959,7 +2004,7 @@ class Isolated extends Component<typeof Automation> {
 }
 
 // What a new script starts with: a comment on what a script is, and one
-// milestone, so it runs as soon as it's created.
+// reported step, so it runs as soon as it's created.
 const STARTER_SCRIPT = `/* global realm */
 // A Realm Runner script: the body of an async function, run with the
 // automation's \`realm\` object. Find cards with realm.cards.search, write
@@ -2001,6 +2046,9 @@ class NewScript extends GlimmerComponent<{
   }
   get path() {
     return (this.name ?? this.suggested).trim().replace(/\.js$/, '');
+  }
+  get scriptFile() {
+    return `${this.path}.js`;
   }
   get problem() {
     if (this.name === undefined) {
@@ -2098,7 +2146,7 @@ class NewScript extends GlimmerComponent<{
             {{#unless this.problem}}
               <div class='new-script__path'>
                 <span>Will be created as</span>
-                <code>{{this.path}}.js</code>
+                <Token @value={{this.scriptFile}} @wrap={{true}} />
                 <span>The new script starts from a short outline and is linked
                   to this automation.</span>
               </div>
@@ -2136,19 +2184,8 @@ class NewScript extends GlimmerComponent<{
       .new-script__path {
         display: grid;
         gap: var(--boxel-sp-4xs);
-        font-family: var(--font-sans);
-        font-size: var(--text-ui-sm, 11.5px);
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
-      }
-      .new-script__path code {
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius-sm);
-        background: var(--muted);
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
-        font-size: var(--text-ui-sm, 11.5px);
-        color: var(--foreground);
-        overflow-wrap: anywhere;
       }
     </style>
   </template>
@@ -2168,6 +2205,7 @@ interface OutsideCall {
 class AddOutsideService extends GlimmerComponent<{
   Args: {
     realm: string | undefined;
+    realmId: string | undefined;
     context: CardContext | undefined;
     onAdd: (targetType: ResolvedCodeRef, operation: string) => void;
   };
@@ -2193,12 +2231,15 @@ class AddOutsideService extends GlimmerComponent<{
   // The script names the card by its path in the workspace.
   get scriptLine() {
     let id = this.card?.id ?? '';
-    let realm = this.args.realm ?? '';
-    let path = id.startsWith(realm) ? id.slice(realm.length) : id;
+    let realmId = this.args.realmId;
+    let path = (realmId ? pathInRealm(id, realmId) : undefined) ?? id;
     return `realm.operations.invoke('${path}', '${this.picked ?? ''}', {})`;
   }
   choose = async () => {
     this.failure = undefined;
+    // The dialog is modal, so the card chooser can't be used while it's
+    // open. It reopens once a card is picked.
+    this.open = false;
     let id = await chooseCard(
       { filter: { type: baseCardRef } },
       this.args.realm
@@ -2277,7 +2318,7 @@ class AddOutsideService extends GlimmerComponent<{
               />
               <div class='add-service__script'>
                 <span>The script makes this call with</span>
-                <code class='add-service__code'>{{this.scriptLine}}</code>
+                <Token @value={{this.scriptLine}} @wrap={{true}} />
               </div>
             {{else}}
               <p class='add-service__note' data-test-automation-no-calls>
@@ -2293,6 +2334,7 @@ class AddOutsideService extends GlimmerComponent<{
             @tone='neutral'
             @appearance='outlined'
             {{on 'click' this.choose}}
+            data-test-automation-choose-another-service
           >Choose another card</Button>
           <Button
             @disabled={{if this.picked false true}}
@@ -2306,22 +2348,6 @@ class AddOutsideService extends GlimmerComponent<{
       .add-service {
         display: grid;
         gap: var(--boxel-sp);
-      }
-      .add-service__note {
-        margin: 0;
-      }
-      .add-service__code {
-        display: block;
-        inline-size: 100%;
-        box-sizing: border-box;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--muted);
-        color: var(--foreground);
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
-        font-size: var(--boxel-font-size-xs);
-        overflow-wrap: anywhere;
       }
       .add-service {
         min-inline-size: 0;
@@ -2384,7 +2410,27 @@ class Edit extends Component<typeof Automation> {
   get scriptURL() {
     return this.args.model.script?.id;
   }
-  linkScript = (file: FileDef) => (this.args.model.script = file);
+  @tracked scriptIssue: ReturnType<typeof listIssue> | undefined;
+  linkScript = (file: FileDef) => {
+    this.scriptIssue = undefined;
+    this.args.model.script = file;
+  };
+  // Each trigger's runs are counted under its label, so no two may share one.
+  get triggersIssue() {
+    let labels = (this.args.model.triggers ?? [])
+      .map((t) => (t.label ?? '').trim())
+      .filter(Boolean);
+    let repeated = labels.find((label, i) => labels.indexOf(label) !== i);
+    return repeated
+      ? listIssue(
+          'triggers',
+          `Two triggers share the label “${repeated}”: each needs its own`,
+        )
+      : undefined;
+  }
+  get paramsIssue() {
+    return paramsIssue(this.args.model.params, 'params');
+  }
   addOperation = (targetType: ResolvedCodeRef, operation: string) => {
     this.args.model.operations = [
       ...(this.args.model.operations ?? []),
@@ -2421,14 +2467,28 @@ class Edit extends Component<typeof Automation> {
       (_, i) => i !== index,
     );
   };
+  // A run reads its script from the automation's own workspace, so a file
+  // from another one can't be linked.
   chooseScript = async () => {
     let file = await chooseFile();
-    if (file) {
-      this.linkScript(file);
+    if (!file) {
+      return;
     }
+    let realmId = this.realmId;
+    if (realmId && file.id && !pathInRealm(file.id, realmId)) {
+      this.scriptIssue = listIssue(
+        'script',
+        'Choose a file in this workspace: an automation runs a script from its own workspace',
+      );
+      return;
+    }
+    this.linkScript(file);
   };
   get realmHref() {
     return this.args.model[realmURL]?.href;
+  }
+  get realmId() {
+    return instanceRealmId(this.args.model as Automation);
   }
   <template>
     <div class='automation-edit'>
@@ -2458,10 +2518,17 @@ class Edit extends Component<typeof Automation> {
               @onCreated={{this.linkScript}}
             />
           </div>
+          {{#if this.scriptIssue}}
+            <FieldError
+              @issue={{this.scriptIssue}}
+              data-test-automation-script-problem
+            />
+          {{/if}}
         {{/if}}
         <ScriptEditor
           @url={{this.scriptURL}}
           @realm={{this.realmHref}}
+          @realmId={{this.realmId}}
           @context={{@context}}
         />
       </FormSection>
@@ -2493,6 +2560,12 @@ class Edit extends Component<typeof Automation> {
             data-test-automation-add-trigger
           >Add a trigger</Button>
         </div>
+        {{#if this.triggersIssue}}
+          <FieldError
+            @issue={{this.triggersIssue}}
+            data-test-automation-triggers-problem
+          />
+        {{/if}}
       </FormSection>
       <FormSection
         @title='Limits'
@@ -2530,6 +2603,7 @@ class Edit extends Component<typeof Automation> {
             >
               <NumberInput
                 @controlId={{id}}
+                @invalid={{if this.batchDeadlineProblem true false}}
                 @value={{@model.batchDeadlineMinutes}}
                 @min={{1}}
                 @max={{1440}}
@@ -2577,6 +2651,7 @@ class Edit extends Component<typeof Automation> {
         {{/if}}
         <AddOutsideService
           @realm={{this.realmHref}}
+          @realmId={{this.realmId}}
           @context={{@context}}
           @onAdd={{this.addOperation}}
         />
@@ -2608,6 +2683,12 @@ class Edit extends Component<typeof Automation> {
             data-test-automation-add-param
           >Add a param</Button>
         </div>
+        {{#if this.paramsIssue}}
+          <FieldError
+            @issue={{this.paramsIssue}}
+            data-test-automation-params-problem
+          />
+        {{/if}}
       </FormSection>
     </div>
     <style scoped>
@@ -2630,7 +2711,7 @@ class Edit extends Component<typeof Automation> {
         gap: var(--boxel-sp-sm);
         padding: var(--boxel-sp);
         border-radius: var(--radius);
-        background: var(--muted);
+        background-color: var(--muted);
       }
       .automation-edit__remove {
         justify-self: end;
@@ -2661,8 +2742,7 @@ class Edit extends Component<typeof Automation> {
       }
       .automation-edit__note {
         margin: 0;
-        font-family: var(--font-sans);
-        font-size: var(--text-ui-sm, 11.5px);
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .automation-edit__list {
@@ -2743,11 +2823,7 @@ class Fitted extends Component<typeof Automation> {
         </span>
       </:placeholder>
       <:eyebrow>Automation</:eyebrow>
-      <:title>{{if
-          @model.cardTitle
-          @model.cardTitle
-          'Untitled automation'
-        }}</:title>
+      <:title>{{@model.cardTitle}}</:title>
       <:subtitle>
         <span class='automation-fitted__when' data-test-automation-fitted-when>
           {{#if (eq this.firstKind 'cron')}}
@@ -2817,10 +2893,6 @@ class Fitted extends Component<typeof Automation> {
         gap: var(--boxel-sp-5xs);
         min-width: 0;
       }
-      .automation-fitted__more,
-      .automation-fitted__summary {
-        margin: 0;
-      }
       /* Too narrow for two chips: the missing script matters more. */
       @container fitted-card (max-width: 180px) or ((max-width: 260px) and (max-height: 180px)) {
         .automation-fitted__batched {
@@ -2866,11 +2938,13 @@ export class Automation extends CardDef {
   @field batchDeadlineMinutes = contains(NumberField);
 
   // A run acts with its payer's authority, and its payer administers the
-  // realm. So whoever can change what an automation does acts with an
-  // administrator's authority: no policy grant may write one, and each write
-  // is open only to a caller the realm's own permissions let write. These are
-  // the writes a card carries, declared in their built-in form so they can be
-  // marked. Each does what it does on any other card.
+  // realm. So no policy grant may change this card's definition: each write
+  // below is open only to a caller the realm's own permissions let write.
+  // These are the writes a card carries, declared in their built-in form so
+  // they can be marked; each does what it does on any other card. `create`
+  // isn't marked, since a new automation runs nothing until a direct writer
+  // turns it on. The linked script file is a separate file, which these marks
+  // don't cover.
   @operation static update = {
     base: 'update',
     nonGrantable: true,
