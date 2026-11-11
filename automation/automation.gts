@@ -235,7 +235,7 @@ const CAP_DEFAULTS: Record<string, number> = {
   callApiCalls: 10,
   responseBytes: 5_000_000,
   resolveCalls: 5,
-  aiCredits: 100,
+  aiCredits: 300,
   writes: 50,
   seconds: 300,
   dailyCredits: 500,
@@ -1173,6 +1173,12 @@ const RUN_LIMITS = [
     noneHint: 'Nothing may come back from outside services',
   },
   {
+    key: 'writes',
+    label: 'Saves',
+    hint: 'Files and cards a run may create or change',
+    noneHint: 'No files or cards may be created or changed',
+  },
+  {
     key: 'resolveCalls',
     label: 'AI requests',
     hint: 'Requests to an AI model',
@@ -1183,14 +1189,9 @@ const RUN_LIMITS = [
     label: 'AI spending',
     hint: 'Credits a run’s AI requests may cost in all',
     editLabel: 'AI spending, in credits',
-    editHint: 'Credits a run’s AI requests may cost in all',
+    editHint:
+      'Each AI request counts at the most it could cost until its cost is known, so a long reply needs room',
     noneHint: 'No credits for AI requests',
-  },
-  {
-    key: 'writes',
-    label: 'Saves',
-    hint: 'Files and cards a run may create or change',
-    noneHint: 'No files or cards may be created or changed',
   },
   {
     key: 'seconds',
@@ -1268,6 +1269,13 @@ export class AutomationCaps extends FieldDef {
       }
       if (caps[key] == null) {
         return NOT_SET_HINT;
+      }
+      // Either AI limit at 0 forbids AI requests, so both say so.
+      if (
+        (key === 'resolveCalls' || key === 'aiCredits') &&
+        !allowsAIRequests({ caps: this.args.model })
+      ) {
+        return limit.noneHint;
       }
       return caps[key] === 0 ? limit.noneHint : limit.hint;
     };
