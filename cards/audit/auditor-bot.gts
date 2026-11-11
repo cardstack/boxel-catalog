@@ -19,6 +19,7 @@ import { parametersAreValid } from './utils/rule-evaluation';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { AuditFacts } from './audit-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Each value renders in the `value` block, which picks the row by key.
 const FACTS = [
@@ -84,67 +85,74 @@ export class AuditorBot extends CardDef {
       return !q || parametersAreValid(q);
     }
     <template>
-      <article class='bot'>
-        <header>
-          <p class='kicker'>Auditor</p>
-          <h1>{{@model.name}}</h1>
-          <div class='head-meta'>
-            {{#if @model.regime.reference}}
-              <@fields.regime @format='atom' />
-            {{/if}}
-            <span class='meta'>{{@model.ruleCount}} rule(s)</span>
-            {{#if this.broken}}
-              <StatePill
-                @label='rules that cannot fire'
-                @hue='red'
-                @dot={{true}}
+      <IsoFrame>
+        <article class='bot'>
+          <header>
+            <p class='kicker'>Auditor</p>
+            <h1>{{@model.name}}</h1>
+            <div class='head-meta'>
+              {{#if @model.regime.reference}}
+                <@fields.regime @format='atom' />
+              {{/if}}
+              <span class='meta'>{{@model.ruleCount}} rule(s)</span>
+              {{#if this.broken}}
+                <StatePill
+                  @label='rules that cannot fire'
+                  @hue='red'
+                  @dot={{true}}
+                />
+              {{/if}}
+            </div>
+          </header>
+
+          <AuditFacts @items={{FACTS}}>
+            <:value as |item|>
+              {{#if (eq item.key 'Runs as')}}
+                {{#if @model.runsAs}}
+                  <@fields.runsAs @format='atom' />
+                {{else}}
+                  <span>Nobody — an automated result still needs a name against
+                    it.</span>
+                {{/if}}
+              {{else if (eq item.key 'Last run')}}
+                {{#if @model.lastRunAt}}
+                  <@fields.lastRunAt />
+                {{else}}
+                  <span class='muted'>Never</span>
+                {{/if}}
+              {{else if @model.subjectQuery}}
+                <code class='mono'>{{@model.subjectQuery}}</code>
+                {{#unless this.queryValid}}
+                  <StatePill @label='not valid JSON' @hue='red' />
+                {{/unless}}
+              {{else}}
+                <span class='muted'>No subject query — nothing would be
+                  evaluated.</span>
+              {{/if}}
+            </:value>
+          </AuditFacts>
+
+          <section>
+            <h2>Rules</h2>
+            {{#if @model.rules.length}}
+              <@fields.rules />
+            {{else}}
+              <EmptyState
+                @title='No rules yet'
+                @message='A bot with no rules passes everything, which is worse than no bot.'
+                @texture={{false}}
+                @size='s'
               />
             {{/if}}
-          </div>
-        </header>
-
-        <AuditFacts @items={{FACTS}}>
-          <:value as |item|>
-            {{#if (eq item.key 'Runs as')}}
-              {{#if @model.runsAs}}
-                <@fields.runsAs @format='atom' />
-              {{else}}
-                <span>Nobody — an automated result still needs a name against
-                  it.</span>
-              {{/if}}
-            {{else if (eq item.key 'Last run')}}
-              {{#if @model.lastRunAt}}
-                <@fields.lastRunAt />
-              {{else}}
-                <span class='muted'>Never</span>
-              {{/if}}
-            {{else if @model.subjectQuery}}
-              <code class='mono'>{{@model.subjectQuery}}</code>
-              {{#unless this.queryValid}}
-                <StatePill @label='not valid JSON' @hue='red' />
-              {{/unless}}
-            {{else}}
-              <span class='muted'>No subject query — nothing would be evaluated.</span>
-            {{/if}}
-          </:value>
-        </AuditFacts>
-
-        <section>
-          <h2>Rules</h2>
-          {{#if @model.rules.length}}
-            <@fields.rules />
-          {{else}}
-            <EmptyState
-              @title='No rules yet'
-              @message='A bot with no rules passes everything, which is worse than no bot.'
-              @texture={{false}}
-              @size='s'
-            />
-          {{/if}}
-        </section>
-      </article>
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .bot {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);

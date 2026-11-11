@@ -26,6 +26,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { AuditFacts } from './audit-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * One rule, one subject, one verdict — the atom an audit is made of.
@@ -93,65 +94,71 @@ export class AuditResult extends CardDef {
       return rows;
     }
     <template>
-      <article class='result'>
-        <header>
-          <p class='kicker'>Audit result</p>
-          <h1>{{@model.cardTitle}}</h1>
-          <div class='head-meta'>
-            <StatePill
-              @label={{@model.status.label}}
-              @hue={{this.hue}}
-              @dot={{true}}
+      <IsoFrame>
+        <article class='result'>
+          <header>
+            <p class='kicker'>Audit result</p>
+            <h1>{{@model.cardTitle}}</h1>
+            <div class='head-meta'>
+              <StatePill
+                @label={{@model.status.label}}
+                @hue={{this.hue}}
+                @dot={{true}}
+              />
+              {{#if @model.evaluatedAt}}
+                <span class='meta'><@fields.evaluatedAt /></span>
+              {{/if}}
+              {{#if @model.evaluatedBy}}
+                <span class='meta'>by
+                  <@fields.evaluatedBy @format='atom' /></span>
+              {{/if}}
+            </div>
+          </header>
+
+          <AuditFacts @items={{this.facts}}>
+            <:value as |item|>
+              {{#if (eq item.key 'Clause')}}
+                <@fields.rule @format='atom' />
+              {{else if (eq item.key 'Observed')}}
+                <span class='mono'>{{item.value}}</span>
+              {{else}}
+                {{item.value}}
+              {{/if}}
+            </:value>
+          </AuditFacts>
+
+          {{#if @model.hasFinding}}
+            <section>
+              <h2>Finding</h2>
+              <@fields.finding />
+            </section>
+          {{/if}}
+
+          {{#if @model.evidence.length}}
+            <section>
+              <h2>Evidence</h2>
+              <@fields.evidence />
+            </section>
+          {{else if @model.rule.evidenceRequired}}
+            <EmptyState
+              @title='No evidence attached'
+              @message='A rule that requires proof reads unproven rather than pass.'
+              @texture={{false}}
+              @size='s'
             />
-            {{#if @model.evaluatedAt}}
-              <span class='meta'><@fields.evaluatedAt /></span>
-            {{/if}}
-            {{#if @model.evaluatedBy}}
-              <span class='meta'>by
-                <@fields.evaluatedBy @format='atom' /></span>
-            {{/if}}
-          </div>
-        </header>
+          {{/if}}
 
-        <AuditFacts @items={{this.facts}}>
-          <:value as |item|>
-            {{#if (eq item.key 'Clause')}}
-              <@fields.rule @format='atom' />
-            {{else if (eq item.key 'Observed')}}
-              <span class='mono'>{{item.value}}</span>
-            {{else}}
-              {{item.value}}
-            {{/if}}
-          </:value>
-        </AuditFacts>
-
-        {{#if @model.hasFinding}}
-          <section>
-            <h2>Finding</h2>
-            <@fields.finding />
-          </section>
-        {{/if}}
-
-        {{#if @model.evidence.length}}
-          <section>
-            <h2>Evidence</h2>
-            <@fields.evidence />
-          </section>
-        {{else if @model.rule.evidenceRequired}}
-          <EmptyState
-            @title='No evidence attached'
-            @message='A rule that requires proof reads unproven rather than pass.'
-            @texture={{false}}
-            @size='s'
-          />
-        {{/if}}
-
-        {{#if @model.meta}}
-          <section class='trail'><@fields.meta /></section>
-        {{/if}}
-      </article>
+          {{#if @model.meta}}
+            <section class='trail'><@fields.meta /></section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .result {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);

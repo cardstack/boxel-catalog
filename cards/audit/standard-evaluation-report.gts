@@ -30,6 +30,7 @@ import { LifecycleDatesField } from '@cardstack/catalog/fields/lifecycle-dates/l
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { certificateAtRisk } from './severity-vocabulary';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * What the certifier receives: a period, a boundary, the results, and a name
@@ -131,118 +132,124 @@ export class StandardEvaluationReport extends CardDef {
       return `${n} open ${n === 1 ? 'finding puts' : 'findings put'} the certificate at risk.`;
     }
     <template>
-      <article class='report'>
-        <header>
-          <p class='kicker'>Standard evaluation report</p>
-          <h1>{{@model.title}}</h1>
-          <div class='head-meta'>
-            <StatePill
-              @label={{@model.rollup.label}}
-              @hue={{this.hue}}
-              @dot={{true}}
+      <IsoFrame>
+        <article class='report'>
+          <header>
+            <p class='kicker'>Standard evaluation report</p>
+            <h1>{{@model.title}}</h1>
+            <div class='head-meta'>
+              <StatePill
+                @label={{@model.rollup.label}}
+                @hue={{this.hue}}
+                @dot={{true}}
+              />
+              {{#if @model.period}}
+                <span class='meta'><@fields.period /></span>
+              {{/if}}
+              {{#if @model.regime.regime}}
+                <span class='meta'>{{@model.regime.regime}}</span>
+              {{/if}}
+            </div>
+          </header>
+
+          {{! Written once per run, so the digits do not roll. }}
+          <section class='stats' aria-label='Run totals'>
+            <Stat
+              @label='Subjects'
+              @value={{this.totals.subjects}}
+              @roll={{false}}
             />
-            {{#if @model.period}}
-              <span class='meta'><@fields.period /></span>
-            {{/if}}
-            {{#if @model.regime.regime}}
-              <span class='meta'>{{@model.regime.regime}}</span>
-            {{/if}}
-          </div>
-        </header>
-
-        {{! Written once per run, so the digits do not roll. }}
-        <section class='stats' aria-label='Run totals'>
-          <Stat
-            @label='Subjects'
-            @value={{this.totals.subjects}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Results'
-            @value={{this.totals.results}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Findings'
-            @value={{this.totals.findings}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Coverage'
-            @value={{this.totals.coverage}}
-            @style='percent'
-            @roll={{false}}
-          />
-        </section>
-
-        {{#if @model.scope}}
-          <section>
-            <h2>Scope</h2>
-            <p class='scope'>{{@model.scope}}</p>
+            <Stat
+              @label='Results'
+              @value={{this.totals.results}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Findings'
+              @value={{this.totals.findings}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Coverage'
+              @value={{this.totals.coverage}}
+              @style='percent'
+              @roll={{false}}
+            />
           </section>
-        {{/if}}
 
-        {{#if @model.signOffBlocked}}
-          <Alert
-            @tone='danger'
-            @title='Sign-off is held'
-            style={{ALERT_STYLE.danger}}
-          >{{this.blockedMessage}}</Alert>
-        {{/if}}
+          {{#if @model.scope}}
+            <section>
+              <h2>Scope</h2>
+              <p class='scope'>{{@model.scope}}</p>
+            </section>
+          {{/if}}
 
-        <section>
-          <h2 id='{{this.findingsId}}'>Findings</h2>
-          {{#if this.findings.length}}
-            <Table @labelledBy={{this.findingsId}}>
-              <:head>
-                <tr>
-                  <th scope='col'>Finding</th>
-                  <th scope='col'>Rule</th>
-                  <th scope='col'>State</th>
-                </tr>
-              </:head>
-              <:body>
-                {{#each this.findings as |f|}}
+          {{#if @model.signOffBlocked}}
+            <Alert
+              @tone='danger'
+              @title='Sign-off is held'
+              style={{ALERT_STYLE.danger}}
+            >{{this.blockedMessage}}</Alert>
+          {{/if}}
+
+          <section>
+            <h2 id='{{this.findingsId}}'>Findings</h2>
+            {{#if this.findings.length}}
+              <Table @labelledBy={{this.findingsId}}>
+                <:head>
                   <tr>
-                    <th scope='row' class='mono'>{{f.findingId}}</th>
-                    <td class='mono'>{{f.rule.ruleId}}</td>
-                    <td>{{f.state}}</td>
+                    <th scope='col'>Finding</th>
+                    <th scope='col'>Rule</th>
+                    <th scope='col'>State</th>
                   </tr>
-                {{/each}}
-              </:body>
-            </Table>
-          {{else}}
-            <EmptyState
-              @title='No findings raised in this period.'
-              @texture={{false}}
-              @size='s'
-            />
-          {{/if}}
-        </section>
-
-        <section>
-          <h2>Results</h2>
-          {{#if @model.results.length}}
-            <@fields.results />
-          {{else}}
-            <EmptyState
-              @title='No results yet'
-              @message='The audit has not been run.'
-              @texture={{false}}
-              @size='s'
-            />
-          {{/if}}
-        </section>
-
-        {{#if @model.signOff}}
-          <section>
-            <h2>Sign-off</h2>
-            <@fields.signOff />
+                </:head>
+                <:body>
+                  {{#each this.findings as |f|}}
+                    <tr>
+                      <th scope='row' class='mono'>{{f.findingId}}</th>
+                      <td class='mono'>{{f.rule.ruleId}}</td>
+                      <td>{{f.state}}</td>
+                    </tr>
+                  {{/each}}
+                </:body>
+              </Table>
+            {{else}}
+              <EmptyState
+                @title='No findings raised in this period.'
+                @texture={{false}}
+                @size='s'
+              />
+            {{/if}}
           </section>
-        {{/if}}
-      </article>
+
+          <section>
+            <h2>Results</h2>
+            {{#if @model.results.length}}
+              <@fields.results />
+            {{else}}
+              <EmptyState
+                @title='No results yet'
+                @message='The audit has not been run.'
+                @texture={{false}}
+                @size='s'
+              />
+            {{/if}}
+          </section>
+
+          {{#if @model.signOff}}
+            <section>
+              <h2>Sign-off</h2>
+              <@fields.signOff />
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .report {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
