@@ -14,6 +14,7 @@ import {
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import enumField from '@cardstack/base/enum';
+import { markDefinition } from '@cardstack/base/mark-definition';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import {
   operation,
@@ -38,14 +39,16 @@ import { IsoDateField } from './ledger-dates';
 import { standingRuns } from './payroll-calc';
 import { formFigures, type FormFigures } from './payroll-forms';
 
-export const PayrollFilingStatusField = enumField(StringField, {
-  displayName: 'Payroll filing status',
-  options: [
-    { value: 'open', label: 'Open' },
-    { value: 'filed', label: 'Filed' },
-    { value: 'paid', label: 'Paid' },
-  ],
-});
+export const PayrollFilingStatusField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Payroll filing status',
+    options: [
+      { value: 'open', label: 'Open' },
+      { value: 'filed', label: 'Filed' },
+      { value: 'paid', label: 'Paid' },
+    ],
+  }),
+);
 
 /** What filing checks before it records the figures. */
 export const FILE_CHECKS = `
