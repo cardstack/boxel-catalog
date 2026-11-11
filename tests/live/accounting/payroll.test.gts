@@ -888,11 +888,13 @@ export function runTests() {
               ],
               section125Minor: good.section125Minor + 1,
             }),
+            // Still balanced, so only the paycheck check can refuse it.
             'CheckedRun/wages.json': probe({
               ...good,
               wages: good.wages.map((w, i) =>
                 i ? w : { ...w, amountMinor: w.amountMinor + 1 },
               ),
+              netMinor: good.netMinor + 1,
             }),
             'CheckedRun/chart.json': probe({
               ...good,
