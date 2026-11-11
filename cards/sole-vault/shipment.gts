@@ -26,6 +26,7 @@ import { FittedCard } from '@cardstack/boxel-ui/components';
 import { Field } from '@cardstack/pretui/components/field';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { Button } from '@cardstack/pretui/components/button';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Shipment — one physical movement of one item, with its tracking.
 //
@@ -171,164 +172,165 @@ class ShipmentIsolated extends Component<typeof Shipment> {
   };
 
   <template>
-    <article class='card'>
-      <header class='hero'>
-        {{! No kicker above the heading — the leg IS the heading. }}
-        <h1 class='hero-title'>{{if
-            @model.legLabel
-            @model.legLabel
-            'Shipment'
-          }}</h1>
+    <IsoFrame>
+      <article class='card'>
+        <header class='hero'>
+          {{! No kicker above the heading — the leg IS the heading. }}
+          <h1 class='hero-title'>{{if
+              @model.legLabel
+              @model.legLabel
+              'Shipment'
+            }}</h1>
 
-        {{#if @model.shippedFrom}}
-          <p class='route'>
-            <span class='route-end'>{{@model.shippedFrom}}</span>
-            <RouteIcon class='route-arrow' aria-hidden='true' />
-            <span class='route-end'>{{if
-                @model.shippedTo
-                @model.shippedTo
-                '…'
-              }}</span>
-          </p>
-        {{/if}}
+          {{#if @model.shippedFrom}}
+            <p class='route'>
+              <span class='route-end'>{{@model.shippedFrom}}</span>
+              <RouteIcon class='route-arrow' aria-hidden='true' />
+              <span class='route-end'>{{if
+                  @model.shippedTo
+                  @model.shippedTo
+                  '…'
+                }}</span>
+            </p>
+          {{/if}}
 
-        {{#if @model.productTitle}}
-          <p class='hero-sub'>{{@model.productTitle}}</p>
-        {{/if}}
-      </header>
+          {{#if @model.productTitle}}
+            <p class='hero-sub'>{{@model.productTitle}}</p>
+          {{/if}}
+        </header>
 
-      {{! THE MANIFEST — status, carrier, tracking and ETA together, as one
+        {{! THE MANIFEST — status, carrier, tracking and ETA together, as one
           stamped plaque rather than scattered field rows. Real gold surface,
           not a hairline accent. }}
-      <section class='manifest'>
-        <div class='manifest-status'>
-          {{#if @model.shipmentStatus}}
-            <@fields.shipmentStatus @format='embedded' />
+        <section class='manifest'>
+          <div class='manifest-status'>
+            {{#if @model.shipmentStatus}}
+              <@fields.shipmentStatus @format='embedded' />
+            {{/if}}
+            {{#if @model.needsAttention}}
+              <p class='attn'>
+                <AlertTriangleIcon width='13' height='13' aria-hidden='true' />
+                Needs attention
+              </p>
+            {{/if}}
+          </div>
+
+          <div class='manifest-grid'>
+            <div class='m-cell'>
+              <span class='m-k'>Carrier</span>
+              <span class='m-v'>{{if @model.carrier @model.carrier '—'}}</span>
+            </div>
+            <div class='m-cell m-cell--wide'>
+              <span class='m-k'>Tracking number</span>
+              {{! Read aloud and typed into a carrier's site: mono, whole. }}
+              <span class='m-v mono'>{{if
+                  @model.trackingNumber
+                  @model.trackingNumber
+                  '—'
+                }}</span>
+            </div>
+            <div class='m-cell'>
+              <span class='m-k'>Estimated delivery</span>
+              <span class='m-v'>{{#if
+                  @model.estimatedDelivery
+                }}<@fields.estimatedDelivery
+                    @format='atom'
+                  />{{else}}—{{/if}}</span>
+            </div>
+          </div>
+
+          {{#if this.canAct}}
+            <div class='actions'>
+              <Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.acting}}
+                @disabled={{this.acting}}
+                {{on 'click' this.markDelivered}}
+              >Mark delivered</Button>
+            </div>
+            {{#if this.actionError}}
+              <p class='action-err' role='alert'>
+                <AlertTriangleIcon width='14' height='14' aria-hidden='true' />
+                {{this.actionError}}
+              </p>
+            {{/if}}
           {{/if}}
-          {{#if @model.needsAttention}}
-            <p class='attn'>
-              <AlertTriangleIcon width='13' height='13' aria-hidden='true' />
-              Needs attention
-            </p>
+
+          {{#if @model.trackingUrl}}
+            <a
+              href={{@model.trackingUrl}}
+              target='_blank'
+              rel='noopener noreferrer'
+              class='track-btn'
+            >Track with the carrier ↗</a>
+          {{else}}
+            <p class='facts-note'>No tracking link recorded — this realm does
+              not poll carriers; a command records what a webhook reported.</p>
           {{/if}}
-        </div>
+        </section>
 
-        <div class='manifest-grid'>
-          <div class='m-cell'>
-            <span class='m-k'>Carrier</span>
-            <span class='m-v'>{{if @model.carrier @model.carrier '—'}}</span>
-          </div>
-          <div class='m-cell m-cell--wide'>
-            <span class='m-k'>Tracking number</span>
-            {{! Read aloud and typed into a carrier's site: mono, whole. }}
-            <span class='m-v mono'>{{if
-                @model.trackingNumber
-                @model.trackingNumber
-                '—'
-              }}</span>
-          </div>
-          <div class='m-cell'>
-            <span class='m-k'>Estimated delivery</span>
-            <span class='m-v'>{{#if
-                @model.estimatedDelivery
-              }}<@fields.estimatedDelivery
-                  @format='atom'
-                />{{else}}—{{/if}}</span>
-          </div>
-        </div>
-
-        {{#if this.canAct}}
-          <div class='actions'>
-            <Button
-              @tone='primary'
-              @appearance='accent'
-              @busy={{this.acting}}
-              @disabled={{this.acting}}
-              {{on 'click' this.markDelivered}}
-            >Mark delivered</Button>
-          </div>
-          {{#if this.actionError}}
-            <p class='action-err' role='alert'>
-              <AlertTriangleIcon width='14' height='14' aria-hidden='true' />
-              {{this.actionError}}
-            </p>
-          {{/if}}
-        {{/if}}
-
-        {{#if @model.trackingUrl}}
-          <a
-            href={{@model.trackingUrl}}
-            target='_blank'
-            rel='noopener noreferrer'
-            class='track-btn'
-          >Track with the carrier ↗</a>
-        {{else}}
-          <p class='facts-note'>No tracking link recorded — this realm does not
-            poll carriers; a command records what a webhook reported.</p>
-        {{/if}}
-      </section>
-
-      {{! THE SIGNATURE ELEMENT — a real tracking rail, each stop lit from
+        {{! THE SIGNATURE ELEMENT — a real tracking rail, each stop lit from
           its own event date (rendered through the card's own date field, so
           it cannot disagree with the manifest above), dated inline rather
           than a bare checklist. }}
-      <section class='rail-wrap'>
-        <h2 class='rail-h'>Tracking history</h2>
-        <ol class='rail'>
-          <li class='stop {{if @model.labelCreatedAt "stop--done"}}'>
-            <span class='stop-dot' aria-hidden='true'>
-              <ReceiptIcon width='13' height='13' aria-hidden='true' />
-            </span>
-            <span class='stop-label'>Label created</span>
-            <span class='stop-when'>{{#if @model.labelCreatedAt}}
-                <@fields.labelCreatedAt @format='atom' />
-              {{else}}
-                pending
-              {{/if}}</span>
-          </li>
-          <li class='stop {{if @model.shippedAt "stop--done"}}'>
-            <span class='stop-dot' aria-hidden='true'>
-              <RouteIcon width='13' height='13' aria-hidden='true' />
-            </span>
-            <span class='stop-label'>In transit</span>
-            <span class='stop-when'>{{#if @model.shippedAt}}
-                <@fields.shippedAt @format='atom' />
-              {{else}}
-                pending
-              {{/if}}</span>
-          </li>
-          <li class='stop {{if @model.deliveredAt "stop--done"}}'>
-            <span class='stop-dot' aria-hidden='true'>
-              <MapPinIcon width='13' height='13' aria-hidden='true' />
-            </span>
-            <span class='stop-label'>Delivered</span>
-            <span class='stop-when'>{{#if @model.deliveredAt}}
-                <@fields.deliveredAt @format='atom' />
-              {{else}}
-                pending
-              {{/if}}</span>
-          </li>
-        </ol>
-      </section>
+        <section class='rail-wrap'>
+          <h2 class='rail-h'>Tracking history</h2>
+          <ol class='rail'>
+            <li class='stop {{if @model.labelCreatedAt "stop--done"}}'>
+              <span class='stop-dot' aria-hidden='true'>
+                <ReceiptIcon width='13' height='13' aria-hidden='true' />
+              </span>
+              <span class='stop-label'>Label created</span>
+              <span class='stop-when'>{{#if @model.labelCreatedAt}}
+                  <@fields.labelCreatedAt @format='atom' />
+                {{else}}
+                  pending
+                {{/if}}</span>
+            </li>
+            <li class='stop {{if @model.shippedAt "stop--done"}}'>
+              <span class='stop-dot' aria-hidden='true'>
+                <RouteIcon width='13' height='13' aria-hidden='true' />
+              </span>
+              <span class='stop-label'>In transit</span>
+              <span class='stop-when'>{{#if @model.shippedAt}}
+                  <@fields.shippedAt @format='atom' />
+                {{else}}
+                  pending
+                {{/if}}</span>
+            </li>
+            <li class='stop {{if @model.deliveredAt "stop--done"}}'>
+              <span class='stop-dot' aria-hidden='true'>
+                <MapPinIcon width='13' height='13' aria-hidden='true' />
+              </span>
+              <span class='stop-label'>Delivered</span>
+              <span class='stop-when'>{{#if @model.deliveredAt}}
+                  <@fields.deliveredAt @format='atom' />
+                {{else}}
+                  pending
+                {{/if}}</span>
+            </li>
+          </ol>
+        </section>
 
-      <section class='order-sec'>
-        <h2 class='order-h'><ReceiptIcon
-            class='order-icon'
-            width='16'
-            height='16'
-            aria-hidden='true'
-          />Order</h2>
-        {{#if @model.order}}
-          <div class='order-embed'><@fields.order @format='embedded' /></div>
-        {{else}}
-          <p class='empty'>
-            <ReceiptIcon width='18' height='18' aria-hidden='true' />No order
-            linked.
-          </p>
-        {{/if}}
-      </section>
-    </article>
-
+        <section class='order-sec'>
+          <h2 class='order-h'><ReceiptIcon
+              class='order-icon'
+              width='16'
+              height='16'
+              aria-hidden='true'
+            />Order</h2>
+          {{#if @model.order}}
+            <div class='order-embed'><@fields.order @format='embedded' /></div>
+          {{else}}
+            <p class='empty'>
+              <ReceiptIcon width='18' height='18' aria-hidden='true' />No order
+              linked.
+            </p>
+          {{/if}}
+        </section>
+      </article>
+    </IsoFrame>
     <style scoped>
       /* Rule 1: isolated gets NO host container — declare our own, named. */
       .card {

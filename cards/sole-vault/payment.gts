@@ -24,6 +24,7 @@ import { Field } from '@cardstack/pretui/components/field';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { formatMoney } from '../collectibles/money-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Payment — the RECORD of one money movement against one Order.
 //
@@ -351,142 +352,147 @@ export class Payment extends CardDef {
   // whole — it is the only handle support has.
   static isolated = class Isolated extends Component<typeof Payment> {
     <template>
-      <article class='card'>
-        <header class='hero'>
-          <div class='hero-copy'>
-            <h1 class='hero-title'>{{if
-                @model.productTitle
-                @model.productTitle
-                'Unlinked order'
-              }}</h1>
-            <p class='hero-meta'>
-              {{#if @model.orderReference}}
-                <span class='meta-item'>order
-                  <strong class='mono'>{{@model.orderReference}}</strong></span>
-              {{/if}}
-              {{#if @model.reason}}
-                <span class='meta-item'>{{@model.reason}}</span>
-              {{/if}}
-            </p>
-          </div>
+      <IsoFrame>
+        <article class='card'>
+          <header class='hero'>
+            <div class='hero-copy'>
+              <h1 class='hero-title'>{{if
+                  @model.productTitle
+                  @model.productTitle
+                  'Unlinked order'
+                }}</h1>
+              <p class='hero-meta'>
+                {{#if @model.orderReference}}
+                  <span class='meta-item'>order
+                    <strong
+                      class='mono'
+                    >{{@model.orderReference}}</strong></span>
+                {{/if}}
+                {{#if @model.reason}}
+                  <span class='meta-item'>{{@model.reason}}</span>
+                {{/if}}
+              </p>
+            </div>
 
-          {{! THE PLAQUE — the signed amount is the dominant element; the
+            {{! THE PLAQUE — the signed amount is the dominant element; the
               direction/processor caption sits BELOW the figure, never above it
               as a kicker. A refund's minus sign is carried by `signedAmount`
               itself, derived once for every format. }}
-          <div
-            class='plaque {{if (eq @model.direction "refund") "plaque--out"}}'
-          >
-            <p
-              class='plaque-amt
-                {{if (eq @model.direction "refund") "plaque-amt--out"}}'
-            >{{if @model.signedAmount @model.signedAmount '—'}}</p>
-            <p class='plaque-caption'>
-              {{if (eq @model.direction 'refund') 'Refund' 'Charge'}}
-              {{#if @model.processor}}
-                <span class='plaque-sep'>·</span>
-                {{@model.processor}}
+            <div
+              class='plaque {{if (eq @model.direction "refund") "plaque--out"}}'
+            >
+              <p
+                class='plaque-amt
+                  {{if (eq @model.direction "refund") "plaque-amt--out"}}'
+              >{{if @model.signedAmount @model.signedAmount '—'}}</p>
+              <p class='plaque-caption'>
+                {{if (eq @model.direction 'refund') 'Refund' 'Charge'}}
+                {{#if @model.processor}}
+                  <span class='plaque-sep'>·</span>
+                  {{@model.processor}}
+                {{/if}}
+              </p>
+              {{#if @model.paymentState}}
+                <div class='plaque-state'>
+                  <@fields.paymentState @format='embedded' />
+                </div>
               {{/if}}
-            </p>
-            {{#if @model.paymentState}}
-              <div class='plaque-state'>
-                <@fields.paymentState @format='embedded' />
-              </div>
-            {{/if}}
-          </div>
-        </header>
+            </div>
+          </header>
 
-        <div class='cols'>
-          {{! Shape 1: a printed ledger strip — leader-dot rows, no icon
+          <div class='cols'>
+            {{! Shape 1: a printed ledger strip — leader-dot rows, no icon
               header. }}
-          <section class='ledger'>
-            <h2 class='sec-label'>Ledger</h2>
-            <div class='ledger-row'>
-              <span class='ledger-key'>Processor</span>
-              <span class='ledger-leader'></span>
-              <span class='ledger-val'>{{if
-                  @model.processor
-                  @model.processor
-                  '—'
-                }}</span>
-            </div>
-            <div class='ledger-row'>
-              <span class='ledger-key'>Reference</span>
-              <span class='ledger-leader'></span>
-              {{! The only handle support has against the processor's
+            <section class='ledger'>
+              <h2 class='sec-label'>Ledger</h2>
+              <div class='ledger-row'>
+                <span class='ledger-key'>Processor</span>
+                <span class='ledger-leader'></span>
+                <span class='ledger-val'>{{if
+                    @model.processor
+                    @model.processor
+                    '—'
+                  }}</span>
+              </div>
+              <div class='ledger-row'>
+                <span class='ledger-key'>Reference</span>
+                <span class='ledger-leader'></span>
+                {{! The only handle support has against the processor's
                   dashboard: mono, tabular, never truncated. }}
-              <span class='ledger-val mono'>{{if
-                  @model.processorReference
-                  @model.processorReference
-                  '—'
-                }}</span>
-            </div>
-            <div class='ledger-row'>
-              <span class='ledger-key'>Direction</span>
-              <span class='ledger-leader'></span>
-              <span class='ledger-val'>{{if
-                  (eq @model.direction 'refund')
-                  'Refund'
-                  'Charge'
-                }}</span>
-            </div>
-            <p class='ledger-note'>A record, not a movement — this realm has no
-              processor. “simulated” here is what separates a demo from a
-              settlement.</p>
-          </section>
+                <span class='ledger-val mono'>{{if
+                    @model.processorReference
+                    @model.processorReference
+                    '—'
+                  }}</span>
+              </div>
+              <div class='ledger-row'>
+                <span class='ledger-key'>Direction</span>
+                <span class='ledger-leader'></span>
+                <span class='ledger-val'>{{if
+                    (eq @model.direction 'refund')
+                    'Refund'
+                    'Charge'
+                  }}</span>
+              </div>
+              <p class='ledger-note'>A record, not a movement — this realm has
+                no processor. “simulated” here is what separates a demo from a
+                settlement.</p>
+            </section>
 
-          {{! Shape 2: a vertical rail — the two moments, connected. }}
-          <section class='timing'>
-            <h2 class='sec-label'><ClockIcon
+            {{! Shape 2: a vertical rail — the two moments, connected. }}
+            <section class='timing'>
+              <h2 class='sec-label'><ClockIcon
+                  class='sec-icon'
+                  width='16'
+                  height='16'
+                  aria-hidden='true'
+                />Timing</h2>
+              <ol class='rail'>
+                <li class='rail-node'>
+                  <span class='rail-dot'></span>
+                  <span class='rail-label'>Initiated</span>
+                  <span class='rail-val'>{{#if
+                      @model.initiatedAt
+                    }}<@fields.initiatedAt
+                        @format='atom'
+                      />{{else}}—{{/if}}</span>
+                </li>
+                <li class='rail-node'>
+                  <span class='rail-dot'></span>
+                  <span class='rail-label'>Settled</span>
+                  <span class='rail-val'>{{#if
+                      @model.settledAt
+                    }}<@fields.settledAt
+                        @format='atom'
+                      />{{else}}—{{/if}}</span>
+                </li>
+              </ol>
+              <p class='rail-note'>Empty settled while only authorized —
+                settlement is when money actually moved.</p>
+            </section>
+          </div>
+
+          {{! Shape 3: the receipt stub — a linked card, torn from the top. }}
+          <section class='stub'>
+            <h2 class='sec-label'><ReceiptIcon
                 class='sec-icon'
                 width='16'
                 height='16'
                 aria-hidden='true'
-              />Timing</h2>
-            <ol class='rail'>
-              <li class='rail-node'>
-                <span class='rail-dot'></span>
-                <span class='rail-label'>Initiated</span>
-                <span class='rail-val'>{{#if
-                    @model.initiatedAt
-                  }}<@fields.initiatedAt
-                      @format='atom'
-                    />{{else}}—{{/if}}</span>
-              </li>
-              <li class='rail-node'>
-                <span class='rail-dot'></span>
-                <span class='rail-label'>Settled</span>
-                <span class='rail-val'>{{#if
-                    @model.settledAt
-                  }}<@fields.settledAt @format='atom' />{{else}}—{{/if}}</span>
-              </li>
-            </ol>
-            <p class='rail-note'>Empty settled while only authorized —
-              settlement is when money actually moved.</p>
+              />Order</h2>
+            {{#if @model.order}}
+              <div class='stub-body'>
+                <@fields.order @format='embedded' />
+              </div>
+            {{else}}
+              <p class='empty'>
+                <ReceiptIcon width='18' height='18' aria-hidden='true' />No
+                order linked — a payment with nothing to settle.
+              </p>
+            {{/if}}
           </section>
-        </div>
-
-        {{! Shape 3: the receipt stub — a linked card, torn from the top. }}
-        <section class='stub'>
-          <h2 class='sec-label'><ReceiptIcon
-              class='sec-icon'
-              width='16'
-              height='16'
-              aria-hidden='true'
-            />Order</h2>
-          {{#if @model.order}}
-            <div class='stub-body'>
-              <@fields.order @format='embedded' />
-            </div>
-          {{else}}
-            <p class='empty'>
-              <ReceiptIcon width='18' height='18' aria-hidden='true' />No order
-              linked — a payment with nothing to settle.
-            </p>
-          {{/if}}
-        </section>
-      </article>
-
+        </article>
+      </IsoFrame>
       <style scoped>
         /* Rule 1: isolated gets NO host container — declare our own, named.
            Literal committed palette, matching the app shell — nothing here
