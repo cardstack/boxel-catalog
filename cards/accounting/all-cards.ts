@@ -21,6 +21,12 @@ interface CardsContext {
   ) => unknown;
 }
 
+// A page has answered once its own search has finished: with a count, or with an error. Until then
+// it may be a page whose query was only just set, which reads as idle and empty.
+const answered = (p: PageResource) =>
+  p.isLoading === false &&
+  (typeof p.totalMatchCount === 'number' || (p.errors ?? []).length > 0);
+
 export class AllCards {
   private pages: (PageResource | undefined)[];
   // With a limit, only the first `limit` rows are read and `truncated` says whether more matched.
@@ -110,7 +116,7 @@ export class AllCards {
     return (
       this.total === undefined && !this.failed
         ? true
-        : this.needed.some((p) => p.isLoading !== false)
+        : this.needed.some((p) => !answered(p))
     );
   }
 
