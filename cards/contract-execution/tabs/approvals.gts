@@ -709,6 +709,7 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
       .ap-main,
       .ap-side {
         min-inline-size: 0;
+        overflow-x: auto;
       }
       .ap-side {
         border-inline-start: 1px solid var(--border);

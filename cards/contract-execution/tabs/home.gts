@@ -256,6 +256,8 @@ export class HomeTab extends GlimmerComponent<Signature> {
       .home-main,
       .home-side {
         min-inline-size: 0;
+        /* a wide table scrolls inside its column instead of running under the next */
+        overflow-x: auto;
       }
       /* two columns of one block: full-height divider, flat insides */
       .home-side {
