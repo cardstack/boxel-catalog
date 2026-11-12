@@ -1,10 +1,11 @@
 import { tracked } from '@glimmer/tracking';
+import { isDestroyed, isDestroying } from '@ember/destroyable';
 
 // A card's own search is capped at 100 rows a page, so a read that must see every record walks
-// the pages: page 0 reports the match count, and once it has, the further pages that count calls
-// for are created, each asking for its own fixed page. No page's search reads another page's
-// state, and pages are only ever created after a render, never during one. Nothing reads as
-// complete until every page it needs has answered.
+// the pages: page 0, created with the read, reports the match count, and once it has, the further
+// pages that count calls for are created after the render that finds them missing, each asking for
+// its own fixed page. No page's search reads another page's state. Nothing reads as complete until
+// every page it needs has answered.
 export const SEARCH_PAGE = 100;
 export const MAX_SEARCH_PAGES = 20;
 
@@ -40,6 +41,7 @@ export class AllCards {
   private limit: number | undefined;
   private maxPages: number;
   private makePage: (number: number) => PageResource | undefined;
+  private parent: object;
   private growing = false;
 
   constructor(
@@ -50,6 +52,7 @@ export class AllCards {
     opts?: { isLive?: true; limit?: number },
   ) {
     this.limit = opts?.limit;
+    this.parent = parent;
     this.maxPages = Math.min(
       MAX_SEARCH_PAGES,
       Math.ceil((opts?.limit ?? Infinity) / SEARCH_PAGE),
@@ -76,6 +79,8 @@ export class AllCards {
     this.growing = true;
     Promise.resolve().then(() => {
       this.growing = false;
+      // The component holding the read may have gone since the render that asked.
+      if (isDestroying(this.parent) || isDestroyed(this.parent)) return;
       let target = Math.min(this.wantedPages, this.maxPages);
       if (target <= this.pages.length) return;
       let pages = [...this.pages];

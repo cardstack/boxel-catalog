@@ -200,6 +200,11 @@ export function runTests() {
       f.answer(0);
       assert.strictEqual(all.total, 250);
       assert.false(all.isComplete, 'pages 1 and 2 have not been created');
+      assert.strictEqual(
+        f.pages.length,
+        1,
+        'no page is created during the read',
+      );
       await afterRender();
       assert.strictEqual(f.pages.length, 3, 'the count calls for three pages');
       assert.false(all.isComplete, 'pages 1 and 2 have not answered');
@@ -232,12 +237,52 @@ export function runTests() {
       assert.false(all.isComplete, 'its rows are not the whole set');
     });
 
-    test('more than the cap matched is too many', function (assert) {
+    test('more than the cap matched is too many', async function (assert) {
       let f = fakeContext(ids(MAX_SEARCH_PAGES * SEARCH_PAGE + 1));
       let all = new AllCards(f.context, {}, query);
       f.answer(0);
       assert.true(all.tooMany);
+      await afterRender();
+      for (let n = 0; n < f.pages.length; n++) f.answer(n);
+      assert.true(all.tooMany, 'still too many once every page has answered');
       assert.false(all.isComplete);
+    });
+
+    test('a count that rises creates the pages it now calls for', async function (assert) {
+      let rows = ids(150);
+      let f = fakeContext(rows);
+      let all = new AllCards(f.context, {}, query);
+      f.answer(0);
+      assert.true(all.isLoading);
+      await afterRender();
+      f.answer(1);
+      assert.true(all.isComplete);
+      rows.push(...Array.from({ length: 200 }, (_, i) => ({ id: `new-${i}` })));
+      assert.strictEqual(all.total, 350);
+      assert.true(all.isLoading, 'the new pages are still to come');
+      await afterRender();
+      assert.strictEqual(f.pages.length, 4);
+      f.answer(2);
+      f.answer(3);
+      assert.true(all.isComplete);
+      assert.strictEqual(all.instances.length, 350);
+    });
+
+    test('a count that shrinks leaves the pages past it out', async function (assert) {
+      let rows = ids(250);
+      let f = fakeContext(rows);
+      let all = new AllCards(f.context, {}, query);
+      f.answer(0);
+      assert.true(all.isLoading);
+      await afterRender();
+      f.answer(1);
+      f.answer(2);
+      assert.true(all.isComplete);
+      rows.length = 120;
+      assert.strictEqual(all.total, 120);
+      assert.true(all.isComplete, 'the two pages it needs have answered');
+      assert.strictEqual(all.instances.length, 120);
+      assert.strictEqual(f.pages.length, 3, 'the third page stays, unread');
     });
 
     test('a limited read reads whole pages up to its limit, and says more matched', async function (assert) {
