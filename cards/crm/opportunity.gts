@@ -262,15 +262,15 @@ class OpportunityIsolated extends Component<typeof Opportunity> {
     <style scoped>
       .h {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         border-block-end: 1px solid var(--border);
       }
       .action-error {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
         color: var(--destructive);
       }
     </style>

@@ -414,7 +414,7 @@ export class Campaign extends CardDef {
         }
         .panel {
           border: 1px solid var(--border);
-          border-radius: 0.5rem;
+          border-radius: var(--radius);
           padding: var(--boxel-sp) var(--boxel-sp);
           background-color: var(--card);
           color: var(--card-foreground);

@@ -216,13 +216,13 @@ export class Activity extends CardDef {
       <style scoped>
         .notes-h {
           margin: 0;
-          padding: 0.5rem 0.625rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           font-weight: 700;
           border-block-end: 1px solid var(--border);
         }
         .notes {
-          padding: 0.5rem 0.625rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
       </style>
     </template>

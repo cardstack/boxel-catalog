@@ -344,13 +344,13 @@ export class Account extends CardDef {
       <style scoped>
         .h {
           margin: 0;
-          padding: 0.4375rem 0.625rem;
-          font-size: 0.75rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           border-block-end: 1px solid var(--border);
         }
         .addr {
-          padding: 0.5rem 0.625rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
       </style>
     </template>
