@@ -12,7 +12,7 @@ import WrenchIcon from '@cardstack/boxel-icons/wrench';
 import { AppConfigurationField } from '@cardstack/catalog/fields/app-configuration/app-configuration-field';
 import { Location } from '../events/location';
 import { Schedule } from '../service-desk/schedule';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { AssetMaintenanceDesk } from './asset-maintenance-desk';
 
 export { nextIdentifier } from './desk-helpers';
@@ -99,11 +99,11 @@ export class AssetMaintenanceApp extends CardDef {
 
   static fitted = class Fitted extends Component<typeof AssetMaintenanceApp> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Facilities</:subtitle>
         <:fact>Assets · work orders · plans · parts</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }
