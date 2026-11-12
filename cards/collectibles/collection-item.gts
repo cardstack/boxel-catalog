@@ -1026,7 +1026,7 @@ export class CollectionItem extends CardDef {
           justify-items: center;
           gap: var(--boxel-sp-4xs);
           color: var(--smoke);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           text-align: center;
           padding: var(--boxel-sp-sm);
         }
@@ -1041,7 +1041,9 @@ export class CollectionItem extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.4em;
-          font-size: 0.6875rem; /* 11px floor — never smaller */
+          font-size: var(
+            --boxel-font-size-2xs
+          ); /* 11px floor — never smaller */
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--smoke);
@@ -1052,7 +1054,7 @@ export class CollectionItem extends CardDef {
         .hero-title {
           margin: 0;
           font-family: var(--font-display);
-          font-size: 1.75rem;
+          font-size: var(--boxel-font-size-xl);
           line-height: 1.15;
           font-weight: 700;
           letter-spacing: -0.01em;
@@ -1070,7 +1072,7 @@ export class CollectionItem extends CardDef {
           background: var(--ink-800);
           border: 1px solid var(--hairline);
           border-top: 3px solid var(--gold);
-          border-radius: 6px;
+          border-radius: var(--radius);
           box-shadow: var(--shadow-1);
           padding: var(--boxel-sp) var(--boxel-sp-lg);
         }
@@ -1101,7 +1103,7 @@ export class CollectionItem extends CardDef {
           }
         }
         .worth--unknown {
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 600;
           color: var(--smoke);
         }
@@ -1110,7 +1112,7 @@ export class CollectionItem extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: 0.3em;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           color: var(--paper);
@@ -1130,7 +1132,7 @@ export class CollectionItem extends CardDef {
         /* The spec leaves green doing double duty (authenticated AND price-up).
            This label is what disambiguates the axis, so it is not optional. */
         .delta-vs {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.06em;
@@ -1160,7 +1162,7 @@ export class CollectionItem extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.09em;
@@ -1198,20 +1200,20 @@ export class CollectionItem extends CardDef {
           align-content: start;
         }
         .stat-k {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
         }
         .stat-v {
           font-family: var(--font-display);
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }
         .stat-sub {
           display: block;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 500;
           color: var(--smoke);
         }
@@ -1233,7 +1235,7 @@ export class CollectionItem extends CardDef {
           position: relative;
           display: grid;
           gap: 0.1em;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .prov-step::before {
           content: '';
@@ -1254,12 +1256,12 @@ export class CollectionItem extends CardDef {
           font-weight: 600;
         }
         .prov-when {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--paper);
           font-variant-numeric: tabular-nums;
         }
         .prov-note {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--smoke);
         }
         .prov-step--todo .prov-label,
@@ -1280,17 +1282,17 @@ export class CollectionItem extends CardDef {
           display: grid;
           gap: 0.15em;
           padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-          border-radius: 6px;
+          border-radius: var(--radius);
           background: var(--ink-700);
         }
         .chip-k {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
         }
         .chip-v {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 600;
         }
         /* Rule 3b: identifiers are read aloud and typed into other systems —
@@ -1303,7 +1305,7 @@ export class CollectionItem extends CardDef {
 
         /* ---------- prose + empty ---------- */
         .prose {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.6;
           max-width: 68ch;
           color: var(--paper);
@@ -1314,7 +1316,7 @@ export class CollectionItem extends CardDef {
           align-items: center;
           gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--smoke);
           background: var(--ink-800);
           border: 1px solid var(--hairline);
@@ -1339,7 +1341,7 @@ export class CollectionItem extends CardDef {
             grid-template-columns: minmax(0, 1fr);
           }
           .hero-title {
-            font-size: 1.25rem;
+            font-size: var(--boxel-font-size-md);
           }
           .answer {
             padding: var(--boxel-sp-sm) var(--boxel-sp);

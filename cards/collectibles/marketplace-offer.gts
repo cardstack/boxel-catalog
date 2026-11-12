@@ -680,10 +680,10 @@ export class MarketplaceOffer extends CardDef {
           background: var(--ink-900);
           color: var(--paper);
           font-family: var(--font-sans);
-          padding: 2rem;
+          padding: var(--boxel-sp-xl);
           display: flex;
           flex-direction: column;
-          gap: 1.75rem;
+          gap: var(--boxel-sp-xl);
 
           scrollbar-color: var(--gold) var(--ink-800);
         }
@@ -716,13 +716,13 @@ export class MarketplaceOffer extends CardDef {
         .hero {
           display: flex;
           flex-direction: column;
-          gap: 0.85rem;
+          gap: var(--boxel-sp-sm);
         }
         .hero-top {
           display: flex;
           flex-wrap: wrap;
           align-items: baseline;
-          gap: 0.75rem;
+          gap: var(--boxel-sp-sm);
         }
         .hero-title {
           margin: 0;
@@ -739,7 +739,7 @@ export class MarketplaceOffer extends CardDef {
           padding: 0.3em 0.7em;
           border: 1px solid var(--hairline);
           border-radius: 999px;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
@@ -749,8 +749,8 @@ export class MarketplaceOffer extends CardDef {
           margin: 0;
           display: flex;
           flex-wrap: wrap;
-          gap: 0.35rem 1.1rem;
-          font-size: 0.875rem;
+          gap: var(--boxel-sp-3xs) var(--boxel-sp);
+          font-size: var(--boxel-font-size-sm);
           color: var(--smoke);
         }
         .party strong {
@@ -766,21 +766,21 @@ export class MarketplaceOffer extends CardDef {
           flex-wrap: wrap;
           align-items: center;
           justify-content: space-between;
-          gap: 1rem;
+          gap: var(--boxel-sp);
           background: var(--ink-800);
           border: 1px solid var(--hairline);
           border-top: 3px solid var(--gold);
-          border-radius: 6px;
-          padding: 1.25rem 1.6rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp-lg) var(--boxel-sp-xl);
           box-shadow: var(--shadow-1);
         }
         .plaque-figure {
           display: grid;
-          gap: 0.15rem;
+          gap: var(--boxel-sp-6xs);
         }
         .plaque-label {
           margin: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.08em;
@@ -800,14 +800,14 @@ export class MarketplaceOffer extends CardDef {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
         }
         /* The delta pill — the offer-vs-asking comparison as its own small
            moment, distinct in shape from a money figure. */
         .delta {
           padding: 0.3em 0.75em;
           border-radius: 999px;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           white-space: nowrap;
           background: color-mix(in oklch, var(--primary) 16%, transparent);
@@ -819,17 +819,17 @@ export class MarketplaceOffer extends CardDef {
         .thread {
           background: var(--ink-800);
           border: 1px solid var(--hairline);
-          border-radius: 14px;
-          padding: 1.4rem 1.6rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp-lg) var(--boxel-sp-xl);
           box-shadow: var(--shadow-1);
         }
         .thread-h {
-          margin: 0 0 0.85rem;
+          margin: 0 0 var(--boxel-sp-sm);
           display: flex;
           align-items: center;
           gap: 0.5em;
           font-family: var(--font-display);
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
         }
         .thread-icon {
@@ -844,22 +844,22 @@ export class MarketplaceOffer extends CardDef {
         .cols {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.25rem;
+          gap: var(--boxel-sp-lg);
         }
         .sec {
           background: var(--ink-800);
           border: 1px solid var(--hairline);
-          border-radius: 12px;
-          padding: 1.1rem 1.3rem 1.3rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
           min-width: 0;
           box-shadow: var(--shadow-1);
         }
         .sec-h {
-          margin: 0 0 0.85rem;
+          margin: 0 0 var(--boxel-sp-sm);
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.09em;
@@ -880,19 +880,19 @@ export class MarketplaceOffer extends CardDef {
 
         /* The buyer's own words — prose, a different shape from every list. */
         .msg {
-          margin: 0 0 1rem;
-          padding: 0 0 0 1rem;
+          margin: 0 0 var(--boxel-sp);
+          padding: 0 0 0 var(--boxel-sp);
           border-left: 2px solid var(--gold);
-          font-size: 1rem;
+          font-size: var(--boxel-font-size);
           line-height: 1.55;
           font-style: italic;
           color: var(--paper);
         }
         .thread-k {
-          margin: 1rem 0 0.5rem;
+          margin: var(--boxel-sp) 0 var(--boxel-sp-xs);
           display: flex;
           align-items: baseline;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.07em;
@@ -904,7 +904,7 @@ export class MarketplaceOffer extends CardDef {
           margin: 0;
           padding: 0;
           display: grid;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
         }
         .empty-li {
           display: contents;
@@ -912,7 +912,7 @@ export class MarketplaceOffer extends CardDef {
 
         .facts {
           display: grid;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
           margin: 0;
         }
         .f-row {
@@ -920,17 +920,17 @@ export class MarketplaceOffer extends CardDef {
           flex-wrap: wrap;
           align-items: baseline;
           justify-content: space-between;
-          gap: 0.6rem;
-          padding-bottom: 0.5rem;
+          gap: var(--boxel-sp-xs);
+          padding-bottom: var(--boxel-sp-xs);
           border-bottom: 1px solid var(--hairline);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .f-row:last-of-type {
           border-bottom: 0;
           padding-bottom: 0;
         }
         .f-row dt {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
@@ -943,8 +943,8 @@ export class MarketplaceOffer extends CardDef {
           white-space: nowrap;
         }
         .facts-note {
-          margin: 0.9rem 0 0;
-          font-size: 0.75rem;
+          margin: var(--boxel-sp) 0 0;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.45;
           color: var(--smoke);
         }
@@ -956,7 +956,7 @@ export class MarketplaceOffer extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.45;
           color: var(--smoke);
         }

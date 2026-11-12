@@ -645,7 +645,7 @@ export class CompletionSet extends CardDef {
         }
         .hero-photo {
           aspect-ratio: 1;
-          border-radius: 12px;
+          border-radius: var(--radius);
           overflow: hidden;
           background: var(--ink-700);
           box-shadow: var(--shadow-2);
@@ -666,7 +666,7 @@ export class CompletionSet extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.4em;
-          font-size: 0.6875rem; /* 11px floor */
+          font-size: var(--boxel-font-size-2xs); /* 11px floor */
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--smoke);
@@ -690,12 +690,12 @@ export class CompletionSet extends CardDef {
         .plaque {
           margin-top: auto;
           display: grid;
-          gap: 0.15rem;
+          gap: var(--boxel-sp-6xs);
           background: var(--ink-800);
           border: 1px solid var(--hairline);
           border-top: 3px solid var(--gold);
-          border-radius: 6px;
-          padding: 1rem 1.25rem 1.15rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp);
           box-shadow: var(--shadow-1);
         }
         .plaque-pct {
@@ -730,13 +730,13 @@ export class CompletionSet extends CardDef {
         }
         .plaque-frac {
           margin: 0;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size);
           font-weight: 700;
           color: var(--paper);
           font-variant-numeric: tabular-nums;
         }
         .plaque-frac-k {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.06em;
@@ -747,7 +747,7 @@ export class CompletionSet extends CardDef {
           align-items: center;
           gap: 0.5em;
           margin-top: auto;
-          font-size: 1rem;
+          font-size: var(--boxel-font-size);
           font-weight: 500;
           color: var(--smoke);
           background: none;
@@ -755,7 +755,7 @@ export class CompletionSet extends CardDef {
           padding: 0;
         }
         .meter {
-          margin-top: 0.6rem;
+          margin-top: var(--boxel-sp-xs);
         }
         @media (prefers-reduced-motion: reduce) {
           .plaque-pct {
@@ -767,7 +767,7 @@ export class CompletionSet extends CardDef {
         .sec {
           background: var(--ink-800);
           padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          border-radius: 12px;
+          border-radius: var(--radius);
           border: 1px solid var(--hairline);
           box-shadow: var(--shadow-1);
           min-width: 0;
@@ -777,7 +777,7 @@ export class CompletionSet extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.09em;
@@ -802,7 +802,7 @@ export class CompletionSet extends CardDef {
         }
 
         .prose {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.55;
         }
 
@@ -814,7 +814,7 @@ export class CompletionSet extends CardDef {
           gap: var(--boxel-sp-4xs);
         }
         .pname {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 600;
         }
         /* A wanted pair is the hunt — gold, the value axis of this family. */
@@ -833,10 +833,10 @@ export class CompletionSet extends CardDef {
           align-items: baseline;
           justify-content: space-between;
           gap: var(--boxel-sp-xs);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .rule-row dt {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
@@ -853,7 +853,7 @@ export class CompletionSet extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--smoke);
         }
         .empty--done {

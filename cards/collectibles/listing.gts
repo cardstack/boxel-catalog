@@ -653,10 +653,10 @@ export class Listing extends CardDef {
           background: var(--ink-900);
           color: var(--paper);
           font-family: var(--font-sans);
-          padding: 1.75rem;
+          padding: var(--boxel-sp-xl);
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: var(--boxel-sp-lg);
 
           scrollbar-color: var(--gold) var(--ink-800);
         }
@@ -685,7 +685,7 @@ export class Listing extends CardDef {
         .hero {
           display: grid;
           grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-          gap: 1.75rem;
+          gap: var(--boxel-sp-xl);
           align-items: stretch;
         }
         .hero-img {
@@ -693,7 +693,7 @@ export class Listing extends CardDef {
           height: 100%;
           min-height: 320px;
           object-fit: cover;
-          border-radius: 16px;
+          border-radius: var(--radius);
           background: var(--ink-800);
           box-shadow: var(--shadow-2);
         }
@@ -708,12 +708,12 @@ export class Listing extends CardDef {
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          gap: 1.5rem;
+          gap: var(--boxel-sp-lg);
         }
         .hero-head {
           display: flex;
           flex-direction: column;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
         }
         .hero-title {
           margin: 0;
@@ -727,8 +727,8 @@ export class Listing extends CardDef {
           margin: 0;
           display: flex;
           flex-wrap: wrap;
-          gap: 0.4rem 1rem;
-          font-size: 0.875rem;
+          gap: var(--boxel-sp-2xs) var(--boxel-sp);
+          font-size: var(--boxel-font-size-sm);
           color: var(--smoke);
         }
         .party strong {
@@ -743,12 +743,12 @@ export class Listing extends CardDef {
         .plaque {
           display: grid;
           align-content: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           background: var(--ink-800);
           border: 1px solid var(--hairline);
           border-top: 3px solid var(--gold);
-          border-radius: 6px;
-          padding: 1.25rem 1.5rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp-lg) var(--boxel-sp-lg);
           box-shadow: var(--shadow-1);
         }
         .plaque-price {
@@ -765,7 +765,7 @@ export class Listing extends CardDef {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
         }
         .l-verified {
           font-weight: 700;
@@ -774,18 +774,18 @@ export class Listing extends CardDef {
         /* ---------- one panel primitive ---------- */
         .sec {
           background: var(--ink-800);
-          padding: 1.1rem 1.4rem 1.4rem;
-          border-radius: 14px;
+          padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
+          border-radius: var(--radius);
           border: 1px solid var(--hairline);
           box-shadow: var(--shadow-1);
           min-width: 0;
         }
         .sec h2 {
-          margin: 0 0 0.75rem;
+          margin: 0 0 var(--boxel-sp-sm);
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.09em;
@@ -806,7 +806,7 @@ export class Listing extends CardDef {
         .cols {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.5rem;
+          gap: var(--boxel-sp-lg);
         }
 
         .links {
@@ -814,7 +814,7 @@ export class Listing extends CardDef {
           margin: 0;
           padding: 0;
           display: grid;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
         }
         .empty-li {
           display: contents;
@@ -822,7 +822,7 @@ export class Listing extends CardDef {
 
         .facts {
           display: grid;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
           margin: 0;
         }
         .f-row {
@@ -830,11 +830,11 @@ export class Listing extends CardDef {
           flex-wrap: wrap;
           align-items: baseline;
           justify-content: space-between;
-          gap: 0.6rem;
-          font-size: 0.875rem;
+          gap: var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-sm);
         }
         .f-row dt {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
@@ -848,14 +848,14 @@ export class Listing extends CardDef {
         /* The sale's terminal fact steps above the routine rows. */
         .f-row--sold {
           border-top: 1px solid var(--hairline);
-          padding-top: 0.6rem;
+          padding-top: var(--boxel-sp-xs);
         }
         .f-row--sold dd {
           color: var(--primary-ink);
         }
 
         .notes {
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size);
           line-height: 1.6;
         }
 
@@ -866,7 +866,7 @@ export class Listing extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.45;
           color: var(--smoke);
         }

@@ -663,7 +663,7 @@ export class AuthenticationRecord extends CardDef {
         }
         .hero-service {
           margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--smoke);
         }
         /* THE VAULT PLAQUE — the family signature: a gold hairline over the
@@ -686,8 +686,8 @@ export class AuthenticationRecord extends CardDef {
           background: var(--ink-800);
           border: 1px solid var(--hairline);
           border-top: 3px dashed var(--gold);
-          border-radius: 6px;
-          padding: 1.1rem 1.4rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp) var(--boxel-sp-lg);
           box-shadow: var(--shadow-1);
         }
         .plaque--passed {
@@ -713,13 +713,13 @@ export class AuthenticationRecord extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: 0.35em;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 600;
           font-variant-numeric: tabular-nums;
           color: var(--smoke);
         }
         .turnaround-k {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.06em;
@@ -730,7 +730,7 @@ export class AuthenticationRecord extends CardDef {
         .sec {
           background: var(--ink-800);
           padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          border-radius: 12px;
+          border-radius: var(--radius);
           border: 1px solid var(--hairline);
           box-shadow: var(--shadow-1);
           min-width: 0;
@@ -740,7 +740,7 @@ export class AuthenticationRecord extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.09em;
@@ -777,7 +777,7 @@ export class AuthenticationRecord extends CardDef {
           flex-wrap: wrap;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .step::before {
           content: '';
@@ -799,7 +799,7 @@ export class AuthenticationRecord extends CardDef {
           font-weight: 600;
         }
         .step-when {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-variant-numeric: tabular-nums;
           color: var(--smoke);
         }
@@ -816,10 +816,10 @@ export class AuthenticationRecord extends CardDef {
           align-items: baseline;
           justify-content: space-between;
           gap: var(--boxel-sp-xs);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .trail-row dt {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
@@ -837,7 +837,7 @@ export class AuthenticationRecord extends CardDef {
         }
 
         .notes {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.55;
         }
 
