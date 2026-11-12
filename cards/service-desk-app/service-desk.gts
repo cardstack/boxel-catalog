@@ -15,7 +15,7 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { array, fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { Detail, Metric, RichFittedCard } from '../shared/rich-fitted-card';
 import InboxIcon from '@cardstack/boxel-icons/inbox';
 import UsersIcon from '@cardstack/boxel-icons/users';
 import BookOpenIcon from '@cardstack/boxel-icons/book-open';
@@ -930,11 +930,51 @@ export class ServiceDesk extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    // The console's queue lens counts, from one ticket query that is not
+    // live: the tile shows the numbers as of its last render.
+    private tickets = (() => {
+      let ref = identifyCard(Ticket);
+      let query = ref ? { filter: { type: ref } } : undefined;
+      let url = this.args.model?.[realmURL];
+      let realms = url ? [url.href] : undefined;
+      return this.args.context?.getCards(
+        this,
+        () => query,
+        () => realms,
+      );
+    })();
+
+    // In progress leads as the metric; the other open-work lenses are the
+    // details. Undefined while loading, so neither renders.
+    get lenses() {
+      let q = this.tickets;
+      if (!q || q.isLoading) return undefined;
+      let tickets = (q.instances as Ticket[]).filter(Boolean);
+      return LENSES.filter((l) => l.key !== 'resolved').map((l) => ({
+        label: l.label,
+        count: String(tickets.filter((t) => matchesLens(t, l.key)).length),
+      }));
+    }
+    get lead() {
+      return this.lenses?.[0];
+    }
+    get rest() {
+      return this.lenses?.slice(1);
+    }
+
     <template>
       <RichFittedCard>
         <:avatar><LifeBuoyIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>Support console</:subtitle>
+        <:metric>{{#if this.lead}}<Metric
+              @value={{this.lead.count}}
+              @label={{this.lead.label}}
+            />{{/if}}</:metric>
+        <:details>{{#each this.rest as |l|}}<Detail
+              @label={{l.label}}
+              @value={{l.count}}
+            />{{/each}}</:details>
         <:fact>Queue, teams, articles, commitments, hours, categories, customers
           and agents, each a live query.</:fact>
       </RichFittedCard>

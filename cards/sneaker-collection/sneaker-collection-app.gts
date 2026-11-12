@@ -43,7 +43,7 @@ import { Stat } from '@cardstack/pretui/components/stat';
 import { statusOption } from '@cardstack/catalog/fields/status/status';
 
 import { DotLabel } from '../hr/dot-enum-field';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { Detail, Metric, RichFittedCard } from '../shared/rich-fitted-card';
 import { CollectionItem } from '../sneakers/collection-item';
 import { CompletionSet, computeCompletion } from '../sneakers/completion-set';
 import { Listing } from '../sneakers/listing';
@@ -1750,11 +1750,58 @@ export class SneakerCollectionApp extends CardDef {
   static isolated = SneakerCollectionIsolated;
 
   static fitted = class Fitted extends Component<typeof SneakerCollectionApp> {
+    // The collection summary plus the active listings, from two queries that
+    // are not live: the tile shows the numbers as of its last render.
+    private query = (cls: typeof CardDef) => {
+      let ref = identifyCard(cls);
+      let query = ref ? { filter: { type: ref } } : undefined;
+      let url = this.args.model?.[realmURL];
+      let realms = url ? [url.href] : undefined;
+      return this.args.context?.getCards(
+        this,
+        () => query,
+        () => realms,
+      );
+    };
+    private items = this.query(CollectionItem);
+    private listings = this.query(Listing);
+    private rows(q: ReturnType<getCards> | undefined): any[] {
+      return (q?.instances ?? []).filter(Boolean);
+    }
+
+    // Undefined while loading, so the metric and details render nothing.
+    get s() {
+      if ([this.items, this.listings].some((q) => !q || q.isLoading)) {
+        return undefined;
+      }
+      let items = this.rows(this.items);
+      return {
+        pairs: String(items.length),
+        value: sumByCurrency(items.map((i) => i.lastKnownValue)),
+        verified: String(items.filter((i) => i.verified).length),
+        forSale: String(items.filter((i) => i.forSale).length),
+        listings: String(
+          this.rows(this.listings).filter((l) => l.listingStatus === 'active')
+            .length,
+        ),
+      };
+    }
+
     <template>
       <RichFittedCard>
         <:avatar><GridIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>Sneaker Collection</:title>
         <:subtitle>{{@model.tagline}}</:subtitle>
+        <:metric>{{#if this.s}}<Metric
+              @value={{this.s.pairs}}
+              @label='Pairs'
+            />{{/if}}</:metric>
+        <:details>{{#if this.s}}
+            <Detail @label='Collection value' @value={{this.s.value}} />
+            <Detail @label='Authenticated' @value={{this.s.verified}} />
+            <Detail @label='For sale' @value={{this.s.forSale}} />
+            <Detail @label='Active listings' @value={{this.s.listings}} />
+          {{/if}}</:details>
       </RichFittedCard>
       <style scoped>
         .app-mark {
