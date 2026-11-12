@@ -6,7 +6,7 @@ import {
   contains,
   field,
 } from '@cardstack/base/card-api';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import PackageIcon from '@cardstack/boxel-icons/package';
 
 export class OrderFulfilmentApp extends CardDef {
@@ -69,7 +69,7 @@ export class OrderFulfilmentApp extends CardDef {
 
   static fitted = class Fitted extends Component<typeof OrderFulfilmentApp> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Order fulfilment</:subtitle>
         <:fact>{{if
@@ -77,7 +77,7 @@ export class OrderFulfilmentApp extends CardDef {
             @model.cardInfo.summary
             'Board · Inventory · Ship desk · In transit · Returns'
           }}</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }
