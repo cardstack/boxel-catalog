@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import {
   CardDef,
@@ -44,8 +45,6 @@ import {
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -757,55 +756,59 @@ export class Offer extends CardDef {
     }
 
     <template>
-      <FitCard @title={{offerTitle @model}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name='Of'
             @hue='var(--muted)'
             @shape='rounded'
             @size={{20}}
             aria-hidden='true'
-          /></:mark>
+          /></:avatar>
+        <:title>{{offerTitle @model}}</:title>
         <:status>{{#if @model.status}}<@fields.status
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:status>
-        <:default>
-          <FitRow @left={{true}}><span class='meta'>{{offerMeta
-                @model
-              }}</span></FitRow>
-          <FitRow @label='Approval'>{{this.approvedCount}}
+        <:subtitle><span class='meta'>{{offerMeta @model}}</span></:subtitle>
+        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
+                @value={{s.value}}
+                @label={{s.label}}
+              />{{/if}}{{/let}}</:metric>
+        <:details>
+
+          <Detail @label='Approval'>{{this.approvedCount}}
             of
             {{this.approvalTotal}}
-            approved</FitRow>
-          <FitRow @label='Base salary'><span class='mono'>{{formatMoney
+            approved</Detail>
+          <Detail @label='Base salary'><span class='mono'>{{formatMoney
                 @model.salary
-              }}</span></FitRow>
+              }}</span></Detail>
           {{#if @model.candidate}}
-            <FitRow @label='Candidate' @left={{true}}><@fields.candidate
+            <Detail @label='Candidate'><@fields.candidate
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <StatStrip @compact={{true}} @items={{this.strip}} />
-          <FitRow @label='Start date'><span class='mono'>{{if
+
+          <Detail @label='Start date'><span class='mono'>{{if
                 @model.startDate
                 (formatDay @model.startDate)
                 '—'
-              }}</span></FitRow>
+              }}</span></Detail>
           {{#if @model.position}}
-            <FitRow @label='Position' @left={{true}}><@fields.position
+            <Detail @label='Position'><@fields.position
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <FitRow @label='Bonus'><span class='mono'>{{formatMoney
+          <Detail @label='Bonus'><span class='mono'>{{formatMoney
                 @model.bonus
-              }}</span></FitRow>
-          <FitRow @label='Equity'><span class='mono'>{{unitsLabel
+              }}</span></Detail>
+          <Detail @label='Equity'><span class='mono'>{{unitsLabel
                 @model.equity
-              }}</span></FitRow>
-        </:default>
-      </FitCard>
+              }}</span></Detail>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

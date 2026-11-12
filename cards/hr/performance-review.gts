@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
@@ -33,28 +34,12 @@ import {
   Descriptions,
   type DescriptionsItem,
 } from '@cardstack/pretui/components/descriptions';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { QUIET_AVATAR_HUE, hueOf, stateColorsOf } from './hr-ui';
 import { daysBetween } from './utils';
-import {
-  EmbCard,
-  FitCard,
-  FitRow,
-  IsoHead,
-  IsoPage,
-  Kv,
-  kv,
-  Panel,
-  Sheet,
-  SheetLine,
-  SheetRows,
-  SheetSection,
-  SheetStat,
-  StatStrip,
-  type StripItem,
-} from '../shared/compact-sheet';
+import { EmbCard, IsoHead, IsoPage, Kv, kv, Panel, Sheet, SheetLine, SheetRows, SheetSection, SheetStat, StatStrip, type StripItem } from '../shared/compact-sheet';
 import { IsoFrame } from '../shared/compact-sheet';
 
 export const REVIEW_CYCLE_STATUSES = ['planned', 'active', 'closed'];
@@ -596,12 +581,12 @@ export class ReviewCycle extends CardDef {
       return items;
     }
 
-    // FitTile carries who / state / fact at every size; from 170 tall the
+    // RichFittedCard carries who / state / fact at every size; from 170 tall the
     // block below it adds the mockup's extra rows, each shown only where a
     // whole row fits (see the container queries).
     <template>
       <div class='fit-wrap'>
-        <FitTile class='fit-top'>
+        <RichFittedCard class='fit-top'>
           <:avatar>
             <Avatar
               @name='Review Cycle'
@@ -625,7 +610,7 @@ export class ReviewCycle extends CardDef {
             {{/if}}
           </:status>
           <:fact>{{this.fact}}</:fact>
-        </FitTile>
+        </RichFittedCard>
         <div class='fit-more'>
           <dl class='fit-stats'>
             <div><dt>Period</dt><dd>{{cycleShort @model.name}}</dd></div>
@@ -1273,40 +1258,43 @@ export class PerformanceReview extends CardDef {
       ];
     }
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><ReviewMark /></:mark>
-        <:status>{{#if @model.status}}<DotLabel
+      <RichFittedCard>
+<:avatar><ReviewMark /></:avatar>
+<:title>{{@model.title}}</:title>
+<:status>{{#if @model.status}}<DotLabel
               @label={{@model.status}}
               @hue={{toneHue this.statusTone}}
             />{{/if}}</:status>
-        <:default>
-          <FitRow @left={{true}}><span
+<:subtitle><span
               class='meta'
-            >{{this.subline}}</span></FitRow>
-          <FitRow @label='Score'>{{if
+            >{{this.subline}}</span></:subtitle>
+<:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric @value={{s.value}} @label={{s.label}} />{{/if}}{{/let}}</:metric>
+<:details>
+          
+          <Detail @label='Score'>{{if
               @model.scoreLabel
               @model.scoreLabel
               '—'
-            }}</FitRow>
-          <FitRow @label='Sign-off'>{{signOffProgress @model}}</FitRow>
+            }}</Detail>
+          <Detail @label='Sign-off'>{{signOffProgress @model}}</Detail>
           {{#if @model.employee}}
-            <FitRow @label='Employee' @left={{true}}><@fields.employee
+            <Detail @label='Employee'><@fields.employee
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
           {{#if @model.cycle}}
-            <FitRow @label='Cycle' @left={{true}}><@fields.cycle
+            <Detail @label='Cycle'><@fields.cycle
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <StatStrip @compact={{true}} @items={{this.strip}} />
+          
           {{#each this.fullFacts as |f|}}
-            <FitRow @label={{f.label}}>{{f.value}}</FitRow>
+            <Detail @label={{f.label}}>{{f.value}}</Detail>
           {{/each}}
-        </:default>
-      </FitCard>
+        </:details>
+</RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

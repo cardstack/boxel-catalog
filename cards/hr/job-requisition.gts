@@ -7,6 +7,7 @@ import {
   StringField,
   type BaseDefComponent,
 } from '@cardstack/base/card-api';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import TextAreaField from '@cardstack/base/text-area';
@@ -26,8 +27,6 @@ import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -392,55 +391,59 @@ export class JobRequisition extends CardDef {
     }
 
     <template>
-      <FitCard @title={{@model.displayTitle}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name='Rq'
             @hue='var(--muted)'
             @shape='rounded'
             @size={{20}}
             aria-hidden='true'
-          /></:mark>
+          /></:avatar>
+        <:title>{{@model.displayTitle}}</:title>
         <:status>{{#if @model.status}}<@fields.status
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:status>
-        <:default>
-          <FitRow @left={{true}}><span class='meta'>{{subLine
-                @model
-              }}</span></FitRow>
-          <FitRow @label='Target fill'><span class='mono'>{{if
+        <:subtitle><span class='meta'>{{subLine @model}}</span></:subtitle>
+        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
+                @value={{s.value}}
+                @label={{s.label}}
+              />{{/if}}{{/let}}</:metric>
+        <:details>
+
+          <Detail @label='Target fill'><span class='mono'>{{if
                 this.targetFill
                 this.targetFill
                 '—'
-              }}</span></FitRow>
-          <FitRow @label='Salary'><span class='mono'>{{salaryRangeLabel
+              }}</span></Detail>
+          <Detail @label='Salary'><span class='mono'>{{salaryRangeLabel
                 @model.salaryRangeMin
                 @model.salaryRangeMax
-              }}</span></FitRow>
-          <FitRow @label='Approval'>{{if
+              }}</span></Detail>
+          <Detail @label='Approval'>{{if
               this.approvalText
               this.approvalText
               '—'
-            }}</FitRow>
-          <StatStrip @compact={{true}} @items={{this.strip}} />
+            }}</Detail>
+
           {{#each @fields.approvalChain.steps as |Step|}}
-            <FitRow @label='Approver' @left={{true}}><Step.approver
+            <Detail @label='Approver'><Step.approver
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/each}}
-          <FitRow @label='Created'><span class='mono'>{{if
+          <Detail @label='Created'><span class='mono'>{{if
                 @model.createdDate
                 (formatDay @model.createdDate)
                 '—'
-              }}</span></FitRow>
-          <FitRow @label='Department'>{{if
+              }}</span></Detail>
+          <Detail @label='Department'>{{if
               @model.department
               @model.department
               '—'
-            }}</FitRow>
-        </:default>
-      </FitCard>
+            }}</Detail>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

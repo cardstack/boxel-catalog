@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   CardDef,
   Component,
@@ -36,8 +37,6 @@ import {
 import { liveCount } from './utils';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -683,43 +682,47 @@ export class Meeting extends CardDef {
       ];
     }
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><MeetingMark /></:mark>
+      <RichFittedCard>
+        <:avatar><MeetingMark /></:avatar>
+        <:title>{{@model.title}}</:title>
         <:status>{{#if (roundOf @model)}}<DotLabel
               @label={{roundOf @model}}
               @hue='blue'
             />{{/if}}</:status>
-        <:default>
-          <FitRow @left={{true}}><span
-              class='meta'
-            >{{this.byline}}</span></FitRow>
+        <:subtitle><span class='meta'>{{this.byline}}</span></:subtitle>
+        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
+                @value={{s.value}}
+                @label={{s.label}}
+              />{{/if}}{{/let}}</:metric>
+        <:details>
+
           {{#if this.scoreLabel}}
-            <FitRow @label='Score'>{{this.scoreLabel}}{{#if
+            <Detail @label='Score'>{{this.scoreLabel}}{{#if
                 this.recommendationLower
               }}
                 ·
-                {{this.recommendationLower}}{{/if}}</FitRow>
+                {{this.recommendationLower}}{{/if}}</Detail>
           {{/if}}
           {{#if @model.candidate}}
-            <FitRow @label='Candidate' @left={{true}}><@fields.candidate
+            <Detail @label='Candidate'><@fields.candidate
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <StatStrip @compact={{true}} @items={{this.strip}} />
+
           {{#each @fields.interviewers as |Interviewer|}}
-            <FitRow @label='Interviewer' @left={{true}}><Interviewer
+            <Detail @label='Interviewer'><Interviewer
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/each}}
           {{#each this.facts as |f|}}
-            <FitRow @label={{f.label}}><span
+            <Detail @label={{f.label}}><span
                 class='mono'
-              >{{f.value}}</span></FitRow>
+              >{{f.value}}</span></Detail>
           {{/each}}
-        </:default>
-      </FitCard>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

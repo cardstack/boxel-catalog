@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import { tracked } from '@glimmer/tracking';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Alert } from '@cardstack/pretui/components/alert';
@@ -37,8 +38,6 @@ import {
 import FileDownloadLink from './components/file-download-link';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -449,56 +448,56 @@ export class Application extends PersonBase {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name={{if @model.name @model.name '?'}}
             @src={{@model.photo.resolvedUrl}}
             @hue={{AVATAR_HUE}}
             @size={{20}}
             aria-hidden='true'
-          /></:mark>
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
         <:status>{{#if @model.status}}<@fields.status
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:status>
-        <:default>
-          <FitRow @left={{true}}><span class='meta'>{{subLine
-                @model
-              }}</span></FitRow>
-          <FitRow @label='Applied'><span class='mono'>{{if
+        <:subtitle><span class='meta'>{{subLine @model}}</span></:subtitle>
+        <:details>
+
+          <Detail @label='Applied'><span class='mono'>{{if
                 @model.appliedDate
                 (formatDay @model.appliedDate)
                 '—'
-              }}</span></FitRow>
-          <FitRow @label='Source'>{{if
+              }}</span></Detail>
+          <Detail @label='Source'>{{if
               @model.source
               @model.source
               '—'
-            }}</FitRow>
+            }}</Detail>
           {{#if @model.position}}
-            <FitRow @label='Position' @left={{true}}><@fields.position
+            <Detail @label='Position'><@fields.position
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <FitRow @label='Email'><span
+          <Detail @label='Email'><span
               class='mono'
-            >{{@model.email}}</span></FitRow>
-          <FitRow @label='Phone'><span
+            >{{@model.email}}</span></Detail>
+          <Detail @label='Phone'><span
               class='mono'
-            >{{@model.phone}}</span></FitRow>
-          <FitRow @label='Résumé'>{{if
+            >{{@model.phone}}</span></Detail>
+          <Detail @label='Résumé'>{{if
               @model.resumeFile
               'attached'
               'not attached'
-            }}</FitRow>
-          <FitRow @label='Cover letter'>{{if
+            }}</Detail>
+          <Detail @label='Cover letter'>{{if
               @model.coverLetterFile
               'attached'
               'not attached'
-            }}</FitRow>
-        </:default>
-      </FitCard>
+            }}</Detail>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;
