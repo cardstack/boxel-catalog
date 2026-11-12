@@ -13,7 +13,7 @@ import TagIcon from '@cardstack/boxel-icons/tag';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import { identifyCard } from '@cardstack/runtime-common';
 import { PersonBase } from '../people/person-base';
 // NOT a static import of `./listing` on purpose. listing.gts now imports
@@ -551,6 +551,12 @@ export class MarketplaceMember extends PersonBase {
           /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>{{@model.email}}</:subtitle>
+        <:details>
+          {{#if @model.phone}}<Detail
+              @label='Phone'
+              @value={{@model.phone}}
+            />{{/if}}
+        </:details>
       </RichFittedCard>
     </template>
   };

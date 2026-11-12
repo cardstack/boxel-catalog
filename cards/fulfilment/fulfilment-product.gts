@@ -19,7 +19,12 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
 import { money } from './fulfilment-format';
-import { RichFittedCard, Media } from '../shared/rich-fitted-card';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import { Product } from '../commerce/product';
 import { realmURL } from 'https://cardstack.com/base/card-api';
@@ -622,6 +627,28 @@ export class FulfilmentProduct extends Product {
           ·
           {{marginText @model}}
           margin</:fact>
+        <:metric>{{#if @model.price.amount}}<Metric
+              @value={{money @model.price.amount @model.price.currency.code}}
+              @label='Price'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.cost.amount}}<Detail
+              @label='Cost'
+              @value={{money @model.cost.amount @model.cost.currency.code}}
+            />{{/if}}
+          {{#if @model.shippingProfile.billableWeight}}<Detail
+              @label='Billable'
+              @value={{kg @model.shippingProfile.billableWeight}}
+            />{{/if}}
+          {{#if @model.shippingProfile.sizeLabel}}<Detail
+              @label='Dimensions'
+              @value={{@model.shippingProfile.sizeLabel}}
+            />{{/if}}
+          {{#if @model.barcode}}<Detail
+              @label='Barcode'
+              @value={{@model.barcode}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.vendor}}<@fields.vendor
               @format='atom'
               @displayContainer={{false}}

@@ -20,7 +20,7 @@ import { Enrollment } from './enrollment';
 import { Lesson } from './lesson';
 import { Employee } from '../hr/employee';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   AtomChip,
   Dot,
@@ -221,6 +221,16 @@ export class AttendanceRecord extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
+        <:details>
+          {{#if @model.markedBy}}<Detail @label='Marked by'><@fields.markedBy
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.markedAt}}<Detail
+              @label='Marked at'
+              @value={{fmtDateTime @model.markedAt}}
+            />{{/if}}
+        </:details>
       </RichFittedCard>
     </template>
   };

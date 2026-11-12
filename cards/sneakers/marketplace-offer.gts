@@ -30,7 +30,7 @@ import {
   moneyText,
 } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -356,6 +356,28 @@ export class MarketplaceOffer extends CardDef {
           {{moneyText @model.listingPrice}}
           ·
           {{expiresLine @model}}</:fact>
+        <:metric>{{#if (formatMoney @model.amount)}}<Metric
+              @value={{formatMoney @model.amount}}
+              @label='Offer'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if (formatMoneyDelta @model.amount @model.listingPrice)}}<Detail
+              @label='Gap'
+              @value={{gap @model}}
+            />{{/if}}
+          {{#if @model.offeredAt}}<Detail
+              @label='Offered'
+              @value={{day @model.offeredAt}}
+            />{{/if}}
+          {{#if @model.respondedAt}}<Detail
+              @label='Responded'
+              @value={{responded @model}}
+            />{{/if}}
+          {{#if @model.listing}}<Detail @label='Listing'><@fields.listing
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
         <:relations>{{#if @model.offeredBy}}<@fields.offeredBy
               @format='atom'
               @displayContainer={{false}}

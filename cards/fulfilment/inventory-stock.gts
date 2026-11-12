@@ -16,7 +16,12 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Button } from '@cardstack/pretui/components/button';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { RichFittedCard, Media } from '../shared/rich-fitted-card';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import { DotLabel } from '../hr/dot-enum-field';
 import { on } from '@ember/modifier';
 import { IsoFrame } from '../shared/compact-sheet';
@@ -574,6 +579,28 @@ export class InventoryStock extends CardDef {
           on hand ·
           {{num @model.quantityReserved}}
           reserved</:fact>
+        <:metric><Metric
+            @value={{num @model.quantityAvailable}}
+            @label='Available'
+          /></:metric>
+        <:details>
+          {{#if @model.quantityIncoming}}<Detail
+              @label='Incoming'
+              @value={{num @model.quantityIncoming}}
+            />{{/if}}
+          {{#if @model.reorderPoint}}<Detail
+              @label='Reorder point'
+              @value={{num @model.reorderPoint}}
+            />{{/if}}
+          {{#if @model.reorderQuantity}}<Detail
+              @label='Reorder qty'
+              @value={{num @model.reorderQuantity}}
+            />{{/if}}
+          {{#if @model.lastCountedAt}}<Detail
+              @label='Last counted'
+              @value={{longDate @model.lastCountedAt}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.warehouse}}<@fields.warehouse
               @format='atom'
               @displayContainer={{false}}

@@ -15,7 +15,7 @@ import enumField from '@cardstack/base/enum';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import BookOpenIcon from '@cardstack/boxel-icons/book-open';
 import { AtomChip, Dot, Mark } from './components/record-sheet';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
@@ -320,6 +320,28 @@ export class Lesson extends CardDef {
               @hour='numeric'
               @minute='2-digit'
             />{{/if}}</:fact>
+        <:metric><Metric
+            @value={{@model.durationLabel}}
+            @label='Duration'
+          /></:metric>
+        <:details>
+          {{#if @model.summary}}<Detail
+              @label='Summary'
+              @value={{@model.summary}}
+            />{{/if}}
+          {{#if @model.order}}<Detail
+              @label='Order'
+              @value='{{@model.order}}'
+            />{{/if}}
+          {{#if @model.media.length}}<Detail
+              @label='Media'
+              @value='{{@model.media.length}}'
+            />{{/if}}
+          {{#if @model.meetingUrl}}<Detail
+              @label='Room'
+              @value={{@model.meetingUrl}}
+            />{{/if}}
+        </:details>
       </RichFittedCard>
     </template>
   };

@@ -23,7 +23,12 @@ import { CollectibleProduct } from './collectible-product';
 // level "for clarity".
 import { CollectionItem } from './collection-item';
 import { DotLabel } from '../hr/dot-enum-field';
-import { RichFittedCard, Media } from '../shared/rich-fitted-card';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -364,6 +369,18 @@ export class CompletionSet extends CardDef {
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><Visibility @model={{@model}} /></:status>
         <:fact>{{productCount @model}} products</:fact>
+        <:metric>{{#if @model.targetCount}}<Metric
+              @value='{{@model.targetCount}}'
+              @label='Products'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.products.length}}<Detail
+              @label='Products'
+            ><@fields.products
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
       </RichFittedCard>
     </template>
   };

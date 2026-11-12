@@ -21,7 +21,7 @@ import { tracked } from '@glimmer/tracking';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import { Button } from '@cardstack/pretui/components/button';
 import { type Hue } from '@cardstack/catalog/components/state-pill';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { FulfilmentLineItemField } from './fulfilment-line-item';
 import {
   OrderStatusField,
@@ -744,6 +744,28 @@ export class FulfilmentOrder extends CardDef {
         <:fact>{{money @model.total.amount @model.currencyCode}}
           ·
           {{itemsText @model}}</:fact>
+        <:metric>{{#if @model.lineItems.length}}<Metric
+              @value={{money @model.total.amount @model.currencyCode}}
+              @label='Total'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.itemCount}}<Detail
+              @label='Fulfilled'
+              @value='{{fulfilledCount @model}} of {{@model.itemCount}}'
+            />{{/if}}
+          {{#if @model.paymentStatus}}<Detail
+              @label='Payment'
+              @value={{paymentLabel @model.paymentStatus}}
+            />{{/if}}
+          {{#if @model.placedAt}}<Detail
+              @label='Placed'
+              @value={{day @model.placedAt}}
+            />{{/if}}
+          {{#if @model.priority}}<Detail
+              @label='Priority'
+              @value={{@model.priorityLabel}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.allocatedWarehouse}}<@fields.allocatedWarehouse
               @format='atom'
               @displayContainer={{false}}

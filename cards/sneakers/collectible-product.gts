@@ -15,9 +15,14 @@ import Tag from '@cardstack/base/tag';
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 import PackageIcon from '@cardstack/boxel-icons/package';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
-import { moneyText } from './money-format';
+import { formatMoney, moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { RichFittedCard, Media } from '../shared/rich-fitted-card';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -229,6 +234,30 @@ export class CollectibleProduct extends CardDef {
           {{moneyText @model.retailPrice}}
           ·
           {{if @model.releaseDate (day @model.releaseDate) '—'}}</:fact>
+        <:metric>{{#if (formatMoney @model.retailPrice)}}<Metric
+              @value={{formatMoney @model.retailPrice}}
+              @label='Retail'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.brand}}<Detail @label='Brand'><@fields.brand
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.silhouette}}<Detail
+              @label='Silhouette'
+            ><@fields.silhouette
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.collabPartner}}<Detail
+              @label='Collab'
+              @value={{@model.collabPartner}}
+            />{{/if}}
+          {{#if @model.availableVariants.length}}<Detail
+              @label='Variants'
+              @value={{sizeCount @model}}
+            />{{/if}}
+        </:details>
       </RichFittedCard>
     </template>
   };

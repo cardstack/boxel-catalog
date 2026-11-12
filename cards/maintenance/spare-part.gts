@@ -13,7 +13,7 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import PackageIcon from '@cardstack/boxel-icons/package';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 import { Asset } from './asset';
 import { AssetCategory } from './asset-category';
@@ -378,6 +378,24 @@ export class SparePart extends CardDef {
                 @value={{this.ratio}}
                 @label='On hand vs reorder point'
               />{{/if}}</span></:fact>
+        <:metric><Metric
+            @value={{stockValue @model}}
+            @label='Stock value'
+          /></:metric>
+        <:details>
+          {{#if @model.unitCost.amount}}<Detail
+              @label='Unit cost'
+              @value={{unitCost @model}}
+            />{{/if}}
+          {{#if @model.reorderQuantity}}<Detail
+              @label='Reorder qty'
+              @value={{n @model.reorderQuantity}}
+            />{{/if}}
+          {{#if @model.compatibleAssets.length}}<Detail
+              @label='Fits assets'
+              @value='{{@model.compatibleAssets.length}}'
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.preferredVendor}}<@fields.preferredVendor
               @format='atom'
             />{{/if}}</:relations>

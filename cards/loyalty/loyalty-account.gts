@@ -23,7 +23,7 @@ import ArrowsExchangeIcon from '@cardstack/boxel-icons/arrows-exchange';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 
 import { Contact } from '../crm/contact';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import LoyaltyTierField, { type TierOption } from './loyalty-tier-field';
 import MemberNumberField from './member-number-field';
 import PointsBalanceField from './points-balance-field';
@@ -416,6 +416,24 @@ export class LoyaltyAccount extends CardDef {
           />
         </:status>
         <:fact>{{this.fact}}</:fact>
+        <:metric><Metric
+            @value={{num @model.pointsBalance}}
+            @label='Balance'
+          /></:metric>
+        <:details>
+          {{#if @model.tier}}<Detail
+              @label='Tier'
+              @value={{tierLine this.model}}
+            />{{/if}}
+          {{#if @model.tierSince}}<Detail
+              @label='Tier since'
+              @value={{day @model.tierSince}}
+            />{{/if}}
+          {{#if @model.memberSince}}<Detail
+              @label='Member since'
+              @value={{day @model.memberSince}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.holder}}<@fields.holder
               @format='atom'
               @displayContainer={{false}}

@@ -21,7 +21,7 @@ import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import { Listing } from './listing';
 import { MarketplaceMember as SneakerCollectionPerson } from './marketplace-member';
 import { SellerProfile } from './seller-profile';
-import { currencyCode, moneyText } from './money-format';
+import { currencyCode, formatMoney, moneyText } from './money-format';
 import {
   OrderStatusField,
   canOrderTransition,
@@ -29,7 +29,7 @@ import {
   type OrderStatus,
 } from './order-status';
 import { DotLabel } from '../hr/dot-enum-field';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -362,6 +362,28 @@ export class Order extends CardDef {
           {{payout @model}}
           · placed
           {{day @model.placedAt true}}</:fact>
+        <:metric>{{#if (formatMoney @model.total)}}<Metric
+              @value={{formatMoney @model.total}}
+              @label='Total'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if (formatMoney @model.price)}}<Detail
+              @label='Price'
+              @value={{formatMoney @model.price}}
+            />{{/if}}
+          {{#if @model.shippedAt}}<Detail
+              @label='Shipped'
+              @value={{day @model.shippedAt}}
+            />{{/if}}
+          {{#if @model.trackingNumber}}<Detail
+              @label='Tracking'
+              @value={{@model.trackingNumber}}
+            />{{/if}}
+          {{#if @model.listing}}<Detail @label='Listing'><@fields.listing
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
         <:relations>{{#if @model.buyer}}<@fields.buyer
               @format='atom'
               @displayContainer={{false}}

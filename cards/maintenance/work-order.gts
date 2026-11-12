@@ -17,7 +17,7 @@ import DateTimeField from '@cardstack/base/datetime';
 import MarkdownField from '@cardstack/base/markdown';
 import WrenchIcon from '@cardstack/boxel-icons/wrench';
 import { Button } from '@cardstack/pretui/components/button';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 import { Asset } from './asset';
 import { Location } from '../events/location';
@@ -687,6 +687,28 @@ export class WorkOrder extends CardDef {
               @model={{@model}}
             /></span></:status>
         <:fact>{{factLine @model}}</:fact>
+        <:metric>{{#if @model.totalCost}}<Metric
+              @value={{money @model.totalCost (currency @model)}}
+              @label='Cost'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.checklist.total}}<Detail
+              @label='Checklist'
+              @value={{checklistDone @model}}
+            />{{/if}}
+          {{#if @model.requestedAt}}<Detail
+              @label='Requested'
+              @value={{requestedLine @model}}
+            />{{/if}}
+          {{#if @model.failure.codeText}}<Detail
+              @label='Failure'
+              @value={{@model.failure.codeText}}
+            />{{/if}}
+          {{#if @model.holdReason}}<Detail
+              @label='Hold reason'
+              @value={{woStatusLabel @model.holdReason}}
+            />{{/if}}
+        </:details>
         <:relations>
           {{#if @model.subjectAsset}}<@fields.subjectAsset
               @format='atom'

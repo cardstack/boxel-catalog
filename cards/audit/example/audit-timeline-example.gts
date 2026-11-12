@@ -11,7 +11,7 @@ import HistoryIcon from '@cardstack/boxel-icons/history';
 
 import { AuditEntry } from '../audit-entry';
 import { AuditTimeline } from '../components/audit-timeline';
-import { RichFittedCard } from '../../shared/rich-fitted-card';
+import { RichFittedCard, Metric } from '../../shared/rich-fitted-card';
 
 // Usage page for the Audit Timeline block: a short real trail over one
 // report, with a sign-off moment set so the after-sign-off marker is visible
@@ -92,6 +92,10 @@ export class AuditTimelineExample extends CardDef {
       <RichFittedCard>
         <:title>Audit Timeline</:title>
         <:subtitle>usage page</:subtitle>
+        <:metric><Metric
+            @value='{{@model.entries.length}}'
+            @label='Entries'
+          /></:metric>
       </RichFittedCard>
     </template>
   };

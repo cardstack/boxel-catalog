@@ -23,7 +23,7 @@ import WarehouseIcon from '@cardstack/boxel-icons/building-warehouse';
 // binding is only read inside the constructor, not at module evaluation.
 import { InventoryStock } from './inventory-stock';
 import { CompoundAtom } from './fulfilment-ui';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { type Hue } from '@cardstack/catalog/components/state-pill';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { Button } from '@cardstack/pretui/components/button';
@@ -505,6 +505,28 @@ export class Warehouse extends CardDef {
           bins ·
           {{pct @model.utilizationPercent}}
           full</:fact>
+        <:metric>{{#if @model.totalBins}}<Metric
+              @value={{freeBins @model}}
+              @label='Free bins'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.zones.length}}<Detail
+              @label='Zones'
+              @value={{join @model.zones}}
+            />{{/if}}
+          {{#if @model.contactPerson}}<Detail
+              @label='Contact'
+              @value={{@model.contactPerson}}
+            />{{/if}}
+          {{#if @model.contactPhone}}<Detail
+              @label='Phone'
+              @value={{@model.contactPhone}}
+            />{{/if}}
+          {{#if @model.operatingHours}}<Detail
+              @label='Hours'
+              @value={{@model.operatingHours}}
+            />{{/if}}
+        </:details>
       </RichFittedCard>
       <style scoped>
         .mark {

@@ -42,7 +42,7 @@ import {
   Sheet,
   Stat,
 } from './components/record-sheet';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { DeskRow, KvList, cardsLinkedTo } from './components/desk-status';
 import { ENROLLMENT_STATUSES } from './enrollment-status-field';
 import { tracked } from '@glimmer/tracking';
@@ -54,6 +54,10 @@ function hueOf(m: any) {
 
 function weekLabel(m: any): string {
   return m?.currentWeek ? `week ${m.currentWeek} / ${m.weekCount}` : '';
+}
+
+function weekValue(m: any): string {
+  return m?.currentWeek ? `${m.currentWeek} / ${m.weekCount}` : '';
 }
 
 function metaLine(m: any): string {
@@ -458,6 +462,21 @@ export class Cohort extends CardDef {
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><Dot @hue={{hueOf @model}}>{{@model.status}}</Dot></:status>
         <:fact>{{factLine @model}}</:fact>
+        <:metric><Metric @value={{weekValue @model}} @label='Week' /></:metric>
+        <:details>
+          {{#if @model.leadInstructorName}}<Detail
+              @label='Lead'
+              @value={{@model.leadInstructorName}}
+            />{{/if}}
+          {{#if @model.courseCode}}<Detail
+              @label='Course'
+              @value={{@model.courseCode}}
+            />{{/if}}
+          {{#if @model.instructors.length}}<Detail
+              @label='Instructors'
+              @value='{{@model.instructors.length}}'
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.course}}<@fields.course
               @format='atom'
               @displayContainer={{false}}

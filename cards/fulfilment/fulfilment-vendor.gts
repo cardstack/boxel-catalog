@@ -14,7 +14,7 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import FactoryIcon from '@cardstack/boxel-icons/building-factory';
 import { CompoundAtom } from './fulfilment-ui';
 import { money } from './fulfilment-format';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import { on } from '@ember/modifier';
@@ -610,6 +610,28 @@ export class FulfilmentVendor extends CardDef {
         <:fact>{{daysText @model.leadTimeDays}}
           lead · min
           {{amountOr @model.minimumOrder 0}}</:fact>
+        <:metric>{{#if @model.leadTimeDays}}<Metric
+              @value={{daysText @model.leadTimeDays}}
+              @label='Lead time'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.contactEmail}}<Detail
+              @label='Email'
+              @value={{@model.contactEmail}}
+            />{{/if}}
+          {{#if @model.contactPhone}}<Detail
+              @label='Phone'
+              @value={{@model.contactPhone}}
+            />{{/if}}
+          {{#if @model.address.addressLine1}}<Detail
+              @label='Address'
+              @value={{shortAddress @model}}
+            />{{/if}}
+          {{#if @model.dropshipFee.amount}}<Detail
+              @label='Dropship fee'
+              @value={{amountOr @model.dropshipFee 2}}
+            />{{/if}}
+        </:details>
       </RichFittedCard>
       <style scoped>
         .mark {

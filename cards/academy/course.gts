@@ -42,7 +42,7 @@ import {
   Sheet,
   Stat,
 } from './components/record-sheet';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { DeskRow, KvList, cardsLinkedTo } from './components/desk-status';
 import { IsoFrame } from '../shared/compact-sheet';
 
@@ -474,6 +474,24 @@ export class Course extends CardDef {
               @model.status
             }}</Dot></:status>
         <:fact>{{factLine @model}}</:fact>
+        <:metric><Metric
+            @value={{minutesLabel @model.totalMinutes}}
+            @label='Material'
+          /></:metric>
+        <:details>
+          {{#if @model.completionRule.minAttendancePct}}<Detail
+              @label='Min attendance'
+              @value={{pctText @model.completionRule.minAttendancePct}}
+            />{{/if}}
+          {{#if @model.completionRule.minGradeLetter}}<Detail
+              @label='Minimum grade'
+              @value={{@model.completionRule.minGradeLetter}}
+            />{{/if}}
+          <Detail
+            @label='Late penalty'
+            @value={{shortLatePolicy @model.latePolicy}}
+          />
+        </:details>
         <:relations>{{#if @model.owner}}<@fields.owner
               @format='atom'
               @displayContainer={{false}}

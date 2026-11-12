@@ -28,7 +28,7 @@ import { CertificationAuthority } from '../audit/certification-authority';
 import { Enrollment } from './enrollment';
 import { Employee } from '../hr/employee';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   AtomChip,
   Dot,
@@ -405,6 +405,28 @@ export class Certificate extends CardDef {
           {{fmtDate @model.issuedAt}}
           ·
           {{creditLine @model.creditHours}}</:fact>
+        <:metric><Metric
+            @value={{@model.finalLetter}}
+            @label='Final grade'
+          /></:metric>
+        <:details>
+          {{#if @model.cohortName}}<Detail
+              @label='Cohort'
+              @value={{@model.cohortName}}
+            />{{/if}}
+          {{#if @model.verificationCode}}<Detail
+              @label='Code'
+              @value={{@model.verificationCode}}
+            />{{/if}}
+          {{#if @model.revokedAt}}<Detail
+              @label='Revoked'
+              @value={{fmtDate @model.revokedAt}}
+            />{{/if}}
+          {{#if @model.revokedReason}}<Detail
+              @label='Reason'
+              @value={{@model.revokedReason}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.authority}}<@fields.authority
               @format='atom'
               @displayContainer={{false}}

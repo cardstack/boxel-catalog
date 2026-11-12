@@ -27,7 +27,7 @@ import { Vendor } from './vendor';
 import { VendorProfile } from './vendor-profile';
 import { Rfq } from './rfq';
 import { formatMoney, sumLineItems } from '../commerce/line-item-totals';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 
 function isPastDay(d?: Date | null): boolean {
   if (!d) {
@@ -547,6 +547,22 @@ export class VendorQuote extends CardDef {
           {{this.f.lead}}
           · valid until
           {{this.f.validFull}}</:fact>
+        <:metric>{{#if @model.lineItems.length}}<Metric
+              @value={{this.f.total}}
+              @label='Total'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.lineItems.length}}<Detail
+              @label='Lines'
+              @value={{this.f.lineWord}}
+            />{{/if}}
+          {{#if @model.vendorProfile}}<Detail
+              @label='Profile'
+            ><@fields.vendorProfile
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
         <:relations>
           {{#if @model.vendor}}<@fields.vendor
               @format='atom'

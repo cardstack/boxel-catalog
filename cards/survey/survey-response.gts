@@ -9,7 +9,7 @@ import {
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { Survey } from './survey';
 import { IsoFrame } from '../shared/compact-sheet';
 
@@ -232,6 +232,16 @@ export class SurveyResponse extends CardDef {
               this.facts.count
             }}</span></:status>
         <:fact>{{this.facts.summary}}</:fact>
+        <:metric>{{#if this.facts.score}}<Metric
+              @value={{this.facts.score}}
+              @label='Rating'
+            />{{/if}}</:metric>
+        <:details>
+          {{#each this.facts.answers as |a|}}<Detail
+              @label={{if a.prompt a.prompt 'Question'}}
+              @value={{a.response}}
+            />{{/each}}
+        </:details>
         <:relations>{{#if @model.survey}}<@fields.survey
               @format='atom'
               @displayContainer={{false}}

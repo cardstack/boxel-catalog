@@ -11,7 +11,7 @@ import NumberField from '@cardstack/base/number';
 import PercentageField from '@cardstack/base/percentage';
 import HelpCircleIcon from '@cardstack/boxel-icons/help-circle';
 import { AtomChip, Mark } from './components/record-sheet';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 
@@ -237,6 +237,20 @@ export class Quiz extends CardDef {
           attempts{{#if @model.timeLimit.value}}
             ·
             {{concatDuration @model.timeLimit}}{{/if}}</:fact>
+        <:metric><Metric
+            @value='{{@model.totalPoints}}'
+            @label='Points'
+          /></:metric>
+        <:details>
+          {{#if @model.instructions}}<Detail
+              @label='Instructions'
+              @value={{@model.instructions}}
+            />{{/if}}
+          {{#if @model.shuffleQuestions}}<Detail
+              @label='Order'
+              @value='Shuffled'
+            />{{/if}}
+        </:details>
       </RichFittedCard>
     </template>
   };

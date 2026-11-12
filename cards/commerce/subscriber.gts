@@ -16,7 +16,7 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Subscription } from './subscription';
 import { IsoFrame } from '../shared/compact-sheet';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { fmtDate } from './compact-parts';
 
 /**
@@ -164,6 +164,16 @@ export class Subscriber extends CardDef {
           /></:status>
         <:subtitle>{{this.planCount}}</:subtitle>
         <:fact>{{#if @model.since}}Since {{fmtDate @model.since}}{{/if}}</:fact>
+        <:metric>{{#if @model.subscriptions.length}}<Metric
+              @value='{{if @model.activeCount @model.activeCount 0}}'
+              @label='Active plans'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.holder.jobTitle}}<Detail
+              @label='Role'
+              @value={{@model.holder.jobTitle}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.subscriptions.length}}<@fields.subscriptions
               @format='atom'
               @displayContainer={{false}}

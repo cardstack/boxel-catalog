@@ -19,7 +19,7 @@ import BooleanField from '@cardstack/base/boolean';
 import DateField from '@cardstack/base/date';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 import { Asset } from './asset';
 import { AssetCategory } from './asset-category';
@@ -480,6 +480,28 @@ export class MaintenancePlan extends CardDef {
               @model={{@model}}
             /></span></:status>
         <:fact>{{dueFact @model}}</:fact>
+        <:metric><Metric
+            @value={{hours @model.estimatedHours}}
+            @label='Estimate'
+          /></:metric>
+        <:details>
+          {{#if @model.trigger.summary}}<Detail
+              @label='Trigger'
+              @value={{@model.trigger.summary}}
+            />{{/if}}
+          {{#if @model.assignTeamName}}<Detail
+              @label='Team'
+              @value={{@model.assignTeamName}}
+            />{{/if}}
+          {{#if @model.lastCompletedAt}}<Detail
+              @label='Last done'
+              @value={{fmtDay @model.lastCompletedAt true}}
+            />{{/if}}
+          {{#if @model.checklist.items.length}}<Detail
+              @label='Checklist'
+              @value='{{@model.checklist.items.length}} items'
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.asset}}<@fields.asset
               @format='atom'
             />{{/if}}</:relations>

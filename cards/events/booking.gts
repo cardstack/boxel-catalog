@@ -17,7 +17,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/pretui/components/button';
 import TicketIcon from '@cardstack/boxel-icons/ticket';
 import { Alert } from '@cardstack/pretui/components/alert';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 import { Contact } from '../crm/contact';
 import { Event } from './event';
@@ -760,6 +760,15 @@ export class Booking extends CardDef {
       let tickets = ticketsOf(this.args.model.quantity);
       return price ? `${tickets} · ${price}` : tickets;
     }
+    get price() {
+      return priceOf(this.args.model as Booking);
+    }
+    get kickOff() {
+      return whenOf(this.args.model.event?.startsAt);
+    }
+    get checkedIn() {
+      return whenOf(this.args.model.checkedInAt);
+    }
     <template>
       <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Bk</span></:avatar>
@@ -782,6 +791,17 @@ export class Booking extends CardDef {
           {{/if}}
         </:status>
         <:fact>{{this.fact}}</:fact>
+        <:metric><Metric @value={{this.price}} @label='Total' /></:metric>
+        <:details>
+          {{#if this.kickOff}}<Detail
+              @label='Kick-off'
+              @value={{this.kickOff}}
+            />{{/if}}
+          {{#if this.checkedIn}}<Detail
+              @label='Checked in'
+              @value={{this.checkedIn}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.event}}<@fields.event
               @format='atom'
               @displayContainer={{false}}

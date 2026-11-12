@@ -28,7 +28,12 @@ import { Employee } from '../hr/employee';
 import { DotLabel, dotEnumField } from '../hr/dot-enum-field';
 import { daysBetween } from '../hr/utils';
 import HomeIcon from '@cardstack/boxel-icons/home';
-import { RichFittedCard, Media } from '../shared/rich-fitted-card';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import { PublishChecklist } from './components/publish-checklist';
 import { ChannelSelector } from './components/channel-selector';
 import { SchedulePicker } from './components/schedule-picker';
@@ -924,6 +929,32 @@ export class PropertyListing extends CardDef {
             @hue={{this.f.statusHue}}
           /></:status>
         <:fact>{{this.f.headline}}</:fact>
+        <:metric>{{#if @model.askingPrice.amount}}<Metric
+              @value={{this.f.price}}
+              @label='Asking'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.areaSqft}}<Detail
+              @label='Area'
+              @value={{this.f.area}}
+            />{{/if}}
+          {{#if @model.propertyType}}<Detail
+              @label='Type'
+              @value={{this.f.type}}
+            />{{/if}}
+          {{#if @model.pricePerSqft}}<Detail
+              @label='Per sqft'
+              @value={{this.f.perSqft}}
+            />{{/if}}
+          {{#if @model.daysOnMarket}}<Detail
+              @label='On market'
+              @value={{this.f.dom}}
+            />{{/if}}
+          {{#if @model.yearBuilt}}<Detail
+              @label='Built'
+              @value={{this.f.built}}
+            />{{/if}}
+        </:details>
         <:relations>
           {{#if @model.agent}}
             <@fields.agent @format='atom' @displayContainer={{false}} />

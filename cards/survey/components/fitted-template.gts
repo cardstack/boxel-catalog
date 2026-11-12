@@ -1,7 +1,7 @@
 import { Component } from '@cardstack/base/card-api';
 import type { Survey } from '../survey';
 import { questionFacts, type SurveyQuestion } from '../survey-question';
-import { RichFittedCard } from '../../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../../shared/rich-fitted-card';
 
 export class SurveyFitted extends Component<typeof Survey> {
   get facts() {
@@ -22,6 +22,16 @@ export class SurveyFitted extends Component<typeof Survey> {
         {{this.facts.total}}
         ·
         {{if @model.isPublished 'published' 'not yet published'}}</:fact>
+      <:metric><Metric
+          @value='{{this.facts.total}}'
+          @label='Questions'
+        /></:metric>
+      <:details>
+        <Detail @label='Rating' @value={{this.facts.rating}} />
+        <Detail @label='Choice' @value={{this.facts.choice}} />
+        <Detail @label='Text' @value={{this.facts.text}} />
+        <Detail @label='Yes / no' @value={{this.facts.yesNo}} />
+      </:details>
     </RichFittedCard>
     <style scoped>
       .mark {

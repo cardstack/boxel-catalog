@@ -25,7 +25,7 @@ import BoxesIcon from '@cardstack/boxel-icons/boxes';
 import CriticalityField from './criticality-field';
 import { Asset } from './asset';
 import { MaintenancePlan } from './maintenance-plan';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   Chip,
   Brief,
@@ -200,6 +200,20 @@ export class AssetCategory extends CardDef {
             @strong={{lifeYears @model.expectedLifeMonths true}}
             @rest={{if @model.defaultTeamName (teamText @model)}}
           /></:fact>
+        <:metric><Metric
+            @value='{{this.assets.length}}'
+            @label='Assets'
+          /></:metric>
+        <:details>
+          {{#if this.assets.length}}<Detail
+              @label='In service'
+              @value='{{this.inService}}'
+            />{{/if}}
+          {{#if @model.defaultPlans.length}}<Detail
+              @label='Default plans'
+              @value='{{@model.defaultPlans.length}}'
+            />{{/if}}
+        </:details>
         <:relations>
           {{#each this.assets as |a|}}
             <Chip

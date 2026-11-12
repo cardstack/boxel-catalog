@@ -15,7 +15,7 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import { on } from '@ember/modifier';
 import { Button } from '@cardstack/pretui/components/button';
 import PackageIcon from '@cardstack/boxel-icons/package';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import TrackingNumberField from './tracking-number';
 import ParcelDimensionsField from './parcel-dimensions';
 import DeliveryWindowField from './delivery-window';
@@ -731,6 +731,31 @@ export class Shipment extends CardDef {
                 @model
               }}</span></span></:status>
         <:fact>{{@model.trackingNumber.number}} · {{windowLabel @model}}</:fact>
+        <:metric><Metric
+            @value={{money
+              @model.shippingMargin
+              @model.customerPaid.currency.code
+            }}
+            @label='Margin'
+          /></:metric>
+        <:details>
+          {{#if @model.shippedAt}}<Detail
+              @label='Shipped'
+              @value={{dayTime @model.shippedAt}}
+            />{{/if}}
+          {{#if @model.deliveredAt}}<Detail
+              @label='Delivered'
+              @value={{dayTime @model.deliveredAt}}
+            />{{/if}}
+          {{#if @model.parcel.billableWeight}}<Detail
+              @label='Billable'
+              @value={{kg @model.parcel.billableWeight}}
+            />{{/if}}
+          {{#if @model.itemCount}}<Detail
+              @label='Items'
+              @value='{{@model.itemCount}}'
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.order}}<@fields.order
               @format='atom'
               @displayContainer={{false}}

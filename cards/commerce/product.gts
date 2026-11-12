@@ -10,7 +10,7 @@ import {
 import enumField from '@cardstack/base/enum';
 import PackageIcon from '@cardstack/boxel-icons/package';
 import { IsoHead, IsoMark, IsoPage, Kv, Panel } from '../shared/compact-sheet';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 
 // Product — the one thing a business buys, sells or stocks, identified by its
 // SKU. Domain cards extend it with what their domain needs (fulfilment adds
@@ -126,6 +126,12 @@ export class Product extends CardDef {
         <:avatar><PackageIcon class='mark' aria-hidden='true' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{@model.sku}}</:subtitle>
+        <:details>
+          {{#if @model.productType}}<Detail
+              @label='Type'
+              @value={{@model.productType}}
+            />{{/if}}
+        </:details>
       </RichFittedCard>
       <style scoped>
         .mark {

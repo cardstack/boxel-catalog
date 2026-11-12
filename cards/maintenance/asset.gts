@@ -39,7 +39,7 @@ import { AssetCategory } from './asset-category';
 import { MaintenancePlan } from './maintenance-plan';
 import { Meter } from './meter';
 import { WorkOrder } from './work-order';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   Chip,
   Brief,
@@ -236,6 +236,28 @@ export class Asset extends CardDef {
             @strong={{this.next.plan}}
             @rest={{this.next.due}}
           /></:fact>
+        <:metric>{{#if @model.primaryMeterValue}}<Metric
+              @value={{num @model.primaryMeterValue @model.primaryMeterUnit}}
+              @label='Running hours'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.lastServicedAt}}<Detail
+              @label='Last serviced'
+              @value={{shortDate @model.lastServicedAt}}
+            />{{/if}}
+          {{#if @model.condition.code}}<Detail
+              @label='Condition'
+              @value={{@model.condition.code}}
+            />{{/if}}
+          {{#if @model.custodianName}}<Detail
+              @label='Custodian'
+              @value={{@model.custodianName}}
+            />{{/if}}
+          {{#if @model.warranty.endsOn}}<Detail
+              @label='Warranty to'
+              @value={{shortDate @model.warranty.endsOn}}
+            />{{/if}}
+        </:details>
         <:relations>
           {{#if @model.category}}<@fields.category @format='atom' />{{/if}}
           {{#if @model.location}}<@fields.location @format='atom' />{{/if}}

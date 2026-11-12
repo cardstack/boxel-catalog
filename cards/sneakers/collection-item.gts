@@ -17,9 +17,14 @@ import ArchiveIcon from '@cardstack/boxel-icons/archive';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { MarketplaceMember } from './marketplace-member';
 import { Acquisition } from './acquisition';
-import { formatMoneyDelta, moneyText } from './money-format';
+import { formatMoney, formatMoneyDelta, moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { RichFittedCard, Media } from '../shared/rich-fitted-card';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -328,6 +333,31 @@ export class CollectionItem extends CardDef {
           {{moneyText @model.lastKnownValue}}
           · Paid
           {{moneyText @model.acquisition.price}}</:fact>
+        <:metric>{{#if (formatMoney @model.lastKnownValue)}}<Metric
+              @value={{formatMoney @model.lastKnownValue}}
+              @label='Value'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if
+            (formatMoneyDelta @model.lastKnownValue @model.acquisition.price)
+          }}<Detail @label='Gain' @value={{gainText @model}} />{{/if}}
+          {{#if @model.variantLabel}}<Detail
+              @label='Size'
+              @value={{@model.variantLabel}}
+            />{{/if}}
+          {{#if @model.condition.summary}}<Detail
+              @label='Condition'
+              @value={{@model.condition.summary}}
+            />{{/if}}
+          {{#if @model.acquisition.acquiredOn}}<Detail
+              @label='Acquired'
+              @value={{day @model.acquisition.acquiredOn}}
+            />{{/if}}
+          {{#if @model.verifiedOn}}<Detail
+              @label='Verified'
+              @value={{verifiedText @model}}
+            />{{/if}}
+        </:details>
       </RichFittedCard>
     </template>
   };
