@@ -12,6 +12,8 @@ import { module, test } from 'qunit';
 import {
   setupLocalIndexing,
   setupOnSave,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
   testRealmURL as nonCatalogRealmURL,
   setupAuthEndpoints,
   setupUserSubscription,
@@ -49,6 +51,7 @@ export function runTests() {
     setupApplicationTest(hooks);
     setupLocalIndexing(hooks);
     setupOnSave(hooks);
+    setupRealmCacheTeardown(hooks);
 
     let mockMatrixUtils = setupMockMatrix(hooks, {
       loggedInAs: '@testuser:localhost',
@@ -68,31 +71,35 @@ export function runTests() {
       });
       setupUserSubscription();
       setupAuthEndpoints();
-      // this setup test realm is pretending to be a mock catalog
-      await setupAcceptanceTestRealm({
-        realmURL: nonCatalogRealmURL,
-        mockMatrixUtils,
-        contents: {
-          ...SYSTEM_CARD_FIXTURE_CONTENTS,
-          ...makeMockCatalogContents(nonCatalogRealmURL, catalogRealmURL),
-        },
-      });
-      await setupAcceptanceTestRealm({
-        mockMatrixUtils,
-        realmURL: testDestinationRealmURL,
-        contents: {
-          ...SYSTEM_CARD_FIXTURE_CONTENTS,
-          ...makeDestinationRealmContents(),
-        },
-      });
-      // Catalog realm whose URL ends with /catalog/ so isRemixableRealm returns true
-      await setupAcceptanceTestRealm({
-        realmURL: catalogRealmMockURL,
-        mockMatrixUtils,
-        contents: {
-          ...SYSTEM_CARD_FIXTURE_CONTENTS,
-          ...makeMockCatalogContents(catalogRealmMockURL, catalogRealmURL),
-        },
+      // Every test builds these fixtures identically, so the indexed result is
+      // cached for the module and restored rather than rebuilt.
+      await withCachedRealmSetup(async () => {
+        // this setup test realm is pretending to be a mock catalog
+        await setupAcceptanceTestRealm({
+          realmURL: nonCatalogRealmURL,
+          mockMatrixUtils,
+          contents: {
+            ...SYSTEM_CARD_FIXTURE_CONTENTS,
+            ...makeMockCatalogContents(nonCatalogRealmURL, catalogRealmURL),
+          },
+        });
+        await setupAcceptanceTestRealm({
+          mockMatrixUtils,
+          realmURL: testDestinationRealmURL,
+          contents: {
+            ...SYSTEM_CARD_FIXTURE_CONTENTS,
+            ...makeDestinationRealmContents(),
+          },
+        });
+        // Catalog realm whose URL ends with /catalog/ so isRemixableRealm returns true
+        await setupAcceptanceTestRealm({
+          realmURL: catalogRealmMockURL,
+          mockMatrixUtils,
+          contents: {
+            ...SYSTEM_CARD_FIXTURE_CONTENTS,
+            ...makeMockCatalogContents(catalogRealmMockURL, catalogRealmURL),
+          },
+        });
       });
     });
 

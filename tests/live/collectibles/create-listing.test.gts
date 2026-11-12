@@ -9,6 +9,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -58,6 +60,7 @@ export function runTests() {
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
       setupOnSave(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -72,35 +75,41 @@ export function runTests() {
         });
         setupUserSubscription();
         setupAuthEndpoints();
-        await setupAcceptanceTestRealm({
-          realmURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            'seller.json': instance('seller-profile', 'SellerProfile', {
-              name: 'Sam',
-            }),
-            'member.json': instance('marketplace-member', 'MarketplaceMember', {
-              name: 'Mo',
-            }),
-            'product.json': instance(
-              'collectible-product',
-              'CollectibleProduct',
-              {
-                sku: 'DZ5485-612',
-              },
-            ),
-            'sellers-item.json': item('seller', 'product'),
-            'members-item.json': item('member', 'product'),
-            'not-a-product.json': item('seller', 'member'),
-            'no-product.json': instance(
-              'collection-item',
-              'CollectionItem',
-              { variant: '9' },
-              { owner: link('seller') },
-            ),
-          },
-        });
+        await withCachedRealmSetup(() =>
+          setupAcceptanceTestRealm({
+            realmURL,
+            mockMatrixUtils,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              'seller.json': instance('seller-profile', 'SellerProfile', {
+                name: 'Sam',
+              }),
+              'member.json': instance(
+                'marketplace-member',
+                'MarketplaceMember',
+                {
+                  name: 'Mo',
+                },
+              ),
+              'product.json': instance(
+                'collectible-product',
+                'CollectibleProduct',
+                {
+                  sku: 'DZ5485-612',
+                },
+              ),
+              'sellers-item.json': item('seller', 'product'),
+              'members-item.json': item('member', 'product'),
+              'not-a-product.json': item('seller', 'member'),
+              'no-product.json': instance(
+                'collection-item',
+                'CollectionItem',
+                { variant: '9' },
+                { owner: link('seller') },
+              ),
+            },
+          }),
+        );
         await visitOperatorMode({ stacks: [[]] });
       });
 

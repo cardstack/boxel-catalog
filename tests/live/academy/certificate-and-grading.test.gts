@@ -9,6 +9,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -166,6 +168,7 @@ export function runTests() {
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
       setupOnSave(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -180,127 +183,132 @@ export function runTests() {
         });
         setupUserSubscription();
         setupAuthEndpoints();
-        await setupAcceptanceTestRealm({
-          realmURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            'authority.json': instance(
-              'cards/audit/certification-authority',
-              'CertificationAuthority',
-              { name: 'Academy', numberPrefix: 'ACAD', lastSequence: 41 },
-            ),
-            'rubric.json': instance('cards/academy/rubric', 'Rubric', {
-              title: 'Essay rubric',
-              criteria: [
+        await withCachedRealmSetup(() =>
+          setupAcceptanceTestRealm({
+            realmURL,
+            mockMatrixUtils,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              'authority.json': instance(
+                'cards/audit/certification-authority',
+                'CertificationAuthority',
+                { name: 'Academy', numberPrefix: 'ACAD', lastSequence: 41 },
+              ),
+              'rubric.json': instance('cards/academy/rubric', 'Rubric', {
+                title: 'Essay rubric',
+                criteria: [
+                  {
+                    name: 'Analysis',
+                    weight: 1,
+                    maxPoints: 10,
+                    levels: [
+                      { label: 'Strong', points: 10 },
+                      { label: 'Weak', points: 4 },
+                    ],
+                  },
+                ],
+              }),
+              'essay.json': instance(
+                'cards/academy/assignment',
+                'Assignment',
                 {
-                  name: 'Analysis',
-                  weight: 1,
+                  title: 'Essay',
                   maxPoints: 10,
-                  levels: [
-                    { label: 'Strong', points: 10 },
-                    { label: 'Weak', points: 4 },
-                  ],
+                  dueWindow: { dueAt: '2026-09-10T09:00:00.000Z' },
                 },
-              ],
-            }),
-            'essay.json': instance(
-              'cards/academy/assignment',
-              'Assignment',
-              {
-                title: 'Essay',
-                maxPoints: 10,
-                dueWindow: { dueAt: '2026-09-10T09:00:00.000Z' },
-              },
-              { rubric: link('rubric') },
-            ),
-            'ruled.json': instance('cards/academy/course', 'Course', {
-              title: 'Analytics',
-              status: 'published',
-              completionRule: { minQuizPassCount: 1 },
-              latePolicy: {
-                penaltyPctPerDay: 10,
-                capPct: 50,
-                graceHours: 0,
-                hardCloseDays: 0,
-              },
-            }),
-            'open.json': instance('cards/academy/course', 'Course', {
-              title: 'Open course',
-              status: 'published',
-            }),
-            'ruled-cohort.json': instance(
-              'cards/academy/cohort',
-              'Cohort',
-              { name: 'Ruled', status: 'running', capacity: 10 },
-              { course: link('ruled') },
-            ),
-            'open-cohort.json': instance(
-              'cards/academy/cohort',
-              'Cohort',
-              { name: 'Open', status: 'running', capacity: 10 },
-              { course: link('open') },
-            ),
-            'ada.json': instance('cards/academy/learner', 'Learner', {
-              name: 'Ada',
-            }),
-            'ben.json': instance('cards/academy/learner', 'Learner', {
-              name: 'Ben',
-            }),
-            'cara.json': instance('cards/academy/learner', 'Learner', {
-              name: 'Cara',
-            }),
-            'ada-ruled.json': seat('ada', 'ruled-cohort'),
-            'ben-open.json': seat('ben', 'open-cohort'),
-            'cara-ruled.json': seat('cara', 'ruled-cohort'),
-            'dan.json': instance('cards/academy/learner', 'Learner', {
-              name: 'Dan',
-            }),
-            'eve.json': instance('cards/academy/learner', 'Learner', {
-              name: 'Eve',
-            }),
-            'dan-ruled.json': seat('dan', 'ruled-cohort'),
-            'eve-ruled.json': seat('eve', 'ruled-cohort'),
-            // An earlier run saved this certificate, then stopped before
-            // linking it from the enrolment.
-            'cara-cert.json': instance(
-              'cards/academy/certificate',
-              'Certificate',
-              { number: `ACAD-${year}-000050`, certStatus: 'issued' },
-              { enrollment: link('cara-ruled'), authority: link('authority') },
-            ),
-            'check.json': instance('cards/academy/quiz', 'Quiz', {
-              title: 'Check',
-              attemptsAllowed: 1,
-              questions: [
+                { rubric: link('rubric') },
+              ),
+              'ruled.json': instance('cards/academy/course', 'Course', {
+                title: 'Analytics',
+                status: 'published',
+                completionRule: { minQuizPassCount: 1 },
+                latePolicy: {
+                  penaltyPctPerDay: 10,
+                  capPct: 50,
+                  graceHours: 0,
+                  hardCloseDays: 0,
+                },
+              }),
+              'open.json': instance('cards/academy/course', 'Course', {
+                title: 'Open course',
+                status: 'published',
+              }),
+              'ruled-cohort.json': instance(
+                'cards/academy/cohort',
+                'Cohort',
+                { name: 'Ruled', status: 'running', capacity: 10 },
+                { course: link('ruled') },
+              ),
+              'open-cohort.json': instance(
+                'cards/academy/cohort',
+                'Cohort',
+                { name: 'Open', status: 'running', capacity: 10 },
+                { course: link('open') },
+              ),
+              'ada.json': instance('cards/academy/learner', 'Learner', {
+                name: 'Ada',
+              }),
+              'ben.json': instance('cards/academy/learner', 'Learner', {
+                name: 'Ben',
+              }),
+              'cara.json': instance('cards/academy/learner', 'Learner', {
+                name: 'Cara',
+              }),
+              'ada-ruled.json': seat('ada', 'ruled-cohort'),
+              'ben-open.json': seat('ben', 'open-cohort'),
+              'cara-ruled.json': seat('cara', 'ruled-cohort'),
+              'dan.json': instance('cards/academy/learner', 'Learner', {
+                name: 'Dan',
+              }),
+              'eve.json': instance('cards/academy/learner', 'Learner', {
+                name: 'Eve',
+              }),
+              'dan-ruled.json': seat('dan', 'ruled-cohort'),
+              'eve-ruled.json': seat('eve', 'ruled-cohort'),
+              // An earlier run saved this certificate, then stopped before
+              // linking it from the enrolment.
+              'cara-cert.json': instance(
+                'cards/academy/certificate',
+                'Certificate',
+                { number: `ACAD-${year}-000050`, certStatus: 'issued' },
                 {
-                  prompt: 'Two plus two?',
-                  kind: 'single',
-                  points: 1,
-                  options: [
-                    { label: 'Four', key: 'four', isCorrect: true },
-                    { label: 'Five', key: 'five', isCorrect: false },
-                  ],
+                  enrollment: link('cara-ruled'),
+                  authority: link('authority'),
                 },
-              ],
-            }),
-            'ada-essay.json': submission(
-              'ada-ruled',
-              '2026-09-12T10:00:00.000Z',
-            ),
-            'cara-essay.json': submission(
-              'cara-ruled',
-              '2026-09-09T10:00:00.000Z',
-            ),
-            // An earlier grading run saved this grade, then stopped.
-            'cara-grade.json': instance(
-              'cards/academy/grade',
-              'Grade',
-              {},
-              { submission: link('cara-essay') },
-            ),
-          },
-        });
+              ),
+              'check.json': instance('cards/academy/quiz', 'Quiz', {
+                title: 'Check',
+                attemptsAllowed: 1,
+                questions: [
+                  {
+                    prompt: 'Two plus two?',
+                    kind: 'single',
+                    points: 1,
+                    options: [
+                      { label: 'Four', key: 'four', isCorrect: true },
+                      { label: 'Five', key: 'five', isCorrect: false },
+                    ],
+                  },
+                ],
+              }),
+              'ada-essay.json': submission(
+                'ada-ruled',
+                '2026-09-12T10:00:00.000Z',
+              ),
+              'cara-essay.json': submission(
+                'cara-ruled',
+                '2026-09-09T10:00:00.000Z',
+              ),
+              // An earlier grading run saved this grade, then stopped.
+              'cara-grade.json': instance(
+                'cards/academy/grade',
+                'Grade',
+                {},
+                { submission: link('cara-essay') },
+              ),
+            },
+          }),
+        );
         await visitOperatorMode({ stacks: [[]] });
       });
 

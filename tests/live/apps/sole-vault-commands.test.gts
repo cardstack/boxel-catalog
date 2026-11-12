@@ -9,6 +9,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -50,6 +52,7 @@ export function runTests() {
   module('Acceptance | Catalog | apps - sole vault commands', function (hooks) {
     setupApplicationTest(hooks);
     setupLocalIndexing(hooks);
+    setupRealmCacheTeardown(hooks);
     setupOnSave(hooks);
 
     let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -64,48 +67,50 @@ export function runTests() {
       });
       setupUserSubscription();
       setupAuthEndpoints();
-      await setupAcceptanceTestRealm({
-        realmURL,
-        mockMatrixUtils,
-        contents: {
-          ...SYSTEM_CARD_FIXTURE_CONTENTS,
-          'seller.json': instance(
-            `${collectibles}seller-profile`,
-            'SellerProfile',
-            { name: 'Test Seller' },
-          ),
-          'buyer.json': instance(
-            `${collectibles}marketplace-member`,
-            'MarketplaceMember',
-            { name: 'Test Buyer' },
-          ),
-          'product.json': instance(
-            `${collectibles}collectible-product`,
-            'CollectibleProduct',
-            { sku: 'TEST-0001' },
-          ),
-          'item.json': instance(
-            `${collectibles}collection-item`,
-            'CollectionItem',
-            { variant: '10', listedAt: '2026-08-01' },
-            { owner: link('seller'), item: link('product') },
-          ),
-          'listing.json': instance(
-            `${collectibles}listing`,
-            'Listing',
-            {
-              price: usd(200),
-              shippingPrice: usd(15),
-              listingStatus: 'active',
-            },
-            {
-              seller: link('seller'),
-              product: link('product'),
-              collectionItem: link('item'),
-            },
-          ),
-        },
-      });
+      await withCachedRealmSetup(() =>
+        setupAcceptanceTestRealm({
+          realmURL,
+          mockMatrixUtils,
+          contents: {
+            ...SYSTEM_CARD_FIXTURE_CONTENTS,
+            'seller.json': instance(
+              `${collectibles}seller-profile`,
+              'SellerProfile',
+              { name: 'Test Seller' },
+            ),
+            'buyer.json': instance(
+              `${collectibles}marketplace-member`,
+              'MarketplaceMember',
+              { name: 'Test Buyer' },
+            ),
+            'product.json': instance(
+              `${collectibles}collectible-product`,
+              'CollectibleProduct',
+              { sku: 'TEST-0001' },
+            ),
+            'item.json': instance(
+              `${collectibles}collection-item`,
+              'CollectionItem',
+              { variant: '10', listedAt: '2026-08-01' },
+              { owner: link('seller'), item: link('product') },
+            ),
+            'listing.json': instance(
+              `${collectibles}listing`,
+              'Listing',
+              {
+                price: usd(200),
+                shippingPrice: usd(15),
+                listingStatus: 'active',
+              },
+              {
+                seller: link('seller'),
+                product: link('product'),
+                collectionItem: link('item'),
+              },
+            ),
+          },
+        }),
+      );
       await visitOperatorMode({ stacks: [[]] });
     });
 
