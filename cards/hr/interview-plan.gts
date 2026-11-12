@@ -517,7 +517,6 @@ export class InterviewPlan extends CardDef {
             @name={{if @model.title @model.title 'Interview Plan'}}
             @hue='var(--muted)'
             @shape='rounded'
-            @size={{20}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.title}}</:title>

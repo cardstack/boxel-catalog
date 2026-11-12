@@ -372,7 +372,6 @@ export class Team extends CardDef {
             @name={{orEmpty @model.title}}
             @hue='var(--muted)'
             @shape='rounded'
-            @size={{20}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.title}}</:title>

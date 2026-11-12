@@ -594,7 +594,6 @@ export class OnboardingChecklist extends CardDef {
             @name='On'
             @hue='var(--muted)'
             @shape='rounded'
-            @size={{20}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{this.personName}}</:title>

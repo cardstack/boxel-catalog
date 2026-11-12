@@ -14,6 +14,7 @@ import ChecklistIcon from '@cardstack/boxel-icons/checklist';
 import { DurationField, durationLabel } from './duration-field';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 // containsMany takes a FieldDef, never a CardDef: this type's data lives inline
 // on the OnboardingTemplate instance and it is never addressable on its own, so
@@ -217,164 +218,34 @@ export class OnboardingTemplate extends CardDef {
     </template>
   };
 
+  // tasks is containsMany, so it is safe to read in prerendered fitted
   static fitted = class Fitted extends Component<typeof this> {
-    // tasks is containsMany — its data lives on the instance itself, so it
-    // is safe to read in prerendered fitted (unlike linksTo/linksToMany).
-    get previewTasks() {
-      return (this.args.model?.tasks ?? []).slice(0, 4);
-    }
-
-    get moreCount(): number {
+    get taskCount() {
       let n = this.args.model?.tasks?.length ?? 0;
-      return Math.max(0, n - 4);
+      return n === 1 ? '1 task' : `${n} tasks`;
     }
-
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
-          </div>
-          <span class='fit-count'>{{@model.tasks.length}} tasks</span>
-        </div>
-
-        {{#if @model.description}}
-          <div class='fit-mid'>
-            <p class='fit-desc'>{{@model.description}}</p>
-          </div>
-        {{/if}}
-
-        {{#if this.previewTasks.length}}
-          <ul class='fit-add'>
-            {{#each this.previewTasks as |task|}}
-              <li class='fit-task'>{{task.title}}</li>
-            {{/each}}
-            {{#if this.moreCount}}
-              <li class='fit-task fit-more'>+{{this.moreCount}} more</li>
-            {{/if}}
-          </ul>
-        {{/if}}
-      </article>
+      <RichFittedCard>
+        <:avatar><ChecklistIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{this.taskCount}}</:subtitle>
+        <:fact>{{@model.description}}</:fact>
+        <:metric><Metric
+            @value='{{@model.tasks.length}}'
+            @label='Tasks'
+          /></:metric>
+        <:details>
+          {{#each @model.tasks as |task|}}<Detail
+              @label={{if task.assigneeRole task.assigneeRole 'Task'}}
+              @value={{task.title}}
+            />{{/each}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        /* Four tiers, each ADDING content. 11px floor. Count never hidden. */
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-3xs);
-          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
-          overflow: hidden;
-          background: var(--card);
-          color: var(--card-foreground);
-          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
-          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-2xs);
-          flex-wrap: wrap;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-count {
-          flex: none;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          white-space: nowrap;
-        }
-        .fit-mid {
-          flex: none;
-          display: none;
-        }
-        .fit-desc {
-          margin: 0;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          line-height: 1.4;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-add {
-          display: none;
-          list-style: none;
-          margin: 0;
-          margin-top: auto;
-          padding: var(--boxel-sp-3xs) 0 0;
-          border-top: 1px dashed var(--border);
-        }
-        .fit-task {
-          font-size: var(--fit-small);
-          font-weight: 600;
-          line-height: 1.5;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .fit-task::before {
-          content: '·';
-          margin-right: 0.35em;
-          color: var(--muted-foreground);
-        }
-        .fit-more {
-          font-weight: 400;
-          color: var(--muted-foreground);
-        }
-        .fit-more::before {
-          content: none;
-        }
-
-        /* TIER 3 — description joins on taller (or wide-strip) cells. */
-        @container fitted-card (height > 80px) {
-          .fit-mid {
-            display: block;
-          }
-        }
-        @container fitted-card (width > 240px) and (height > 50px) {
-          .fit-mid {
-            display: block;
-          }
-        }
-        /* TIER 4 — first task titles, pinned to the bottom edge. */
-        @container fitted-card (height > 130px) and (width >= 170px) {
-          .fit-add {
-            display: block;
-          }
-        }
-        /* Short strip: horizontal, single-line name and description. */
-        @container fitted-card (height <= 90px) {
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-          .fit-desc {
-            -webkit-line-clamp: 1;
-          }
         }
       </style>
     </template>

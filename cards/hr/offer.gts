@@ -761,7 +761,6 @@ export class Offer extends CardDef {
             @name='Of'
             @hue='var(--muted)'
             @shape='rounded'
-            @size={{20}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{offerTitle @model}}</:title>

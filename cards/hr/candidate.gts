@@ -985,7 +985,6 @@ export class Candidate extends PersonBase {
             @name={{if @model.title @model.title '?'}}
             @src={{@model.photo.resolvedUrl}}
             @hue={{AVATAR_HUE}}
-            @size={{20}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.title}}</:title>

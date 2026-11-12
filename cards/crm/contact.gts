@@ -129,7 +129,6 @@ export class Contact extends PersonBase {
         <:avatar><Avatar
             @name={{if @model.cardTitle @model.cardTitle ''}}
             @shape='square'
-            @size={{20}}
           /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:status>{{#each

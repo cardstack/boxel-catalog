@@ -19,6 +19,7 @@ import { CompensationField } from './compensation-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 
 export const COMP_CHANGE_REASONS = [
   'new-hire',
@@ -278,43 +279,30 @@ export class Compensation extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get reasonLabel() {
+      return COMP_CHANGE_REASON_LABELS[this.args.model?.reason ?? ''];
+    }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.cardTitle}}</span>
-        <span class='fit-pkg'>{{@model.package.summary}}</span>
-      </div>
-      <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fit-pkg {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#if this.reasonLabel}}<StatePill
+              @label={{this.reasonLabel}}
+              @hue='blue'
+            />{{/if}}</:status>
+        <:subtitle>{{@model.package.summary}}</:subtitle>
+        <:details>
+          {{#if @model.employee}}<Detail @label='Employee'><@fields.employee
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.approvedBy}}<Detail
+              @label='Approved by'
+            ><@fields.approvedBy
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

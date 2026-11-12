@@ -34,12 +34,25 @@ import {
   Descriptions,
   type DescriptionsItem,
 } from '@cardstack/pretui/components/descriptions';
-import { RichFittedCard } from '../shared/rich-fitted-card';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { QUIET_AVATAR_HUE, hueOf, stateColorsOf } from './hr-ui';
 import { daysBetween } from './utils';
-import { EmbCard, IsoHead, IsoPage, Kv, kv, Panel, Sheet, SheetLine, SheetRows, SheetSection, SheetStat, StatStrip, type StripItem } from '../shared/compact-sheet';
+import {
+  EmbCard,
+  IsoHead,
+  IsoPage,
+  Kv,
+  kv,
+  Panel,
+  Sheet,
+  SheetLine,
+  SheetRows,
+  SheetSection,
+  SheetStat,
+  StatStrip,
+  type StripItem,
+} from '../shared/compact-sheet';
 import { IsoFrame } from '../shared/compact-sheet';
 
 export const REVIEW_CYCLE_STATUSES = ['planned', 'active', 'closed'];
@@ -591,7 +604,6 @@ export class ReviewCycle extends CardDef {
             <Avatar
               @name='Review Cycle'
               @hue={{QUIET_AVATAR_HUE}}
-              @size={{32}}
               aria-hidden='true'
             />
           </:avatar>
@@ -1259,18 +1271,19 @@ export class PerformanceReview extends CardDef {
     }
     <template>
       <RichFittedCard>
-<:avatar><ReviewMark /></:avatar>
-<:title>{{@model.title}}</:title>
-<:status>{{#if @model.status}}<DotLabel
+        <:avatar><ReviewMark /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:status>{{#if @model.status}}<DotLabel
               @label={{@model.status}}
               @hue={{toneHue this.statusTone}}
             />{{/if}}</:status>
-<:subtitle><span
-              class='meta'
-            >{{this.subline}}</span></:subtitle>
-<:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric @value={{s.value}} @label={{s.label}} />{{/if}}{{/let}}</:metric>
-<:details>
-          
+        <:subtitle><span class='meta'>{{this.subline}}</span></:subtitle>
+        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
+                @value={{s.value}}
+                @label={{s.label}}
+              />{{/if}}{{/let}}</:metric>
+        <:details>
+
           <Detail @label='Score'>{{if
               @model.scoreLabel
               @model.scoreLabel
@@ -1289,12 +1302,12 @@ export class PerformanceReview extends CardDef {
                 @displayContainer={{false}}
               /></Detail>
           {{/if}}
-          
+
           {{#each this.fullFacts as |f|}}
             <Detail @label={{f.label}}>{{f.value}}</Detail>
           {{/each}}
         </:details>
-</RichFittedCard>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

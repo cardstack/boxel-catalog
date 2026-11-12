@@ -479,7 +479,6 @@ export class Contractor extends PersonBase {
             @name={{if @model.name @model.name '?'}}
             @src={{@model.photo.resolvedUrl}}
             @hue={{AVATAR_HUE}}
-            @size={{20}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.title}}</:title>

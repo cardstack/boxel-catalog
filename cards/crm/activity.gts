@@ -111,11 +111,7 @@ export class Activity extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar
-            @name='Activity'
-            @shape='square'
-            @size={{20}}
-          /></:avatar>
+        <:avatar><Avatar @name='Activity' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:status>{{#each
             if @model.activityType (array (hash label=@model.activityType))

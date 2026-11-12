@@ -396,7 +396,6 @@ export class JobRequisition extends CardDef {
             @name='Rq'
             @hue='var(--muted)'
             @shape='rounded'
-            @size={{20}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.displayTitle}}</:title>

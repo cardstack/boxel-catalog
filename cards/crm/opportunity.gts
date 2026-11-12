@@ -443,11 +443,7 @@ export class Opportunity extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar
-            @name='Opportunity'
-            @shape='square'
-            @size={{20}}
-          /></:avatar>
+        <:avatar><Avatar @name='Opportunity' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:status>{{#each
             if @model.stage (array (hash label=@model.stage tone='info'))
