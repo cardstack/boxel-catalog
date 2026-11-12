@@ -1821,27 +1821,28 @@ function lastRunText(status: ServerStatus): string | undefined {
       : 'Canceled';
 }
 
-function runs(n: number): string {
-  return `${n} run${n === 1 ? '' : 's'}`;
+function tally(n: number): string {
+  return n.toLocaleString('en-US');
 }
 
-// "26 runs left", "At least 10,000 runs left", "No runs left", or undefined
-// for a trigger with no bound.
+// "26", "At least 10,000", "None", or undefined for a trigger with no bound.
 function runsLeftText(trigger: TriggerStatus): string | undefined {
   if (trigger.runsLeft === undefined) {
     return undefined;
   }
   if (trigger.runsLeft === 0) {
-    return 'No runs left';
+    return 'None';
   }
-  let left = `${trigger.runsLeft.toLocaleString('en-US')} run${trigger.runsLeft === 1 ? '' : 's'} left`;
-  return trigger.runsLeftAtLeast ? `At least ${lowerFirst(left)}` : left;
+  let left = tally(trigger.runsLeft);
+  return trigger.runsLeftAtLeast ? `At least ${left}` : left;
 }
 
 interface StatusItem {
   label: string;
   value?: string;
   date?: string;
+  // The zone a `date` reads in; the viewer's own when absent.
+  timeZone?: string;
   look?: StateLook;
 }
 
@@ -1852,9 +1853,11 @@ function statusItems(status: ServerStatus): StatusItem[] {
   ];
   if (status.switchedOn) {
     items.push(
-      status.nextRun
-        ? { label: 'Next run', date: status.nextRun }
-        : { label: 'Next run', value: 'None scheduled' },
+      status.state === 'paused'
+        ? { label: 'Next run', value: 'None while paused' }
+        : status.nextRun
+          ? { label: 'Next run', date: status.nextRun }
+          : { label: 'Next run', value: 'None scheduled' },
     );
     let last = lastRunText(status);
     items.push(
@@ -1866,19 +1869,29 @@ function statusItems(status: ServerStatus): StatusItem[] {
   return items;
 }
 
-function triggerItems(trigger: TriggerStatus): StatusItem[] {
+// A trigger's times read in the trigger's own zone, as the trigger's
+// sentences do.
+function triggerItems(
+  trigger: TriggerStatus,
+  timeZone: string | null | undefined,
+): StatusItem[] {
+  let zone = timeZone && isTimeZone(timeZone) ? timeZone : undefined;
   let items: StatusItem[] = [
-    { label: 'Runs so far', value: runs(trigger.runs) },
+    { label: 'Runs so far', value: tally(trigger.runs) },
   ];
   let left = runsLeftText(trigger);
   if (left) {
     items.push({ label: 'Runs left', value: left });
   }
   if (trigger.until) {
-    items.push({ label: 'Last possible run', date: trigger.until });
+    items.push({
+      label: 'Ends no later than',
+      date: trigger.until,
+      timeZone: zone,
+    });
   }
   if (trigger.nextRun) {
-    items.push({ label: 'Next run', date: trigger.nextRun });
+    items.push({ label: 'Next run', date: trigger.nextRun, timeZone: zone });
   }
   return items;
 }
@@ -1912,6 +1925,7 @@ class StatusFacts extends GlimmerComponent<{
               @date={{fact.date}}
               @dateStyle='medium'
               @timeStyle='short'
+              @timeZone={{fact.timeZone}}
             />
           {{else}}
             {{fact.value}}
@@ -1930,7 +1944,11 @@ function statusOfTrigger(
   if (!status?.switchedOn || !label) {
     return undefined;
   }
-  return status.triggers.find((t) => t.label === label);
+  let trigger = status.triggers.find((t) => t.label === label);
+  // A paused automation runs nothing, whatever its schedule says.
+  return trigger && status.state === 'paused'
+    ? { ...trigger, nextRun: undefined }
+    : trigger;
 }
 
 // The linked script, read-only.
@@ -2172,6 +2190,7 @@ class Isolated extends Component<typeof Automation> {
   get statusItems() {
     return this.status ? statusItems(this.status) : [];
   }
+  timeZoneAt = (index: number) => this.args.model.triggers?.[index]?.timeZone;
   triggerStatusAt = (index: number) =>
     statusOfTrigger(this.status, this.args.model.triggers?.[index]?.label);
   <template>
@@ -2257,7 +2276,10 @@ class Isolated extends Component<typeof Automation> {
                       class='automation__progress'
                       data-test-automation-trigger-progress={{progress.label}}
                     >
-                      <StatusFacts @items={{triggerItems progress}} @size='s' />
+                      <StatusFacts
+                        @items={{triggerItems progress (this.timeZoneAt index)}}
+                        @size='s'
+                      />
                     </div>
                   {{/if}}
                 {{/let}}
@@ -3491,7 +3513,8 @@ class Embedded extends WithStatus {
         margin: 0;
         padding: 0;
         list-style: none;
-        font-size: var(--boxel-font-size-sm);
+        font-size: var(--boxel-font-size-xs);
+        line-height: var(--boxel-line-height-xs);
         color: var(--muted-foreground);
       }
       .automation-embedded__triggers li {
