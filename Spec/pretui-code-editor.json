@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/code-editor",
+        "name": "CodeEditor"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { CodeEditor } from '@cardstack/pretui/components/code-editor';\n```\n",
+      "cardTitle": "CodeEditor",
+      "cardDescription": "Source code you can edit in place, with a language mode, line numbers and undo",
+      "containedExamples": [],
+      "componentName": "CodeEditor",
+      "category": "Inputs",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "pretui",
+      "lineage": null,
+      "version": "0.1.0",
+      "brief": "Source code you can edit in place, with a language mode, line numbers and undo",
+      "refs": "CodeMirror 6 \u00b7 Mantine CodeHighlight (read-only cousin) \u00b7 Pretui CodeBlock",
+      "buildsOn": "host CodeMirror, CodeBlock fallback",
+      "icon": "code",
+      "demand": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "CodeEditor",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/code-editor.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/code-editor.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

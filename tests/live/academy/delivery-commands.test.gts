@@ -9,6 +9,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -95,6 +97,7 @@ export function runTests() {
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
       setupOnSave(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -109,36 +112,38 @@ export function runTests() {
         });
         setupUserSubscription();
         setupAuthEndpoints();
-        await setupAcceptanceTestRealm({
-          realmURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            'm1.json': instance('course-module', 'Module', { title: 'One' }),
-            'm2.json': instance('course-module', 'Module', { title: 'Two' }),
-            'outsider.json': instance('course-module', 'Module', {
-              title: 'Elsewhere',
-            }),
-            'course.json': instance(
-              'course',
-              'Course',
-              { title: 'Analytics', status: 'published' },
-              { 'modules.0': link('m1'), 'modules.1': link('m2') },
-            ),
-            'ada.json': instance('learner', 'Learner', { name: 'Ada' }),
-            'ben.json': instance('learner', 'Learner', { name: 'Ben' }),
-            'running.json': cohort('Running', 'running', 1, ['m1']),
-            'planned.json': cohort('Planned', 'planned', 10),
-            'closed.json': cohort('Closed', 'closed', 10),
-            'ada-running.json': seat('ada', 'running'),
-            'ben-planned.json': seat('ben', 'planned'),
-            'ada-closed.json': seat('ada', 'closed', 'completed'),
-            'cert.json': instance('certificate', 'Certificate', {
-              number: 'ACAD-2026-000042',
-              certStatus: 'issued',
-            }),
-          },
-        });
+        await withCachedRealmSetup(() =>
+          setupAcceptanceTestRealm({
+            realmURL,
+            mockMatrixUtils,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              'm1.json': instance('course-module', 'Module', { title: 'One' }),
+              'm2.json': instance('course-module', 'Module', { title: 'Two' }),
+              'outsider.json': instance('course-module', 'Module', {
+                title: 'Elsewhere',
+              }),
+              'course.json': instance(
+                'course',
+                'Course',
+                { title: 'Analytics', status: 'published' },
+                { 'modules.0': link('m1'), 'modules.1': link('m2') },
+              ),
+              'ada.json': instance('learner', 'Learner', { name: 'Ada' }),
+              'ben.json': instance('learner', 'Learner', { name: 'Ben' }),
+              'running.json': cohort('Running', 'running', 1, ['m1']),
+              'planned.json': cohort('Planned', 'planned', 10),
+              'closed.json': cohort('Closed', 'closed', 10),
+              'ada-running.json': seat('ada', 'running'),
+              'ben-planned.json': seat('ben', 'planned'),
+              'ada-closed.json': seat('ada', 'closed', 'completed'),
+              'cert.json': instance('certificate', 'Certificate', {
+                number: 'ACAD-2026-000042',
+                certStatus: 'issued',
+              }),
+            },
+          }),
+        );
         await visitOperatorMode({ stacks: [[]] });
       });
 

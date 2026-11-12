@@ -9,6 +9,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -218,6 +220,7 @@ export function runTests() {
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
       setupOnSave(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -234,30 +237,32 @@ export function runTests() {
         });
         setupUserSubscription();
         setupAuthEndpoints();
-        ({ adapter } = await setupAcceptanceTestRealm({
-          realmURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            'RecurringTemplate/fresh.json': template({
-              nextDate: null,
-              runCount: 0,
-              scheduledRuns: 0,
-            }),
-            'RecurringTemplate/midway.json': template({
-              nextDate: '2027-02-01',
-              lastRunDate: '2027-01-01',
-              runCount: 1,
-              scheduledRuns: 1,
-            }),
-            'RecurringTemplate/ended.json': template({
-              nextDate: null,
-              lastRunDate: '2027-03-01',
-              runCount: 3,
-              scheduledRuns: 3,
-            }),
-          },
-        }));
+        ({ adapter } = await withCachedRealmSetup(() =>
+          setupAcceptanceTestRealm({
+            realmURL,
+            mockMatrixUtils,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              'RecurringTemplate/fresh.json': template({
+                nextDate: null,
+                runCount: 0,
+                scheduledRuns: 0,
+              }),
+              'RecurringTemplate/midway.json': template({
+                nextDate: '2027-02-01',
+                lastRunDate: '2027-01-01',
+                runCount: 1,
+                scheduledRuns: 1,
+              }),
+              'RecurringTemplate/ended.json': template({
+                nextDate: null,
+                lastRunDate: '2027-03-01',
+                runCount: 3,
+                scheduledRuns: 3,
+              }),
+            },
+          }),
+        ));
         await visitOperatorMode({ stacks: [[]] });
         ({ operations } = (await getService('loader-service').loader.import(
           '@cardstack/base/operations',

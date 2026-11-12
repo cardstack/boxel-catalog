@@ -9,6 +9,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -72,6 +74,7 @@ export function runTests() {
   module('Acceptance | Catalog | maintenance - commands', function (hooks) {
     setupApplicationTest(hooks);
     setupLocalIndexing(hooks);
+    setupRealmCacheTeardown(hooks);
     setupOnSave(hooks);
 
     let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -86,101 +89,103 @@ export function runTests() {
       });
       setupUserSubscription();
       setupAuthEndpoints();
-      await setupAcceptanceTestRealm({
-        realmURL,
-        mockMatrixUtils,
-        contents: {
-          ...SYSTEM_CARD_FIXTURE_CONTENTS,
-          'forklift.json': instance('asset', 'Asset', {
-            name: 'Forklift',
-            serialNumber: 'SN-1',
-            primaryMeterValue: 4600,
-            primaryMeterUnit: 'h',
-          }),
-          'plan-raised.json': dailyPlan('Daily walkaround'),
-          'plan-fresh.json': dailyPlan('Daily battery check'),
-          'plan-meter.json': instance(
-            'maintenance-plan',
-            'MaintenancePlan',
-            {
-              name: '500-hour service',
-              kind: 'preventive',
-              active: true,
-              trigger: { meterThreshold: 500, meterUnit: 'h' },
-              lastCompletedMeter: 4000,
-            },
-            { asset: link('forklift') },
-          ),
-          'plan-both.json': instance(
-            'maintenance-plan',
-            'MaintenancePlan',
-            {
-              name: 'Quarterly or 500-hour service',
-              kind: 'preventive',
-              active: true,
-              trigger: {
-                calendar: { pattern: 'monthly', interval: 3 },
-                meterThreshold: 500,
-                meterUnit: 'h',
-                whicheverFirst: true,
+      await withCachedRealmSetup(() =>
+        setupAcceptanceTestRealm({
+          realmURL,
+          mockMatrixUtils,
+          contents: {
+            ...SYSTEM_CARD_FIXTURE_CONTENTS,
+            'forklift.json': instance('asset', 'Asset', {
+              name: 'Forklift',
+              serialNumber: 'SN-1',
+              primaryMeterValue: 4600,
+              primaryMeterUnit: 'h',
+            }),
+            'plan-raised.json': dailyPlan('Daily walkaround'),
+            'plan-fresh.json': dailyPlan('Daily battery check'),
+            'plan-meter.json': instance(
+              'maintenance-plan',
+              'MaintenancePlan',
+              {
+                name: '500-hour service',
+                kind: 'preventive',
+                active: true,
+                trigger: { meterThreshold: 500, meterUnit: 'h' },
+                lastCompletedMeter: 4000,
               },
-              lastCompletedAt: yesterdayKey,
-              lastCompletedMeter: 4000,
-            },
-            { asset: link('forklift') },
-          ),
-          'both-open.json': instance(
-            'work-order',
-            'WorkOrder',
-            {
-              title: 'Quarterly or 500-hour service',
-              status: 'scheduled',
-              kind: 'preventive',
-              planDueKey: `plan-both@${dayKey(addDays(today, 90))}`,
-            },
-            { plan: link('plan-both') },
-          ),
-          'raised.json': instance(
-            'work-order',
-            'WorkOrder',
-            {
-              title: 'Daily walkaround',
-              status: 'requested',
-              kind: 'preventive',
-              planDueKey: `plan-raised@${todayKey}`,
-            },
-            { plan: link('plan-raised') },
-          ),
-          'done.json': instance(
-            'work-order',
-            'WorkOrder',
-            {
-              title: 'Daily battery check',
-              status: 'completed',
-              kind: 'preventive',
-              completedAt: `${todayKey}T12:00:00`,
-            },
-            { plan: link('plan-fresh'), subjectAsset: link('forklift') },
-          ),
-          'hours.json': instance(
-            'meter',
-            'Meter',
-            {
-              name: 'Running hours',
-              kind: 'cumulative',
-              unit: 'h',
-              readings: [
-                {
-                  value: 4600,
-                  unit: 'h',
-                  readAt: '2026-09-01T00:00:00.000Z',
+              { asset: link('forklift') },
+            ),
+            'plan-both.json': instance(
+              'maintenance-plan',
+              'MaintenancePlan',
+              {
+                name: 'Quarterly or 500-hour service',
+                kind: 'preventive',
+                active: true,
+                trigger: {
+                  calendar: { pattern: 'monthly', interval: 3 },
+                  meterThreshold: 500,
+                  meterUnit: 'h',
+                  whicheverFirst: true,
                 },
-              ],
-            },
-            { asset: link('forklift') },
-          ),
-        },
-      });
+                lastCompletedAt: yesterdayKey,
+                lastCompletedMeter: 4000,
+              },
+              { asset: link('forklift') },
+            ),
+            'both-open.json': instance(
+              'work-order',
+              'WorkOrder',
+              {
+                title: 'Quarterly or 500-hour service',
+                status: 'scheduled',
+                kind: 'preventive',
+                planDueKey: `plan-both@${dayKey(addDays(today, 90))}`,
+              },
+              { plan: link('plan-both') },
+            ),
+            'raised.json': instance(
+              'work-order',
+              'WorkOrder',
+              {
+                title: 'Daily walkaround',
+                status: 'requested',
+                kind: 'preventive',
+                planDueKey: `plan-raised@${todayKey}`,
+              },
+              { plan: link('plan-raised') },
+            ),
+            'done.json': instance(
+              'work-order',
+              'WorkOrder',
+              {
+                title: 'Daily battery check',
+                status: 'completed',
+                kind: 'preventive',
+                completedAt: `${todayKey}T12:00:00`,
+              },
+              { plan: link('plan-fresh'), subjectAsset: link('forklift') },
+            ),
+            'hours.json': instance(
+              'meter',
+              'Meter',
+              {
+                name: 'Running hours',
+                kind: 'cumulative',
+                unit: 'h',
+                readings: [
+                  {
+                    value: 4600,
+                    unit: 'h',
+                    readAt: '2026-09-01T00:00:00.000Z',
+                  },
+                ],
+              },
+              { asset: link('forklift') },
+            ),
+          },
+        }),
+      );
       await visitOperatorMode({ stacks: [[]] });
     });
 
