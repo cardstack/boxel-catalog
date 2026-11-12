@@ -2263,7 +2263,7 @@ class Isolated extends Component<typeof Automation> {
           <p class='automation__lead' data-test-automation-state-sentence>
             {{this.stateSentence}}
           </p>
-          <StatusFacts @items={{this.statusItems}} />
+          <StatusFacts @items={{this.statusItems}} @columns={{2}} />
         </PanelSection>
       {{else if this.statusKnown}}
         <Callout
