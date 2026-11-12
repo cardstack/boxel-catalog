@@ -5,7 +5,13 @@
       "sessionDate": "2026-09-02",
       "attendanceStatus": "excused",
       "note": "Client travel, notified in advance.",
-      "markedAt": "2026-09-02T11:45:00.000Z"
+      "markedAt": "2026-09-02T11:45:00.000Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "enrollment": {

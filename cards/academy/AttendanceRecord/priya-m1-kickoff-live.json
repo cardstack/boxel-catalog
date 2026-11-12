@@ -5,7 +5,13 @@
       "sessionDate": "2026-08-27",
       "attendanceStatus": "present",
       "note": null,
-      "markedAt": "2026-08-27T11:45:00.000Z"
+      "markedAt": "2026-08-27T11:45:00.000Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "enrollment": {

@@ -23,6 +23,11 @@
         "links": {
           "self": "../AuditorBot/contract-controls"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

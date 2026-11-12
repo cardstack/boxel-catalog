@@ -17,6 +17,8 @@ import { Table } from '@cardstack/pretui/components/table';
 
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 /**
  * Whole calendar days from `asOf` to `now`, counted on local calendar dates
@@ -140,64 +142,69 @@ export class CurrencyRegistry extends CardDef {
       return this.args.model?.baseCurrency?.toUpperCase() ?? 'USD';
     }
     <template>
-      <article class='registry'>
-        <header class='head'>
-          <p class='kicker'>Currency Registry</p>
-          <h1>{{this.base}}
-            base ·
-            {{@model.staleAfterDays}}-day staleness policy</h1>
-        </header>
-        <section class='panel'>
-          <h2 id={{this.captionId}}>Rates · 1 unit → {{this.base}}</h2>
-          {{#if this.rows.length}}
-            <Table @labelledBy={{this.captionId}}>
-              <:head>
-                <tr>
-                  <th scope='col'>Currency</th>
-                  <th scope='col' class='num'>Rate</th>
-                  <th scope='col'>As of</th>
-                  <th scope='col' class='num'>Age</th>
-                  <th scope='col'>Source</th>
-                  <th scope='col'>Resolve Currency</th>
-                </tr>
-              </:head>
-              <:body>
-                {{#each this.rows as |row|}}
-                  <tr class={{if row.stale 'stale'}}>
-                    <th scope='row' class='cur'>{{row.rate.currency}}</th>
-                    <td class='num'><FormatNumber
-                        @value={{row.rate.rate}}
-                        @maximumFractionDigits={{6}}
-                      /></td>
-                    <td>{{row.asOfLabel}}</td>
-                    <td class='num'>{{row.ageLabel}}</td>
-                    <td class='source'>{{row.rate.source}}</td>
-                    <td>
-                      <StatePill
-                        @label={{row.statusLabel}}
-                        @hue={{row.statusHue}}
-                        @dot={{true}}
-                      />
-                    </td>
+      <IsoFrame>
+        <article class='registry'>
+          <header class='head'>
+            <p class='kicker'>Currency Registry</p>
+            <h1>{{this.base}}
+              base ·
+              {{@model.staleAfterDays}}-day staleness policy</h1>
+          </header>
+          <section class='panel'>
+            <h2 id={{this.captionId}}>Rates · 1 unit → {{this.base}}</h2>
+            {{#if this.rows.length}}
+              <Table @labelledBy={{this.captionId}}>
+                <:head>
+                  <tr>
+                    <th scope='col'>Currency</th>
+                    <th scope='col' class='num'>Rate</th>
+                    <th scope='col'>As of</th>
+                    <th scope='col' class='num'>Age</th>
+                    <th scope='col'>Source</th>
+                    <th scope='col'>Resolve Currency</th>
                   </tr>
-                {{/each}}
-              </:body>
-            </Table>
-          {{else}}
-            <EmptyState
-              @title='No rates recorded'
-              @message='Resolve Currency refuses every conversion until the book has rows.'
-              @texture={{false}}
-              @size='s'
-            />
-          {{/if}}
-        </section>
-      </article>
+                </:head>
+                <:body>
+                  {{#each this.rows as |row|}}
+                    <tr class={{if row.stale 'stale'}}>
+                      <th scope='row' class='cur'>{{row.rate.currency}}</th>
+                      <td class='num'><FormatNumber
+                          @value={{row.rate.rate}}
+                          @maximumFractionDigits={{6}}
+                        /></td>
+                      <td>{{row.asOfLabel}}</td>
+                      <td class='num'>{{row.ageLabel}}</td>
+                      <td class='source'>{{row.rate.source}}</td>
+                      <td>
+                        <StatePill
+                          @label={{row.statusLabel}}
+                          @hue={{row.statusHue}}
+                          @dot={{true}}
+                        />
+                      </td>
+                    </tr>
+                  {{/each}}
+                </:body>
+              </Table>
+            {{else}}
+              <EmptyState
+                @title='No rates recorded'
+                @message='Resolve Currency refuses every conversion until the book has rows.'
+                @texture={{false}}
+                @size='s'
+              />
+            {{/if}}
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .registry {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background);
           color: var(--foreground);
           display: grid;
           gap: var(--boxel-sp);
@@ -290,41 +297,20 @@ export class CurrencyRegistry extends CardDef {
       return (this.args.model?.rates ?? []).length;
     }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.cardTitle}}</span>
-        <span class='fit-sub'>{{this.count}}
-          rates ·
-          {{@model.staleAfterDays}}d staleness</span>
-      </div>
-      <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 700;
-          font-size: var(--boxel-font-size);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fit-sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{this.count}}
+          rates{{#if @model.staleAfterDays}}
+            ·
+            {{@model.staleAfterDays}}d staleness{{/if}}</:subtitle>
+        <:metric><Metric @value='{{this.count}}' @label='Rates' /></:metric>
+        <:details>
+          {{#each @model.rates as |r|}}{{#if r.currency}}<Detail
+                @label={{r.currency}}
+                @value='{{r.rate}}'
+              />{{/if}}{{/each}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

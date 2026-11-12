@@ -34,7 +34,13 @@
           "selectedKeys": [],
           "text": "retention curve"
         }
-      ]
+      ],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "enrollment": {

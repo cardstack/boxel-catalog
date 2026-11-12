@@ -903,8 +903,14 @@ export class AssetMaintenanceDesk extends Component<
                       @priority={{2}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='am-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.homeSearch}}
                           @placeholder='Search work orders'
                           @onInput={{this.setHomeSearch}}
@@ -925,6 +931,7 @@ export class AssetMaintenanceDesk extends Component<
                     </lc.Slot>
                     <lc.Slot
                       @id='add'
+                      @align='end'
                       @priority={{0}}
                       @pinned={{true}}
                       @forms={{ADD_FORMS}}
@@ -932,7 +939,6 @@ export class AssetMaintenanceDesk extends Component<
                       as |form|
                     >
                       <Button
-                        class='push'
                         @icon={{PlusIcon}}
                         @tone='primary'
                         @size='s'
@@ -1024,8 +1030,14 @@ export class AssetMaintenanceDesk extends Component<
                       @priority={{2}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='am-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.assetSearch}}
                           @placeholder='Search assets'
                           @onInput={{this.setAssetSearch}}
@@ -1033,6 +1045,7 @@ export class AssetMaintenanceDesk extends Component<
                     </lc.Slot>
                     <lc.Slot
                       @id='add'
+                      @align='end'
                       @priority={{0}}
                       @pinned={{true}}
                       @forms={{ADD_FORMS}}
@@ -1040,7 +1053,6 @@ export class AssetMaintenanceDesk extends Component<
                       as |form|
                     >
                       <Button
-                        class='push'
                         @icon={{PlusIcon}}
                         @tone='primary'
                         @size='s'
@@ -1139,13 +1151,13 @@ export class AssetMaintenanceDesk extends Component<
                     </lc.Slot>
                     <lc.Slot
                       @id='view'
+                      @align='end'
                       @priority={{1}}
                       @pinned={{true}}
                       @forms={{VIEW_FORMS}}
                       @label='View'
                     >
                       <SegmentedControl
-                        class='push'
                         @label='View'
                         @options={{WORK_VIEWS}}
                         @value={{this.workView}}
@@ -1215,8 +1227,14 @@ export class AssetMaintenanceDesk extends Component<
                       @priority={{2}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='am-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.planSearch}}
                           @placeholder={{if
                             (eq this.collection 'plans')
@@ -1250,12 +1268,12 @@ export class AssetMaintenanceDesk extends Component<
                     </lc.Slot>
                     <lc.Slot
                       @id='collection'
+                      @align='end'
                       @priority={{1}}
                       @forms={{VIEW_FORMS}}
                       @label='Collection'
                     >
                       <SegmentedControl
-                        class='push'
                         @label='Collection'
                         @options={{this.collectionOptions}}
                         @value={{this.collection}}
@@ -1842,6 +1860,8 @@ export class AssetMaintenanceDesk extends Component<
       }
       .link {
         --pretui-button-h: auto;
+        color: inherit;
+        text-align: start;
       }
       .att:focus-visible {
         outline: 2px solid var(--ring);

@@ -30,6 +30,13 @@
       },
       "cardDescription": "A recorded gap between a rule and reality, with its severity, evidence, corrective task and closure code."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

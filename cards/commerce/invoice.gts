@@ -1,4 +1,5 @@
 import { Button } from '@cardstack/pretui/components/button';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { on } from '@ember/modifier';
 import {
   CardDef,
@@ -40,7 +41,7 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { formatMoney } from '../crm/utils';
-import { CompactFitted, CompactRow, fmtDate } from './compact-parts';
+import { fmtDate } from './compact-parts';
 import DueDateField from '@cardstack/catalog/fields/due-date/due-date';
 // ---- AP (buy-side) leg.
 import { PurchaseOrder } from '../procurement/purchase-order';
@@ -51,6 +52,7 @@ import {
   type ResolutionLike,
 } from '../procurement/three-way-match';
 import { ThreeWayMatchPanel } from '../procurement/components/three-way-match-panel';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Overdue is not a state anyone sets — it is what being unpaid past the due
 // date looks like, so it is derived rather than stored and cannot drift from
@@ -233,172 +235,174 @@ class InvoiceIsolated extends Component<typeof Invoice> {
     return rows;
   }
   <template>
-    <article class='ip'>
-      <header class='ih'>
-        <Avatar @name='Invoice' @shape='square' @size={{24}} />
-        <div class='id'>
-          <h1>{{this.f.number}}</h1>
-          <p class='meta'>{{this.f.sub}}</p>
-        </div>
-        <span class='tags'>{{#each this.f.tags as |t|}}<Chip
-              @label={{t.label}}
-              @tone={{t.tone}}
-              @appearance='plain'
-            />{{/each}}</span>
-        {{#if this.balance}}
-          <Button
-            @appearance='filled'
-            @disabled={{this.busy}}
-            {{on 'click' this.recordPayment}}
-          >Record payment</Button>
-        {{/if}}
-      </header>
-      <div class='stats'>
-        <Stat
-          @label='Balance due'
-          @tone={{if (eq this.f.status 'overdue') 'danger' 'info'}}
-          @value={{this.f.a.balance}}
-          @style='currency'
-          @currency={{this.f.code}}
-          @maximumFractionDigits={{0}}
-          @roll={{false}}
-          @hint={{if this.f.a.paid 'part paid' 'nothing paid'}}
-        />
-        <Stat
-          @label='Days overdue'
-          @tone={{if this.f.days 'warning'}}
-          @value={{this.f.days}}
-          @roll={{false}}
-          @hint={{if this.f.due (concat 'due ' this.f.due)}}
-        />
-        <Stat
-          @label='Tax'
-          @value={{this.f.a.tax}}
-          @style='currency'
-          @currency={{this.f.code}}
-          @maximumFractionDigits={{0}}
-          @roll={{false}}
-          @hint={{if this.f.taxText this.f.taxText}}
-        />
-      </div>
-      <div class='cols'>
-        <div>
-          <section>
-            <h2>Line items</h2>
-            {{#if this.rows.length}}
-              <Table class='lines' @label='Line items'>
-                <:head>
-                  <tr>
-                    <th scope='col'>Description</th>
-                    <th scope='col' class='num'>Qty</th>
-                    <th scope='col' class='num'>Amount</th>
-                  </tr>
-                </:head>
-                <:body>
-                  {{#each this.rows as |row|}}
-                    <tr>
-                      <td>{{row.description}}</td>
-                      <td class='num'>{{row.quantity}}</td>
-                      <td class='num'><Money
-                          @amount={{row.total}}
-                          @code={{row.code}}
-                        /></td>
-                    </tr>
-                  {{/each}}
-                  {{#if this.f.taxText}}
-                    <tr>
-                      <td>Tax</td>
-                      <td></td>
-                      <td class='num'><Money
-                          @amount={{this.f.a.tax}}
-                          @code={{this.f.code}}
-                        /></td>
-                    </tr>
-                  {{/if}}
-                  <tr class='total'>
-                    <td>Total</td>
-                    <td></td>
-                    <td class='num'>{{this.f.total}}</td>
-                  </tr>
-                </:body>
-              </Table>
-            {{else}}
-              <p class='empty-note'>No line items yet</p>
-            {{/if}}
-          </section>
-          {{#if @model.purchaseOrder}}
-            <section>
-              <h2>Three-way match · vs {{@model.purchaseOrder.poNumber}}</h2>
-              <ThreeWayMatchPanel @invoice={{@model}} @context={{@context}} />
-            </section>
+    <IsoFrame>
+      <article class='ip'>
+        <header class='ih'>
+          <Avatar @name='Invoice' @shape='square' @size={{24}} />
+          <div class='id'>
+            <h1>{{this.f.number}}</h1>
+            <p class='meta'>{{this.f.sub}}</p>
+          </div>
+          <span class='tags'>{{#each this.f.tags as |t|}}<Chip
+                @label={{t.label}}
+                @tone={{t.tone}}
+                @appearance='plain'
+              />{{/each}}</span>
+          {{#if this.balance}}
+            <Button
+              @appearance='filled'
+              @disabled={{this.busy}}
+              {{on 'click' this.recordPayment}}
+            >Record payment</Button>
           {{/if}}
-          <section>
-            <h2>Payments</h2>
-            {{#if @model.payments.length}}
-              <@fields.payments @format='embedded' />
-            {{else}}
-              <p class='empty-note'>No payments recorded</p>
+        </header>
+        <div class='stats'>
+          <Stat
+            @label='Balance due'
+            @tone={{if (eq this.f.status 'overdue') 'danger' 'info'}}
+            @value={{this.f.a.balance}}
+            @style='currency'
+            @currency={{this.f.code}}
+            @maximumFractionDigits={{0}}
+            @roll={{false}}
+            @hint={{if this.f.a.paid 'part paid' 'nothing paid'}}
+          />
+          <Stat
+            @label='Days overdue'
+            @tone={{if this.f.days 'warning'}}
+            @value={{this.f.days}}
+            @roll={{false}}
+            @hint={{if this.f.due (concat 'due ' this.f.due)}}
+          />
+          <Stat
+            @label='Tax'
+            @value={{this.f.a.tax}}
+            @style='currency'
+            @currency={{this.f.code}}
+            @maximumFractionDigits={{0}}
+            @roll={{false}}
+            @hint={{if this.f.taxText this.f.taxText}}
+          />
+        </div>
+        <div class='cols'>
+          <div>
+            <section>
+              <h2>Line items</h2>
+              {{#if this.rows.length}}
+                <Table class='lines' @label='Line items'>
+                  <:head>
+                    <tr>
+                      <th scope='col'>Description</th>
+                      <th scope='col' class='num'>Qty</th>
+                      <th scope='col' class='num'>Amount</th>
+                    </tr>
+                  </:head>
+                  <:body>
+                    {{#each this.rows as |row|}}
+                      <tr>
+                        <td>{{row.description}}</td>
+                        <td class='num'>{{row.quantity}}</td>
+                        <td class='num'><Money
+                            @amount={{row.total}}
+                            @code={{row.code}}
+                          /></td>
+                      </tr>
+                    {{/each}}
+                    {{#if this.f.taxText}}
+                      <tr>
+                        <td>Tax</td>
+                        <td></td>
+                        <td class='num'><Money
+                            @amount={{this.f.a.tax}}
+                            @code={{this.f.code}}
+                          /></td>
+                      </tr>
+                    {{/if}}
+                    <tr class='total'>
+                      <td>Total</td>
+                      <td></td>
+                      <td class='num'>{{this.f.total}}</td>
+                    </tr>
+                  </:body>
+                </Table>
+              {{else}}
+                <p class='empty-note'>No line items yet</p>
+              {{/if}}
+            </section>
+            {{#if @model.purchaseOrder}}
+              <section>
+                <h2>Three-way match · vs {{@model.purchaseOrder.poNumber}}</h2>
+                <ThreeWayMatchPanel @invoice={{@model}} @context={{@context}} />
+              </section>
             {{/if}}
-          </section>
+            <section>
+              <h2>Payments</h2>
+              {{#if @model.payments.length}}
+                <@fields.payments @format='embedded' />
+              {{else}}
+                <p class='empty-note'>No payments recorded</p>
+              {{/if}}
+            </section>
+          </div>
+          <div>
+            <section>
+              <h2>Linked</h2>
+              <KeyValue
+                @items={{this.linked}}
+                @divided={{true}}
+                @labelStyle='eyebrow'
+                class='kv'
+              >
+                <:value as |row|>
+                  {{#if (eq row.key 'Account')}}<@fields.account
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else if (eq row.key 'Quote')}}<@fields.quote
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else if (eq row.key 'Owner')}}<@fields.owner
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else if (eq row.key 'Order')}}<@fields.order
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else if (eq row.key 'Subscription')}}<@fields.subscription
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else}}<@fields.taxBreakdown.jurisdiction
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{/if}}
+                </:value>
+              </KeyValue>
+            </section>
+            <section>
+              <h2>Details</h2>
+              <KeyValue
+                @items={{this.details}}
+                @divided={{true}}
+                @labelStyle='eyebrow'
+                class='kv'
+              />
+            </section>
+          </div>
         </div>
-        <div>
-          <section>
-            <h2>Linked</h2>
-            <KeyValue
-              @items={{this.linked}}
-              @divided={{true}}
-              @labelStyle='eyebrow'
-              class='kv'
-            >
-              <:value as |row|>
-                {{#if (eq row.key 'Account')}}<@fields.account
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else if (eq row.key 'Quote')}}<@fields.quote
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else if (eq row.key 'Owner')}}<@fields.owner
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else if (eq row.key 'Order')}}<@fields.order
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else if (eq row.key 'Subscription')}}<@fields.subscription
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else}}<@fields.taxBreakdown.jurisdiction
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{/if}}
-              </:value>
-            </KeyValue>
-          </section>
-          <section>
-            <h2>Details</h2>
-            <KeyValue
-              @items={{this.details}}
-              @divided={{true}}
-              @labelStyle='eyebrow'
-              class='kv'
-            />
-          </section>
-        </div>
-      </div>
-    </article>
+      </article>
+    </IsoFrame>
     <style scoped>
       .empty-note {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.6875rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .ip {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.4;
         --text-stat: 1.375rem;
         --text-ui-xs: 0.6875rem;
@@ -409,15 +413,15 @@ class InvoiceIsolated extends Component<typeof Invoice> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         overflow: hidden;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.25;
         color: var(--card-foreground);
       }
       .ih {
         display: flex;
         align-items: center;
-        gap: 0.625rem;
-        padding: 0.625rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs);
       }
       .id {
         flex: 1;
@@ -426,17 +430,17 @@ class InvoiceIsolated extends Component<typeof Invoice> {
       h1 {
         font-family: var(--font-sans);
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .tags {
         display: flex;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       .stats {
         display: grid;
@@ -447,7 +451,7 @@ class InvoiceIsolated extends Component<typeof Invoice> {
         border-inline-start: 1px solid var(--border);
       }
       .stats > * {
-        padding: 0.5rem 0.625rem;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
       }
       .cols {
         display: grid;
@@ -471,12 +475,12 @@ class InvoiceIsolated extends Component<typeof Invoice> {
       }
       h2 {
         margin: 0;
-        padding: 0.625rem 0.625rem 0.25rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-4xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .lines {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       .num {
         text-align: end;
@@ -486,7 +490,7 @@ class InvoiceIsolated extends Component<typeof Invoice> {
         font-weight: 700;
       }
       .kv {
-        padding-inline: 0.625rem;
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
         row-gap: 0;
       }
     </style>
@@ -595,47 +599,52 @@ export class Invoice extends CardDef {
       return invoiceFacts(this.args.model as Invoice);
     }
     <template>
-      <CompactFitted
-        @mark='Invoice'
-        @title={{this.f.number}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.fact}}
-        @big={{this.f.balance}}
-        @bigLabel='Balance due'
-        @tags={{this.f.tags}}
-      >
-        <:rows>
-          <CompactRow @k='Total' @v={{this.f.total}} />
-          <CompactRow @k='Subtotal' @v={{this.f.subtotal}} />
-          {{#if @model.account}}<CompactRow @k='Account'><@fields.account
+      <RichFittedCard>
+        <:avatar><Avatar @name='Invoice' @shape='square' /></:avatar>
+        <:title>{{this.f.number}}</:title>
+        <:status>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.fact}}</:fact>
+        <:metric><Metric
+            @value={{this.f.balance}}
+            @label='Balance due'
+          /></:metric>
+        <:details>
+          <Detail @label='Total' @value={{this.f.total}} />
+          <Detail @label='Subtotal' @value={{this.f.subtotal}} />
+          {{#if @model.account}}<Detail @label='Account'><@fields.account
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if this.f.taxText}}<CompactRow
-              @k='Tax'
-              @v={{this.f.taxText}}
+              /></Detail>{{/if}}
+          {{#if this.f.taxText}}<Detail
+              @label='Tax'
+              @value={{this.f.taxText}}
             />{{/if}}
-          {{#if this.f.issued}}<CompactRow
-              @k='Issued'
-              @v={{this.f.issued}}
+          {{#if this.f.issued}}<Detail
+              @label='Issued'
+              @value={{this.f.issued}}
             />{{/if}}
-          {{#if @model.quote}}<CompactRow @k='Quote'><@fields.quote
+          {{#if @model.quote}}<Detail @label='Quote'><@fields.quote
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if this.f.due}}<CompactRow @k='Due' @v={{this.f.due}} />{{/if}}
-          {{#if @model.owner}}<CompactRow @k='Owner'><@fields.owner
+              /></Detail>{{/if}}
+          {{#if this.f.due}}<Detail @label='Due' @value={{this.f.due}} />{{/if}}
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if @model.taxBreakdown.jurisdiction}}<CompactRow
-              @k='Tax jurisdiction'
+              /></Detail>{{/if}}
+          {{#if @model.taxBreakdown.jurisdiction}}<Detail
+              @label='Tax jurisdiction'
             ><@fields.taxBreakdown.jurisdiction
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-        </:rows>
-      </CompactFitted>
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 
@@ -739,7 +748,7 @@ export class Invoice extends CardDef {
           padding: 0 0.625rem 0.5rem;
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
       </style>

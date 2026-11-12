@@ -20,6 +20,11 @@
         "links": {
           "self": "../Shipment/shp-0145"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

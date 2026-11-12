@@ -4,15 +4,20 @@ import {
   field,
   contains,
   linksTo,
+  realmURL,
   StringField,
 } from '@cardstack/base/card-api';
+import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import HeadsetIcon from '@cardstack/boxel-icons/headset';
 import { DeskSettingsField } from '../service-desk/desk-settings-field';
 import { Employee } from '../hr/employee';
 import { Workflow } from '../service-desk/workflow';
 import { SupportDesk } from './components/support-desk';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
+import { Case } from '../service-desk/case';
+import { Escalation } from '../service-desk/escalation';
+import { Sla } from '../service-desk/sla';
+import { Detail, Metric, RichFittedCard } from '../shared/rich-fitted-card';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 
 /**
@@ -120,10 +125,54 @@ export class SupportCaseApp extends CardDef {
     </template>
   };
 
-  // Fitted, in FITTED-RULE priority: who (desk), setup state, the one fact that
-  // explains the desk's numbering, then the operator and the default workflow
-  // in their own atom formats.
+  // Fitted, in FITTED-RULE priority: who (desk), setup state, open cases and
+  // the desk's escalation and clock counts, the one fact that explains the
+  // desk's numbering, then the operator and the default workflow in their own
+  // atom formats. Breach and at-risk counts need the case-to-clock join the
+  // desk does, so the tile leaves them to the desk.
   static fitted = class Fitted extends Component<typeof SupportCaseApp> {
+    // One query per counted type, not live: the tile shows the numbers as of
+    // its last render.
+    private query = (cls: typeof CardDef) => {
+      let ref = identifyCard(cls);
+      let query = ref ? { filter: { type: ref } } : undefined;
+      let url = this.args.model?.[realmURL];
+      let realms = url ? [url.href] : undefined;
+      return this.args.context?.getCards(
+        this,
+        () => query,
+        () => realms,
+      );
+    };
+    private cases = this.query(Case);
+    private escalations = this.query(Escalation);
+    private slas = this.query(Sla);
+    private rows<T>(q: ReturnType<getCards> | undefined): T[] {
+      return ((q?.instances ?? []) as T[]).filter(Boolean);
+    }
+
+    // Undefined while loading, so the metric and details render nothing.
+    get s() {
+      let lists = [this.cases, this.escalations, this.slas];
+      if (lists.some((q) => !q || q.isLoading)) return undefined;
+      let open = this.rows<Case>(this.cases).filter(
+        (c) => c.status !== 'resolved' && c.status !== 'closed',
+      );
+      let awaiting = this.rows<Escalation>(this.escalations).filter(
+        (e) => e.status === 'open',
+      );
+      let slas = this.rows<Sla>(this.slas);
+      let met = slas.filter((s) =>
+        (s.timers ?? []).some((t: any) => t.satisfiedAt),
+      ).length;
+      return {
+        open: String(open.length),
+        awaiting: String(awaiting.length),
+        overdue: String(awaiting.filter((e) => e.ackOverdue === 'yes').length),
+        met: `${met} of ${slas.length}`,
+      };
+    }
+
     get setupState(): string {
       let c = this.args.model?.config;
       return c?.setupCompletedAt
@@ -139,17 +188,25 @@ export class SupportCaseApp extends CardDef {
       return parts.length ? parts.join(' · ') : undefined;
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Avatar
             @name={{if @model.title @model.title ''}}
             @hue='var(--primary)'
-            @size={{32}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>Clocks, ladders, ownership and workflow</:subtitle>
         <:status><StatusChip @value={{this.setupState}} /></:status>
+        <:metric>{{#if this.s}}<Metric
+              @value={{this.s.open}}
+              @label='Open cases'
+            />{{/if}}</:metric>
         <:fact>{{this.numbering}}</:fact>
+        <:details>{{#if this.s}}
+            <Detail @label='Awaiting ack' @value={{this.s.awaiting}} />
+            <Detail @label='Ack overdue' @value={{this.s.overdue}} />
+            <Detail @label='Clocks met' @value={{this.s.met}} />
+          {{/if}}</:details>
         <:relations>
           {{#if @model.operator}}
             <@fields.operator @format='atom' @displayContainer={{false}} />
@@ -161,7 +218,7 @@ export class SupportCaseApp extends CardDef {
             />
           {{/if}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

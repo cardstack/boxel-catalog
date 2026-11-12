@@ -44,6 +44,11 @@ import { GoverningLawField } from './governing-law-field';
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import { ContractTypeField, contractTypeLabel } from './contract-type';
+import { IsoFrame } from '../shared/compact-sheet';
+import { Mark } from './compact-card';
+import { Dot as DotChip } from '../shared/compact-parts';
+import type { Tone } from '../shared/compact-format';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
@@ -302,243 +307,252 @@ class ContractIsolated extends Component<typeof Contract> {
     return a || b ? `${a || '—'} – ${b || '—'}` : '';
   }
   <template>
-    <article class='contract-page'>
-      <header class='ch'>
-        <span class='mark' aria-hidden='true'>Ct</span>
-        <div class='ch-id'>
-          <h1>{{@model.cardTitle}}</h1>
-          <p class='meta'>{{contractMeta @model}}</p>
-        </div>
-        <ul class='ch-state'>
-          {{#if @model.status}}
-            <li
-              class='dot'
-              data-tone={{statusTone @model.status}}
-            >{{contractStatusLabel @model.status}}</li>
-          {{/if}}
-          {{#if @model.riskGrade}}
-            <li class='dot' data-tone='warn'>{{@model.riskGrade}} risk</li>
-          {{/if}}
-          {{#if @model.autoRenews}}
-            <li class='dot'>auto-renews</li>
-          {{/if}}
-        </ul>
-      </header>
+    <IsoFrame>
+      <article class='contract-page'>
+        <header class='ch'>
+          <span class='mark' aria-hidden='true'>Ct</span>
+          <div class='ch-id'>
+            <h1>{{@model.cardTitle}}</h1>
+            <p class='meta'>{{contractMeta @model}}</p>
+          </div>
+          <ul class='ch-state'>
+            {{#if @model.status}}
+              <li
+                class='dot'
+                data-tone={{statusTone @model.status}}
+              >{{contractStatusLabel @model.status}}</li>
+            {{/if}}
+            {{#if @model.riskGrade}}
+              <li class='dot' data-tone='warn'>{{@model.riskGrade}} risk</li>
+            {{/if}}
+            {{#if @model.autoRenews}}
+              <li class='dot'>auto-renews</li>
+            {{/if}}
+          </ul>
+        </header>
 
-      <section class='stats' aria-label='Key numbers'>
-        <div class='stat'>
-          <span class='cap dot' data-tone='ok'>Value</span>
-          <strong>{{pick (moneyShort @model) '—'}}</strong>
-          <span class='sub'>{{if @model.value.amount 'per year' ''}}</span>
-        </div>
-        <div class='stat'>
-          <span class='cap dot' data-tone='info'>Notice by</span>
-          <strong>{{pick (shortDate @model.noticeBy) '—'}}</strong>
-          <span class='sub'>{{yearOf @model.noticeBy}}{{#if
-              @model.daysToNotice
-            }} · {{@model.daysToNotice}} days left{{/if}}</span>
-        </div>
-        <div class='stat'>
-          <span class='cap dot' data-tone='warn'>Risk</span>
-          <strong>{{if
-              @model.risk.score
-              (concat @model.risk.score ' / 100')
-              '—'
-            }}</strong>
-          <span class='sub'>{{riskGradeLabel @model.riskGrade}}
-            ·
-            {{this.riskRows.length}}
-            criteria</span>
-        </div>
-        <div class='stat'>
-          <span class='cap dot' data-tone='ok'>Signed</span>
-          <strong>{{pick (shortDate @model.signedAt) '—'}}</strong>
-          <span class='sub'>{{yearOf @model.signedAt}}{{#if
-              @model.signatureProvider
-            }} · {{@model.signatureProvider}}{{/if}}</span>
-        </div>
-      </section>
+        <section class='stats' aria-label='Key numbers'>
+          <div class='stat'>
+            <span class='cap dot' data-tone='ok'>Value</span>
+            <strong>{{pick (moneyShort @model) '—'}}</strong>
+            <span class='sub'>{{if @model.value.amount 'per year' ''}}</span>
+          </div>
+          <div class='stat'>
+            <span class='cap dot' data-tone='info'>Notice by</span>
+            <strong>{{pick (shortDate @model.noticeBy) '—'}}</strong>
+            <span class='sub'>{{yearOf @model.noticeBy}}{{#if
+                @model.daysToNotice
+              }} · {{@model.daysToNotice}} days left{{/if}}</span>
+          </div>
+          <div class='stat'>
+            <span class='cap dot' data-tone='warn'>Risk</span>
+            <strong>{{if
+                @model.risk.score
+                (concat @model.risk.score ' / 100')
+                '—'
+              }}</strong>
+            <span class='sub'>{{riskGradeLabel @model.riskGrade}}
+              ·
+              {{this.riskRows.length}}
+              criteria</span>
+          </div>
+          <div class='stat'>
+            <span class='cap dot' data-tone='ok'>Signed</span>
+            <strong>{{pick (shortDate @model.signedAt) '—'}}</strong>
+            <span class='sub'>{{yearOf @model.signedAt}}{{#if
+                @model.signatureProvider
+              }} · {{@model.signatureProvider}}{{/if}}</span>
+          </div>
+        </section>
 
-      <div class='cols'>
-        <div class='col'>
-          {{#if @model.terms}}
+        <div class='cols'>
+          <div class='col'>
+            {{#if @model.terms}}
+              <section class='blk'>
+                <h2>Terms</h2>
+                <p class='terms'>{{plainTerms @model.terms}}</p>
+              </section>
+            {{/if}}
+
+            {{#if this.steps.length}}
+              <section class='blk'>
+                <h2>Approval chain</h2>
+                <ol class='rows'>
+                  {{#each this.steps as |s i|}}
+                    <li class='row'>
+                      <span class='num'>{{inc i}}</span>
+                      <strong>{{pick
+                          s.approver.cardTitle
+                          'Unassigned'
+                        }}</strong>
+                      <span class='muted'>{{shortDate
+                          (pick s.decidedAt s.openedAt)
+                          true
+                        }}{{#if s.comment}} · {{s.comment}}{{/if}}
+                        {{s.decision}}</span>
+                    </li>
+                  {{/each}}
+                </ol>
+              </section>
+            {{/if}}
+
+            {{#if this.riskRows.length}}
+              <section class='blk'>
+                <h2>Risk scorecard</h2>
+                <ul class='rows'>
+                  {{#each this.riskRows as |r|}}
+                    <li class='row risk'>
+                      <span>{{r.name}}</span>
+                      <span class='bar' style={{r.style}}></span>
+                      <span class='mono'>{{r.score}} / 5</span>
+                    </li>
+                  {{/each}}
+                </ul>
+              </section>
+            {{/if}}
+
+            {{#if @model.signatureBlocks.length}}
+              <section class='blk'>
+                <h2>Signature blocks</h2>
+                <ul class='rows'>
+                  {{#each @model.signatureBlocks as |b|}}
+                    <li class='row sig'>
+                      <div>
+                        <strong>{{b.signingOrder}}
+                          ·
+                          {{pick
+                            b.signerName
+                            b.signatory.cardTitle
+                            'Signer'
+                          }}{{#if b.signerTitle}},
+                            {{b.signerTitle}}{{/if}}</strong>
+                        <span class='muted'>{{b.party.definedTerm}}{{#if
+                            b.party.entity.cardTitle
+                          }} · {{b.party.entity.cardTitle}}{{/if}}{{#if
+                            b.signedAt
+                          }} · {{shortDate b.signedAt true}}{{/if}}</span>
+                      </div>
+                      <span
+                        class='dot'
+                        data-tone={{if (eq b.lineStatus 'signed') 'ok'}}
+                      >{{b.lineStatus}}</span>
+                    </li>
+                  {{/each}}
+                </ul>
+              </section>
+            {{/if}}
+
+            {{#if @model.governingLaw.jurisdiction}}
+              <section class='blk'>
+                <h2>Governing law</h2>
+                <dl class='kv'>
+                  <dt>Jurisdiction</dt><dd
+                  >{{@model.governingLaw.jurisdiction}}</dd>
+                  <dt>Venue</dt><dd>{{pick @model.governingLaw.venue '—'}}</dd>
+                </dl>
+              </section>
+            {{/if}}
+
+            {{#if this.queryFailed}}
+              <Alert
+                @tone='danger'
+                @title="Could not load this contract's clauses and obligations"
+                style={{ALERT_STYLE.danger}}
+              >
+                <:default>This is a failed lookup, not an empty record — reload
+                  before concluding there are none.</:default>
+              </Alert>
+            {{/if}}
+          </div>
+
+          <div class='col'>
             <section class='blk'>
-              <h2>Terms</h2>
-              <p class='terms'>{{plainTerms @model.terms}}</p>
-            </section>
-          {{/if}}
-
-          {{#if this.steps.length}}
-            <section class='blk'>
-              <h2>Approval chain</h2>
-              <ol class='rows'>
-                {{#each this.steps as |s i|}}
-                  <li class='row'>
-                    <span class='num'>{{inc i}}</span>
-                    <strong>{{pick s.approver.cardTitle 'Unassigned'}}</strong>
-                    <span class='muted'>{{shortDate
-                        (pick s.decidedAt s.openedAt)
-                        true
-                      }}{{#if s.comment}} · {{s.comment}}{{/if}}
-                      {{s.decision}}</span>
-                  </li>
-                {{/each}}
-              </ol>
-            </section>
-          {{/if}}
-
-          {{#if this.riskRows.length}}
-            <section class='blk'>
-              <h2>Risk scorecard</h2>
-              <ul class='rows'>
-                {{#each this.riskRows as |r|}}
-                  <li class='row risk'>
-                    <span>{{r.name}}</span>
-                    <span class='bar' style={{r.style}}></span>
-                    <span class='mono'>{{r.score}} / 5</span>
-                  </li>
-                {{/each}}
-              </ul>
-            </section>
-          {{/if}}
-
-          {{#if @model.signatureBlocks.length}}
-            <section class='blk'>
-              <h2>Signature blocks</h2>
-              <ul class='rows'>
-                {{#each @model.signatureBlocks as |b|}}
-                  <li class='row sig'>
-                    <div>
-                      <strong>{{b.signingOrder}}
-                        ·
-                        {{pick
-                          b.signerName
-                          b.signatory.cardTitle
-                          'Signer'
-                        }}{{#if b.signerTitle}},
-                          {{b.signerTitle}}{{/if}}</strong>
-                      <span class='muted'>{{b.party.definedTerm}}{{#if
-                          b.party.entity.cardTitle
-                        }} · {{b.party.entity.cardTitle}}{{/if}}{{#if
-                          b.signedAt
-                        }} · {{shortDate b.signedAt true}}{{/if}}</span>
-                    </div>
-                    <span
-                      class='dot'
-                      data-tone={{if (eq b.lineStatus 'signed') 'ok'}}
-                    >{{b.lineStatus}}</span>
-                  </li>
-                {{/each}}
-              </ul>
-            </section>
-          {{/if}}
-
-          {{#if @model.governingLaw.jurisdiction}}
-            <section class='blk'>
-              <h2>Governing law</h2>
+              <h2>Linked</h2>
               <dl class='kv'>
-                <dt>Jurisdiction</dt><dd
-                >{{@model.governingLaw.jurisdiction}}</dd>
-                <dt>Venue</dt><dd>{{pick @model.governingLaw.venue '—'}}</dd>
+                <dt>Owner</dt>
+                <dd>{{#if @model.owner}}<@fields.owner
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                <dt>Account</dt>
+                <dd>{{#if @model.account}}<@fields.account
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                {{#if @model.deal}}
+                  <dt>Deal</dt>
+                  <dd><@fields.deal
+                      @format='atom'
+                      @displayContainer={{false}}
+                    /></dd>
+                {{/if}}
+                <dt>Signatory</dt>
+                <dd>{{pick this.firstSignatory.cardTitle '—'}}</dd>
+                {{#if (and this.isClmManaged this.isLoadingLinked)}}
+                  <dt>Clauses</dt>
+                  <dd class='muted' role='status'>Loading…</dd>
+                {{/if}}
+                {{#each this.deviations as |c|}}
+                  <dt>Deviation</dt>
+                  <dd><button
+                      type='button'
+                      class='link'
+                      {{on 'click' (fn this.openCard c)}}
+                    >{{c.cardTitle}}</button></dd>
+                {{/each}}
+                {{#each this.obligations as |o|}}
+                  <dt>Obligation</dt>
+                  <dd><button
+                      type='button'
+                      class='link'
+                      {{on 'click' (fn this.openCard o)}}
+                    >{{o.cardTitle}}</button></dd>
+                {{/each}}
               </dl>
             </section>
-          {{/if}}
 
-          {{#if this.queryFailed}}
-            <Alert
-              @tone='danger'
-              @title="Could not load this contract's clauses and obligations"
-              style={{ALERT_STYLE.danger}}
-            >
-              <:default>This is a failed lookup, not an empty record — reload
-                before concluding there are none.</:default>
-            </Alert>
-          {{/if}}
+            <section class='blk'>
+              <h2>Details</h2>
+              <dl class='kv'>
+                <dt>Value</dt><dd>{{pick this.valueDisplay '—'}}</dd>
+                <dt>Term</dt><dd>{{pick this.termRange '—'}}</dd>
+                <dt>Notice</dt><dd class='mono'>{{if
+                    @model.renewalNoticeDays
+                    (concat @model.renewalNoticeDays ' days')
+                    '—'
+                  }}</dd>
+                <dt>Risk</dt><dd>{{pick @model.risk.summary '—'}}</dd>
+                <dt>Signed</dt><dd class='mono'>{{pick
+                    (shortDate @model.signedAt true)
+                    '—'
+                  }}</dd>
+                <dt>Provider</dt><dd>{{pick @model.signatureProvider '—'}}</dd>
+                <dt>Governing law</dt><dd>{{pick
+                    @model.governingLaw.jurisdiction
+                    '—'
+                  }}</dd>
+                <dt>Approval</dt><dd>{{pick this.approvalSummary '—'}}</dd>
+              </dl>
+            </section>
+          </div>
         </div>
-
-        <div class='col'>
-          <section class='blk'>
-            <h2>Linked</h2>
-            <dl class='kv'>
-              <dt>Owner</dt>
-              <dd>{{#if @model.owner}}<@fields.owner
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</dd>
-              <dt>Account</dt>
-              <dd>{{#if @model.account}}<@fields.account
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</dd>
-              {{#if @model.deal}}
-                <dt>Deal</dt>
-                <dd><@fields.deal
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></dd>
-              {{/if}}
-              <dt>Signatory</dt>
-              <dd>{{pick this.firstSignatory.cardTitle '—'}}</dd>
-              {{#if (and this.isClmManaged this.isLoadingLinked)}}
-                <dt>Clauses</dt>
-                <dd class='muted' role='status'>Loading…</dd>
-              {{/if}}
-              {{#each this.deviations as |c|}}
-                <dt>Deviation</dt>
-                <dd><button
-                    type='button'
-                    class='link'
-                    {{on 'click' (fn this.openCard c)}}
-                  >{{c.cardTitle}}</button></dd>
-              {{/each}}
-              {{#each this.obligations as |o|}}
-                <dt>Obligation</dt>
-                <dd><button
-                    type='button'
-                    class='link'
-                    {{on 'click' (fn this.openCard o)}}
-                  >{{o.cardTitle}}</button></dd>
-              {{/each}}
-            </dl>
-          </section>
-
-          <section class='blk'>
-            <h2>Details</h2>
-            <dl class='kv'>
-              <dt>Value</dt><dd>{{pick this.valueDisplay '—'}}</dd>
-              <dt>Term</dt><dd>{{pick this.termRange '—'}}</dd>
-              <dt>Notice</dt><dd class='mono'>{{if
-                  @model.renewalNoticeDays
-                  (concat @model.renewalNoticeDays ' days')
-                  '—'
-                }}</dd>
-              <dt>Risk</dt><dd>{{pick @model.risk.summary '—'}}</dd>
-              <dt>Signed</dt><dd class='mono'>{{pick
-                  (shortDate @model.signedAt true)
-                  '—'
-                }}</dd>
-              <dt>Provider</dt><dd>{{pick @model.signatureProvider '—'}}</dd>
-              <dt>Governing law</dt><dd>{{pick
-                  @model.governingLaw.jurisdiction
-                  '—'
-                }}</dd>
-              <dt>Approval</dt><dd>{{pick this.approvalSummary '—'}}</dd>
-            </dl>
-          </section>
-        </div>
-      </div>
-    </article>
+      </article>
+    </IsoFrame>
     <style scoped>
       .contract-page {
+        background: var(--card);
+        color: var(--card-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         container-type: inline-size;
         container-name: contract-page;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--foreground);
-        padding: 1rem;
+        padding: var(--boxel-sp);
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       .ch,
       .stats,
@@ -550,8 +564,8 @@ class ContractIsolated extends Component<typeof Contract> {
       .ch {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        padding: 0.625rem 0.625rem;
+        gap: var(--boxel-sp-sm);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         flex-wrap: wrap;
       }
       .ch {
@@ -573,10 +587,10 @@ class ContractIsolated extends Component<typeof Contract> {
         inline-size: 2rem;
         block-size: 2rem;
         border: 1px solid var(--border);
-        border-radius: 0.25rem;
+        border-radius: var(--boxel-border-radius-xs);
         background-color: var(--muted);
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
       }
       .ch-id {
@@ -586,19 +600,19 @@ class ContractIsolated extends Component<typeof Contract> {
       h1 {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-sm);
         font-weight: 700;
       }
       .meta,
       .muted,
       .sub {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .ch-state {
         display: flex;
-        gap: 0.75rem;
+        gap: var(--boxel-sp-sm);
         margin: 0;
         padding: 0;
         list-style: none;
@@ -606,7 +620,7 @@ class ContractIsolated extends Component<typeof Contract> {
       .dot {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
         white-space: nowrap;
         text-transform: lowercase;
       }
@@ -632,14 +646,14 @@ class ContractIsolated extends Component<typeof Contract> {
       .stat {
         display: flex;
         flex-direction: column;
-        gap: 0.125rem;
-        padding: 0.5rem 0.625rem;
+        gap: var(--boxel-sp-6xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         border-right: 1px solid var(--border);
         border-bottom: 1px solid var(--border);
         margin: 0 -1px -1px 0;
       }
       .stat strong {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
         line-height: 1.2;
@@ -656,28 +670,28 @@ class ContractIsolated extends Component<typeof Contract> {
       .cols {
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         align-items: start;
       }
       .col {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         min-width: 0;
       }
       .blk {
-        padding: 0.4375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       }
       h2 {
-        margin: 0 0 0.25rem;
-        padding-bottom: 0.25rem;
+        margin: 0 0 var(--boxel-sp-4xs);
+        padding-bottom: var(--boxel-sp-4xs);
         border-bottom: 1px solid var(--border);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .terms {
-        margin: 0.25rem 0;
-        font-size: 0.75rem;
+        margin: var(--boxel-sp-4xs) 0;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.5;
       }
       .rows {
@@ -688,7 +702,7 @@ class ContractIsolated extends Component<typeof Contract> {
       .row {
         display: flex;
         align-items: center;
-        gap: 0.625rem;
+        gap: var(--boxel-sp-xs);
         min-block-size: 1.75rem;
         border-top: 1px solid var(--border);
       }
@@ -701,7 +715,7 @@ class ContractIsolated extends Component<typeof Contract> {
       }
       .row.sig {
         justify-content: space-between;
-        padding-block: 0.25rem;
+        padding-block: var(--boxel-sp-4xs);
       }
       .row.sig div {
         display: flex;
@@ -710,12 +724,12 @@ class ContractIsolated extends Component<typeof Contract> {
       .num,
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .bar {
         block-size: 0.1875rem;
-        border-radius: 0.125rem;
+        border-radius: var(--boxel-border-radius-xs);
         background:
           linear-gradient(var(--foreground), var(--foreground)) 0 0 /
             var(--fill) 100% no-repeat,
@@ -1173,8 +1187,7 @@ export class Contract extends CardDef {
     </template>
   };
 
-  // Rows in priority order; container queries drop whole rows as the tile
-  // shrinks (identity → status → key fact → state → linked → numbers).
+  // Status, risk and renewal as chips; the notice date is the fact.
   static fitted = class Fitted extends Component<typeof Contract> {
     get valueDisplay() {
       return formatMoney(
@@ -1182,214 +1195,48 @@ export class Contract extends CardDef {
         this.args.model?.value?.currency?.code,
       );
     }
+    get statusTone(): Tone {
+      let tone = statusTone(this.args.model?.status);
+      return tone === 'ok' ? 'success' : tone === 'bad' ? 'danger' : 'info';
+    }
     <template>
-      <article class='cf'>
-        <div class='r head'>
-          <span class='mark' aria-hidden='true'>Ct</span>
-          <strong class='name'>{{@model.cardTitle}}</strong>
-          {{#if @model.status}}
-            <span
-              class='dot st-inline'
-              data-tone={{statusTone @model.status}}
-            >{{contractStatusLabel @model.status}}</span>
-          {{/if}}
-        </div>
-        <div class='r meta'>{{contractMeta @model}}</div>
-        {{#if @model.status}}
-          <div class='r st-row'><span
-              class='dot'
-              data-tone={{statusTone @model.status}}
-            >{{contractStatusLabel @model.status}}</span></div>
-        {{/if}}
-        {{#if @model.noticeBy}}
-          <div class='r fact'>Notice by
+      <RichFittedCard>
+        <:avatar><Mark @text='Ct' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#if @model.status}}<DotChip
+              @label={{contractStatusLabel @model.status}}
+              @tone={{this.statusTone}}
+            />{{/if}}{{#if @model.riskGrade}}<DotChip
+              @label='{{@model.riskGrade}} risk'
+              @tone='warning'
+            />{{/if}}{{#if @model.autoRenews}}<DotChip
+              @label='auto-renews'
+            />{{/if}}</:status>
+        <:subtitle>{{contractMeta @model}}</:subtitle>
+        <:fact>{{#if @model.noticeBy}}Notice by
             {{shortDate @model.noticeBy true}}{{#if @model.daysToNotice}}
               ·
               {{@model.daysToNotice}}
-              days left{{/if}}</div>
-        {{/if}}
-        <div class='r flags'>
-          {{#if @model.riskGrade}}
-            <span class='dot' data-tone='warn'>{{@model.riskGrade}} risk</span>
-          {{/if}}
-          {{#if @model.autoRenews}}<span
-              class='dot renews'
-            >auto-renews</span>{{/if}}
-        </div>
-        {{#if @model.owner}}
-          <div class='r kv owner'><span class='cap'>Owner</span><@fields.owner
-              @format='atom'
-              @displayContainer={{false}}
-            /></div>
-        {{/if}}
-        <div class='r kv val'><span class='cap'>Value</span><span>{{pick
-              this.valueDisplay
-              '—'
-            }}</span></div>
-        <div class='r kv term'><span class='cap'>Signed</span><span
-            class='mono'
-          >{{pick (shortDate @model.signedAt true) '—'}}</span></div>
-        <div class='r kv prov'><span class='cap'>Provider</span><span>{{pick
-              @model.signatureProvider
-              '—'
-            }}</span></div>
-      </article>
-      <style scoped>
-        .cf {
-          block-size: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          font-family: var(--font-sans);
-          font-size: 0.75rem;
-          color: var(--foreground);
-        }
-        .r {
-          flex: none;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          min-block-size: 1.75rem;
-          padding-inline: 0.625rem;
-          border-top: 1px solid var(--border);
-          min-width: 0;
-          overflow: hidden;
-          white-space: nowrap;
-        }
-        .head {
-          border-top: 0;
-          min-block-size: 2.375rem;
-        }
-        .mark {
-          flex: none;
-          display: inline-grid;
-          place-items: center;
-          inline-size: 1.25rem;
-          block-size: 1.25rem;
-          border: 1px solid var(--border);
-          border-radius: 0.25rem;
-          background-color: var(--muted);
-          font-family: var(--font-mono);
-          font-size: 0.5625rem;
-          font-weight: 600;
-        }
-        .name {
-          flex: 1;
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-weight: 700;
-        }
-        .meta,
-        .fact {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          text-overflow: ellipsis;
-          display: block;
-          line-height: 1.75rem;
-        }
-        .kv {
-          justify-content: space-between;
-        }
-        .cap {
-          font-family: var(--font-mono);
-          font-size: 0.5625rem;
-          font-weight: 600;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .mono {
-          font-family: var(--font-mono);
-          font-size: 0.6875rem;
-        }
-        .dot {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          white-space: nowrap;
-          text-transform: lowercase;
-        }
-        .dot::before {
-          content: '';
-          flex: none;
-          inline-size: 0.4375rem;
-          block-size: 0.4375rem;
-          border-radius: 50%;
-          background-color: var(--muted-foreground);
-        }
-        .dot[data-tone='ok']::before {
-          background-color: var(--success);
-        }
-        .dot[data-tone='warn']::before {
-          background-color: var(--warning);
-        }
-        .dot[data-tone='bad']::before {
-          background-color: var(--destructive);
-        }
-
-        /* Narrow (< 250): status gets its own row; wide: beside the title. */
-        .st-inline {
-          display: none;
-        }
-        @container fitted-card (min-width: 250px) {
-          .st-inline {
-            display: inline-flex;
-          }
-          .st-row {
-            display: none;
-          }
-        }
-        /* Height budget: hide whole rows from the bottom up. */
-        @container fitted-card (max-height: 64px) {
-          .r:not(.head) {
-            display: none;
-          }
-          .head {
-            block-size: 100%;
-          }
-        }
-        @container fitted-card (max-height: 104px) {
-          .st-row,
-          .fact {
-            display: none;
-          }
-        }
-        @container fitted-card (max-height: 169px) {
-          .flags,
-          .owner {
-            display: none;
-          }
-        }
-        @container fitted-card (max-height: 274px) {
-          .val,
-          .term,
-          .prov {
-            display: none;
-          }
-        }
-        @container fitted-card (min-height: 275px) and (max-height: 400px) {
-          .prov {
-            display: none;
-          }
-        }
-        @container fitted-card (max-width: 249px) and (max-height: 274px) {
-          .owner {
-            display: none;
-          }
-        }
-        @container fitted-card (max-width: 249px) and (min-height: 250px) {
-          .owner {
-            display: flex;
-          }
-        }
-        @container fitted-card (max-width: 249px) {
-          .renews {
-            display: none;
-          }
-        }
-      </style>
+              days left{{/if}}{{/if}}</:fact>
+        <:metric>{{#if this.valueDisplay}}<Metric
+              @value={{this.valueDisplay}}
+              @label='Value'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.signedAt}}<Detail
+              @label='Signed'
+              @value={{shortDate @model.signedAt true}}
+            />{{/if}}
+          {{#if @model.signatureProvider}}<Detail
+              @label='Provider'
+              @value={{@model.signatureProvider}}
+            />{{/if}}
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

@@ -11,7 +11,7 @@ import NumberField from '@cardstack/base/number';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import ClipboardListIcon from '@cardstack/boxel-icons/clipboard-list';
 import { AtomChip, Dot, Mark } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
 
@@ -24,6 +24,7 @@ import {
 import { Rubric } from './rubric';
 import { Module } from './course-module';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * A piece of work a learner hands in. Owns the brief and the timing; borrows
@@ -72,68 +73,77 @@ export class Assignment extends CardDef {
       return dueWindowState(this.args.model?.dueWindow);
     }
     <template>
-      <article class='assignment'>
-        <header class='hero'>
-          <div class='hero-text'>
-            <span class='eyebrow'>
-              Assignment{{#if @model.code}} {{@model.code}}{{/if}}
-              {{#if @model.required}}<StatePill
-                  @label='Required'
-                  @hue='amber'
-                />{{/if}}
-              {{#if @model.module}} · <@fields.module @format='atom' />{{/if}}
-            </span>
-            <h1>{{@model.cardTitle}}</h1>
-          </div>
-          <div class='side'>
-            <Stat @label='Points' @value={{orZero @model.effectiveMaxPoints}} />
-            <StatePill
-              @label={{dueWindowLabel this.state}}
-              @hue={{hueFor this.state}}
-              @dot={{true}}
-            />
-          </div>
-        </header>
-        <section class='timing'>
-          <@fields.dueWindow @format='embedded' />
-          {{#if @model.allowResubmission}}<span class='note'>Resubmission
-              allowed</span>{{/if}}
-        </section>
-        <section class='brief'>
-          <h2>Brief</h2>
-          {{#if @model.brief.content}}
-            <@fields.brief />
-          {{else}}
-            <EmptyState
-              @size='s'
-              @title='No brief yet'
-              @message='Learners see this first: say what to hand in and how it is judged.'
-            />
-          {{/if}}
-        </section>
-        <section>
-          <h2>Rubric</h2>
-          {{#if @model.rubric}}
-            <@fields.rubric @format='embedded' />
-          {{else}}
-            <EmptyState
-              @size='s'
-              @title='No rubric linked'
-              @message='Submissions cannot be graded until one is.'
-            />
-          {{/if}}
-        </section>
-      </article>
+      <IsoFrame>
+        <article class='assignment'>
+          <header class='hero'>
+            <div class='hero-text'>
+              <span class='eyebrow'>
+                Assignment{{#if @model.code}} {{@model.code}}{{/if}}
+                {{#if @model.required}}<StatePill
+                    @label='Required'
+                    @hue='amber'
+                  />{{/if}}
+                {{#if @model.module}} · <@fields.module @format='atom' />{{/if}}
+              </span>
+              <h1>{{@model.cardTitle}}</h1>
+            </div>
+            <div class='side'>
+              <Stat
+                @label='Points'
+                @value={{orZero @model.effectiveMaxPoints}}
+              />
+              <StatePill
+                @label={{dueWindowLabel this.state}}
+                @hue={{hueFor this.state}}
+                @dot={{true}}
+              />
+            </div>
+          </header>
+          <section class='timing'>
+            <@fields.dueWindow @format='embedded' />
+            {{#if @model.allowResubmission}}<span class='note'>Resubmission
+                allowed</span>{{/if}}
+          </section>
+          <section class='brief'>
+            <h2>Brief</h2>
+            {{#if @model.brief.content}}
+              <@fields.brief />
+            {{else}}
+              <EmptyState
+                @size='s'
+                @title='No brief yet'
+                @message='Learners see this first: say what to hand in and how it is judged.'
+              />
+            {{/if}}
+          </section>
+          <section>
+            <h2>Rubric</h2>
+            {{#if @model.rubric}}
+              <@fields.rubric @format='embedded' />
+            {{else}}
+              <EmptyState
+                @size='s'
+                @title='No rubric linked'
+                @message='Submissions cannot be graded until one is.'
+              />
+            {{/if}}
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .assignment {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 52rem;
           margin: 0 auto;
+          inline-size: 100%;
           container-type: inline-size;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
           color: var(--foreground);
-          background: var(--background);
         }
         .hero {
           display: flex;
@@ -266,7 +276,7 @@ export class Assignment extends CardDef {
       return dueWindowState(this.args.model?.dueWindow);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='As' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{if @model.code @model.code 'Assignment'}}
@@ -277,7 +287,29 @@ export class Assignment extends CardDef {
               this.state
             }}</Dot></:status>
         <:fact>{{@model.dueLabel}}</:fact>
-      </FitTile>
+        <:metric><Metric
+            @value='{{orZero @model.effectiveMaxPoints}}'
+            @label='Points'
+          /></:metric>
+        <:details>
+          {{#if @model.module}}<Detail @label='Module'><@fields.module
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.rubric}}<Detail @label='Rubric'><@fields.rubric
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.required}}<Detail
+              @label='Required'
+              @value='Yes'
+            />{{/if}}
+          {{#if @model.allowResubmission}}<Detail
+              @label='Resubmission'
+              @value='Allowed'
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

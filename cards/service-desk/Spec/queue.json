@@ -25,6 +25,11 @@
         "links": {
           "self": "../Queue/l1-general"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

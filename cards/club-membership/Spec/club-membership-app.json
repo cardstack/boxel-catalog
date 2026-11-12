@@ -22,6 +22,11 @@
         "links": {
           "self": "../ClubMembership/main"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

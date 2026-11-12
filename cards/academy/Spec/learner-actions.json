@@ -22,6 +22,11 @@
         "links": {
           "self": "../Enrollment/priya-paf-101-a"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

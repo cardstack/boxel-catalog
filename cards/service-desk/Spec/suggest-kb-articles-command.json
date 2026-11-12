@@ -19,6 +19,11 @@
         "links": {
           "self": "../Incident/1234-dashboard-access"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -55,7 +55,13 @@
       "holidays": [
         "2026-09-16",
         "2026-12-25"
-      ]
+      ],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "cardInfo.theme": {

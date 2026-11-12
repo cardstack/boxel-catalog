@@ -27,10 +27,17 @@ import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { Employee } from '../hr/employee';
 import { DotLabel, dotEnumField } from '../hr/dot-enum-field';
 import { daysBetween } from '../hr/utils';
-import { FitTile } from '../shared/fit-tile';
+import HomeIcon from '@cardstack/boxel-icons/home';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import { PublishChecklist } from './components/publish-checklist';
 import { ChannelSelector } from './components/channel-selector';
 import { SchedulePicker } from './components/schedule-picker';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const PROPERTY_TYPES = [
   'house',
@@ -286,176 +293,181 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
   };
 
   <template>
-    <article class='pl'>
-      <header class='pl-head'>
-        {{#if this.f.hero}}
-          <img class='pl-thumb' src={{this.f.hero}} alt='' />
-        {{/if}}
-        <div class='pl-who'>
-          <h1 class='pl-name'>{{@model.cardTitle}}</h1>
-          <p class='pl-meta'>{{this.f.place}}</p>
-        </div>
-        <div class='pl-head-side'>
-          <DotLabel @label={{this.f.statusLabel}} @hue={{this.f.statusHue}} />
-          <span class='pl-meta'>{{this.f.type}}</span>
-          {{#if this.canPublish}}
-            <Button
-              @tone='primary'
-              @appearance={{if this.publishPanelOpen 'outlined' 'accent'}}
-              @size='s'
-              aria-expanded={{if this.publishPanelOpen 'true' 'false'}}
-              {{on 'click' this.togglePanel}}
-            >{{if
-                this.publishPanelOpen
-                'Close publish panel'
-                'Publish'
-              }}</Button>
+    <IsoFrame>
+      <article class='pl'>
+        <header class='pl-head'>
+          {{#if this.f.hero}}
+            <img class='pl-thumb' src={{this.f.hero}} alt='' />
           {{/if}}
-        </div>
-      </header>
-
-      {{#if this.publishOutcome}}
-        <Alert
-          class='pl-alert'
-          @tone={{if this.publishScheduled 'info' 'success'}}
-        >{{this.publishOutcome}}</Alert>
-      {{/if}}
-
-      {{#if this.publishPanelOpen}}
-        <section class='pl-publish' aria-label='Publish listing'>
-          <div class='pl-sect'>
-            <h2 class='pl-h'>Ready to publish to</h2>
-            <ChannelSelector
-              @selected={{this.selectedChannels}}
-              @onToggle={{this.toggleChannel}}
-            />
-            <SchedulePicker
-              @value={{this.scheduleIso}}
-              @onChange={{this.setSchedule}}
-            />
+          <div class='pl-who'>
+            <h1 class='pl-name'>{{@model.cardTitle}}</h1>
+            <p class='pl-meta'>{{this.f.place}}</p>
           </div>
-          <div class='pl-sect'>
-            <h2 class='pl-h'>Pre-publish checklist</h2>
-            <PublishChecklist @model={{@model}} />
-            <Button
-              @tone='primary'
-              @appearance='accent'
-              @size='s'
-              @busy={{this.publishing}}
-              {{on 'click' this.publish}}
-            >{{if this.publishing 'Publishing…' 'Publish now'}}</Button>
-            {{#if this.publishProblem}}
-              <Alert @tone='danger'>{{this.publishProblem}}</Alert>
+          <div class='pl-head-side'>
+            <DotLabel @label={{this.f.statusLabel}} @hue={{this.f.statusHue}} />
+            <span class='pl-meta'>{{this.f.type}}</span>
+            {{#if this.canPublish}}
+              <Button
+                @tone='primary'
+                @appearance={{if this.publishPanelOpen 'outlined' 'accent'}}
+                @size='s'
+                aria-expanded={{if this.publishPanelOpen 'true' 'false'}}
+                {{on 'click' this.togglePanel}}
+              >{{if
+                  this.publishPanelOpen
+                  'Close publish panel'
+                  'Publish'
+                }}</Button>
             {{/if}}
           </div>
+        </header>
+
+        {{#if this.publishOutcome}}
+          <Alert
+            class='pl-alert'
+            @tone={{if this.publishScheduled 'info' 'success'}}
+          >{{this.publishOutcome}}</Alert>
+        {{/if}}
+
+        {{#if this.publishPanelOpen}}
+          <section class='pl-publish' aria-label='Publish listing'>
+            <div class='pl-sect'>
+              <h2 class='pl-h'>Ready to publish to</h2>
+              <ChannelSelector
+                @selected={{this.selectedChannels}}
+                @onToggle={{this.toggleChannel}}
+              />
+              <SchedulePicker
+                @value={{this.scheduleIso}}
+                @onChange={{this.setSchedule}}
+              />
+            </div>
+            <div class='pl-sect'>
+              <h2 class='pl-h'>Pre-publish checklist</h2>
+              <PublishChecklist @model={{@model}} />
+              <Button
+                @tone='primary'
+                @appearance='accent'
+                @size='s'
+                @busy={{this.publishing}}
+                {{on 'click' this.publish}}
+              >{{if this.publishing 'Publishing…' 'Publish now'}}</Button>
+              {{#if this.publishProblem}}
+                <Alert @tone='danger'>{{this.publishProblem}}</Alert>
+              {{/if}}
+            </div>
+          </section>
+        {{/if}}
+
+        <section class='pl-stats' aria-label='Key numbers'>
+          <div class='pl-stat'><Stat
+              @label='Asking'
+              @value={{this.f.price}}
+              @hint='{{this.f.code}} · {{@model.propertyType}}'
+              @tone='success'
+              @roll={{false}}
+            /></div>
+          <div class='pl-stat'><Stat
+              @label='Days on market'
+              @value={{if @model.daysOnMarket @model.daysOnMarket '—'}}
+              @hint='listed {{this.f.listed}}'
+              @tone='warning'
+              @roll={{false}}
+            /></div>
+          <div class='pl-stat'><Stat
+              @label='Price / sqft'
+              @value={{this.f.perSqft}}
+              @hint={{this.f.area}}
+              @tone='info'
+              @roll={{false}}
+            /></div>
+          <div class='pl-stat'><Stat
+              @label='Bedrooms'
+              @value={{if @model.bedrooms @model.bedrooms '—'}}
+              @hint='{{if @model.bathrooms @model.bathrooms "—"}} baths'
+              @tone='neutral'
+              @roll={{false}}
+            /></div>
         </section>
-      {{/if}}
 
-      <section class='pl-stats' aria-label='Key numbers'>
-        <div class='pl-stat'><Stat
-            @label='Asking'
-            @value={{this.f.price}}
-            @hint='{{this.f.code}} · {{@model.propertyType}}'
-            @tone='success'
-            @roll={{false}}
-          /></div>
-        <div class='pl-stat'><Stat
-            @label='Days on market'
-            @value={{if @model.daysOnMarket @model.daysOnMarket '—'}}
-            @hint='listed {{this.f.listed}}'
-            @tone='warning'
-            @roll={{false}}
-          /></div>
-        <div class='pl-stat'><Stat
-            @label='Price / sqft'
-            @value={{this.f.perSqft}}
-            @hint={{this.f.area}}
-            @tone='info'
-            @roll={{false}}
-          /></div>
-        <div class='pl-stat'><Stat
-            @label='Bedrooms'
-            @value={{if @model.bedrooms @model.bedrooms '—'}}
-            @hint='{{if @model.bathrooms @model.bathrooms "—"}} baths'
-            @tone='neutral'
-            @roll={{false}}
-          /></div>
-      </section>
+        <div class='pl-cols'>
+          <div class='pl-main'>
+            <section class='pl-sect'>
+              <h2 class='pl-h'>About this property</h2>
+              {{#if @model.description}}
+                <div class='pl-prose'><@fields.description /></div>
+              {{else}}
+                <p class='pl-meta'>—</p>
+              {{/if}}
+            </section>
+            <section class='pl-sect pl-flush'>
+              <h2 class='pl-h pl-h-row'>Features
+                <span class='pl-count'>{{@model.features.length}}</span></h2>
+              <ul class='pl-grid'>
+                {{#each @model.features as |feature|}}
+                  <li>{{feature}}</li>
+                {{else}}
+                  <li class='pl-meta'>—</li>
+                {{/each}}
+              </ul>
+            </section>
+            <section class='pl-sect pl-flush'>
+              <h2 class='pl-h pl-h-row'>Photos
+                <span class='pl-count'>{{this.photoRows.length}}</span></h2>
+              <ul class='pl-rows'>
+                {{#each this.photoRows as |p|}}
+                  <li class='pl-row'>
+                    <strong>{{p.caption}}</strong>
+                    <span class='pl-row-side'>
+                      <span class='pl-meta'>{{if
+                          p.hero
+                          (concat 'Hero photo · ' p.position)
+                          p.position
+                        }}</span>
+                      {{#if p.hero}}<DotLabel
+                          @label='hero'
+                          @hue='blue'
+                        />{{/if}}
+                    </span>
+                  </li>
+                {{else}}
+                  <li class='pl-row pl-meta'>No photos yet</li>
+                {{/each}}
+              </ul>
+            </section>
+          </div>
 
-      <div class='pl-cols'>
-        <div class='pl-main'>
-          <section class='pl-sect'>
-            <h2 class='pl-h'>About this property</h2>
-            {{#if @model.description}}
-              <div class='pl-prose'><@fields.description /></div>
-            {{else}}
-              <p class='pl-meta'>—</p>
-            {{/if}}
-          </section>
-          <section class='pl-sect pl-flush'>
-            <h2 class='pl-h pl-h-row'>Features
-              <span class='pl-count'>{{@model.features.length}}</span></h2>
-            <ul class='pl-grid'>
-              {{#each @model.features as |feature|}}
-                <li>{{feature}}</li>
-              {{else}}
-                <li class='pl-meta'>—</li>
-              {{/each}}
-            </ul>
-          </section>
-          <section class='pl-sect pl-flush'>
-            <h2 class='pl-h pl-h-row'>Photos
-              <span class='pl-count'>{{this.photoRows.length}}</span></h2>
-            <ul class='pl-rows'>
-              {{#each this.photoRows as |p|}}
-                <li class='pl-row'>
-                  <strong>{{p.caption}}</strong>
-                  <span class='pl-row-side'>
-                    <span class='pl-meta'>{{if
-                        p.hero
-                        (concat 'Hero photo · ' p.position)
-                        p.position
-                      }}</span>
-                    {{#if p.hero}}<DotLabel @label='hero' @hue='blue' />{{/if}}
-                  </span>
-                </li>
-              {{else}}
-                <li class='pl-row pl-meta'>No photos yet</li>
-              {{/each}}
-            </ul>
-          </section>
+          <aside class='pl-side'>
+            <section class='pl-sect pl-flush'>
+              <h2 class='pl-h'>Linked</h2>
+              <dl class='pl-kv'>
+                <div><dt>Listing agent</dt>
+                  <dd>{{#if @model.agent}}<@fields.agent
+                        @format='atom'
+                      />{{else}}—{{/if}}</dd></div>
+              </dl>
+            </section>
+            <section class='pl-sect pl-flush'>
+              <h2 class='pl-h'>Details</h2>
+              <dl class='pl-kv pl-mono'>
+                <div><dt>Price / sqft</dt><dd>{{this.f.perSqft}}</dd></div>
+                <div><dt>Area</dt><dd>{{this.f.area}}</dd></div>
+                <div><dt>Year built</dt><dd>{{this.f.built}}</dd></div>
+                <div><dt>Lot</dt><dd>{{this.f.lot}}</dd></div>
+                <div><dt>MLS#</dt><dd>{{if
+                      @model.mlsNumber
+                      @model.mlsNumber
+                      '—'
+                    }}</dd></div>
+                <div><dt>Listed</dt><dd>{{this.f.listed}}</dd></div>
+                <div><dt>Photos</dt><dd>{{this.photoRows.length}}</dd></div>
+                <div><dt>Features</dt><dd>{{@model.features.length}}</dd></div>
+              </dl>
+            </section>
+          </aside>
         </div>
-
-        <aside class='pl-side'>
-          <section class='pl-sect pl-flush'>
-            <h2 class='pl-h'>Linked</h2>
-            <dl class='pl-kv'>
-              <div><dt>Listing agent</dt>
-                <dd>{{#if @model.agent}}<@fields.agent
-                      @format='atom'
-                    />{{else}}—{{/if}}</dd></div>
-            </dl>
-          </section>
-          <section class='pl-sect pl-flush'>
-            <h2 class='pl-h'>Details</h2>
-            <dl class='pl-kv pl-mono'>
-              <div><dt>Price / sqft</dt><dd>{{this.f.perSqft}}</dd></div>
-              <div><dt>Area</dt><dd>{{this.f.area}}</dd></div>
-              <div><dt>Year built</dt><dd>{{this.f.built}}</dd></div>
-              <div><dt>Lot</dt><dd>{{this.f.lot}}</dd></div>
-              <div><dt>MLS#</dt><dd>{{if
-                    @model.mlsNumber
-                    @model.mlsNumber
-                    '—'
-                  }}</dd></div>
-              <div><dt>Listed</dt><dd>{{this.f.listed}}</dd></div>
-              <div><dt>Photos</dt><dd>{{this.photoRows.length}}</dd></div>
-              <div><dt>Features</dt><dd>{{@model.features.length}}</dd></div>
-            </dl>
-          </section>
-        </aside>
-      </div>
-    </article>
+      </article>
+    </IsoFrame>
     <style scoped>
       .pl {
         container-type: inline-size;
@@ -905,12 +917,11 @@ export class PropertyListing extends CardDef {
       return new ListingFacts(this.args.model as PropertyListing);
     }
     <template>
-      <FitTile>
-        <:avatar>{{#if this.f.hero}}<img
-              class='pf-thumb'
-              src={{this.f.hero}}
-              alt=''
-            />{{/if}}</:avatar>
+      <RichFittedCard>
+        <:media><Media @src={{this.f.hero}} @alt=''><HomeIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{this.f.place}}</:subtitle>
         <:status><DotLabel
@@ -918,21 +929,38 @@ export class PropertyListing extends CardDef {
             @hue={{this.f.statusHue}}
           /></:status>
         <:fact>{{this.f.headline}}</:fact>
+        <:metric>{{#if @model.askingPrice.amount}}<Metric
+              @value={{this.f.price}}
+              @label='Asking'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.areaSqft}}<Detail
+              @label='Area'
+              @value={{this.f.area}}
+            />{{/if}}
+          {{#if @model.propertyType}}<Detail
+              @label='Type'
+              @value={{this.f.type}}
+            />{{/if}}
+          {{#if @model.pricePerSqft}}<Detail
+              @label='Per sqft'
+              @value={{this.f.perSqft}}
+            />{{/if}}
+          {{#if @model.daysOnMarket}}<Detail
+              @label='On market'
+              @value={{this.f.dom}}
+            />{{/if}}
+          {{#if @model.yearBuilt}}<Detail
+              @label='Built'
+              @value={{this.f.built}}
+            />{{/if}}
+        </:details>
         <:relations>
           {{#if @model.agent}}
             <@fields.agent @format='atom' @displayContainer={{false}} />
           {{/if}}
         </:relations>
-      </FitTile>
-      <style scoped>
-        .pf-thumb {
-          display: block;
-          inline-size: 2rem;
-          block-size: 2rem;
-          object-fit: cover;
-          border-radius: var(--radius);
-        }
-      </style>
+      </RichFittedCard>
     </template>
   };
 }

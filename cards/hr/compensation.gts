@@ -18,6 +18,8 @@ import {
 import { CompensationField } from './compensation-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 
 export const COMP_CHANGE_REASONS = [
   'new-hire',
@@ -107,60 +109,65 @@ export class Compensation extends CardDef {
       return COMP_CHANGE_REASON_LABELS[this.args.model?.reason ?? ''] ?? '—';
     }
     <template>
-      <article class='comp-rec'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Compensation Record</p>
-            <h1>{{@model.cardTitle}}</h1>
-            <p class='sub'>effective
-              {{#if @model.effectiveDate}}<FormatDate
-                  @date={{@model.effectiveDate}}
-                  @dateStyle='long'
-                />{{else}}—{{/if}}</p>
-          </div>
-          <StatePill
-            @label={{this.reasonLabel}}
-            @hue='blue'
-            @emphatic={{true}}
-          />
-        </header>
-        <section class='panel'>
-          <h2>Package</h2>
-          <@fields.package @format='embedded' />
-          {{#if this.breakdown.length}}
-            <CompensationBreakdown
-              @components={{this.breakdown}}
-              @currencyCode='USD'
-              @heading='Annual cash'
+      <IsoFrame>
+        <article class='comp-rec'>
+          <header class='head'>
+            <div>
+              <p class='kicker'>Compensation Record</p>
+              <h1>{{@model.cardTitle}}</h1>
+              <p class='sub'>effective
+                {{#if @model.effectiveDate}}<FormatDate
+                    @date={{@model.effectiveDate}}
+                    @dateStyle='long'
+                  />{{else}}—{{/if}}</p>
+            </div>
+            <StatePill
+              @label={{this.reasonLabel}}
+              @hue='blue'
+              @emphatic={{true}}
             />
+          </header>
+          <section class='panel'>
+            <h2>Package</h2>
+            <@fields.package @format='embedded' />
+            {{#if this.breakdown.length}}
+              <CompensationBreakdown
+                @components={{this.breakdown}}
+                @currencyCode='USD'
+                @heading='Annual cash'
+              />
+            {{/if}}
+          </section>
+          <div class='grid'>
+            <section class='panel'>
+              <h2>Employee</h2>
+              {{#if @model.employee}}<@fields.employee @format='atom' />{{else}}
+                <p class='empty'>No employee linked.</p>{{/if}}
+            </section>
+            <section class='panel'>
+              <h2>Approved By</h2>
+              {{#if @model.approvedBy}}<@fields.approvedBy
+                  @format='atom'
+                />{{else}}
+                <p class='empty'>Unapproved draft.</p>{{/if}}
+            </section>
+          </div>
+          {{#if @model.notes}}
+            <section class='panel'>
+              <h2>Notes</h2>
+              <p class='notes'>{{@model.notes}}</p>
+            </section>
           {{/if}}
-        </section>
-        <div class='grid'>
-          <section class='panel'>
-            <h2>Employee</h2>
-            {{#if @model.employee}}<@fields.employee @format='atom' />{{else}}
-              <p class='empty'>No employee linked.</p>{{/if}}
-          </section>
-          <section class='panel'>
-            <h2>Approved By</h2>
-            {{#if @model.approvedBy}}<@fields.approvedBy
-                @format='atom'
-              />{{else}}
-              <p class='empty'>Unapproved draft.</p>{{/if}}
-          </section>
-        </div>
-        {{#if @model.notes}}
-          <section class='panel'>
-            <h2>Notes</h2>
-            <p class='notes'>{{@model.notes}}</p>
-          </section>
-        {{/if}}
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .comp-rec {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--card);
           color: var(--card-foreground);
           display: grid;
           gap: var(--boxel-sp);
@@ -272,43 +279,30 @@ export class Compensation extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get reasonLabel() {
+      return COMP_CHANGE_REASON_LABELS[this.args.model?.reason ?? ''];
+    }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.cardTitle}}</span>
-        <span class='fit-pkg'>{{@model.package.summary}}</span>
-      </div>
-      <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fit-pkg {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#if this.reasonLabel}}<StatePill
+              @label={{this.reasonLabel}}
+              @hue='blue'
+            />{{/if}}</:status>
+        <:subtitle>{{@model.package.summary}}</:subtitle>
+        <:details>
+          {{#if @model.employee}}<Detail @label='Employee'><@fields.employee
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.approvedBy}}<Detail
+              @label='Approved by'
+            ><@fields.approvedBy
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

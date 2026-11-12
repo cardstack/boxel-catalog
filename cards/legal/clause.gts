@@ -8,6 +8,8 @@ import {
   type BaseDefComponent,
 } from '@cardstack/base/card-api';
 import type { Hue } from './compact-card';
+import { Dot as DotChip } from '../shared/compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import DateField from '@cardstack/base/date';
 import MarkdownField from '@cardstack/base/markdown';
 import TextAreaField from '@cardstack/base/text-area';
@@ -21,13 +23,13 @@ import {
   AtomLayout,
   EmbLayout,
   Facts,
-  FitLayout,
   IsoLayout,
   Mark,
   Rows,
   Section,
   Text,
   riskTone,
+  fitParts,
   stats,
   type Dot,
   type Fact,
@@ -35,6 +37,7 @@ import {
   type StatItem,
 } from './compact-card';
 import { cap, dash, dayAndYear, formatDay } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * A pre-approved piece of contract language, owned by legal.
@@ -264,35 +267,39 @@ export class Clause extends CardDef {
       ];
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.stats}}
-      >
-        <:mark><Mark @text='Cl' @size='lg' /></:mark>
-        <:main>
-          <Section @title='Standard text'><@fields.standardText /></Section>
-          {{#if @model.guidance}}
-            <Section @title='Guidance'><Text
-              >{{@model.guidance}}</Text></Section>
-          {{/if}}
-          <Section @title='In use' @flush={{true}}>
-            {{#if this.lookupFailed}}
-              <Rows @rows={{this.failedRows}} />
-            {{else if this.isCounting}}
-              <Rows @rows={{this.countingRows}} />
-            {{else if this.rows.length}}
-              <Rows @rows={{this.rows}} />
-            {{else}}
-              <Rows @rows={{this.unusedRows}} />
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.stats}}
+        >
+          <:mark><Mark @text='Cl' @size='lg' /></:mark>
+          <:main>
+            <Section @title='Standard text'><@fields.standardText /></Section>
+            {{#if @model.guidance}}
+              <Section @title='Guidance'><Text
+                >{{@model.guidance}}</Text></Section>
             {{/if}}
-          </Section>
-        </:main>
-        <:side>
-          <Section @title='Details'><Facts @items={{this.details}} /></Section>
-        </:side>
-      </IsoLayout>
+            <Section @title='In use' @flush={{true}}>
+              {{#if this.lookupFailed}}
+                <Rows @rows={{this.failedRows}} />
+              {{else if this.isCounting}}
+                <Rows @rows={{this.countingRows}} />
+              {{else if this.rows.length}}
+                <Rows @rows={{this.rows}} />
+              {{else}}
+                <Rows @rows={{this.unusedRows}} />
+              {{/if}}
+            </Section>
+          </:main>
+          <:side>
+            <Section @title='Details'><Facts
+                @items={{this.details}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
     failedRows: Row[] = [
       {
@@ -326,16 +333,26 @@ export class Clause extends CardDef {
   static fitted = class Fitted extends Component<typeof Clause> {
     <template>
       {{#let (clauseView @model) as |v|}}
-        <FitLayout
-          @title={{v.title}}
-          @subtitle={{v.subtitle}}
-          @status={{v.state}}
-          @fact={{v.fact}}
-          @facts={{v.facts}}
-          @stats={{v.fitStats}}
-        >
-          <:mark><Mark @text='Cl' /></:mark>
-        </FitLayout>
+        {{#let (fitParts v.facts v.fitStats) as |fit|}}
+          <RichFittedCard>
+            <:avatar><Mark @text='Cl' /></:avatar>
+            <:title>{{v.title}}</:title>
+            <:status>{{#if v.state}}<DotChip
+                  @label={{v.state.label}}
+                  @tone={{v.state.tone}}
+                />{{/if}}</:status>
+            <:subtitle>{{v.subtitle}}</:subtitle>
+            <:fact>{{v.fact}}</:fact>
+            <:metric>{{#if fit.metric}}<Metric
+                  @value={{fit.metric.value}}
+                  @label={{fit.metric.key}}
+                />{{/if}}</:metric>
+            <:details>{{#each fit.details as |d|}}<Detail
+                  @label={{d.key}}
+                  @value={{d.value}}
+                />{{/each}}</:details>
+          </RichFittedCard>
+        {{/let}}
       {{/let}}
     </template>
   };

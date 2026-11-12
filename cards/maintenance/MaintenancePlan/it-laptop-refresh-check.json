@@ -51,7 +51,13 @@
       "priority": "P4",
       "assignTeamName": "IT Support",
       "active": true,
-      "complianceWindowDays": 30
+      "complianceWindowDays": 30,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "category": {

@@ -19,6 +19,11 @@
         "links": {
           "self": "../Ticket/1288-invoice-download"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

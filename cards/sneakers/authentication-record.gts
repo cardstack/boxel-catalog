@@ -15,18 +15,23 @@ import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { CollectionItem } from './collection-item';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
   SnKv,
-  SnMark,
   SnRow,
   SnSection,
   SnSheet,
   SnStat,
   day,
 } from './parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // AuthenticationRecord — one legit-check on one item: who checked it, when, the
 // verdict, and the certificate reference.
@@ -138,54 +143,58 @@ export class AuthenticationRecord extends CardDef {
     typeof AuthenticationRecord
   > {
     <template>
-      <SnSheet @title={{titleOf @model}} @src={{photoOf @model}}>
-        <:meta>{{metaLine @model}}</:meta>
-        <:actions><Outcome @model={{@model}} /></:actions>
-        <:stats>
-          <SnStat
-            @label='Outcome'
-            @value={{outcomeLabel @model.outcome}}
-            @hint={{@model.service}}
-          />
-          <SnStat
-            @label='Turnaround'
-            @value={{or @model.turnaroundDays}}
-            @hint={{spanText @model}}
-          />
-          <SnStat
-            @label='Certificate'
-            @value={{or @model.certificateId}}
-            @hint={{@model.authenticator}}
-          />
-        </:stats>
-        <:main>
-          <SnSection @title='Authenticator notes'>
-            {{#if @model.authenticatorNotes}}<@fields.authenticatorNotes
-              />{{else}}—{{/if}}
-          </SnSection>
-          <SnSection @title='Record' @flush={{true}}>
-            <SnKv>
-              <SnRow @label='Service'>{{or @model.service}}</SnRow>
-              <SnRow @label='Authenticator'>{{or @model.authenticator}}</SnRow>
-              <SnRow @label='Submitted' @value={{day @model.submittedAt}} />
-              <SnRow @label='Completed' @value={{day @model.completedAt}} />
-              <SnRow @label='Certificate'>{{or @model.certificateId}}</SnRow>
-              <SnRow @label='Order'>{{#if @model.order}}<@fields.order
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</SnRow>
-            </SnKv>
-          </SnSection>
-        </:main>
-        <:side>
-          <SnSection @title='Linked' @flush={{true}}>
-            <ItemRow @model={{@model}} @fields={{@fields}} />
-          </SnSection>
-          <SnSection @title='Details' @flush={{true}}>
-            <DetailRows @model={{@model}} />
-          </SnSection>
-        </:side>
-      </SnSheet>
+      <IsoFrame>
+        <SnSheet @title={{titleOf @model}} @src={{photoOf @model}}>
+          <:meta>{{metaLine @model}}</:meta>
+          <:actions><Outcome @model={{@model}} /></:actions>
+          <:stats>
+            <SnStat
+              @label='Outcome'
+              @value={{outcomeLabel @model.outcome}}
+              @hint={{@model.service}}
+            />
+            <SnStat
+              @label='Turnaround'
+              @value={{or @model.turnaroundDays}}
+              @hint={{spanText @model}}
+            />
+            <SnStat
+              @label='Certificate'
+              @value={{or @model.certificateId}}
+              @hint={{@model.authenticator}}
+            />
+          </:stats>
+          <:main>
+            <SnSection @title='Authenticator notes'>
+              {{#if @model.authenticatorNotes}}<@fields.authenticatorNotes
+                />{{else}}—{{/if}}
+            </SnSection>
+            <SnSection @title='Record' @flush={{true}}>
+              <SnKv>
+                <SnRow @label='Service'>{{or @model.service}}</SnRow>
+                <SnRow @label='Authenticator'>{{or
+                    @model.authenticator
+                  }}</SnRow>
+                <SnRow @label='Submitted' @value={{day @model.submittedAt}} />
+                <SnRow @label='Completed' @value={{day @model.completedAt}} />
+                <SnRow @label='Certificate'>{{or @model.certificateId}}</SnRow>
+                <SnRow @label='Order'>{{#if @model.order}}<@fields.order
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</SnRow>
+              </SnKv>
+            </SnSection>
+          </:main>
+          <:side>
+            <SnSection @title='Linked' @flush={{true}}>
+              <ItemRow @model={{@model}} @fields={{@fields}} />
+            </SnSection>
+            <SnSection @title='Details' @flush={{true}}>
+              <DetailRows @model={{@model}} />
+            </SnSection>
+          </:side>
+        </SnSheet>
+      </IsoFrame>
     </template>
   };
 
@@ -212,15 +221,36 @@ export class AuthenticationRecord extends CardDef {
 
   static fitted = class Fitted extends Component<typeof AuthenticationRecord> {
     <template>
-      <FitTile>
-        <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
+      <RichFittedCard>
+        <:media><Media @src={{photoOf @model}} @alt=''><ShieldCheckIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{titleOf @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><Outcome @model={{@model}} /></:status>
         <:fact>{{spanText @model}}
           ·
           {{or @model.turnaroundDays}}</:fact>
-      </FitTile>
+        <:metric>{{#if @model.turnaroundDays}}<Metric
+              @value={{@model.turnaroundDays}}
+              @label='Turnaround'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.item}}<Detail @label='Item'><@fields.item
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.authenticator}}<Detail
+              @label='Authenticator'
+              @value={{@model.authenticator}}
+            />{{/if}}
+          {{#if @model.order}}<Detail @label='Order'><@fields.order
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

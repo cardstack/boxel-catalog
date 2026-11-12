@@ -25,11 +25,12 @@ import {
   Sheet,
   Stat,
 } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import { ENROLLMENT_STATUSES } from './enrollment-status-field';
 import { SUBMISSION_STATUSES } from './submission-status-field';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { DeskRow, KvList, cardsLinkedTo } from './components/desk-status';
+import { IsoFrame } from '../shared/compact-sheet';
 
 function learnerName(title?: string): string {
   return title ?? 'Unnamed learner';
@@ -221,78 +222,80 @@ class LearnerIsolated extends Component<typeof Learner> {
   }
 
   <template>
-    <Sheet
-      @mark={{@model.initials}}
-      @title={{@model.title}}
-      @meta={{metaLine @model}}
-    >
-      <:status><Dot
-          @hue={{if this.enrollments.length 'green'}}
-        >{{this.cohortLabel}}</Dot></:status>
-      <:stats>{{#each this.stats as |st|}}<Stat
-            @label={{st.label}}
-            @value={{st.value}}
-            @sub={{st.hint}}
-          />{{/each}}</:stats>
-      <:main>
+    <IsoFrame>
+      <Sheet
+        @mark={{@model.initials}}
+        @title={{@model.title}}
+        @meta={{metaLine @model}}
+      >
+        <:status><Dot
+            @hue={{if this.enrollments.length 'green'}}
+          >{{this.cohortLabel}}</Dot></:status>
+        <:stats>{{#each this.stats as |st|}}<Stat
+              @label={{st.label}}
+              @value={{st.value}}
+              @sub={{st.hint}}
+            />{{/each}}</:stats>
+        <:main>
 
-        <Section @title='Contact'><KvList
-            @items={{contactItems @model}}
-          /></Section>
-        <Section @title='Enrollments'>
-          {{#each this.enrollments as |e|}}
-            <DeskRow @title={{e.cohortName}} @meta={{enrollmentMeta e}}>
-              <Dot
-                @hue={{enrollmentHue e.enrollmentStatus}}
-              >{{e.enrollmentStatus}}</Dot>
-            </DeskRow>
-          {{else}}
-            <DeskRow @title='No enrollments' @meta='Enroll from a cohort.' />
-          {{/each}}
-        </Section>
-        <Section @title='Work'>
-          {{#each this.submissions as |w|}}
-            <DeskRow
-              @title={{w.assignmentTitle}}
-              @meta={{workMeta w 'version'}}
-            >
-              <Dot
-                @hue={{submissionHue w.submissionStatus}}
-              >{{w.statusLabel}}</Dot>
-            </DeskRow>
-          {{/each}}
-          {{#each this.attempts as |a|}}
-            <DeskRow
-              @title={{a.quizTitle}}
-              @meta={{workMeta a 'attemptNumber'}}
-            >
-              <Dot @hue={{if a.passed 'green' 'red'}}>{{pct a.scorePct}}</Dot>
-            </DeskRow>
-          {{/each}}
-          {{#unless this.workCount}}
-            <DeskRow
-              @title='No work yet'
-              @meta='Submissions and quiz attempts show here.'
-            />
-          {{/unless}}
-        </Section>
-        {{#if @model.notes}}
-          <Section @title='Notes'><p
-              class='notes'
-            >{{@model.notes}}</p></Section>
-        {{/if}}
-      </:main>
-      <:side>
-        <Section @title='Linked'>
-          <Kv @label='Staff record'>{{#if
-              @model.linkedEmployee
-            }}<@fields.linkedEmployee
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</Kv>
-        </Section>
-        <Section @title='Details'><KvList @items={{this.details}} /></Section>
-      </:side></Sheet>
+          <Section @title='Contact'><KvList
+              @items={{contactItems @model}}
+            /></Section>
+          <Section @title='Enrollments'>
+            {{#each this.enrollments as |e|}}
+              <DeskRow @title={{e.cohortName}} @meta={{enrollmentMeta e}}>
+                <Dot
+                  @hue={{enrollmentHue e.enrollmentStatus}}
+                >{{e.enrollmentStatus}}</Dot>
+              </DeskRow>
+            {{else}}
+              <DeskRow @title='No enrollments' @meta='Enroll from a cohort.' />
+            {{/each}}
+          </Section>
+          <Section @title='Work'>
+            {{#each this.submissions as |w|}}
+              <DeskRow
+                @title={{w.assignmentTitle}}
+                @meta={{workMeta w 'version'}}
+              >
+                <Dot
+                  @hue={{submissionHue w.submissionStatus}}
+                >{{w.statusLabel}}</Dot>
+              </DeskRow>
+            {{/each}}
+            {{#each this.attempts as |a|}}
+              <DeskRow
+                @title={{a.quizTitle}}
+                @meta={{workMeta a 'attemptNumber'}}
+              >
+                <Dot @hue={{if a.passed 'green' 'red'}}>{{pct a.scorePct}}</Dot>
+              </DeskRow>
+            {{/each}}
+            {{#unless this.workCount}}
+              <DeskRow
+                @title='No work yet'
+                @meta='Submissions and quiz attempts show here.'
+              />
+            {{/unless}}
+          </Section>
+          {{#if @model.notes}}
+            <Section @title='Notes'><p
+                class='notes'
+              >{{@model.notes}}</p></Section>
+          {{/if}}
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <Kv @label='Staff record'>{{#if
+                @model.linkedEmployee
+              }}<@fields.linkedEmployee
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+          </Section>
+          <Section @title='Details'><KvList @items={{this.details}} /></Section>
+        </:side></Sheet>
+    </IsoFrame>
     <style scoped>
       .notes {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
@@ -385,20 +388,29 @@ export class Learner extends PersonBase {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Avatar
             @name={{learnerName @model.title}}
             @src={{@model.photo.resolvedUrl}}
-            @size={{32}}
           /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:fact>{{if @model.email @model.email '—'}}</:fact>
+        <:details>
+          {{#if @model.phone}}<Detail
+              @label='Phone'
+              @value={{@model.phone}}
+            />{{/if}}
+          {{#if @model.notes}}<Detail
+              @label='Notes'
+              @value={{@model.notes}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.linkedEmployee}}<@fields.linkedEmployee
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

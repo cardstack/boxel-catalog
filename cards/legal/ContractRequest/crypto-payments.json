@@ -14,7 +14,13 @@
         }
       },
       "background": "Requested for a pilot.",
-      "decisionNote": "Declined \u2014 the provider would hold customer funds, which is outside our licence. Revisit if we obtain one."
+      "decisionNote": "Declined \u2014 the provider would hold customer funds, which is outside our licence. Revisit if we obtain one.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "requestedBy": {

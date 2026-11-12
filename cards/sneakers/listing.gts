@@ -21,9 +21,14 @@ import TagIcon from '@cardstack/boxel-icons/tag';
 import { CollectionItem } from './collection-item';
 import { CollectibleProduct } from './collectible-product';
 import { SellerProfile } from './seller-profile';
-import { moneyText } from './money-format';
+import { formatMoney, moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -35,6 +40,7 @@ import {
   SnStat,
   day,
 } from './parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Listing — one seller offering one owned item for sale. Every value a tile
 // shows is an attribute (computed at index time), because prerendered fitted
@@ -154,74 +160,76 @@ export class Listing extends CardDef {
 
   static isolated = class Isolated extends Component<typeof Listing> {
     <template>
-      <SnSheet>
-        <:mark><SnMark @src={{@model.photos.primaryUrl}} @text='Li' /></:mark>
-        <:title>{{@model.cardTitle}}</:title>
-        <:meta>{{metaLine @model}}</:meta>
-        <:actions><DotLabel
-            @hue={{statusHue ListingStatusField @model.listingStatus}}
-            @label={{statusLabel @model.listingStatus}}
-          /></:actions>
-        <:stats>
-          <SnStat
-            @label='Asking'
-            @hue='green'
-            @value={{moneyText @model.price}}
-            @hint={{shippingLine @model}}
-          />
-          <SnStat
-            @label='Last value'
-            @value={{moneyText @model.collectionItem.lastKnownValue}}
-            @hint={{day @model.collectionItem.valuedOn}}
-          />
-          <SnStat
-            @label='Retail'
-            @value={{moneyText @model.product.retailPrice}}
-            @hint={{day @model.product.releaseDate}}
-          />
-        </:stats>
-        <:main>
-          <SnSection @title='Notes' @text={{@model.listingNotes}} />
-          <SnSection @title='Listing' @flush={{true}}><SnKv>
-              <SnRow @label='Price' @value={{moneyText @model.price}} />
-              <SnRow
-                @label='Shipping'
-                @value={{moneyText @model.shippingPrice}}
-              />
-              <SnRow @label='Ships from' @value={{@model.shipsFrom}} />
-              <SnRow @label='Listed' @value={{day @model.listedAt}} />
-              <SnRow @label='Sold' @value={{day @model.soldAt}} />
-              <SnRow @label='Expires' @value={{day @model.expiresAt}} />
-            </SnKv></SnSection>
-        </:main>
-        <:side>
-          <SnSection @title='Linked' @flush={{true}}><SnKv>
-              <SnRow @label='Seller'>{{#if @model.seller}}<@fields.seller
-                    @format='atom'
-                  />{{else}}—{{/if}}</SnRow>
-              <SnRow @label='Item'>{{#if
-                  @model.collectionItem
-                }}<@fields.collectionItem
-                    @format='atom'
-                  />{{else}}—{{/if}}</SnRow>
-              <SnRow @label='Product'>{{#if @model.product}}<@fields.product
-                    @format='atom'
-                  />{{else}}—{{/if}}</SnRow>
-            </SnKv></SnSection>
-          <SnSection @title='Details' @flush={{true}}><SnKv>
-              <SnRow @label='Price' @value={{moneyText @model.price}} />
-              <SnRow
-                @label='Shipping'
-                @value={{moneyText @model.shippingPrice}}
-              />
-              <SnRow @label='Size' @value={{@model.variantLabel}} />
-              <SnRow @label='Condition' @value={{@model.conditionCode}} />
-              <SnRow @label='Ships from' @value={{@model.shipsFrom}} />
-              <SnRow @label='Listed' @value={{day @model.listedAt}} />
-              <SnRow @label='Expires' @value={{expiry @model}} />
-            </SnKv></SnSection>
-        </:side>
-      </SnSheet>
+      <IsoFrame>
+        <SnSheet>
+          <:mark><SnMark @src={{@model.photos.primaryUrl}} @text='Li' /></:mark>
+          <:title>{{@model.cardTitle}}</:title>
+          <:meta>{{metaLine @model}}</:meta>
+          <:actions><DotLabel
+              @hue={{statusHue ListingStatusField @model.listingStatus}}
+              @label={{statusLabel @model.listingStatus}}
+            /></:actions>
+          <:stats>
+            <SnStat
+              @label='Asking'
+              @hue='green'
+              @value={{moneyText @model.price}}
+              @hint={{shippingLine @model}}
+            />
+            <SnStat
+              @label='Last value'
+              @value={{moneyText @model.collectionItem.lastKnownValue}}
+              @hint={{day @model.collectionItem.valuedOn}}
+            />
+            <SnStat
+              @label='Retail'
+              @value={{moneyText @model.product.retailPrice}}
+              @hint={{day @model.product.releaseDate}}
+            />
+          </:stats>
+          <:main>
+            <SnSection @title='Notes' @text={{@model.listingNotes}} />
+            <SnSection @title='Listing' @flush={{true}}><SnKv>
+                <SnRow @label='Price' @value={{moneyText @model.price}} />
+                <SnRow
+                  @label='Shipping'
+                  @value={{moneyText @model.shippingPrice}}
+                />
+                <SnRow @label='Ships from' @value={{@model.shipsFrom}} />
+                <SnRow @label='Listed' @value={{day @model.listedAt}} />
+                <SnRow @label='Sold' @value={{day @model.soldAt}} />
+                <SnRow @label='Expires' @value={{day @model.expiresAt}} />
+              </SnKv></SnSection>
+          </:main>
+          <:side>
+            <SnSection @title='Linked' @flush={{true}}><SnKv>
+                <SnRow @label='Seller'>{{#if @model.seller}}<@fields.seller
+                      @format='atom'
+                    />{{else}}—{{/if}}</SnRow>
+                <SnRow @label='Item'>{{#if
+                    @model.collectionItem
+                  }}<@fields.collectionItem
+                      @format='atom'
+                    />{{else}}—{{/if}}</SnRow>
+                <SnRow @label='Product'>{{#if @model.product}}<@fields.product
+                      @format='atom'
+                    />{{else}}—{{/if}}</SnRow>
+              </SnKv></SnSection>
+            <SnSection @title='Details' @flush={{true}}><SnKv>
+                <SnRow @label='Price' @value={{moneyText @model.price}} />
+                <SnRow
+                  @label='Shipping'
+                  @value={{moneyText @model.shippingPrice}}
+                />
+                <SnRow @label='Size' @value={{@model.variantLabel}} />
+                <SnRow @label='Condition' @value={{@model.conditionCode}} />
+                <SnRow @label='Ships from' @value={{@model.shipsFrom}} />
+                <SnRow @label='Listed' @value={{day @model.listedAt}} />
+                <SnRow @label='Expires' @value={{expiry @model}} />
+              </SnKv></SnSection>
+          </:side>
+        </SnSheet>
+      </IsoFrame>
     </template>
   };
 
@@ -263,12 +271,11 @@ export class Listing extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Listing> {
     <template>
-      <FitTile>
-        <:avatar><SnMark
-            @src={{@model.photos.primaryUrl}}
-            @text='Li'
-            @size='lg'
-          /></:avatar>
+      <RichFittedCard>
+        <:media><Media @src={{@model.photos.primaryUrl}} @alt=''><TagIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><DotLabel
@@ -276,11 +283,33 @@ export class Listing extends CardDef {
             @label={{statusLabel @model.listingStatus}}
           /></:status>
         <:fact>{{moneyText @model.price}} · {{shippingLine @model}}</:fact>
+        <:metric>{{#if (formatMoney @model.price)}}<Metric
+              @value={{formatMoney @model.price}}
+              @label='Asking'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.variantLabel}}<Detail
+              @label='Size'
+              @value={{@model.variantLabel}}
+            />{{/if}}
+          {{#if @model.listedAt}}<Detail
+              @label='Listed'
+              @value={{day @model.listedAt}}
+            />{{/if}}
+          {{#if @model.expiresAt}}<Detail
+              @label='Expires'
+              @value={{expiry @model}}
+            />{{/if}}
+          {{#if @model.shipsFrom}}<Detail
+              @label='Ships from'
+              @value={{@model.shipsFrom}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.seller}}<@fields.seller
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

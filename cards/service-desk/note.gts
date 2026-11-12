@@ -14,6 +14,8 @@ import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helper
 
 import CreatedAtField from '@cardstack/catalog/fields/created-at/created-at';
 import { User } from '../crm/user';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 
 /**
  * A freeform written record, usually about something — the base card
@@ -133,35 +135,42 @@ export class Note extends CardDef {
 
   static isolated = class Isolated extends Component<typeof Note> {
     <template>
-      <article class='note-page'>
-        <header>
-          <h1>{{@model.cardTitle}}</h1>
-          <div class='byline'>
-            {{#if @model.author}}
-              <span>{{@model.author.name}}</span>
-            {{/if}}
-            {{#if @model.createdAt}}
-              <span class='muted'><@fields.createdAt @format='atom' /></span>
-            {{/if}}
-            {{#if @model.about}}
-              <span class='about'>on <@fields.about @format='atom' /></span>
-            {{/if}}
-          </div>
-        </header>
-        {{#if @model.body}}
-          <section class='body'><@fields.body /></section>
-        {{else}}
-          <EmptyState
-            @title='Nothing written yet.'
-            @texture={{false}}
-            style={{COMPACT_EMPTY_STYLE}}
-          />
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='note-page'>
+          <header>
+            <h1>{{@model.cardTitle}}</h1>
+            <div class='byline'>
+              {{#if @model.author}}
+                <span>{{@model.author.name}}</span>
+              {{/if}}
+              {{#if @model.createdAt}}
+                <span class='muted'><@fields.createdAt @format='atom' /></span>
+              {{/if}}
+              {{#if @model.about}}
+                <span class='about'>on <@fields.about @format='atom' /></span>
+              {{/if}}
+            </div>
+          </header>
+          {{#if @model.body}}
+            <section class='body'><@fields.body /></section>
+          {{else}}
+            <EmptyState
+              @title='Nothing written yet.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .note-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 40rem;
           margin: 0 auto;
+          inline-size: 100%;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
@@ -207,80 +216,23 @@ export class Note extends CardDef {
       return excerpt(this.args.model?.body);
     }
     <template>
-      <div class='fit'>
-        <span class='f-title'>{{@model.cardTitle}}</span>
-        <span class='f-excerpt'>{{this.excerpt}}</span>
-        <span class='f-when'>{{#if @model.createdAt}}<@fields.createdAt
+      <RichFittedCard>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{#if @model.createdAt}}<@fields.createdAt
               @format='atom'
-            />{{/if}}</span>
-      </div>
-      <style scoped>
-        .fit {
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: var(--boxel-sp-4xs);
-          overflow: hidden;
-        }
-        .f-title {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.25;
-          color: var(--foreground);
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-          overflow: hidden;
-        }
-        .f-excerpt {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          line-height: 1.4;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 4;
-          overflow: hidden;
-        }
-        .f-when {
-          align-self: end;
-        }
-        /* badge: title only */
-        @container fitted-card (width <= 150px) and (height <= 169px) {
-          .f-excerpt,
-          .f-when {
-            display: none;
-          }
-          .f-title {
-            -webkit-line-clamp: 2;
-            font-size: var(--boxel-font-size-xs);
-          }
-        }
-        /* strip: one line + timestamp */
-        @container fitted-card (aspect-ratio > 2.0) and (height <= 90px) {
-          .fit {
-            grid-template-rows: none;
-            grid-template-columns: minmax(0, 1fr) auto;
-            align-items: center;
-          }
-          .f-title {
-            -webkit-line-clamp: 1;
-          }
-          .f-excerpt {
-            display: none;
-          }
-          .f-when {
-            align-self: center;
-          }
-        }
-        /* larger cards let the excerpt breathe */
-        @container fitted-card (width >= 400px) and (height >= 170px) {
-          .f-excerpt {
-            -webkit-line-clamp: 6;
-          }
-        }
-      </style>
+            />{{/if}}</:subtitle>
+        <:fact>{{this.excerpt}}</:fact>
+        <:details>
+          {{#if @model.author}}<Detail @label='Author'><@fields.author
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.about}}<Detail @label='About'><@fields.about
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

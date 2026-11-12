@@ -28,7 +28,7 @@ import { CertificationAuthority } from '../audit/certification-authority';
 import { Enrollment } from './enrollment';
 import { Employee } from '../hr/employee';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   AtomChip,
   Dot,
@@ -39,6 +39,7 @@ import {
   Sheet,
   Stat,
 } from './components/record-sheet';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const CERTIFICATE_STATUSES: StatusOption[] = [
   {
@@ -116,134 +117,140 @@ class CertificateIsolated extends Component<typeof Certificate> {
     }
   };
   <template>
-    <Sheet
-      @mark='Ce'
-      @title={{if @model.number @model.number 'Unnumbered'}}
-      @meta={{headline @model}}
-    >
-      <:status>
-        <Dot @hue={{this.hue}}>{{lower @model.statusLabel}}</Dot>
-        {{#if @model.finalLetter}}<Dot @hue='blue'>final
-            {{@model.finalLetter}}</Dot>{{/if}}
-      </:status>
-      <:actions>
-        {{#if @model.verifyUrl}}
-          <Button
-            @size='s'
-            @tone='primary'
-            @appearance='accent'
-            {{on 'click' this.copyVerify}}
-          >Copy verify link</Button>
-        {{/if}}
-        {{#if this.canRevoke}}
-          <Button
-            @size='s'
-            @tone='neutral'
-            @appearance='outlined'
-            {{on 'click' this.toggleRevoke}}
-          >Revoke</Button>
-        {{/if}}
-      </:actions>
-      <:stats>
-        <Stat
-          @label='Final grade'
-          @value={{@model.finalLetter}}
-          @sub='final letter'
-        />
-        <Stat
-          @label='Credit'
-          @value={{hours @model.creditHours}}
-          @sub={{@model.cohortName}}
-        />
-        <Stat
-          @label='Issued'
-          @value={{fmtShort @model.issuedAt}}
-          @sub={{this.issuedYear}}
-        />
-      </:stats>
-      <:main>
-        {{#if this.revoking}}
-          <Section @title='Revoke'>
-            <div class='revoke'>
-              <p class='hint'>Revocation keeps the number and prints the reason
-                on the record. It cannot be undone.</p>
-              <div class='revoke-row'>
-                <Input
-                  @value={{this.reason}}
-                  @onInput={{this.setReason}}
-                  @placeholder='Reason (required)'
-                  aria-label='Revocation reason'
-                />
-                <Button
-                  @size='s'
-                  @tone='danger'
-                  @appearance='accent'
-                  @busy={{this.busy}}
-                  @disabled={{or this.busy (not this.reason)}}
-                  {{on 'click' this.revoke}}
-                >Revoke certificate</Button>
+    <IsoFrame>
+      <Sheet
+        @mark='Ce'
+        @title={{if @model.number @model.number 'Unnumbered'}}
+        @meta={{headline @model}}
+      >
+        <:status>
+          <Dot @hue={{this.hue}}>{{lower @model.statusLabel}}</Dot>
+          {{#if @model.finalLetter}}<Dot @hue='blue'>final
+              {{@model.finalLetter}}</Dot>{{/if}}
+        </:status>
+        <:actions>
+          {{#if @model.verifyUrl}}
+            <Button
+              @size='s'
+              @tone='primary'
+              @appearance='accent'
+              {{on 'click' this.copyVerify}}
+            >Copy verify link</Button>
+          {{/if}}
+          {{#if this.canRevoke}}
+            <Button
+              @size='s'
+              @tone='neutral'
+              @appearance='outlined'
+              {{on 'click' this.toggleRevoke}}
+            >Revoke</Button>
+          {{/if}}
+        </:actions>
+        <:stats>
+          <Stat
+            @label='Final grade'
+            @value={{@model.finalLetter}}
+            @sub='final letter'
+          />
+          <Stat
+            @label='Credit'
+            @value={{hours @model.creditHours}}
+            @sub={{@model.cohortName}}
+          />
+          <Stat
+            @label='Issued'
+            @value={{fmtShort @model.issuedAt}}
+            @sub={{this.issuedYear}}
+          />
+        </:stats>
+        <:main>
+          {{#if this.revoking}}
+            <Section @title='Revoke'>
+              <div class='revoke'>
+                <p class='hint'>Revocation keeps the number and prints the
+                  reason on the record. It cannot be undone.</p>
+                <div class='revoke-row'>
+                  <Input
+                    @value={{this.reason}}
+                    @onInput={{this.setReason}}
+                    @placeholder='Reason (required)'
+                    aria-label='Revocation reason'
+                  />
+                  <Button
+                    @size='s'
+                    @tone='danger'
+                    @appearance='accent'
+                    @busy={{this.busy}}
+                    @disabled={{or this.busy (not this.reason)}}
+                    {{on 'click' this.revoke}}
+                  >Revoke certificate</Button>
+                </div>
               </div>
-            </div>
+            </Section>
+          {{/if}}
+          {{#if this.error}}<div class='alert'><Alert
+                @tone='danger'
+              >{{this.error}}</Alert></div>{{/if}}
+          {{#if this.notice}}<div class='alert'><Alert
+                @tone='success'
+              >{{this.notice}}</Alert></div>{{/if}}
+          <Section @title='Certificate'>
+            <Kv @label='Number' @mono={{true}}>{{dash @model.number}}</Kv>
+            <Kv @label='Learner'>{{dash @model.learnerName}}</Kv>
+            <Kv @label='Course'>{{dash @model.courseTitle}}</Kv>
+            <Kv @label='Cohort'>{{dash @model.cohortName}}</Kv>
+            <Kv @label='Final grade'>{{dash @model.finalLetter}}</Kv>
+            <Kv @label='Credit hours' @mono={{true}}>{{dash
+                @model.creditHours
+              }}</Kv>
           </Section>
-        {{/if}}
-        {{#if this.error}}<div class='alert'><Alert
-              @tone='danger'
-            >{{this.error}}</Alert></div>{{/if}}
-        {{#if this.notice}}<div class='alert'><Alert
-              @tone='success'
-            >{{this.notice}}</Alert></div>{{/if}}
-        <Section @title='Certificate'>
-          <Kv @label='Number' @mono={{true}}>{{dash @model.number}}</Kv>
-          <Kv @label='Learner'>{{dash @model.learnerName}}</Kv>
-          <Kv @label='Course'>{{dash @model.courseTitle}}</Kv>
-          <Kv @label='Cohort'>{{dash @model.cohortName}}</Kv>
-          <Kv @label='Final grade'>{{dash @model.finalLetter}}</Kv>
-          <Kv @label='Credit hours' @mono={{true}}>{{dash
-              @model.creditHours
-            }}</Kv>
-        </Section>
-        <Section @title='Verification'>
-          <Kv @label='Verify URL'>{{dash @model.verifyUrl}}</Kv>
-          <Kv @label='Code' @mono={{true}}>{{dash @model.verificationCode}}</Kv>
-          <Kv @label='Signatory'>{{signatory @model.authority}}</Kv>
-          <Kv @label='Status'><Dot @hue={{this.hue}}>{{lower
-                @model.statusLabel
-              }}</Dot></Kv>
-          {{#if @model.revokedReason}}
-            <Kv @label='Reason'>{{@model.revokedReason}}</Kv>
-          {{/if}}
-        </Section>
-      </:main>
-      <:side>
-        <Section @title='Linked'>
-          <Kv @label='Authority'>{{#if @model.authority}}<@fields.authority
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</Kv>
-          <Kv @label='Issued by'>{{#if @model.issuedBy}}<@fields.issuedBy
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</Kv>
-          {{#if @model.enrollment}}
-            <Kv @label='Enrollment'><@fields.enrollment
-                @format='atom'
-                @displayContainer={{false}}
-              /></Kv>
-          {{/if}}
-        </Section>
-        <Section @title='Details'>
-          <Kv @label='Learner'>{{dash @model.learnerName}}</Kv>
-          <Kv @label='Course'>{{dash @model.courseTitle}}</Kv>
-          <Kv @label='Cohort'>{{dash @model.cohortName}}</Kv>
-          <Kv @label='Final'>{{dash @model.finalLetter}}</Kv>
-          <Kv @label='Credit' @mono={{true}}>{{hoursLong
-              @model.creditHours
-            }}</Kv>
-          <Kv @label='Issued' @mono={{true}}>{{fmtDate @model.issuedAt}}</Kv>
-          <Kv @label='Revoked' @mono={{true}}>{{fmtDate @model.revokedAt}}</Kv>
-        </Section>
-      </:side>
-    </Sheet>
+          <Section @title='Verification'>
+            <Kv @label='Verify URL'>{{dash @model.verifyUrl}}</Kv>
+            <Kv @label='Code' @mono={{true}}>{{dash
+                @model.verificationCode
+              }}</Kv>
+            <Kv @label='Signatory'>{{signatory @model.authority}}</Kv>
+            <Kv @label='Status'><Dot @hue={{this.hue}}>{{lower
+                  @model.statusLabel
+                }}</Dot></Kv>
+            {{#if @model.revokedReason}}
+              <Kv @label='Reason'>{{@model.revokedReason}}</Kv>
+            {{/if}}
+          </Section>
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <Kv @label='Authority'>{{#if @model.authority}}<@fields.authority
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+            <Kv @label='Issued by'>{{#if @model.issuedBy}}<@fields.issuedBy
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+            {{#if @model.enrollment}}
+              <Kv @label='Enrollment'><@fields.enrollment
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></Kv>
+            {{/if}}
+          </Section>
+          <Section @title='Details'>
+            <Kv @label='Learner'>{{dash @model.learnerName}}</Kv>
+            <Kv @label='Course'>{{dash @model.courseTitle}}</Kv>
+            <Kv @label='Cohort'>{{dash @model.cohortName}}</Kv>
+            <Kv @label='Final'>{{dash @model.finalLetter}}</Kv>
+            <Kv @label='Credit' @mono={{true}}>{{hoursLong
+                @model.creditHours
+              }}</Kv>
+            <Kv @label='Issued' @mono={{true}}>{{fmtDate @model.issuedAt}}</Kv>
+            <Kv @label='Revoked' @mono={{true}}>{{fmtDate
+                @model.revokedAt
+              }}</Kv>
+          </Section>
+        </:side>
+      </Sheet>
+    </IsoFrame>
     <style scoped>
       .revoke {
         display: grid;
@@ -387,7 +394,7 @@ export class Certificate extends CardDef {
       return statusHue(CertificateStatusField, this.args.model?.certStatus);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Ce' /></:avatar>
         <:title>{{if @model.number @model.number 'Certificate'}}</:title>
         <:subtitle>{{headline @model}}</:subtitle>
@@ -398,6 +405,28 @@ export class Certificate extends CardDef {
           {{fmtDate @model.issuedAt}}
           ·
           {{creditLine @model.creditHours}}</:fact>
+        <:metric><Metric
+            @value={{@model.finalLetter}}
+            @label='Final grade'
+          /></:metric>
+        <:details>
+          {{#if @model.cohortName}}<Detail
+              @label='Cohort'
+              @value={{@model.cohortName}}
+            />{{/if}}
+          {{#if @model.verificationCode}}<Detail
+              @label='Code'
+              @value={{@model.verificationCode}}
+            />{{/if}}
+          {{#if @model.revokedAt}}<Detail
+              @label='Revoked'
+              @value={{fmtDate @model.revokedAt}}
+            />{{/if}}
+          {{#if @model.revokedReason}}<Detail
+              @label='Reason'
+              @value={{@model.revokedReason}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.authority}}<@fields.authority
               @format='atom'
               @displayContainer={{false}}
@@ -405,7 +434,7 @@ export class Certificate extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

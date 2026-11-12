@@ -15,7 +15,7 @@ import enumField from '@cardstack/base/enum';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import BookOpenIcon from '@cardstack/boxel-icons/book-open';
 import { AtomChip, Dot, Mark } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
@@ -23,6 +23,7 @@ import { FormatDate } from '@cardstack/pretui/components/format-date';
 import { DurationField } from '../hr/duration-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const LESSON_KINDS = [
   { value: 'video', label: 'Video' },
@@ -95,75 +96,83 @@ export class Lesson extends CardDef {
       return LESSON_KIND_HUES[this.args.model?.kind ?? ''] ?? 'slate';
     }
     <template>
-      <article class='lesson'>
-        <header class='hero'>
-          <span class='glyph' aria-hidden='true'>{{glyphFor @model.kind}}</span>
-          <div class='hero-text'>
-            <div class='eyebrow'>
-              <StatePill
-                @label={{@model.kindLabel}}
-                @hue={{this.hue}}
-                @dot={{true}}
-              />
-              {{#if @model.durationLabel}}
-                <span class='dur'>{{@model.durationLabel}}</span>
+      <IsoFrame>
+        <article class='lesson'>
+          <header class='hero'>
+            <span class='glyph' aria-hidden='true'>{{glyphFor
+                @model.kind
+              }}</span>
+            <div class='hero-text'>
+              <div class='eyebrow'>
+                <StatePill
+                  @label={{@model.kindLabel}}
+                  @hue={{this.hue}}
+                  @dot={{true}}
+                />
+                {{#if @model.durationLabel}}
+                  <span class='dur'>{{@model.durationLabel}}</span>
+                {{/if}}
+              </div>
+              <h1>{{@model.cardTitle}}</h1>
+              {{#if @model.summary}}
+                <p class='summary'>{{@model.summary}}</p>
               {{/if}}
             </div>
-            <h1>{{@model.cardTitle}}</h1>
-            {{#if @model.summary}}
-              <p class='summary'>{{@model.summary}}</p>
-            {{/if}}
-          </div>
-        </header>
-        {{#if @model.liveSessionAt}}
-          <section class='live'>
-            <span class='live-when'>Live
-              <FormatDate
-                @date={{@model.liveSessionAt}}
-                @weekday='short'
-                @month='short'
-                @day='numeric'
-                @hour='numeric'
-                @minute='2-digit'
-              /></span>
-            {{#if @model.meetingUrl}}
-              <Button
-                @href={{@model.meetingUrl}}
-                @appearance='link'
-                target='_blank'
-                rel='noopener noreferrer'
-              >Join room ↗</Button>
-            {{/if}}
-          </section>
-        {{/if}}
-        <section class='body'>
-          {{#if @model.content.content}}
-            <@fields.content />
-          {{else}}
-            <EmptyState
-              @size='s'
-              @title='No content yet'
-              @message='Add a reading, a transcript or the exercise brief.'
-            />
+          </header>
+          {{#if @model.liveSessionAt}}
+            <section class='live'>
+              <span class='live-when'>Live
+                <FormatDate
+                  @date={{@model.liveSessionAt}}
+                  @weekday='short'
+                  @month='short'
+                  @day='numeric'
+                  @hour='numeric'
+                  @minute='2-digit'
+                /></span>
+              {{#if @model.meetingUrl}}
+                <Button
+                  @href={{@model.meetingUrl}}
+                  @appearance='link'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >Join room ↗</Button>
+              {{/if}}
+            </section>
           {{/if}}
-        </section>
-        {{#if @model.media.length}}
-          <section class='media'>
-            <h2>Materials</h2>
-            <div class='media-grid'><@fields.media @format='embedded' /></div>
+          <section class='body'>
+            {{#if @model.content.content}}
+              <@fields.content />
+            {{else}}
+              <EmptyState
+                @size='s'
+                @title='No content yet'
+                @message='Add a reading, a transcript or the exercise brief.'
+              />
+            {{/if}}
           </section>
-        {{/if}}
-      </article>
+          {{#if @model.media.length}}
+            <section class='media'>
+              <h2>Materials</h2>
+              <div class='media-grid'><@fields.media @format='embedded' /></div>
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .lesson {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 52rem;
           margin: 0 auto;
+          inline-size: 100%;
           container-type: inline-size;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
           color: var(--foreground);
-          background: var(--background);
         }
         .hero {
           display: grid;
@@ -295,7 +304,7 @@ export class Lesson extends CardDef {
       return LESSON_KIND_HUES[this.args.model?.kind ?? ''] ?? 'slate';
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Ls' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{@model.kindLabel}}{{#if @model.durationLabel}}
@@ -311,7 +320,29 @@ export class Lesson extends CardDef {
               @hour='numeric'
               @minute='2-digit'
             />{{/if}}</:fact>
-      </FitTile>
+        <:metric><Metric
+            @value={{@model.durationLabel}}
+            @label='Duration'
+          /></:metric>
+        <:details>
+          {{#if @model.summary}}<Detail
+              @label='Summary'
+              @value={{@model.summary}}
+            />{{/if}}
+          {{#if @model.order}}<Detail
+              @label='Order'
+              @value='{{@model.order}}'
+            />{{/if}}
+          {{#if @model.media.length}}<Detail
+              @label='Media'
+              @value='{{@model.media.length}}'
+            />{{/if}}
+          {{#if @model.meetingUrl}}<Detail
+              @label='Room'
+              @value={{@model.meetingUrl}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

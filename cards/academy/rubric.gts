@@ -17,7 +17,8 @@ import {
   round1,
 } from './rubric-criterion-field';
 import { Mark } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * A reusable grading grid: named criteria, each with a ladder of levels. A
@@ -53,43 +54,49 @@ export class Rubric extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     <template>
-      <article class='rubric'>
-        <header class='hero'>
-          <div>
-            <span class='eyebrow'>Rubric ·
-              {{@model.criterionCount}}
-              {{if (eq1 @model.criterionCount) 'criterion' 'criteria'}}</span>
-            <h1>{{@model.cardTitle}}</h1>
-            {{#if @model.purpose}}<p
-                class='purpose'
-              >{{@model.purpose}}</p>{{/if}}
-          </div>
-          <Stat @label='Points' @value={{orZero @model.totalPoints}} />
-        </header>
-        {{#if @model.criteria.length}}
-          <section class='grid'>
-            {{#each @fields.criteria as |Criterion|}}
-              <div class='crit-card'><Criterion /></div>
-            {{/each}}
-          </section>
-        {{else}}
-          <EmptyState
-            @size='s'
-            @title='No criteria yet'
-            @message='A rubric with no rows cannot grade anything. Add the first criterion in edit mode.'
-          />
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='rubric'>
+          <header class='hero'>
+            <div>
+              <span class='eyebrow'>Rubric ·
+                {{@model.criterionCount}}
+                {{if (eq1 @model.criterionCount) 'criterion' 'criteria'}}</span>
+              <h1>{{@model.cardTitle}}</h1>
+              {{#if @model.purpose}}<p
+                  class='purpose'
+                >{{@model.purpose}}</p>{{/if}}
+            </div>
+            <Stat @label='Points' @value={{orZero @model.totalPoints}} />
+          </header>
+          {{#if @model.criteria.length}}
+            <section class='grid'>
+              {{#each @fields.criteria as |Criterion|}}
+                <div class='crit-card'><Criterion /></div>
+              {{/each}}
+            </section>
+          {{else}}
+            <EmptyState
+              @size='s'
+              @title='No criteria yet'
+              @message='A rubric with no rows cannot grade anything. Add the first criterion in edit mode.'
+            />
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .rubric {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 60rem;
           margin: 0 auto;
+          inline-size: 100%;
           container-type: inline-size;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
           color: var(--foreground);
-          background: var(--background);
         }
         .hero {
           display: flex;
@@ -178,12 +185,26 @@ export class Rubric extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Rb' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Rubric · {{@model.totalPoints}} pts</:subtitle>
         <:fact>{{@model.criterionCount}} criteria</:fact>
-      </FitTile>
+        <:metric><Metric
+            @value='{{orZero @model.totalPoints}}'
+            @label='Points'
+          /></:metric>
+        <:details>
+          {{#if @model.purpose}}<Detail
+              @label='Purpose'
+              @value={{@model.purpose}}
+            />{{/if}}
+          {{#each @model.criteria as |c|}}<Detail
+              @label={{if c.name c.name 'Criterion'}}
+              @value='{{c.maxPoints}} pts'
+            />{{/each}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

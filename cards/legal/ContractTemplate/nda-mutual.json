@@ -12,7 +12,13 @@
         "Purpose",
         "Term length"
       ],
-      "guidance": "Default for exploratory conversations where both sides share information."
+      "guidance": "Default for exploratory conversations where both sides share information.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "cardInfo.theme": {

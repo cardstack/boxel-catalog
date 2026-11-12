@@ -7,16 +7,15 @@ import {
   containsMany,
   StringField,
 } from '@cardstack/base/card-api';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import TextAreaField from '@cardstack/base/text-area';
 import UrlField from '@cardstack/base/url';
 import EmailField from '@cardstack/base/email';
 import BuildingIcon from '@cardstack/boxel-icons/building';
-import GlimmerComponent from '@glimmer/component';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import type {
   PretuiTone,
   PretuiToneArg,
@@ -35,8 +34,6 @@ import {
 } from '@cardstack/catalog/components/state-pill';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -46,7 +43,7 @@ import {
   SheetSection,
   StatStrip,
   type StripItem,
-} from '../hr/compact-sheet';
+} from '../shared/compact-sheet';
 import { DotLabel } from '../hr/dot-enum-field';
 import { codeRef, realmURL } from '@cardstack/runtime-common';
 import type { BaseDef } from '@cardstack/base/card-api';
@@ -200,248 +197,6 @@ const DATE_OPTIONS = { dateStyle: 'medium' } as const;
 /** `Feb 15, 2027`, the date wording every talent card uses. */
 export function mediumDate(value?: Date | null): string | undefined {
   return value ? formatDate(new Date(value), 'en-US', DATE_OPTIONS) : undefined;
-}
-
-export interface FittedStat {
-  key: string;
-  value: string;
-}
-
-export interface FittedProgress {
-  label: string;
-  /** 0–100 */
-  value: number;
-  valueText: string;
-}
-
-interface FittedExtrasSignature {
-  Args: {
-    /** key facts, one per line (two columns from 400 wide) */
-    facts?: KeyValueItem[];
-    /** the three-number strip, on expanded cards only */
-    stats?: FittedStat[];
-    progress?: FittedProgress;
-    /** one label per linked card the `relation` block renders */
-    relations?: string[];
-  };
-  Blocks: {
-    /** the card's FitTile */
-    default: [];
-    /** the linked card for one label, as its own atom */
-    relation: [label: string, index: number];
-  };
-}
-
-// shortcut: FitTile budgets only who / state / fact / relations, so the rows
-// tall fitted sizes add (key facts, one relation per line, a progress bar, a
-// stat strip) are budgeted here around it; move this into FitTile when the kit
-// grows an extras region. Every list wraps whole items out of sight in a
-// column that starts past the right edge, so nothing is ever half-cut.
-export class FittedExtras extends GlimmerComponent<FittedExtrasSignature> {
-  get hasRelations() {
-    return Boolean(this.args.relations?.length);
-  }
-  get hasFacts() {
-    return Boolean(this.args.facts?.length);
-  }
-  <template>
-    <div class='fitx'>
-      <div class='fitx-tile'>{{yield}}</div>
-      {{#if @stats}}
-        <dl class='fitx-stats'>
-          {{#each @stats as |stat|}}
-            <div class='fitx-stat'>
-              <dt>{{stat.key}}</dt>
-              <dd>{{stat.value}}</dd>
-            </div>
-          {{/each}}
-        </dl>
-      {{/if}}
-      {{#if @progress}}
-        {{! The wrapper carries the hide/show rule: ProgressBar's own root
-          rule (display: grid, same layer, same specificity) would otherwise
-          override a class passed to it, and the bar would show at every size. }}
-        <div class='fitx-bar'>
-          <ProgressBar
-            @value={{@progress.value}}
-            @label={{@progress.label}}
-            @count={{@progress.valueText}}
-            @valueText={{@progress.valueText}}
-          />
-        </div>
-      {{/if}}
-      {{#if this.hasFacts}}
-        <dl class='fitx-facts'>
-          {{#each @facts as |item|}}
-            <div class='fitx-fact'>
-              <dt>{{item.key}}</dt>
-              <dd>{{item.value}}</dd>
-            </div>
-          {{/each}}
-        </dl>
-      {{/if}}
-      {{#if this.hasRelations}}
-        <ul class='fitx-rels'>
-          {{#each @relations as |label index|}}
-            <li class='fitx-rel'>
-              <span class='fitx-rel-k'>{{label}}</span>
-              <span class='fitx-rel-v'>{{yield
-                  label
-                  index
-                  to='relation'
-                }}</span>
-            </li>
-          {{/each}}
-        </ul>
-      {{/if}}
-    </div>
-    <style scoped>
-      @layer PretComponent {
-        .fitx {
-          display: flex;
-          flex-direction: column;
-          block-size: 100%;
-          overflow: hidden;
-        }
-        .fitx-tile {
-          flex: 1 1 0;
-          min-block-size: 0;
-        }
-        .fitx-stats,
-        .fitx-bar,
-        .fitx-facts,
-        .fitx-rels {
-          display: none;
-          margin: 0;
-          padding: 0 var(--boxel-sp-sm);
-          font-size: var(--boxel-font-size-xs);
-          line-height: 1.5;
-        }
-        .fitx-stats {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: var(--boxel-sp-xs);
-          margin-block-end: var(--boxel-sp-xs);
-        }
-        .fitx-stat dt,
-        .fitx-fact dt,
-        .fitx-rel-k {
-          color: var(--muted-foreground);
-        }
-        .fitx-stat dt,
-        .fitx-stat dd {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fitx-stat dd {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 600;
-          color: var(--primary);
-          font-variant-numeric: tabular-nums;
-        }
-        .fitx-bar {
-          margin-block-end: var(--boxel-sp-xs);
-        }
-        /* a column of whole rows; a row that doesn't fit wraps into the
-           next column, which starts past the right edge */
-        .fitx-facts,
-        .fitx-rels {
-          flex-direction: column;
-          flex-wrap: wrap;
-          align-content: flex-start;
-          row-gap: var(--boxel-sp-4xs);
-          column-gap: var(--boxel-sp);
-          min-block-size: 0;
-          overflow: hidden;
-          list-style: none;
-        }
-        .fitx-facts {
-          flex: 1 1 0;
-        }
-        .fitx-rels {
-          flex: 0 1 auto;
-          padding-block-end: var(--boxel-sp-sm);
-        }
-        .fitx-fact,
-        .fitx-rel {
-          box-sizing: border-box;
-          inline-size: 100%;
-          min-inline-size: 0;
-        }
-        .fitx-fact {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-          white-space: nowrap;
-        }
-        .fitx-fact dd {
-          margin: 0;
-          min-inline-size: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-weight: 600;
-          font-variant-numeric: tabular-nums;
-        }
-        .fitx-rel {
-          display: grid;
-          grid-template-columns: auto minmax(0, 1fr);
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          block-size: 1.375rem;
-          white-space: nowrap;
-        }
-        .fitx-rel-v {
-          display: flex;
-          min-inline-size: 0;
-          font-size: var(--boxel-font-size-xs);
-        }
-
-        /* 170 tall, or a wide strip: one relation per line */
-        @container fitted-card (height >= 170px) or ((height >= 105px) and (width >= 400px)) {
-          .fitx-tile {
-            flex: none;
-          }
-          .fitx-rels {
-            display: flex;
-          }
-        }
-        @container fitted-card (height < 170px) {
-          .fitx-rels {
-            padding-block-end: var(--boxel-sp-xs);
-          }
-        }
-        /* under 250 wide the atom needs the line, its label goes */
-        @container fitted-card (width < 250px) {
-          .fitx-rel-k {
-            display: none;
-          }
-        }
-        /* 250 tall and up: the key-fact list */
-        @container fitted-card (height >= 250px) {
-          .fitx-facts {
-            display: flex;
-          }
-        }
-        @container fitted-card (width >= 400px) {
-          .fitx-fact {
-            inline-size: calc((100% - var(--boxel-sp)) / 2);
-          }
-        }
-        /* full cards add the progress bar, expanded cards the stat strip */
-        @container fitted-card (height >= 275px) and (width >= 400px) {
-          .fitx-bar {
-            display: block;
-          }
-        }
-        @container fitted-card (height >= 400px) and (width >= 400px) {
-          .fitx-stats {
-            display: grid;
-          }
-        }
-      }
-    </style>
-  </template>
 }
 
 interface RecordIsolatedSignature {
@@ -923,11 +678,13 @@ export class Vendor extends CardDef {
       </IsoPage>
       <style scoped>
         .mono {
-          font: 500 0.6875rem var(--font-mono);
+          font-weight: 500;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
         .muted {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .grow {
@@ -997,24 +754,14 @@ export class Vendor extends CardDef {
         { key: 'Email', value: orDash(this.args.model?.email) },
       ];
     }
-    get stats(): FittedStat[] {
-      let v = this.v;
-      return [
-        { key: 'Spend YTD', value: orDash(v.spend) },
-        { key: 'Rating', value: orDash(v.rating) },
-        { key: 'Contract', value: orDash(v.lengthShort) },
-      ];
-    }
-    get progress(): FittedProgress | undefined {
-      let v = this.v;
-      return v.ratingPercent == null || !v.rating
-        ? undefined
-        : { label: 'Rating', value: v.ratingPercent, valueText: v.rating };
-    }
     // spend and contract already have their own rows above
     get moreFacts(): KeyValueItem[] {
       return this.facts.slice(3);
     }
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let v = this.v;
       return [
@@ -1024,61 +771,44 @@ export class Vendor extends CardDef {
       ];
     }
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name={{orEmpty @model.title}}
             @hue='var(--muted)'
             @shape='rounded'
-            @size={{20}}
             aria-hidden='true'
-          /></:mark>
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
         <:status>{{#if this.v.rating}}<DotLabel
               @label={{this.v.rating}}
               @hue={{toneHue this.v.ratingTone}}
             />{{/if}}</:status>
-        <:default>
-          {{#if this.v.subtitle}}<FitRow @left={{true}}><span
-                class='meta'
-              >{{this.v.subtitle}}</span></FitRow>{{/if}}
-          <FitRow @label='Spend YTD'><span class='mono'>{{orDash
+        <:subtitle><span class='meta'>{{this.v.subtitle}}</span></:subtitle>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
+        <:details>
+          <Detail @label='Spend YTD'><span class='mono'>{{orDash
                 this.v.spend
-              }}</span></FitRow>
-          <FitRow @label='Contract'><span class='mono'>{{orDash
+              }}</span></Detail>
+          <Detail @label='Contract'><span class='mono'>{{orDash
                 this.v.contract
-              }}</span></FitRow>
-          <StatStrip
-            class='fit-strip'
-            @compact={{true}}
-            @items={{this.strip}}
-          />
+              }}</span></Detail>
+
           {{#each this.moreFacts as |f|}}
-            <FitRow @label={{f.key}}>{{f.value}}</FitRow>
+            <Detail @label={{f.key}}>{{f.value}}</Detail>
           {{/each}}
-        </:default>
-      </FitCard>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
         .mono {
-          font: 500 0.6875rem var(--font-mono);
+          font-family: var(--font-mono);
+          font-weight: 500;
           color: var(--muted-foreground);
-        }
-        .fit-strip {
-          border-top: 1px solid var(--border);
-        }
-        @container fitted-card (width < 400px) {
-          .fit-strip :deep(.strip-cell:nth-child(3)) {
-            display: none;
-          }
-        }
-        @container fitted-card (width < 250px) or (height < 250px) {
-          .fit-strip {
-            display: none;
-          }
         }
       </style>
     </template>

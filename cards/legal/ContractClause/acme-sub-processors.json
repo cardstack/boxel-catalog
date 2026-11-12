@@ -5,7 +5,13 @@
       "clauseType": "data_protection",
       "deviationSeverity": "bespoke",
       "actualText": "Supplier may engage the sub-processors listed at Schedule 4 without further authorisation, provided it remains liable for their acts and omissions.",
-      "deviationNotes": "No approved standard covers a pre-authorised sub-processor list. Flagged for legal review before the next renewal."
+      "deviationNotes": "No approved standard covers a pre-authorised sub-processor list. Flagged for legal review before the next renewal.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

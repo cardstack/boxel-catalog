@@ -32,6 +32,13 @@
       },
       "cardDescription": "A finding raised on site: where it was, who saw it, and the photographs."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

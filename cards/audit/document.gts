@@ -19,10 +19,11 @@ import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 
 import { Employee } from '../hr/employee';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { DocumentPreview } from './components/document-preview';
 import { shortHash } from './utils/evidence-hash';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const DOCUMENT_KINDS = [
   'policy',
@@ -223,127 +224,128 @@ export class Document extends CardDef {
       return Boolean(this.doc.tags?.length);
     }
     <template>
-      <article class='doc'>
-        <header class='head'>
-          <span class='mark' aria-hidden='true'>Dc</span>
-          <div class='id'>
-            <h1>{{@model.cardTitle}}</h1>
-            <p class='meta'>{{metaLine this.doc}}</p>
-          </div>
-          <div class='states'>
-            <Status
-              @value={{kindLabel @model.kind}}
-              @tone={{kindTone @model.kind}}
-            /><Status
-              @value={{if (hashed this.doc) 'hashed' 'not hashed'}}
-              @tone={{if (hashed this.doc) 'success' 'warning'}}
-            />
-          </div>
-        </header>
-
-        <section class='stats' aria-label='Key facts'>
-          {{#each this.stats as |st|}}
-            <div class='stat'>
-              <Stat
-                @label={{st.label}}
-                @value={{st.value}}
-                @tone={{st.tone}}
-                @hint={{st.hint}}
-                @roll={{false}}
+      <IsoFrame>
+        <article class='doc'>
+          <header class='head'>
+            <span class='mark' aria-hidden='true'>Dc</span>
+            <div class='id'>
+              <h1>{{@model.cardTitle}}</h1>
+              <p class='meta'>{{metaLine this.doc}}</p>
+            </div>
+            <div class='states'>
+              <Status
+                @value={{kindLabel @model.kind}}
+                @tone={{kindTone @model.kind}}
+              /><Status
+                @value={{if (hashed this.doc) 'hashed' 'not hashed'}}
+                @tone={{if (hashed this.doc) 'success' 'warning'}}
               />
             </div>
-          {{/each}}
-        </section>
+          </header>
 
-        <div class='cols'>
-          <div class='main'>
-            <section class='sec'>
-              <h2>Preview</h2>
-              <DocumentPreview
-                @document={{@model}}
-                @fileField={{@fields.file}}
-                @format='embedded'
-                @bare={{true}}
-              />
-            </section>
-            <section class='sec'>
-              <h2>Facts</h2>
-              <dl class='kv'>
-                <dt>Hashed</dt>
-                <dd>{{stamp @model.hashedAt}}</dd>
-                <dt>Supersedes</dt>
-                <dd>{{#if @model.supersedes}}<@fields.supersedes
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-              </dl>
-            </section>
-            <section class='sec'>
-              <h2>File metadata</h2>
-              <dl class='kv'>
-                <dt>Title</dt>
-                <dd>{{dash @model.info.title}}</dd>
-                <dt>Author</dt>
-                <dd>{{dash @model.info.author}}</dd>
-                <dt>Subject</dt>
-                <dd>{{dash @model.info.subject}}</dd>
-              </dl>
-            </section>
-            <section class='sec'>
-              <h2>Content hash</h2>
-              <p class='mono hash'>{{dash @model.contentHash}}</p>
-            </section>
+          <section class='stats' aria-label='Key facts'>
+            {{#each this.stats as |st|}}
+              <div class='stat'>
+                <Stat
+                  @label={{st.label}}
+                  @value={{st.value}}
+                  @tone={{st.tone}}
+                  @hint={{st.hint}}
+                  @roll={{false}}
+                />
+              </div>
+            {{/each}}
+          </section>
+
+          <div class='cols'>
+            <div class='main'>
+              <section class='sec'>
+                <h2>Preview</h2>
+                <DocumentPreview
+                  @document={{@model}}
+                  @fileField={{@fields.file}}
+                  @format='embedded'
+                  @bare={{true}}
+                />
+              </section>
+              <section class='sec'>
+                <h2>Facts</h2>
+                <dl class='kv'>
+                  <dt>Hashed</dt>
+                  <dd>{{stamp @model.hashedAt}}</dd>
+                  <dt>Supersedes</dt>
+                  <dd>{{#if @model.supersedes}}<@fields.supersedes
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                </dl>
+              </section>
+              <section class='sec'>
+                <h2>File metadata</h2>
+                <dl class='kv'>
+                  <dt>Title</dt>
+                  <dd>{{dash @model.info.title}}</dd>
+                  <dt>Author</dt>
+                  <dd>{{dash @model.info.author}}</dd>
+                  <dt>Subject</dt>
+                  <dd>{{dash @model.info.subject}}</dd>
+                </dl>
+              </section>
+              <section class='sec'>
+                <h2>Content hash</h2>
+                <p class='mono hash'>{{dash @model.contentHash}}</p>
+              </section>
+            </div>
+
+            <aside class='side'>
+              <section class='sec'>
+                <h2>Linked</h2>
+                <dl class='kv'>
+                  <dt>Supersedes</dt>
+                  <dd>{{#if @model.supersedes}}<@fields.supersedes
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                  <dt>Owner</dt>
+                  <dd>{{#if @model.owner}}<@fields.owner
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}not set{{/if}}</dd>
+                </dl>
+              </section>
+              <section class='sec'>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  <dt>Kind</dt>
+                  <dd>{{kindLabel @model.kind}}</dd>
+                  <dt>Version</dt>
+                  <dd>{{dash @model.version}}</dd>
+                  <dt>Content hash</dt>
+                  <dd class='mono'>{{if
+                      (hashed this.doc)
+                      (shortHash @model.contentHash)
+                      '—'
+                    }}</dd>
+                  <dt>Hashed at</dt>
+                  <dd>{{stamp @model.hashedAt}}</dd>
+                  <dt>Artefact</dt>
+                  <dd>{{if @model.file 'attached' 'none attached'}}</dd>
+                  <dt>Author</dt>
+                  <dd>{{dash @model.info.author}}</dd>
+                  <dt>Subject</dt>
+                  <dd>{{dash @model.info.subject}}</dd>
+                  <dt>Tags</dt>
+                  <dd>{{#if this.hasTags}}<@fields.tags
+                        @format='atom'
+                      />{{else}}none{{/if}}</dd>
+                </dl>
+              </section>
+            </aside>
           </div>
-
-          <aside class='side'>
-            <section class='sec'>
-              <h2>Linked</h2>
-              <dl class='kv'>
-                <dt>Supersedes</dt>
-                <dd>{{#if @model.supersedes}}<@fields.supersedes
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-                <dt>Owner</dt>
-                <dd>{{#if @model.owner}}<@fields.owner
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}not set{{/if}}</dd>
-              </dl>
-            </section>
-            <section class='sec'>
-              <h2>Details</h2>
-              <dl class='kv'>
-                <dt>Kind</dt>
-                <dd>{{kindLabel @model.kind}}</dd>
-                <dt>Version</dt>
-                <dd>{{dash @model.version}}</dd>
-                <dt>Content hash</dt>
-                <dd class='mono'>{{if
-                    (hashed this.doc)
-                    (shortHash @model.contentHash)
-                    '—'
-                  }}</dd>
-                <dt>Hashed at</dt>
-                <dd>{{stamp @model.hashedAt}}</dd>
-                <dt>Artefact</dt>
-                <dd>{{if @model.file 'attached' 'none attached'}}</dd>
-                <dt>Author</dt>
-                <dd>{{dash @model.info.author}}</dd>
-                <dt>Subject</dt>
-                <dd>{{dash @model.info.subject}}</dd>
-                <dt>Tags</dt>
-                <dd>{{#if this.hasTags}}<@fields.tags
-                      @format='atom'
-                    />{{else}}none{{/if}}</dd>
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .doc {
-          margin: var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           overflow: hidden;
@@ -642,7 +644,7 @@ export class Document extends CardDef {
       return this.args.model as Document;
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Dc</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine this.doc}}</:subtitle>
@@ -654,11 +656,30 @@ export class Document extends CardDef {
             @tone={{if (hashed this.doc) 'success' 'warning'}}
           /></:status>
         <:fact><span class='mono'>{{hashLine this.doc}}</span></:fact>
+        <:metric><Metric @value={{@model.version}} @label='Version' /></:metric>
+        <:details>
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.info.author}}<Detail
+              @label='Author'
+              @value={{@model.info.author}}
+            />{{/if}}
+          <Detail
+            @label='Artefact'
+            @value={{if @model.file 'attached' 'none attached'}}
+          />
+          {{#if @model.tags.length}}<Detail
+              @label='Tags'
+              @value='{{@model.tags.length}}'
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.supersedes}}<@fields.supersedes
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

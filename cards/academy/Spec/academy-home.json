@@ -22,6 +22,11 @@
         "links": {
           "self": "../example/AcademyHomeExample/product-analytics"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

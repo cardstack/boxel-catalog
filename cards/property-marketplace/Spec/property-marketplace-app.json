@@ -24,6 +24,11 @@
         "links": {
           "self": "../PropertyMarketplaceApp/main"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

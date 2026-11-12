@@ -17,16 +17,17 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { Table } from '@cardstack/pretui/components/table';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { Money } from '../crm/money';
 import { Deal } from './deal';
 import { LineItem } from './line-item';
 import { Proposal } from './proposal';
-import { lineTotal, sumLineItems } from './line-item-totals';
+import { formatMoney, lineTotal, sumLineItems } from './line-item-totals';
 import { hasNumber } from '../crm/utils';
 import { orEmpty } from './compact-parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Quote — a priced proposal, not yet binding. Versioned: each negotiation
 // round creates a NEW Quote with `supersedes` pointing at the previous one,
@@ -113,6 +114,7 @@ export class Quote extends CardDef {
             />{{/if}}
         </header>
         <KeyValue
+          class='kv'
           @items={{this.rows}}
           @labelStyle='eyebrow'
           @divided={{true}}
@@ -188,8 +190,8 @@ export class Quote extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Quote> {
     <template>
-      <FitTile>
-        <:avatar><Avatar @name='Quote' @shape='square' @size={{32}} /></:avatar>
+      <RichFittedCard>
+        <:avatar><Avatar @name='Quote' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{quoteSub @model}}</:subtitle>
         <:status>{{#if @model.status}}<StatusChip
@@ -200,11 +202,31 @@ export class Quote extends CardDef {
           ·
           {{@model.lineItems.length}}
           items</:fact>
+        <:metric>{{#if @model.lineItems.length}}<Metric
+              @value={{formatMoney @model.total (quoteCurrency @model)}}
+              @label='Total'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.version}}<Detail
+              @label='Version'
+              @value='v{{@model.version}}'
+            />{{/if}}
+          {{#if @model.supersedes}}<Detail
+              @label='Supersedes'
+            ><@fields.supersedes
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.proposal}}<Detail @label='Proposal'><@fields.proposal
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
         <:relations>{{#if @model.deal}}<@fields.deal
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
@@ -238,147 +260,149 @@ export class Quote extends CardDef {
       }));
     }
     <template>
-      <article class='page'>
-        <header>
-          <Avatar @name='Quote' @shape='square' @size={{32}} />
-          <div class='id'>
-            <h1>{{@model.cardTitle}}</h1>
-            <p>{{quoteSub @model}}</p>
-          </div>
-          {{#if @model.status}}<StatusChip
-              @value={{@model.status}}
-              @appearance='plain'
-            />{{/if}}
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Total'
-            @tone='neutral'
-            @value={{orEmpty @model.total}}
-            @style='currency'
-            @maximumFractionDigits={{0}}
-            @currency={{this.code}}
-            @hint={{concat this.rows.length ' line items'}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Version'
-            @tone='neutral'
-            @value={{concat 'v' @model.version}}
-            @hint={{if
-              @model.supersedes
-              (concat 'supersedes v' @model.supersedes.version)
-            }}
-            @roll={{false}}
-          />
-          {{#if @model.supersedes}}
+      <IsoFrame>
+        <article class='page'>
+          <header>
+            <Avatar @name='Quote' @shape='square' @size={{32}} />
+            <div class='id'>
+              <h1>{{@model.cardTitle}}</h1>
+              <p>{{quoteSub @model}}</p>
+            </div>
+            {{#if @model.status}}<StatusChip
+                @value={{@model.status}}
+                @appearance='plain'
+              />{{/if}}
+          </header>
+          <div class='stats'>
             <Stat
-              @label='Change'
+              @label='Total'
               @tone='neutral'
-              @value={{this.change}}
+              @value={{orEmpty @model.total}}
               @style='currency'
               @maximumFractionDigits={{0}}
               @currency={{this.code}}
-              @hint={{concat 'vs v' @model.supersedes.version}}
+              @hint={{concat this.rows.length ' line items'}}
               @roll={{false}}
             />
-          {{/if}}
-        </div>
-        <div class='cols'>
-          <div class='main'>
-            <section>
-              <h2 id={{this.itemsId}}>Line items</h2>
-              {{#if this.rows.length}}
-                <Table
-                  class='lines'
-                  @framed={{false}}
-                  @labelledBy={{this.itemsId}}
-                >
-                  <:head>
-                    <tr>
-                      <th scope='col'>Description</th>
-                      <th scope='col' class='num'>Qty</th>
-                      <th scope='col' class='num'>Unit price</th>
-                      <th scope='col' class='num'>Amount</th>
-                    </tr>
-                  </:head>
-                  <:body>
-                    {{#each this.rows as |row|}}
-                      <tr>
-                        <td>{{row.description}}</td>
-                        <td class='num'>{{row.quantity}}</td>
-                        <td class='num'><Money
-                            @amount={{row.unit}}
-                            @code={{row.code}}
-                          /></td>
-                        <td class='num'><Money
-                            @amount={{row.total}}
-                            @code={{row.code}}
-                          /></td>
-                      </tr>
-                    {{/each}}
-                  </:body>
-                </Table>
-              {{else}}
-                <EmptyState
-                  @title='No line items yet'
-                  @texture={{false}}
-                  style={{COMPACT_EMPTY_STYLE}}
-                />
-              {{/if}}
-            </section>
-            <section>
-              <h2>Status</h2>
-              <div class='steps'>
-                {{#each this.statuses as |st|}}
-                  <span class='step' data-current={{st.current}}><StatusChip
-                      @value={{st.label}}
-                      @appearance='plain'
-                    /></span>
-                {{/each}}
-              </div>
-            </section>
-          </div>
-          <div class='side'>
-            <section>
-              <h2>Linked</h2>
-              <div class='linked'><span class='cap'>Deal</span>
-                <@fields.deal
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></div>
-              <div class='linked'><span class='cap'>Supersedes</span>
-                <@fields.supersedes
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></div>
-              <div class='linked'><span class='cap'>Proposal</span>
-                <@fields.proposal
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></div>
-            </section>
-            <section>
-              <h2>Details</h2>
-              <KeyValue
-                @items={{this.details}}
-                @labelStyle='eyebrow'
-                @divided={{true}}
-                class='kv'
+            <Stat
+              @label='Version'
+              @tone='neutral'
+              @value={{concat 'v' @model.version}}
+              @hint={{if
+                @model.supersedes
+                (concat 'supersedes v' @model.supersedes.version)
+              }}
+              @roll={{false}}
+            />
+            {{#if @model.supersedes}}
+              <Stat
+                @label='Change'
+                @tone='neutral'
+                @value={{this.change}}
+                @style='currency'
+                @maximumFractionDigits={{0}}
+                @currency={{this.code}}
+                @hint={{concat 'vs v' @model.supersedes.version}}
+                @roll={{false}}
               />
-            </section>
+            {{/if}}
           </div>
-        </div>
-      </article>
+          <div class='cols'>
+            <div class='main'>
+              <section>
+                <h2 id={{this.itemsId}}>Line items</h2>
+                {{#if this.rows.length}}
+                  <Table
+                    class='lines'
+                    @framed={{false}}
+                    @labelledBy={{this.itemsId}}
+                  >
+                    <:head>
+                      <tr>
+                        <th scope='col'>Description</th>
+                        <th scope='col' class='num'>Qty</th>
+                        <th scope='col' class='num'>Unit price</th>
+                        <th scope='col' class='num'>Amount</th>
+                      </tr>
+                    </:head>
+                    <:body>
+                      {{#each this.rows as |row|}}
+                        <tr>
+                          <td>{{row.description}}</td>
+                          <td class='num'>{{row.quantity}}</td>
+                          <td class='num'><Money
+                              @amount={{row.unit}}
+                              @code={{row.code}}
+                            /></td>
+                          <td class='num'><Money
+                              @amount={{row.total}}
+                              @code={{row.code}}
+                            /></td>
+                        </tr>
+                      {{/each}}
+                    </:body>
+                  </Table>
+                {{else}}
+                  <EmptyState
+                    @title='No line items yet'
+                    @texture={{false}}
+                    style={{COMPACT_EMPTY_STYLE}}
+                  />
+                {{/if}}
+              </section>
+              <section>
+                <h2>Status</h2>
+                <div class='steps'>
+                  {{#each this.statuses as |st|}}
+                    <span class='step' data-current={{st.current}}><StatusChip
+                        @value={{st.label}}
+                        @appearance='plain'
+                      /></span>
+                  {{/each}}
+                </div>
+              </section>
+            </div>
+            <div class='side'>
+              <section>
+                <h2>Linked</h2>
+                <div class='linked'><span class='cap'>Deal</span>
+                  <@fields.deal
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></div>
+                <div class='linked'><span class='cap'>Supersedes</span>
+                  <@fields.supersedes
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></div>
+                <div class='linked'><span class='cap'>Proposal</span>
+                  <@fields.proposal
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></div>
+              </section>
+              <section>
+                <h2>Details</h2>
+                <KeyValue
+                  @items={{this.details}}
+                  @labelStyle='eyebrow'
+                  @divided={{true}}
+                  class='kv'
+                />
+              </section>
+            </div>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .stats > * {
-          padding: 0.4375rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         }
         .stats > * + * {
           border-inline-start: 1px solid var(--border);
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
         .linked .cap {
           font-family: var(--font-mono);
@@ -403,8 +427,8 @@ export class Quote extends CardDef {
         .steps {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.75rem;
-          padding: 0.4375rem 0.625rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           color: var(--muted-foreground);
         }
         .step[data-current] {
@@ -421,7 +445,7 @@ export class Quote extends CardDef {
           }
         }
         .page {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           --text-stat: 1.375rem;
           --text-ui-xs: 0.6875rem;
@@ -440,8 +464,8 @@ export class Quote extends CardDef {
         header {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.75rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm);
           border-bottom: 1px solid var(--border);
         }
         .id {
@@ -451,12 +475,12 @@ export class Quote extends CardDef {
         h1 {
           font-family: var(--font-sans);
           margin: 0;
-          font-size: 1rem;
+          font-size: var(--boxel-font-size);
           font-weight: 700;
         }
         p {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .stats {
@@ -466,8 +490,8 @@ export class Quote extends CardDef {
         }
         section h2 {
           margin: 0;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.75rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           border-bottom: 1px solid var(--border);
         }
@@ -477,8 +501,8 @@ export class Quote extends CardDef {
         .linked {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.375rem 0.75rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-sm);
           border-bottom: 1px solid var(--border);
         }
         .cap {

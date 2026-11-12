@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   Component,
   field,
@@ -17,8 +18,6 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -26,7 +25,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 import type { DescriptionsItem } from '@cardstack/pretui/components/descriptions';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 
@@ -482,7 +481,7 @@ class EmployeeIsolated extends Component<typeof Employee> {
     <style scoped>
       .muted {
         color: var(--muted-foreground);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       .grow {
         flex: 1 1 8rem;
@@ -490,7 +489,9 @@ class EmployeeIsolated extends Component<typeof Employee> {
         font-weight: 700;
       }
       .mono {
-        font: 500 0.6875rem var(--font-mono);
+        font-weight: 500;
+        font-size: var(--boxel-font-size-2xs);
+        font-family: var(--font-mono);
         color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
@@ -683,9 +684,13 @@ export class Employee extends PersonBase {
 
   // Rows in priority order (kit fitted rule): who + state, role, next PTO,
   // tenure, manager, the stat strip, then the remaining facts and links.
-  // FitCard shows a row whole or not at all. Extends the isolated class for
+  // RichFittedCard shows a row whole or not at all. Extends the isolated class for
   // its Team / Review / PTO live queries.
   static fitted = class Fitted extends EmployeeIsolated {
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let m = this.args.model;
       return [
@@ -695,79 +700,82 @@ export class Employee extends PersonBase {
       ];
     }
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name={{if @model.title @model.title '?'}}
             @src={{@model.photo.resolvedUrl}}
             @hue={{AVATAR_HUE}}
-            @size={{20}}
             aria-hidden='true'
-          /></:mark>
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
         <:status>{{#if @model.status}}<@fields.status
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:status>
-        <:default>
-          <FitRow @left={{true}}><span class='meta'>{{roleLine
-                @model
-              }}</span></FitRow>
-          <FitRow @label='PTO'><span class='mono'>{{if
+        <:subtitle><span class='meta'>{{roleLine @model}}</span></:subtitle>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
+        <:details>
+
+          <Detail @label='PTO'><span class='mono'>{{if
                 this.nextPto.startDate
                 (formatDay this.nextPto.startDate)
                 '—'
-              }}</span></FitRow>
-          <FitRow @label='Tenure'><span class='mono'>{{if
+              }}</span></Detail>
+          <Detail @label='Tenure'><span class='mono'>{{if
                 @model.tenure.label
                 @model.tenure.label
                 '—'
               }}{{#if (startYear @model)}}
                 · since
-                {{startYear @model}}{{/if}}</span></FitRow>
+                {{startYear @model}}{{/if}}</span></Detail>
           {{#if @model.manager}}
-            <FitRow @label='Manager' @left={{true}}><@fields.manager
+            <Detail @label='Manager'><@fields.manager
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <StatStrip @compact={{true}} @items={{this.strip}} />
-          <FitRow @label='Start date'><span class='mono'>{{if
+
+          <Detail @label='Start date'><span class='mono'>{{if
                 @model.startDate
                 (formatDay @model.startDate)
                 '—'
-              }}</span></FitRow>
-          <FitRow @label='Department'>{{if
+              }}</span></Detail>
+          <Detail @label='Department'>{{if
               @model.department
               @model.department
               '—'
-            }}</FitRow>
+            }}</Detail>
           {{#let (cardComponent this.team) as |TeamAtom|}}{{#if TeamAtom}}
-              <FitRow @label='Team' @left={{true}}><TeamAtom
+              <Detail @label='Team'><TeamAtom
                   @format='atom'
                   @displayContainer={{false}}
-                /></FitRow>
+                /></Detail>
             {{/if}}{{/let}}
           {{#let (cardComponent this.latestReview) as |ReviewAtom|}}{{#if
               ReviewAtom
             }}
-              <FitRow @label='Review' @left={{true}}><ReviewAtom
+              <Detail @label='Review'><ReviewAtom
                   @format='atom'
                   @displayContainer={{false}}
-                /></FitRow>
+                /></Detail>
             {{/if}}{{/let}}
-          <FitRow @label='PTO allowance'><span class='mono'>{{daysLabel
+          <Detail @label='PTO allowance'><span class='mono'>{{daysLabel
                 @model.ptoAllowanceDays
-              }}</span></FitRow>
-          <FitRow @label='Salary'><span class='mono'>{{formatMoney
+              }}</span></Detail>
+          <Detail @label='Salary'><span class='mono'>{{formatMoney
                 @model.salary
-              }}</span></FitRow>
-          <FitRow @label='Email'><span
+              }}</span></Detail>
+          <Detail @label='Email'><span
               class='mono'
-            >{{@model.email}}</span></FitRow>
-          <FitRow @label='Phone'><span
+            >{{@model.email}}</span></Detail>
+          <Detail @label='Phone'><span
               class='mono'
-            >{{@model.phone}}</span></FitRow>
-        </:default>
-      </FitCard>
+            >{{@model.phone}}</span></Detail>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

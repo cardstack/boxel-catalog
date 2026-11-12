@@ -13,7 +13,13 @@
         "Annual value",
         "Payment terms"
       ],
-      "guidance": "Use for any recurring vendor relationship. Pair with a Statement of Work per engagement."
+      "guidance": "Use for any recurring vendor relationship. Pair with a Statement of Work per engagement.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "standardClauses.0": {

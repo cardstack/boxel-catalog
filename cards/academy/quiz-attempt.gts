@@ -18,7 +18,7 @@ import { Enrollment } from './enrollment';
 import { Quiz } from './quiz';
 import { scoreAnswer } from './quiz-question-field';
 import { concat } from '@ember/helper';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   AtomChip,
   Dot,
@@ -29,6 +29,7 @@ import {
   Sheet,
   Stat,
 } from './components/record-sheet';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /** One recorded answer: which question, which option keys, or free text. */
 export class QuizAnswerField extends FieldDef {
@@ -108,92 +109,96 @@ export class QuizAttempt extends CardDef {
       return perQuestion(this.args.model);
     }
     <template>
-      <Sheet @mark='Qz' @title={{headline @model}} @meta={{metaLine @model}}>
-        <:status>
-          <Dot @hue={{if @model.passed 'green' 'red'}}>{{if
-              @model.passed
-              'passed'
-              'not passed'
-            }}</Dot>
-          <Dot @hue='blue'>{{@model.scorePct}}%</Dot>
-        </:status>
-        <:stats>
-          <Stat
-            @label='Score'
-            @value={{concat @model.scorePct '%'}}
-            @sub={{concat
-              @model.scorePoints
-              ' of '
-              (dash @model.quiz.totalPoints)
-              ' points'
-            }}
-          />
-          <Stat
-            @label='Correct'
-            @value={{concat
-              @model.correctCount
-              ' / '
-              (dash @model.quiz.questionCount)
-            }}
-            @sub='questions'
-          />
-          <Stat
-            @label='Time'
-            @value={{elapsed @model}}
-            @sub='start to submit'
-          />
-        </:stats>
-        <:main>
-          <Section @title='Answers'>
-            {{#each this.results as |r i|}}
-              <div class='ans'>
-                <span class='q'>
-                  <span class='prompt'>{{inc i}}
-                    ·
-                    {{r.prompt}}</span>
-                  <span class='given'>{{r.given}}{{#unless r.correct}}
-                      · expected
-                      {{r.expected}}{{/unless}}</span>
-                </span>
-                <Dot @hue={{if r.correct 'green' 'red'}}>{{r.earned}}
-                  /
-                  {{r.points}}</Dot>
-              </div>
-            {{else}}
-              <p class='empty'>No questions on the linked quiz.</p>
-            {{/each}}
-          </Section>
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <Kv @label='Enrollment'>{{#if @model.enrollment}}<@fields.enrollment
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}—{{/if}}</Kv>
-            <Kv @label='Quiz'>{{#if @model.quiz}}<@fields.quiz
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}—{{/if}}</Kv>
-          </Section>
-          <Section @title='Details'>
-            <Kv @label='Quiz'>{{dash @model.quizTitle}}</Kv>
-            <Kv @label='Attempt' @mono={{true}}>{{attemptOf @model}}</Kv>
-            <Kv @label='Score' @mono={{true}}>{{@model.scorePoints}}
-              /
-              {{dash @model.quiz.totalPoints}}</Kv>
-            <Kv @label='Correct' @mono={{true}}>{{@model.correctCount}}
-              of
-              {{dash @model.quiz.questionCount}}</Kv>
-            <Kv @label='Started' @mono={{true}}>{{fmtDateTime
-                @model.startedAt
-              }}</Kv>
-            <Kv @label='Submitted' @mono={{true}}>{{fmtDateTime
-                @model.submittedAt
-              }}</Kv>
-            <Kv @label='Pass mark' @mono={{true}}>{{passMark @model}}</Kv>
-          </Section>
-        </:side>
-      </Sheet>
+      <IsoFrame>
+        <Sheet @mark='Qz' @title={{headline @model}} @meta={{metaLine @model}}>
+          <:status>
+            <Dot @hue={{if @model.passed 'green' 'red'}}>{{if
+                @model.passed
+                'passed'
+                'not passed'
+              }}</Dot>
+            <Dot @hue='blue'>{{@model.scorePct}}%</Dot>
+          </:status>
+          <:stats>
+            <Stat
+              @label='Score'
+              @value={{concat @model.scorePct '%'}}
+              @sub={{concat
+                @model.scorePoints
+                ' of '
+                (dash @model.quiz.totalPoints)
+                ' points'
+              }}
+            />
+            <Stat
+              @label='Correct'
+              @value={{concat
+                @model.correctCount
+                ' / '
+                (dash @model.quiz.questionCount)
+              }}
+              @sub='questions'
+            />
+            <Stat
+              @label='Time'
+              @value={{elapsed @model}}
+              @sub='start to submit'
+            />
+          </:stats>
+          <:main>
+            <Section @title='Answers'>
+              {{#each this.results as |r i|}}
+                <div class='ans'>
+                  <span class='q'>
+                    <span class='prompt'>{{inc i}}
+                      ·
+                      {{r.prompt}}</span>
+                    <span class='given'>{{r.given}}{{#unless r.correct}}
+                        · expected
+                        {{r.expected}}{{/unless}}</span>
+                  </span>
+                  <Dot @hue={{if r.correct 'green' 'red'}}>{{r.earned}}
+                    /
+                    {{r.points}}</Dot>
+                </div>
+              {{else}}
+                <p class='empty'>No questions on the linked quiz.</p>
+              {{/each}}
+            </Section>
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <Kv @label='Enrollment'>{{#if
+                  @model.enrollment
+                }}<@fields.enrollment
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</Kv>
+              <Kv @label='Quiz'>{{#if @model.quiz}}<@fields.quiz
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</Kv>
+            </Section>
+            <Section @title='Details'>
+              <Kv @label='Quiz'>{{dash @model.quizTitle}}</Kv>
+              <Kv @label='Attempt' @mono={{true}}>{{attemptOf @model}}</Kv>
+              <Kv @label='Score' @mono={{true}}>{{@model.scorePoints}}
+                /
+                {{dash @model.quiz.totalPoints}}</Kv>
+              <Kv @label='Correct' @mono={{true}}>{{@model.correctCount}}
+                of
+                {{dash @model.quiz.questionCount}}</Kv>
+              <Kv @label='Started' @mono={{true}}>{{fmtDateTime
+                  @model.startedAt
+                }}</Kv>
+              <Kv @label='Submitted' @mono={{true}}>{{fmtDateTime
+                  @model.submittedAt
+                }}</Kv>
+              <Kv @label='Pass mark' @mono={{true}}>{{passMark @model}}</Kv>
+            </Section>
+          </:side>
+        </Sheet>
+      </IsoFrame>
       <style scoped>
         .ans {
           display: flex;
@@ -276,7 +281,7 @@ export class QuizAttempt extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Qz' /></:avatar>
         <:title>{{headline @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -290,6 +295,20 @@ export class QuizAttempt extends CardDef {
           {{dash @model.quiz.totalPoints}}
           points · pass mark
           {{passMark @model}}</:fact>
+        <:metric><Metric
+            @value='{{@model.scorePct}}%'
+            @label='Score'
+          /></:metric>
+        <:details>
+          <Detail
+            @label='Correct'
+            @value='{{@model.correctCount}} / {{dash
+              @model.quiz.questionCount
+            }}'
+          />
+          <Detail @label='Time' @value={{elapsed @model}} />
+          <Detail @label='Attempt' @value={{attemptOf @model}} />
+        </:details>
         <:relations>{{#if @model.enrollment}}<@fields.enrollment
               @format='atom'
               @displayContainer={{false}}
@@ -297,7 +316,7 @@ export class QuizAttempt extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

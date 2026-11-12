@@ -16,7 +16,8 @@ import { on } from '@ember/modifier';
 import { Button } from '@cardstack/pretui/components/button';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Chip } from '@cardstack/pretui/components/chip';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
+import { IsoFrame } from '../shared/compact-sheet';
 
 function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -272,128 +273,131 @@ export class Role extends CardDef {
       this.args.editCard?.(this.args.model as Role);
     };
     <template>
-      <article class='iso'>
-        <header class='ih'>
-          <span class='mark' aria-hidden='true'>Ro</span>
-          <div class='t'>
-            <h1 class='name'>{{this.v.name}}</h1>
-            <p class='meta'>{{this.v.subline}}</p>
-          </div>
-          <span class='sts'>
-            {{#if this.v.onDuty}}<Chip
-                @label='on duty'
-                @tone='success'
+      <IsoFrame>
+        <article class='iso'>
+          <header class='ih'>
+            <span class='mark' aria-hidden='true'>Ro</span>
+            <div class='t'>
+              <h1 class='name'>{{this.v.name}}</h1>
+              <p class='meta'>{{this.v.subline}}</p>
+            </div>
+            <span class='sts'>
+              {{#if this.v.onDuty}}<Chip
+                  @label='on duty'
+                  @tone='success'
+                  @appearance='plain'
+                />{{/if}}
+              <Chip
+                @label={{this.v.membersLabel}}
+                @tone='neutral'
                 @appearance='plain'
-              />{{/if}}
-            <Chip
-              @label={{this.v.membersLabel}}
+              />
+            </span>
+            {{#if @editCard}}
+              <Button
+                @tone='neutral'
+                @appearance='outlined'
+                @size='s'
+                @icon={{PencilIcon}}
+                {{on 'click' this.edit}}
+              >Edit</Button>
+            {{/if}}
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Members'
               @tone='neutral'
-              @appearance='plain'
+              @value={{this.v.memberCount}}
+              @hint={{this.v.memberNames}}
+              @roll={{false}}
             />
-          </span>
-          {{#if @editCard}}
-            <Button
-              @tone='neutral'
-              @appearance='outlined'
-              @size='s'
-              @icon={{PencilIcon}}
-              {{on 'click' this.edit}}
-            >Edit</Button>
-          {{/if}}
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Members'
-            @tone='neutral'
-            @value={{this.v.memberCount}}
-            @hint={{this.v.memberNames}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Permissions'
-            @tone='primary'
-            @value={{this.v.permissions.length}}
-            @hint={{this.v.permissionsHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='On duty'
-            @tone='success'
-            @value={{if this.v.onDuty 1 0}}
-            @hint={{if this.v.dutyName this.v.dutyName 'nobody on duty'}}
-            @roll={{false}}
-          />
-        </div>
-        <div class='cols'>
-          <div class='main'>
-            <section>
-              <h2>Members</h2>
-              {{#each this.v.memberRows as |r|}}
-                <div class='row'>
-                  <span class='row-id'>
-                    <span class='row-name'>{{r.name}}</span>
-                    <span class='meta'>{{if r.sub r.sub '—'}}</span>
-                  </span>
-                  {{#if r.duty}}<Chip
-                      @label='on duty'
-                      @tone='success'
-                      @appearance='plain'
-                    />{{else}}<Chip
-                      @label='member'
-                      @tone='neutral'
-                      @appearance='plain'
-                    />{{/if}}
-                </div>
-              {{else}}
-                <p class='row meta'>No members yet</p>
-              {{/each}}
-            </section>
-            {{#if this.v.permissions.length}}
+            <Stat
+              @label='Permissions'
+              @tone='primary'
+              @value={{this.v.permissions.length}}
+              @hint={{this.v.permissionsHint}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='On duty'
+              @tone='success'
+              @value={{if this.v.onDuty 1 0}}
+              @hint={{if this.v.dutyName this.v.dutyName 'nobody on duty'}}
+              @roll={{false}}
+            />
+          </div>
+          <div class='cols'>
+            <div class='main'>
               <section>
-                <h2>Permissions</h2>
-                {{#each this.v.permissions as |p|}}
+                <h2>Members</h2>
+                {{#each this.v.memberRows as |r|}}
                   <div class='row'>
                     <span class='row-id'>
-                      <span class='row-name'>{{p}}</span>
-                      <span class='meta'>can</span>
+                      <span class='row-name'>{{r.name}}</span>
+                      <span class='meta'>{{if r.sub r.sub '—'}}</span>
                     </span>
+                    {{#if r.duty}}<Chip
+                        @label='on duty'
+                        @tone='success'
+                        @appearance='plain'
+                      />{{else}}<Chip
+                        @label='member'
+                        @tone='neutral'
+                        @appearance='plain'
+                      />{{/if}}
                   </div>
+                {{else}}
+                  <p class='row meta'>No members yet</p>
                 {{/each}}
               </section>
-            {{/if}}
+              {{#if this.v.permissions.length}}
+                <section>
+                  <h2>Permissions</h2>
+                  {{#each this.v.permissions as |p|}}
+                    <div class='row'>
+                      <span class='row-id'>
+                        <span class='row-name'>{{p}}</span>
+                        <span class='meta'>can</span>
+                      </span>
+                    </div>
+                  {{/each}}
+                </section>
+              {{/if}}
+            </div>
+            <aside class='side'>
+              <section>
+                <h2>Linked</h2>
+                <dl class='kv'>
+                  {{#if this.v.onDuty}}
+                    <div class='kv-r'><dt class='cap'>On duty</dt><dd
+                      ><@fields.onDuty @format='atom' /></dd></div>
+                  {{/if}}
+                  {{#each @fields.members as |Member i|}}
+                    {{#unless (get this.v.dutyFlags i)}}
+                      <div class='kv-r'><dt class='cap'>Member</dt><dd><Member
+                            @format='atom'
+                          /></dd></div>
+                    {{/unless}}
+                  {{/each}}
+                </dl>
+              </section>
+              <section>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  {{#each this.v.facts as |f|}}
+                    <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+                      >{{f.value}}</dd></div>
+                  {{/each}}
+                  {{#each this.v.permissions as |p|}}
+                    <div class='kv-r'><dt class='cap'>Can</dt><dd
+                      >{{p}}</dd></div>
+                  {{/each}}
+                </dl>
+              </section>
+            </aside>
           </div>
-          <aside class='side'>
-            <section>
-              <h2>Linked</h2>
-              <dl class='kv'>
-                {{#if this.v.onDuty}}
-                  <div class='kv-r'><dt class='cap'>On duty</dt><dd
-                    ><@fields.onDuty @format='atom' /></dd></div>
-                {{/if}}
-                {{#each @fields.members as |Member i|}}
-                  {{#unless (get this.v.dutyFlags i)}}
-                    <div class='kv-r'><dt class='cap'>Member</dt><dd><Member
-                          @format='atom'
-                        /></dd></div>
-                  {{/unless}}
-                {{/each}}
-              </dl>
-            </section>
-            <section>
-              <h2>Details</h2>
-              <dl class='kv'>
-                {{#each this.v.facts as |f|}}
-                  <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
-                    >{{f.value}}</dd></div>
-                {{/each}}
-                {{#each this.v.permissions as |p|}}
-                  <div class='kv-r'><dt class='cap'>Can</dt><dd>{{p}}</dd></div>
-                {{/each}}
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .iso {
           container-type: inline-size;
@@ -553,7 +557,7 @@ export class Role extends CardDef {
       return roleView(this.args.model);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar>
           {{! the record's type mark, not a person: a square, not an Avatar }}
           <span class='mark' aria-hidden='true'>Ro</span>
@@ -573,33 +577,28 @@ export class Role extends CardDef {
               @tone='neutral'
               @appearance='plain'
             />{{/if}}</:status>
-        <:fact>
-          {{! rows ranked by priority; container queries drop whole rows }}
-          <dl class='fr'>
-            {{#if this.v.onDuty}}
-              <div class='fr-r'><dt class='cap'>On duty</dt><dd><@fields.onDuty
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></dd></div>
-            {{/if}}
-            <div class='fr-r'><dt class='cap'>Members</dt><dd
-              >{{this.v.memberCount}}</dd></div>
-            <div class='fr-r'><dt class='cap'>Permissions</dt><dd
-              >{{this.v.permissions.length}}</dd></div>
-            {{#each @fields.members as |Member i|}}
-              {{#unless (get this.v.dutyFlags i)}}
-                <div class='fr-r'><dt class='cap'>Member</dt><dd><Member
-                      @format='atom'
-                      @displayContainer={{false}}
-                    /></dd></div>
-              {{/unless}}
-            {{/each}}
-            {{#each this.v.permissions as |p|}}
-              <div class='fr-r'><dt class='cap'>Can</dt><dd>{{p}}</dd></div>
-            {{/each}}
-          </dl>
-        </:fact>
-      </FitTile>
+        <:details>
+          {{#if this.v.onDuty}}
+            <Detail @label='On duty'><@fields.onDuty
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>
+          {{/if}}
+          <Detail @label='Members'>{{this.v.memberCount}}</Detail>
+          <Detail @label='Permissions'>{{this.v.permissions.length}}</Detail>
+          {{#each @fields.members as |Member i|}}
+            {{#unless (get this.v.dutyFlags i)}}
+              <Detail @label='Member'><Member
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></Detail>
+            {{/unless}}
+          {{/each}}
+          {{#each this.v.permissions as |p|}}
+            <Detail @label='Can'>{{p}}</Detail>
+          {{/each}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .ell {
           display: block;
@@ -618,89 +617,6 @@ export class Role extends CardDef {
           font-family: var(--font-mono);
           font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
-        }
-        .cap {
-          font-family: var(--font-mono);
-          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
-          font-weight: 600;
-          line-height: 1.2;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
-          white-space: normal;
-          color: var(--muted-foreground);
-        }
-        .fr {
-          display: grid;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--card-foreground);
-        }
-        .fr-r {
-          display: grid;
-          grid-template-columns: 5rem minmax(0, 1fr);
-          column-gap: var(--boxel-sp-2xs);
-          align-items: center;
-          block-size: 1.75rem;
-          border-top: 1px solid var(--border);
-          overflow: hidden;
-        }
-        .fr-r dd {
-          margin: 0;
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fr-r:nth-child(n + 13) {
-          display: none;
-        }
-        @container fitted-card (width < 250px) {
-          .fr-r {
-            grid-template-columns: minmax(0, 1fr);
-          }
-          .fr-r dt {
-            display: none;
-          }
-        }
-        @container fitted-card (width >= 400px) {
-          .fr-r {
-            grid-template-columns: 6.75rem minmax(0, 1fr);
-          }
-        }
-        @container fitted-card (height < 445px) and (width < 400px) {
-          .fr-r:nth-child(n + 7) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 445px) and (width >= 400px) {
-          .fr-r:nth-child(n + 8) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 275px) {
-          .fr-r:nth-child(n + 6) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 250px) and (width < 400px) {
-          .fr-r:nth-child(n + 3) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 250px) and (width >= 400px) {
-          .fr-r:nth-child(n + 4) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 170px) and (width < 400px) {
-          .fr {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 170px) and (width >= 400px) {
-          .fr-r:nth-child(n + 2) {
-            display: none;
-          }
         }
       </style>
     </template>

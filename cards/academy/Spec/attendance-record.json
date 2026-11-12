@@ -22,6 +22,11 @@
         "links": {
           "self": "../AttendanceRecord/daniel-m1-kickoff-live"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

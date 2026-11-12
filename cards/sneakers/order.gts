@@ -21,7 +21,7 @@ import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import { Listing } from './listing';
 import { MarketplaceMember as SneakerCollectionPerson } from './marketplace-member';
 import { SellerProfile } from './seller-profile';
-import { currencyCode, moneyText } from './money-format';
+import { currencyCode, formatMoney, moneyText } from './money-format';
 import {
   OrderStatusField,
   canOrderTransition,
@@ -29,7 +29,7 @@ import {
   type OrderStatus,
 } from './order-status';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -41,6 +41,7 @@ import {
   SnStat,
   day,
 } from './parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Order — one escrow-protected purchase of one Listing. The status is a
 // graph (see order-status.gts), the total is computed from four snapshot
@@ -190,113 +191,118 @@ export class Order extends CardDef {
     };
 
     <template>
-      <SnSheet>
-        <:mark><SnMark @text='Or' /></:mark>
-        <:title>{{orderTitle @model}}</:title>
-        <:meta>{{metaLine @model}}</:meta>
-        <:actions>
-          <DotLabel
-            @hue={{statusHue OrderStatusField @model.orderStatus}}
-            @label={{statusLabel @model.orderStatus}}
-          />
-          {{#if @model.fundsHeld}}
-            <DotLabel @hue='blue' @label='funds held' />
-          {{/if}}
-          {{#each this.moves as |n i|}}
-            <Button
-              @tone={{if i 'neutral' 'primary'}}
-              @appearance={{if i 'outlined' 'accent'}}
-              @size='s'
-              {{on 'click' (fn this.move n.value)}}
-            >Mark {{lower n.label}}</Button>
-          {{/each}}
-        </:actions>
-        <:stats>
-          <SnStat
-            @label='Total'
-            @hue='blue'
-            @value={{moneyText @model.total}}
-            @hint='price + shipping + fees'
-          />
-          <SnStat
-            @label='Status'
-            @hue={{statusHue OrderStatusField @model.orderStatus}}
-            @value={{statusLabel @model.orderStatus}}
-            @hint={{statusMeta @model.orderStatus}}
-          />
-          <SnStat
-            @label='Placed'
-            @value={{day @model.placedAt true}}
-            @hint={{paidLine @model}}
-          />
-          <SnStat
-            @label='Payout'
-            @hue='green'
-            @value={{payout @model}}
-            @hint='after fees, on release'
-          />
-        </:stats>
-        <:main>
-          <SnSection @title='Timeline' @flush={{true}}><SnKv>
-              {{#each (timeline @model) as |s|}}
+      <IsoFrame>
+        <SnSheet>
+          <:mark><SnMark @text='Or' /></:mark>
+          <:title>{{orderTitle @model}}</:title>
+          <:meta>{{metaLine @model}}</:meta>
+          <:actions>
+            <DotLabel
+              @hue={{statusHue OrderStatusField @model.orderStatus}}
+              @label={{statusLabel @model.orderStatus}}
+            />
+            {{#if @model.fundsHeld}}
+              <DotLabel @hue='blue' @label='funds held' />
+            {{/if}}
+            {{#each this.moves as |n i|}}
+              <Button
+                @tone={{if i 'neutral' 'primary'}}
+                @appearance={{if i 'outlined' 'accent'}}
+                @size='s'
+                {{on 'click' (fn this.move n.value)}}
+              >Mark {{lower n.label}}</Button>
+            {{/each}}
+          </:actions>
+          <:stats>
+            <SnStat
+              @label='Total'
+              @hue='blue'
+              @value={{moneyText @model.total}}
+              @hint='price + shipping + fees'
+            />
+            <SnStat
+              @label='Status'
+              @hue={{statusHue OrderStatusField @model.orderStatus}}
+              @value={{statusLabel @model.orderStatus}}
+              @hint={{statusMeta @model.orderStatus}}
+            />
+            <SnStat
+              @label='Placed'
+              @value={{day @model.placedAt true}}
+              @hint={{paidLine @model}}
+            />
+            <SnStat
+              @label='Payout'
+              @hue='green'
+              @value={{payout @model}}
+              @hint='after fees, on release'
+            />
+          </:stats>
+          <:main>
+            <SnSection @title='Timeline' @flush={{true}}><SnKv>
+                {{#each (timeline @model) as |s|}}
+                  <SnRow
+                    @label={{s.label}}
+                    @value={{s.value}}
+                    @hue={{s.hue}}
+                    @state={{s.state}}
+                  />
+                {{/each}}
+              </SnKv></SnSection>
+            <SnSection @title='Price breakdown' @flush={{true}}><SnKv>
+                <SnRow @label='Price' @value={{moneyText @model.price}} />
                 <SnRow
-                  @label={{s.label}}
-                  @value={{s.value}}
-                  @hue={{s.hue}}
-                  @state={{s.state}}
+                  @label='Shipping'
+                  @value={{moneyText @model.shippingPrice}}
                 />
-              {{/each}}
-            </SnKv></SnSection>
-          <SnSection @title='Price breakdown' @flush={{true}}><SnKv>
-              <SnRow @label='Price' @value={{moneyText @model.price}} />
-              <SnRow
-                @label='Shipping'
-                @value={{moneyText @model.shippingPrice}}
-              />
-              <SnRow
-                @label='Authentication fee'
-                @value={{moneyText @model.authFee}}
-              />
-              <SnRow
-                @label='Platform fee'
-                @value={{moneyText @model.platformFee}}
-              />
-              <SnRow @label='Total'><strong>{{moneyText
-                    @model.total
-                  }}</strong></SnRow>
-            </SnKv></SnSection>
-        </:main>
-        <:side>
-          <SnSection @title='Linked' @flush={{true}}><SnKv>
-              <SnRow @label='Buyer'>{{#if @model.buyer}}<@fields.buyer
-                    @format='atom'
-                  />{{else}}—{{/if}}</SnRow>
-              <SnRow @label='Seller'>{{#if @model.seller}}<@fields.seller
-                    @format='atom'
-                  />{{else}}—{{/if}}</SnRow>
-              <SnRow @label='Listing'>{{#if @model.listing}}<@fields.listing
-                    @format='atom'
-                  />{{else}}—{{/if}}</SnRow>
-            </SnKv></SnSection>
-          <SnSection @title='Details' @flush={{true}}><SnKv>
-              <SnRow @label='Total' @value={{moneyText @model.total}} />
-              <SnRow @label='Price' @value={{moneyText @model.price}} />
-              <SnRow
-                @label='Shipping'
-                @value={{moneyText @model.shippingPrice}}
-              />
-              <SnRow @label='Auth fee' @value={{moneyText @model.authFee}} />
-              <SnRow
-                @label='Platform fee'
-                @value={{moneyText @model.platformFee}}
-              />
-              <SnRow @label='Placed' @value={{day @model.placedAt}} />
-              <SnRow @label='Shipped' @value={{day @model.shippedAt}} />
-              <SnRow @label='Tracking' @value={{@model.trackingNumber}} />
-              <SnRow @label='Payment ref' @value={{@model.paymentReference}} />
-            </SnKv></SnSection>
-        </:side>
-      </SnSheet>
+                <SnRow
+                  @label='Authentication fee'
+                  @value={{moneyText @model.authFee}}
+                />
+                <SnRow
+                  @label='Platform fee'
+                  @value={{moneyText @model.platformFee}}
+                />
+                <SnRow @label='Total'><strong>{{moneyText
+                      @model.total
+                    }}</strong></SnRow>
+              </SnKv></SnSection>
+          </:main>
+          <:side>
+            <SnSection @title='Linked' @flush={{true}}><SnKv>
+                <SnRow @label='Buyer'>{{#if @model.buyer}}<@fields.buyer
+                      @format='atom'
+                    />{{else}}—{{/if}}</SnRow>
+                <SnRow @label='Seller'>{{#if @model.seller}}<@fields.seller
+                      @format='atom'
+                    />{{else}}—{{/if}}</SnRow>
+                <SnRow @label='Listing'>{{#if @model.listing}}<@fields.listing
+                      @format='atom'
+                    />{{else}}—{{/if}}</SnRow>
+              </SnKv></SnSection>
+            <SnSection @title='Details' @flush={{true}}><SnKv>
+                <SnRow @label='Total' @value={{moneyText @model.total}} />
+                <SnRow @label='Price' @value={{moneyText @model.price}} />
+                <SnRow
+                  @label='Shipping'
+                  @value={{moneyText @model.shippingPrice}}
+                />
+                <SnRow @label='Auth fee' @value={{moneyText @model.authFee}} />
+                <SnRow
+                  @label='Platform fee'
+                  @value={{moneyText @model.platformFee}}
+                />
+                <SnRow @label='Placed' @value={{day @model.placedAt}} />
+                <SnRow @label='Shipped' @value={{day @model.shippedAt}} />
+                <SnRow @label='Tracking' @value={{@model.trackingNumber}} />
+                <SnRow
+                  @label='Payment ref'
+                  @value={{@model.paymentReference}}
+                />
+              </SnKv></SnSection>
+          </:side>
+        </SnSheet>
+      </IsoFrame>
     </template>
   };
 
@@ -343,7 +349,7 @@ export class Order extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Order> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><SnMark @text='Or' @size='lg' /></:avatar>
         <:title>{{orderTitle @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -356,6 +362,28 @@ export class Order extends CardDef {
           {{payout @model}}
           · placed
           {{day @model.placedAt true}}</:fact>
+        <:metric>{{#if (formatMoney @model.total)}}<Metric
+              @value={{formatMoney @model.total}}
+              @label='Total'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if (formatMoney @model.price)}}<Detail
+              @label='Price'
+              @value={{formatMoney @model.price}}
+            />{{/if}}
+          {{#if @model.shippedAt}}<Detail
+              @label='Shipped'
+              @value={{day @model.shippedAt}}
+            />{{/if}}
+          {{#if @model.trackingNumber}}<Detail
+              @label='Tracking'
+              @value={{@model.trackingNumber}}
+            />{{/if}}
+          {{#if @model.listing}}<Detail @label='Listing'><@fields.listing
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
         <:relations>{{#if @model.buyer}}<@fields.buyer
               @format='atom'
               @displayContainer={{false}}
@@ -363,7 +391,7 @@ export class Order extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

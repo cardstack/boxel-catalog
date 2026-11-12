@@ -5,7 +5,11 @@
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { realmURL } from '@cardstack/base/card-api';
-import { identifyCard } from '@cardstack/runtime-common';
+import {
+  identifyCard,
+  resolveRRIReference,
+  type RealmResourceIdentifier,
+} from '@cardstack/runtime-common';
 import { DotLabel } from '../hr/dot-enum-field';
 
 type Hue = DotLabel['args']['hue'];
@@ -466,7 +470,13 @@ export function linkedQuery(
       if (!own) {
         return undefined;
       }
-      let on = { module: new URL(module, own.module).href, name };
+      let on = {
+        module: resolveRRIReference(
+          module,
+          own.module as RealmResourceIdentifier,
+        ),
+        name,
+      };
       return { filter: { on, eq: { [path]: id } } };
     },
     () => {

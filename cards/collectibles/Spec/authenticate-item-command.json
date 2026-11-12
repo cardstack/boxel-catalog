@@ -23,6 +23,11 @@
         "links": {
           "self": "../CollectionItem/aj1-lost-and-found-105"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

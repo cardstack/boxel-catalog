@@ -15,7 +15,7 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import { on } from '@ember/modifier';
 import { Button } from '@cardstack/pretui/components/button';
 import PackageIcon from '@cardstack/boxel-icons/package';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import TrackingNumberField from './tracking-number';
 import ParcelDimensionsField from './parcel-dimensions';
 import DeliveryWindowField from './delivery-window';
@@ -28,6 +28,7 @@ import {
 import { FulfilmentOrder } from './fulfilment-order';
 import { Warehouse } from './warehouse';
 import { Carrier } from './carrier';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // One scan on the package's journey. Carriers emit these; we store them
 // verbatim rather than collapsing them into the status, because the sequence is
@@ -123,137 +124,138 @@ class ShipmentIsolated extends Component<typeof Shipment> {
   };
 
   <template>
-    <article class='shp'>
-      <header class='ihead'>
-        <div class='who'>
-          <span class='mark' aria-hidden='true'>Sh</span>
-          <div class='id'>
-            <h1 class='name'>{{if
-                @model.shipmentNumber
-                @model.shipmentNumber
-                'Untitled shipment'
-              }}</h1>
-            <p class='meta'>{{metaLine @model}}</p>
+    <IsoFrame>
+      <article class='shp'>
+        <header class='ihead'>
+          <div class='who'>
+            <span class='mark' aria-hidden='true'>Sh</span>
+            <div class='id'>
+              <h1 class='name'>{{if
+                  @model.shipmentNumber
+                  @model.shipmentNumber
+                  'Untitled shipment'
+                }}</h1>
+              <p class='meta'>{{metaLine @model}}</p>
+            </div>
           </div>
-        </div>
-        <div class='bar'>
-          <span class='st' data-tone={{statusTone @model.status}}><span
-              class='dot'
-            ></span>{{statusText @model}}</span>
-          <span class='st'><span class='dot'></span>{{if
-              @model.isDropship
-              'dropship'
-              'warehouse'
-            }}</span>
-          {{#if @model.order}}
-            {{#if this.offPath}}
-              <Button
-                @variant='primary'
-                @size='sm'
-                {{on 'click' this.openOrder}}
-              >Re-ship</Button>
-              <Button
-                @variant='outline'
-                @size='sm'
-                {{on 'click' this.openOrder}}
-              >Open return</Button>
-            {{else}}
-              <Button
-                @variant='outline'
-                @size='sm'
-                {{on 'click' this.openOrder}}
-              >Open order</Button>
-            {{/if}}
-          {{/if}}
-        </div>
-      </header>
-
-      <div class='stats'>
-        {{#each this.stats as |s|}}
-          <div class='stat'>
-            <span class='st cap' data-tone={{s.tone}}><span
+          <div class='bar'>
+            <span class='st' data-tone={{statusTone @model.status}}><span
                 class='dot'
-              ></span>{{s.label}}</span>
-            <span class='num'>{{s.value}}</span>
-            <span class='meta'>{{s.meta}}</span>
-          </div>
-        {{/each}}
-      </div>
-
-      <section class='blk'>
-        <h2>Tracking</h2>
-        {{#each this.events as |e|}}
-          <div class='row'>
-            <span class='lead'>
-              <span class='st' data-tone={{eventTone e.statusCode}}><span
-                  class='dot'
-                ></span></span>
-              <span class='strong'>{{e.statusDescription}}</span>
-              <span class='meta mono-ish'>{{eventMeta e}}</span>
-            </span>
-            <span class='mono'>{{e.statusCode}}</span>
-          </div>
-        {{else}}
-          <p class='row meta'>No scans yet</p>
-        {{/each}}
-      </section>
-
-      <section class='blk'>
-        <h2>Parcel</h2>
-        <dl class='kv'>
-          {{#each this.parcelRows as |r|}}
-            <dt class='cap'>{{r.k}}</dt>
-            <dd>{{r.v}}</dd>
-          {{/each}}
-        </dl>
-      </section>
-
-      <section class='blk'>
-        <h2>Line items</h2>
-        {{#each @model.lineItems as |l|}}
-          <div class='row'>
-            <span class='lead'>
-              <span class='strong'>{{l.productName}} × {{l.quantity}}</span>
-              <span class='meta'>{{lineMeta l}}</span>
-            </span>
-            <span class='mono'>{{if
+              ></span>{{statusText @model}}</span>
+            <span class='st'><span class='dot'></span>{{if
                 @model.isDropship
                 'dropship'
-                l.quantityFulfilled
+                'warehouse'
               }}</span>
+            {{#if @model.order}}
+              {{#if this.offPath}}
+                <Button
+                  @variant='primary'
+                  @size='sm'
+                  {{on 'click' this.openOrder}}
+                >Re-ship</Button>
+                <Button
+                  @variant='outline'
+                  @size='sm'
+                  {{on 'click' this.openOrder}}
+                >Open return</Button>
+              {{else}}
+                <Button
+                  @variant='outline'
+                  @size='sm'
+                  {{on 'click' this.openOrder}}
+                >Open order</Button>
+              {{/if}}
+            {{/if}}
           </div>
-        {{else}}
-          <p class='row meta'>—</p>
-        {{/each}}
-      </section>
+        </header>
 
-      <section class='blk'>
-        <h2>Linked</h2>
-        <dl class='kv'>
-          <dt class='cap'>Order</dt>
-          <dd>{{#if @model.order}}<@fields.order
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</dd>
-          <dt class='cap'>Origin</dt>
-          <dd>{{#if @model.originWarehouse}}<@fields.originWarehouse
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</dd>
-          <dt class='cap'>Carrier</dt>
-          <dd>{{#if @model.carrier}}<@fields.carrier
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</dd>
-        </dl>
-      </section>
-    </article>
+        <div class='stats'>
+          {{#each this.stats as |s|}}
+            <div class='stat'>
+              <span class='st cap' data-tone={{s.tone}}><span
+                  class='dot'
+                ></span>{{s.label}}</span>
+              <span class='num'>{{s.value}}</span>
+              <span class='meta'>{{s.meta}}</span>
+            </div>
+          {{/each}}
+        </div>
 
+        <section class='blk'>
+          <h2>Tracking</h2>
+          {{#each this.events as |e|}}
+            <div class='row'>
+              <span class='lead'>
+                <span class='st' data-tone={{eventTone e.statusCode}}><span
+                    class='dot'
+                  ></span></span>
+                <span class='strong'>{{e.statusDescription}}</span>
+                <span class='meta mono-ish'>{{eventMeta e}}</span>
+              </span>
+              <span class='mono'>{{e.statusCode}}</span>
+            </div>
+          {{else}}
+            <p class='row meta'>No scans yet</p>
+          {{/each}}
+        </section>
+
+        <section class='blk'>
+          <h2>Parcel</h2>
+          <dl class='kv'>
+            {{#each this.parcelRows as |r|}}
+              <dt class='cap'>{{r.k}}</dt>
+              <dd>{{r.v}}</dd>
+            {{/each}}
+          </dl>
+        </section>
+
+        <section class='blk'>
+          <h2>Line items</h2>
+          {{#each @model.lineItems as |l|}}
+            <div class='row'>
+              <span class='lead'>
+                <span class='strong'>{{l.productName}} × {{l.quantity}}</span>
+                <span class='meta'>{{lineMeta l}}</span>
+              </span>
+              <span class='mono'>{{if
+                  @model.isDropship
+                  'dropship'
+                  l.quantityFulfilled
+                }}</span>
+            </div>
+          {{else}}
+            <p class='row meta'>—</p>
+          {{/each}}
+        </section>
+
+        <section class='blk'>
+          <h2>Linked</h2>
+          <dl class='kv'>
+            <dt class='cap'>Order</dt>
+            <dd>{{#if @model.order}}<@fields.order
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd>
+            <dt class='cap'>Origin</dt>
+            <dd>{{#if @model.originWarehouse}}<@fields.originWarehouse
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd>
+            <dt class='cap'>Carrier</dt>
+            <dd>{{#if @model.carrier}}<@fields.carrier
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd>
+          </dl>
+        </section>
+      </article>
+    </IsoFrame>
     <style scoped>
       .shp {
         container-type: inline-size;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.4;
         color: var(--foreground);
         background-color: var(--card);
@@ -267,13 +269,13 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 0.5rem 0.75rem;
-        padding: 0.5rem 0.625rem;
+        gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
       }
       .who {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         min-width: 0;
       }
       .mark {
@@ -295,26 +297,26 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       .name {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-sm);
         font-weight: 600;
         letter-spacing: normal;
         text-transform: none;
       }
       .meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .bar {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.5rem 0.75rem;
+        gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .st {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
         font-weight: 600;
         --tone: var(--muted-foreground);
       }
@@ -351,14 +353,14 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       .stat {
         display: flex;
         flex-direction: column;
-        gap: 0.125rem;
-        padding: 0.5rem 0.625rem;
+        gap: var(--boxel-sp-6xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         border-right: 1px solid var(--border);
         border-bottom: 1px solid var(--border);
         margin-bottom: -1px;
       }
       .num {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         line-height: 1.15;
         font-variant-numeric: tabular-nums;
@@ -371,25 +373,25 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .blk h2 {
         margin: 0;
-        padding: 0.625rem 0.625rem 0.375rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-2xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 0.75rem;
+        gap: var(--boxel-sp-sm);
         min-height: 1.75rem;
         margin: 0;
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
       }
       .lead {
         display: flex;
         flex-wrap: wrap;
         align-items: baseline;
-        column-gap: 0.5rem;
+        column-gap: var(--boxel-sp-xs);
         min-width: 0;
       }
       .lead .st {
@@ -400,7 +402,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .kv {
@@ -417,10 +419,10 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         border-top: 1px solid var(--border);
       }
       .kv dt {
-        padding-left: 0.625rem;
+        padding-left: var(--boxel-sp-xs);
       }
       .kv dd {
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
         min-width: 0;
       }
       @container (width < 560px) {
@@ -719,7 +721,7 @@ export class Shipment extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Shipment> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Sh</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -729,6 +731,31 @@ export class Shipment extends CardDef {
                 @model
               }}</span></span></:status>
         <:fact>{{@model.trackingNumber.number}} · {{windowLabel @model}}</:fact>
+        <:metric><Metric
+            @value={{money
+              @model.shippingMargin
+              @model.customerPaid.currency.code
+            }}
+            @label='Margin'
+          /></:metric>
+        <:details>
+          {{#if @model.shippedAt}}<Detail
+              @label='Shipped'
+              @value={{dayTime @model.shippedAt}}
+            />{{/if}}
+          {{#if @model.deliveredAt}}<Detail
+              @label='Delivered'
+              @value={{dayTime @model.deliveredAt}}
+            />{{/if}}
+          {{#if @model.parcel.billableWeight}}<Detail
+              @label='Billable'
+              @value={{kg @model.parcel.billableWeight}}
+            />{{/if}}
+          {{#if @model.itemCount}}<Detail
+              @label='Items'
+              @value='{{@model.itemCount}}'
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.order}}<@fields.order
               @format='atom'
               @displayContainer={{false}}
@@ -736,7 +763,7 @@ export class Shipment extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

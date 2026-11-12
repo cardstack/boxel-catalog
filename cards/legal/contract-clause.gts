@@ -8,6 +8,8 @@ import {
   linksTo,
 } from '@cardstack/base/card-api';
 import type { Hue } from './compact-card';
+import { Dot as DotChip } from '../shared/compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import BooleanField from '@cardstack/base/boolean';
 import MarkdownField from '@cardstack/base/markdown';
 import TextAreaField from '@cardstack/base/text-area';
@@ -20,17 +22,18 @@ import {
   AtomLayout,
   EmbLayout,
   Facts,
-  FitLayout,
   IsoLayout,
   LinkRow,
   Mark,
   Section,
   Text,
+  fitParts,
   stats,
   type Dot,
   type Fact,
 } from './compact-card';
 import { cap, dash, type Tone } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * What THIS contract actually says for one provision, next to what it was
@@ -147,41 +150,45 @@ export class ContractClause extends CardDef {
       return ccView(this.args.model);
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='CC' @size='lg' /></:mark>
-        <:main>
-          <Section @title='Actual text'><@fields.actualText /></Section>
-          {{#if @model.deviationNotes}}
-            <Section @title='Deviation notes'><Text
-              >{{@model.deviationNotes}}</Text></Section>
-          {{/if}}
-          {{#if @model.standardClause}}
-            <Section @title='Playbook text'><Text
-              >{{@model.standardClause.standardText}}</Text></Section>
-          {{else}}
-            <Section @title='Playbook text'><Text>Bespoke language: no approved
-                standard to compare against.</Text></Section>
-          {{/if}}
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkRow @label='Contract'><@fields.contract
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-            <LinkRow @label='Standard'><@fields.standardClause
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-          </Section>
-          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='CC' @size='lg' /></:mark>
+          <:main>
+            <Section @title='Actual text'><@fields.actualText /></Section>
+            {{#if @model.deviationNotes}}
+              <Section @title='Deviation notes'><Text
+                >{{@model.deviationNotes}}</Text></Section>
+            {{/if}}
+            {{#if @model.standardClause}}
+              <Section @title='Playbook text'><Text
+                >{{@model.standardClause.standardText}}</Text></Section>
+            {{else}}
+              <Section @title='Playbook text'><Text>Bespoke language: no
+                  approved standard to compare against.</Text></Section>
+            {{/if}}
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkRow @label='Contract'><@fields.contract
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+              <LinkRow @label='Standard'><@fields.standardClause
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+            </Section>
+            <Section @title='Details'><Facts
+                @items={{this.v.facts}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 
@@ -189,17 +196,28 @@ export class ContractClause extends CardDef {
     get v() {
       return ccView(this.args.model);
     }
+    get fit() {
+      return fitParts(this.v.facts, this.v.fitStats);
+    }
     <template>
-      <FitLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @status={{this.v.state}}
-        @fact={{this.v.fact}}
-        @facts={{this.v.facts}}
-        @stats={{this.v.fitStats}}
-      >
-        <:mark><Mark @text='CC' /></:mark>
-      </FitLayout>
+      <RichFittedCard>
+        <:avatar><Mark @text='CC' /></:avatar>
+        <:title>{{this.v.title}}</:title>
+        <:status>{{#if this.v.state}}<DotChip
+              @label={{this.v.state.label}}
+              @tone={{this.v.state.tone}}
+            />{{/if}}</:status>
+        <:subtitle>{{this.v.subtitle}}</:subtitle>
+        <:fact>{{this.v.fact}}</:fact>
+        <:metric>{{#if this.fit.metric}}<Metric
+              @value={{this.fit.metric.value}}
+              @label={{this.fit.metric.key}}
+            />{{/if}}</:metric>
+        <:details>{{#each this.fit.details as |d|}}<Detail
+              @label={{d.key}}
+              @value={{d.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 

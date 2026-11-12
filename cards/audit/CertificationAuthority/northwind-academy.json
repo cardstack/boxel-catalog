@@ -11,7 +11,13 @@
       },
       "verificationBaseUrl": "https://verify.northwind.example/cert/",
       "numberPrefix": "ACAD",
-      "lastSequence": 1
+      "lastSequence": 1,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "cardInfo.theme": {

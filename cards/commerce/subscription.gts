@@ -15,12 +15,13 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { Account } from '../crm/account';
 import { Contract } from '../legal/contract';
 import { Money } from '../crm/money';
-import { hasNumber } from '../crm/utils';
+import { formatMoney, hasNumber } from '../crm/utils';
 import { orEmpty } from './compact-parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const BillingCycleField = enumField(StringField, {
   options: ['monthly', 'yearly'],
@@ -131,6 +132,7 @@ export class Subscription extends CardDef {
             />{{/if}}
         </header>
         <KeyValue
+          class='kv'
           @items={{this.rows}}
           @labelStyle='eyebrow'
           @divided={{true}}
@@ -200,12 +202,8 @@ export class Subscription extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Subscription> {
     <template>
-      <FitTile>
-        <:avatar><Avatar
-            @name='Subscription'
-            @shape='square'
-            @size={{32}}
-          /></:avatar>
+      <RichFittedCard>
+        <:avatar><Avatar @name='Subscription' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{@model.account.cardTitle}}
           ·
@@ -220,11 +218,36 @@ export class Subscription extends CardDef {
           />
           /
           {{@model.billingCycle}}</:fact>
+        <:metric>{{#if (hasNumber @model.price.amount)}}<Metric
+              @value={{formatMoney
+                @model.price.amount
+                @model.price.currency.code
+              }}
+              @label='Price'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.renewalDate}}<Detail
+              @label='Renews'
+              @value={{fmtDate @model.renewalDate}}
+            />{{/if}}
+          {{#if @model.startDate}}<Detail
+              @label='Started'
+              @value={{fmtDate @model.startDate}}
+            />{{/if}}
+          {{#if @model.canceledAt}}<Detail
+              @label='Canceled'
+              @value={{fmtDate @model.canceledAt}}
+            />{{/if}}
+          {{#if @model.contract}}<Detail @label='Contract'><@fields.contract
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
         <:relations>{{#if @model.account}}<@fields.account
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
@@ -265,107 +288,110 @@ export class Subscription extends CardDef {
         : undefined;
     }
     <template>
-      <article class='page'>
-        <header>
-          <Avatar @name='Subscription' @shape='square' @size={{32}} />
-          <div class='id'>
-            <h1>{{@model.cardTitle}}</h1>
-            <p>{{@model.account.cardTitle}} · {{@model.billingCycle}}</p>
+      <IsoFrame>
+        <article class='page'>
+          <header>
+            <Avatar @name='Subscription' @shape='square' @size={{32}} />
+            <div class='id'>
+              <h1>{{@model.cardTitle}}</h1>
+              <p>{{@model.account.cardTitle}} · {{@model.billingCycle}}</p>
+            </div>
+            {{#if @model.status}}<StatusChip
+                @value={{@model.status}}
+                @appearance='plain'
+              />{{/if}}
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Price'
+              @tone='neutral'
+              @value={{orEmpty @model.price.amount}}
+              @style='currency'
+              @maximumFractionDigits={{0}}
+              @currency={{@model.price.currency.code}}
+              @hint={{if
+                (eq @model.billingCycle 'yearly')
+                'per year'
+                'per month'
+              }}
+              @roll={{false}}
+            />
+            <Stat
+              @label='MRR'
+              @tone='neutral'
+              @value={{orEmpty this.mrr}}
+              @style='currency'
+              @maximumFractionDigits={{0}}
+              @currency={{@model.price.currency.code}}
+              @hint='counts toward the dashboard'
+              @roll={{false}}
+            />
+            <Stat
+              @label='Renews'
+              @tone='neutral'
+              @value={{fmtDate @model.renewalDate}}
+              @roll={{false}}
+            />
           </div>
-          {{#if @model.status}}<StatusChip
-              @value={{@model.status}}
-              @appearance='plain'
-            />{{/if}}
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Price'
-            @tone='neutral'
-            @value={{orEmpty @model.price.amount}}
-            @style='currency'
-            @maximumFractionDigits={{0}}
-            @currency={{@model.price.currency.code}}
-            @hint={{if
-              (eq @model.billingCycle 'yearly')
-              'per year'
-              'per month'
-            }}
-            @roll={{false}}
-          />
-          <Stat
-            @label='MRR'
-            @tone='neutral'
-            @value={{orEmpty this.mrr}}
-            @style='currency'
-            @maximumFractionDigits={{0}}
-            @currency={{@model.price.currency.code}}
-            @hint='counts toward the dashboard'
-            @roll={{false}}
-          />
-          <Stat
-            @label='Renews'
-            @tone='neutral'
-            @value={{fmtDate @model.renewalDate}}
-            @roll={{false}}
-          />
-        </div>
-        <div class='cols'>
-          <div class='main'>
-            <section>
-              <h2>Status</h2>
-              <div class='steps'>
-                {{#each this.statuses as |st|}}
-                  <span class='step' data-current={{st.current}}><StatusChip
-                      @value={{st.label}}
-                      @appearance='plain'
-                    /></span>
-                {{/each}}
-              </div>
-            </section>
-            <section>
-              <h2>Plan</h2>
-              <KeyValue
-                @items={{this.planRows}}
-                @labelStyle='eyebrow'
-                @divided={{true}}
-                class='kv'
-              />
-            </section>
+          <div class='cols'>
+            <div class='main'>
+              <section>
+                <h2>Status</h2>
+                <div class='steps'>
+                  {{#each this.statuses as |st|}}
+                    <span class='step' data-current={{st.current}}><StatusChip
+                        @value={{st.label}}
+                        @appearance='plain'
+                      /></span>
+                  {{/each}}
+                </div>
+              </section>
+              <section>
+                <h2>Plan</h2>
+                <KeyValue
+                  @items={{this.planRows}}
+                  @labelStyle='eyebrow'
+                  @divided={{true}}
+                  class='kv'
+                />
+              </section>
+            </div>
+            <div class='side'>
+              <section>
+                <h2>Linked</h2>
+                <div class='linked'><span class='cap'>Account</span>
+                  <@fields.account
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></div>
+                <div class='linked'><span class='cap'>Contract</span>
+                  <@fields.contract
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></div>
+              </section>
+              <section>
+                <h2>Details</h2>
+                <KeyValue
+                  class='kv'
+                  @items={{this.rows}}
+                  @labelStyle='eyebrow'
+                  @divided={{true}}
+                />
+              </section>
+            </div>
           </div>
-          <div class='side'>
-            <section>
-              <h2>Linked</h2>
-              <div class='linked'><span class='cap'>Account</span>
-                <@fields.account
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></div>
-              <div class='linked'><span class='cap'>Contract</span>
-                <@fields.contract
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></div>
-            </section>
-            <section>
-              <h2>Details</h2>
-              <KeyValue
-                @items={{this.rows}}
-                @labelStyle='eyebrow'
-                @divided={{true}}
-              />
-            </section>
-          </div>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .stats > * {
-          padding: 0.4375rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         }
         .stats > * + * {
           border-inline-start: 1px solid var(--border);
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
         .linked .cap {
           font-family: var(--font-mono);
@@ -390,8 +416,8 @@ export class Subscription extends CardDef {
         .steps {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.75rem;
-          padding: 0.4375rem 0.625rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           color: var(--muted-foreground);
         }
         .step[data-current] {
@@ -399,10 +425,10 @@ export class Subscription extends CardDef {
           font-weight: 700;
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
         .page {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           --text-stat: 1.375rem;
           --text-ui-xs: 0.6875rem;
@@ -421,8 +447,8 @@ export class Subscription extends CardDef {
         header {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.75rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm);
           border-bottom: 1px solid var(--border);
         }
         .id {
@@ -432,12 +458,12 @@ export class Subscription extends CardDef {
         h1 {
           font-family: var(--font-sans);
           margin: 0;
-          font-size: 1rem;
+          font-size: var(--boxel-font-size);
           font-weight: 700;
         }
         p {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .stats {
@@ -447,16 +473,16 @@ export class Subscription extends CardDef {
         }
         section h2 {
           margin: 0;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.75rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           border-bottom: 1px solid var(--border);
         }
         .linked {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.375rem 0.75rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-sm);
           border-bottom: 1px solid var(--border);
         }
         .cap {

@@ -20,23 +20,26 @@ import {
   AtomLayout,
   EmbLayout,
   Facts,
-  FitLayout,
   IsoLayout,
   LinkRow,
   Mark,
   Rows,
   Section,
   Text,
+  fitParts,
   stats,
   type Dot,
   type Fact,
   type Row,
 } from '../legal/compact-card';
+import { Dot as DotChip } from '../shared/compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   dayAndYear,
   formatDateTime,
   type Tone,
 } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
@@ -214,41 +217,43 @@ export class AuditEntry extends CardDef {
       return [...this.v.facts, { key: 'Trail', value: this.position }];
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='Au' @size='lg' /></:mark>
-        <:main>
-          {{#if @model.note}}
-            <Section @title='Note'><Text>{{@model.note}}</Text></Section>
-          {{/if}}
-          {{#if @model.conditions}}
-            <Section @title='Conditions'><Text
-              >{{@model.conditions}}</Text></Section>
-          {{/if}}
-          {{#if this.rows.length}}
-            <Section @title='Trail for this subject' @flush={{true}}><Rows
-                @rows={{this.rows}}
-              /></Section>
-          {{/if}}
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkRow @label='Subject'><@fields.subject
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-            <LinkRow @label='By'><@fields.doneBy
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-          </Section>
-          <Section @title='Details'><Facts @items={{this.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='Au' @size='lg' /></:mark>
+          <:main>
+            {{#if @model.note}}
+              <Section @title='Note'><Text>{{@model.note}}</Text></Section>
+            {{/if}}
+            {{#if @model.conditions}}
+              <Section @title='Conditions'><Text
+                >{{@model.conditions}}</Text></Section>
+            {{/if}}
+            {{#if this.rows.length}}
+              <Section @title='Trail for this subject' @flush={{true}}><Rows
+                  @rows={{this.rows}}
+                /></Section>
+            {{/if}}
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkRow @label='Subject'><@fields.subject
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+              <LinkRow @label='By'><@fields.doneBy
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+            </Section>
+            <Section @title='Details'><Facts @items={{this.facts}} /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 
@@ -279,17 +284,28 @@ export class AuditEntry extends CardDef {
     get v() {
       return entryView(this.args.model);
     }
+    get fit() {
+      return fitParts(this.v.facts, this.v.fitStats);
+    }
     <template>
-      <FitLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @status={{this.v.state}}
-        @fact={{this.v.fact}}
-        @facts={{this.v.facts}}
-        @stats={{this.v.fitStats}}
-      >
-        <:mark><Mark @text='Au' /></:mark>
-      </FitLayout>
+      <RichFittedCard>
+        <:avatar><Mark @text='Au' /></:avatar>
+        <:title>{{this.v.title}}</:title>
+        <:status>{{#if this.v.state}}<DotChip
+              @label={{this.v.state.label}}
+              @tone={{this.v.state.tone}}
+            />{{/if}}</:status>
+        <:subtitle>{{this.v.subtitle}}</:subtitle>
+        <:fact>{{this.v.fact}}</:fact>
+        <:metric>{{#if this.fit.metric}}<Metric
+              @value={{this.fit.metric.value}}
+              @label={{this.fit.metric.key}}
+            />{{/if}}</:metric>
+        <:details>{{#each this.fit.details as |d|}}<Detail
+              @label={{d.key}}
+              @value={{d.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 

@@ -35,8 +35,8 @@ import { Chip } from '@cardstack/pretui/components/chip';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
-import { FittedExtras } from '../procurement/vendor';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
+import { IsoFrame } from '../shared/compact-sheet';
 
 function daysBetween(
   from?: Date | string | null,
@@ -345,170 +345,176 @@ export class Ticket extends CardDef {
       m.isSlaEvent ? 'SLA event' : m.isInternal ? 'internal' : 'public';
 
     <template>
-      <article class='tk'>
-        <header class='head'>
-          <span class='mark' aria-hidden='true'>#</span>
-          <span class='id'>
-            <h1>{{@model.subject}}</h1>
-            <span class='meta'>{{@model.reference}}
-              ·
-              {{@model.customerName}}{{@model.customerSuffix}}</span>
-          </span>
-          <span class='sts'>
-            <Chip
-              @appearance='plain'
-              @tone={{ticketStatusTone @model.status}}
-            >{{@model.status}}</Chip>
-            <Chip
-              @appearance='plain'
-              @tone={{ticketPriorityTone @model.priority}}
-            >{{@model.priority}}</Chip>
-          </span>
-        </header>
+      <IsoFrame>
+        <article class='tk'>
+          <header class='head'>
+            <span class='mark' aria-hidden='true'>#</span>
+            <span class='id'>
+              <h1>{{@model.subject}}</h1>
+              <span class='meta'>{{@model.reference}}
+                ·
+                {{@model.customerName}}{{@model.customerSuffix}}</span>
+            </span>
+            <span class='sts'>
+              <Chip
+                @appearance='plain'
+                @tone={{ticketStatusTone @model.status}}
+              >{{@model.status}}</Chip>
+              <Chip
+                @appearance='plain'
+                @tone={{ticketPriorityTone @model.priority}}
+              >{{@model.priority}}</Chip>
+            </span>
+          </header>
 
-        <section class='stats' aria-label='Ticket numbers'>
-          <div class='cell'><Stat
-              @label='First response'
-              @tone={{if this.firstResponse 'success' 'neutral'}}
-              @value={{if this.firstResponse this.firstResponse.shortLabel '—'}}
-              @roll={{false}}
-            /></div>
-          <div class='cell'><Stat
-              @label='Resolution'
-              @tone='info'
-              @value={{if this.resolution this.resolution.shortLabel '—'}}
-              @hint={{@model.slaDueLabel}}
-              @roll={{false}}
-            /></div>
-          <div class='cell'><Stat
-              @label='Messages'
-              @tone='neutral'
-              @value={{this.messages.length}}
-              @hint='{{this.internalCount}} internal'
-              @roll={{false}}
-            /></div>
-          <div class='cell'><Stat
-              @label='Age'
-              @tone='neutral'
-              @value={{if @model.ageLabel @model.ageLabel '—'}}
-              @roll={{false}}
-            /></div>
-        </section>
+          <section class='stats' aria-label='Ticket numbers'>
+            <div class='cell'><Stat
+                @label='First response'
+                @tone={{if this.firstResponse 'success' 'neutral'}}
+                @value={{if
+                  this.firstResponse
+                  this.firstResponse.shortLabel
+                  '—'
+                }}
+                @roll={{false}}
+              /></div>
+            <div class='cell'><Stat
+                @label='Resolution'
+                @tone='info'
+                @value={{if this.resolution this.resolution.shortLabel '—'}}
+                @hint={{@model.slaDueLabel}}
+                @roll={{false}}
+              /></div>
+            <div class='cell'><Stat
+                @label='Messages'
+                @tone='neutral'
+                @value={{this.messages.length}}
+                @hint='{{this.internalCount}} internal'
+                @roll={{false}}
+              /></div>
+            <div class='cell'><Stat
+                @label='Age'
+                @tone='neutral'
+                @value={{if @model.ageLabel @model.ageLabel '—'}}
+                @roll={{false}}
+              /></div>
+          </section>
 
-        <div class='body'>
-          <div class='main'>
-            <section class='blk'>
-              <h2 class='sh'>Details</h2>
-              <p class='txt'>{{@model.details}}</p>
-            </section>
-            <section class='blk'>
-              <h2 class='sh'>Conversation</h2>
-              <ul class='msgs'>
-                {{#each this.messages as |m|}}
-                  <li class='msg'>
-                    <span class='lines'>
-                      <span class='who'><b>{{m.author}}</b>
-                        ·
-                        {{m.authorRole}}
-                        <span class='mono dim'>{{this.stamp
-                            m.sentAt
-                          }}</span></span>
-                      <span class='tx'>{{m.body}}</span>
-                    </span>
-                    <Chip
-                      @appearance='plain'
-                      @tone={{this.visTone m}}
-                    >{{this.visText m}}</Chip>
-                  </li>
-                {{/each}}
-              </ul>
-            </section>
-            <section class='blk'>
-              <h2 class='sh'>SLA timers</h2>
-              <dl class='kv'>
-                {{#each this.timers as |t|}}
-                  <dt>{{t.kind}}</dt>
-                  <dd><SlaTimerBadge
-                      @facts={{t}}
-                      @live={{false}}
-                      @plain={{true}}
-                    /></dd>
-                {{/each}}
-                <dt>Category</dt><dd>{{if
-                    @model.categoryName
-                    @model.categoryName
-                    '—'
-                  }}</dd>
-              </dl>
-            </section>
+          <div class='body'>
+            <div class='main'>
+              <section class='blk'>
+                <h2 class='sh'>Details</h2>
+                <p class='txt'>{{@model.details}}</p>
+              </section>
+              <section class='blk'>
+                <h2 class='sh'>Conversation</h2>
+                <ul class='msgs'>
+                  {{#each this.messages as |m|}}
+                    <li class='msg'>
+                      <span class='lines'>
+                        <span class='who'><b>{{m.author}}</b>
+                          ·
+                          {{m.authorRole}}
+                          <span class='mono dim'>{{this.stamp
+                              m.sentAt
+                            }}</span></span>
+                        <span class='tx'>{{m.body}}</span>
+                      </span>
+                      <Chip
+                        @appearance='plain'
+                        @tone={{this.visTone m}}
+                      >{{this.visText m}}</Chip>
+                    </li>
+                  {{/each}}
+                </ul>
+              </section>
+              <section class='blk'>
+                <h2 class='sh'>SLA timers</h2>
+                <dl class='kv'>
+                  {{#each this.timers as |t|}}
+                    <dt>{{t.kind}}</dt>
+                    <dd><SlaTimerBadge
+                        @facts={{t}}
+                        @live={{false}}
+                        @plain={{true}}
+                      /></dd>
+                  {{/each}}
+                  <dt>Category</dt><dd>{{if
+                      @model.categoryName
+                      @model.categoryName
+                      '—'
+                    }}</dd>
+                </dl>
+              </section>
+            </div>
+            <aside class='side'>
+              <section class='blk'>
+                <h2 class='sh'>Linked</h2>
+                <dl class='kv'>
+                  <dt>Customer</dt><dd>{{#if @model.customer}}<@fields.customer
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                  <dt>Assignee</dt><dd>{{#if @model.assignee}}<@fields.assignee
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                  <dt>Queue</dt><dd>{{#if @model.queue}}<@fields.queue
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                  <dt>Category</dt><dd>{{#if @model.category}}<@fields.category
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                  <dt>Commitment</dt><dd>{{#if
+                      @model.slaPolicy
+                    }}<@fields.slaPolicy
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                  <dt>Article</dt><dd>{{#if
+                      @model.linkedArticles.length
+                    }}<@fields.linkedArticles
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                </dl>
+              </section>
+              <section class='blk'>
+                <h2 class='sh'>Details</h2>
+                <dl class='kv'>
+                  <dt>Priority</dt><dd>{{@model.priority}}</dd>
+                  <dt>Status</dt><dd>{{@model.status}}</dd>
+                  <dt>Channel</dt><dd>{{if
+                      @model.channel
+                      @model.channel
+                      '—'
+                    }}</dd>
+                  <dt>Type</dt><dd>{{if
+                      @model.ticketType
+                      @model.ticketType
+                      '—'
+                    }}</dd>
+                  <dt>Opened</dt><dd class='mono'>{{this.stamp
+                      @model.openedAt
+                    }}</dd>
+                  <dt>Resolution due</dt><dd class='mono'>{{if
+                      @model.slaDueLabel
+                      @model.slaDueLabel
+                      '—'
+                    }}</dd>
+                  <dt>Tags</dt><dd>{{if
+                      @model.tagSummary
+                      @model.tagSummary
+                      '—'
+                    }}</dd>
+                </dl>
+              </section>
+            </aside>
           </div>
-          <aside class='side'>
-            <section class='blk'>
-              <h2 class='sh'>Linked</h2>
-              <dl class='kv'>
-                <dt>Customer</dt><dd>{{#if @model.customer}}<@fields.customer
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-                <dt>Assignee</dt><dd>{{#if @model.assignee}}<@fields.assignee
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-                <dt>Queue</dt><dd>{{#if @model.queue}}<@fields.queue
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-                <dt>Category</dt><dd>{{#if @model.category}}<@fields.category
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-                <dt>Commitment</dt><dd>{{#if
-                    @model.slaPolicy
-                  }}<@fields.slaPolicy
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-                <dt>Article</dt><dd>{{#if
-                    @model.linkedArticles.length
-                  }}<@fields.linkedArticles
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-              </dl>
-            </section>
-            <section class='blk'>
-              <h2 class='sh'>Details</h2>
-              <dl class='kv'>
-                <dt>Priority</dt><dd>{{@model.priority}}</dd>
-                <dt>Status</dt><dd>{{@model.status}}</dd>
-                <dt>Channel</dt><dd>{{if
-                    @model.channel
-                    @model.channel
-                    '—'
-                  }}</dd>
-                <dt>Type</dt><dd>{{if
-                    @model.ticketType
-                    @model.ticketType
-                    '—'
-                  }}</dd>
-                <dt>Opened</dt><dd class='mono'>{{this.stamp
-                    @model.openedAt
-                  }}</dd>
-                <dt>Resolution due</dt><dd class='mono'>{{if
-                    @model.slaDueLabel
-                    @model.slaDueLabel
-                    '—'
-                  }}</dd>
-                <dt>Tags</dt><dd>{{if
-                    @model.tagSummary
-                    @model.tagSummary
-                    '—'
-                  }}</dd>
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .tk {
           margin: 0;
@@ -839,45 +845,39 @@ export class Ticket extends CardDef {
         { key: 'Resolution due', value: m?.slaDueLabel || '—' },
       ];
     }
-    get stats() {
-      let m = this.args.model;
-      let msgs = (m?.messages ?? []).filter(Boolean).length;
-      return [
-        { key: 'Priority', value: m?.priority || '—' },
-        { key: 'Status', value: m?.status || '—' },
-        { key: 'Messages', value: String(msgs) },
-      ];
+    get messageCount() {
+      return String((this.args.model?.messages ?? []).filter(Boolean).length);
     }
     <template>
-      <FittedExtras @facts={{this.facts}} @stats={{this.stats}}>
-        <:default>
-          <FitTile>
-            <:avatar><Avatar
-                @name='Ticket'
-                @shape='square'
-                @size={{32}}
-              /></:avatar>
-            <:title>{{@model.subject}}</:title>
-            <:subtitle>{{@model.reference}}
-              ·
-              {{@model.customerName}}{{@model.customerSuffix}}</:subtitle>
-            <:status>
-              <Chip
-                @appearance='plain'
-                @tone={{ticketStatusTone @model.status}}
-              >{{@model.status}}</Chip>
-              <Chip
-                @appearance='plain'
-                @tone={{ticketPriorityTone @model.priority}}
-              >{{@model.priority}}</Chip>
-            </:status>
-            <:fact>{{@model.slaDueLabel}}</:fact>
-            <:relations>{{@model.assigneeName}}{{#if @model.queueName}}
-                ·
-                {{@model.queueName}}{{/if}}</:relations>
-          </FitTile>
-        </:default>
-      </FittedExtras>
+      <RichFittedCard>
+        <:avatar><Avatar @name='Ticket' @shape='square' /></:avatar>
+        <:title>{{@model.subject}}</:title>
+        <:subtitle>{{@model.reference}}
+          ·
+          {{@model.customerName}}{{@model.customerSuffix}}</:subtitle>
+        <:status>
+          <Chip
+            @appearance='plain'
+            @tone={{ticketStatusTone @model.status}}
+          >{{@model.status}}</Chip>
+          <Chip
+            @appearance='plain'
+            @tone={{ticketPriorityTone @model.priority}}
+          >{{@model.priority}}</Chip>
+        </:status>
+        <:fact>{{@model.slaDueLabel}}</:fact>
+        <:metric><Metric
+            @value={{this.messageCount}}
+            @label='Messages'
+          /></:metric>
+        <:details>{{#each this.facts as |item|}}<Detail
+              @label={{item.key}}
+              @value={{item.value}}
+            />{{/each}}</:details>
+        <:relations>{{@model.assigneeName}}{{#if @model.queueName}}
+            ·
+            {{@model.queueName}}{{/if}}</:relations>
+      </RichFittedCard>
     </template>
   };
 }

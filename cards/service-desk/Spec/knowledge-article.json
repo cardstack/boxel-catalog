@@ -25,6 +25,11 @@
         "links": {
           "self": "../KnowledgeArticle/sso-troubleshooting"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

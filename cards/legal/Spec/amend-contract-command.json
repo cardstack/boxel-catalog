@@ -24,6 +24,11 @@
         "links": {
           "self": "../Contract/msa-northwind"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

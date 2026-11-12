@@ -16,8 +16,9 @@ import { statusField } from '@cardstack/catalog/fields/status/status';
 import PriorityField from '@cardstack/catalog/fields/priority/priority';
 import DueDateField from '@cardstack/catalog/fields/due-date/due-date';
 import CreatedAtField from '@cardstack/catalog/fields/created-at/created-at';
-import { Avatar } from '@cardstack/pretui/components/avatar';
 import { User } from '../crm/user';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 /**
  * The generic actionable item, not any app's version of one. Composed from
@@ -193,72 +194,81 @@ export class Task extends CardDef {
       return subtaskList(this.args.model).length;
     }
     <template>
-      <article class='task-page'>
-        <header>
-          <div class='head-row'>
-            <@fields.status @format='embedded' />
-            {{#if @model.priority}}
-              <@fields.priority @format='embedded' />
-            {{/if}}
-          </div>
-          <h1>{{@model.cardTitle}}</h1>
-          <div class='meta'>
-            {{#if @model.dueDate}}
-              <span class='meta-item'><@fields.dueDate
-                  @format='embedded'
-                /></span>
-            {{/if}}
-            {{#if @model.assignee}}
-              <span class='meta-item'><@fields.assignee @format='atom' /></span>
-            {{/if}}
-            {{#if @model.createdAt}}
-              <span class='meta-item muted'>created
-                <@fields.createdAt @format='atom' /></span>
-            {{/if}}
-          </div>
-          {{#if @model.tags.length}}
-            <div class='tags'><@fields.tags @format='atom' /></div>
-          {{/if}}
-        </header>
-        {{#if @model.details}}
-          <section class='panel details'><@fields.details /></section>
-        {{/if}}
-        <section class='panel'>
-          <h2>Subtasks
-            {{#if this.total}}<span class='progress'>{{this.done}}
-                of
-                {{this.total}}
-                done</span>{{/if}}</h2>
-          {{#if this.total}}
-            <div class='subtask-list'>
-              {{#each @fields.subtasks as |Subtask|}}
-                <Subtask
-                  class='subtask'
-                  @format='embedded'
-                  @displayContainer={{false}}
-                />
-              {{/each}}
+      <IsoFrame>
+        <article class='task-page'>
+          <header>
+            <div class='head-row'>
+              <@fields.status @format='embedded' />
+              {{#if @model.priority}}
+                <@fields.priority @format='embedded' />
+              {{/if}}
             </div>
-          {{else}}
-            <p class='empty'>No subtasks — this task stands alone.</p>
+            <h1>{{@model.cardTitle}}</h1>
+            <div class='meta'>
+              {{#if @model.dueDate}}
+                <span class='meta-item'><@fields.dueDate
+                    @format='embedded'
+                  /></span>
+              {{/if}}
+              {{#if @model.assignee}}
+                <span class='meta-item'><@fields.assignee
+                    @format='atom'
+                  /></span>
+              {{/if}}
+              {{#if @model.createdAt}}
+                <span class='meta-item muted'>created
+                  <@fields.createdAt @format='atom' /></span>
+              {{/if}}
+            </div>
+            {{#if @model.tags.length}}
+              <div class='tags'><@fields.tags @format='atom' /></div>
+            {{/if}}
+          </header>
+          {{#if @model.details}}
+            <section class='panel details'><@fields.details /></section>
           {{/if}}
-        </section>
-      </article>
+          <section class='panel'>
+            <h2>Subtasks
+              {{#if this.total}}<span class='progress'>{{this.done}}
+                  of
+                  {{this.total}}
+                  done</span>{{/if}}</h2>
+            {{#if this.total}}
+              <div class='subtask-list'>
+                {{#each @fields.subtasks as |Subtask|}}
+                  <Subtask
+                    class='subtask'
+                    @format='embedded'
+                    @displayContainer={{false}}
+                  />
+                {{/each}}
+              </div>
+            {{else}}
+              <p class='empty'>No subtasks — this task stands alone.</p>
+            {{/if}}
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .task-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 44rem;
           margin: 0 auto;
-          padding: 2rem 1.5rem;
+          inline-size: 100%;
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: var(--boxel-sp-lg);
         }
         header {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: 1.25rem;
+          padding-bottom: var(--boxel-sp-lg);
         }
         .head-row {
           display: flex;
@@ -267,7 +277,7 @@ export class Task extends CardDef {
         }
         h1 {
           margin: 0;
-          font-size: 1.625rem;
+          font-size: var(--boxel-font-size-lg);
           line-height: 1.15;
         }
         .meta {
@@ -292,12 +302,12 @@ export class Task extends CardDef {
         }
         .panel {
           border: 1px solid var(--border);
-          border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp) var(--boxel-sp-lg);
           background-color: var(--card);
         }
         h2 {
-          margin: 0 0 0.75rem;
+          margin: 0 0 var(--boxel-sp-sm);
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -348,127 +358,25 @@ export class Task extends CardDef {
       return subtaskList(this.args.model).length;
     }
     <template>
-      <div class='fit'>
-        <div class='top'>
-          <@fields.status @format='atom' />
-          {{#if @model.priority}}
-            <span class='f-priority'><@fields.priority @format='atom' /></span>
-          {{/if}}
-        </div>
-        <span class='f-title'>{{@model.cardTitle}}</span>
-        <div class='f-meta'>
-          {{#if @model.dueDate}}
-            <@fields.dueDate @format='atom' />
-          {{/if}}
-          {{#if this.total}}
-            <span class='f-subs'>{{this.done}}/{{this.total}} done</span>
-          {{/if}}
-        </div>
-        <div class='f-extra'>
-          {{#if @model.assignee}}
-            <span class='f-assignee'>
-              <Avatar
-                @name={{if @model.assignee.name @model.assignee.name '?'}}
-                @hue='var(--muted-foreground)'
-                @size={{20}}
-                aria-hidden='true'
-              />
-              <span class='f-assignee-name'>{{@model.assignee.name}}</span>
-            </span>
-          {{/if}}
-        </div>
-      </div>
-      <style scoped>
-        .fit {
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: grid;
-          grid-template-rows: auto auto minmax(0, 1fr) auto;
-          gap: var(--boxel-sp-4xs);
-          overflow: hidden;
-        }
-        .top {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: var(--boxel-sp-4xs);
-        }
-        .f-title {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.25;
-          color: var(--foreground);
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-          overflow: hidden;
-        }
-        .f-meta {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-xs);
-          align-self: start;
-        }
-        .f-subs {
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-        }
-        .f-extra {
-          display: flex;
-          align-items: center;
-          min-height: 0;
-        }
-        .f-assignee {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-4xs);
-          min-width: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .f-assignee-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        /* badge: status + one-line title only */
-        @container fitted-card (width <= 150px) and (height <= 169px) {
-          .f-priority,
-          .f-meta,
-          .f-extra {
-            display: none;
-          }
-          .f-title {
-            -webkit-line-clamp: 1;
-            font-size: var(--boxel-font-size-xs);
-          }
-        }
-        /* strip: single row, due date joins */
-        @container fitted-card (aspect-ratio > 2.0) and (height <= 90px) {
-          .fit {
-            grid-template-rows: none;
-            grid-template-columns: auto minmax(0, 1fr) auto;
-            align-items: center;
-          }
-          .f-title {
-            -webkit-line-clamp: 1;
-          }
-          .f-priority,
-          .f-subs,
-          .f-extra {
-            display: none;
-          }
-        }
-        /* card: assignee row earns its place */
-        @container fitted-card (width < 400px) or (height < 170px) {
-          .f-extra {
-            display: none;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status><@fields.status @format='atom' />{{#if
+            @model.priority
+          }}<@fields.priority @format='atom' />{{/if}}</:status>
+        <:metric>{{#if this.total}}<Metric
+              @value='{{this.done}}/{{this.total}}'
+              @label='Subtasks done'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.dueDate}}<Detail @label='Due'><@fields.dueDate
+                @format='atom'
+              /></Detail>{{/if}}
+          {{#if @model.assignee.name}}<Detail
+              @label='Assignee'
+              @value={{@model.assignee.name}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

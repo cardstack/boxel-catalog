@@ -25,7 +25,8 @@ import CalendarIcon from '@cardstack/boxel-icons/calendar';
 import MessageCircleIcon from '@cardstack/boxel-icons/message-circle';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import { tracked } from '@glimmer/tracking';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { identifyCard } from '@cardstack/runtime-common';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import {
@@ -38,6 +39,7 @@ import { Accordion } from '@cardstack/pretui/components/accordion';
 import { Spinner } from '@cardstack/pretui/components/spinner';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Offer — a buyer proposing a price below asking, and the negotiation that
 // follows: offer, counter, negotiate.
@@ -484,167 +486,168 @@ export class MarketplaceOffer extends CardDef {
     }
 
     <template>
-      <article class='card'>
-        <header class='hero'>
-          <div class='hero-top'>
-            <h1 class='hero-title'>{{if
-                @model.productTitle
-                @model.productTitle
-                'Unlinked listing'
-              }}</h1>
-            {{#if @model.isCounter}}
-              <span class='counter-flag'>Counter-offer</span>
-            {{/if}}
-          </div>
+      <IsoFrame>
+        <article class='card'>
+          <header class='hero'>
+            <div class='hero-top'>
+              <h1 class='hero-title'>{{if
+                  @model.productTitle
+                  @model.productTitle
+                  'Unlinked listing'
+                }}</h1>
+              {{#if @model.isCounter}}
+                <span class='counter-flag'>Counter-offer</span>
+              {{/if}}
+            </div>
 
-          <p class='parties'>
-            {{#if @model.offeredByName}}
-              <span class='party'>from
-                <strong>{{@model.offeredByName}}</strong></span>
-            {{/if}}
-            {{#if this.asking}}
-              <span class='party'>asking
-                <strong class='mono'>{{moneyText
-                    @model.listingPrice
-                  }}</strong></span>
-            {{/if}}
-          </p>
+            <p class='parties'>
+              {{#if @model.offeredByName}}
+                <span class='party'>from
+                  <strong>{{@model.offeredByName}}</strong></span>
+              {{/if}}
+              {{#if this.asking}}
+                <span class='party'>asking
+                  <strong class='mono'>{{moneyText
+                      @model.listingPrice
+                    }}</strong></span>
+              {{/if}}
+            </p>
 
-          {{! THE PLAQUE — real gold surface area. The offered amount is the
+            {{! THE PLAQUE — real gold surface area. The offered amount is the
               dominant element; the gap annotates it as a delta pill (a ratio
               is not an amount), the status qualifies it. }}
-          <div class='plaque'>
-            <div class='plaque-figure'>
-              <p class='plaque-label'>Offered</p>
-              <p class='plaque-amount'>{{moneyText @model.amount}}</p>
+            <div class='plaque'>
+              <div class='plaque-figure'>
+                <p class='plaque-label'>Offered</p>
+                <p class='plaque-amount'>{{moneyText @model.amount}}</p>
+              </div>
+              <div class='plaque-meta'>
+                {{#if @model.offerStatus}}
+                  <@fields.offerStatus @format='embedded' />
+                {{/if}}
+                {{#if this.gap}}
+                  <span
+                    class='delta
+                      {{if this.gapIsBelowAsking "delta--down" "delta--up"}}'
+                  >{{this.gap.label}}</span>
+                {{/if}}
+              </div>
             </div>
-            <div class='plaque-meta'>
-              {{#if @model.offerStatus}}
-                <@fields.offerStatus @format='embedded' />
-              {{/if}}
-              {{#if this.gap}}
-                <span
-                  class='delta
-                    {{if this.gapIsBelowAsking "delta--down" "delta--up"}}'
-                >{{this.gap.label}}</span>
-              {{/if}}
-            </div>
-          </div>
-        </header>
+          </header>
 
-        {{! The negotiation thread — the section that makes this view worth
+          {{! The negotiation thread — the section that makes this view worth
             opening. Given more visual weight than the utility panels below, so
             it does not read as a third identical icon+heading box. }}
-        <section class='thread'>
-          <h2 class='thread-h'><MessageCircleIcon
-              class='thread-icon'
-              aria-hidden='true'
-            />Negotiation</h2>
-
-          {{#if @model.message}}
-            <blockquote class='msg'>
-              “{{@model.message}}”
-            </blockquote>
-          {{/if}}
-
-          {{#if @model.counterTo}}
-            <p class='thread-k'>Answers</p>
-            <ul class='links'>
-              <li><@fields.counterTo @format='embedded' /></li>
-            </ul>
-          {{/if}}
-
-          <p class='thread-k'>Countered by<span
-              class='count'
-            >{{this.counters.length}}</span></p>
-          {{#if this.countersError}}
-            <p class='err'>
-              <AlertTriangleIcon
-                width='18'
-                height='18'
+          <section class='thread'>
+            <h2 class='thread-h'><MessageCircleIcon
+                class='thread-icon'
                 aria-hidden='true'
-              />Could not load counters.
-            </p>
-          {{else if this.countersLoading}}
-            <p class='wait'><Spinner />Looking for counters…</p>
-          {{else if this.counters.length}}
-            <ul class='links'>
-              {{! getCards instances have no `.component` — getComponent(card)
+              />Negotiation</h2>
+
+            {{#if @model.message}}
+              <blockquote class='msg'>
+                “{{@model.message}}”
+              </blockquote>
+            {{/if}}
+
+            {{#if @model.counterTo}}
+              <p class='thread-k'>Answers</p>
+              <ul class='links'>
+                <li><@fields.counterTo @format='embedded' /></li>
+              </ul>
+            {{/if}}
+
+            <p class='thread-k'>Countered by<span
+                class='count'
+              >{{this.counters.length}}</span></p>
+            {{#if this.countersError}}
+              <p class='err'>
+                <AlertTriangleIcon
+                  width='18'
+                  height='18'
+                  aria-hidden='true'
+                />Could not load counters.
+              </p>
+            {{else if this.countersLoading}}
+              <p class='wait'><Spinner />Looking for counters…</p>
+            {{else if this.counters.length}}
+              <ul class='links'>
+                {{! getCards instances have no `.component` — getComponent(card)
                   is the API; the property renders an empty row silently. }}
-              {{#each this.counters as |c|}}
-                <li>{{#let (getComponent c) as |CounterCard|}}
-                    <CounterCard @format='embedded' />
-                  {{/let}}</li>
-              {{/each}}
-            </ul>
-          {{else}}
-            <EmptyState
-              @title='No counter yet. A counter is a new Offer linked back to this one — this card is never edited to answer it.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
-          {{/if}}
-        </section>
+                {{#each this.counters as |c|}}
+                  <li>{{#let (getComponent c) as |CounterCard|}}
+                      <CounterCard @format='embedded' />
+                    {{/let}}</li>
+                {{/each}}
+              </ul>
+            {{else}}
+              <EmptyState
+                @title='No counter yet. A counter is a new Offer linked back to this one — this card is never edited to answer it.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
+            {{/if}}
+          </section>
 
-        <div class='cols'>
-          {{! Shape: a compact party rail — quieter utility panel, distinct
+          <div class='cols'>
+            {{! Shape: a compact party rail — quieter utility panel, distinct
               from the thread's prose shape above and the ledger below. }}
-          <section class='sec'>
-            <h2 class='sec-h'><TagIcon
-                class='sec-icon'
-                aria-hidden='true'
-              />Listing &amp; parties</h2>
-            <ul class='links'>
-              {{#if @model.listing}}
-                <li><@fields.listing @format='embedded' /></li>
-              {{else}}
-                <li class='empty-li'>
-                  <EmptyState
-                    @title='No listing linked — an offer with nothing to buy.'
-                    @texture={{false}}
-                    style={{COMPACT_EMPTY_STYLE}}
-                  />
-                </li>
-              {{/if}}
-              {{#if @model.offeredBy}}
-                <li><@fields.offeredBy @format='embedded' /></li>
-              {{/if}}
-            </ul>
-          </section>
+            <section class='sec'>
+              <h2 class='sec-h'><TagIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Listing &amp; parties</h2>
+              <ul class='links'>
+                {{#if @model.listing}}
+                  <li><@fields.listing @format='embedded' /></li>
+                {{else}}
+                  <li class='empty-li'>
+                    <EmptyState
+                      @title='No listing linked — an offer with nothing to buy.'
+                      @texture={{false}}
+                      style={{COMPACT_EMPTY_STYLE}}
+                    />
+                  </li>
+                {{/if}}
+                {{#if @model.offeredBy}}
+                  <li><@fields.offeredBy @format='embedded' /></li>
+                {{/if}}
+              </ul>
+            </section>
 
-          {{! Shape: a mono ledger — a third, structurally different panel
+            {{! Shape: a mono ledger — a third, structurally different panel
               (definition list of dated facts, not a link list or prose). }}
-          <section class='sec'>
-            <h2 class='sec-h'><CalendarIcon
-                class='sec-icon'
-                aria-hidden='true'
-              />Dates</h2>
-            <dl class='facts'>
-              <div class='f-row'>
-                <dt>Offered</dt>
-                <dd>{{#if @model.offeredAt}}<@fields.offeredAt
-                      @format='atom'
-                    />{{else}}—{{/if}}</dd>
-              </div>
-              <div class='f-row'>
-                <dt>Responded</dt>
-                <dd>{{#if @model.respondedAt}}<@fields.respondedAt
-                      @format='atom'
-                    />{{else}}—{{/if}}</dd>
-              </div>
-              <div class='f-row'>
-                <dt>Expires</dt>
-                <dd>{{#if @model.expiresAt}}<@fields.expiresAt
-                      @format='atom'
-                    />{{else}}—{{/if}}</dd>
-              </div>
-            </dl>
-            <p class='facts-note'>Past its expiry an offer must be MOVED to
-              expired — it does not lapse on its own.</p>
-          </section>
-        </div>
-      </article>
-
+            <section class='sec'>
+              <h2 class='sec-h'><CalendarIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Dates</h2>
+              <dl class='facts'>
+                <div class='f-row'>
+                  <dt>Offered</dt>
+                  <dd>{{#if @model.offeredAt}}<@fields.offeredAt
+                        @format='atom'
+                      />{{else}}—{{/if}}</dd>
+                </div>
+                <div class='f-row'>
+                  <dt>Responded</dt>
+                  <dd>{{#if @model.respondedAt}}<@fields.respondedAt
+                        @format='atom'
+                      />{{else}}—{{/if}}</dd>
+                </div>
+                <div class='f-row'>
+                  <dt>Expires</dt>
+                  <dd>{{#if @model.expiresAt}}<@fields.expiresAt
+                        @format='atom'
+                      />{{else}}—{{/if}}</dd>
+                </div>
+              </dl>
+              <p class='facts-note'>Past its expiry an offer must be MOVED to
+                expired — it does not lapse on its own.</p>
+            </section>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         /* Rule 1: isolated gets NO host container — declare our own, named. */
         .card {
@@ -678,10 +681,10 @@ export class MarketplaceOffer extends CardDef {
           background: var(--ink-900);
           color: var(--paper);
           font-family: var(--font-sans);
-          padding: 2rem;
+          padding: var(--boxel-sp-xl);
           display: flex;
           flex-direction: column;
-          gap: 1.75rem;
+          gap: var(--boxel-sp-xl);
 
           scrollbar-color: var(--gold) var(--ink-800);
         }
@@ -714,13 +717,13 @@ export class MarketplaceOffer extends CardDef {
         .hero {
           display: flex;
           flex-direction: column;
-          gap: 0.85rem;
+          gap: var(--boxel-sp-sm);
         }
         .hero-top {
           display: flex;
           flex-wrap: wrap;
           align-items: baseline;
-          gap: 0.75rem;
+          gap: var(--boxel-sp-sm);
         }
         .hero-title {
           margin: 0;
@@ -737,7 +740,7 @@ export class MarketplaceOffer extends CardDef {
           padding: 0.3em 0.7em;
           border: 1px solid var(--hairline);
           border-radius: 999px;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
@@ -747,8 +750,8 @@ export class MarketplaceOffer extends CardDef {
           margin: 0;
           display: flex;
           flex-wrap: wrap;
-          gap: 0.35rem 1.1rem;
-          font-size: 0.875rem;
+          gap: var(--boxel-sp-3xs) var(--boxel-sp);
+          font-size: var(--boxel-font-size-sm);
           color: var(--smoke);
         }
         .party strong {
@@ -764,21 +767,21 @@ export class MarketplaceOffer extends CardDef {
           flex-wrap: wrap;
           align-items: center;
           justify-content: space-between;
-          gap: 1rem;
+          gap: var(--boxel-sp);
           background: var(--ink-800);
           border: 1px solid var(--hairline);
           border-top: 3px solid var(--gold);
-          border-radius: 6px;
-          padding: 1.25rem 1.6rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp-lg) var(--boxel-sp-xl);
           box-shadow: var(--shadow-1);
         }
         .plaque-figure {
           display: grid;
-          gap: 0.15rem;
+          gap: var(--boxel-sp-6xs);
         }
         .plaque-label {
           margin: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.08em;
@@ -798,14 +801,14 @@ export class MarketplaceOffer extends CardDef {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
         }
         /* The delta pill — the offer-vs-asking comparison as its own small
            moment, distinct in shape from a money figure. */
         .delta {
           padding: 0.3em 0.75em;
           border-radius: 999px;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           white-space: nowrap;
           background: color-mix(in oklch, var(--primary) 16%, transparent);
@@ -817,17 +820,17 @@ export class MarketplaceOffer extends CardDef {
         .thread {
           background: var(--ink-800);
           border: 1px solid var(--hairline);
-          border-radius: 14px;
-          padding: 1.4rem 1.6rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp-lg) var(--boxel-sp-xl);
           box-shadow: var(--shadow-1);
         }
         .thread-h {
-          margin: 0 0 0.85rem;
+          margin: 0 0 var(--boxel-sp-sm);
           display: flex;
           align-items: center;
           gap: 0.5em;
           font-family: var(--font-display);
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
         }
         .thread-icon {
@@ -842,22 +845,22 @@ export class MarketplaceOffer extends CardDef {
         .cols {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.25rem;
+          gap: var(--boxel-sp-lg);
         }
         .sec {
           background: var(--ink-800);
           border: 1px solid var(--hairline);
-          border-radius: 12px;
-          padding: 1.1rem 1.3rem 1.3rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
           min-width: 0;
           box-shadow: var(--shadow-1);
         }
         .sec-h {
-          margin: 0 0 0.85rem;
+          margin: 0 0 var(--boxel-sp-sm);
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.09em;
@@ -878,19 +881,19 @@ export class MarketplaceOffer extends CardDef {
 
         /* The buyer's own words — prose, a different shape from every list. */
         .msg {
-          margin: 0 0 1rem;
-          padding: 0 0 0 1rem;
+          margin: 0 0 var(--boxel-sp);
+          padding: 0 0 0 var(--boxel-sp);
           border-left: 2px solid var(--gold);
-          font-size: 1rem;
+          font-size: var(--boxel-font-size);
           line-height: 1.55;
           font-style: italic;
           color: var(--paper);
         }
         .thread-k {
-          margin: 1rem 0 0.5rem;
+          margin: var(--boxel-sp) 0 var(--boxel-sp-xs);
           display: flex;
           align-items: baseline;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.07em;
@@ -902,7 +905,7 @@ export class MarketplaceOffer extends CardDef {
           margin: 0;
           padding: 0;
           display: grid;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
         }
         .empty-li {
           display: contents;
@@ -910,7 +913,7 @@ export class MarketplaceOffer extends CardDef {
 
         .facts {
           display: grid;
-          gap: 0.6rem;
+          gap: var(--boxel-sp-xs);
           margin: 0;
         }
         .f-row {
@@ -918,17 +921,17 @@ export class MarketplaceOffer extends CardDef {
           flex-wrap: wrap;
           align-items: baseline;
           justify-content: space-between;
-          gap: 0.6rem;
-          padding-bottom: 0.5rem;
+          gap: var(--boxel-sp-xs);
+          padding-bottom: var(--boxel-sp-xs);
           border-bottom: 1px solid var(--hairline);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .f-row:last-of-type {
           border-bottom: 0;
           padding-bottom: 0;
         }
         .f-row dt {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
@@ -941,8 +944,8 @@ export class MarketplaceOffer extends CardDef {
           white-space: nowrap;
         }
         .facts-note {
-          margin: 0.9rem 0 0;
-          font-size: 0.75rem;
+          margin: var(--boxel-sp) 0 0;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.45;
           color: var(--smoke);
         }
@@ -954,7 +957,7 @@ export class MarketplaceOffer extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.45;
           color: var(--smoke);
         }
@@ -990,21 +993,21 @@ export class MarketplaceOffer extends CardDef {
   // orphan a counter or accidentally chain an opening offer to an unrelated one.
   static edit = MarketplaceOfferEdit;
 
-  // FITTED — FittedCard, same fork and knobs as the family's other supporting
-  // tiles.
-  //
-  // SLOT DISCIPLINE — four distinct facts, four slots:
-  //   productTitle (eyebrow) · amount (title, the anchor) · status (badge) ·
-  //   the offer-vs-asking gap (footer)
-  //
-  // NOTE ON THE GAP: it is computed here from `listingPrice`, which is
-  // denormalized onto the card precisely so a PRERENDERED tile can show it —
-  // prerendered fitted cannot resolve `linksTo`, so reading the listing
-  // directly would render blank. The comparison itself is still derived at
-  // render time, never stored, so it cannot go stale when the seller re-prices.
+  // The offer-vs-asking gap reads `listingPrice`, denormalized so a
+  // prerendered fitted view can show it; the comparison is derived here, never
+  // stored, so it cannot go stale when the seller re-prices.
   static fitted = class Fitted extends Component<typeof MarketplaceOffer> {
     get amount() {
       return formatMoney(this.args.model?.amount);
+    }
+    get asking() {
+      return formatMoney(this.args.model?.listingPrice);
+    }
+    // the amount rides on the subtitle too, so strips under 170 tall show it
+    get subtitle() {
+      return [this.args.model?.offeredByName, this.amount]
+        .filter(Boolean)
+        .join(' · ');
     }
 
     get gap() {
@@ -1023,158 +1026,41 @@ export class MarketplaceOffer extends CardDef {
     }
 
     <template>
-      <FittedCard class='of-fit' @titleTag='h3'>
-        {{! Rule 2 anchor: no image field on an offer, so the tier-2 icon — the
-            card's OWN static icon, shared with its isolated and atom formats. }}
-        <:placeholder>
-          <HandshakeIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
-        </:placeholder>
-
-        <:eyebrow><span class='fit-eyebrow'>{{if
-              @model.productTitle
-              @model.productTitle
-              'Unlinked listing'
-            }}</span></:eyebrow>
-
-        {{! The amount is the main field of an offer, so it takes the title slot
-            and FittedCard's own "title is loudest" behaviour points at the right
-            value rather than being fought. }}
-        <:title><span class='fit-title'>{{moneyText
-              @model.amount
-            }}</span></:title>
-
-        <:badgeRight>
-          {{#if @model.offerStatus}}
-            <@fields.offerStatus @format='atom' />
-          {{/if}}
-        </:badgeRight>
-
-        <:footer>
-          {{#if this.gap}}
-            <span class='of-gap'>{{this.gap}}</span>
-          {{/if}}
-          {{#if @model.isCounter}}
-            <span class='of-counter'>Counter</span>
-          {{/if}}
-        </:footer>
-      </FittedCard>
-
+      <RichFittedCard>
+        <:avatar><HandshakeIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{if
+            @model.productTitle
+            @model.productTitle
+            'Unlinked listing'
+          }}</:title>
+        <:status>{{#if @model.offerStatus}}<@fields.offerStatus
+              @format='atom'
+            />{{/if}}{{#if @model.isCounter}}<StatePill
+              @label='Counter'
+              @hue='slate'
+            />{{/if}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{this.gap}}</:fact>
+        <:metric>{{#if this.amount}}<Metric
+              @value={{this.amount}}
+              @label='Offer'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if this.asking}}<Detail
+              @label='Asking'
+              @value={{this.asking}}
+            />{{/if}}
+          {{#if @model.offeredBy}}<Detail @label='Offered by'><@fields.offeredBy
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        /* No container-type / container-name — FittedCard queries the HOST's
-           `fitted-card` container. */
-        .of-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          --fc-image-width: 34cqh;
-          --fc-image-min-width: 2.5rem;
-          --fc-image-max-width: 5rem;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-
-          --fc-content-padding: 0.5rem 0.75rem;
-          --fc-header-gap: 0.15em;
-          --fc-content-gap: 0.25rem;
-
-          --fc-eyebrow-font-size: max(9px, 0.62em);
-          --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(15px, 1.3em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 1;
-          --fc-footer-font-size: max(11px, 0.72em);
-          --fc-footer-gap: 0.5rem;
-          --fc-footer-justify: space-between;
-          --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: 0.2rem;
-        }
-
-        /* The product name is the QUIET row here — clamped to one line so a long
-           colourway cannot push the amount off the tile. */
-        .fit-eyebrow {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--smoke);
-          font-weight: 600;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 1;
-          overflow: hidden;
-        }
-        /* The anchor — gold display serif, same as every money figure in the
-           family's hero moments. */
-        .fit-title {
-          font-family: 'Playfair Display', Georgia, serif;
-          color: var(--primary-ink);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          letter-spacing: -0.01em;
-          white-space: nowrap;
-        }
-
-        /* A ratio is not an amount: muted mono and a step down, so it
-           annotates the figure rather than reading as a second money value. */
-        .of-gap {
-          font-family:
-            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-          color: var(--smoke);
-          white-space: nowrap;
-        }
-        /* A different KIND of mark from the gap beside it — uppercase and
-           tracked, so the two footer values do not read as one wrapped field. */
-        .of-counter {
-          font-size: 0.85em;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.07em;
-          color: var(--smoke);
-          white-space: nowrap;
-        }
-
-        /* ---- quanta: visibility only ---- */
-        @container fitted-card (height <= 50px) {
-          .of-fit {
-            --fc-footer-display: none;
-            --fc-badge-right-display: none;
-            --fc-content-padding: 0.15rem 0.35rem;
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-
-        /* The counter mark goes before the gap does: the gap is the number the
-           reader is deciding on, the mark is context. */
-        @container fitted-card (width <= 220px) and (height <= 80px) {
-          .of-fit .of-counter {
-            display: none;
-          }
-        }
-
-        @container fitted-card (width <= 150px) {
-          .of-fit {
-            --fc-image-max-width: 100%;
-          }
-          .fit-eyebrow {
-            display: none;
-          }
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

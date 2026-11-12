@@ -10,6 +10,8 @@ import {
 import StarIcon from '@cardstack/boxel-icons/star';
 import { Plan } from './plan';
 import { Service } from './service';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 // Product Review — customer feedback on a Plan or Service, not on a
 // specific purchase. Deliberately NOT rendered inside RevenueOs (an internal
@@ -113,67 +115,33 @@ export class ProductReview extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof ProductReview> {
+    get score() {
+      let r = this.args.model?.rating;
+      return `${r ? r : '—'}/5`;
+    }
     <template>
-      <div class='fitted'>
-        <div class='fmt badge'>
-          <StarIcon class='doc-icon' />
-          <span class='figure'>{{if @model.rating @model.rating '—'}}/5</span>
-        </div>
-        <div class='fmt strip'>
-          <StarIcon class='doc-icon' />
-          <span class='figure'>{{if @model.rating @model.rating '—'}}/5</span>
-          {{#if @model.body}}
-            <span class='meta'>{{@model.body}}</span>
-          {{/if}}
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><StarIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>Rated {{this.score}}</:subtitle>
+        <:fact>{{@model.body}}</:fact>
+        <:metric><Metric @value={{this.score}} @label='Rating' /></:metric>
+        <:details>
+          {{#if @model.plan}}<Detail @label='Plan'><@fields.plan
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.service}}<Detail @label='Service'><@fields.service
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          color: var(--foreground);
-        }
-        .fmt {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-        }
-        .doc-icon {
-          width: 18px;
-          height: 18px;
-          color: var(--warning-ink);
-          flex-shrink: 0;
-        }
-        .figure {
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-        .meta {
-          font-size: var(--boxel-font-size-xs);
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        @container fitted-card (max-width: 150px) and (max-height: 169px) {
-          .badge {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: var(--boxel-sp-xs);
-            text-align: center;
-          }
-        }
-        @container fitted-card (min-width: 151px) {
-          .strip {
-            display: flex;
-            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          }
         }
       </style>
     </template>
@@ -188,24 +156,31 @@ export class ProductReview extends CardDef {
       return `Rated ${this.args.model?.rating ?? 0} out of 5`;
     }
     <template>
-      <article class='review-page'>
-        <div class='stars-lg'>
-          <span class='boxel-sr-only'>{{this.ratingLabel}}</span>
-          {{#each this.stars as |star|}}
-            <StarIcon
-              class='star {{if star.on "star-on"}}'
-              aria-hidden='true'
-            />
-          {{/each}}
-        </div>
-        {{#if @model.body}}
-          <p class='body'>{{@model.body}}</p>
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='review-page'>
+          <div class='stars-lg'>
+            <span class='boxel-sr-only'>{{this.ratingLabel}}</span>
+            {{#each this.stars as |star|}}
+              <StarIcon
+                class='star {{if star.on "star-on"}}'
+                aria-hidden='true'
+              />
+            {{/each}}
+          </div>
+          {{#if @model.body}}
+            <p class='body'>{{@model.body}}</p>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .review-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 32rem;
           margin: 0 auto;
+          inline-size: 100%;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
         }
         .stars-lg {

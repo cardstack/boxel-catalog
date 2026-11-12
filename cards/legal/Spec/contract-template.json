@@ -38,6 +38,11 @@
         "links": {
           "self": "../ContractTemplate/employment-offer"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

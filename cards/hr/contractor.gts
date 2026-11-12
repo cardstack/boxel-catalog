@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   Component,
   field,
@@ -25,15 +26,13 @@ import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import { daysUntil } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
   Panel,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 // Inside this window the contract window turns amber; past zero it turns red.
 const EXPIRY_WARNING_DAYS = 30;
@@ -461,6 +460,10 @@ export class Contractor extends PersonBase {
       return contractorView(this.args.model);
     }
 
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let v = this.v;
       let d = this.args.model?.daysRemaining;
@@ -475,56 +478,59 @@ export class Contractor extends PersonBase {
     }
 
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name={{if @model.name @model.name '?'}}
             @src={{@model.photo.resolvedUrl}}
             @hue={{AVATAR_HUE}}
-            @size={{20}}
             aria-hidden='true'
-          /></:mark>
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
         <:status>{{#if @model.status}}<@fields.status
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:status>
-        <:default>
-          <FitRow @left={{true}}><span
-              class='meta'
-            >{{this.v.subtitle}}</span></FitRow>
-          <FitRow @label='Rate'><span class='mono'>{{orDash
+        <:subtitle><span class='meta'>{{this.v.subtitle}}</span></:subtitle>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
+        <:details>
+
+          <Detail @label='Rate'><span class='mono'>{{orDash
                 this.v.rateLong
-              }}</span></FitRow>
-          <FitRow @label='Ends in'><span class='mono'>{{orDash
+              }}</span></Detail>
+          <Detail @label='Ends in'><span class='mono'>{{orDash
                 this.v.daysText
-              }}</span></FitRow>
+              }}</span></Detail>
           {{#if @model.vendor}}
-            <FitRow @label='Vendor' @left={{true}}><@fields.vendor
+            <Detail @label='Vendor'><@fields.vendor
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <StatStrip @compact={{true}} @items={{this.strip}} />
+
           {{#if @model.project}}
-            <FitRow @label='Project' @left={{true}}><@fields.project
+            <Detail @label='Project'><@fields.project
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <FitRow @label='Contract'><span class='mono'>{{orDash
+          <Detail @label='Contract'><span class='mono'>{{orDash
                 this.v.range
-              }}</span></FitRow>
-          <FitRow @label='Invoicing'>{{orDash this.v.invoicing}}</FitRow>
-          <FitRow @label='VAT ID'><span class='mono'>{{orDash
+              }}</span></Detail>
+          <Detail @label='Invoicing'>{{orDash this.v.invoicing}}</Detail>
+          <Detail @label='VAT ID'><span class='mono'>{{orDash
                 @model.vatId
-              }}</span></FitRow>
-          <FitRow @label='Email'><span class='mono'>{{orDash
+              }}</span></Detail>
+          <Detail @label='Email'><span class='mono'>{{orDash
                 @model.email
-              }}</span></FitRow>
-          <FitRow @label='Phone'><span class='mono'>{{orDash
+              }}</span></Detail>
+          <Detail @label='Phone'><span class='mono'>{{orDash
                 @model.phone
-              }}</span></FitRow>
-        </:default>
-      </FitCard>
+              }}</span></Detail>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

@@ -32,6 +32,11 @@
         "links": {
           "self": "../Role/ops-lead"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

@@ -24,6 +24,11 @@
         "links": {
           "self": "../TerminationClause/standard-90-day"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

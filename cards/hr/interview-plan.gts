@@ -8,6 +8,7 @@ import {
   linksTo,
   StringField,
 } from 'https://cardstack.com/base/card-api';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import DateField from 'https://cardstack.com/base/date';
 import MarkdownField from 'https://cardstack.com/base/markdown';
 import ListChecksIcon from '@cardstack/boxel-icons/list-checks';
@@ -21,8 +22,6 @@ import { type DescriptionsItem } from '@cardstack/pretui/components/descriptions
 import { IconButton } from '@cardstack/pretui/components/icon-button';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -32,7 +31,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 
 import {
   INTERVIEW_ROUND_LABELS,
@@ -504,6 +503,10 @@ export class InterviewPlan extends CardDef {
     get facts() {
       return planFacts(this.args.model);
     }
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let f = this.facts;
       return [
@@ -513,33 +516,36 @@ export class InterviewPlan extends CardDef {
       ];
     }
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name={{if @model.title @model.title 'Interview Plan'}}
             @hue='var(--muted)'
             @shape='rounded'
-            @size={{20}}
             aria-hidden='true'
-          /></:mark>
-        <:default>
-          <FitRow @left={{true}}><span
-              class='meta'
-            >{{this.facts.subline}}</span></FitRow>
-          <FitRow @label='Rounds'>{{this.facts.roundLine}}</FitRow>
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle><span class='meta'>{{this.facts.subline}}</span></:subtitle>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
+        <:details>
+
+          <Detail @label='Rounds'>{{this.facts.roundLine}}</Detail>
           {{#if @model.position}}
-            <FitRow @label='Position' @left={{true}}><@fields.position
+            <Detail @label='Position'><@fields.position
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <StatStrip @compact={{true}} @items={{this.strip}} />
+
           {{#each this.facts.rounds as |r|}}
-            <FitRow @label={{r.label}}><span
+            <Detail @label={{r.label}}><span
                 class='mono'
-              >{{r.questionLine}}</span></FitRow>
+              >{{r.questionLine}}</span></Detail>
           {{/each}}
-        </:default>
-      </FitCard>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

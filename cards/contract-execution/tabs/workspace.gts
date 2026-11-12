@@ -434,6 +434,7 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
       }
       .ws-main {
         min-inline-size: 0;
+        overflow-x: auto;
       }
       .ws-head {
         display: flex;

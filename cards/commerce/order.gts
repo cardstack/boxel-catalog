@@ -15,7 +15,9 @@ import PercentageField from '@cardstack/base/percentage';
 import { Account } from '../crm/account';
 import { Contract } from '../legal/contract';
 import { LineItem } from './line-item';
-import { lineTotal, orderTotals } from './line-item-totals';
+import { formatMoney, lineTotal, orderTotals } from './line-item-totals';
+import { fmtDate } from './compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import {
@@ -30,6 +32,7 @@ import {
 import { Table } from '@cardstack/pretui/components/table';
 import { Money } from '../crm/money';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const OrderStatusField = enumField(StringField, {
   options: ['pending', 'paid', 'shipped', 'delivered', 'canceled'],
@@ -151,200 +154,50 @@ export class Order extends CardDef {
     get totals() {
       return orderTotals(this.args.model?.lineItems, this.args.model?.taxRate);
     }
+    get money() {
+      return formatMoney(this.totals.total, this.totals.code);
+    }
+    // the total rides on the subtitle too, so strips under 170 tall show it
+    get subtitle() {
+      return [this.args.model?.account?.name, this.money]
+        .filter(Boolean)
+        .join(' · ');
+    }
     get destination() {
       let a = this.args.model?.shippingAddress;
       return [a?.city, a?.country?.name].filter(Boolean).join(', ');
     }
     <template>
-      <div class='fitted'>
-        <div class='fmt badge'>
-          <PackageIcon class='doc-icon' />
-          <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.status}}
-            <StatePill
-              class='status'
+      <RichFittedCard>
+        <:avatar><PackageIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#if @model.status}}<StatePill
               @label={{@model.status}}
               @hue={{statusHue @model.status}}
-            />
-          {{/if}}
-        </div>
-        <div class='fmt strip'>
-          <PackageIcon class='doc-icon' />
-          <div class='info'>
-            <span class='name'>{{@model.cardTitle}}</span>
-            {{#if @model.status}}
-              <StatePill
-                class='status'
-                @label={{@model.status}}
-                @hue={{statusHue @model.status}}
-              />
-            {{/if}}
-          </div>
-          <Money
-            class='figure'
-            @amount={{this.totals.total}}
-            @code={{this.totals.code}}
-          />
-        </div>
-        <div class='fmt tile'>
-          <div class='row'>
-            <PackageIcon class='doc-icon' />
-            {{#if @model.status}}
-              <StatePill
-                class='status'
-                @label={{@model.status}}
-                @hue={{statusHue @model.status}}
-              />
-            {{/if}}
-          </div>
-          <span class='name'>{{@model.cardTitle}}</span>
-          <Money
-            class='figure figure-lg'
-            @amount={{this.totals.total}}
-            @code={{this.totals.code}}
-          />
-          {{#if this.destination}}
-            <span class='meta'>To {{this.destination}}</span>
-          {{/if}}
-        </div>
-        <div class='fmt card'>
-          <div class='col'>
-            <div class='row'>
-              <PackageIcon class='doc-icon' />
-              <span class='name name-lg'>{{@model.cardTitle}}</span>
-              {{#if @model.status}}
-                <StatePill
-                  class='status'
-                  @label={{@model.status}}
-                  @hue={{statusHue @model.status}}
-                />
-              {{/if}}
-            </div>
-            {{#if @model.account.name}}
-              <span class='meta'>{{@model.account.name}}</span>
-            {{/if}}
-            {{#if this.destination}}
-              <span class='meta'>To {{this.destination}}</span>
-            {{/if}}
-          </div>
-          <Money
-            class='figure figure-lg'
-            @amount={{this.totals.total}}
-            @code={{this.totals.code}}
-          />
-        </div>
-      </div>
+            />{{/if}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{#if this.destination}}To {{this.destination}}{{/if}}</:fact>
+        <:metric><Metric @value={{this.money}} @label='Total' /></:metric>
+        <:details>
+          {{#if @model.orderDate}}<Detail
+              @label='Ordered'
+              @value={{fmtDate @model.orderDate}}
+            />{{/if}}
+          {{#if @model.lineItems.length}}<Detail
+              @label='Items'
+              @value='{{@model.lineItems.length}}'
+            />{{/if}}
+          {{#if @model.contract}}<Detail @label='Contract'><@fields.contract
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          color: var(--foreground);
-        }
-        .fmt {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-        .doc-icon {
-          width: 1.25rem;
-          height: 1.25rem;
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-xs);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .name-lg {
-          font-size: var(--boxel-font-size-sm);
-        }
-        .figure {
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-        .figure-lg {
-          font-size: var(--boxel-font-size-md);
-        }
-        .meta {
-          font-size: var(--boxel-font-size-2xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .status {
-          flex-shrink: 0;
-        }
-        .row {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-        }
-        .col,
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          min-width: 0;
-          flex: 1;
-        }
-        @container fitted-card (max-width: 150px) and (max-height: 169px) {
-          .badge {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: var(--boxel-sp-2xs);
-            padding: var(--boxel-sp-xs);
-            text-align: center;
-          }
-        }
-        @container fitted-card (min-width: 151px) and (max-height: 169px) {
-          .strip {
-            display: flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          }
-          .strip .info {
-            gap: var(--boxel-sp-6xs);
-          }
-          .strip .status {
-            align-self: flex-start;
-          }
-        }
-        @container fitted-card (max-width: 399px) and (min-height: 170px) {
-          .tile {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            gap: var(--boxel-sp-2xs);
-            padding: var(--boxel-sp-sm);
-          }
-          .tile .row {
-            width: 100%;
-            justify-content: space-between;
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--boxel-sp);
-            padding: var(--boxel-sp-lg);
-          }
         }
       </style>
     </template>
@@ -400,109 +253,120 @@ export class Order extends CardDef {
       return [{ key: 'Ordered', value: 'orderDate' }];
     }
     <template>
-      <article class='order-doc'>
-        <header class='doc-head'>
-          <div>
-            <p class='doc-kind'>Order</p>
-            <h1>{{this.number}}</h1>
-          </div>
-          {{#if this.isCanceled}}
-            <StatePill
-              class='status'
-              @label='canceled'
-              @hue='red'
-              @dot={{true}}
+      <IsoFrame>
+        <article class='order-doc'>
+          <header class='doc-head'>
+            <div>
+              <p class='doc-kind'>Order</p>
+              <h1>{{this.number}}</h1>
+            </div>
+            {{#if this.isCanceled}}
+              <StatePill
+                class='status'
+                @label='canceled'
+                @hue='red'
+                @dot={{true}}
+              />
+            {{/if}}
+          </header>
+
+          {{#unless this.isCanceled}}
+            <StepList
+              class='stepper'
+              @steps={{this.steps}}
+              @variant='track'
+              @label='Order progress'
             />
-          {{/if}}
-        </header>
+          {{/unless}}
 
-        {{#unless this.isCanceled}}
-          <StepList
-            class='stepper'
-            @steps={{this.steps}}
-            @variant='track'
-            @label='Order progress'
-          />
-        {{/unless}}
-
-        <section class='doc-meta'>
-          <div class='party'>
-            <span class='label'>Account</span>
-            <@fields.account @format='embedded' />
-          </div>
-          <KeyValue class='facts' @items={{this.facts}}>
-            <:value>
-              <@fields.orderDate />
-            </:value>
-          </KeyValue>
-        </section>
-
-        <section class='items'>
-          {{#if this.rows.length}}
-            <Table class='lines' @label='Line items'>
-              <:head>
-                <tr>
-                  <th scope='col'>Item</th>
-                  <th scope='col' class='t-num'>Qty</th>
-                  <th scope='col' class='t-num'>Unit</th>
-                  <th scope='col' class='t-num'>Amount</th>
-                </tr>
-              </:head>
-              <:body>
-                {{#each this.rows as |row|}}
-                  <tr>
-                    <td>{{row.description}}</td>
-                    <td class='t-num'>{{row.quantity}}</td>
-                    <td class='t-num'><Money
-                        @amount={{row.unit}}
-                        @code={{row.code}}
-                      /></td>
-                    <td class='t-num t-strong'><Money
-                        @amount={{row.total}}
-                        @code={{row.code}}
-                      /></td>
-                  </tr>
-                {{/each}}
-              </:body>
-            </Table>
-            <KeyValue
-              class='totals'
-              @items={{this.totalsFacts}}
-              @valueAlign='end'
-            >
-              <:value as |row|>
-                {{#if (eq row.value 'subtotal')}}
-                  <Money
-                    @amount={{this.totals.subtotal}}
-                    @code={{this.totals.code}}
-                  />
-                {{else if (eq row.value 'tax')}}
-                  <Money
-                    @amount={{this.totals.tax}}
-                    @code={{this.totals.code}}
-                  />
-                {{else}}
-                  <Money
-                    @amount={{this.totals.total}}
-                    @code={{this.totals.code}}
-                  />
-                {{/if}}
+          <section class='doc-meta'>
+            <div class='party'>
+              <span class='label'>Account</span>
+              <@fields.account @format='embedded' />
+            </div>
+            <KeyValue class='facts kv-pad' @items={{this.facts}}>
+              <:value>
+                <@fields.orderDate />
               </:value>
             </KeyValue>
-          {{else}}
-            <EmptyState @size='s' @texture={{false}} @title='No items yet' />
-          {{/if}}
-        </section>
+          </section>
 
-        <section class='ship'>
-          <span class='label'>Ship to</span>
-          <@fields.shippingAddress />
-        </section>
-      </article>
+          <section class='items'>
+            {{#if this.rows.length}}
+              <Table class='lines' @label='Line items'>
+                <:head>
+                  <tr>
+                    <th scope='col'>Item</th>
+                    <th scope='col' class='t-num'>Qty</th>
+                    <th scope='col' class='t-num'>Unit</th>
+                    <th scope='col' class='t-num'>Amount</th>
+                  </tr>
+                </:head>
+                <:body>
+                  {{#each this.rows as |row|}}
+                    <tr>
+                      <td>{{row.description}}</td>
+                      <td class='t-num'>{{row.quantity}}</td>
+                      <td class='t-num'><Money
+                          @amount={{row.unit}}
+                          @code={{row.code}}
+                        /></td>
+                      <td class='t-num t-strong'><Money
+                          @amount={{row.total}}
+                          @code={{row.code}}
+                        /></td>
+                    </tr>
+                  {{/each}}
+                </:body>
+              </Table>
+              <KeyValue
+                class='totals kv-pad'
+                @items={{this.totalsFacts}}
+                @valueAlign='end'
+              >
+                <:value as |row|>
+                  {{#if (eq row.value 'subtotal')}}
+                    <Money
+                      @amount={{this.totals.subtotal}}
+                      @code={{this.totals.code}}
+                    />
+                  {{else if (eq row.value 'tax')}}
+                    <Money
+                      @amount={{this.totals.tax}}
+                      @code={{this.totals.code}}
+                    />
+                  {{else}}
+                    <Money
+                      @amount={{this.totals.total}}
+                      @code={{this.totals.code}}
+                    />
+                  {{/if}}
+                </:value>
+              </KeyValue>
+            {{else}}
+              <EmptyState @size='s' @texture={{false}} @title='No items yet' />
+            {{/if}}
+          </section>
+
+          <section class='ship'>
+            <span class='label'>Ship to</span>
+            <@fields.shippingAddress />
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+
         .order-doc {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 46rem;
           margin: 0 auto;
+          inline-size: 100%;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
@@ -617,7 +481,7 @@ export class Order extends CardDef {
         }
         .ship {
           border: 1px solid var(--border);
-          border-radius: 0.5rem;
+          border-radius: var(--radius);
           padding: var(--boxel-sp);
           background-color: var(--card);
           color: var(--card-foreground);

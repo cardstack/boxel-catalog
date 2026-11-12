@@ -19,6 +19,8 @@ import { parametersAreValid } from './utils/rule-evaluation';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { AuditFacts } from './audit-ui';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 // Each value renders in the `value` block, which picks the row by key.
 const FACTS = [
@@ -84,67 +86,74 @@ export class AuditorBot extends CardDef {
       return !q || parametersAreValid(q);
     }
     <template>
-      <article class='bot'>
-        <header>
-          <p class='kicker'>Auditor</p>
-          <h1>{{@model.name}}</h1>
-          <div class='head-meta'>
-            {{#if @model.regime.reference}}
-              <@fields.regime @format='atom' />
-            {{/if}}
-            <span class='meta'>{{@model.ruleCount}} rule(s)</span>
-            {{#if this.broken}}
-              <StatePill
-                @label='rules that cannot fire'
-                @hue='red'
-                @dot={{true}}
+      <IsoFrame>
+        <article class='bot'>
+          <header>
+            <p class='kicker'>Auditor</p>
+            <h1>{{@model.name}}</h1>
+            <div class='head-meta'>
+              {{#if @model.regime.reference}}
+                <@fields.regime @format='atom' />
+              {{/if}}
+              <span class='meta'>{{@model.ruleCount}} rule(s)</span>
+              {{#if this.broken}}
+                <StatePill
+                  @label='rules that cannot fire'
+                  @hue='red'
+                  @dot={{true}}
+                />
+              {{/if}}
+            </div>
+          </header>
+
+          <AuditFacts @items={{FACTS}}>
+            <:value as |item|>
+              {{#if (eq item.key 'Runs as')}}
+                {{#if @model.runsAs}}
+                  <@fields.runsAs @format='atom' />
+                {{else}}
+                  <span>Nobody — an automated result still needs a name against
+                    it.</span>
+                {{/if}}
+              {{else if (eq item.key 'Last run')}}
+                {{#if @model.lastRunAt}}
+                  <@fields.lastRunAt />
+                {{else}}
+                  <span class='muted'>Never</span>
+                {{/if}}
+              {{else if @model.subjectQuery}}
+                <code class='mono'>{{@model.subjectQuery}}</code>
+                {{#unless this.queryValid}}
+                  <StatePill @label='not valid JSON' @hue='red' />
+                {{/unless}}
+              {{else}}
+                <span class='muted'>No subject query — nothing would be
+                  evaluated.</span>
+              {{/if}}
+            </:value>
+          </AuditFacts>
+
+          <section>
+            <h2>Rules</h2>
+            {{#if @model.rules.length}}
+              <@fields.rules />
+            {{else}}
+              <EmptyState
+                @title='No rules yet'
+                @message='A bot with no rules passes everything, which is worse than no bot.'
+                @texture={{false}}
+                @size='s'
               />
             {{/if}}
-          </div>
-        </header>
-
-        <AuditFacts @items={{FACTS}}>
-          <:value as |item|>
-            {{#if (eq item.key 'Runs as')}}
-              {{#if @model.runsAs}}
-                <@fields.runsAs @format='atom' />
-              {{else}}
-                <span>Nobody — an automated result still needs a name against
-                  it.</span>
-              {{/if}}
-            {{else if (eq item.key 'Last run')}}
-              {{#if @model.lastRunAt}}
-                <@fields.lastRunAt />
-              {{else}}
-                <span class='muted'>Never</span>
-              {{/if}}
-            {{else if @model.subjectQuery}}
-              <code class='mono'>{{@model.subjectQuery}}</code>
-              {{#unless this.queryValid}}
-                <StatePill @label='not valid JSON' @hue='red' />
-              {{/unless}}
-            {{else}}
-              <span class='muted'>No subject query — nothing would be evaluated.</span>
-            {{/if}}
-          </:value>
-        </AuditFacts>
-
-        <section>
-          <h2>Rules</h2>
-          {{#if @model.rules.length}}
-            <@fields.rules />
-          {{else}}
-            <EmptyState
-              @title='No rules yet'
-              @message='A bot with no rules passes everything, which is worse than no bot.'
-              @texture={{false}}
-              @size='s'
-            />
-          {{/if}}
-        </section>
-      </article>
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .bot {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
@@ -267,62 +276,30 @@ export class AuditorBot extends CardDef {
       return d ? d.toISOString().slice(0, 10) : 'never run';
     }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.name}}</span>
-        <span class='fit-sub'>{{@model.ruleCount}} rule(s)</span>
-        <div class='tier-tile'>
-          <span class='row'>{{this.regimeLabel}}</span>
-          <span class='row'>Last run {{this.lastRun}}</span>
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><BotIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.name}}</:title>
+        <:status>{{#if @model.brokenRuleCount}}<StatePill
+              @label='needs fixing'
+              @hue='red'
+              @dot={{true}}
+            />{{/if}}</:status>
+        <:subtitle>{{this.regimeLabel}}</:subtitle>
+        <:fact>Last run {{this.lastRun}}</:fact>
+        <:metric><Metric
+            @value='{{@model.ruleCount}}'
+            @label='Rules'
+          /></:metric>
+        <:details>{{#if @model.runsAs}}<Detail @label='Runs as'><@fields.runsAs
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}</:details>
+      </RichFittedCard>
       <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .fit-sub,
-        .row {
-          font-size: var(--boxel-font-size-xs);
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .tier-tile {
-          display: none;
-          flex-direction: column;
-          gap: var(--boxel-sp-6xs);
-          margin-top: auto;
-          padding-top: var(--boxel-sp-5xs);
-          border-top: 1px solid var(--border);
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 120px) {
-          .tier-tile {
-            display: flex;
-          }
         }
       </style>
     </template>

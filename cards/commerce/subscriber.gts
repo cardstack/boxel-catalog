@@ -15,6 +15,9 @@ import { Contact } from '../crm/contact';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Subscription } from './subscription';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
+import { fmtDate } from './compact-parts';
 
 /**
  * The party on the receiving end of subscriptions — who holds them, since
@@ -148,60 +151,39 @@ export class Subscriber extends CardDef {
       return n === 1 ? '1 plan' : `${n} plans`;
     }
     <template>
-      <div class='fitted'>
-        <span class='name'>{{if
+      <RichFittedCard>
+        <:avatar><RepeatIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{if
             @model.holder.name
             @model.holder.name
             'Unassigned subscriber'
-          }}</span>
-        <span class='meta line-plans'>{{this.planCount}}</span>
-        {{#if @model.since}}
-          <span class='meta line-since'>Since <@fields.since /></span>
-        {{/if}}
-      </div>
+          }}</:title>
+        <:status><StatePill
+            @label='{{if @model.activeCount @model.activeCount 0}} active'
+            @hue={{if @model.activeCount 'green' 'slate'}}
+          /></:status>
+        <:subtitle>{{this.planCount}}</:subtitle>
+        <:fact>{{#if @model.since}}Since {{fmtDate @model.since}}{{/if}}</:fact>
+        <:metric>{{#if @model.subscriptions.length}}<Metric
+              @value='{{if @model.activeCount @model.activeCount 0}}'
+              @label='Active plans'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.holder.jobTitle}}<Detail
+              @label='Role'
+              @value={{@model.holder.jobTitle}}
+            />{{/if}}
+        </:details>
+        <:relations>{{#if @model.subscriptions.length}}<@fields.subscriptions
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: var(--boxel-sp-4xs);
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-        .name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-xs);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .meta {
-          font-size: var(--boxel-font-size-2xs);
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-        }
-        .line-plans,
-        .line-since {
-          display: none;
-        }
-        /* Badge degradation: strip height keeps only the first line. */
-        @container fitted-card (max-height: 50px) {
-          .fitted {
-            padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-            gap: var(--boxel-sp-6xs);
-          }
-        }
-        @container fitted-card (min-height: 65px) {
-          .line-plans {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .line-since {
-            display: block;
-          }
         }
       </style>
     </template>
@@ -209,48 +191,57 @@ export class Subscriber extends CardDef {
 
   static isolated = class Isolated extends Component<typeof Subscriber> {
     <template>
-      <article class='sub-page'>
-        <header class='sh'>
-          <div class='sh-id'>
-            <p class='doc-kind'>Subscriber</p>
-            <h1>{{if
-                @model.holder.name
-                @model.holder.name
-                'Unassigned subscriber'
-              }}</h1>
-            {{#if @model.since}}
-              <p class='sh-since'>Subscriber since <@fields.since /></p>
-            {{/if}}
-          </div>
-          <StatePill
-            @label='{{if @model.activeCount @model.activeCount 0}} active'
-            @hue={{if @model.activeCount 'green' 'slate'}}
-            @dot={{true}}
-          />
-        </header>
-        {{#if @model.holder}}
-          <section class='panel'>
-            <h2>Holder</h2>
-            <div class='linked'><@fields.holder @format='embedded' /></div>
-          </section>
-        {{/if}}
-        <section class='panel'>
-          <h2>Subscriptions</h2>
-          {{#if @model.subscriptions.length}}
-            <div class='subs'><@fields.subscriptions @format='embedded' /></div>
-          {{else}}
-            <EmptyState
-              @title='No subscriptions yet'
-              @texture={{false}}
-              @size='s'
+      <IsoFrame>
+        <article class='sub-page'>
+          <header class='sh'>
+            <div class='sh-id'>
+              <p class='doc-kind'>Subscriber</p>
+              <h1>{{if
+                  @model.holder.name
+                  @model.holder.name
+                  'Unassigned subscriber'
+                }}</h1>
+              {{#if @model.since}}
+                <p class='sh-since'>Subscriber since <@fields.since /></p>
+              {{/if}}
+            </div>
+            <StatePill
+              @label='{{if @model.activeCount @model.activeCount 0}} active'
+              @hue={{if @model.activeCount 'green' 'slate'}}
+              @dot={{true}}
             />
+          </header>
+          {{#if @model.holder}}
+            <section class='panel'>
+              <h2>Holder</h2>
+              <div class='linked'><@fields.holder @format='embedded' /></div>
+            </section>
           {{/if}}
-        </section>
-      </article>
+          <section class='panel'>
+            <h2>Subscriptions</h2>
+            {{#if @model.subscriptions.length}}
+              <div class='subs'><@fields.subscriptions
+                  @format='embedded'
+                /></div>
+            {{else}}
+              <EmptyState
+                @title='No subscriptions yet'
+                @texture={{false}}
+                @size='s'
+              />
+            {{/if}}
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .sub-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 40rem;
           margin: 0 auto;
+          inline-size: 100%;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
@@ -284,7 +275,7 @@ export class Subscriber extends CardDef {
         }
         .panel {
           border: 1px solid var(--border);
-          border-radius: 0.75rem;
+          border-radius: var(--radius);
           padding: var(--boxel-sp) var(--boxel-sp-lg);
           background: var(--card);
           color: var(--card-foreground);

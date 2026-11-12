@@ -9,8 +9,9 @@ import {
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { Survey } from './survey';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // The facts every format reads off the answers: the first 1–5 answer is the
 // rating, the first yes/no answer is the "would you come again" signal.
@@ -219,7 +220,7 @@ export class SurveyResponse extends CardDef {
       return responseFacts(this.args.model as SurveyResponse);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Rs</span></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>{{this.facts.count}}</:subtitle>
@@ -231,11 +232,21 @@ export class SurveyResponse extends CardDef {
               this.facts.count
             }}</span></:status>
         <:fact>{{this.facts.summary}}</:fact>
+        <:metric>{{#if this.facts.score}}<Metric
+              @value={{this.facts.score}}
+              @label='Rating'
+            />{{/if}}</:metric>
+        <:details>
+          {{#each this.facts.answers as |a|}}<Detail
+              @label={{if a.prompt a.prompt 'Question'}}
+              @value={{a.response}}
+            />{{/each}}
+        </:details>
         <:relations>{{#if @model.survey}}<@fields.survey
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;
@@ -273,95 +284,96 @@ export class SurveyResponse extends CardDef {
       return responseFacts(this.args.model as SurveyResponse);
     }
     <template>
-      <article class='rec'>
-        <header class='head'>
-          <span class='mark' aria-hidden='true'>Rs</span>
-          <div class='id'>
-            <h1 class='name'>{{@model.title}}</h1>
-            <p class='meta'>{{this.facts.summary}}</p>
-          </div>
-          <span class='sts'>
-            {{#if this.facts.score}}
-              <span class='dot-text'><span
-                  class='dot ok'
-                ></span>{{this.facts.score}}</span>
-            {{/if}}
-            <span class='dot-text'><span
-                class='dot'
-              ></span>{{this.facts.count}}</span>
-          </span>
-        </header>
-        <dl class='stats' aria-label='Key numbers'>
-          <div class='stat'>
-            <dt>Rating</dt>
-            <dd class='num'>{{if this.facts.score this.facts.score '—'}}</dd>
-            <dd class='sub'>overall</dd>
-          </div>
-          <div class='stat'>
-            <dt>Answers</dt>
-            <dd class='num'>{{this.facts.total}}</dd>
-            <dd class='sub'>{{this.facts.asked}}</dd>
-          </div>
-          {{#if this.facts.yesNo}}
-            <div class='stat'>
-              <dt>Yes / no</dt>
-              <dd class='num'>{{this.facts.yesNo.response}}</dd>
-              <dd class='sub'>{{this.facts.yesNo.prompt}}</dd>
+      <IsoFrame>
+        <article class='rec'>
+          <header class='head'>
+            <span class='mark' aria-hidden='true'>Rs</span>
+            <div class='id'>
+              <h1 class='name'>{{@model.title}}</h1>
+              <p class='meta'>{{this.facts.summary}}</p>
             </div>
-          {{/if}}
-        </dl>
-        <div class='cols'>
-          <section class='main'>
-            <h2>Answers <span class='count'>{{this.facts.total}}</span></h2>
-            <ul class='rows'>
-              {{#each this.facts.answers as |a|}}
-                <li class='row'>
-                  <span>{{if a.prompt a.prompt 'Question'}}</span>
-                  <span class='ans'>{{if a.response a.response '—'}}</span>
-                </li>
-              {{else}}
-                <li class='row muted'>No answers</li>
-              {{/each}}
-            </ul>
-          </section>
-          <aside class='side'>
-            <section class='sec'>
-              <h2>Linked</h2>
-              <dl class='kv'>
-                <dt>Survey</dt>
-                <dd>{{#if @model.survey}}<@fields.survey
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}{{if
+            <span class='sts'>
+              {{#if this.facts.score}}
+                <span class='dot-text'><span
+                    class='dot ok'
+                  ></span>{{this.facts.score}}</span>
+              {{/if}}
+              <span class='dot-text'><span
+                  class='dot'
+                ></span>{{this.facts.count}}</span>
+            </span>
+          </header>
+          <dl class='stats' aria-label='Key numbers'>
+            <div class='stat'>
+              <dt>Rating</dt>
+              <dd class='num'>{{if this.facts.score this.facts.score '—'}}</dd>
+              <dd class='sub'>overall</dd>
+            </div>
+            <div class='stat'>
+              <dt>Answers</dt>
+              <dd class='num'>{{this.facts.total}}</dd>
+              <dd class='sub'>{{this.facts.asked}}</dd>
+            </div>
+            {{#if this.facts.yesNo}}
+              <div class='stat'>
+                <dt>Yes / no</dt>
+                <dd class='num'>{{this.facts.yesNo.response}}</dd>
+                <dd class='sub'>{{this.facts.yesNo.prompt}}</dd>
+              </div>
+            {{/if}}
+          </dl>
+          <div class='cols'>
+            <section class='main'>
+              <h2>Answers <span class='count'>{{this.facts.total}}</span></h2>
+              <ul class='rows'>
+                {{#each this.facts.answers as |a|}}
+                  <li class='row'>
+                    <span>{{if a.prompt a.prompt 'Question'}}</span>
+                    <span class='ans'>{{if a.response a.response '—'}}</span>
+                  </li>
+                {{else}}
+                  <li class='row muted'>No answers</li>
+                {{/each}}
+              </ul>
+            </section>
+            <aside class='side'>
+              <section class='sec'>
+                <h2>Linked</h2>
+                <dl class='kv'>
+                  <dt>Survey</dt>
+                  <dd>{{#if @model.survey}}<@fields.survey
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}{{if
+                        @model.surveyTitle
+                        @model.surveyTitle
+                        '—'
+                      }}{{/if}}</dd>
+                </dl>
+              </section>
+              <section class='sec'>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  <dt>Rating</dt><dd>{{if
+                      this.facts.score
+                      this.facts.score
+                      '—'
+                    }}</dd>
+                  <dt>Answers</dt><dd>{{this.facts.total}}</dd>
+                  <dt>Survey</dt><dd>{{if
                       @model.surveyTitle
                       @model.surveyTitle
                       '—'
-                    }}{{/if}}</dd>
-              </dl>
-            </section>
-            <section class='sec'>
-              <h2>Details</h2>
-              <dl class='kv'>
-                <dt>Rating</dt><dd>{{if
-                    this.facts.score
-                    this.facts.score
-                    '—'
-                  }}</dd>
-                <dt>Answers</dt><dd>{{this.facts.total}}</dd>
-                <dt>Survey</dt><dd>{{if
-                    @model.surveyTitle
-                    @model.surveyTitle
-                    '—'
-                  }}</dd>
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+                    }}</dd>
+                </dl>
+              </section>
+            </aside>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .rec {
           container-type: inline-size;
-          margin: var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           background-color: var(--card);
@@ -384,7 +396,7 @@ export class SurveyResponse extends CardDef {
           flex-shrink: 0;
           width: 2rem;
           height: 2rem;
-          border-radius: 0.375rem;
+          border-radius: var(--radius);
           background-color: var(--muted);
           font-size: var(--boxel-font-size-2xs);
           font-weight: 700;

@@ -25,7 +25,7 @@ import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { Enrollment } from './enrollment';
 import { Assignment } from './assignment';
 import { Grade } from './grade';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   AtomChip,
   Dot,
@@ -36,6 +36,7 @@ import {
   Sheet,
   Stat,
 } from './components/record-sheet';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * One hand-in: a version of a learner's answer to one assignment. A
@@ -112,129 +113,134 @@ export class Submission extends CardDef {
       if (g) this.args.viewCard?.(g as any, 'isolated');
     };
     <template>
-      <Sheet @mark='Sb' @title={{headline @model}} @meta={{metaLine @model}}>
-        <:status>
-          <Dot @hue={{this.hue}}>{{lower @model.statusLabel}}</Dot>
-          {{#if @model.submittedAt}}
-            <Dot @hue={{if @model.isLate 'red' 'green'}}>{{lateLabel
-                @model
-              }}</Dot>
-          {{/if}}
-        </:status>
-        <:actions>
-          {{#if @model.grade}}
-            <Button
-              @size='s'
-              @tone='primary'
-              @appearance='accent'
-              {{on 'click' this.openGrade}}
-            >Open grade</Button>
-          {{/if}}
-        </:actions>
-        <:stats>
-          <Stat
-            @label='Grade'
-            @value={{gradeLetter @model}}
-            @sub={{gradeLine @model}}
-          />
-          <Stat
-            @label='Version'
-            @value={{concat 'v' (if @model.version @model.version 1)}}
-            @sub={{if
-              @model.assignment.allowResubmission
-              'resubmission allowed'
-              'single submission'
-            }}
-          />
-          <Stat
-            @label='Late'
-            @value={{concat (if @model.daysLate @model.daysLate 0) ' days'}}
-            @sub={{dueLine @model}}
-          />
-        </:stats>
-        <:main>
-          <Section @title='Answer'>
-            <div class='answer'>{{#if @model.text}}<@fields.text />{{else}}<span
-                  class='muted'
-                >No text answer.</span>{{/if}}</div>
-          </Section>
-          {{#if this.scores.length}}
-            <Section @title='Rubric score'>
-              {{#each this.scores as |c|}}
-                <div class='row'>
-                  <span class='lead'>{{c.criterionName}}{{#if c.levelLabel}}
-                      <span class='muted'>·
-                        {{c.levelLabel}}</span>{{/if}}</span>
-                  <span class='mono'>{{c.points}} / {{c.maxPoints}}</span>
-                </div>
-              {{/each}}
+      <IsoFrame>
+        <Sheet @mark='Sb' @title={{headline @model}} @meta={{metaLine @model}}>
+          <:status>
+            <Dot @hue={{this.hue}}>{{lower @model.statusLabel}}</Dot>
+            {{#if @model.submittedAt}}
+              <Dot @hue={{if @model.isLate 'red' 'green'}}>{{lateLabel
+                  @model
+                }}</Dot>
+            {{/if}}
+          </:status>
+          <:actions>
+            {{#if @model.grade}}
+              <Button
+                @size='s'
+                @tone='primary'
+                @appearance='accent'
+                {{on 'click' this.openGrade}}
+              >Open grade</Button>
+            {{/if}}
+          </:actions>
+          <:stats>
+            <Stat
+              @label='Grade'
+              @value={{gradeLetter @model}}
+              @sub={{gradeLine @model}}
+            />
+            <Stat
+              @label='Version'
+              @value={{concat 'v' (if @model.version @model.version 1)}}
+              @sub={{if
+                @model.assignment.allowResubmission
+                'resubmission allowed'
+                'single submission'
+              }}
+            />
+            <Stat
+              @label='Late'
+              @value={{concat (if @model.daysLate @model.daysLate 0) ' days'}}
+              @sub={{dueLine @model}}
+            />
+          </:stats>
+          <:main>
+            <Section @title='Answer'>
+              <div class='answer'>{{#if @model.text}}<@fields.text
+                  />{{else}}<span class='muted'>No text answer.</span>{{/if}}</div>
             </Section>
-          {{/if}}
-          {{#if this.comments.length}}
-            <Section @title='Grader comment'>
-              {{#each this.comments as |c|}}
-                <div class='row'>
-                  <span class='lead'>{{c.criterionName}}
-                    <span class='muted'>{{c.comment}}</span></span>
-                  <span class='mono'>{{c.points}} / {{c.maxPoints}}</span>
-                </div>
-              {{/each}}
+            {{#if this.scores.length}}
+              <Section @title='Rubric score'>
+                {{#each this.scores as |c|}}
+                  <div class='row'>
+                    <span class='lead'>{{c.criterionName}}{{#if c.levelLabel}}
+                        <span class='muted'>·
+                          {{c.levelLabel}}</span>{{/if}}</span>
+                    <span class='mono'>{{c.points}} / {{c.maxPoints}}</span>
+                  </div>
+                {{/each}}
+              </Section>
+            {{/if}}
+            {{#if this.comments.length}}
+              <Section @title='Grader comment'>
+                {{#each this.comments as |c|}}
+                  <div class='row'>
+                    <span class='lead'>{{c.criterionName}}
+                      <span class='muted'>{{c.comment}}</span></span>
+                    <span class='mono'>{{c.points}} / {{c.maxPoints}}</span>
+                  </div>
+                {{/each}}
+              </Section>
+            {{/if}}
+            {{#if @model.files.length}}
+              <Section @title='Files'>
+                <div class='files'><@fields.files
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></div>
+              </Section>
+            {{/if}}
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <Kv @label='Enrollment'>{{#if
+                  @model.enrollment
+                }}<@fields.enrollment
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</Kv>
+              <Kv @label='Assignment'>{{#if
+                  @model.assignment
+                }}<@fields.assignment
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</Kv>
+              <Kv @label='Grade'>{{#if @model.grade}}<@fields.grade
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</Kv>
             </Section>
-          {{/if}}
-          {{#if @model.files.length}}
-            <Section @title='Files'>
-              <div class='files'><@fields.files
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></div>
+            <Section @title='Details'>
+              <Kv @label='Assignment'>{{dash @model.assignmentTitle}}</Kv>
+              <Kv @label='Version' @mono={{true}}>{{if
+                  @model.version
+                  @model.version
+                  1
+                }}</Kv>
+              <Kv @label='Submitted' @mono={{true}}>{{fmtDay
+                  @model.submittedAt
+                }}</Kv>
+              <Kv @label='Due' @mono={{true}}>{{fmtDay
+                  @model.assignment.dueWindow.dueAt
+                }}</Kv>
+              <Kv @label='Late'>{{if
+                  @model.isLate
+                  (concat @model.daysLate ' days')
+                  'no'
+                }}</Kv>
+              <Kv @label='Grade'>{{gradeShort @model}}</Kv>
+              <Kv @label='Graded' @mono={{true}}>{{fmtDay
+                  @model.grade.gradedAt
+                }}</Kv>
+              <Kv @label='Files' @mono={{true}}>{{if
+                  @model.files.length
+                  @model.files.length
+                  'none'
+                }}</Kv>
             </Section>
-          {{/if}}
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <Kv @label='Enrollment'>{{#if @model.enrollment}}<@fields.enrollment
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}—{{/if}}</Kv>
-            <Kv @label='Assignment'>{{#if @model.assignment}}<@fields.assignment
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}—{{/if}}</Kv>
-            <Kv @label='Grade'>{{#if @model.grade}}<@fields.grade
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}—{{/if}}</Kv>
-          </Section>
-          <Section @title='Details'>
-            <Kv @label='Assignment'>{{dash @model.assignmentTitle}}</Kv>
-            <Kv @label='Version' @mono={{true}}>{{if
-                @model.version
-                @model.version
-                1
-              }}</Kv>
-            <Kv @label='Submitted' @mono={{true}}>{{fmtDay
-                @model.submittedAt
-              }}</Kv>
-            <Kv @label='Due' @mono={{true}}>{{fmtDay
-                @model.assignment.dueWindow.dueAt
-              }}</Kv>
-            <Kv @label='Late'>{{if
-                @model.isLate
-                (concat @model.daysLate ' days')
-                'no'
-              }}</Kv>
-            <Kv @label='Grade'>{{gradeShort @model}}</Kv>
-            <Kv @label='Graded' @mono={{true}}>{{fmtDay
-                @model.grade.gradedAt
-              }}</Kv>
-            <Kv @label='Files' @mono={{true}}>{{if
-                @model.files.length
-                @model.files.length
-                'none'
-              }}</Kv>
-          </Section>
-        </:side>
-      </Sheet>
+          </:side>
+        </Sheet>
+      </IsoFrame>
       <style scoped>
         .answer {
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
@@ -349,7 +355,7 @@ export class Submission extends CardDef {
       );
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Sb' /></:avatar>
         <:title>{{headline @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -357,6 +363,21 @@ export class Submission extends CardDef {
               @model.statusLabel
             }}</Dot></:status>
         <:fact>Grade {{gradeLetter @model}} · {{gradeFact @model}}</:fact>
+        <:details>
+          {{#if @model.submittedAt}}<Detail
+              @label='Late'
+              @value={{lateLabel @model}}
+            />{{/if}}
+          <Detail @label='Due' @value={{dueLine @model}} />
+          <Detail
+            @label='Version'
+            @value='v{{if @model.version @model.version 1}}'
+          />
+          {{#if @model.files.length}}<Detail
+              @label='Files'
+              @value='{{@model.files.length}}'
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.enrollment}}<@fields.enrollment
               @format='atom'
               @displayContainer={{false}}
@@ -364,7 +385,7 @@ export class Submission extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

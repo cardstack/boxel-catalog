@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   CardDef,
   Component,
@@ -21,7 +22,6 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
 
 import { LineItem } from '../commerce/line-item';
 import { Vendor } from './vendor';
@@ -429,7 +429,7 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
               @items={{this.delivery}}
               @divided={{true}}
               @labelStyle='eyebrow'
-              class='kv'
+              class='kv kv-pad'
             >
               <:value as |row|><span
                   class={{if (get row 'mono') 'mono'}}
@@ -443,7 +443,7 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
                 @items={{this.linked}}
                 @divided={{true}}
                 @labelStyle='eyebrow'
-                class='kv'
+                class='kv kv-pad'
               >
                 <:value as |row|>
                   {{#if (eq row.key 'Vendor')}}<@fields.vendor
@@ -468,7 +468,7 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
               @items={{this.details}}
               @divided={{true}}
               @labelStyle='eyebrow'
-              class='kv'
+              class='kv kv-pad'
             >
               <:value as |row|><span
                   class={{if (get row 'mono') 'mono'}}
@@ -479,6 +479,10 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       </div>
     </article>
     <style scoped>
+      .kv-pad {
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
+      }
+
       .po {
         --pretui-kv-label-font-size: 0.5625rem;
         --pretui-kv-label-color: var(--muted-foreground);
@@ -486,16 +490,18 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         box-sizing: border-box;
         min-block-size: 100%;
         overflow-y: auto;
-        padding: 0.625rem;
+        padding: var(--boxel-sp-sm);
         display: grid;
         align-content: start;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.25;
         color: var(--card-foreground);
-        background: var(--muted);
+        background: var(--background);
         --text-stat: 1.375rem;
+
+        min-height: 100%;
       }
       .blk {
         min-inline-size: 0;
@@ -508,8 +514,8 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.625rem;
-        padding: 0.625rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs);
       }
       .id {
         flex: 1 1 12rem;
@@ -518,22 +524,22 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       h1 {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-sm);
         font-weight: 700;
       }
       .meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .tags,
       .acts {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: var(--boxel-sp-sm);
       }
       .acts {
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
       }
       .stats {
         display: grid;
@@ -542,19 +548,19 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         overflow: hidden;
       }
       .stats > * {
-        padding: 0.4375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         border-inline-end: 1px solid var(--border);
         margin-inline-end: -1px;
       }
       .cols {
         display: grid;
         grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         align-items: start;
       }
       .col {
         display: grid;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         min-inline-size: 0;
       }
       @container (width < 40rem) {
@@ -564,17 +570,17 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       }
       h2 {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         border-block-end: 1px solid var(--border);
       }
       .row {
         display: flex;
         align-items: center;
-        gap: 0.625rem;
+        gap: var(--boxel-sp-xs);
         min-block-size: 1.75rem;
-        padding: 0.4375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       }
       .row + .row {
         border-block-start: 1px solid var(--border);
@@ -585,13 +591,13 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         display: grid;
       }
       .rmeta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .num,
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .num {
@@ -600,13 +606,13 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       .kv {
         --boxel-sp-xs: 0.375rem;
         --boxel-sp-lg: 0.75rem;
-        padding: 0 0.625rem 0.25rem;
+        padding: 0 var(--boxel-sp-xs) var(--boxel-sp-4xs);
         row-gap: 0;
       }
       .empty-note {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.6875rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
     </style>
@@ -702,7 +708,7 @@ export class PurchaseOrder extends CardDef {
           @items={{this.rows}}
           @divided={{true}}
           @labelStyle='eyebrow'
-          class='kv'
+          class='kv kv-pad'
         >
           <:value as |row|>
             {{#if (eq (get row 'atom') 'vendor')}}<@fields.vendor
@@ -720,6 +726,10 @@ export class PurchaseOrder extends CardDef {
         </KeyValue>
       </article>
       <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+
         .pe {
           --pretui-kv-label-font-size: 0.5625rem;
           --pretui-kv-label-color: var(--muted-foreground);
@@ -838,31 +848,42 @@ export class PurchaseOrder extends CardDef {
       return poFacts(this.args.model as PurchaseOrder);
     }
     <template>
-      <CompactFitted
-        @mark='Po'
-        @title={{this.f.number}}
-        @sub={{this.f.sub}}
-        @fact={{if
-          this.f.next
-          (concat 'Waiting on ' this.f.next ' · ' this.f.waiting)
-          this.f.routeLong
-        }}
-        @big={{this.f.total}}
-        @tags={{this.f.tags}}
-      >
-        <:rows>
-          <CompactRow @k='Total' @v={{this.f.total}} class='mono' />
-          <CompactRow @k='Expected' @v={{this.f.expected}} class='mono' />
-          <CompactRow @k='Route' @v={{this.f.routeShort}} />
-          <CompactRow @k='Approval' @v={{this.f.approvalText}} class='mono' />
-          <CompactRow @k='Received' @v={{this.f.receivedText}} class='mono' />
-          <CompactRow @k='Lines' @v={{this.f.lineCount}} />
-          <CompactRow @k='Line items' @v=' ' />
+      <RichFittedCard>
+        <:avatar><Avatar @name='Po' @shape='square' /></:avatar>
+        <:title>{{this.f.number}}</:title>
+        <:status>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{if
+            this.f.next
+            (concat 'Waiting on ' this.f.next ' · ' this.f.waiting)
+            this.f.routeLong
+          }}</:fact>
+        <:metric><Metric @value={{this.f.total}} /></:metric>
+        <:details>
+          <Detail @label='Total' @value={{this.f.total}} class='mono' />
+          <Detail @label='Expected' @value={{this.f.expected}} class='mono' />
+          <Detail @label='Route' @value={{this.f.routeShort}} />
+          <Detail
+            @label='Approval'
+            @value={{this.f.approvalText}}
+            class='mono'
+          />
+          <Detail
+            @label='Received'
+            @value={{this.f.receivedText}}
+            class='mono'
+          />
+          <Detail @label='Lines' @value={{this.f.lineCount}} />
+          <Detail @label='Line items' @value=' ' />
           {{#each this.f.lines as |l|}}
-            <CompactRow @k={{l.name}} @v={{l.amount}} class='mono' />
+            <Detail @label={{l.name}} @value={{l.amount}} class='mono' />
           {{/each}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .mono {
           font-family: var(--font-mono);

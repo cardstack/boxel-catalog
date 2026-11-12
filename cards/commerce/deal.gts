@@ -1,4 +1,9 @@
 import { RelatedList, relatedSearch } from '../crm/record-views';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
+import {
+  resolveRRIReference,
+  type RealmResourceIdentifier,
+} from '@cardstack/runtime-common';
 import {
   Component,
   contains,
@@ -17,10 +22,11 @@ import {
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { CompactFitted, CompactRow, fmtDate, orEmpty } from './compact-parts';
+import { fmtDate, orEmpty } from './compact-parts';
 import { Opportunity } from '../crm/opportunity';
 import { Contact } from '../crm/contact';
 import { formatMoney, hasNumber } from '../crm/utils';
+import { IsoFrame } from '../shared/compact-sheet';
 
 function stageTone(stage?: string) {
   if (stage === 'closed won') return 'success' as const;
@@ -107,46 +113,48 @@ export class Deal extends Opportunity {
       return facts(this.args.model as Deal);
     }
     <template>
-      <CompactFitted
-        @mark='Deal'
-        @title={{@model.cardTitle}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.fact}}
-        @big={{this.f.money}}
-        @bigLabel='Value'
-        @tags={{this.f.tags}}
-      >
-        <:rows>
-          {{#if this.f.weightedText}}<CompactRow
-              @k='Weighted'
-              @v={{this.f.weightedText}}
+      <RichFittedCard>
+        <:avatar><Avatar @name='Deal' @shape='square' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.fact}}</:fact>
+        <:metric><Metric @value={{this.f.money}} @label='Value' /></:metric>
+        <:details>
+          {{#if this.f.weightedText}}<Detail
+              @label='Weighted'
+              @value={{this.f.weightedText}}
             />{{/if}}
-          {{#if this.f.closeText}}<CompactRow
-              @k='Close date'
-              @v={{this.f.closeText}}
+          {{#if this.f.closeText}}<Detail
+              @label='Close date'
+              @value={{this.f.closeText}}
             />{{/if}}
-          {{#if @model.account}}<CompactRow @k='Account'><@fields.account
+          {{#if @model.account}}<Detail @label='Account'><@fields.account
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if @model.daysInStage}}<CompactRow
-              @k='Days in stage'
-              @v='{{@model.daysInStage}}'
+              /></Detail>{{/if}}
+          {{#if @model.daysInStage}}<Detail
+              @label='Days in stage'
+              @value='{{@model.daysInStage}}'
             />{{/if}}
-          {{#if this.f.competitors}}<CompactRow
-              @k='Competitors'
-              @v={{this.f.competitors}}
+          {{#if this.f.competitors}}<Detail
+              @label='Competitors'
+              @value={{this.f.competitors}}
             />{{/if}}
-          {{#if @model.owner}}<CompactRow @k='Owner'><@fields.owner
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if @model.decisionMakers.length}}<CompactRow
-              @k='Decision makers'
-              @v='{{@model.decisionMakers.length}}'
+              /></Detail>{{/if}}
+          {{#if @model.decisionMakers.length}}<Detail
+              @label='Decision makers'
+              @value='{{@model.decisionMakers.length}}'
             />{{/if}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
     </template>
   };
 
@@ -254,7 +262,7 @@ export class Deal extends Opportunity {
           padding: 0 0.625rem 0.5rem;
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
       </style>
@@ -268,7 +276,7 @@ export class Deal extends Opportunity {
         this.args.context,
         () => this.args.model,
         // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-        new URL(path, import.meta.url).href,
+        resolveRRIReference(path, import.meta.url as RealmResourceIdentifier),
         name,
         field,
       );
@@ -327,127 +335,129 @@ export class Deal extends Opportunity {
       return rows;
     }
     <template>
-      <article class='dp'>
-        <header class='dh'>
-          <Avatar @name='Deal' @shape='square' @size={{24}} />
-          <div class='id'>
-            <h1>{{@model.cardTitle}}</h1>
-            <p class='meta'>{{this.f.sub}}</p>
-          </div>
-          <span class='tags'>{{#each this.f.tags as |t|}}<Chip
-                @label={{t.label}}
-                @tone={{t.tone}}
-                @appearance='plain'
-              />{{/each}}</span>
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Value'
-            @tone='info'
-            @value={{orEmpty this.f.amount}}
-            @style='currency'
-            @currency={{this.f.code}}
-            @maximumFractionDigits={{0}}
-            @roll={{false}}
-            @hint={{this.f.code}}
-          />
-          <Stat
-            @label='Probability'
-            @value={{this.f.pText}}
-            @roll={{false}}
-            @hint='stage default'
-          />
-          <Stat
-            @label='Weighted'
-            @value={{orEmpty this.f.weighted}}
-            @style='currency'
-            @currency={{this.f.code}}
-            @maximumFractionDigits={{0}}
-            @roll={{false}}
-            @hint='value × probability'
-          />
-          <Stat
-            @label='Days in stage'
-            @value={{orEmpty @model.daysInStage}}
-            @roll={{false}}
-          />
-        </div>
-        <div class='cols'>
-          <div>
-            {{#if @model.terms}}
-              <section>
-                <h2>Terms</h2>
-                <div class='pad'><@fields.terms /></div>
-              </section>
-            {{/if}}
-            {{#if @model.competitors.length}}
-              <section>
-                <h2>Competitors</h2>
-                <ul class='rows'>{{#each @model.competitors as |c|}}<li
-                    >{{c}}</li>{{/each}}</ul>
-              </section>
-            {{/if}}
-            {{#if @model.decisionMakers.length}}
-              <section>
-                <h2>Decision makers</h2>
-                <div class='people'><@fields.decisionMakers
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></div>
-              </section>
-            {{/if}}
-            <RelatedList
-              @title='Activity'
-              @cards={{this.activityCards}}
-              @empty='No activity logged'
+      <IsoFrame>
+        <article class='dp'>
+          <header class='dh'>
+            <Avatar @name='Deal' @shape='square' @size={{24}} />
+            <div class='id'>
+              <h1>{{@model.cardTitle}}</h1>
+              <p class='meta'>{{this.f.sub}}</p>
+            </div>
+            <span class='tags'>{{#each this.f.tags as |t|}}<Chip
+                  @label={{t.label}}
+                  @tone={{t.tone}}
+                  @appearance='plain'
+                />{{/each}}</span>
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Value'
+              @tone='info'
+              @value={{orEmpty this.f.amount}}
+              @style='currency'
+              @currency={{this.f.code}}
+              @maximumFractionDigits={{0}}
+              @roll={{false}}
+              @hint={{this.f.code}}
+            />
+            <Stat
+              @label='Probability'
+              @value={{this.f.pText}}
+              @roll={{false}}
+              @hint='stage default'
+            />
+            <Stat
+              @label='Weighted'
+              @value={{orEmpty this.f.weighted}}
+              @style='currency'
+              @currency={{this.f.code}}
+              @maximumFractionDigits={{0}}
+              @roll={{false}}
+              @hint='value × probability'
+            />
+            <Stat
+              @label='Days in stage'
+              @value={{orEmpty @model.daysInStage}}
+              @roll={{false}}
             />
           </div>
-          <div>
-            <section>
-              <h2>Linked</h2>
-              <KeyValue
-                @items={{this.linked}}
-                @divided={{true}}
-                @labelStyle='eyebrow'
-                class='kv'
-              >
-                <:value as |row|>
-                  {{#if (eq row.key 'Account')}}<@fields.account
+          <div class='cols'>
+            <div>
+              {{#if @model.terms}}
+                <section>
+                  <h2>Terms</h2>
+                  <div class='pad'><@fields.terms /></div>
+                </section>
+              {{/if}}
+              {{#if @model.competitors.length}}
+                <section>
+                  <h2>Competitors</h2>
+                  <ul class='rows'>{{#each @model.competitors as |c|}}<li
+                      >{{c}}</li>{{/each}}</ul>
+                </section>
+              {{/if}}
+              {{#if @model.decisionMakers.length}}
+                <section>
+                  <h2>Decision makers</h2>
+                  <div class='people'><@fields.decisionMakers
                       @format='atom'
                       @displayContainer={{false}}
-                    />
-                  {{else}}<@fields.owner
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{/if}}
-                </:value>
-              </KeyValue>
-            </section>
-            <RelatedList
-              @title='Proposals'
-              @cards={{this.proposalCards}}
-              @empty='No proposal yet'
-            />
-            <RelatedList
-              @title='Quotes'
-              @cards={{this.quoteCards}}
-              @empty='No quotes yet'
-            />
-            <section>
-              <h2>Details</h2>
-              <KeyValue
-                @items={{this.details}}
-                @divided={{true}}
-                @labelStyle='eyebrow'
-                class='kv'
+                    /></div>
+                </section>
+              {{/if}}
+              <RelatedList
+                @title='Activity'
+                @cards={{this.activityCards}}
+                @empty='No activity logged'
               />
-            </section>
+            </div>
+            <div>
+              <section>
+                <h2>Linked</h2>
+                <KeyValue
+                  @items={{this.linked}}
+                  @divided={{true}}
+                  @labelStyle='eyebrow'
+                  class='kv'
+                >
+                  <:value as |row|>
+                    {{#if (eq row.key 'Account')}}<@fields.account
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />
+                    {{else}}<@fields.owner
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{/if}}
+                  </:value>
+                </KeyValue>
+              </section>
+              <RelatedList
+                @title='Proposals'
+                @cards={{this.proposalCards}}
+                @empty='No proposal yet'
+              />
+              <RelatedList
+                @title='Quotes'
+                @cards={{this.quoteCards}}
+                @empty='No quotes yet'
+              />
+              <section>
+                <h2>Details</h2>
+                <KeyValue
+                  @items={{this.details}}
+                  @divided={{true}}
+                  @labelStyle='eyebrow'
+                  class='kv'
+                />
+              </section>
+            </div>
           </div>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .dp {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           --text-stat: 1.375rem;
           --text-ui-xs: 0.6875rem;
@@ -458,15 +468,15 @@ export class Deal extends Opportunity {
           border: 1px solid var(--border);
           border-radius: var(--radius);
           overflow: hidden;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.25;
           color: var(--card-foreground);
         }
         .dh {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
         }
         .id {
           flex: 1;
@@ -475,17 +485,17 @@ export class Deal extends Opportunity {
         h1 {
           font-family: var(--font-sans);
           margin: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .tags {
           display: flex;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
         }
         .stats {
           display: grid;
@@ -496,7 +506,7 @@ export class Deal extends Opportunity {
           border-inline-start: 1px solid var(--border);
         }
         .stats > * {
-          padding: 0.5rem 0.625rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
         .cols {
           display: grid;
@@ -520,12 +530,12 @@ export class Deal extends Opportunity {
         }
         h2 {
           margin: 0;
-          padding: 0.625rem 0.625rem 0.25rem;
-          font-size: 0.75rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-4xs);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .pad {
-          padding: 0 0.625rem 0.5rem;
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
         .rows {
           margin: 0;
@@ -533,17 +543,17 @@ export class Deal extends Opportunity {
           list-style: none;
         }
         .rows > li {
-          padding: 0.25rem 0.625rem;
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
           border-block-start: 1px solid var(--border);
         }
         .people {
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
-          padding: 0 0.625rem 0.5rem;
+          gap: var(--boxel-sp-4xs);
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
       </style>

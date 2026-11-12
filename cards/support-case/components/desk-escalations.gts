@@ -140,8 +140,10 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
           @priority={{2}}
           @forms={{SEARCH_FORMS}}
           @label='Search'
+          as |form|
         >
           <div class='desk-search'><SearchInput
+              @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
               @value={{this.escSearch}}
               @placeholder='Search subject, reason, level or who raised it'
               @onInput={{this.setEscSearch}}
@@ -170,6 +172,7 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
         </lc.Slot>
         <lc.Slot
           @id='raise'
+          @align='end'
           @priority={{0}}
           @pinned={{true}}
           @forms={{ADD_FORMS}}
@@ -177,7 +180,6 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
           as |form|
         >
           <Button
-            class='esc-add'
             @icon={{PlusIcon}}
             @tone='primary'
             @appearance='accent'
@@ -287,9 +289,6 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
       }
       .desk-search {
         inline-size: 15rem;
-      }
-      .esc-add {
-        margin-inline-start: auto;
       }
       .ecard {
         display: flex;

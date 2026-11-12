@@ -8,6 +8,8 @@ import { Stat } from '@cardstack/pretui/components/stat';
 import Component from '@glimmer/component';
 import { hash } from '@ember/helper';
 import { on } from '@ember/modifier';
+import { htmlSafe } from '@ember/template';
+import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
 import type { ComponentLike } from '@glint/template';
 import { Button } from '@cardstack/pretui/components/button';
 import {
@@ -74,6 +76,8 @@ export const Sheet: TemplateOnlyComponent<SheetSignature> = <template>
         --pto-mark-size: 2rem;
         --review-mark-size: 2rem;
         --review-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
+        --iso-mark-size: 2.25rem;
+        --iso-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         --pto-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         --meeting-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
         flex: none;
@@ -342,8 +346,8 @@ export const SheetEmpty: TemplateOnlyComponent<EmptySignature> = <template>
 
 // ── The kit's card layout (matrix-compact-kit cards/*.html) ──────────────
 // Isolated: IsoHead (mark, name, meta, status; optional StatStrip) above an
-// IsoGrid of Panels with a docked aside. Embedded: EmbCard. Fitted: FitCard
-// with FitRows. Rows are 28px with one hairline; labels are 9px mono caps.
+// IsoGrid of Panels with a docked aside. Embedded: EmbCard. Fitted: RichFittedCard.
+// Rows are 28px with one hairline; labels are 9px mono caps.
 
 interface HeadActionSignature {
   Args: {
@@ -478,6 +482,76 @@ export const IsoHead: TemplateOnlyComponent<IsoHeadSignature> = <template>
   </style>
 </template>;
 
+interface IsoMarkSignature {
+  Blocks: { default: [] };
+  Element: HTMLSpanElement;
+}
+
+/** The square mark at the start of an IsoHead: initials or an icon. */
+export const IsoMark: TemplateOnlyComponent<IsoMarkSignature> = <template>
+  <span class='iso-mark' aria-hidden='true' ...attributes>{{yield}}</span>
+  <style scoped>
+    @layer PretComponent {
+      .iso-mark {
+        display: inline-grid;
+        flex: none;
+        place-items: center;
+        inline-size: var(--iso-mark-size, 2rem);
+        block-size: var(--iso-mark-size, 2rem);
+        border-radius: calc(var(--radius) - 2px);
+        background: var(--card);
+        box-shadow: inset 0 0 0 1px var(--border);
+        color: var(--primary-ink);
+        font-size: var(--iso-mark-font-size, var(--boxel-font-size-xs));
+        font-weight: 600;
+        line-height: 1;
+      }
+    }
+  </style>
+</template>;
+
+interface DotLabelSignature {
+  Args: { label?: string | null; hue?: Hue; color?: string };
+  Element: HTMLSpanElement;
+}
+
+/** A row status as a 7px dot in the hue (or CSS colour) plus its label: no pill. */
+export class DotLabel extends Component<DotLabelSignature> {
+  get dotStyle() {
+    let { hue, color } = this.args;
+    return htmlSafe(
+      `background: ${hue ? stateColor(hue).ring : color || 'var(--muted-foreground)'}`,
+    );
+  }
+  <template>
+    <span class='dot-label' ...attributes><span
+        class='dot'
+        style={{this.dotStyle}}
+        aria-hidden='true'
+      ></span>{{@label}}</span>
+    <style scoped>
+      @layer PretComponent {
+        .dot-label {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          max-inline-size: 100%;
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 600;
+          white-space: nowrap;
+          color: var(--foreground);
+        }
+        .dot {
+          flex: none;
+          inline-size: 0.4375rem;
+          block-size: 0.4375rem;
+          border-radius: 50%;
+        }
+      }
+    </style>
+  </template>
+}
+
 export interface StripItem {
   label: string;
   value?: string | null;
@@ -575,7 +649,7 @@ interface IsoPageSignature {
 export const IsoPage: TemplateOnlyComponent<IsoPageSignature> = <template>
   <article class='iso' ...attributes>
     {{yield to='head'}}
-    <div class='iso-grid'>
+    <div class='iso-grid' data-aside={{if (has-block 'aside') 'true'}}>
       <div class='iso-col'>{{yield to='main'}}</div>
       {{#if (has-block 'aside')}}<aside class='iso-aside'>{{yield
             to='aside'
@@ -592,8 +666,8 @@ export const IsoPage: TemplateOnlyComponent<IsoPageSignature> = <template>
         box-sizing: border-box;
         min-height: 100%;
         padding: var(--boxel-sp-sm);
-        background: var(--card);
-        color: var(--card-foreground);
+        background: var(--background);
+        color: var(--foreground);
         font-family: var(--font-sans);
         font-size: var(--boxel-font-size-xs);
         line-height: 1.35;
@@ -620,16 +694,50 @@ export const IsoPage: TemplateOnlyComponent<IsoPageSignature> = <template>
         border-radius: var(--radius);
       }
       @container iso (width >= 42rem) {
-        .iso-grid {
+        /* with an aside the two columns are ONE card: a single outer frame
+           and one hairline between them; without one the main card takes
+           the full width */
+        .iso-grid[data-aside] {
           grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-          align-items: start;
+          gap: 0;
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
         }
-        /* docked flush: one hairline on its leading edge */
-        .iso-aside {
+        .iso-grid[data-aside] > .iso-col {
+          border: 0;
+          border-radius: 0;
+        }
+        .iso-grid[data-aside] > .iso-aside {
           border-width: 0 0 0 1px;
           border-radius: 0;
-          background: var(--card);
         }
+      }
+    }
+  </style>
+</template>;
+
+interface IsoFrameSignature {
+  Blocks: { default: [] };
+  Element: HTMLElement;
+}
+
+/** The page ground for a card that lays out its own blocks: IsoPage's
+ *  padding and background, without its head, columns or gap. */
+export const IsoFrame: TemplateOnlyComponent<IsoFrameSignature> = <template>
+  <div class='iso-frame' ...attributes>{{yield}}</div>
+  <style scoped>
+    @layer PretComponent {
+      .iso-frame {
+        box-sizing: border-box;
+        /* full width even when the card's host lays it out as a flex item,
+           where an auto width would shrink to the content */
+        inline-size: 100%;
+        min-height: 100%;
+        padding: var(--boxel-sp-sm);
+        background: var(--background);
+        color: var(--foreground);
       }
     }
   </style>
@@ -737,7 +845,7 @@ export const Kv: TemplateOnlyComponent<KvSignature> = <template>
       --boxel-sp-lg: 0.75rem;
       --boxel-sp-xs: 0.375rem;
       margin: 0;
-      padding-inline: var(--boxel-sp-xs);
+      --pretui-kv-pad-inline: var(--boxel-sp-sm);
       border-top: 1px solid var(--border);
       font-size: var(--boxel-font-size-xs);
       overflow-wrap: break-word;
@@ -828,179 +936,6 @@ export const EmbCard: TemplateOnlyComponent<EmbCardSignature> = <template>
         display: inline-flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
-      }
-    }
-  </style>
-</template>;
-
-interface FitCardSignature {
-  Args: { title?: string | null };
-  Blocks: { mark: []; status: []; default: [] };
-  Element: HTMLElement;
-}
-
-/** Fitted: a 30px head (mark, name, status at 250+ wide), then 28px rows.
- *  The body is a wrapping column: a row that does not fit wraps into a
- *  second column outside the tile, so a row is shown whole or not at all. */
-export const FitCard: TemplateOnlyComponent<FitCardSignature> = <template>
-  <article class='fx' ...attributes>
-    <header class='fh'>
-      {{#if (has-block 'mark')}}<span class='fh-mark'>{{yield
-            to='mark'
-          }}</span>{{/if}}
-      <strong class='fh-n'>{{@title}}</strong>
-      {{#if (has-block 'status')}}<span class='fh-st'>{{yield
-            to='status'
-          }}</span>{{/if}}
-    </header>
-    <div class='fx-body'>
-      {{! a first line never wraps its first item; this empty one takes that
-        place so a too-tall row wraps out of sight instead of being cut }}
-      <span class='fx-first' aria-hidden='true'></span>
-      {{#if (has-block 'status')}}<div class='fr fr-st'>{{yield
-            to='status'
-          }}</div>{{/if}}
-      {{yield}}
-    </div>
-  </article>
-  <style scoped>
-    @layer PretComponent {
-      .fx {
-        display: flex;
-        flex-direction: column;
-        block-size: 100%;
-        overflow: hidden;
-        font-family: var(--font-sans);
-        font-size: var(--boxel-font-size-xs);
-        line-height: 1.35;
-        color: var(--card-foreground);
-      }
-      .fh {
-        flex: none;
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        block-size: 1.875rem;
-        padding: 0 var(--boxel-sp-xs);
-        min-width: 0;
-      }
-      .fh-mark {
-        --pretui-avatar-size: 1.25rem;
-        --position-mark-size: 1.25rem;
-        --meeting-mark-size: 1.25rem;
-        --pto-mark-size: 1.25rem;
-        --review-mark-size: 1.25rem;
-        --review-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
-        --pto-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
-        --meeting-mark-font-size: 0.5625rem; /* 9px ladder label: no token */
-        flex: none;
-        display: inline-flex;
-      }
-      .fh-n {
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-weight: 700;
-      }
-      .fh-st {
-        flex: none;
-        display: none;
-      }
-      .fx-body {
-        flex: 1;
-        min-height: 0;
-        display: flex;
-        flex-flow: column wrap;
-        align-content: flex-start;
-        overflow: hidden;
-      }
-      .fx-first {
-        block-size: 0;
-      }
-      .fr-st {
-        inline-size: 100%;
-        flex: none;
-        display: flex;
-        align-items: center;
-        box-sizing: border-box;
-        block-size: 1.75rem;
-        padding: 0 var(--boxel-sp-xs);
-        border-top: 1px solid var(--border);
-        overflow: hidden;
-      }
-      @container fitted-card (width >= 250px) {
-        .fh-st {
-          display: inline-flex;
-        }
-        .fr-st {
-          display: none;
-        }
-      }
-    }
-  </style>
-</template>;
-
-interface FitRowSignature {
-  Args: { label?: string; left?: boolean };
-  Blocks: { default: [] };
-  Element: HTMLElement;
-}
-
-/** One fitted row: mono caps label and a right-aligned value; under 250
- *  wide the label drops and the value reads left. */
-export const FitRow: TemplateOnlyComponent<FitRowSignature> = <template>
-  <div class='fr' data-left={{if @left 'true'}} ...attributes>
-    {{#if @label}}<span class='fr-k'>{{@label}}</span>{{/if}}
-    <span class='fr-v'>{{yield}}</span>
-  </div>
-  <style scoped>
-    @layer PretComponent {
-      .fr {
-        inline-size: 100%;
-        flex: none;
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        box-sizing: border-box;
-        block-size: 1.75rem;
-        padding: 0 var(--boxel-sp-xs);
-        border-top: 1px solid var(--border);
-        min-width: 0;
-        overflow: hidden;
-        white-space: nowrap;
-      }
-      .fr-k {
-        flex: none;
-        font-weight: 600;
-        font-size: 0.5625rem; /* 9px ladder label: no token */
-        line-height: 1.3;
-        font-family: var(--font-mono);
-        letter-spacing: 0.13em;
-        text-transform: uppercase;
-        color: var(--subtle-foreground);
-      }
-      .fr-v {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: var(--boxel-sp-2xs);
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .fr[data-left] .fr-v {
-        justify-content: flex-start;
-      }
-      @container fitted-card (width < 250px) {
-        .fr-k {
-          display: none;
-        }
-        .fr-v {
-          justify-content: flex-start;
-        }
       }
     }
   </style>

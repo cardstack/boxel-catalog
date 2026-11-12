@@ -44,6 +44,12 @@
             "minPct": 0
           }
         ]
+      },
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
       }
     },
     "relationships": {

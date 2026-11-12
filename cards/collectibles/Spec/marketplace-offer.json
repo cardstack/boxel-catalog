@@ -20,6 +20,11 @@
         "links": {
           "self": "../MarketplaceOffer/yeezy-350-zebra-185"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

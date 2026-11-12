@@ -12,7 +12,13 @@
           "code": "USD"
         }
       },
-      "endDateAtVersion": "2028-01-14"
+      "endDateAtVersion": "2028-01-14",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "executedBy": {

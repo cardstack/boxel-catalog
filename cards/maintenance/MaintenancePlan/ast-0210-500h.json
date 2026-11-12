@@ -55,7 +55,13 @@
       "assignTeamName": "Facilities",
       "active": true,
       "complianceWindowDays": 7,
-      "lastCompletedMeter": 4310
+      "lastCompletedMeter": 4310,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "asset": {

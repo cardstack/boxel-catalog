@@ -340,7 +340,12 @@ const F = (...forms: [string, number][]): LayoutControlForm[] =>
   forms.map(([name, minWidth]) => ({ name, minWidth }));
 // rem widths, richest first (the mock's Directory toolbar table)
 const ACTION_FORMS = F(['label', 8], ['icon', 1.75]);
-const SEARCH_FORMS = F(['field', 15], ['field-s', 10.5], ['field-xs', 6]);
+const SEARCH_FORMS = F(
+  ['field', 15],
+  ['field-s', 10.5],
+  ['field-xs', 6],
+  ['collapsed', 2],
+);
 const VIEW_FORMS = F(['text', 7], ['menu', 0]);
 
 type SlotComponent = ComponentLike<LayoutControlSlotSignature>;
@@ -706,6 +711,7 @@ export class ListToolbar extends GlimmerComponent<ListToolbarSignature> {
         >
           {{! the field never leaves the row: typing is the main job of a list }}
           <SearchInput
+            @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
             class='lt-search'
             data-form={{form}}
             @value={{@searchValue}}

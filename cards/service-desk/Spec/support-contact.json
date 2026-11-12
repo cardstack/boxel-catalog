@@ -25,6 +25,11 @@
         "links": {
           "self": "../SupportContact/jane-smith"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

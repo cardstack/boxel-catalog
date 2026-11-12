@@ -60,7 +60,7 @@ interface Signature {
 
 const F = (...forms: [string, number][]) =>
   forms.map(([name, minWidth]) => ({ name, minWidth }));
-const SEARCH_FORMS = F(['field', 12], ['field-s', 8], ['icon', 2], ['menu', 0]);
+const SEARCH_FORMS = F(['field', 12], ['field-s', 8], ['collapsed', 2]);
 const VIEW_FORMS = F(['text', 14], ['icon', 7], ['menu', 0]);
 const ADD_FORMS = F(['label', 8], ['icon', 2]);
 const VIEWS = [
@@ -239,8 +239,10 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
             @priority={{1}}
             @forms={{SEARCH_FORMS}}
             @label='Search'
+            as |form|
           >
             <div class='sbox'><SearchInput
+                @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
                 @value={{this.search}}
                 @onInput={{this.setSearch}}
                 @placeholder={{if
@@ -252,19 +254,20 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
           </lc.Slot>
           <lc.Slot
             @id='view'
+            @align='end'
             @priority={{2}}
             @forms={{VIEW_FORMS}}
             @label='View'
             @menuItems={{this.viewChoices}}
             as |form|
           >
-            <div class='push'><SegmentedControl
-                @label='View'
-                @display={{if (eq form 'icon') 'icon' 'text'}}
-                @options={{VIEWS}}
-                @value={{this.view}}
-                @onValueChange={{this.setView}}
-              /></div>
+            <SegmentedControl
+              @label='View'
+              @display={{if (eq form 'icon') 'icon' 'text'}}
+              @options={{VIEWS}}
+              @value={{this.view}}
+              @onValueChange={{this.setView}}
+            />
           </lc.Slot>
           {{#if this.canAdd}}
             <lc.Slot
@@ -400,9 +403,6 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
       .c {
         font-size: var(--boxel-font-size-xs);
         font-family: var(--font-sans);
-      }
-      .push {
-        margin-inline-start: auto;
       }
       .first {
         all: unset;

@@ -9,6 +9,7 @@ import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 
 import { SeverityBadge } from '../components/severity-badge';
 import { SeverityField } from '../severity-field';
+import { RichFittedCard, Detail } from '../../shared/rich-fitted-card';
 
 // Usage page for the Severity Badge block: every level in every mode, plus
 // one real Severity field so the embedded and atom renders are exercised.
@@ -114,27 +115,17 @@ export class SeverityBadgeExample extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <div class='fit'>
-        <SeverityBadge @level='critical' @compact={{true}} />
-        <span class='name'>Severity Badge</span>
-      </div>
-      <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      </style>
+      <RichFittedCard>
+        <:title>Severity Badge</:title>
+        <:status><SeverityBadge @level='critical' @compact={{true}} /></:status>
+        <:subtitle>usage page</:subtitle>
+        <:details>
+          <Detail @label='Levels' @value='minor, major, critical' />
+          {{#if @model.severity}}<Detail @label='Field'><@fields.severity
+                @format='atom'
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

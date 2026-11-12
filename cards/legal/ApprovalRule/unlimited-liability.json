@@ -11,7 +11,13 @@
         "CEO"
       ],
       "isParallel": false,
-      "guidance": "Any deviation from the approved liability clause goes to Legal and then the CEO, regardless of value."
+      "guidance": "Any deviation from the approved liability clause goes to Legal and then the CEO, regardless of value.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

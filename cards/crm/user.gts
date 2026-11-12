@@ -10,6 +10,8 @@ import UserIcon from '@cardstack/boxel-icons/user';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { avatarHue } from './utils';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 
 export class User extends CardDef {
   static displayName = 'User';
@@ -97,87 +99,15 @@ export class User extends CardDef {
       return this.args.model?.name?.trim() || 'Unnamed User';
     }
     <template>
-      <div class='fitted'>
-        <Avatar
-          class='avatar-sm'
-          @name={{if @model.name @model.name ''}}
-          @hue={{avatarHue @model.name}}
-          @size={{28}}
-        />
-        <Avatar
-          class='avatar-lg'
-          @name={{if @model.name @model.name ''}}
-          @hue={{avatarHue @model.name}}
-          @size={{40}}
-        />
-        <div class='info'>
-          <span class='name'>{{this.name}}</span>
-          {{#if @model.email}}
-            <span class='meta line-email'>{{@model.email}}</span>
-          {{/if}}
-        </div>
-      </div>
-      <style scoped>
-        .fitted {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          box-sizing: border-box;
-          overflow: hidden;
-          color: var(--foreground);
-        }
-        /* Pret UI Avatar sizes itself from @size, so each tier mounts its own
-           and the container query shows one. The parent class keeps these
-           rules above Avatar's own display. */
-        .fitted .avatar-lg {
-          display: none;
-        }
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-6xs);
-          min-width: 0;
-        }
-        .name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-xs);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .meta {
-          font-size: var(--boxel-font-size-2xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .line-email {
-          display: none;
-        }
-        @container fitted-card (min-height: 65px) {
-          .line-email {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .fitted {
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            padding: var(--boxel-sp-sm);
-          }
-          .fitted .avatar-sm {
-            display: none;
-          }
-          .fitted .avatar-lg {
-            display: inline-flex;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:avatar><Avatar
+            @name={{if @model.name @model.name ''}}
+            @hue={{avatarHue @model.name}}
+            aria-hidden='true'
+          /></:avatar>
+        <:title>{{this.name}}</:title>
+        <:subtitle>{{@model.email}}</:subtitle>
+      </RichFittedCard>
     </template>
   };
 
@@ -187,31 +117,42 @@ export class User extends CardDef {
     }
     contactRows = [{ key: 'Email', value: 'email' }];
     <template>
-      <article class='user-page'>
-        <header class='uh'>
-          <Avatar
-            @name={{if @model.name @model.name ''}}
-            @hue={{avatarHue @model.name}}
-            @size={{56}}
-          />
-          <div class='uh-id'>
-            <p class='doc-kind'>{{@model.constructor.displayName}}</p>
-            <h1>{{this.name}}</h1>
-          </div>
-        </header>
-        {{#if @model.email}}
-          <section class='panel'>
-            <h2>Contact</h2>
-            <KeyValue @items={{this.contactRows}}>
-              <:value><@fields.email /></:value>
-            </KeyValue>
-          </section>
-        {{/if}}
-      </article>
+      <IsoFrame>
+        <article class='user-page'>
+          <header class='uh'>
+            <Avatar
+              @name={{if @model.name @model.name ''}}
+              @hue={{avatarHue @model.name}}
+              @size={{56}}
+            />
+            <div class='uh-id'>
+              <p class='doc-kind'>{{@model.constructor.displayName}}</p>
+              <h1>{{this.name}}</h1>
+            </div>
+          </header>
+          {{#if @model.email}}
+            <section class='panel'>
+              <h2>Contact</h2>
+              <KeyValue class='kv-pad' @items={{this.contactRows}}>
+                <:value><@fields.email /></:value>
+              </KeyValue>
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+
         .user-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 40rem;
           margin: 0 auto;
+          inline-size: 100%;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
@@ -240,7 +181,7 @@ export class User extends CardDef {
         }
         .panel {
           border: 1px solid var(--border);
-          border-radius: 0.75rem;
+          border-radius: var(--radius);
           padding: var(--boxel-sp) var(--boxel-sp-lg);
           background-color: var(--card);
           color: var(--card-foreground);

@@ -22,6 +22,11 @@
         "links": {
           "self": "../Event/end-of-season-awards-night"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

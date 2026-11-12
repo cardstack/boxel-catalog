@@ -16,7 +16,7 @@ export const HORIZON_DAYS = 14;
 // LayoutControl forms, richest first; minWidth in rem.
 const forms = (...list: [string, number][]) =>
   list.map(([name, minWidth]) => ({ name, minWidth }));
-export const SEARCH_FORMS = forms(['field', 14], ['menu', 0]);
+export const SEARCH_FORMS = forms(['field', 14], ['collapsed', 1.75]);
 export const CHIP_FORMS = forms(['chips', 16], ['menu', 0]);
 export const VIEW_FORMS = forms(['segments', 12], ['menu', 0]);
 export const ADD_FORMS = forms(['label', 7], ['icon', 2]);

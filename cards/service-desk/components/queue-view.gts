@@ -106,7 +106,7 @@ interface Signature {
  */
 const F = (...forms: [string, number][]) =>
   forms.map(([name, minWidth]) => ({ name, minWidth }));
-const SEARCH_FORMS = F(['field', 12], ['field-s', 8], ['icon', 2], ['menu', 0]);
+const SEARCH_FORMS = F(['field', 12], ['field-s', 8], ['collapsed', 2]);
 const QUEUE_FORMS = F(['chips', 24], ['menu', 0]);
 const ADD_FORMS = F(['label', 8], ['icon', 2]);
 
@@ -712,8 +712,10 @@ export class QueueView extends GlimmerComponent<Signature> {
             @priority={{1}}
             @forms={{SEARCH_FORMS}}
             @label='Search'
+            as |form|
           >
             <div class='sbox'><SearchInput
+                @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
                 class='qsearch'
                 @controlId={{this.searchId}}
                 @value={{this.search}}
@@ -742,12 +744,15 @@ export class QueueView extends GlimmerComponent<Signature> {
               @pinned={{true}}
               @forms={{ADD_FORMS}}
               @label='New ticket'
+              as |form|
             >
               <Button
                 @icon={{PlusIcon}}
                 @tone='primary'
                 @appearance='accent'
                 @size='s'
+                @display={{if (eq form 'icon') 'icon' 'label'}}
+                @label='New ticket'
                 @busy={{@creating}}
                 {{on 'click' @onNew}}
               >

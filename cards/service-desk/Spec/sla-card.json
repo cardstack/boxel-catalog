@@ -27,6 +27,11 @@
         "links": {
           "self": "../Sla/sla-case-0142"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

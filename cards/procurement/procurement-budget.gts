@@ -5,6 +5,7 @@ import {
   contains,
   StringField,
 } from '@cardstack/base/card-api';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import NumberField from '@cardstack/base/number';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
@@ -16,13 +17,14 @@ import {
   utilizationBandOf,
 } from './budget-utilization-field';
 import { formatMoney } from '../commerce/line-item-totals';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
+
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Button } from '@cardstack/pretui/components/button';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // POs link TO a budget; a runtime ref keeps purchase-order out of this
 // module's imports (it imports this one).
@@ -169,99 +171,101 @@ export class ProcurementBudget extends CardDef {
     }
     open = (card: CardDef) => this.args.viewCard?.(card);
     <template>
-      <article class='ip'>
-        <header class='ih'>
-          <Avatar @name='Budget' @shape='square' @size={{24}} />
-          <div class='id'>
-            <h1>{{this.f.title}}</h1>
-            <p class='meta'>{{this.f.sub}}</p>
-          </div>
-          <span class='tags'>
-            <Chip
-              @label={{this.f.band}}
-              @tone={{this.f.tone}}
-              @appearance='plain'
+      <IsoFrame>
+        <article class='ip'>
+          <header class='ih'>
+            <Avatar @name='Budget' @shape='square' @size={{24}} />
+            <div class='id'>
+              <h1>{{this.f.title}}</h1>
+              <p class='meta'>{{this.f.sub}}</p>
+            </div>
+            <span class='tags'>
+              <Chip
+                @label={{this.f.band}}
+                @tone={{this.f.tone}}
+                @appearance='plain'
+              />
+              <Chip @label={{this.f.usedText}} @appearance='plain' />
+            </span>
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Budget'
+              @value={{this.f.budgetText}}
+              @roll={{false}}
+              @hint={{@model.period}}
             />
-            <Chip @label={{this.f.usedText}} @appearance='plain' />
-          </span>
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Budget'
-            @value={{this.f.budgetText}}
-            @roll={{false}}
-            @hint={{@model.period}}
-          />
-          <Stat
-            @label='Used'
-            @value={{this.f.pctText}}
-            @roll={{false}}
-            @hint='committed + actual'
-          />
-          <Stat
-            @label='Remaining'
-            @tone='success'
-            @value={{this.f.remainingText}}
-            @roll={{false}}
-            @hint='to commit'
-          />
-        </div>
-        <div class='cols'>
-          <div>
-            <section>
-              <h2>Utilisation</h2>
-              <div class='pad'>
-                <ProgressBar
-                  @value={{this.f.pct}}
-                  @hue={{this.f.hue}}
-                  aria-label='Budget used'
-                />
+            <Stat
+              @label='Used'
+              @value={{this.f.pctText}}
+              @roll={{false}}
+              @hint='committed + actual'
+            />
+            <Stat
+              @label='Remaining'
+              @tone='success'
+              @value={{this.f.remainingText}}
+              @roll={{false}}
+              @hint='to commit'
+            />
+          </div>
+          <div class='cols'>
+            <div>
+              <section>
+                <h2>Utilisation</h2>
+                <div class='pad'>
+                  <ProgressBar
+                    @value={{this.f.pct}}
+                    @hue={{this.f.hue}}
+                    aria-label='Budget used'
+                  />
+                  <KeyValue
+                    @items={{this.f.ledger}}
+                    @divided={{true}}
+                    @labelStyle='eyebrow'
+                    class='kv flush'
+                  />
+                </div>
+              </section>
+              <section>
+                <h2>Charged here</h2>
+                {{#if this.charged.length}}
+                  <ul class='list'>
+                    {{#each this.charged as |po|}}
+                      <li>
+                        <Button
+                          @appearance='plain'
+                          class='po'
+                          {{on 'click' (fn this.open po.card)}}
+                        >
+                          <span class='two'>
+                            <strong>{{po.number}}</strong>
+                            <span class='meta'>{{po.sub}}</span>
+                          </span>
+                          <span class='mono'>{{po.amount}}</span>
+                        </Button>
+                      </li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <p class='empty-note'>No purchase orders charged yet</p>
+                {{/if}}
+              </section>
+            </div>
+            <div>
+              <section>
+                <h2>Details</h2>
                 <KeyValue
-                  @items={{this.f.ledger}}
+                  @items={{this.f.details}}
                   @divided={{true}}
                   @labelStyle='eyebrow'
-                  class='kv flush'
+                  class='kv'
                 />
-              </div>
-            </section>
-            <section>
-              <h2>Charged here</h2>
-              {{#if this.charged.length}}
-                <ul class='list'>
-                  {{#each this.charged as |po|}}
-                    <li>
-                      <Button
-                        @appearance='plain'
-                        class='po'
-                        {{on 'click' (fn this.open po.card)}}
-                      >
-                        <span class='two'>
-                          <strong>{{po.number}}</strong>
-                          <span class='meta'>{{po.sub}}</span>
-                        </span>
-                        <span class='mono'>{{po.amount}}</span>
-                      </Button>
-                    </li>
-                  {{/each}}
-                </ul>
-              {{else}}
-                <p class='empty-note'>No purchase orders charged yet</p>
-              {{/if}}
-            </section>
+              </section>
+            </div>
           </div>
-          <div>
-            <section>
-              <h2>Details</h2>
-              <KeyValue
-                @items={{this.f.details}}
-                @divided={{true}}
-                @labelStyle='eyebrow'
-                class='kv'
-              />
-            </section>
-          </div>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .ip {
           --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
@@ -346,11 +350,11 @@ export class ProcurementBudget extends CardDef {
           /* KeyValue pads divided rows with --boxel-sp-xs: 0.35rem gives 28px rows */
           --boxel-sp-xs: 0.35rem;
           --boxel-sp-lg: 0.75rem;
-          padding-inline: var(--boxel-sp-xs);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
         .kv.flush {
-          padding-inline: 0;
+          --pretui-kv-pad-inline: 0;
           margin-block-start: var(--boxel-sp-xs);
         }
         .list {
@@ -472,7 +476,7 @@ export class ProcurementBudget extends CardDef {
           /* KeyValue pads divided rows with --boxel-sp-xs: 0.35rem gives 28px rows */
           --boxel-sp-xs: 0.35rem;
           --boxel-sp-lg: 0.75rem;
-          padding-inline: var(--boxel-sp-xs);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           padding-block-end: var(--boxel-sp-4xs);
           row-gap: 0;
         }
@@ -532,24 +536,27 @@ export class ProcurementBudget extends CardDef {
       return budgetFacts(this.args.model as ProcurementBudget);
     }
     <template>
-      <CompactFitted
-        @mark='Budget'
-        @title={{this.f.title}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.factText}}
-        @tags={{this.f.tags}}
-      >
-        <:rows>
+      <RichFittedCard>
+        <:avatar><Avatar @name='Budget' @shape='square' /></:avatar>
+        <:title>{{this.f.title}}</:title>
+        <:status>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.factText}}</:fact>
+        <:details>
           <div class='bar'><ProgressBar
               @value={{this.f.pct}}
               @hue={{this.f.hue}}
               aria-label='Budget used'
             /></div>
           {{#each this.f.fittedRows as |r|}}
-            <CompactRow @k={{r.key}} @v={{r.value}} />
+            <Detail @label={{r.key}} @value={{r.value}} />
           {{/each}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .bar {
           display: flex;

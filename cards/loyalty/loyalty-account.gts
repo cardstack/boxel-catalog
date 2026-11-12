@@ -23,11 +23,12 @@ import ArrowsExchangeIcon from '@cardstack/boxel-icons/arrows-exchange';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 
 import { Contact } from '../crm/contact';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import LoyaltyTierField, { type TierOption } from './loyalty-tier-field';
 import MemberNumberField from './member-number-field';
 import PointsBalanceField from './points-balance-field';
 import { MembershipStatusField } from './membership-status-field';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const NUM = new Intl.NumberFormat();
 const SIGNED = new Intl.NumberFormat(undefined, { signDisplay: 'exceptZero' });
@@ -403,8 +404,8 @@ export class LoyaltyAccount extends CardDef {
       return `${num(m?.pointsBalance)} pts · ${num(m?.lifetimePoints)} lifetime`;
     }
     <template>
-      <FitTile>
-        <:avatar><Avatar @name={{this.name}} @size={{32}} /></:avatar>
+      <RichFittedCard>
+        <:avatar><Avatar @name={{this.name}} /></:avatar>
         <:title>{{this.name}}</:title>
         <:subtitle>{{this.meta}}</:subtitle>
         <:status>
@@ -415,11 +416,29 @@ export class LoyaltyAccount extends CardDef {
           />
         </:status>
         <:fact>{{this.fact}}</:fact>
+        <:metric><Metric
+            @value={{num @model.pointsBalance}}
+            @label='Balance'
+          /></:metric>
+        <:details>
+          {{#if @model.tier}}<Detail
+              @label='Tier'
+              @value={{tierLine this.model}}
+            />{{/if}}
+          {{#if @model.tierSince}}<Detail
+              @label='Tier since'
+              @value={{day @model.tierSince}}
+            />{{/if}}
+          {{#if @model.memberSince}}<Detail
+              @label='Member since'
+              @value={{day @model.memberSince}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.holder}}<@fields.holder
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
@@ -532,131 +551,132 @@ export class LoyaltyAccount extends CardDef {
     }
 
     <template>
-      <article class='page'>
-        <header class='head'>
-          <Avatar @name={{this.name}} @size={{28}} />
-          <div class='id'>
-            <h1 class='name'>{{this.name}}</h1>
-            {{#if this.meta}}<p class='meta'>{{this.meta}}</p>{{/if}}
-          </div>
-          <div class='tags'>
-            <DotText @label={{@model.tier}} @tone='primary' />
-            <DotText
-              @label={{@model.status}}
-              @tone={{statusTone @model.status}}
-            />
-          </div>
-        </header>
-
-        <dl class='stats' aria-label='Key numbers'>
-          <div class='stat'>
-            <dt class='label'>Balance</dt>
-            <dd class='value'>{{num @model.pointsBalance}}</dd>
-            <dd class='sub'>redeemable points</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Lifetime</dt>
-            <dd class='value'>{{num @model.lifetimePoints}}</dd>
-            <dd class='sub'>points earned</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Tier</dt>
-            <dd class='value'>{{if @model.tier @model.tier '—'}}</dd>
-            <dd class='sub'>since {{day @model.tierSince}}</dd>
-          </div>
-          {{#if this.hasBookings}}
-            <div class='stat'>
-              <dt class='label'>Bookings</dt>
-              <dd class='value'>{{this.bookings.length}}</dd>
-              <dd class='sub'>for this holder</dd>
+      <IsoFrame>
+        <article class='page'>
+          <header class='head'>
+            <Avatar @name={{this.name}} @size={{28}} />
+            <div class='id'>
+              <h1 class='name'>{{this.name}}</h1>
+              {{#if this.meta}}<p class='meta'>{{this.meta}}</p>{{/if}}
             </div>
-          {{/if}}
-        </dl>
+            <div class='tags'>
+              <DotText @label={{@model.tier}} @tone='primary' />
+              <DotText
+                @label={{@model.status}}
+                @tone={{statusTone @model.status}}
+              />
+            </div>
+          </header>
 
-        <div class='cols'>
-          <div class='main'>
-            <section class='sec'>
-              <h2>Recent activity</h2>
-              {{#if this.ledger.length}}
-                <ul class='rows'>
-                  {{#each this.ledger key='id' as |t|}}
-                    <li class='row'>
-                      <span class='date'>{{day t.occurredAt}}</span>
-                      <span class='what'><strong>{{reasonOf t}}</strong>
-                        <span class='muted'>{{#if t.source}}·
-                            {{t.source}}{{/if}}{{#if t.expiresAt}}
-                            · expires
-                            {{dayMonth t.expiresAt}}{{/if}}</span></span>
-                      <span class='amt {{sign t.amount}}'>{{signed
-                          t.amount
-                        }}</span>
-                    </li>
-                  {{/each}}
-                </ul>
-              {{else}}
-                <p class='empty'>No points activity yet</p>
-              {{/if}}
-            </section>
-            {{#if this.ladder.length}}
+          <dl class='stats' aria-label='Key numbers'>
+            <div class='stat'>
+              <dt class='label'>Balance</dt>
+              <dd class='value'>{{num @model.pointsBalance}}</dd>
+              <dd class='sub'>redeemable points</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Lifetime</dt>
+              <dd class='value'>{{num @model.lifetimePoints}}</dd>
+              <dd class='sub'>points earned</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Tier</dt>
+              <dd class='value'>{{if @model.tier @model.tier '—'}}</dd>
+              <dd class='sub'>since {{day @model.tierSince}}</dd>
+            </div>
+            {{#if this.hasBookings}}
+              <div class='stat'>
+                <dt class='label'>Bookings</dt>
+                <dd class='value'>{{this.bookings.length}}</dd>
+                <dd class='sub'>for this holder</dd>
+              </div>
+            {{/if}}
+          </dl>
+
+          <div class='cols'>
+            <div class='main'>
               <section class='sec'>
-                <h2>Tier ladder</h2>
+                <h2>Recent activity</h2>
+                {{#if this.ledger.length}}
+                  <ul class='rows'>
+                    {{#each this.ledger key='id' as |t|}}
+                      <li class='row'>
+                        <span class='date'>{{day t.occurredAt}}</span>
+                        <span class='what'><strong>{{reasonOf t}}</strong>
+                          <span class='muted'>{{#if t.source}}·
+                              {{t.source}}{{/if}}{{#if t.expiresAt}}
+                              · expires
+                              {{dayMonth t.expiresAt}}{{/if}}</span></span>
+                        <span class='amt {{sign t.amount}}'>{{signed
+                            t.amount
+                          }}</span>
+                      </li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <p class='empty'>No points activity yet</p>
+                {{/if}}
+              </section>
+              {{#if this.ladder.length}}
+                <section class='sec'>
+                  <h2>Tier ladder</h2>
+                  <dl class='kv'>
+                    {{#each this.ladder as |o|}}
+                      <dt>{{o.value}}{{if o.current ' (current)'}}</dt>
+                      <dd>{{if o.meaning o.meaning '—'}}{{#if o.multiplier}}
+                          ·
+                          {{o.multiplier}}×{{/if}}</dd>
+                    {{/each}}
+                  </dl>
+                </section>
+              {{/if}}
+            </div>
+
+            <aside class='side'>
+              <section class='sec'>
+                <h2>Linked</h2>
                 <dl class='kv'>
-                  {{#each this.ladder as |o|}}
-                    <dt>{{o.value}}{{if o.current ' (current)'}}</dt>
-                    <dd>{{if o.meaning o.meaning '—'}}{{#if o.multiplier}}
-                        ·
-                        {{o.multiplier}}×{{/if}}</dd>
+                  <dt>Holder</dt>
+                  <dd>{{#if @model.holder}}<@fields.holder
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                  {{#each this.bookings as |b|}}
+                    <dt>Booking</dt>
+                    <dd>{{#let (getComponent b) as |B|}}<B
+                          @format='atom'
+                          @displayContainer={{false}}
+                        />{{/let}}</dd>
                   {{/each}}
                 </dl>
               </section>
-            {{/if}}
+              <section class='sec'>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  <dt>Points balance</dt><dd class='num'>{{num
+                      @model.pointsBalance
+                    }}</dd>
+                  <dt>Lifetime points</dt><dd class='num'>{{num
+                      @model.lifetimePoints
+                    }}</dd>
+                  <dt>Tier</dt><dd>{{this.tierLine}}</dd>
+                  <dt>Tier since</dt><dd>{{day @model.tierSince}}</dd>
+                  <dt>Member since</dt><dd>{{day @model.memberSince}}</dd>
+                  <dt>Status</dt><dd>{{if @model.status @model.status '—'}}</dd>
+                  <dt>Expiring</dt><dd>{{this.expiring}}</dd>
+                  <dt>Member no.</dt><dd class='mono'>{{if
+                      @model.memberNumber
+                      @model.memberNumber
+                      '—'
+                    }}</dd>
+                </dl>
+              </section>
+            </aside>
           </div>
-
-          <aside class='side'>
-            <section class='sec'>
-              <h2>Linked</h2>
-              <dl class='kv'>
-                <dt>Holder</dt>
-                <dd>{{#if @model.holder}}<@fields.holder
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-                {{#each this.bookings as |b|}}
-                  <dt>Booking</dt>
-                  <dd>{{#let (getComponent b) as |B|}}<B
-                        @format='atom'
-                        @displayContainer={{false}}
-                      />{{/let}}</dd>
-                {{/each}}
-              </dl>
-            </section>
-            <section class='sec'>
-              <h2>Details</h2>
-              <dl class='kv'>
-                <dt>Points balance</dt><dd class='num'>{{num
-                    @model.pointsBalance
-                  }}</dd>
-                <dt>Lifetime points</dt><dd class='num'>{{num
-                    @model.lifetimePoints
-                  }}</dd>
-                <dt>Tier</dt><dd>{{this.tierLine}}</dd>
-                <dt>Tier since</dt><dd>{{day @model.tierSince}}</dd>
-                <dt>Member since</dt><dd>{{day @model.memberSince}}</dd>
-                <dt>Status</dt><dd>{{if @model.status @model.status '—'}}</dd>
-                <dt>Expiring</dt><dd>{{this.expiring}}</dd>
-                <dt>Member no.</dt><dd class='mono'>{{if
-                    @model.memberNumber
-                    @model.memberNumber
-                    '—'
-                  }}</dd>
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .page {
-          margin: var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           background-color: var(--card);
@@ -1020,7 +1040,7 @@ export class PointsTransaction extends CardDef {
       return `${signed(m?.amount)} points${who ? ` to ${who}` : ''}`;
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><TxMark @size='lg' /></:avatar>
         <:title>{{reasonOf @model}}</:title>
         <:subtitle>{{txMeta @model}}</:subtitle>
@@ -1033,7 +1053,7 @@ export class PointsTransaction extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .amt {
           font-family: var(--font-mono);
@@ -1106,124 +1126,127 @@ export class PointsTransaction extends CardDef {
     }
 
     <template>
-      <article class='page'>
-        <header class='head'>
-          <TxMark @size='lg' />
-          <div class='id'>
-            <h1 class='name'>{{reasonOf @model}}</h1>
-            <p class='meta'>{{txMeta @model}}</p>
-          </div>
-          <div class='tags'>
-            <span class='amt {{sign @model.amount}}'>{{signed @model.amount}}
-              pts</span>
-            {{#if @model.expiresAt}}<DotText
-                @label={{dayMonth @model.expiresAt}}
-                @tone='warning'
-              />{{/if}}
-          </div>
-        </header>
+      <IsoFrame>
+        <article class='page'>
+          <header class='head'>
+            <TxMark @size='lg' />
+            <div class='id'>
+              <h1 class='name'>{{reasonOf @model}}</h1>
+              <p class='meta'>{{txMeta @model}}</p>
+            </div>
+            <div class='tags'>
+              <span class='amt {{sign @model.amount}}'>{{signed @model.amount}}
+                pts</span>
+              {{#if @model.expiresAt}}<DotText
+                  @label={{dayMonth @model.expiresAt}}
+                  @tone='warning'
+                />{{/if}}
+            </div>
+          </header>
 
-        <dl class='stats' aria-label='Key numbers'>
-          <div class='stat'>
-            <dt class='label'>Amount</dt>
-            <dd class='value {{sign @model.amount}}'>{{signed
-                @model.amount
-              }}</dd>
-            <dd class='sub'>{{this.amountHint}}</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Source</dt>
-            <dd class='value'>{{if @model.source @model.source '—'}}</dd>
-            <dd class='sub'>{{reasonOf @model}}</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Expires</dt>
-            <dd class='value'>{{if
-                @model.expiresAt
-                (dayMonth @model.expiresAt)
-                'Never'
-              }}</dd>
-            <dd class='sub'>{{if
-                @model.expiresAt
-                (when @model.expiresAt)
-                'no expiry'
-              }}</dd>
-          </div>
-        </dl>
+          <dl class='stats' aria-label='Key numbers'>
+            <div class='stat'>
+              <dt class='label'>Amount</dt>
+              <dd class='value {{sign @model.amount}}'>{{signed
+                  @model.amount
+                }}</dd>
+              <dd class='sub'>{{this.amountHint}}</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Source</dt>
+              <dd class='value'>{{if @model.source @model.source '—'}}</dd>
+              <dd class='sub'>{{reasonOf @model}}</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Expires</dt>
+              <dd class='value'>{{if
+                  @model.expiresAt
+                  (dayMonth @model.expiresAt)
+                  'Never'
+                }}</dd>
+              <dd class='sub'>{{if
+                  @model.expiresAt
+                  (when @model.expiresAt)
+                  'no expiry'
+                }}</dd>
+            </div>
+          </dl>
 
-        <div class='cols'>
-          <div class='main'>
-            <section class='sec'>
-              <h2>Transaction</h2>
-              <dl class='kv'>
-                <dt>Reason</dt><dd>{{reasonOf @model}}</dd>
-                <dt>Source</dt><dd>{{if @model.source @model.source '—'}}</dd>
-                <dt>Amount</dt><dd class='num'>{{signed @model.amount}}
-                  points</dd>
-                <dt>Occurred</dt><dd>{{when @model.occurredAt}}</dd>
-                <dt>Expires</dt><dd>{{if
-                    @model.expiresAt
-                    (when @model.expiresAt)
-                    'Never'
-                  }}</dd>
-              </dl>
-            </section>
-            {{#if this.sameAccount.length}}
+          <div class='cols'>
+            <div class='main'>
               <section class='sec'>
-                <h2>Same account</h2>
-                <ul class='rows'>
-                  {{#each this.sameAccount key='id' as |t|}}
-                    <li class='row'>
-                      <span class='date'>{{day t.occurredAt}}</span>
-                      <span class='what'><strong>{{reasonOf t}}</strong>
-                        {{#if t.source}}<span class='muted'>·
-                            {{t.source}}</span>{{/if}}</span>
-                      <span class='amt {{sign t.amount}}'>{{signed
-                          t.amount
-                        }}</span>
-                    </li>
-                  {{/each}}
-                </ul>
+                <h2>Transaction</h2>
+                <dl class='kv'>
+                  <dt>Reason</dt><dd>{{reasonOf @model}}</dd>
+                  <dt>Source</dt><dd>{{if @model.source @model.source '—'}}</dd>
+                  <dt>Amount</dt><dd class='num'>{{signed @model.amount}}
+                    points</dd>
+                  <dt>Occurred</dt><dd>{{when @model.occurredAt}}</dd>
+                  <dt>Expires</dt><dd>{{if
+                      @model.expiresAt
+                      (when @model.expiresAt)
+                      'Never'
+                    }}</dd>
+                </dl>
               </section>
-            {{/if}}
-          </div>
+              {{#if this.sameAccount.length}}
+                <section class='sec'>
+                  <h2>Same account</h2>
+                  <ul class='rows'>
+                    {{#each this.sameAccount key='id' as |t|}}
+                      <li class='row'>
+                        <span class='date'>{{day t.occurredAt}}</span>
+                        <span class='what'><strong>{{reasonOf t}}</strong>
+                          {{#if t.source}}<span class='muted'>·
+                              {{t.source}}</span>{{/if}}</span>
+                        <span class='amt {{sign t.amount}}'>{{signed
+                            t.amount
+                          }}</span>
+                      </li>
+                    {{/each}}
+                  </ul>
+                </section>
+              {{/if}}
+            </div>
 
-          <aside class='side'>
-            <section class='sec'>
-              <h2>Linked</h2>
-              <dl class='kv'>
-                <dt>Account</dt>
-                <dd>{{#if @model.account}}<@fields.account
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-              </dl>
-            </section>
-            <section class='sec'>
-              <h2>Details</h2>
-              <dl class='kv'>
-                <dt>Amount</dt><dd class='num'>{{signed @model.amount}}</dd>
-                <dt>Source</dt><dd>{{if @model.source @model.source '—'}}</dd>
-                <dt>Occurred</dt><dd>{{day @model.occurredAt}}</dd>
-                <dt>Expires</dt><dd>{{if
-                    @model.expiresAt
-                    (day @model.expiresAt)
-                    'Never'
-                  }}</dd>
-                <dt>Account</dt><dd>{{if
-                    @model.account.holder.name
-                    @model.account.holder.name
-                    '—'
-                  }}</dd>
-                <dt>Balance after</dt><dd class='num'>{{this.balanceAfter}}</dd>
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+            <aside class='side'>
+              <section class='sec'>
+                <h2>Linked</h2>
+                <dl class='kv'>
+                  <dt>Account</dt>
+                  <dd>{{#if @model.account}}<@fields.account
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                </dl>
+              </section>
+              <section class='sec'>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  <dt>Amount</dt><dd class='num'>{{signed @model.amount}}</dd>
+                  <dt>Source</dt><dd>{{if @model.source @model.source '—'}}</dd>
+                  <dt>Occurred</dt><dd>{{day @model.occurredAt}}</dd>
+                  <dt>Expires</dt><dd>{{if
+                      @model.expiresAt
+                      (day @model.expiresAt)
+                      'Never'
+                    }}</dd>
+                  <dt>Account</dt><dd>{{if
+                      @model.account.holder.name
+                      @model.account.holder.name
+                      '—'
+                    }}</dd>
+                  <dt>Balance after</dt><dd
+                    class='num'
+                  >{{this.balanceAfter}}</dd>
+                </dl>
+              </section>
+            </aside>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .page {
-          margin: var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           background-color: var(--card);

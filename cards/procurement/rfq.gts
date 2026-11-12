@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   CardDef,
   Component,
@@ -23,11 +24,7 @@ import { concat } from '@ember/helper';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
-import {
-  CompactFitted,
-  CompactRow,
-  type CompactTag,
-} from '../commerce/compact-parts';
+import { type CompactTag } from '../commerce/compact-parts';
 import { lineTotal, sumLineItems } from '../commerce/line-item-totals';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
@@ -449,10 +446,12 @@ class RfqIsolated extends Component<typeof Rfq> {
         background: var(--background);
         color: var(--card-foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.25;
         --text-stat: 1.375rem;
         --text-ui-xs: 0.6875rem;
+
+        min-height: 100%;
       }
       .card {
         background: var(--card);
@@ -464,8 +463,8 @@ class RfqIsolated extends Component<typeof Rfq> {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.625rem;
-        padding: 0.5rem 0.625rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
       }
       .id {
         flex: 1 1 10rem;
@@ -474,21 +473,21 @@ class RfqIsolated extends Component<typeof Rfq> {
       h1 {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.625rem;
+        gap: var(--boxel-sp-xs);
       }
       .flash {
-        margin: 0 0.625rem 0.5rem;
+        margin: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
       }
       .stats {
         display: grid;
@@ -496,7 +495,7 @@ class RfqIsolated extends Component<typeof Rfq> {
         border-block-start: 1px solid var(--border);
       }
       .stats > * {
-        padding: 0.4375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         min-inline-size: 0;
       }
       .stats > :not(:first-child) {
@@ -529,21 +528,21 @@ class RfqIsolated extends Component<typeof Rfq> {
       }
       h2 {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .ul {
         list-style: none;
         margin: 0;
-        padding: 0 0 0.25rem;
+        padding: 0 0 var(--boxel-sp-4xs);
       }
       .li {
         display: flex;
         align-items: center;
-        gap: 0.625rem;
+        gap: var(--boxel-sp-xs);
         min-block-size: 1.75rem;
-        padding: 0.3125rem 0.625rem;
+        padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
         border-block-start: 1px solid var(--border);
       }
       .two {
@@ -557,14 +556,14 @@ class RfqIsolated extends Component<typeof Rfq> {
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .kv {
         display: grid;
         grid-template-columns: 6.5rem minmax(0, 1fr);
         margin: 0;
-        padding: 0 0.625rem 0.25rem;
+        padding: 0 var(--boxel-sp-xs) var(--boxel-sp-4xs);
       }
       .kv dt,
       .kv dd {
@@ -769,25 +768,28 @@ export class Rfq extends CardDef {
       return [{ label: this.f.statusLabel, tone: this.f.tone }];
     }
     <template>
-      <CompactFitted
-        @mark='R Q'
-        @title={{this.f.title}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.lowestFact}}
-        @tags={{this.tags}}
-      >
-        <:rows>
-          <CompactRow @k='Deadline' @v={{this.f.deadline}} />
-          <CompactRow @k='Quotes in' @v={{this.f.quotesOf}} />
-          <CompactRow @k='Highest' @v={{this.f.highest}} />
-          <CompactRow @k='Fastest lead' @v={{this.f.fastest}} />
-          <CompactRow @k='Lines' @v={{this.f.lineCount}} />
-          <CompactRow @k='Awarded' @v={{this.f.awardedText}} />
+      <RichFittedCard>
+        <:avatar><Avatar @name='R Q' @shape='square' /></:avatar>
+        <:title>{{this.f.title}}</:title>
+        <:status>{{#each this.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.lowestFact}}</:fact>
+        <:details>
+          <Detail @label='Deadline' @value={{this.f.deadline}} />
+          <Detail @label='Quotes in' @value={{this.f.quotesOf}} />
+          <Detail @label='Highest' @value={{this.f.highest}} />
+          <Detail @label='Fastest lead' @value={{this.f.fastest}} />
+          <Detail @label='Lines' @value={{this.f.lineCount}} />
+          <Detail @label='Awarded' @value={{this.f.awardedText}} />
           {{#each this.f.lines as |l|}}
-            <CompactRow @k={{l.description}} @v={{l.total}} />
+            <Detail @label={{l.description}} @value={{l.total}} />
           {{/each}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

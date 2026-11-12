@@ -20,7 +20,9 @@ import {
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { Money } from './money';
-import { hasNumber, labelProgress } from './utils';
+import { formatMoney, hasNumber, labelProgress } from './utils';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 // Mirrors the channels Lead.source names, so a lead's channel and the specific
 // activity it came from describe the same thing at two levels of detail.
@@ -183,112 +185,45 @@ export class Campaign extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof Campaign> {
+    get spend() {
+      let m = this.args.model;
+      return formatMoney(m?.spend?.amount, m?.spend?.currency?.code);
+    }
+    // the spend rides on the subtitle too, so strips under 170 tall show it
+    get subtitle() {
+      return [this.args.model?.campaignType, this.spend]
+        .filter(Boolean)
+        .join(' · ');
+    }
+    get budgetLine() {
+      let m = this.args.model;
+      if (!m?.budget?.amount) return '';
+      let budget = formatMoney(m.budget.amount, m.budget.currency?.code);
+      return `${m.budgetUsedPercent}% of ${budget}${m.isOverBudget ? ' — over budget' : ''}`;
+    }
     <template>
-      <div class='fitted'>
-        <div class='top'>
-          <SpeakerphoneIcon class='icon' />
-          <StatePill
-            class='status'
-            @label={{@model.status}}
-            @hue={{statusHue @model.status}}
-          />
-        </div>
-        <span class='name'>{{@model.cardTitle}}</span>
-        {{#if (hasNumber @model.spend.amount)}}
-          <Money
-            class='figure'
-            @amount={{@model.spend.amount}}
-            @code={{@model.spend.currency.code}}
-          />
-        {{/if}}
-        {{#if @model.campaignType}}
-          <span class='meta line-type'>{{@model.campaignType}}</span>
-        {{/if}}
-        {{#if @model.budget.amount}}
-          <span
-            class='meta line-budget {{if @model.isOverBudget "over"}}'
-          >{{@model.budgetUsedPercent}}% of
-            <Money
-              @amount={{@model.budget.amount}}
-              @code={{@model.budget.currency.code}}
-            /></span>
-        {{/if}}
-        {{#if @model.endDate}}
-          <span class='meta line-dates'>Ran
-            <@fields.startDate />
-            –
-            <@fields.endDate /></span>
-        {{else if @model.startDate}}
-          <span class='meta line-dates'>Since <@fields.startDate /></span>
-        {{/if}}
-      </div>
+      <RichFittedCard>
+        <:avatar><SpeakerphoneIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#if @model.status}}<StatePill
+              @label={{@model.status}}
+              @hue={{statusHue @model.status}}
+            />{{/if}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{this.budgetLine}}</:fact>
+        <:metric><Metric @value={{this.spend}} @label='Spend' /></:metric>
+        <:details>
+          {{#if @model.startDate}}<Detail @label='Started'><@fields.startDate
+              /></Detail>{{/if}}
+          {{#if @model.endDate}}<Detail @label='Ended'><@fields.endDate
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-6xs);
-          overflow: hidden;
-          color: var(--foreground);
-        }
-        .top {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-2xs);
-        }
-        .icon {
-          width: 1rem;
-          height: 1rem;
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .status {
-          margin-inline-start: auto;
-        }
-        .name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-xs);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .figure {
-          font-weight: 700;
-        }
-        .meta {
-          font-size: var(--boxel-font-size-2xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          text-transform: capitalize;
-        }
-        .over {
-          color: var(--destructive-ink);
-          font-weight: 600;
-        }
-        .line-type,
-        .line-budget,
-        .line-dates {
-          display: none;
-        }
-        /* Each taller tier adds a line, so a tile fills its box. */
-        @container fitted-card (min-height: 170px) {
-          .line-type,
-          .line-budget {
-            display: block;
-          }
-          .line-type {
-            margin-top: auto;
-          }
-        }
-        @container fitted-card (min-height: 215px) {
-          .line-dates {
-            display: block;
-          }
         }
       </style>
     </template>
@@ -307,69 +242,82 @@ export class Campaign extends CardDef {
       return rows;
     }
     <template>
-      <article class='campaign-page'>
-        <header class='ch'>
-          <div class='ch-id'>
-            <p class='doc-kind'>Campaign</p>
-            <h1>{{@model.cardTitle}}</h1>
-            <p class='status-line'>{{@model.campaignType}}{{#if @model.status}}
-                ·
-                {{@model.status}}{{/if}}</p>
-          </div>
-        </header>
-
-        {{#if (hasNumber @model.budget.amount)}}
-          <section class='panel'>
-            <h2>Budget</h2>
-            <div class='spend-row'>
-              <Money
-                class='spend'
-                @amount={{@model.spend.amount}}
-                @code={{@model.spend.currency.code}}
-              />
-              <span class='of'>of
-                <Money
-                  @amount={{@model.budget.amount}}
-                  @code={{@model.budget.currency.code}}
-                /></span>
+      <IsoFrame>
+        <article class='campaign-page'>
+          <header class='ch'>
+            <div class='ch-id'>
+              <p class='doc-kind'>Campaign</p>
+              <h1>{{@model.cardTitle}}</h1>
+              <p class='status-line'>{{@model.campaignType}}{{#if
+                  @model.status
+                }}
+                  ·
+                  {{@model.status}}{{/if}}</p>
             </div>
-            <ProgressBar
-              class='bar {{if @model.isOverBudget "bar-over"}}'
-              @value={{this.barValue}}
-              @max={{100}}
-              @steps={{false}}
-              {{labelProgress this.noteId}}
-            />
-            <p
-              id={{this.noteId}}
-              class='bar-note {{if @model.isOverBudget "over"}}'
-            >
-              {{@model.budgetUsedPercent}}% spent{{#if @model.isOverBudget}}
-                — over budget{{/if}}
-            </p>
-          </section>
-        {{/if}}
+          </header>
 
-        <section class='panel'>
-          <h2>Details</h2>
-          <KeyValue @items={{this.details}}>
-            <:value as |row|>
-              {{#if (eq row.value 'startDate')}}
-                <@fields.startDate />
-              {{else}}
-                <@fields.endDate />
-              {{/if}}
-            </:value>
-          </KeyValue>
-          <p class='hint'>Leads attributed to this campaign are counted by
-            querying leads that point at it — a campaign does not hold a list of
-            them.</p>
-        </section>
-      </article>
+          {{#if (hasNumber @model.budget.amount)}}
+            <section class='panel'>
+              <h2>Budget</h2>
+              <div class='spend-row'>
+                <Money
+                  class='spend'
+                  @amount={{@model.spend.amount}}
+                  @code={{@model.spend.currency.code}}
+                />
+                <span class='of'>of
+                  <Money
+                    @amount={{@model.budget.amount}}
+                    @code={{@model.budget.currency.code}}
+                  /></span>
+              </div>
+              <ProgressBar
+                class='bar {{if @model.isOverBudget "bar-over"}}'
+                @value={{this.barValue}}
+                @max={{100}}
+                @steps={{false}}
+                {{labelProgress this.noteId}}
+              />
+              <p
+                id={{this.noteId}}
+                class='bar-note {{if @model.isOverBudget "over"}}'
+              >
+                {{@model.budgetUsedPercent}}% spent{{#if @model.isOverBudget}}
+                  — over budget{{/if}}
+              </p>
+            </section>
+          {{/if}}
+
+          <section class='panel'>
+            <h2>Details</h2>
+            <KeyValue class='kv-pad' @items={{this.details}}>
+              <:value as |row|>
+                {{#if (eq row.value 'startDate')}}
+                  <@fields.startDate />
+                {{else}}
+                  <@fields.endDate />
+                {{/if}}
+              </:value>
+            </KeyValue>
+            <p class='hint'>Leads attributed to this campaign are counted by
+              querying leads that point at it — a campaign does not hold a list
+              of them.</p>
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+
         .campaign-page {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 42rem;
           margin: 0 auto;
+          inline-size: 100%;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
@@ -400,7 +348,7 @@ export class Campaign extends CardDef {
         }
         .panel {
           border: 1px solid var(--border);
-          border-radius: 0.5rem;
+          border-radius: var(--radius);
           padding: var(--boxel-sp) var(--boxel-sp);
           background-color: var(--card);
           color: var(--card-foreground);

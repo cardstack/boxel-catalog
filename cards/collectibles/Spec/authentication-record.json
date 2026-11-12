@@ -20,6 +20,11 @@
         "links": {
           "self": "../AuthenticationRecord/cc-2022-88431"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

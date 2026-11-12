@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   CardDef,
   Component,
@@ -22,7 +23,7 @@ import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { List } from '@cardstack/pretui/components/list';
 import { Item } from '@cardstack/pretui/components/item';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
+
 import {
   KeyValue,
   type KeyValueItem,
@@ -286,7 +287,7 @@ export class PurchaseRequisition extends CardDef {
             <section class='card'>
               <h2>Request</h2>
               <KeyValue
-                class='kv'
+                class='kv kv-pad'
                 @items={{this.request}}
                 @divided={{true}}
                 @labelStyle='eyebrow'
@@ -296,7 +297,7 @@ export class PurchaseRequisition extends CardDef {
               <h2>Linked</h2>
               {{#if @model.budget}}
                 <KeyValue
-                  class='kv'
+                  class='kv kv-pad'
                   @items={{BUDGET_ROW}}
                   @divided={{true}}
                   @labelStyle='eyebrow'
@@ -313,7 +314,7 @@ export class PurchaseRequisition extends CardDef {
             <section class='card'>
               <h2>Details</h2>
               <KeyValue
-                class='kv'
+                class='kv kv-pad'
                 @items={{this.details}}
                 @divided={{true}}
                 @labelStyle='eyebrow'
@@ -323,6 +324,10 @@ export class PurchaseRequisition extends CardDef {
         </div>
       </article>
       <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+
         .ip {
           --text-stat: 1.375rem;
           --text-ui-xs: 0.6875rem;
@@ -331,11 +336,14 @@ export class PurchaseRequisition extends CardDef {
           --boxel-sp-xs: 0.35rem;
           container-type: inline-size;
           display: grid;
-          gap: 0.5rem;
-          padding: 0.75rem;
-          font-size: 0.75rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.25;
           color: var(--card-foreground);
+
+          background: var(--background);
+          min-height: 100%;
         }
         .card {
           min-inline-size: 0;
@@ -348,8 +356,8 @@ export class PurchaseRequisition extends CardDef {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
         }
         .id {
           flex: 1;
@@ -358,18 +366,18 @@ export class PurchaseRequisition extends CardDef {
         h1 {
           margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .tags {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.625rem;
+          gap: var(--boxel-sp-xs);
         }
         .stats {
           display: grid;
@@ -377,7 +385,7 @@ export class PurchaseRequisition extends CardDef {
           border-block-start: 1px solid var(--border);
         }
         .stats > * {
-          padding: 0.5rem 0.625rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
           box-shadow:
             1px 0 0 var(--border),
             0 1px 0 var(--border);
@@ -385,33 +393,33 @@ export class PurchaseRequisition extends CardDef {
         .cols {
           display: grid;
           grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           align-items: start;
         }
         .col {
           display: grid;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           min-inline-size: 0;
         }
         h2 {
           margin: 0;
-          padding: 0.4375rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           border-block-end: 1px solid var(--border);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .body {
           margin: 0;
-          padding: 0.4375rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           white-space: pre-wrap;
         }
         .muted {
           color: var(--muted-foreground);
         }
         .lines {
-          padding-inline: 0.625rem;
-          font-size: 0.75rem;
+          padding-inline: var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
         }
         .mono,
         .kv {
@@ -419,10 +427,10 @@ export class PurchaseRequisition extends CardDef {
         }
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
         }
         .kv {
-          padding: 0.25rem 0.625rem;
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
           row-gap: 0;
         }
         @container (width < 40rem) {
@@ -475,7 +483,7 @@ export class PurchaseRequisition extends CardDef {
             · needed by
             {{this.f.neededBy}}{{/if}}</p>
         <KeyValue
-          class='kv'
+          class='kv kv-pad'
           @items={{this.items}}
           @divided={{true}}
           @labelStyle='eyebrow'
@@ -489,6 +497,10 @@ export class PurchaseRequisition extends CardDef {
         </KeyValue>
       </article>
       <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+
         .emb {
           --pretui-kv-label-font-size: 0.5625rem;
           --pretui-kv-label-color: var(--muted-foreground);
@@ -584,39 +596,44 @@ export class PurchaseRequisition extends CardDef {
       return [{ label: this.f.status, tone: this.f.tone }];
     }
     <template>
-      <CompactFitted
-        @mark='Pr'
-        @title={{this.f.name}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.fact}}
-        @big={{this.f.total}}
-        @bigLabel='Est. total'
-        @tags={{this.tags}}
-      >
-        <:rows>
-          {{#if this.f.neededBy}}<CompactRow
-              @k='Needed by'
-              @v={{this.f.neededBy}}
+      <RichFittedCard>
+        <:avatar><Avatar @name='Pr' @shape='square' /></:avatar>
+        <:title>{{this.f.name}}</:title>
+        <:status>{{#each this.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.fact}}</:fact>
+        <:metric><Metric
+            @value={{this.f.total}}
+            @label='Est. total'
+          /></:metric>
+        <:details>
+          {{#if this.f.neededBy}}<Detail
+              @label='Needed by'
+              @value={{this.f.neededBy}}
             />{{/if}}
-          {{#if this.f.requester}}<CompactRow
-              @k='Requester'
-              @v={{this.f.requester}}
+          {{#if this.f.requester}}<Detail
+              @label='Requester'
+              @value={{this.f.requester}}
             />{{/if}}
-          {{#if this.f.department}}<CompactRow
-              @k='Department'
-              @v={{this.f.department}}
+          {{#if this.f.department}}<Detail
+              @label='Department'
+              @value={{this.f.department}}
             />{{/if}}
-          {{#each this.f.lineKv as |row|}}<CompactRow
-              @k={{row.key}}
-              @v={{row.value}}
+          {{#each this.f.lineKv as |row|}}<Detail
+              @label={{row.key}}
+              @value={{row.value}}
             />{{/each}}
-          <CompactRow @k='Lines' @v={{this.f.linesCountText}} />
-          {{#each this.f.lines as |line|}}<CompactRow
-              @k={{line.description}}
-              @v={{line.total}}
+          <Detail @label='Lines' @value={{this.f.linesCountText}} />
+          {{#each this.f.lines as |line|}}<Detail
+              @label={{line.description}}
+              @value={{line.total}}
             />{{/each}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

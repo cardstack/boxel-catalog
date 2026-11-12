@@ -28,6 +28,11 @@
         "links": {
           "self": "../Meter/ast-2026-0041-running-hours"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

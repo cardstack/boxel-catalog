@@ -26,6 +26,13 @@
       },
       "cardDescription": "The regime, edition and clause a control satisfies — an ISO clause or an internal standard's section, in one shape."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

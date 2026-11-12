@@ -11,7 +11,9 @@ import MailIcon from '@cardstack/boxel-icons/mail';
 import PhoneIcon from '@cardstack/boxel-icons/phone';
 import TagIcon from '@cardstack/boxel-icons/tag';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import { identifyCard } from '@cardstack/runtime-common';
 import { PersonBase } from '../people/person-base';
 // NOT a static import of `./listing` on purpose. listing.gts now imports
@@ -27,6 +29,7 @@ import type { Listing as ListingType } from './listing';
 import { Spinner } from '@cardstack/pretui/components/spinner';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // The isolated landing page, exported so SellerProfile can extend it.
 export class MarketplaceMemberIsolated<
@@ -76,85 +79,89 @@ export class MarketplaceMemberIsolated<
   }
 
   <template>
-    <article class='card'>
-      <header class='hero'>
-        {{#if @model.photo.resolvedUrl}}
-          <img
-            class='portrait'
-            src={{@model.photo.resolvedUrl}}
-            alt={{@model.title}}
-          />
-        {{else}}
-          <div class='portrait portrait--plaque' aria-hidden='true'>
-            {{#if @model.name}}
-              <span class='init'>{{@model.initials}}</span>
-            {{else}}
-              <UserIcon width='40%' height='40%' />
-            {{/if}}
-          </div>
-        {{/if}}
+    <IsoFrame>
+      <article class='card'>
+        <header class='hero'>
+          {{#if @model.photo.resolvedUrl}}
+            <img
+              class='portrait'
+              src={{@model.photo.resolvedUrl}}
+              alt={{@model.title}}
+            />
+          {{else}}
+            <div class='portrait portrait--plaque' aria-hidden='true'>
+              {{#if @model.name}}
+                <span class='init'>{{@model.initials}}</span>
+              {{else}}
+                <UserIcon width='40%' height='40%' />
+              {{/if}}
+            </div>
+          {{/if}}
 
-        <div class='hero-body'>
-          <h1 class='name'>{{@model.title}}</h1>
+          <div class='hero-body'>
+            <h1 class='name'>{{@model.title}}</h1>
 
-          {{! Contact facts as quiet pills, each with its own glyph —
+            {{! Contact facts as quiet pills, each with its own glyph —
               identifiers, so the value itself never truncates. }}
-          <ul class='contact'>
-            {{#if @model.email}}
-              <li class='c-pill'>
-                <MailIcon class='c-icon' aria-hidden='true' />
-                <a class='c-link' href='mailto:{{@model.email}}'>
-                  {{@model.email}}</a>
-              </li>
-            {{/if}}
-            {{#if @model.phone}}
-              <li class='c-pill'>
-                <PhoneIcon class='c-icon' aria-hidden='true' />
-                <span class='c-val'>{{@model.phone}}</span>
-              </li>
-            {{/if}}
-            {{#unless @model.email}}
-              {{#unless @model.phone}}
-                <li class='c-none'>No contact details recorded.</li>
+            <ul class='contact'>
+              {{#if @model.email}}
+                <li class='c-pill'>
+                  <MailIcon class='c-icon' aria-hidden='true' />
+                  <a class='c-link' href='mailto:{{@model.email}}'>
+                    {{@model.email}}</a>
+                </li>
+              {{/if}}
+              {{#if @model.phone}}
+                <li class='c-pill'>
+                  <PhoneIcon class='c-icon' aria-hidden='true' />
+                  <span class='c-val'>{{@model.phone}}</span>
+                </li>
+              {{/if}}
+              {{#unless @model.email}}
+                {{#unless @model.phone}}
+                  <li class='c-none'>No contact details recorded.</li>
+                {{/unless}}
               {{/unless}}
-            {{/unless}}
-          </ul>
-        </div>
-      </header>
+            </ul>
+          </div>
+        </header>
 
-      {{! What they are selling — reverse query over Listing.seller. }}
-      <section class='sec'>
-        <h2><TagIcon class='sec-icon' aria-hidden='true' />Listings<span
-            class='count'
-          >{{this.listings.length}}</span></h2>
+        {{! What they are selling — reverse query over Listing.seller. }}
+        <section class='sec'>
+          <h2><TagIcon class='sec-icon' aria-hidden='true' />Listings<span
+              class='count'
+            >{{this.listings.length}}</span></h2>
 
-        {{#if this.listingsError}}
-          <p class='err'>
-            <AlertTriangleIcon width='18' height='18' aria-hidden='true' />Could
-            not load listings.
-          </p>
-        {{else if this.listingsLoading}}
-          <p class='wait'><Spinner />Looking for listings…</p>
-        {{else if this.listings.length}}
-          <ul class='links'>
-            {{! getCards instances have no `.component` — getComponent(card)
+          {{#if this.listingsError}}
+            <p class='err'>
+              <AlertTriangleIcon
+                width='18'
+                height='18'
+                aria-hidden='true'
+              />Could not load listings.
+            </p>
+          {{else if this.listingsLoading}}
+            <p class='wait'><Spinner />Looking for listings…</p>
+          {{else if this.listings.length}}
+            <ul class='links'>
+              {{! getCards instances have no `.component` — getComponent(card)
                 is the API; the property renders an empty row silently. }}
-            {{#each this.listings as |l|}}
-              <li>{{#let (getComponent l) as |ListingCard|}}
-                  <ListingCard @format='embedded' />
-                {{/let}}</li>
-            {{/each}}
-          </ul>
-        {{else}}
-          <EmptyState
-            @title='Nothing listed for sale by this person yet.'
-            @texture={{false}}
-            style={{COMPACT_EMPTY_STYLE}}
-          />
-        {{/if}}
-      </section>
-    </article>
-
+              {{#each this.listings as |l|}}
+                <li>{{#let (getComponent l) as |ListingCard|}}
+                    <ListingCard @format='embedded' />
+                  {{/let}}</li>
+              {{/each}}
+            </ul>
+          {{else}}
+            <EmptyState
+              @title='Nothing listed for sale by this person yet.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
+          {{/if}}
+        </section>
+      </article>
+    </IsoFrame>
     <style scoped>
       /* Rule 1: an isolated card gets NO host container — declaring our own
          is what makes every @container rule below live rather than inert. */
@@ -528,7 +535,7 @@ export class MarketplaceMember extends PersonBase {
     </template>
   };
 
-  // FITTED — FittedCard, same knobs as the rest of the collectibles cards.
+  // FITTED — RichFittedCard, the person photo as the avatar.
   //
   // SLOT DISCIPLINE — two distinct facts, two slots. No eyebrow: the only
   // string left is the email, which is already the footer, and "Person" as a
@@ -537,137 +544,20 @@ export class MarketplaceMember extends PersonBase {
     typeof MarketplaceMember
   > {
     <template>
-      <FittedCard
-        class='p-fit'
-        @imageUrl={{@model.photo.resolvedUrl}}
-        @imageAlt={{@model.title}}
-        @titleTag='h3'
-      >
-        {{! Rule 2 anchor: tier 1 is the photo. The tier-2 fallback here is the
-            INITIALS rather than the generic user glyph — a person's initials
-            identify this record, where a placeholder avatar is exactly the
-            "decoration where content should be" the rules warn against. The
-            icon stays as the last resort for an unnamed person, where
-            `initialsOf` yields '?'. }}
-        <:placeholder>
-          {{#if @model.name}}
-            <span class='p-init'>{{@model.initials}}</span>
-          {{else}}
-            <UserIcon
-              width='max(18px, 34%)'
-              height='max(18px, 34%)'
-              aria-hidden='true'
-            />
-          {{/if}}
-        </:placeholder>
-
-        <:title><span class='fit-title'>{{@model.title}}</span></:title>
-
-        <:footer>
-          {{! An email is an identifier — it gets typed and read aloud — so it
-              never ellipsises. It is hidden WHOLE at the narrow quanta below. }}
-          {{#if @model.email}}
-            <span class='p-mail'>{{@model.email}}</span>
-          {{/if}}
-        </:footer>
-      </FittedCard>
-
-      <style scoped>
-        /* No container-type / container-name — FittedCard queries the host's
-           `fitted-card` container. */
-        .p-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          /* The miniature vault plaque — inset shadow, not a border. */
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          /* A person reads as a portrait, so the image is square and sits
-             tighter than the product tiles' 11rem. */
-          --fc-image-width: 42cqh;
-          --fc-image-min-width: 3rem;
-          --fc-image-max-width: 7rem;
-          --fc-image-object-fit: cover;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-
-          --fc-content-padding: 0.4rem 0.7rem;
-          --fc-header-gap: 0.15em;
-          --fc-content-gap: 0.25rem;
-
-          --fc-title-font-size: max(13px, 1.05em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 2;
-          --fc-footer-font-size: max(11px, 0.78em);
-          --fc-footer-gap: 0.5rem;
-          --fc-footer-justify: flex-start;
-          --fc-footer-flex-wrap: nowrap;
-        }
-
-        /* Rule 2: the name is the anchor, so it is the loud thing at every
-           size — there is no eyebrow competing with it. */
-        .fit-title {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-
-        /* Initials as the anchor: serif gold, the family's plaque treatment, so
-           a photo-less person still reads as this app rather than as a gap. */
-        .p-init {
-          font-family: 'Playfair Display', Georgia, serif;
-          /* Rule 1: the scale is CAPPED, not just floored. A bare
-             `max(14px, 30cqh)` reaches ~82px in the tallest quantum, and two
-             capital letters at that size are wider than the 7rem image column —
-             so it would overflow horizontally instead of clipping vertically,
-             which is the same defect wearing a different axis. clamp() bounds
-             both ends; 1.15 line-height keeps descenders intact at the floor. */
-          font-size: clamp(14px, 30cqh, 40px);
-          line-height: 1.15;
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          color: var(--primary-ink);
-        }
-        .p-mail {
-          color: var(--smoke);
-          white-space: nowrap;
-        }
-
-        /* ---- quanta: visibility only, never a shrink-into-a-clip ---- */
-        @container fitted-card (height <= 50px) {
-          .p-fit {
-            --fc-footer-display: none;
-            --fc-title-line-clamp: 1;
-            --fc-content-padding: 0.15rem 0.3rem;
-          }
-        }
-
-        /* The email is dropped WHOLE rather than truncated to a stub — a
-           half-visible address is worse than an absent one. */
-        @container fitted-card (width <= 220px) and (height <= 80px) {
-          .p-fit .p-mail {
-            display: none;
-          }
-        }
-
-        @container fitted-card (width <= 150px) {
-          .p-fit {
-            --fc-image-max-width: 100%;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:avatar><Avatar
+            @name={{if @model.title @model.title ''}}
+            @src={{@model.photo.resolvedUrl}}
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{@model.email}}</:subtitle>
+        <:details>
+          {{#if @model.phone}}<Detail
+              @label='Phone'
+              @value={{@model.phone}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

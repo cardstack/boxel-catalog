@@ -8,6 +8,7 @@ import {
   linksTo,
   StringField,
 } from '@cardstack/base/card-api';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
@@ -28,11 +29,7 @@ import {
   COMPACT_EMPTY_STYLE,
 } from '@cardstack/catalog/components/pretui-helpers';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import {
-  CompactFitted,
-  CompactRow,
-  type CompactTag,
-} from '../commerce/compact-parts';
+import { type CompactTag } from '../commerce/compact-parts';
 
 // DateField hands back local midnight, so format in local time (a UTC
 // formatter shows the previous day west of Greenwich).
@@ -313,7 +310,7 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
               @items={{this.receipt}}
               @divided={{true}}
               @labelStyle='eyebrow'
-              class='kv'
+              class='kv kv-pad'
             />
           </section>
           {{#if @model.purchaseOrder}}
@@ -323,7 +320,7 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
                 @items={{LINKED}}
                 @divided={{true}}
                 @labelStyle='eyebrow'
-                class='kv'
+                class='kv kv-pad'
               >
                 <:value><@fields.purchaseOrder
                     @format='atom'
@@ -338,13 +335,17 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
               @items={{this.details}}
               @divided={{true}}
               @labelStyle='eyebrow'
-              class='kv'
+              class='kv kv-pad'
             />
           </section>
         </div>
       </div>
     </article>
     <style scoped>
+      .kv-pad {
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
+      }
+
       .gr {
         container-type: inline-size;
         box-sizing: border-box;
@@ -352,9 +353,9 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
-        padding: 0.75rem;
-        font-size: 0.75rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-sm);
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.25;
         color: var(--card-foreground);
         --text-stat: 1.375rem;
@@ -364,6 +365,9 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
         --pretui-kv-label-font-family: var(--font-mono);
         --pretui-kv-label-font-weight: 600;
         --pretui-kv-label-letter-spacing: 0.13em;
+
+        background: var(--background);
+        min-height: 100%;
       }
       /* the root scrolls; its blocks keep their own height instead of shrinking */
       .gr > * {
@@ -379,8 +383,8 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.625rem;
-        padding: 0.625rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs);
       }
       .id {
         flex: 1;
@@ -389,17 +393,17 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
       h1 {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .tags {
         display: flex;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       .stats {
         display: grid;
@@ -407,7 +411,7 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
         border-block-start: 1px solid var(--border);
       }
       .stats > * {
-        padding: 0.5rem 0.625rem;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
       }
       .stats > :not(:first-child) {
         border-inline-start: 1px solid var(--border);
@@ -415,13 +419,13 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
       .cols {
         display: grid;
         grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         align-items: start;
       }
       .col {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         min-inline-size: 0;
       }
       @container (width < 40rem) {
@@ -431,8 +435,8 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
       }
       h2 {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         border-block-end: 1px solid var(--border);
       }
@@ -440,7 +444,7 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
         border-block-start: 1px solid var(--border);
       }
       .kv {
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
         row-gap: 0;
         --boxel-sp-xs: 0.35rem;
         --boxel-sp-lg: 0.75rem;
@@ -544,7 +548,7 @@ export class GoodsReceipt extends CardDef {
           @items={{this.items}}
           @divided={{true}}
           @labelStyle='eyebrow'
-          class='kv'
+          class='kv kv-pad'
         >
           <:value as |row|>
             {{#if (eq row.key 'Purchase order')}}<@fields.purchaseOrder
@@ -555,6 +559,10 @@ export class GoodsReceipt extends CardDef {
         </KeyValue>
       </article>
       <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+
         .emb {
           font-size: 0.75rem;
           line-height: 1.25;
@@ -644,30 +652,35 @@ export class GoodsReceipt extends CardDef {
       return grFacts(this.args.model as GoodsReceipt);
     }
     <template>
-      <CompactFitted
-        @mark='Goods Receipt'
-        @title={{@model.title}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.fact}}
-        @big='{{this.f.received}} / {{this.f.ordered}}'
-        @bigLabel={{this.f.match.label}}
-        @tags={{this.f.tags}}
-      >
-        <:rows>
-          <CompactRow @k='Received on' @v={{this.f.full}} />
-          <CompactRow @k='Received by' @v={{if this.f.by this.f.by '—'}} />
-          <CompactRow @k='Ordered' @v='{{this.f.ordered}}' />
-          <CompactRow @k='Received' @v='{{this.f.received}}' />
-          <CompactRow @k='Match' @v={{this.f.match.label}} />
-          <CompactRow @k='Posted' @v={{this.f.postedYes}} />
+      <RichFittedCard>
+        <:avatar><Avatar @name='Goods Receipt' @shape='square' /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:status>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.fact}}</:fact>
+        <:metric><Metric
+            @value='{{this.f.received}} / {{this.f.ordered}}'
+            @label={{this.f.match.label}}
+          /></:metric>
+        <:details>
+          <Detail @label='Received on' @value={{this.f.full}} />
+          <Detail @label='Received by' @value={{if this.f.by this.f.by '—'}} />
+          <Detail @label='Ordered' @value='{{this.f.ordered}}' />
+          <Detail @label='Received' @value='{{this.f.received}}' />
+          <Detail @label='Match' @value={{this.f.match.label}} />
+          <Detail @label='Posted' @value={{this.f.postedYes}} />
           {{#each this.f.lines as |l|}}
-            <CompactRow
-              @k={{if l.description l.description '—'}}
-              @v='{{l.qtyReceived}} / {{l.qtyOrdered}}'
+            <Detail
+              @label={{if l.description l.description '—'}}
+              @value='{{l.qtyReceived}} / {{l.qtyOrdered}}'
             />
           {{/each}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

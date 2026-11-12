@@ -4,7 +4,13 @@
     "attributes": {
       "clauseType": "payment",
       "deviationSeverity": "none",
-      "actualText": "Invoices are payable within thirty (30) days of receipt of a valid invoice."
+      "actualText": "Invoices are payable within thirty (30) days of receipt of a valid invoice.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

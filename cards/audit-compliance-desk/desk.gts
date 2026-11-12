@@ -88,7 +88,7 @@ const ORDER_FILTERS = [
 // LayoutControl forms, richest first; minWidth in rem.
 const forms = (...list: [string, number][]) =>
   list.map(([name, minWidth]) => ({ name, minWidth }));
-const SEARCH_FORMS = forms(['field', 13.75], ['menu', 0]);
+const SEARCH_FORMS = forms(['field', 13.75], ['collapsed', 1.75]);
 const CHIP_FORMS = forms(['chips', 14], ['menu', 0]);
 const ADD_FORMS = forms(['label', 8], ['icon', 2]);
 
@@ -443,8 +443,14 @@ export class AuditComplianceDeskIsolated extends Component<
                     @priority={{2}}
                     @forms={{SEARCH_FORMS}}
                     @label='Search'
+                    as |form|
                   >
                     <div class='search'><SearchInput
+                        @display={{if
+                          (eq form 'collapsed')
+                          'collapsed'
+                          'field'
+                        }}
                         @value={{this.docSearch}}
                         @placeholder='Search documents…'
                         @onInput={{this.setDocSearch}}
@@ -465,6 +471,7 @@ export class AuditComplianceDeskIsolated extends Component<
                   </lc.Slot>
                   <lc.Slot
                     @id='add'
+                    @align='end'
                     @priority={{0}}
                     @pinned={{true}}
                     @forms={{ADD_FORMS}}
@@ -472,7 +479,6 @@ export class AuditComplianceDeskIsolated extends Component<
                     as |form|
                   >
                     <Button
-                      class='push'
                       @icon={{PlusIcon}}
                       @tone='primary'
                       @size='s'
@@ -570,8 +576,14 @@ export class AuditComplianceDeskIsolated extends Component<
                     @priority={{1}}
                     @forms={{SEARCH_FORMS}}
                     @label='Filter values'
+                    as |form|
                   >
                     <div class='search'><SearchInput
+                        @display={{if
+                          (eq form 'collapsed')
+                          'collapsed'
+                          'field'
+                        }}
                         @value={{this.vocabSearch}}
                         @placeholder='Filter values…'
                         @onInput={{this.setVocabSearch}}

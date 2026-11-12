@@ -73,44 +73,4 @@ export function dotEnumField(
   } as unknown as typeof StringField;
 }
 
-interface DotLabelSignature {
-  Args: { label?: string | null; hue?: Hue };
-  Element: HTMLSpanElement;
-}
-
-/** A row status as a 7px dot in the hue plus its label: no pill. */
-export class DotLabel extends GlimmerComponent<DotLabelSignature> {
-  get dotStyle() {
-    let hue = this.args.hue;
-    return htmlSafe(
-      `background: ${hue ? stateColor(hue).ring : 'var(--muted-foreground)'}`,
-    );
-  }
-  <template>
-    <span class='dot-label' ...attributes><span
-        class='dot'
-        style={{this.dotStyle}}
-        aria-hidden='true'
-      ></span>{{@label}}</span>
-    <style scoped>
-      @layer PretComponent {
-        .dot-label {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-2xs);
-          max-inline-size: 100%;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
-          white-space: nowrap;
-          color: var(--foreground);
-        }
-        .dot {
-          flex: none;
-          inline-size: 0.4375rem;
-          block-size: 0.4375rem;
-          border-radius: 50%;
-        }
-      }
-    </style>
-  </template>
-}
+export { DotLabel } from '../shared/compact-sheet';

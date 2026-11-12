@@ -20,6 +20,11 @@
         "links": {
           "self": "../InventoryStock/stock-08"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

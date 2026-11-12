@@ -22,6 +22,11 @@
         "links": {
           "self": "../Survey/event-feedback"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

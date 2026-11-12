@@ -17,14 +17,18 @@ import ArchiveIcon from '@cardstack/boxel-icons/archive';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { MarketplaceMember } from './marketplace-member';
 import { Acquisition } from './acquisition';
-import { formatMoneyDelta, moneyText } from './money-format';
+import { formatMoney, formatMoneyDelta, moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
   SnKv,
-  SnMark,
   SnRow,
   SnSection,
   SnSheet,
@@ -33,6 +37,7 @@ import {
   instances,
   linkedQuery,
 } from './parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // CollectionItem — one physical thing someone owns, catalogued.
 //
@@ -172,108 +177,110 @@ export class CollectionItem extends CardDef {
     }
 
     <template>
-      <SnSheet @title={{@model.cardTitle}} @src={{photoOf @model}}>
-        <:meta>{{metaLine @model}}</:meta>
-        <:actions>
-          {{#if @model.verified}}<DotLabel
-              @label='verified'
-              @hue='green'
-            />{{/if}}
-          {{#if @model.condition.code}}<DotLabel
-              @label={{@model.condition.code}}
-              @hue='green'
-            />{{/if}}
-          {{#if @model.forSale}}<DotLabel
-              @label='for sale'
-              @hue='orange'
-            />{{/if}}
-        </:actions>
-        <:stats>
-          <SnStat
-            @label='Value'
-            @value={{moneyText @model.lastKnownValue}}
-            @hint={{day @model.valuedOn}}
-          />
-          <SnStat
-            @label='Paid'
-            @value={{moneyText @model.acquisition.price}}
-            @hint={{day @model.acquisition.acquiredOn}}
-          />
-          <SnStat
-            @label='Gain'
-            @value={{if this.delta this.delta.text '—'}}
-            @hint={{if this.delta this.delta.percent}}
-          />
-        </:stats>
-        <:main>
-          <SnSection @title='Notes'>
-            {{#if @model.notes}}<@fields.notes />{{else}}—{{/if}}
-          </SnSection>
-          <SnSection @title='Acquisition' @flush={{true}}>
-            <SnKv>
-              <SnRow @label='Price'>{{moneyText
-                  @model.acquisition.price
-                }}</SnRow>
-              <SnRow
-                @label='Acquired'
-                @value={{day @model.acquisition.acquiredOn}}
-              />
-              <SnRow @label='Source'>{{or @model.acquisition.source}}</SnRow>
-              <SnRow @label='Reference'>{{or
-                  @model.acquisition.reference
-                }}</SnRow>
-            </SnKv>
-          </SnSection>
-          <SnSection @title='Verification' @flush={{true}}>
-            <SnKv>
-              <SnRow @label='Verified' @value={{day @model.verifiedOn}} />
-              <SnRow @label='By'>{{or @model.verifiedBy}}</SnRow>
-              <SnRow @label='Reference'>{{or
-                  @model.verificationReference
-                }}</SnRow>
-            </SnKv>
-          </SnSection>
-        </:main>
-        <:side>
-          <SnSection @title='Linked' @flush={{true}}>
-            <SnKv>
-              <SnRow @label='Product'>{{#if @model.item}}<@fields.item
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</SnRow>
-              <SnRow @label='Owner'>{{#if @model.owner}}<@fields.owner
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</SnRow>
-              <SnRow @label='Certificate'>
-                {{#if this.certificate}}
-                  {{#let (getComponent this.certificate) as |Cert|}}
-                    <Cert @format='atom' @displayContainer={{false}} />
-                  {{/let}}
-                  <DotLabel
-                    @label={{this.certificate.outcome}}
-                    @hue={{outcomeHue this.certificate.outcome}}
-                  />
-                {{else}}—{{/if}}
-              </SnRow>
-              <SnRow @label='Listing'>
-                {{#if this.listing}}
-                  {{#let (getComponent this.listing) as |ListingCard|}}
-                    <ListingCard @format='atom' @displayContainer={{false}} />
-                  {{/let}}
-                  <DotLabel
-                    @label={{this.listing.listingStatus}}
-                    @hue={{listingHue this.listing.listingStatus}}
-                  />
-                {{else}}—{{/if}}
-              </SnRow>
-            </SnKv>
-          </SnSection>
-          <SnSection @title='Details' @flush={{true}}>
-            <DetailRows @model={{@model}} />
-          </SnSection>
-        </:side>
-      </SnSheet>
+      <IsoFrame>
+        <SnSheet @title={{@model.cardTitle}} @src={{photoOf @model}}>
+          <:meta>{{metaLine @model}}</:meta>
+          <:actions>
+            {{#if @model.verified}}<DotLabel
+                @label='verified'
+                @hue='green'
+              />{{/if}}
+            {{#if @model.condition.code}}<DotLabel
+                @label={{@model.condition.code}}
+                @hue='green'
+              />{{/if}}
+            {{#if @model.forSale}}<DotLabel
+                @label='for sale'
+                @hue='orange'
+              />{{/if}}
+          </:actions>
+          <:stats>
+            <SnStat
+              @label='Value'
+              @value={{moneyText @model.lastKnownValue}}
+              @hint={{day @model.valuedOn}}
+            />
+            <SnStat
+              @label='Paid'
+              @value={{moneyText @model.acquisition.price}}
+              @hint={{day @model.acquisition.acquiredOn}}
+            />
+            <SnStat
+              @label='Gain'
+              @value={{if this.delta this.delta.text '—'}}
+              @hint={{if this.delta this.delta.percent}}
+            />
+          </:stats>
+          <:main>
+            <SnSection @title='Notes'>
+              {{#if @model.notes}}<@fields.notes />{{else}}—{{/if}}
+            </SnSection>
+            <SnSection @title='Acquisition' @flush={{true}}>
+              <SnKv>
+                <SnRow @label='Price'>{{moneyText
+                    @model.acquisition.price
+                  }}</SnRow>
+                <SnRow
+                  @label='Acquired'
+                  @value={{day @model.acquisition.acquiredOn}}
+                />
+                <SnRow @label='Source'>{{or @model.acquisition.source}}</SnRow>
+                <SnRow @label='Reference'>{{or
+                    @model.acquisition.reference
+                  }}</SnRow>
+              </SnKv>
+            </SnSection>
+            <SnSection @title='Verification' @flush={{true}}>
+              <SnKv>
+                <SnRow @label='Verified' @value={{day @model.verifiedOn}} />
+                <SnRow @label='By'>{{or @model.verifiedBy}}</SnRow>
+                <SnRow @label='Reference'>{{or
+                    @model.verificationReference
+                  }}</SnRow>
+              </SnKv>
+            </SnSection>
+          </:main>
+          <:side>
+            <SnSection @title='Linked' @flush={{true}}>
+              <SnKv>
+                <SnRow @label='Product'>{{#if @model.item}}<@fields.item
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</SnRow>
+                <SnRow @label='Owner'>{{#if @model.owner}}<@fields.owner
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</SnRow>
+                <SnRow @label='Certificate'>
+                  {{#if this.certificate}}
+                    {{#let (getComponent this.certificate) as |Cert|}}
+                      <Cert @format='atom' @displayContainer={{false}} />
+                    {{/let}}
+                    <DotLabel
+                      @label={{this.certificate.outcome}}
+                      @hue={{outcomeHue this.certificate.outcome}}
+                    />
+                  {{else}}—{{/if}}
+                </SnRow>
+                <SnRow @label='Listing'>
+                  {{#if this.listing}}
+                    {{#let (getComponent this.listing) as |ListingCard|}}
+                      <ListingCard @format='atom' @displayContainer={{false}} />
+                    {{/let}}
+                    <DotLabel
+                      @label={{this.listing.listingStatus}}
+                      @hue={{listingHue this.listing.listingStatus}}
+                    />
+                  {{else}}—{{/if}}
+                </SnRow>
+              </SnKv>
+            </SnSection>
+            <SnSection @title='Details' @flush={{true}}>
+              <DetailRows @model={{@model}} />
+            </SnSection>
+          </:side>
+        </SnSheet>
+      </IsoFrame>
     </template>
   };
 
@@ -311,8 +318,11 @@ export class CollectionItem extends CardDef {
   // Attributes only: a prerendered grid tile cannot resolve links.
   static fitted = class Fitted extends Component<typeof CollectionItem> {
     <template>
-      <FitTile>
-        <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
+      <RichFittedCard>
+        <:media><Media @src={{photoOf @model}} @alt=''><ArchiveIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><DotLabel
@@ -323,7 +333,32 @@ export class CollectionItem extends CardDef {
           {{moneyText @model.lastKnownValue}}
           · Paid
           {{moneyText @model.acquisition.price}}</:fact>
-      </FitTile>
+        <:metric>{{#if (formatMoney @model.lastKnownValue)}}<Metric
+              @value={{formatMoney @model.lastKnownValue}}
+              @label='Value'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if
+            (formatMoneyDelta @model.lastKnownValue @model.acquisition.price)
+          }}<Detail @label='Gain' @value={{gainText @model}} />{{/if}}
+          {{#if @model.variantLabel}}<Detail
+              @label='Size'
+              @value={{@model.variantLabel}}
+            />{{/if}}
+          {{#if @model.condition.summary}}<Detail
+              @label='Condition'
+              @value={{@model.condition.summary}}
+            />{{/if}}
+          {{#if @model.acquisition.acquiredOn}}<Detail
+              @label='Acquired'
+              @value={{day @model.acquisition.acquiredOn}}
+            />{{/if}}
+          {{#if @model.verifiedOn}}<Detail
+              @label='Verified'
+              @value={{verifiedText @model}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

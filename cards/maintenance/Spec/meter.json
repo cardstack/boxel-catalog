@@ -27,6 +27,11 @@
         "links": {
           "self": "../Meter/ast-2026-0090-supply-temp"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

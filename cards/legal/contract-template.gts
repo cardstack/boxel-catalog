@@ -19,7 +19,6 @@ import {
   Dots,
   EmbLayout,
   Facts,
-  FitLayout,
   IsoLayout,
   LinkRow,
   Mark,
@@ -27,12 +26,16 @@ import {
   Section,
   Text,
   riskTone,
+  fitParts,
   stats,
   type Dot,
   type Fact,
   type Row,
 } from './compact-card';
+import { Dot as DotChip } from '../shared/compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { dayAndYear, formatDay } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * CONTRACT TEMPLATE — the standard starting points for a new contract.
@@ -88,43 +91,47 @@ export class ContractTemplate extends CardDef {
       return templateView(this.args.model);
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='Tp' @size='lg' /></:mark>
-        <:main>
-          {{#if @model.guidance}}
-            <Section @title='Guidance'><Text
-              >{{@model.guidance}}</Text></Section>
-          {{/if}}
-          <Section @title='Required inputs' @flush={{true}}>
-            {{#if this.v.inputs.length}}
-              <Dots @items={{this.v.inputs}} />
-            {{else}}
-              <Rows @rows={{this.v.noInputs}} />
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='Tp' @size='lg' /></:mark>
+          <:main>
+            {{#if @model.guidance}}
+              <Section @title='Guidance'><Text
+                >{{@model.guidance}}</Text></Section>
             {{/if}}
-          </Section>
-          <Section @title='Standard clauses' @flush={{true}}>
-            <Rows @rows={{this.v.clauses}} />
-          </Section>
-        </:main>
-        <:side>
-          {{#if this.v.clauses.length}}
-            <Section @title='Linked'>
-              {{#each @fields.standardClauses as |C|}}
-                <LinkRow @label='Clause'><C
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></LinkRow>
-              {{/each}}
+            <Section @title='Required inputs' @flush={{true}}>
+              {{#if this.v.inputs.length}}
+                <Dots @items={{this.v.inputs}} />
+              {{else}}
+                <Rows @rows={{this.v.noInputs}} />
+              {{/if}}
             </Section>
-          {{/if}}
-          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+            <Section @title='Standard clauses' @flush={{true}}>
+              <Rows @rows={{this.v.clauses}} />
+            </Section>
+          </:main>
+          <:side>
+            {{#if this.v.clauses.length}}
+              <Section @title='Linked'>
+                {{#each @fields.standardClauses as |C|}}
+                  <LinkRow @label='Clause'><C
+                      @format='atom'
+                      @displayContainer={{false}}
+                    /></LinkRow>
+                {{/each}}
+              </Section>
+            {{/if}}
+            <Section @title='Details'><Facts
+                @items={{this.v.facts}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 
@@ -149,17 +156,28 @@ export class ContractTemplate extends CardDef {
     get v() {
       return templateView(this.args.model);
     }
+    get fit() {
+      return fitParts(this.v.facts, this.v.fitStats);
+    }
     <template>
-      <FitLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @status={{this.v.state}}
-        @fact={{this.v.fact}}
-        @facts={{this.v.facts}}
-        @stats={{this.v.fitStats}}
-      >
-        <:mark><Mark @text='Tp' /></:mark>
-      </FitLayout>
+      <RichFittedCard>
+        <:avatar><Mark @text='Tp' /></:avatar>
+        <:title>{{this.v.title}}</:title>
+        <:status>{{#if this.v.state}}<DotChip
+              @label={{this.v.state.label}}
+              @tone={{this.v.state.tone}}
+            />{{/if}}</:status>
+        <:subtitle>{{this.v.subtitle}}</:subtitle>
+        <:fact>{{this.v.fact}}</:fact>
+        <:metric>{{#if this.fit.metric}}<Metric
+              @value={{this.fit.metric.value}}
+              @label={{this.fit.metric.key}}
+            />{{/if}}</:metric>
+        <:details>{{#each this.fit.details as |d|}}<Detail
+              @label={{d.key}}
+              @value={{d.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 

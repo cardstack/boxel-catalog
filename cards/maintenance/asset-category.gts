@@ -25,7 +25,7 @@ import BoxesIcon from '@cardstack/boxel-icons/boxes';
 import CriticalityField from './criticality-field';
 import { Asset } from './asset';
 import { MaintenancePlan } from './maintenance-plan';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   Chip,
   Brief,
@@ -42,6 +42,7 @@ import {
   hueTone,
   type KvItem,
 } from './card-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /** Icon names a category may pick; anything else falls back to boxes. */
 export const CATEGORY_ICONS: Record<string, unknown> = {
@@ -171,6 +172,7 @@ export class AssetCategory extends CardDef {
           /></:fact>
         <:default>
           <KeyValue
+            class='kv-pad'
             @items={{this.rows}}
             @labelStyle='eyebrow'
             @divided={{true}}
@@ -178,12 +180,17 @@ export class AssetCategory extends CardDef {
           <AssetAtoms @assets={{this.assets}} />
         </:default>
       </Brief>
+      <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+      </style>
     </template>
   };
 
   static fitted = class Fitted extends CategoryView {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Ca' @size='lg' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -193,6 +200,20 @@ export class AssetCategory extends CardDef {
             @strong={{lifeYears @model.expectedLifeMonths true}}
             @rest={{if @model.defaultTeamName (teamText @model)}}
           /></:fact>
+        <:metric><Metric
+            @value='{{this.assets.length}}'
+            @label='Assets'
+          /></:metric>
+        <:details>
+          {{#if this.assets.length}}<Detail
+              @label='In service'
+              @value='{{this.inService}}'
+            />{{/if}}
+          {{#if @model.defaultPlans.length}}<Detail
+              @label='Default plans'
+              @value='{{@model.defaultPlans.length}}'
+            />{{/if}}
+        </:details>
         <:relations>
           {{#each this.assets as |a|}}
             <Chip
@@ -203,7 +224,7 @@ export class AssetCategory extends CardDef {
             />
           {{/each}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
@@ -226,85 +247,94 @@ export class AssetCategory extends CardDef {
     }
 
     <template>
-      <Sheet>
-        <:head>
-          <Head
-            @mark='Ca'
-            @title={{@model.cardTitle}}
-            @meta={{metaLine @model}}
-          >
-            <:status><CategoryDots @model={{@model}} /></:status>
-          </Head>
-        </:head>
-        <:stats>
-          <Stat
-            @label='Assets'
-            @value={{this.assets.length}}
-            @hint='{{this.inService}} in service'
-            @roll={{false}}
-          />
-          <Stat
-            @label='Expected life'
-            @value={{lifeYears @model.expectedLifeMonths}}
-            @hint={{if
-              @model.expectedLifeMonths
-              (concat @model.expectedLifeMonths ' months')
-              '—'
-            }}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Criticality'
-            @value={{capital this.level}}
-            @hint='default for new assets'
-            @roll={{false}}
-          />
-        </:stats>
-        <:main>
-          {{#if @model.description}}
-            <Section @title='Description'><p
-              >{{@model.description}}</p></Section>
-          {{/if}}
-          <Section @title='Defaults'>
-            <KeyValue
-              @items={{this.defaults}}
-              @labelStyle='eyebrow'
-              @divided={{true}}
+      <IsoFrame>
+        <Sheet>
+          <:head>
+            <Head
+              @mark='Ca'
+              @title={{@model.cardTitle}}
+              @meta={{metaLine @model}}
             >
-              <:value as |item|>
-                {{#if item.value}}{{item.value}}{{else if this.level}}<Dot
-                    @tone={{criticalityTone this.level}}
-                    @label={{this.level}}
-                  />{{else}}—{{/if}}
-              </:value>
-            </KeyValue>
-          </Section>
-          <Section @title='Assets'>
-            {{#each this.assets as |a|}}
-              <Row
-                @title={{a.name}}
-                @meta={{join a.tag (shortPlace a.location.name)}}
-                @tone={{hueTone a.statusHue}}
-                @state={{enumText a.status}}
-              />
-            {{else}}
-              <Row @title='No assets in this category yet' />
-            {{/each}}
-          </Section>
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <AssetAtoms @assets={{this.assets}} />
-          </Section>
-          <Section @title='Details'>
-            <KeyValue
-              @items={{this.details}}
-              @labelStyle='eyebrow'
-              @divided={{true}}
+              <:status><CategoryDots @model={{@model}} /></:status>
+            </Head>
+          </:head>
+          <:stats>
+            <Stat
+              @label='Assets'
+              @value={{this.assets.length}}
+              @hint='{{this.inService}} in service'
+              @roll={{false}}
             />
-          </Section>
-        </:side>
-      </Sheet>
+            <Stat
+              @label='Expected life'
+              @value={{lifeYears @model.expectedLifeMonths}}
+              @hint={{if
+                @model.expectedLifeMonths
+                (concat @model.expectedLifeMonths ' months')
+                '—'
+              }}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Criticality'
+              @value={{capital this.level}}
+              @hint='default for new assets'
+              @roll={{false}}
+            />
+          </:stats>
+          <:main>
+            {{#if @model.description}}
+              <Section @title='Description'><p
+                >{{@model.description}}</p></Section>
+            {{/if}}
+            <Section @title='Defaults'>
+              <KeyValue
+                class='kv-pad'
+                @items={{this.defaults}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              >
+                <:value as |item|>
+                  {{#if item.value}}{{item.value}}{{else if this.level}}<Dot
+                      @tone={{criticalityTone this.level}}
+                      @label={{this.level}}
+                    />{{else}}—{{/if}}
+                </:value>
+              </KeyValue>
+            </Section>
+            <Section @title='Assets'>
+              {{#each this.assets as |a|}}
+                <Row
+                  @title={{a.name}}
+                  @meta={{join a.tag (shortPlace a.location.name)}}
+                  @tone={{hueTone a.statusHue}}
+                  @state={{enumText a.status}}
+                />
+              {{else}}
+                <Row @title='No assets in this category yet' />
+              {{/each}}
+            </Section>
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <AssetAtoms @assets={{this.assets}} />
+            </Section>
+            <Section @title='Details'>
+              <KeyValue
+                class='kv-pad'
+                @items={{this.details}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              />
+            </Section>
+          </:side>
+        </Sheet>
+      </IsoFrame>
+      <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+      </style>
     </template>
   };
 }
@@ -356,6 +386,7 @@ const CategoryDots: TemplateOnlyComponent<{
 const AssetAtoms: TemplateOnlyComponent<{ Args: { assets: Asset[] } }> =
   <template>
     <KeyValue
+      class='kv-pad'
       @items={{assetItems @assets}}
       @labelStyle='eyebrow'
       @divided={{true}}
@@ -370,6 +401,11 @@ const AssetAtoms: TemplateOnlyComponent<{ Args: { assets: Asset[] } }> =
         />
       </:value>
     </KeyValue>
+    <style scoped>
+      .kv-pad {
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
+      }
+    </style>
   </template>;
 
 // KeyValue items are strings; a row finds its asset again by name.

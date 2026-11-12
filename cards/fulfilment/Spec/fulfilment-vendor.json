@@ -20,6 +20,11 @@
         "links": {
           "self": "../FulfilmentVendor/widgetco"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -141,7 +141,7 @@ export interface DeskColumn {
 
 const SEARCH_FORMS = [
   { name: 'field', minWidth: 14 },
-  { name: 'menu', minWidth: 0 },
+  { name: 'collapsed', minWidth: 1.75 },
 ];
 const CHIP_FORMS = [
   { name: 'chips', minWidth: 16 },
@@ -207,8 +207,10 @@ export class DeskList extends GlimmerComponent<ListSignature> {
         @priority={{2}}
         @forms={{SEARCH_FORMS}}
         @label='Search'
+        as |form|
       >
         <div class='search'><SearchInput
+            @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
             @value={{@search}}
             @placeholder='Search {{@noun}}…'
             @onInput={{@onSearch}}
@@ -232,17 +234,21 @@ export class DeskList extends GlimmerComponent<ListSignature> {
       {{#if @onNew}}
         <lc.Slot
           @id='new'
+          @align='end'
           @priority={{0}}
           @pinned={{true}}
           @forms={{ADD_FORMS}}
           @label={{@newLabel}}
+          as |form|
         >
-          <div class='push'><Button
-              @icon={{PlusIcon}}
-              @tone='primary'
-              @size='s'
-              {{on 'click' @onNew}}
-            >{{@newLabel}}</Button></div>
+          <Button
+            @icon={{PlusIcon}}
+            @tone='primary'
+            @size='s'
+            @display={{if (eq form 'icon') 'icon' 'label'}}
+            @label={{@newLabel}}
+            {{on 'click' @onNew}}
+          >{{@newLabel}}</Button>
         </lc.Slot>
       {{/if}}
     </LayoutControl>
@@ -341,9 +347,6 @@ export class DeskList extends GlimmerComponent<ListSignature> {
         font-family: var(--font-mono);
         font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
-      }
-      .push {
-        margin-inline-start: auto;
       }
       .status {
         text-transform: capitalize;

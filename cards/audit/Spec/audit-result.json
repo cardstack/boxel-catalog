@@ -48,6 +48,11 @@
         "links": {
           "self": "../AuditResult/con-04-brightleaf-pilot-terms"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

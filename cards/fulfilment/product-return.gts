@@ -23,7 +23,20 @@ import { Shipment } from './shipment';
 import { type StatusStyle } from './fulfilment-status-chip';
 import { money } from './fulfilment-format';
 import { CompoundAtom } from './fulfilment-ui';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import {
+  DotLabel,
+  IsoHead,
+  IsoMark,
+  IsoPage,
+  Kv,
+  Panel,
+  SheetEmpty,
+  SheetLine,
+  StatStrip,
+  type StripItem,
+} from '../shared/compact-sheet';
 
 // Each status reads a theme token, so a linked theme restyles them; the
 // lifecycle steps without a status meaning take the chart hues.
@@ -452,316 +465,89 @@ export class ProductReturn extends CardDef {
   }
 
   static isolated = class Isolated extends Component<typeof ProductReturn> {
+    get strip(): StripItem[] {
+      let m = this.args.model;
+      return [
+        {
+          label: 'Refund',
+          value: amt(m.refundAmount),
+          hint: refundMethodLabel(m.refundMethod),
+        },
+        { label: 'Items', value: String(m.itemCount ?? 0), hint: itemNames(m) },
+        {
+          label: 'Restocking fee',
+          value: amt(m.restockingFee),
+          hint: m.feeWaived ? 'our fault' : 'per returns policy',
+        },
+        {
+          label: 'Requested',
+          value: monthDay(m.requestedAt),
+          hint: year(m.requestedAt),
+        },
+      ];
+    }
+    get linkedItems() {
+      return [{ key: 'Order' }, { key: 'Shipment' }];
+    }
+    get timelineItems() {
+      let m = this.args.model;
+      return [
+        { key: 'Requested', value: stamp(m.requestedAt) },
+        { key: 'Received', value: stamp(m.receivedAt) },
+        { key: 'Inspected', value: stamp(m.inspectedAt) },
+        { key: 'Completed', value: stamp(m.completedAt) },
+      ];
+    }
     <template>
-      <article class='ret'>
-        <header class='ihead'>
-          <div class='who'>
-            <span class='mark' aria-hidden='true'>Rt</span>
-            <div class='id'>
-              <h1 class='name'>{{@model.cardTitle}}</h1>
-              <p class='meta'>{{metaLine @model}}</p>
-            </div>
-          </div>
-          <div class='bar'>
-            <span class='st' style={{dotStyle @model.statusStyle.hue}}><span
-                class='dot'
-              ></span>{{lower @model.statusStyle.label}}</span>
-            <span class='st'><span
-                class='dot'
-              ></span>{{@model.lifecycleState}}</span>
-          </div>
-        </header>
-
-        <div class='stats four'>
-          <div class='stat'>
-            <span class='st cap'><span class='dot'></span>Refund</span>
-            <span class='num'>{{amt @model.refundAmount}}</span>
-            <span class='meta'>{{refundMethodLabel @model.refundMethod}}</span>
-          </div>
-          <div class='stat'>
-            <span class='st cap'><span class='dot'></span>Items</span>
-            <span class='num'>{{if @model.itemCount @model.itemCount 0}}</span>
-            <span class='meta'>{{itemNames @model}}</span>
-          </div>
-          <div class='stat'>
-            <span class='st cap'><span class='dot'></span>Restocking fee</span>
-            <span class='num'>{{amt @model.restockingFee}}</span>
-            <span class='meta'>{{if
-                @model.feeWaived
-                'our fault'
-                'per returns policy'
-              }}</span>
-          </div>
-          <div class='stat'>
-            <span class='st cap'><span class='dot'></span>Requested</span>
-            <span class='num'>{{monthDay @model.requestedAt}}</span>
-            <span class='meta'>{{year @model.requestedAt}}</span>
-          </div>
-        </div>
-
-        <section class='blk'>
-          <h2>Reason</h2>
-          <p class='row'>{{if
-              @model.reasonDetails
-              @model.reasonDetails
-              @model.reasonLabel
-            }}</p>
-        </section>
-
-        <section class='blk'>
-          <h2>Items</h2>
-          {{#if @model.lineItems.length}}
-            <@fields.lineItems @format='embedded' />
-          {{else}}
-            <p class='row meta'>No items on this return</p>
-          {{/if}}
-        </section>
-
-        <section class='blk'>
-          <h2>Timeline</h2>
-          <dl class='kv'>
-            <dt class='cap'>Requested</dt>
-            <dd class='mono'>{{stamp @model.requestedAt}}</dd>
-            <dt class='cap'>Received</dt>
-            <dd class='mono'>{{stamp @model.receivedAt}}</dd>
-            <dt class='cap'>Inspected</dt>
-            <dd class='mono'>{{stamp @model.inspectedAt}}</dd>
-            <dt class='cap'>Completed</dt>
-            <dd class='mono'>{{stamp @model.completedAt}}</dd>
-          </dl>
-        </section>
-
-        <section class='blk'>
-          <h2>Linked</h2>
-          <dl class='kv'>
-            <dt class='cap'>Order</dt>
-            <dd>{{#if @model.order}}<@fields.order
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}—{{/if}}</dd>
-            <dt class='cap'>Shipment</dt>
-            <dd>{{#if @model.originalShipment}}<@fields.originalShipment
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}—{{/if}}</dd>
-          </dl>
-        </section>
-      </article>
-
-      <style scoped>
-        .ret {
-          container-type: inline-size;
-          font-family: var(--font-sans);
-          font-size: var(--boxel-font-size-xs);
-          line-height: 1.4;
-          color: var(--card-foreground);
-          background-color: var(--card);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          overflow: hidden;
-        }
-        .stats.four {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-        .st[style] {
-          --tone: var(--st-hue);
-        }
-        .ihead {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        }
-        .who {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-        }
-        .mark {
-          flex: none;
-          display: inline-grid;
-          place-items: center;
-          width: 1.375rem;
-          height: 1.375rem;
-          border-radius: calc(var(--radius) * 0.6);
-          background-color: var(--muted);
-          font-family: var(--font-mono);
-          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
-          font-weight: 700;
-          color: var(--foreground);
-        }
-        .id {
-          min-width: 0;
-        }
-        .name {
-          font-family: var(--font-sans);
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
-          letter-spacing: normal;
-          text-transform: none;
-        }
-        .meta {
-          margin: 0;
-          font-size: var(--boxel-font-size-2xs);
-          color: var(--muted-foreground);
-        }
-        .bar {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        }
-        .st {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-5xs);
-          font-weight: 600;
-          --tone: var(--muted-foreground);
-        }
-        .st[data-tone='bad'] {
-          --tone: var(--destructive);
-        }
-        .st[data-tone='warn'] {
-          --tone: var(--warning);
-        }
-        .st[data-tone='ok'] {
-          --tone: var(--success);
-        }
-        .dot {
-          flex: none;
-          width: 0.4375rem;
-          height: 0.4375rem;
-          border-radius: 50%;
-          background-color: var(--tone);
-        }
-        .cap {
-          font-family: var(--font-mono);
-          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
-          font-weight: 600;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .stats {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          border-top: 1px solid var(--border);
-        }
-        .stat {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-6xs);
-          min-width: 0;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        }
-        .stat + .stat {
-          border-left: 1px solid var(--border);
-        }
-        .stat .meta {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .num {
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 700;
-          line-height: 1.1;
-          font-variant-numeric: tabular-nums;
-        }
-        @container (max-width: 30rem) {
-          .stats {
-            grid-template-columns: minmax(0, 1fr);
-          }
-          .stat + .stat {
-            border-left: 0;
-            border-top: 1px solid var(--border);
-          }
-        }
-        .blk h2 {
-          margin: 0;
-          padding: var(--boxel-sp-sm) var(--boxel-sp-sm) var(--boxel-sp-4xs);
-          font-family: var(--font-sans);
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          letter-spacing: normal;
-          text-transform: none;
-        }
-        .row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: var(--boxel-sp-sm);
-          width: 100%;
-          min-height: 1.75rem;
-          padding: 0 var(--boxel-sp-sm);
-          border: 0;
-          border-top: 1px solid var(--border);
-          background: none;
-          color: inherit;
-          font-family: inherit;
-          font-size: inherit;
-          font-weight: inherit;
-          line-height: inherit;
-          text-align: start;
-        }
-        button.row {
-          cursor: pointer;
-        }
-        @media (hover: hover) {
-          button.row:hover {
-            background-color: var(--muted);
-          }
-        }
-        button.row:focus-visible {
-          outline: 2px solid var(--ring);
-          outline-offset: -2px;
-        }
-
-        .lead {
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-        }
-        .lead .meta {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .strong {
-          flex: none;
-          font-weight: 600;
-        }
-        .kv {
-          display: grid;
-          grid-template-columns: minmax(7rem, 9.5rem) minmax(0, 1fr);
-          margin: 0;
-        }
-        .kv dt,
-        .kv dd {
-          display: flex;
-          align-items: center;
-          min-height: 1.75rem;
-          margin: 0;
-          border-top: 1px solid var(--border);
-        }
-        .kv dt {
-          padding-left: var(--boxel-sp-sm);
-        }
-        .kv dd {
-          padding: 0 var(--boxel-sp-sm);
-          min-width: 0;
-          overflow-wrap: break-word;
-          min-width: 0;
-        }
-        .mono {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-        }
-      </style>
+      <IsoPage>
+        <:head>
+          <IsoHead @title={{@model.cardTitle}} @meta={{metaLine @model}}>
+            <:mark><IsoMark>Rt</IsoMark></:mark>
+            <:aside>
+              <DotLabel
+                @label={{lower @model.statusStyle.label}}
+                @color={{@model.statusStyle.hue}}
+              />
+              <DotLabel @label={{@model.lifecycleState}} />
+            </:aside>
+            <:stats><StatStrip @items={{this.strip}} /></:stats>
+          </IsoHead>
+        </:head>
+        <:main>
+          <Panel @title='Reason'>
+            <SheetLine>{{if
+                @model.reasonDetails
+                @model.reasonDetails
+                @model.reasonLabel
+              }}</SheetLine>
+          </Panel>
+          <Panel @title='Items'>
+            {{#if @model.lineItems.length}}
+              <@fields.lineItems @format='embedded' />
+            {{else}}
+              <SheetEmpty @title='No items on this return' />
+            {{/if}}
+          </Panel>
+        </:main>
+        <:aside>
+          <Panel @title='Linked'>
+            <Kv @items={{this.linkedItems}}>
+              <:value as |row|>{{#if (eq row.key 'Order')}}{{#if
+                    @model.order
+                  }}<@fields.order
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}{{else if
+                  @model.originalShipment
+                }}<@fields.originalShipment
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</:value>
+            </Kv>
+          </Panel>
+          <Panel @title='Timeline'><Kv @items={{this.timelineItems}} /></Panel>
+        </:aside>
+      </IsoPage>
     </template>
   };
 
@@ -917,7 +703,7 @@ export class ProductReturn extends CardDef {
 
   static fitted = class Fitted extends Component<typeof ProductReturn> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Rt</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -931,11 +717,33 @@ export class ProductReturn extends CardDef {
           refund ·
           {{if @model.itemCount @model.itemCount 0}}
           items</:fact>
+        <:metric>{{#if @model.lineItems.length}}<Metric
+              @value={{amt @model.refundAmount}}
+              @label='Refund'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.lineItems.length}}<Detail
+              @label='Items'
+              @value={{itemNames @model}}
+            />{{/if}}
+          {{#if @model.restockingFee.amount}}<Detail
+              @label='Restocking fee'
+              @value={{amt @model.restockingFee}}
+            />{{/if}}
+          {{#if @model.receivedAt}}<Detail
+              @label='Received'
+              @value={{day @model.receivedAt}}
+            />{{/if}}
+          {{#if @model.returnTrackingNumber}}<Detail
+              @label='Return tracking'
+              @value={{@model.returnTrackingNumber}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.order}}<@fields.order
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .st[style] {
           --tone: var(--st-hue);

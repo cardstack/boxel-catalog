@@ -21,6 +21,11 @@
       }
     },
     "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      },
       "listing": {
         "links": {
           "self": "../Listing/yeezy-350-zebra-11"

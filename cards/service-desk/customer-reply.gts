@@ -12,13 +12,13 @@ import MarkdownField from '@cardstack/base/markdown';
 import enumField from '@cardstack/base/enum';
 import MessageCircleIcon from '@cardstack/boxel-icons/message-circle';
 import { Case } from './case';
-import { FitRows, TypeMark, lowercase } from './components/fit-rows';
+import { TypeMark, lowercase } from './components/fit-rows';
 import { Employee } from '../hr/employee';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Panel } from '@cardstack/pretui/components/panel';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   KeyValue,
   type KeyValueItem,
@@ -207,7 +207,7 @@ export class CustomerReply extends CardDef {
         </header>
         {{#if this.v.quote}}<p class='emb-quote'>{{this.v.quote}}</p>{{/if}}
         <KeyValue
-          class='emb-kv'
+          class='emb-kv kv-pad'
           @items={{this.v.rows}}
           @labelStyle='eyebrow'
           @divided={{true}}
@@ -225,6 +225,10 @@ export class CustomerReply extends CardDef {
         </KeyValue>
       </article>
       <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+
         @layer PretComponent {
           .emb {
             display: grid;
@@ -371,6 +375,7 @@ export class CustomerReply extends CardDef {
             {{#if this.v.linked.length}}
               <Panel @title='Linked' @variant='inspector'>
                 <KeyValue
+                  class='kv-pad'
                   @items={{this.v.linked}}
                   @labelStyle='eyebrow'
                   @divided={{true}}
@@ -389,6 +394,7 @@ export class CustomerReply extends CardDef {
             {{/if}}
             <Panel @title='Details' @variant='inspector'>
               <KeyValue
+                class='kv-pad'
                 @items={{this.v.facts}}
                 @labelStyle='eyebrow'
                 @divided={{true}}
@@ -404,6 +410,10 @@ export class CustomerReply extends CardDef {
         </div>
       </article>
       <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+
         @layer PretComponent {
           .iso {
             container-type: inline-size;
@@ -411,8 +421,8 @@ export class CustomerReply extends CardDef {
             align-content: start;
             gap: var(--boxel-sp-xs);
             min-height: 100%;
-            padding: var(--boxel-sp-xs);
-            background: var(--muted);
+            padding: var(--boxel-sp-sm);
+            background: var(--background);
             color: var(--card-foreground);
             font-size: var(--boxel-font-size-sm);
           }
@@ -501,42 +511,36 @@ export class CustomerReply extends CardDef {
       return replyView(this.args.model);
     }
     <template>
-      <FitRows @items={{this.v.fitRows}}>
-        <:tile>
-          <FitTile>
-            <:avatar><TypeMark @label='Re' /></:avatar>
-            <:title><span
-                class='fit-title'
-                role='heading'
-                aria-level='3'
-              >{{this.v.title}}</span></:title>
-            <:subtitle>{{this.v.subline}}</:subtitle>
-            <:status>
-              <Chip
-                @tone={{this.v.directionTone}}
-                @appearance='plain'
-              >{{lowercase this.v.directionLabel}}</Chip>
-            </:status>
-          </FitTile>
-        </:tile>
-        <:row as |item|>
-          {{#if (eq item.key 'Author')}}
-            <@fields.author @format='atom' @displayContainer={{false}} />
-          {{else if (eq item.key 'Case')}}
-            <@fields.case @format='atom' @displayContainer={{false}} />
-          {{else}}
-            <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
-          {{/if}}
-        </:row>
-      </FitRows>
+      <RichFittedCard>
+        <:avatar><TypeMark @label='Re' /></:avatar>
+        <:title><span
+            role='heading'
+            aria-level='3'
+          >{{this.v.title}}</span></:title>
+        <:subtitle>{{this.v.subline}}</:subtitle>
+        <:status>
+          <Chip @tone={{this.v.directionTone}} @appearance='plain'>{{lowercase
+              this.v.directionLabel
+            }}</Chip>
+        </:status>
+        <:details>
+          {{#each this.v.fitRows as |item|}}
+            <Detail @label={{item.key}}>
+              {{#if (eq item.key 'Author')}}
+                <@fields.author @format='atom' @displayContainer={{false}} />
+              {{else if (eq item.key 'Case')}}
+                <@fields.case @format='atom' @displayContainer={{false}} />
+              {{else}}
+                <span
+                  class={{if (isMono item.key) 'mono'}}
+                >{{item.value}}</span>
+              {{/if}}
+            </Detail>
+          {{/each}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
         @layer PretComponent {
-          .fit-title {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
           .mono {
             font-family: var(--font-mono);
           }

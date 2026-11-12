@@ -14,7 +14,7 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import FactoryIcon from '@cardstack/boxel-icons/building-factory';
 import { CompoundAtom } from './fulfilment-ui';
 import { money } from './fulfilment-format';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import { on } from '@ember/modifier';
@@ -22,6 +22,7 @@ import { fn } from '@ember/helper';
 // Cyclic with fulfilment-product.gts (it links to this vendor); the binding is
 // only read inside the constructor, never at module evaluation.
 import { FulfilmentProduct } from './fulfilment-product';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Vendor (Ve) — a supplier. Two jobs, and it matters that they are separate:
 // restocking your own shelves (lead time, minimum order), and dropshipping
@@ -122,109 +123,113 @@ export class FulfilmentVendor extends CardDef {
     }
 
     <template>
-      <article class='ven'>
-        <header class='ihead'>
-          <div class='who'>
-            <span class='mark' aria-hidden='true'>{{initials
-                @model.vendorName
-              }}</span>
-            <div class='id'>
-              <h1 class='name'>{{@model.cardTitle}}</h1>
-              <p class='meta'>{{metaLine @model}}</p>
+      <IsoFrame>
+        <article class='ven'>
+          <header class='ihead'>
+            <div class='who'>
+              <span class='mark' aria-hidden='true'>{{initials
+                  @model.vendorName
+                }}</span>
+              <div class='id'>
+                <h1 class='name'>{{@model.cardTitle}}</h1>
+                <p class='meta'>{{metaLine @model}}</p>
+              </div>
+            </div>
+            <div class='bar'>
+              {{#if @model.leadTimeDays}}
+                <span class='st'><span
+                    class='dot'
+                  ></span>{{@model.leadTimeDays}}
+                  d lead</span>
+              {{/if}}
+              <span
+                class='st'
+                data-tone={{if @model.supportsDropship 'ok'}}
+              ><span class='dot'></span>{{if
+                  @model.supportsDropship
+                  'dropship'
+                  'no dropship'
+                }}</span>
+            </div>
+          </header>
+
+          <div class='stats'>
+            <div class='stat'>
+              <span class='st cap'><span class='dot'></span>Lead time</span>
+              <span class='num'>{{daysText @model.leadTimeDays}}</span>
+              <span class='meta'>from order to dock</span>
+            </div>
+            <div class='stat'>
+              <span class='st cap'><span class='dot'></span>Minimum order</span>
+              <span class='num'>{{amountOr @model.minimumOrder 0}}</span>
+              <span class='meta'>per purchase order</span>
+            </div>
+            <div class='stat'>
+              <span class='st cap'><span class='dot'></span>Products</span>
+              <span class='num'>{{this.products.length}}</span>
+              <span class='meta'>supplied by this vendor</span>
             </div>
           </div>
-          <div class='bar'>
-            {{#if @model.leadTimeDays}}
-              <span class='st'><span class='dot'></span>{{@model.leadTimeDays}}
-                d lead</span>
+
+          <section class='blk'>
+            <h2>Terms</h2>
+            <dl class='kv'>
+              <dt class='cap'>Lead time</dt>
+              <dd>{{daysText @model.leadTimeDays}}</dd>
+              <dt class='cap'>Minimum order</dt>
+              <dd class='mono'>{{amountOr @model.minimumOrder 2}}</dd>
+              <dt class='cap'>Supports dropship</dt>
+              <dd>{{if @model.supportsDropship 'Yes' 'No'}}</dd>
+              {{#if @model.supportsDropship}}
+                <dt class='cap'>Dropship fee</dt>
+                <dd class='mono'>{{amountOr @model.dropshipFee 2}}</dd>
+              {{/if}}
+            </dl>
+          </section>
+
+          <section class='blk'>
+            <h2>Contact</h2>
+            <dl class='kv'>
+              <dt class='cap'>Email</dt>
+              <dd>{{dash @model.contactEmail}}</dd>
+              <dt class='cap'>Phone</dt>
+              <dd>{{dash @model.contactPhone}}</dd>
+              <dt class='cap'>Address</dt>
+              <dd>{{addressLine @model}}</dd>
+            </dl>
+          </section>
+
+          <section class='blk'>
+            <h2>Products</h2>
+            {{#if this.queryError}}
+              <p class='row meta'>Could not read this vendor's products:
+                {{this.queryError}}</p>
+            {{else if this.isQueryLoading}}
+              <p class='row meta'>Loading…</p>
+            {{else}}
+              <ul class='rows'>
+                {{#each this.products as |p|}}
+                  <li>
+                    <button
+                      type='button'
+                      class='row'
+                      {{on 'click' (fn this.open p)}}
+                    >
+                      <span class='lead'>
+                        <span class='strong'>{{p.cardTitle}}</span>
+                        <span class='meta'>{{productMeta p}}</span>
+                      </span>
+                      <span class='mono'>{{amountOr p.price 2}}</span>
+                    </button>
+                  </li>
+                {{else}}
+                  <li class='row meta'>No products from this vendor yet</li>
+                {{/each}}
+              </ul>
             {{/if}}
-            <span class='st' data-tone={{if @model.supportsDropship 'ok'}}><span
-                class='dot'
-              ></span>{{if
-                @model.supportsDropship
-                'dropship'
-                'no dropship'
-              }}</span>
-          </div>
-        </header>
-
-        <div class='stats'>
-          <div class='stat'>
-            <span class='st cap'><span class='dot'></span>Lead time</span>
-            <span class='num'>{{daysText @model.leadTimeDays}}</span>
-            <span class='meta'>from order to dock</span>
-          </div>
-          <div class='stat'>
-            <span class='st cap'><span class='dot'></span>Minimum order</span>
-            <span class='num'>{{amountOr @model.minimumOrder 0}}</span>
-            <span class='meta'>per purchase order</span>
-          </div>
-          <div class='stat'>
-            <span class='st cap'><span class='dot'></span>Products</span>
-            <span class='num'>{{this.products.length}}</span>
-            <span class='meta'>supplied by this vendor</span>
-          </div>
-        </div>
-
-        <section class='blk'>
-          <h2>Terms</h2>
-          <dl class='kv'>
-            <dt class='cap'>Lead time</dt>
-            <dd>{{daysText @model.leadTimeDays}}</dd>
-            <dt class='cap'>Minimum order</dt>
-            <dd class='mono'>{{amountOr @model.minimumOrder 2}}</dd>
-            <dt class='cap'>Supports dropship</dt>
-            <dd>{{if @model.supportsDropship 'Yes' 'No'}}</dd>
-            {{#if @model.supportsDropship}}
-              <dt class='cap'>Dropship fee</dt>
-              <dd class='mono'>{{amountOr @model.dropshipFee 2}}</dd>
-            {{/if}}
-          </dl>
-        </section>
-
-        <section class='blk'>
-          <h2>Contact</h2>
-          <dl class='kv'>
-            <dt class='cap'>Email</dt>
-            <dd>{{dash @model.contactEmail}}</dd>
-            <dt class='cap'>Phone</dt>
-            <dd>{{dash @model.contactPhone}}</dd>
-            <dt class='cap'>Address</dt>
-            <dd>{{addressLine @model}}</dd>
-          </dl>
-        </section>
-
-        <section class='blk'>
-          <h2>Products</h2>
-          {{#if this.queryError}}
-            <p class='row meta'>Could not read this vendor's products:
-              {{this.queryError}}</p>
-          {{else if this.isQueryLoading}}
-            <p class='row meta'>Loading…</p>
-          {{else}}
-            <ul class='rows'>
-              {{#each this.products as |p|}}
-                <li>
-                  <button
-                    type='button'
-                    class='row'
-                    {{on 'click' (fn this.open p)}}
-                  >
-                    <span class='lead'>
-                      <span class='strong'>{{p.cardTitle}}</span>
-                      <span class='meta'>{{productMeta p}}</span>
-                    </span>
-                    <span class='mono'>{{amountOr p.price 2}}</span>
-                  </button>
-                </li>
-              {{else}}
-                <li class='row meta'>No products from this vendor yet</li>
-              {{/each}}
-            </ul>
-          {{/if}}
-        </section>
-      </article>
-
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .ven {
           container-type: inline-size;
@@ -588,7 +593,7 @@ export class FulfilmentVendor extends CardDef {
 
   static fitted = class Fitted extends Component<typeof FulfilmentVendor> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>{{initials
               @model.vendorName
             }}</span></:avatar>
@@ -605,7 +610,29 @@ export class FulfilmentVendor extends CardDef {
         <:fact>{{daysText @model.leadTimeDays}}
           lead · min
           {{amountOr @model.minimumOrder 0}}</:fact>
-      </FitTile>
+        <:metric>{{#if @model.leadTimeDays}}<Metric
+              @value={{daysText @model.leadTimeDays}}
+              @label='Lead time'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.contactEmail}}<Detail
+              @label='Email'
+              @value={{@model.contactEmail}}
+            />{{/if}}
+          {{#if @model.contactPhone}}<Detail
+              @label='Phone'
+              @value={{@model.contactPhone}}
+            />{{/if}}
+          {{#if @model.address.addressLine1}}<Detail
+              @label='Address'
+              @value={{shortAddress @model}}
+            />{{/if}}
+          {{#if @model.dropshipFee.amount}}<Detail
+              @label='Dropship fee'
+              @value={{amountOr @model.dropshipFee 2}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

@@ -199,7 +199,7 @@ const plural = (n: number, one: string, many = `${one}s`) =>
 
 const SEARCH_FORMS = [
   { name: 'full', minWidth: 14 },
-  { name: 'menu', minWidth: 0 },
+  { name: 'collapsed', minWidth: 1.75 },
 ];
 const FILTER_FORMS = [
   { name: 'full', minWidth: 22 },
@@ -1190,9 +1190,8 @@ export class VendorOnboardingConsole extends Component<
                   @active={{item.active}}
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.setTab item.key}}
-                >
-                  <:icon><item.icon aria-hidden='true' /></:icon>
-                </SidebarItem>
+                  @icon={{item.icon}}
+                />
               {{/each}}
             </SidebarGroup>
             <SidebarGroup @label='Procurement' @hideLabel={{bar.collapsed}}>
@@ -1203,9 +1202,8 @@ export class VendorOnboardingConsole extends Component<
                   @active={{item.active}}
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.setTab item.key}}
-                >
-                  <:icon><item.icon aria-hidden='true' /></:icon>
-                </SidebarItem>
+                  @icon={{item.icon}}
+                />
               {{/each}}
             </SidebarGroup>
           </:nav>
@@ -1239,10 +1237,12 @@ export class VendorOnboardingConsole extends Component<
                   @priority={{2}}
                   @forms={{this.SEARCH_FORMS}}
                   @label='Search'
+                  as |form|
                 >
                   <label class='search'>
                     <VisuallyHidden>Search {{this.noun}}</VisuallyHidden>
                     <SearchInput
+                      @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
                       @placeholder='Search {{this.noun}}'
                       @value={{this.searchText}}
                       @onInput={{this.setSearch}}

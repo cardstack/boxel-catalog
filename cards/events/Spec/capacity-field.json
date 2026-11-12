@@ -41,6 +41,13 @@
       },
       "cardDescription": "How much of something a place or offer can hold, and how that total is carved up before anything is sold or assigned."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "fields": {
         "containedExamples": [

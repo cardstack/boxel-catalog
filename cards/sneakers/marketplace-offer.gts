@@ -30,7 +30,7 @@ import {
   moneyText,
 } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -42,6 +42,7 @@ import {
   SnStat,
   day,
 } from './parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Offer — a price proposed on a listing. A counter is a new Offer linked back
 // through `counterTo`, so what each party offered stays on record.
@@ -201,107 +202,112 @@ export class MarketplaceOffer extends CardDef {
     decline = () => this.respond('declined');
 
     <template>
-      <SnSheet>
-        <:mark><SnMark @text='Of' /></:mark>
-        <:title>{{offerTitle @model}}</:title>
-        <:meta>{{metaLine @model}}</:meta>
-        <:actions>
-          <DotLabel
-            @hue={{statusHue OfferStatusField @model.offerStatus}}
-            @label={{statusLabel @model.offerStatus}}
-          />
-          {{#if @model.expiresAt}}
-            <DotLabel @label={{expiresLine @model}} />
-          {{/if}}
-          {{#if @model.isOpen}}
-            {{! Both answers are final, so each asks first. }}
-            <AlertDialog
-              @title='Accept this offer?'
-              @description='The offer is marked accepted. An accepted offer cannot be changed.'
-              @confirmLabel='Accept offer'
-              @tone='primary'
-              @onConfirm={{this.accept}}
-            >
-              <:trigger as |_isOpen toggle|>
-                <Button
-                  @tone='primary'
-                  @appearance='accent'
-                  @size='s'
-                  {{on 'click' toggle}}
-                >Accept</Button>
-              </:trigger>
-            </AlertDialog>
-            <AlertDialog
-              @title='Decline this offer?'
-              @description='The offer is marked declined. A declined offer cannot be reopened.'
-              @confirmLabel='Decline offer'
-              @onConfirm={{this.decline}}
-            >
-              <:trigger as |_isOpen toggle|>
-                <Button
-                  @tone='danger'
-                  @appearance='outlined'
-                  @size='s'
-                  {{on 'click' toggle}}
-                >Decline</Button>
-              </:trigger>
-            </AlertDialog>
-          {{/if}}
-        </:actions>
-        <:stats>
-          <SnStat
-            @label='Offer'
-            @hue='blue'
-            @value={{moneyText @model.amount}}
-            @hint={{ofAsking @model}}
-          />
-          <SnStat
-            @label='Asking'
-            @value={{moneyText @model.listingPrice}}
-            @hint={{shippingLine @model}}
-          />
-          <SnStat
-            @label='Expires'
-            @hue='amber'
-            @value={{day @model.expiresAt true}}
-            @hint={{windowLine @model}}
-          />
-        </:stats>
-        <:main>
-          <SnSection @title='Message' @text={{@model.message}} />
-          <SnSection @title='Offer' @flush={{true}}><SnKv>
-              <SnRow @label='Amount' @value={{moneyText @model.amount}} />
-              <SnRow
-                @label='Listing price'
-                @value={{moneyText @model.listingPrice}}
-              />
-              <SnRow @label='Offered' @value={{day @model.offeredAt}} />
-              <SnRow @label='Expires' @value={{day @model.expiresAt}} />
-              <SnRow @label='Responded' @value={{day @model.respondedAt}} />
-              <SnRow @label='Counter to'>{{#if
-                  @model.counterTo
-                }}<@fields.counterTo @format='atom' />{{else}}—{{/if}}</SnRow>
-            </SnKv></SnSection>
-        </:main>
-        <:side>
-          <SnSection @title='Linked' @flush={{true}}><SnKv>
-              <SnRow @label='From'>{{#if @model.offeredBy}}<@fields.offeredBy
-                    @format='atom'
-                  />{{else}}—{{/if}}</SnRow>
-              <SnRow @label='Listing'>{{#if @model.listing}}<@fields.listing
-                    @format='atom'
-                  />{{else}}—{{/if}}</SnRow>
-            </SnKv></SnSection>
-          <SnSection @title='Details' @flush={{true}}><SnKv>
-              <SnRow @label='Offer' @value={{moneyText @model.amount}} />
-              <SnRow @label='Asking' @value={{moneyText @model.listingPrice}} />
-              <SnRow @label='Gap' @value={{gap @model}} />
-              <SnRow @label='Offered' @value={{day @model.offeredAt}} />
-              <SnRow @label='Expires' @value={{day @model.expiresAt}} />
-              <SnRow @label='Responded' @value={{responded @model}} />
-            </SnKv></SnSection>
-        </:side>
-      </SnSheet>
+      <IsoFrame>
+        <SnSheet>
+          <:mark><SnMark @text='Of' /></:mark>
+          <:title>{{offerTitle @model}}</:title>
+          <:meta>{{metaLine @model}}</:meta>
+          <:actions>
+            <DotLabel
+              @hue={{statusHue OfferStatusField @model.offerStatus}}
+              @label={{statusLabel @model.offerStatus}}
+            />
+            {{#if @model.expiresAt}}
+              <DotLabel @label={{expiresLine @model}} />
+            {{/if}}
+            {{#if @model.isOpen}}
+              {{! Both answers are final, so each asks first. }}
+              <AlertDialog
+                @title='Accept this offer?'
+                @description='The offer is marked accepted. An accepted offer cannot be changed.'
+                @confirmLabel='Accept offer'
+                @tone='primary'
+                @onConfirm={{this.accept}}
+              >
+                <:trigger as |_isOpen toggle|>
+                  <Button
+                    @tone='primary'
+                    @appearance='accent'
+                    @size='s'
+                    {{on 'click' toggle}}
+                  >Accept</Button>
+                </:trigger>
+              </AlertDialog>
+              <AlertDialog
+                @title='Decline this offer?'
+                @description='The offer is marked declined. A declined offer cannot be reopened.'
+                @confirmLabel='Decline offer'
+                @onConfirm={{this.decline}}
+              >
+                <:trigger as |_isOpen toggle|>
+                  <Button
+                    @tone='danger'
+                    @appearance='outlined'
+                    @size='s'
+                    {{on 'click' toggle}}
+                  >Decline</Button>
+                </:trigger>
+              </AlertDialog>
+            {{/if}}
+          </:actions>
+          <:stats>
+            <SnStat
+              @label='Offer'
+              @hue='blue'
+              @value={{moneyText @model.amount}}
+              @hint={{ofAsking @model}}
+            />
+            <SnStat
+              @label='Asking'
+              @value={{moneyText @model.listingPrice}}
+              @hint={{shippingLine @model}}
+            />
+            <SnStat
+              @label='Expires'
+              @hue='amber'
+              @value={{day @model.expiresAt true}}
+              @hint={{windowLine @model}}
+            />
+          </:stats>
+          <:main>
+            <SnSection @title='Message' @text={{@model.message}} />
+            <SnSection @title='Offer' @flush={{true}}><SnKv>
+                <SnRow @label='Amount' @value={{moneyText @model.amount}} />
+                <SnRow
+                  @label='Listing price'
+                  @value={{moneyText @model.listingPrice}}
+                />
+                <SnRow @label='Offered' @value={{day @model.offeredAt}} />
+                <SnRow @label='Expires' @value={{day @model.expiresAt}} />
+                <SnRow @label='Responded' @value={{day @model.respondedAt}} />
+                <SnRow @label='Counter to'>{{#if
+                    @model.counterTo
+                  }}<@fields.counterTo @format='atom' />{{else}}—{{/if}}</SnRow>
+              </SnKv></SnSection>
+          </:main>
+          <:side>
+            <SnSection @title='Linked' @flush={{true}}><SnKv>
+                <SnRow @label='From'>{{#if @model.offeredBy}}<@fields.offeredBy
+                      @format='atom'
+                    />{{else}}—{{/if}}</SnRow>
+                <SnRow @label='Listing'>{{#if @model.listing}}<@fields.listing
+                      @format='atom'
+                    />{{else}}—{{/if}}</SnRow>
+              </SnKv></SnSection>
+            <SnSection @title='Details' @flush={{true}}><SnKv>
+                <SnRow @label='Offer' @value={{moneyText @model.amount}} />
+                <SnRow
+                  @label='Asking'
+                  @value={{moneyText @model.listingPrice}}
+                />
+                <SnRow @label='Gap' @value={{gap @model}} />
+                <SnRow @label='Offered' @value={{day @model.offeredAt}} />
+                <SnRow @label='Expires' @value={{day @model.expiresAt}} />
+                <SnRow @label='Responded' @value={{responded @model}} />
+              </SnKv></SnSection>
+          </:side>
+        </SnSheet>
+      </IsoFrame>
     </template>
   };
 
@@ -337,7 +343,7 @@ export class MarketplaceOffer extends CardDef {
 
   static fitted = class Fitted extends Component<typeof MarketplaceOffer> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><SnMark @text='Of' @size='lg' /></:avatar>
         <:title>{{offerTitle @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -350,11 +356,33 @@ export class MarketplaceOffer extends CardDef {
           {{moneyText @model.listingPrice}}
           ·
           {{expiresLine @model}}</:fact>
+        <:metric>{{#if (formatMoney @model.amount)}}<Metric
+              @value={{formatMoney @model.amount}}
+              @label='Offer'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if (formatMoneyDelta @model.amount @model.listingPrice)}}<Detail
+              @label='Gap'
+              @value={{gap @model}}
+            />{{/if}}
+          {{#if @model.offeredAt}}<Detail
+              @label='Offered'
+              @value={{day @model.offeredAt}}
+            />{{/if}}
+          {{#if @model.respondedAt}}<Detail
+              @label='Responded'
+              @value={{responded @model}}
+            />{{/if}}
+          {{#if @model.listing}}<Detail @label='Listing'><@fields.listing
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
         <:relations>{{#if @model.offeredBy}}<@fields.offeredBy
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

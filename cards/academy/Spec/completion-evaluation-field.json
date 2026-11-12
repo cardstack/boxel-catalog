@@ -37,7 +37,13 @@
       ],
       "cardDescription": "A completion rule judged clause by clause for one enrolment, with required, actual and evidence for each clause."
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

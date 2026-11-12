@@ -18,19 +18,21 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Chip } from '@cardstack/pretui/components/chip';
-import { Stat } from '@cardstack/pretui/components/stat';
 import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
-import { FittedExtras } from '../procurement/vendor';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
-  RecCard,
-  RecHead,
-  RecStats,
-  RecBody,
-  RecBlock,
-  RecRow,
-  RecLine,
-} from './components/record';
+  DotLabel,
+  IsoHead,
+  IsoMark,
+  IsoPage,
+  Kv,
+  Panel,
+  SheetEmpty,
+  SheetLine,
+  StatStrip,
+  type StripItem,
+} from '../shared/compact-sheet';
+import { RecCard, RecHead, RecRow } from './components/record';
 
 // The two routing defaults as Pret UI KeyValue rows. `value` names which
 // field the isolated view's value block renders for the row.
@@ -131,90 +133,103 @@ export class TicketCategory extends CardDef {
         .join(' ');
     }
     openArticle = (a: any) => (this.args as any).viewCard?.(a);
+    get strip(): StripItem[] {
+      return [
+        {
+          label: 'Default priority',
+          value: this.args.model?.defaultPriority,
+          hint: this.priorityHint,
+        },
+        { label: 'Routes to', value: this.queueShort, hint: this.queueRest },
+        {
+          label: 'Articles',
+          value: String(this.articleList.length),
+          hint: this.articleList[0]?.title,
+        },
+      ];
+    }
+    get routingItems() {
+      return [
+        { key: 'Default priority', value: this.args.model?.defaultPriority },
+        { key: 'Routes to', value: this.args.model?.defaultQueueName },
+      ];
+    }
+    get detailItems() {
+      return [
+        { key: 'Path', value: this.args.model?.path },
+        { key: 'Parent', value: this.args.model?.parent?.title },
+        { key: 'Queue', value: this.args.model?.defaultQueueName },
+      ];
+    }
     <template>
-      <RecCard @inset={{true}}>
-        <RecHead @mark='C' @title={{@model.title}} @sub={{@model.path}}>
-          <:status>{{#if @model.defaultPriority}}<Chip
-                @appearance='plain'
-              >{{@model.defaultPriority}}</Chip>{{/if}}</:status>
-        </RecHead>
-        <RecStats>
-          <Stat
-            @label='Default priority'
-            @tone='neutral'
-            @value={{if @model.defaultPriority @model.defaultPriority '—'}}
-            @hint={{this.priorityHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Routes to'
-            @tone='neutral'
-            @value={{this.queueShort}}
-            @hint={{this.queueRest}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Articles'
-            @tone='neutral'
-            @value={{this.articleList.length}}
-            @hint={{this.articleList.[0].title}}
-            @roll={{false}}
-          />
-        </RecStats>
-        <RecBody>
-          <:main>
-            <RecBlock @title='Routing'>
-              <RecRow @label='Default priority'>{{if
-                  @model.defaultPriority
-                  @model.defaultPriority
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Routes to'>{{#if
-                  @model.defaultQueue
-                }}<@fields.defaultQueue
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</RecRow>
-            </RecBlock>
-            <RecBlock @title='Articles in this category'>
-              {{#each this.articleList as |a|}}
-                <RecLine>
-                  <:default><Button
-                      @appearance='link'
-                      {{on 'click' (fn this.openArticle a)}}
-                    ><b>{{a.title}}</b></Button><span
-                      class='dim'
-                    >{{a.visibility}} · {{a.keywordLabel}}</span></:default>
-                  <:end><Chip
-                      @appearance='plain'
-                      @tone={{if (eq a.status 'Published') 'success' 'warning'}}
-                    >{{a.status}}</Chip></:end>
-                </RecLine>
-              {{else}}
-                <RecLine><span class='dim'>No articles yet.</span></RecLine>
-              {{/each}}
-            </RecBlock>
-          </:main>
-          <:side>
-            <RecBlock @title='Details'>
-              <RecRow @label='Path'>{{if @model.path @model.path '—'}}</RecRow>
-              <RecRow @label='Parent'>{{#if @model.parent}}<@fields.parent
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</RecRow>
-              <RecRow @label='Queue'>{{if
-                  @model.defaultQueueName
-                  @model.defaultQueueName
-                  '—'
-                }}</RecRow>
-            </RecBlock>
-          </:side>
-        </RecBody>
-      </RecCard>
+      <IsoPage>
+        <:head>
+          <IsoHead @title={{@model.title}} @meta={{@model.path}}>
+            <:mark><IsoMark>C</IsoMark></:mark>
+            <:aside>{{#if @model.defaultPriority}}<DotLabel
+                  @label={{@model.defaultPriority}}
+                />{{/if}}</:aside>
+            <:stats><StatStrip @items={{this.strip}} /></:stats>
+          </IsoHead>
+        </:head>
+        <:main>
+          <Panel @title='Routing'>
+            <Kv @items={{this.routingItems}}>
+              <:value as |row|>{{#if (eq row.key 'Routes to')}}{{#if
+                    @model.defaultQueue
+                  }}<@fields.defaultQueue
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}{{else}}{{if
+                    row.value
+                    row.value
+                    '—'
+                  }}{{/if}}</:value>
+            </Kv>
+          </Panel>
+          <Panel @title='Articles in this category'>
+            {{#each this.articleList as |a|}}
+              <SheetLine>
+                <Button
+                  @appearance='link'
+                  {{on 'click' (fn this.openArticle a)}}
+                ><b>{{a.title}}</b></Button>
+                <span class='dim'>{{a.visibility}} · {{a.keywordLabel}}</span>
+                <Chip
+                  class='end'
+                  @appearance='plain'
+                  @tone={{if (eq a.status 'Published') 'success' 'warning'}}
+                >{{a.status}}</Chip>
+              </SheetLine>
+            {{else}}
+              <SheetEmpty @title='No articles yet.' />
+            {{/each}}
+          </Panel>
+        </:main>
+        <:aside>
+          <Panel @title='Details'>
+            <Kv @items={{this.detailItems}}>
+              <:value as |row|>{{#if (eq row.key 'Parent')}}{{#if
+                    @model.parent
+                  }}<@fields.parent
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}{{else}}{{if
+                    row.value
+                    row.value
+                    '—'
+                  }}{{/if}}</:value>
+            </Kv>
+          </Panel>
+        </:aside>
+      </IsoPage>
       <style scoped>
         .dim {
           font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
+        }
+        .end {
+          margin-inline-start: auto;
         }
       </style>
     </template>
@@ -280,7 +295,7 @@ export class TicketCategory extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    // the details tier's key-value rows
     get facts() {
       let m = this.args.model;
       return [
@@ -296,24 +311,20 @@ export class TicketCategory extends CardDef {
       ];
     }
     <template>
-      <FittedExtras @facts={{this.facts}}>
-        <:default>
-          <FitTile>
-            <:avatar><PretAvatar
-                @name='C'
-                @shape='square'
-                @size={{32}}
-              /></:avatar>
-            <:title>{{@model.title}}</:title>
-            <:subtitle>{{@model.path}}</:subtitle>
-            <:status>{{#if @model.defaultPriority}}<Chip
-                  @appearance='plain'
-                >{{@model.defaultPriority}}</Chip>{{/if}}</:status>
-            <:fact>Routes to
-              {{if @model.defaultQueueName @model.defaultQueueName '—'}}</:fact>
-          </FitTile>
-        </:default>
-      </FittedExtras>
+      <RichFittedCard>
+        <:avatar><PretAvatar @name='C' @shape='square' /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{@model.path}}</:subtitle>
+        <:status>{{#if @model.defaultPriority}}<Chip
+              @appearance='plain'
+            >{{@model.defaultPriority}}</Chip>{{/if}}</:status>
+        <:fact>Routes to
+          {{if @model.defaultQueueName @model.defaultQueueName '—'}}</:fact>
+        <:details>{{#each this.facts as |item|}}<Detail
+              @label={{item.key}}
+              @value={{item.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 }

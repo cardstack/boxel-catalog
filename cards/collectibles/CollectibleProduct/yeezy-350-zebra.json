@@ -34,6 +34,11 @@
       }
     },
     "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      },
       "silhouette": {
         "links": {
           "self": null

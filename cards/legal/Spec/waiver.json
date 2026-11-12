@@ -24,6 +24,11 @@
         "links": {
           "self": "../Waiver/march-late-fee"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

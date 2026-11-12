@@ -22,10 +22,12 @@ import FileTextIcon from '@cardstack/boxel-icons/file-text';
 import NotebookPenIcon from '@cardstack/boxel-icons/notebook-pen';
 import ArchiveIcon from '@cardstack/boxel-icons/archive';
 import { tracked } from '@glimmer/tracking';
-import { FittedCard, FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { RichFittedCard, Detail, Media } from '../shared/rich-fitted-card';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // AuthenticationRecord — one legit-check on one item: who checked it, when, the
 // verdict, and the certificate reference.
@@ -403,150 +405,155 @@ export class AuthenticationRecord extends CardDef {
     }
 
     <template>
-      <article class='card'>
-        <header class='hero'>
-          <div class='hero-head'>
-            <h1 class='hero-title'>
-              <ShieldCheckIcon
-                class='hero-glyph'
-                width='max(18px, 0.85em)'
-                height='max(18px, 0.85em)'
-                aria-hidden='true'
-              />{{if @model.itemTitle @model.itemTitle 'Unlinked item'}}
-            </h1>
-            {{#if @model.service}}
-              <p class='hero-service'>{{@model.service}}</p>
-            {{/if}}
-          </div>
+      <IsoFrame>
+        <article class='card'>
+          <header class='hero'>
+            <div class='hero-head'>
+              <h1 class='hero-title'>
+                <ShieldCheckIcon
+                  class='hero-glyph'
+                  width='max(18px, 0.85em)'
+                  height='max(18px, 0.85em)'
+                  aria-hidden='true'
+                />{{if @model.itemTitle @model.itemTitle 'Unlinked item'}}
+              </h1>
+              {{#if @model.service}}
+                <p class='hero-service'>{{@model.service}}</p>
+              {{/if}}
+            </div>
 
-          {{! THE PLAQUE — the family's filled-panel hero device (same
+            {{! THE PLAQUE — the family's filled-panel hero device (same
               radius/shadow as CollectionItem's worth figure, CompletionSet's
               percentage, Listing's price), recoloured per verdict rather than
               rendered as a small inline pill. The verdict is the one loud
               thing; turnaround is its quiet annotation, stepping DOWN in
               weight beside the figure it modifies. }}
-          <div class='plaque {{this.verdictModifierClass}}'>
-            <p class='plaque-value'>{{if
-                @model.outcome
-                this.verdictOption.label
-                'Not submitted'
-              }}</p>
-            {{#if @model.turnaroundDays}}
-              <p class='turnaround'>
-                <CalendarClockIcon
-                  width='max(13px, 0.95em)'
-                  height='max(13px, 0.95em)'
-                  aria-hidden='true'
-                />
-                {{@model.turnaroundDays}}
-                <span class='turnaround-k'>turnaround</span>
-              </p>
-            {{/if}}
-          </div>
-        </header>
+            <div class='plaque {{this.verdictModifierClass}}'>
+              <p class='plaque-value'>{{if
+                  @model.outcome
+                  this.verdictOption.label
+                  'Not submitted'
+                }}</p>
+              {{#if @model.turnaroundDays}}
+                <p class='turnaround'>
+                  <CalendarClockIcon
+                    width='max(13px, 0.95em)'
+                    height='max(13px, 0.95em)'
+                    aria-hidden='true'
+                  />
+                  {{@model.turnaroundDays}}
+                  <span class='turnaround-k'>turnaround</span>
+                </p>
+              {{/if}}
+            </div>
+          </header>
 
-        {{! AT A GLANCE — shape: ol. The lifecycle rail, the family signature.
+          {{! AT A GLANCE — shape: ol. The lifecycle rail, the family signature.
             The three steps are written out rather than looped: each row needs
             its OWN date field, and a loop over a getter forced one shared
             `<@fields.x>` into every row — which rendered the submission date
             beside the verdict. Three explicit rows carrying one fact each beats
             a loop that has to lie about one of them. }}
-        <section class='sec'>
-          <h2><CalendarIcon class='sec-icon' aria-hidden='true' />Progress</h2>
-          <ol class='steps'>
-            <li class='step {{if @model.submittedAt "step--done"}}'>
-              <span class='step-label'>Submitted</span>
-              {{#if @model.submittedAt}}
-                <span class='step-when'><@fields.submittedAt
-                    @format='atom'
-                  /></span>
-              {{/if}}
-            </li>
-            <li class='step {{if this.isUnderReview "step--done"}}'>
-              <span class='step-label'>Under review</span>
-            </li>
-            <li class='step {{if @model.completedAt "step--done"}}'>
-              <span class='step-label'>{{this.verdictLabel}}</span>
-              {{#if @model.completedAt}}
-                <span class='step-when'><@fields.completedAt
-                    @format='atom'
-                  /></span>
-              {{/if}}
-            </li>
-          </ol>
-        </section>
-
-        <div class='cols'>
-          {{! DETAIL — shape: dl. The paper trail: the values someone types into
-              another system, so identifiers never ellipsis. }}
           <section class='sec'>
-            <h2><FileTextIcon class='sec-icon' aria-hidden='true' />Paper trail</h2>
-            {{#if this.hasPaperTrail}}
-              <dl class='trail'>
-                {{#if @model.certificateId}}
-                  <div class='trail-row'>
-                    <dt>Certificate</dt>
-                    <dd class='trail-id'>{{@model.certificateId}}</dd>
-                  </div>
-                {{/if}}
-                {{#if @model.service}}
-                  <div class='trail-row'>
-                    <dt>Service</dt>
-                    <dd>{{@model.service}}</dd>
-                  </div>
-                {{/if}}
-                {{#if @model.authenticator}}
-                  <div class='trail-row'>
-                    <dt>Authenticator</dt>
-                    <dd>{{@model.authenticator}}</dd>
-                  </div>
-                {{/if}}
-              </dl>
-            {{else}}
-              {{! Rule 5: an empty section with a muted glyph reads as designed;
-                  the same sentence alone reads as a bug. }}
-              <EmptyState
-                @title='No certificate recorded yet.'
-                @texture={{false}}
-                style={{COMPACT_EMPTY_STYLE}}
-              />
-            {{/if}}
-          </section>
-
-          {{! DETAIL — shape: prose. Deliberately a different shape from the dl
-              beside it, so the two sections do not read as one list twice. }}
-          <section class='sec'>
-            <h2><NotebookPenIcon
+            <h2><CalendarIcon
                 class='sec-icon'
                 aria-hidden='true'
-              />Authenticator notes</h2>
-            {{#if @model.authenticatorNotes}}
-              <div class='notes'><@fields.authenticatorNotes /></div>
+              />Progress</h2>
+            <ol class='steps'>
+              <li class='step {{if @model.submittedAt "step--done"}}'>
+                <span class='step-label'>Submitted</span>
+                {{#if @model.submittedAt}}
+                  <span class='step-when'><@fields.submittedAt
+                      @format='atom'
+                    /></span>
+                {{/if}}
+              </li>
+              <li class='step {{if this.isUnderReview "step--done"}}'>
+                <span class='step-label'>Under review</span>
+              </li>
+              <li class='step {{if @model.completedAt "step--done"}}'>
+                <span class='step-label'>{{this.verdictLabel}}</span>
+                {{#if @model.completedAt}}
+                  <span class='step-when'><@fields.completedAt
+                      @format='atom'
+                    /></span>
+                {{/if}}
+              </li>
+            </ol>
+          </section>
+
+          <div class='cols'>
+            {{! DETAIL — shape: dl. The paper trail: the values someone types into
+              another system, so identifiers never ellipsis. }}
+            <section class='sec'>
+              <h2><FileTextIcon class='sec-icon' aria-hidden='true' />Paper
+                trail</h2>
+              {{#if this.hasPaperTrail}}
+                <dl class='trail'>
+                  {{#if @model.certificateId}}
+                    <div class='trail-row'>
+                      <dt>Certificate</dt>
+                      <dd class='trail-id'>{{@model.certificateId}}</dd>
+                    </div>
+                  {{/if}}
+                  {{#if @model.service}}
+                    <div class='trail-row'>
+                      <dt>Service</dt>
+                      <dd>{{@model.service}}</dd>
+                    </div>
+                  {{/if}}
+                  {{#if @model.authenticator}}
+                    <div class='trail-row'>
+                      <dt>Authenticator</dt>
+                      <dd>{{@model.authenticator}}</dd>
+                    </div>
+                  {{/if}}
+                </dl>
+              {{else}}
+                {{! Rule 5: an empty section with a muted glyph reads as designed;
+                  the same sentence alone reads as a bug. }}
+                <EmptyState
+                  @title='No certificate recorded yet.'
+                  @texture={{false}}
+                  style={{COMPACT_EMPTY_STYLE}}
+                />
+              {{/if}}
+            </section>
+
+            {{! DETAIL — shape: prose. Deliberately a different shape from the dl
+              beside it, so the two sections do not read as one list twice. }}
+            <section class='sec'>
+              <h2><NotebookPenIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Authenticator notes</h2>
+              {{#if @model.authenticatorNotes}}
+                <div class='notes'><@fields.authenticatorNotes /></div>
+              {{else}}
+                <EmptyState
+                  @title='No notes from the authenticator.'
+                  @texture={{false}}
+                  style={{COMPACT_EMPTY_STYLE}}
+                />
+              {{/if}}
+            </section>
+          </div>
+
+          {{! DETAIL — shape: linked card + gallery. Third distinct shape. }}
+          <section class='sec'>
+            <h2><ArchiveIcon class='sec-icon' aria-hidden='true' />Item checked</h2>
+            {{#if @model.item}}
+              <@fields.item @format='embedded' @displayContainer={{false}} />
             {{else}}
               <EmptyState
-                @title='No notes from the authenticator.'
+                @title='This record is not linked to a collection item.'
                 @texture={{false}}
                 style={{COMPACT_EMPTY_STYLE}}
               />
             {{/if}}
           </section>
-        </div>
-
-        {{! DETAIL — shape: linked card + gallery. Third distinct shape. }}
-        <section class='sec'>
-          <h2><ArchiveIcon class='sec-icon' aria-hidden='true' />Item checked</h2>
-          {{#if @model.item}}
-            <@fields.item @format='embedded' @displayContainer={{false}} />
-          {{else}}
-            <EmptyState
-              @title='This record is not linked to a collection item.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
-          {{/if}}
-        </section>
-      </article>
-
+        </article>
+      </IsoFrame>
       <style scoped>
         /* Rule 1: an isolated card gets NO host container — nothing up the chain
            declares one — so this template declares its own, NAMED, or every
@@ -657,7 +664,7 @@ export class AuthenticationRecord extends CardDef {
         }
         .hero-service {
           margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--smoke);
         }
         /* THE VAULT PLAQUE — the family signature: a gold hairline over the
@@ -680,8 +687,8 @@ export class AuthenticationRecord extends CardDef {
           background: var(--ink-800);
           border: 1px solid var(--hairline);
           border-top: 3px dashed var(--gold);
-          border-radius: 6px;
-          padding: 1.1rem 1.4rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp) var(--boxel-sp-lg);
           box-shadow: var(--shadow-1);
         }
         .plaque--passed {
@@ -707,13 +714,13 @@ export class AuthenticationRecord extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: 0.35em;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 600;
           font-variant-numeric: tabular-nums;
           color: var(--smoke);
         }
         .turnaround-k {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.06em;
@@ -724,7 +731,7 @@ export class AuthenticationRecord extends CardDef {
         .sec {
           background: var(--ink-800);
           padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          border-radius: 12px;
+          border-radius: var(--radius);
           border: 1px solid var(--hairline);
           box-shadow: var(--shadow-1);
           min-width: 0;
@@ -734,7 +741,7 @@ export class AuthenticationRecord extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.09em;
@@ -771,7 +778,7 @@ export class AuthenticationRecord extends CardDef {
           flex-wrap: wrap;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .step::before {
           content: '';
@@ -793,7 +800,7 @@ export class AuthenticationRecord extends CardDef {
           font-weight: 600;
         }
         .step-when {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-variant-numeric: tabular-nums;
           color: var(--smoke);
         }
@@ -810,10 +817,10 @@ export class AuthenticationRecord extends CardDef {
           align-items: baseline;
           justify-content: space-between;
           gap: var(--boxel-sp-xs);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .trail-row dt {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
@@ -831,7 +838,7 @@ export class AuthenticationRecord extends CardDef {
         }
 
         .notes {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.55;
         }
 
@@ -849,190 +856,35 @@ export class AuthenticationRecord extends CardDef {
     </template>
   };
 
-  // FITTED — Step 0 fork: FittedCard, not hand-rolled. This is a standard
-  // composition (image/placeholder + eyebrow + title + badge + footer) and the
-  // three fitted templates already shipped in this family use it, so forking a
-  // fourth idiom here would break the family for no gain.
-  //
-  // SLOT DISCIPLINE — four distinct facts, four slots, zero repeats.
-  // `<:subtitle>` and `<:meta>` are deliberately NOT rendered: the only values
-  // left to put in them are the service (already the eyebrow) and the outcome
-  // (already the badge), and a slot filled with a value shown elsewhere is the
-  // documented failure that survives source review because the repeat only
-  // appears at the quanta where both slots happen to be visible.
   static fitted = class Fitted extends Component<typeof AuthenticationRecord> {
     <template>
-      <FittedCard
-        class='a-fit'
-        @imageUrl={{@model.submittedPhotos.primaryUrl}}
-        @imageAlt={{@model.itemTitle}}
-        @titleTag='h3'
-      >
-        {{! Rule 2 anchor: tier 1 is the submitted photo; this is the tier-2
-            fallback and it is the card's OWN static icon — the same one its
-            isolated view and its breadcrumb use, which is what makes it identity
-            rather than filler. Never an empty grey square. }}
-        <:placeholder>
-          <ShieldCheckIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
-        </:placeholder>
-
-        <:eyebrow><span class='fit-eyebrow'>{{@model.service}}</span></:eyebrow>
-
-        <:title><span class='fit-title'>{{if
-              @model.itemTitle
-              @model.itemTitle
-              'Unlinked item'
-            }}</span></:title>
-
-        <:badgeRight>
-          {{! Delegated to the status field, whose StatePill derives its colour
-              from the option's hue. A hand-rolled per-outcome class list here
-              would be a second, drifting definition of the same three colours. }}
-          {{#if @model.outcome}}
-            <@fields.outcome @format='atom' />
-          {{/if}}
-        </:badgeRight>
-
-        <:footer>
-          {{! Rule 1, data is all-or-nothing: an identifier is never ellipsised,
-              so the certificate gets `nowrap` and is hidden WHOLE at the narrow
-              quanta below rather than truncated to an unreadable stub. }}
-          {{#if @model.certificateId}}
-            <span class='a-cert'>{{@model.certificateId}}</span>
-          {{/if}}
-          {{#if @model.turnaroundDays}}
-            <span class='a-turn'>{{@model.turnaroundDays}}</span>
-          {{/if}}
-        </:footer>
-      </FittedCard>
-
-      <style scoped>
-        /* NO container-type / container-name here — FittedCard queries the
-           HOST's `fitted-card` container, and declaring one would capture those
-           queries. Everything below is a --fc-* knob or a visibility change. */
-        .a-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-          --font-display: var(--font-serif);
-
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          /* The miniature vault plaque: a 2px gold edge as an INSET SHADOW, not
-             a border — the host draws the chrome and a border would fight it. */
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          --fc-image-width: 42cqh;
-          --fc-image-min-width: 3.5rem;
-          --fc-image-max-width: 11rem;
-          --fc-image-object-fit: cover;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-
-          --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          --fc-header-gap: 0.15em;
-          --fc-content-gap: var(--boxel-sp-2xs);
-
-          /* Rule 1: line-height >= 1.15 on every text role, so a descender is
-             never sheared even when the clamp math "fits". */
-          --fc-eyebrow-font-size: max(9px, 0.62em);
-          --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(13px, 1.05em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 2;
-          --fc-footer-font-size: max(11px, 0.78em);
-          --fc-footer-gap: var(--boxel-sp-xs);
-          --fc-footer-justify: space-between;
-          --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-2xs);
-        }
-
-        /* Rule 2: the eyebrow stays quiet so the title wins by CONTRAST, not
-           only by size. Two loud things would mean no anchor. */
-        .fit-eyebrow {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--smoke);
-          font-weight: 600;
-        }
-        .fit-title {
-          font-family: var(--font-display);
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-        /* Set here, NOT via a `--fc-footer-line-height` knob — that name does
-           not exist, and an invented --fc-* name is valid CSS that silently
-           does nothing. */
-
-        /* A certificate id is read aloud and typed into other systems: mono,
-           tabular, and never wrapped or ellipsised. */
-        .a-cert {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-weight: 600;
-          white-space: nowrap;
-        }
-        /* Turnaround is the plaque value on this card — serif gold, matching the
-           money figures on its siblings. */
-        .a-turn {
-          font-family: var(--font-display);
-          color: var(--primary-ink);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-
-        /* ---- quanta: visibility only, never a shrink-into-a-clip ----
-           The type scale itself does not step; these rules hide whole rows. */
-
-        /* Badge tier (h <= 50): the title is usually the only survivor, and it
-           must still be the loudest thing. Everything else goes. */
-        @container fitted-card (height <= 50px) {
-          .a-fit {
-            --fc-footer-display: none;
-            --fc-badge-right-display: none;
-            --fc-title-line-clamp: 1;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-
-        /* Very narrow strips: the certificate is dropped WHOLE rather than
-           truncated, leaving the turnaround — a half-visible id is worse than
-           an absent one, and the id is the longer of the two. */
-        @container fitted-card (width <= 200px) and (height <= 80px) {
-          .a-fit .a-cert {
-            display: none;
-          }
-        }
-
-        /* Narrow tiles: the image would starve the text column below the ~200px
-           content-column rule, so it yields width rather than the title
-           clipping. */
-        @container fitted-card (width <= 150px) {
-          .a-fit {
-            --fc-image-max-width: 100%;
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:media><Media
+            @src={{@model.submittedPhotos.primaryUrl}}
+            @alt={{if @model.itemTitle @model.itemTitle ''}}
+          ><ShieldCheckIcon width='40%' height='40%' /></Media></:media>
+        <:title>{{if
+            @model.itemTitle
+            @model.itemTitle
+            'Unlinked item'
+          }}</:title>
+        <:status>{{#if @model.outcome}}<@fields.outcome
+              @format='atom'
+            />{{/if}}</:status>
+        <:subtitle>{{@model.service}}</:subtitle>
+        <:fact>{{#if @model.turnaroundDays}}Turnaround
+            {{@model.turnaroundDays}}{{/if}}</:fact>
+        <:details>
+          {{#if @model.certificateId}}<Detail
+              @label='Certificate'
+              @value={{@model.certificateId}}
+            />{{/if}}
+          {{#if @model.authenticator}}<Detail
+              @label='Authenticator'
+              @value={{@model.authenticator}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

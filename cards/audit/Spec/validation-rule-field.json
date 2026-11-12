@@ -36,6 +36,13 @@
       },
       "cardDescription": "A control as something testable: which field is tested, how, against what, and how severe a failure is."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

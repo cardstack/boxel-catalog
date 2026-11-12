@@ -8,7 +8,13 @@
       "standardText": "This Agreement renews automatically for successive twelve (12) month terms unless either party gives not less than sixty (60) days' written notice before the end of the then-current term.",
       "guidance": "Always pair with a Notification obligation carrying the notice deadline, or the renewal happens by default.",
       "ownerRole": "Legal",
-      "reviewedAt": "2026-02-04"
+      "reviewedAt": "2026-02-04",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

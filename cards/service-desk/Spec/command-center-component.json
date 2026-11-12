@@ -27,6 +27,11 @@
         "links": {
           "self": "../example/CaseDeskExample/payments-desk"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

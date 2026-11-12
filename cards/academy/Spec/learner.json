@@ -22,6 +22,11 @@
         "links": {
           "self": "../Learner/priya-menon"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

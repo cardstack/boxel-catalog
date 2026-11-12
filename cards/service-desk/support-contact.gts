@@ -31,8 +31,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { FitTile } from '../shared/fit-tile';
-import { FittedExtras } from '../procurement/vendor';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import { initials } from './utils/initials';
 import {
   RecCard,
@@ -46,6 +45,7 @@ import {
 
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const CUSTOMER_TIERS = ['VIP', 'Standard', 'Trial'] as const;
 
@@ -130,107 +130,113 @@ export class SupportContact extends PersonBase {
     }
     openTicket = (t: any) => (this.args as any).viewCard?.(t);
     <template>
-      <RecCard @inset={{true}}>
-        <RecHead
-          @mark={{initials @model.title}}
-          @title={{@model.title}}
-          @sub={{@model.company}}
-        >
-          <:status>
-            {{#if @model.tier}}<Chip
-                @appearance='plain'
-              >{{@model.tier}}</Chip>{{/if}}
-            <Chip @appearance='plain'>{{this.open.length}} open</Chip>
-          </:status>
-        </RecHead>
-        <RecStats>
-          <Stat
-            @label='Tier'
-            @tone='neutral'
-            @value={{if @model.tier @model.tier '—'}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Open tickets'
-            @tone='neutral'
-            @value={{this.open.length}}
-            @hint={{this.openHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Last contact'
-            @tone='neutral'
-            @value={{this.lastContact}}
-            @roll={{false}}
-          />
-        </RecStats>
-        <RecBody>
-          <:main>
-            <RecBlock @title='Contact'>
-              <RecRow @label='Email'>{{if
-                  @model.email
-                  @model.email
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Phone' @mono={{true}}>{{if
-                  @model.phone
-                  @model.phone
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Company'>{{if
-                  @model.company
-                  @model.company
-                  '—'
-                }}</RecRow>
-            </RecBlock>
-            <RecBlock @title='Tickets'>
-              {{#each this.open as |t|}}
-                <RecLine>
-                  <:default><Button
-                      @appearance='link'
-                      {{on 'click' (fn this.openTicket t)}}
-                    ><b>{{t.subject}}</b></Button>
-                    <span class='dim'>{{t.reference}}
-                      ·
-                      {{t.priority}}
-                      ·
-                      {{t.assigneeName}}</span></:default>
-                  <:end><Chip
-                      @appearance='plain'
-                      @tone={{if (eq t.status 'Open') 'info' 'warning'}}
-                    >{{t.status}}</Chip></:end>
-                </RecLine>
-              {{else}}
-                <RecLine><span class='dim'>No open tickets.</span></RecLine>
-              {{/each}}
-            </RecBlock>
-          </:main>
-          <:side>
-            <RecBlock @title='Details'>
-              <RecRow @label='Company'>{{if
-                  @model.company
-                  @model.company
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Tier'>{{if @model.tier @model.tier '—'}}</RecRow>
-              <RecRow @label='Email'>{{if
-                  @model.email
-                  @model.email
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Phone' @mono={{true}}>{{if
-                  @model.phone
-                  @model.phone
-                  '—'
-                }}</RecRow>
-              <RecRow
-                @label='Open tickets'
-                @mono={{true}}
-              >{{this.open.length}}</RecRow>
-            </RecBlock>
-          </:side>
-        </RecBody>
-      </RecCard>
+      <IsoFrame>
+        <RecCard @inset={{true}}>
+          <RecHead
+            @mark={{initials @model.title}}
+            @title={{@model.title}}
+            @sub={{@model.company}}
+          >
+            <:status>
+              {{#if @model.tier}}<Chip
+                  @appearance='plain'
+                >{{@model.tier}}</Chip>{{/if}}
+              <Chip @appearance='plain'>{{this.open.length}} open</Chip>
+            </:status>
+          </RecHead>
+          <RecStats>
+            <Stat
+              @label='Tier'
+              @tone='neutral'
+              @value={{if @model.tier @model.tier '—'}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Open tickets'
+              @tone='neutral'
+              @value={{this.open.length}}
+              @hint={{this.openHint}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Last contact'
+              @tone='neutral'
+              @value={{this.lastContact}}
+              @roll={{false}}
+            />
+          </RecStats>
+          <RecBody>
+            <:main>
+              <RecBlock @title='Contact'>
+                <RecRow @label='Email'>{{if
+                    @model.email
+                    @model.email
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Phone' @mono={{true}}>{{if
+                    @model.phone
+                    @model.phone
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Company'>{{if
+                    @model.company
+                    @model.company
+                    '—'
+                  }}</RecRow>
+              </RecBlock>
+              <RecBlock @title='Tickets'>
+                {{#each this.open as |t|}}
+                  <RecLine>
+                    <:default><Button
+                        @appearance='link'
+                        {{on 'click' (fn this.openTicket t)}}
+                      ><b>{{t.subject}}</b></Button>
+                      <span class='dim'>{{t.reference}}
+                        ·
+                        {{t.priority}}
+                        ·
+                        {{t.assigneeName}}</span></:default>
+                    <:end><Chip
+                        @appearance='plain'
+                        @tone={{if (eq t.status 'Open') 'info' 'warning'}}
+                      >{{t.status}}</Chip></:end>
+                  </RecLine>
+                {{else}}
+                  <RecLine><span class='dim'>No open tickets.</span></RecLine>
+                {{/each}}
+              </RecBlock>
+            </:main>
+            <:side>
+              <RecBlock @title='Details'>
+                <RecRow @label='Company'>{{if
+                    @model.company
+                    @model.company
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Tier'>{{if
+                    @model.tier
+                    @model.tier
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Email'>{{if
+                    @model.email
+                    @model.email
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Phone' @mono={{true}}>{{if
+                    @model.phone
+                    @model.phone
+                    '—'
+                  }}</RecRow>
+                <RecRow
+                  @label='Open tickets'
+                  @mono={{true}}
+                >{{this.open.length}}</RecRow>
+              </RecBlock>
+            </:side>
+          </RecBody>
+        </RecCard>
+      </IsoFrame>
       <style scoped>
         .dim {
           font-size: var(--boxel-font-size-2xs);
@@ -310,7 +316,7 @@ export class SupportContact extends PersonBase {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    // the details tier's key-value rows
     get facts() {
       let m = this.args.model;
       return [
@@ -321,23 +327,22 @@ export class SupportContact extends PersonBase {
       ];
     }
     <template>
-      <FittedExtras @facts={{this.facts}}>
-        <:default>
-          <FitTile>
-            <:avatar><Avatar
-                @name={{if @model.title @model.title ''}}
-                @shape='square'
-                @size={{32}}
-              /></:avatar>
-            <:title>{{@model.title}}</:title>
-            <:subtitle>{{@model.company}}</:subtitle>
-            <:status>{{#if @model.tier}}<Chip
-                  @appearance='plain'
-                >{{@model.tier}}</Chip>{{/if}}</:status>
-            <:fact>{{@model.email}}</:fact>
-          </FitTile>
-        </:default>
-      </FittedExtras>
+      <RichFittedCard>
+        <:avatar><Avatar
+            @name={{if @model.title @model.title ''}}
+            @shape='square'
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{@model.company}}</:subtitle>
+        <:status>{{#if @model.tier}}<Chip
+              @appearance='plain'
+            >{{@model.tier}}</Chip>{{/if}}</:status>
+        <:fact>{{@model.email}}</:fact>
+        <:details>{{#each this.facts as |item|}}<Detail
+              @label={{item.key}}
+              @value={{item.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 }

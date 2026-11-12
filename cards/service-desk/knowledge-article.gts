@@ -15,8 +15,7 @@ import { TicketCategory } from './ticket-category';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
-import { FittedExtras } from '../procurement/vendor';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   RecCard,
   RecHead,
@@ -27,6 +26,7 @@ import {
   RecText,
 } from './components/record';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const ARTICLE_VISIBILITIES = ['Public', 'Internal'] as const;
 export const ARTICLE_STATUSES = ['Draft', 'Published', 'Archived'] as const;
@@ -188,93 +188,101 @@ export class KnowledgeArticle extends CardDef {
       return (this.args.model?.keywords ?? []).filter(Boolean).length;
     }
     <template>
-      <RecCard @inset={{true}}>
-        <RecHead
-          @mark='KB'
-          @title={{@model.title}}
-          @sub='{{@model.categoryName}} · {{this.visLower}}'
-        >
-          <:status>
-            {{#if @model.status}}<Chip
-                @appearance='plain'
-                @tone={{if (eq @model.status 'Published') 'success' 'warning'}}
-              >{{@model.status}}</Chip>{{/if}}
-            {{#if @model.visibility}}<Chip
-                @appearance='plain'
-              >{{@model.visibility}}</Chip>{{/if}}
-          </:status>
-        </RecHead>
-        <RecStats>
-          <Stat
-            @label='Status'
-            @tone={{if (eq @model.status 'Published') 'success' 'warning'}}
-            @value={{if @model.status @model.status '—'}}
-            @hint={{@model.visibility}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Category'
-            @tone='neutral'
-            @value={{if @model.categoryName @model.categoryName '—'}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Keywords'
-            @tone='neutral'
-            @value={{this.keywordCount}}
-            @hint={{@model.keywordLabel}}
-            @roll={{false}}
-          />
-        </RecStats>
-        <RecBody>
-          <:main>
-            <RecBlock @title='Article'>
-              <RecText><@fields.body /></RecText>
-            </RecBlock>
-            <RecBlock @title='Keywords'>
-              <RecText><span class='mono'>{{if
+      <IsoFrame>
+        <RecCard @inset={{true}}>
+          <RecHead
+            @mark='KB'
+            @title={{@model.title}}
+            @sub='{{@model.categoryName}} · {{this.visLower}}'
+          >
+            <:status>
+              {{#if @model.status}}<Chip
+                  @appearance='plain'
+                  @tone={{if
+                    (eq @model.status 'Published')
+                    'success'
+                    'warning'
+                  }}
+                >{{@model.status}}</Chip>{{/if}}
+              {{#if @model.visibility}}<Chip
+                  @appearance='plain'
+                >{{@model.visibility}}</Chip>{{/if}}
+            </:status>
+          </RecHead>
+          <RecStats>
+            <Stat
+              @label='Status'
+              @tone={{if (eq @model.status 'Published') 'success' 'warning'}}
+              @value={{if @model.status @model.status '—'}}
+              @hint={{@model.visibility}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Category'
+              @tone='neutral'
+              @value={{if @model.categoryName @model.categoryName '—'}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Keywords'
+              @tone='neutral'
+              @value={{this.keywordCount}}
+              @hint={{@model.keywordLabel}}
+              @roll={{false}}
+            />
+          </RecStats>
+          <RecBody>
+            <:main>
+              <RecBlock @title='Article'>
+                <RecText><@fields.body /></RecText>
+              </RecBlock>
+              <RecBlock @title='Keywords'>
+                <RecText><span class='mono'>{{if
+                      @model.keywordLabel
+                      @model.keywordLabel
+                      '—'
+                    }}</span></RecText>
+              </RecBlock>
+            </:main>
+            <:side>
+              <RecBlock @title='Linked'>
+                <RecRow @label='Category'>{{#if
+                    @model.category
+                  }}<@fields.category
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</RecRow>
+              </RecBlock>
+              <RecBlock @title='Details'>
+                <RecRow @label='Status'>{{if
+                    @model.status
+                    @model.status
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Visibility'>{{if
+                    @model.visibility
+                    @model.visibility
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Category'>{{if
+                    @model.categoryName
+                    @model.categoryName
+                    '—'
+                  }}</RecRow>
+                <RecRow @label='Keywords'>{{if
                     @model.keywordLabel
                     @model.keywordLabel
                     '—'
-                  }}</span></RecText>
-            </RecBlock>
-          </:main>
-          <:side>
-            <RecBlock @title='Linked'>
-              <RecRow @label='Category'>{{#if @model.category}}<@fields.category
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</RecRow>
-            </RecBlock>
-            <RecBlock @title='Details'>
-              <RecRow @label='Status'>{{if
-                  @model.status
-                  @model.status
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Visibility'>{{if
-                  @model.visibility
-                  @model.visibility
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Category'>{{if
-                  @model.categoryName
-                  @model.categoryName
-                  '—'
-                }}</RecRow>
-              <RecRow @label='Keywords'>{{if
-                  @model.keywordLabel
-                  @model.keywordLabel
-                  '—'
-                }}</RecRow>
-            </RecBlock>
-          </:side>
-        </RecBody>
-      </RecCard>
+                  }}</RecRow>
+              </RecBlock>
+            </:side>
+          </RecBody>
+        </RecCard>
+      </IsoFrame>
       <style scoped>
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
         }
       </style>
     </template>
@@ -352,7 +360,7 @@ export class KnowledgeArticle extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    // the details tier's key-value rows
     get facts() {
       let m = this.args.model;
       return [
@@ -372,28 +380,20 @@ export class KnowledgeArticle extends CardDef {
       ];
     }
     <template>
-      <FittedExtras @facts={{this.facts}}>
-        <:default>
-          <FitTile>
-            <:avatar><PretAvatar
-                @name='KB'
-                @shape='square'
-                @size={{32}}
-              /></:avatar>
-            <:title>{{@model.title}}</:title>
-            <:subtitle>{{@model.categoryName}}</:subtitle>
-            <:status>{{#if @model.status}}<Chip
-                  @appearance='plain'
-                  @tone={{if
-                    (eq @model.status 'Published')
-                    'success'
-                    'warning'
-                  }}
-                >{{@model.status}}</Chip>{{/if}}</:status>
-            <:fact>{{@model.excerpt}}</:fact>
-          </FitTile>
-        </:default>
-      </FittedExtras>
+      <RichFittedCard>
+        <:avatar><PretAvatar @name='KB' @shape='square' /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{@model.categoryName}}</:subtitle>
+        <:status>{{#if @model.status}}<Chip
+              @appearance='plain'
+              @tone={{if (eq @model.status 'Published') 'success' 'warning'}}
+            >{{@model.status}}</Chip>{{/if}}</:status>
+        <:fact>{{@model.excerpt}}</:fact>
+        <:details>{{#each this.facts as |item|}}<Detail
+              @label={{item.key}}
+              @value={{item.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 }

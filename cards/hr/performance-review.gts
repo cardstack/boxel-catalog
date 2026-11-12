@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
@@ -33,15 +34,12 @@ import {
   Descriptions,
   type DescriptionsItem,
 } from '@cardstack/pretui/components/descriptions';
-import { FitTile } from '../shared/fit-tile';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { QUIET_AVATAR_HUE, hueOf, stateColorsOf } from './hr-ui';
 import { daysBetween } from './utils';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -54,7 +52,8 @@ import {
   SheetStat,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const REVIEW_CYCLE_STATUSES = ['planned', 'active', 'closed'];
 
@@ -259,88 +258,95 @@ export class ReviewCycle extends CardDef {
     }
 
     <template>
-      <Sheet
-        class='cycle-isolated'
-        @title={{@model.title}}
-        @meta={{this.period}}
-      >
-        <:mark><Avatar
-            @name='Review Cycle'
-            @hue={{QUIET_AVATAR_HUE}}
-            @size={{32}}
-            aria-hidden='true'
-          /></:mark>
-        <:aside>{{#if @model.status}}
-            <StatePill
-              @label={{@model.status}}
-              @hue={{hueOf REVIEW_CYCLE_STATUS_HUES @model.status}}
-              @dot={{true}}
-            />
-          {{/if}}
-          <StatePill @label={{this.reviewCount}} /></:aside>
-        <:default>
-
-          <SheetSection @label='Summary'>
-            <SheetStat
-              @label='Reviews'
-              @value={{this.reviews.length}}
-              @hint='{{this.signedOffCount}} signed off'
-            />
-            <SheetStat
-              @label='Period'
-              @value={{cycleShort @model.name}}
-              @hint={{this.period}}
-            />
-            {{#if this.daysLeft}}
-              <SheetStat
-                @label='Days left'
-                @value={{this.daysLeft}}
-                @hint={{this.endsLabel}}
+      <IsoFrame>
+        <Sheet
+          class='cycle-isolated'
+          @title={{@model.title}}
+          @meta={{this.period}}
+        >
+          <:mark><Avatar
+              @name='Review Cycle'
+              @hue={{QUIET_AVATAR_HUE}}
+              @size={{32}}
+              aria-hidden='true'
+            /></:mark>
+          <:aside>{{#if @model.status}}
+              <StatePill
+                @label={{@model.status}}
+                @hue={{hueOf REVIEW_CYCLE_STATUS_HUES @model.status}}
+                @dot={{true}}
               />
             {{/if}}
-          </SheetSection>
+            <StatePill @label={{this.reviewCount}} /></:aside>
+          <:default>
 
-          <div class='iso-body'>
-            <div class='iso-col'>
-              {{#if @model.description}}
-                <SheetSection @label='About this cycle'>
-                  <p class='iso-text'>{{@model.description}}</p>
-                </SheetSection>
+            <SheetSection @label='Summary'>
+              <SheetStat
+                @label='Reviews'
+                @value={{this.reviews.length}}
+                @hint='{{this.signedOffCount}} signed off'
+              />
+              <SheetStat
+                @label='Period'
+                @value={{cycleShort @model.name}}
+                @hint={{this.period}}
+              />
+              {{#if this.daysLeft}}
+                <SheetStat
+                  @label='Days left'
+                  @value={{this.daysLeft}}
+                  @hint={{this.endsLabel}}
+                />
               {{/if}}
-              <SheetSection @label='Reviews'>
-                {{#if this.reviews.length}}
-                  <ul class='review-list'>
-                    {{#each this.reviews as |review|}}
-                      <li>
-                        {{#let (getComponent review) as |ReviewCard|}}
-                          <ReviewCard @format='atom' />
-                        {{/let}}
-                        <span class='row-sub'>{{reviewScoreLine review}}</span>
-                      </li>
-                    {{/each}}
-                  </ul>
-                {{else}}
-                  <p class='iso-muted'>No reviews link to this cycle yet.</p>
+            </SheetSection>
+
+            <div class='iso-body'>
+              <div class='iso-col'>
+                {{#if @model.description}}
+                  <SheetSection @label='About this cycle'>
+                    <p class='iso-text'>{{@model.description}}</p>
+                  </SheetSection>
                 {{/if}}
-              </SheetSection>
+                <SheetSection @label='Reviews'>
+                  {{#if this.reviews.length}}
+                    <ul class='review-list'>
+                      {{#each this.reviews as |review|}}
+                        <li>
+                          {{#let (getComponent review) as |ReviewCard|}}
+                            <ReviewCard @format='atom' />
+                          {{/let}}
+                          <span class='row-sub'>{{reviewScoreLine
+                              review
+                            }}</span>
+                        </li>
+                      {{/each}}
+                    </ul>
+                  {{else}}
+                    <p class='iso-muted'>No reviews link to this cycle yet.</p>
+                  {{/if}}
+                </SheetSection>
+              </div>
+              <div class='iso-col'>
+                <SheetSection @label='Details'>
+                  <SheetRows @items={{this.details}} />
+                </SheetSection>
+              </div>
             </div>
-            <div class='iso-col'>
-              <SheetSection @label='Details'>
-                <SheetRows @items={{this.details}} />
-              </SheetSection>
-            </div>
-          </div>
-        </:default>
-      </Sheet>
+          </:default>
+        </Sheet>
+      </IsoFrame>
       <style scoped>
         @layer PretComponent {
           .cycle-isolated {
+            background: var(--card);
+            color: var(--card-foreground);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             min-height: 100%;
             display: flex;
             flex-direction: column;
             gap: var(--boxel-sp-lg);
             padding: var(--boxel-sp-lg);
-            background: var(--card);
             color: var(--card-foreground);
             container-type: inline-size;
           }
@@ -470,7 +476,7 @@ export class ReviewCycle extends CardDef {
         {{/if}}
         {{#if this.details.length}}
           <Descriptions
-            class='emb-kv'
+            class='emb-kv kv-pad'
             @items={{this.details}}
             @columns={{3}}
             @layout='vertical'
@@ -479,6 +485,10 @@ export class ReviewCycle extends CardDef {
         {{/if}}
       </article>
       <style scoped>
+        .kv-pad {
+          padding-inline: var(--boxel-sp-sm);
+        }
+
         @layer PretComponent {
           .emb {
             container-type: inline-size;
@@ -584,17 +594,16 @@ export class ReviewCycle extends CardDef {
       return items;
     }
 
-    // FitTile carries who / state / fact at every size; from 170 tall the
+    // RichFittedCard carries who / state / fact at every size; from 170 tall the
     // block below it adds the mockup's extra rows, each shown only where a
     // whole row fits (see the container queries).
     <template>
       <div class='fit-wrap'>
-        <FitTile class='fit-top'>
+        <RichFittedCard class='fit-top'>
           <:avatar>
             <Avatar
               @name='Review Cycle'
               @hue={{QUIET_AVATAR_HUE}}
-              @size={{32}}
               aria-hidden='true'
             />
           </:avatar>
@@ -613,7 +622,7 @@ export class ReviewCycle extends CardDef {
             {{/if}}
           </:status>
           <:fact>{{this.fact}}</:fact>
-        </FitTile>
+        </RichFittedCard>
         <div class='fit-more'>
           <dl class='fit-stats'>
             <div><dt>Period</dt><dd>{{cycleShort @model.name}}</dd></div>
@@ -1247,6 +1256,10 @@ export class PerformanceReview extends CardDef {
   };
 
   static fitted: BaseDefComponent = class Fitted extends ReviewView {
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let m = this.args.model;
       return [
@@ -1261,40 +1274,44 @@ export class PerformanceReview extends CardDef {
       ];
     }
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><ReviewMark /></:mark>
+      <RichFittedCard>
+        <:avatar><ReviewMark /></:avatar>
+        <:title>{{@model.title}}</:title>
         <:status>{{#if @model.status}}<DotLabel
               @label={{@model.status}}
               @hue={{toneHue this.statusTone}}
             />{{/if}}</:status>
-        <:default>
-          <FitRow @left={{true}}><span
-              class='meta'
-            >{{this.subline}}</span></FitRow>
-          <FitRow @label='Score'>{{if
+        <:subtitle><span class='meta'>{{this.subline}}</span></:subtitle>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
+        <:details>
+
+          <Detail @label='Score'>{{if
               @model.scoreLabel
               @model.scoreLabel
               '—'
-            }}</FitRow>
-          <FitRow @label='Sign-off'>{{signOffProgress @model}}</FitRow>
+            }}</Detail>
+          <Detail @label='Sign-off'>{{signOffProgress @model}}</Detail>
           {{#if @model.employee}}
-            <FitRow @label='Employee' @left={{true}}><@fields.employee
+            <Detail @label='Employee'><@fields.employee
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
           {{#if @model.cycle}}
-            <FitRow @label='Cycle' @left={{true}}><@fields.cycle
+            <Detail @label='Cycle'><@fields.cycle
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <StatStrip @compact={{true}} @items={{this.strip}} />
+
           {{#each this.fullFacts as |f|}}
-            <FitRow @label={{f.label}}>{{f.value}}</FitRow>
+            <Detail @label={{f.label}}>{{f.value}}</Detail>
           {{/each}}
-        </:default>
-      </FitCard>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

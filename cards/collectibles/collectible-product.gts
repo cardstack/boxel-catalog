@@ -13,7 +13,13 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import Tag from '@cardstack/base/tag';
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 import { tracked } from '@glimmer/tracking';
-import { FittedCard, FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import {
+  RichFittedCard,
+  Detail,
+  Media,
+  Metric,
+} from '../shared/rich-fitted-card';
 import PackageIcon from '@cardstack/boxel-icons/package';
 import ImageOffIcon from '@cardstack/boxel-icons/image-off';
 import TagIcon from '@cardstack/boxel-icons/tag';
@@ -447,10 +453,10 @@ export class CollectibleProduct extends CardDef {
           background: var(--ink-900);
           color: var(--paper);
           font-family: var(--font-sans);
-          padding: 2rem;
+          padding: var(--boxel-sp-sm);
           display: flex;
           flex-direction: column;
-          gap: 1.75rem;
+          gap: var(--boxel-sp-xs);
 
           scrollbar-color: var(--gold) var(--ink-800);
         }
@@ -479,12 +485,12 @@ export class CollectibleProduct extends CardDef {
         .hero {
           display: grid;
           grid-template-columns: minmax(14rem, 34%) minmax(0, 1fr);
-          gap: 1.75rem;
+          gap: var(--boxel-sp-xl);
           align-items: stretch;
         }
         .hero-photo {
           aspect-ratio: 1;
-          border-radius: 16px;
+          border-radius: var(--radius);
           overflow: hidden;
           background: var(--ink-700);
           display: grid;
@@ -499,17 +505,17 @@ export class CollectibleProduct extends CardDef {
         .photo-empty {
           display: grid;
           justify-items: center;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
           color: var(--smoke);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           text-align: center;
-          padding: 1rem;
+          padding: var(--boxel-sp);
         }
         .hero-body {
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 0.9rem;
+          gap: var(--boxel-sp);
         }
         .title {
           margin: 0;
@@ -522,7 +528,7 @@ export class CollectibleProduct extends CardDef {
         .badges {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
         }
         .badge {
           display: inline-flex;
@@ -533,7 +539,7 @@ export class CollectibleProduct extends CardDef {
           background: var(--ink-800);
           border: 1px solid var(--hairline);
           color: var(--smoke);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           white-space: nowrap;
         }
@@ -551,12 +557,12 @@ export class CollectibleProduct extends CardDef {
           display: flex;
           flex-wrap: wrap;
           align-items: baseline;
-          gap: 0.3rem 0.7rem;
+          gap: var(--boxel-sp-3xs) var(--boxel-sp-sm);
           background: var(--ink-800);
           border: 1px solid var(--hairline);
           border-top: 3px solid var(--gold);
-          border-radius: 6px;
-          padding: 1.1rem 1.4rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp) var(--boxel-sp-lg);
           box-shadow: var(--shadow-1);
         }
         .plaque-value {
@@ -569,11 +575,11 @@ export class CollectibleProduct extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .plaque-value--unknown {
-          font-size: 1.25rem;
+          font-size: var(--boxel-font-size-md);
           font-weight: 600;
         }
         .plaque-label {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.06em;
@@ -583,18 +589,18 @@ export class CollectibleProduct extends CardDef {
         /* ---------- the one panel primitive ---------- */
         .sec {
           background: var(--ink-800);
-          padding: 1.4rem 1.6rem;
-          border-radius: 14px;
+          padding: var(--boxel-sp-lg) var(--boxel-sp-xl);
+          border-radius: var(--radius);
           border: 1px solid var(--hairline);
           box-shadow: var(--shadow-1);
           min-width: 0;
         }
         .sec h2 {
-          margin: 0 0 1rem;
+          margin: 0 0 var(--boxel-sp);
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
@@ -610,7 +616,7 @@ export class CollectibleProduct extends CardDef {
         .cols {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.5rem;
+          gap: var(--boxel-sp-lg);
         }
 
         /* ---------- at a glance: a wide fact rail, distinct from the plaque
@@ -621,28 +627,28 @@ export class CollectibleProduct extends CardDef {
           padding: 0;
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-          gap: 1.25rem;
+          gap: var(--boxel-sp-lg);
         }
         .stat {
           display: grid;
-          gap: 0.25rem;
+          gap: var(--boxel-sp-4xs);
           align-content: start;
           border-left: 1px solid var(--hairline);
-          padding-left: 1rem;
+          padding-left: var(--boxel-sp);
         }
         .stat:first-child {
           border-left: 0;
           padding-left: 0;
         }
         .stat-k {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
         }
         .stat-v {
           font-family: var(--font-display);
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }
@@ -650,11 +656,11 @@ export class CollectibleProduct extends CardDef {
         /* ---------- sizing & tags ---------- */
         .chips {
           list-style: none;
-          margin: 0 0 0.6rem;
+          margin: 0 0 var(--boxel-sp-xs);
           padding: 0;
           display: flex;
           flex-wrap: wrap;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
         }
         .chips:last-child {
           margin-bottom: 0;
@@ -663,25 +669,25 @@ export class CollectibleProduct extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.3em;
-          padding: 0.35rem 0.7rem;
-          border-radius: 8px;
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-sm);
+          border-radius: var(--radius);
           background: var(--ink-700);
         }
         .tags li {
           color: var(--smoke);
         }
         .chip-v {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 600;
         }
         .tags .chip-v {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 500;
         }
 
         /* ---------- prose + empty ---------- */
         .prose {
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size);
           line-height: 1.65;
           max-width: 68ch;
           color: var(--paper);
@@ -690,8 +696,8 @@ export class CollectibleProduct extends CardDef {
           margin: 0;
           display: flex;
           align-items: center;
-          gap: 0.6rem;
-          font-size: 0.9375rem;
+          gap: var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size);
           color: var(--smoke);
         }
 
@@ -703,7 +709,7 @@ export class CollectibleProduct extends CardDef {
             max-width: 260px;
           }
           .plaque-value {
-            font-size: 2.25rem;
+            font-size: var(--boxel-font-size-2xl);
           }
         }
         @container product (width < 460px) {
@@ -714,17 +720,17 @@ export class CollectibleProduct extends CardDef {
             border-left: 0;
             padding-left: 0;
             border-top: 1px solid var(--hairline);
-            padding-top: 0.75rem;
+            padding-top: var(--boxel-sp-sm);
           }
           .stat:first-child {
             border-top: 0;
             padding-top: 0;
           }
           .plaque-value {
-            font-size: 1.875rem;
+            font-size: var(--boxel-font-size-xl);
           }
           .title {
-            font-size: 1.5rem;
+            font-size: var(--boxel-font-size-lg);
           }
         }
       </style>
@@ -863,117 +869,42 @@ export class CollectibleProduct extends CardDef {
     get retail() {
       return formatMoney(this.args.model?.retailPrice);
     }
+    // the retail price rides on the subtitle too, so strips under 170 tall show it
+    get subtitle() {
+      return [this.args.model?.sku, this.retail].filter(Boolean).join(' · ');
+    }
 
     <template>
-      <FittedCard
-        class='p-fit'
-        @imageUrl={{@model.images.primaryUrl}}
-        @imageAlt={{@model.displayTitle}}
-        @titleTag='h3'
-      >
-        <:placeholder>
-          <PackageIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
-        </:placeholder>
-        <:eyebrow><span class='fit-eyebrow'>{{@model.sku}}</span></:eyebrow>
-        <:title><span class='fit-title'>{{@model.displayTitle}}</span></:title>
-        <:footer>
-          {{#if this.retail}}<span class='p-rrp'>{{moneyText
-                @model.retailPrice
-              }}</span>{{/if}}
-          {{#if @model.collabPartner}}<span
-              class='p-collab'
-            >{{@model.collabPartner}}</span>{{/if}}
-        </:footer>
-      </FittedCard>
-
-      <style scoped>
-        /* No container-type — FittedCard queries the host's fitted-card
-           container. */
-        .p-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          /* Miniature plaque: gold edge as an inset shadow, never a border —
-             the host draws the chrome. */
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          --fc-image-width: 42cqh;
-          --fc-image-min-width: 3.5rem;
-          --fc-image-max-width: 11rem;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-          --fc-content-padding: 0.4rem 0.7rem;
-          --fc-header-gap: 0.15em;
-          --fc-eyebrow-font-size: max(9px, 0.62em);
-          --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(13px, 1.05em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 2;
-          --fc-footer-font-size: max(11px, 0.78em);
-          --fc-footer-gap: 0.5rem;
-          --fc-footer-justify: space-between;
-          --fc-footer-flex-wrap: nowrap;
-        }
-        /* The SKU is an identifier: monospace, never wrapped, never
-           ellipsised. */
-        .fit-eyebrow {
-          font-family:
-            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-          letter-spacing: 0.02em;
-          color: var(--smoke);
-          white-space: nowrap;
-        }
-        .fit-title {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-        .p-rrp {
-          /* Plaque value: serif + gold. */
-          font-family: 'Playfair Display', Georgia, serif;
-          color: var(--primary-ink);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-        .p-collab {
-          color: var(--smoke);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        @container fitted-card (height <= 50px) {
-          .p-fit {
-            --fc-footer-display: none;
-            --fc-title-line-clamp: 1;
-            --fc-content-padding: 0.15rem 0.3rem;
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-        /* The collab name is dropped whole rather than truncated to a stub. */
-        @container fitted-card (width <= 200px) and (height <= 80px) {
-          .p-fit .p-collab {
-            display: none;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:media><Media
+            @src={{@model.images.primaryUrl}}
+            @alt={{if @model.displayTitle @model.displayTitle ''}}
+          ><PackageIcon width='40%' height='40%' /></Media></:media>
+        <:title>{{@model.displayTitle}}</:title>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{#if @model.collabPartner}}With
+            {{@model.collabPartner}}{{/if}}</:fact>
+        <:metric>{{#if this.retail}}<Metric
+              @value={{this.retail}}
+              @label='Retail'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.brand}}<Detail @label='Brand'><@fields.brand
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.silhouette}}<Detail
+              @label='Silhouette'
+            ><@fields.silhouette
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.availableVariants.length}}<Detail
+              @label='Sizes'
+              @value='{{@model.availableVariants.length}}'
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

@@ -16,8 +16,7 @@ import { Stat } from '@cardstack/pretui/components/stat';
 import type { BusinessSchedule, DayWindow } from './utils/sla';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
-import { FittedExtras } from '../procurement/vendor';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   RecCard,
   RecHead,
@@ -27,6 +26,7 @@ import {
   RecRow,
   RecLine,
 } from './components/record';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const WEEKDAYS = [
   'Sunday',
@@ -319,94 +319,96 @@ export class Schedule extends CardDef {
       );
     }
     <template>
-      <RecCard @inset={{true}}>
-        <RecHead @mark='BH' @title={{@model.title}} @sub={{@model.summary}}>
-          <:status>{{#if @model.isDefault}}<Chip
+      <IsoFrame>
+        <RecCard @inset={{true}}>
+          <RecHead @mark='BH' @title={{@model.title}} @sub={{@model.summary}}>
+            <:status>{{#if @model.isDefault}}<Chip
+                  @appearance='plain'
+                  @tone='info'
+                >default</Chip>{{/if}}<Chip
                 @appearance='plain'
-                @tone='info'
-              >default</Chip>{{/if}}<Chip
-              @appearance='plain'
-            >{{this.holidayTotal}} holidays</Chip></:status>
-        </RecHead>
-        <RecStats>
-          <Stat
-            @label='Hours / week'
-            @tone='neutral'
-            @value={{this.hoursPerWeek}}
-            @hint={{this.dayHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Holidays'
-            @tone='neutral'
-            @value={{this.holidayTotal}}
-            @hint={{this.nextHoliday}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Time zone'
-            @tone='neutral'
-            @value={{this.zoneShort}}
-            @hint={{@model.timeZone}}
-            @roll={{false}}
-          />
-        </RecStats>
-        <RecBody>
-          <:main>
-            <RecBlock @title='Working hours'>
-              {{#each this.days as |d|}}
-                <RecLine><:default><b>{{d.day}}</b></:default><:end><span
-                      class='mono dim'
-                    >{{d.hours}}</span></:end></RecLine>
-              {{/each}}
-            </RecBlock>
-            <RecBlock @title='Holidays'>
-              {{#each this.holidayList as |h|}}
-                <RecLine><:default><span
-                      class='mono'
-                    >{{h.date}}</span></:default><:end><span
-                      class='dim'
-                    >{{h.weekday}}</span></:end></RecLine>
-              {{else}}
-                <RecLine><span class='dim'>No holidays.</span></RecLine>
-              {{/each}}
-            </RecBlock>
-          </:main>
-          <:side>
-            <RecBlock @title='Details'>
-              <RecRow @label='Time zone'>{{if
-                  @model.timeZone
-                  @model.timeZone
-                  '—'
-                }}</RecRow>
-              {{#each this.days as |d|}}
-                <RecRow @label={{d.day}} @mono={{true}}>{{d.hours}}</RecRow>
-              {{/each}}
-              <RecRow
-                @label='Hours / week'
-                @mono={{true}}
-              >{{this.hoursPerWeek}}</RecRow>
-              <RecRow
-                @label='Holidays'
-                @mono={{true}}
-              >{{this.holidayTotal}}</RecRow>
-              <RecRow @label='Next holiday'>{{this.nextHoliday}}</RecRow>
-              <RecRow @label='Default'>{{if
-                  @model.isDefault
-                  'Yes'
-                  'No'
-                }}</RecRow>
-            </RecBlock>
-          </:side>
-        </RecBody>
-      </RecCard>
+              >{{this.holidayTotal}} holidays</Chip></:status>
+          </RecHead>
+          <RecStats>
+            <Stat
+              @label='Hours / week'
+              @tone='neutral'
+              @value={{this.hoursPerWeek}}
+              @hint={{this.dayHint}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Holidays'
+              @tone='neutral'
+              @value={{this.holidayTotal}}
+              @hint={{this.nextHoliday}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Time zone'
+              @tone='neutral'
+              @value={{this.zoneShort}}
+              @hint={{@model.timeZone}}
+              @roll={{false}}
+            />
+          </RecStats>
+          <RecBody>
+            <:main>
+              <RecBlock @title='Working hours'>
+                {{#each this.days as |d|}}
+                  <RecLine><:default><b>{{d.day}}</b></:default><:end><span
+                        class='mono dim'
+                      >{{d.hours}}</span></:end></RecLine>
+                {{/each}}
+              </RecBlock>
+              <RecBlock @title='Holidays'>
+                {{#each this.holidayList as |h|}}
+                  <RecLine><:default><span
+                        class='mono'
+                      >{{h.date}}</span></:default><:end><span
+                        class='dim'
+                      >{{h.weekday}}</span></:end></RecLine>
+                {{else}}
+                  <RecLine><span class='dim'>No holidays.</span></RecLine>
+                {{/each}}
+              </RecBlock>
+            </:main>
+            <:side>
+              <RecBlock @title='Details'>
+                <RecRow @label='Time zone'>{{if
+                    @model.timeZone
+                    @model.timeZone
+                    '—'
+                  }}</RecRow>
+                {{#each this.days as |d|}}
+                  <RecRow @label={{d.day}} @mono={{true}}>{{d.hours}}</RecRow>
+                {{/each}}
+                <RecRow
+                  @label='Hours / week'
+                  @mono={{true}}
+                >{{this.hoursPerWeek}}</RecRow>
+                <RecRow
+                  @label='Holidays'
+                  @mono={{true}}
+                >{{this.holidayTotal}}</RecRow>
+                <RecRow @label='Next holiday'>{{this.nextHoliday}}</RecRow>
+                <RecRow @label='Default'>{{if
+                    @model.isDefault
+                    'Yes'
+                    'No'
+                  }}</RecRow>
+              </RecBlock>
+            </:side>
+          </RecBody>
+        </RecCard>
+      </IsoFrame>
       <style scoped>
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
         }
         .dim {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
       </style>
@@ -482,7 +484,7 @@ export class Schedule extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    // the details tier's key-value rows
     get facts() {
       let m = this.args.model;
       return [
@@ -499,24 +501,20 @@ export class Schedule extends CardDef {
       ];
     }
     <template>
-      <FittedExtras @facts={{this.facts}}>
-        <:default>
-          <FitTile>
-            <:avatar><PretAvatar
-                @name='BH'
-                @shape='square'
-                @size={{32}}
-              /></:avatar>
-            <:title>{{@model.title}}</:title>
-            <:subtitle>{{@model.timeZone}}</:subtitle>
-            <:status>{{#if @model.isDefault}}<Chip
-                  @appearance='plain'
-                  @tone='info'
-                >default</Chip>{{/if}}</:status>
-            <:fact>{{@model.summary}}</:fact>
-          </FitTile>
-        </:default>
-      </FittedExtras>
+      <RichFittedCard>
+        <:avatar><PretAvatar @name='BH' @shape='square' /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{@model.timeZone}}</:subtitle>
+        <:status>{{#if @model.isDefault}}<Chip
+              @appearance='plain'
+              @tone='info'
+            >default</Chip>{{/if}}</:status>
+        <:fact>{{@model.summary}}</:fact>
+        <:details>{{#each this.facts as |item|}}<Detail
+              @label={{item.key}}
+              @value={{item.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 }

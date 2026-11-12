@@ -18,8 +18,8 @@ import BadgeCheckIcon from '@cardstack/boxel-icons/badge-check';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
 import NotebookPenIcon from '@cardstack/boxel-icons/notebook-pen';
 import { tracked } from '@glimmer/tracking';
-import { FittedCard, FieldContainer } from '@cardstack/boxel-ui/components';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { RichFittedCard, Media, Metric } from '../shared/rich-fitted-card';
 import { identifyCard } from '@cardstack/runtime-common';
 // CollectionItem is read ONLY inside the isolated component's methods, never at
 // module-evaluation time. That is what keeps this import cycle legal —
@@ -33,6 +33,7 @@ import { Spinner } from '@cardstack/pretui/components/spinner';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // CompletionSet — a curated collecting goal and the arithmetic for how far along
 // it is. "All Travis Scott x Nike", "every Chicago colourway", "my top 10 grails".
@@ -407,153 +408,159 @@ export class CompletionSet extends CardDef {
     }
 
     <template>
-      <article class='card'>
-        <header class='hero'>
-          {{! `resolvedUrl`, NOT `url`. ImageSourceField accepts either a pasted
+      <IsoFrame>
+        <article class='card'>
+          <header class='hero'>
+            {{! `resolvedUrl`, NOT `url`. ImageSourceField accepts either a pasted
               URL or a file uploaded into the realm and exposes the winner as
               `resolvedUrl` — reading `.url` silently renders nothing for every
               uploaded cover, which is the majority case once someone uses the
               file picker. Decorative here (the title names the set), so alt=''. }}
-          {{#if @model.coverImage.resolvedUrl}}
-            <div class='hero-photo'>
-              <img src={{@model.coverImage.resolvedUrl}} alt='' />
-            </div>
-          {{/if}}
+            {{#if @model.coverImage.resolvedUrl}}
+              <div class='hero-photo'>
+                <img src={{@model.coverImage.resolvedUrl}} alt='' />
+              </div>
+            {{/if}}
 
-          <div class='hero-body'>
-            <p class='eyebrow'>
-              <TargetArrowIcon
-                width='max(12px, 0.9em)'
-                height='max(12px, 0.9em)'
-                aria-hidden='true'
-              />
-              Completion set
-              {{#if @model.isPublic}}
-                <span class='eyebrow-sep'>·</span>Public
-              {{/if}}
-            </p>
+            <div class='hero-body'>
+              <p class='eyebrow'>
+                <TargetArrowIcon
+                  width='max(12px, 0.9em)'
+                  height='max(12px, 0.9em)'
+                  aria-hidden='true'
+                />
+                Completion set
+                {{#if @model.isPublic}}
+                  <span class='eyebrow-sep'>·</span>Public
+                {{/if}}
+              </p>
 
-            <h1 class='hero-title'>{{if
-                @model.cardTitle
-                @model.cardTitle
-                'Untitled set'
-              }}</h1>
+              <h1 class='hero-title'>{{if
+                  @model.cardTitle
+                  @model.cardTitle
+                  'Untitled set'
+                }}</h1>
 
-            {{! THE VAULT PLAQUE. Gold covers real surface area here, not a
+              {{! THE VAULT PLAQUE. Gold covers real surface area here, not a
                 thin accent — a filled gold slab carrying the dominant
                 figure, matching the ledger-hero treatment the app shell
                 commits to for its own headline number. }}
-            {{#if this.isLoading}}
-              <p class='plaque plaque--wait'>
-                <Spinner />
-                Reading your collection…
-              </p>
-            {{else}}
-              <div class='plaque'>
-                <p class='plaque-pct'>{{this.result.percent}}<span
-                    class='plaque-pct-sym'
-                  >%</span></p>
-                <p class='plaque-frac'>
-                  {{this.result.ownedCount}}
-                  of
-                  {{this.result.targetCount}}
-                  <span class='plaque-frac-k'>owned</span>
+              {{#if this.isLoading}}
+                <p class='plaque plaque--wait'>
+                  <Spinner />
+                  Reading your collection…
                 </p>
-                {{! aria-label attribute, not @label — @label renders as
+              {{else}}
+                <div class='plaque'>
+                  <p class='plaque-pct'>{{this.result.percent}}<span
+                      class='plaque-pct-sym'
+                    >%</span></p>
+                  <p class='plaque-frac'>
+                    {{this.result.ownedCount}}
+                    of
+                    {{this.result.targetCount}}
+                    <span class='plaque-frac-k'>owned</span>
+                  </p>
+                  {{! aria-label attribute, not @label — @label renders as
                     visible text inside this 6px meter and shears. }}
-                <ProgressBar
-                  class='meter'
-                  @value={{this.result.percent}}
-                  @max={{100}}
-                  @hue='var(--primary-ink)'
-                  aria-label='Set completion'
-                />
-              </div>
-            {{/if}}
-          </div>
-        </header>
+                  <ProgressBar
+                    class='meter'
+                    @value={{this.result.percent}}
+                    @max={{100}}
+                    @hue='var(--primary-ink)'
+                    aria-label='Set completion'
+                  />
+                </div>
+              {{/if}}
+            </div>
+          </header>
 
-        {{! DETAIL — shape: prose. The goal in the owner's own words. }}
-        {{#if @model.goal}}
-          <section class='sec'>
-            <h2><NotebookPenIcon class='sec-icon' aria-hidden='true' />The goal</h2>
-            <div class='prose'><@fields.goal /></div>
-          </section>
-        {{/if}}
+          {{! DETAIL — shape: prose. The goal in the owner's own words. }}
+          {{#if @model.goal}}
+            <section class='sec'>
+              <h2><NotebookPenIcon class='sec-icon' aria-hidden='true' />The
+                goal</h2>
+              <div class='prose'><@fields.goal /></div>
+            </section>
+          {{/if}}
 
-        <div class='cols'>
-          {{! DETAIL — shape: ul of linked cards. Distinct from the prose above
+          <div class='cols'>
+            {{! DETAIL — shape: ul of linked cards. Distinct from the prose above
               and from the dl below, so the sections do not read as one shape
               three times. }}
-          <section class='sec'>
-            <h2><BadgeCheckIcon class='sec-icon' aria-hidden='true' />Owned<span
-                class='count'
-              >{{this.owned.length}}</span></h2>
-            {{#if this.owned.length}}
-              <ul class='plist'>
-                {{#each this.owned as |p|}}
-                  <li><span class='pname'>{{p.displayTitle}}</span></li>
-                {{/each}}
-              </ul>
-            {{else}}
-              <EmptyState
-                @title='Nothing from this set is in your collection yet.'
-                @texture={{false}}
-                style={{COMPACT_EMPTY_STYLE}}
-              />
-            {{/if}}
-          </section>
+            <section class='sec'>
+              <h2><BadgeCheckIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Owned<span class='count'>{{this.owned.length}}</span></h2>
+              {{#if this.owned.length}}
+                <ul class='plist'>
+                  {{#each this.owned as |p|}}
+                    <li><span class='pname'>{{p.displayTitle}}</span></li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <EmptyState
+                  @title='Nothing from this set is in your collection yet.'
+                  @texture={{false}}
+                  style={{COMPACT_EMPTY_STYLE}}
+                />
+              {{/if}}
+            </section>
 
-          {{! The half a collector actually opens this card for — what is left
+            {{! The half a collector actually opens this card for — what is left
               to hunt. Same shape as Owned on purpose: they are two halves of
               one list, and reading them side by side is the point. }}
-          <section class='sec'>
-            <h2><TargetArrowIcon class='sec-icon' aria-hidden='true' />Still
-              needed<span class='count'>{{this.missing.length}}</span></h2>
-            {{#if this.missing.length}}
-              <ul class='plist'>
-                {{#each this.missing as |p|}}
-                  <li><span
-                      class='pname pname--want'
-                    >{{p.displayTitle}}</span></li>
-                {{/each}}
-              </ul>
-            {{else}}
-              <p class='empty empty--done'>
-                <BadgeCheckIcon width='18' height='18' aria-hidden='true' />Set
-                complete — every pair accounted for.
-              </p>
-            {{/if}}
-          </section>
-        </div>
+            <section class='sec'>
+              <h2><TargetArrowIcon class='sec-icon' aria-hidden='true' />Still
+                needed<span class='count'>{{this.missing.length}}</span></h2>
+              {{#if this.missing.length}}
+                <ul class='plist'>
+                  {{#each this.missing as |p|}}
+                    <li><span
+                        class='pname pname--want'
+                      >{{p.displayTitle}}</span></li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <p class='empty empty--done'>
+                  <BadgeCheckIcon
+                    width='18'
+                    height='18'
+                    aria-hidden='true'
+                  />Set complete — every pair accounted for.
+                </p>
+              {{/if}}
+            </section>
+          </div>
 
-        {{! DETAIL — shape: dl. The rule the arithmetic above obeys, which is
+          {{! DETAIL — shape: dl. The rule the arithmetic above obeys, which is
             otherwise invisible and is the first thing questioned when a
             percentage looks wrong. }}
-        <section class='sec'>
-          <h2><FileTextIcon class='sec-icon' aria-hidden='true' />How this is
-            counted</h2>
-          <dl class='rules'>
-            <div class='rule-row'>
-              <dt>Completion rule</dt>
-              <dd>{{if
-                  @model.completionRule
-                  @model.completionRule
-                  'Own any'
-                }}</dd>
-            </div>
-            <div class='rule-row'>
-              <dt>Products tracked</dt>
-              <dd>{{this.result.targetCount}}</dd>
-            </div>
-            <div class='rule-row'>
-              <dt>Visibility</dt>
-              <dd>{{if @model.isPublic 'Public' 'Private'}}</dd>
-            </div>
-          </dl>
-        </section>
-      </article>
-
+          <section class='sec'>
+            <h2><FileTextIcon class='sec-icon' aria-hidden='true' />How this is
+              counted</h2>
+            <dl class='rules'>
+              <div class='rule-row'>
+                <dt>Completion rule</dt>
+                <dd>{{if
+                    @model.completionRule
+                    @model.completionRule
+                    'Own any'
+                  }}</dd>
+              </div>
+              <div class='rule-row'>
+                <dt>Products tracked</dt>
+                <dd>{{this.result.targetCount}}</dd>
+              </div>
+              <div class='rule-row'>
+                <dt>Visibility</dt>
+                <dd>{{if @model.isPublic 'Public' 'Private'}}</dd>
+              </div>
+            </dl>
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         /* Rule 1: isolated gets NO host container, so this template declares
            its own, NAMED — otherwise every @container rule below is inert
@@ -638,7 +645,7 @@ export class CompletionSet extends CardDef {
         }
         .hero-photo {
           aspect-ratio: 1;
-          border-radius: 12px;
+          border-radius: var(--radius);
           overflow: hidden;
           background: var(--ink-700);
           box-shadow: var(--shadow-2);
@@ -659,7 +666,7 @@ export class CompletionSet extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.4em;
-          font-size: 0.6875rem; /* 11px floor */
+          font-size: var(--boxel-font-size-2xs); /* 11px floor */
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--smoke);
@@ -683,12 +690,12 @@ export class CompletionSet extends CardDef {
         .plaque {
           margin-top: auto;
           display: grid;
-          gap: 0.15rem;
+          gap: var(--boxel-sp-6xs);
           background: var(--ink-800);
           border: 1px solid var(--hairline);
           border-top: 3px solid var(--gold);
-          border-radius: 6px;
-          padding: 1rem 1.25rem 1.15rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp);
           box-shadow: var(--shadow-1);
         }
         .plaque-pct {
@@ -723,13 +730,13 @@ export class CompletionSet extends CardDef {
         }
         .plaque-frac {
           margin: 0;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size);
           font-weight: 700;
           color: var(--paper);
           font-variant-numeric: tabular-nums;
         }
         .plaque-frac-k {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.06em;
@@ -740,7 +747,7 @@ export class CompletionSet extends CardDef {
           align-items: center;
           gap: 0.5em;
           margin-top: auto;
-          font-size: 1rem;
+          font-size: var(--boxel-font-size);
           font-weight: 500;
           color: var(--smoke);
           background: none;
@@ -748,7 +755,7 @@ export class CompletionSet extends CardDef {
           padding: 0;
         }
         .meter {
-          margin-top: 0.6rem;
+          margin-top: var(--boxel-sp-xs);
         }
         @media (prefers-reduced-motion: reduce) {
           .plaque-pct {
@@ -760,7 +767,7 @@ export class CompletionSet extends CardDef {
         .sec {
           background: var(--ink-800);
           padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          border-radius: 12px;
+          border-radius: var(--radius);
           border: 1px solid var(--hairline);
           box-shadow: var(--shadow-1);
           min-width: 0;
@@ -770,7 +777,7 @@ export class CompletionSet extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.09em;
@@ -795,7 +802,7 @@ export class CompletionSet extends CardDef {
         }
 
         .prose {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.55;
         }
 
@@ -807,7 +814,7 @@ export class CompletionSet extends CardDef {
           gap: var(--boxel-sp-4xs);
         }
         .pname {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 600;
         }
         /* A wanted pair is the hunt — gold, the value axis of this family. */
@@ -826,10 +833,10 @@ export class CompletionSet extends CardDef {
           align-items: baseline;
           justify-content: space-between;
           gap: var(--boxel-sp-xs);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .rule-row dt {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
@@ -846,7 +853,7 @@ export class CompletionSet extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--smoke);
         }
         .empty--done {
@@ -866,155 +873,36 @@ export class CompletionSet extends CardDef {
     </template>
   };
 
-  // FITTED — FittedCard, same fork and same knobs as the rest of the family.
-  //
-  // NO PROGRESS BAR HERE, and this is the important decision rather than an
-  // omission. Progress needs the owner's collection, which means a query, and a
-  // prerendered fitted tile can neither run a query nor resolve a link — so any
-  // percentage drawn here would be an invented number. The isolated view runs
-  // that query; the tile shows only what this card actually owns.
-  //
-  // SLOT DISCIPLINE — three distinct facts, three slots. `<:subtitle>` and
-  // `<:meta>` are not rendered: the remaining values are the rule (already the
-  // eyebrow) and the count (already the footer).
+  // No progress here: it needs the owner's collection, a query a prerendered
+  // fitted view cannot run, so the view shows only what this card owns.
   static fitted = class Fitted extends Component<typeof CompletionSet> {
     get countLabel() {
       let n = this.args.model?.targetCount ?? 0;
       return n === 1 ? '1 product' : `${n} products`;
     }
+    get ruleLabel() {
+      return this.args.model?.completionRule === 'own-all'
+        ? 'Own every variant'
+        : 'Own any variant';
+    }
 
     <template>
-      <FittedCard
-        class='s-fit'
-        @imageUrl={{@model.coverImage.resolvedUrl}}
-        @imageAlt={{@model.cardTitle}}
-        @titleTag='h3'
-      >
-        {{! Rule 2 anchor: tier 1 is the cover image; tier 2 is the card's own
-            static icon, the same one its isolated view and atom use. }}
-        <:placeholder>
-          <TargetArrowIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
-        </:placeholder>
-
-        <:eyebrow><span class='fit-eyebrow'>{{if
-              (eq @model.completionRule 'own-all')
-              'Own every variant'
-              'Own any variant'
-            }}</span></:eyebrow>
-
-        <:title><span class='fit-title'>{{if
-              @model.cardTitle
-              @model.cardTitle
-              'Untitled set'
-            }}</span></:title>
-
-        <:badgeRight>
-          {{#if @model.isPublic}}
-            <StatePill class='s-pub' @label='Public' @hue='slate' />
-          {{/if}}
-        </:badgeRight>
-
-        <:footer>
-          {{! The one real number this card owns without a query. Rendered in
-              full or not at all — never ellipsised. }}
-          <span class='s-count'>{{this.countLabel}}</span>
-        </:footer>
-      </FittedCard>
-
-      <style scoped>
-        /* No container-type / container-name — FittedCard queries the HOST's
-           `fitted-card` container. */
-        .s-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          /* The miniature vault plaque — inset shadow, not a border. */
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          --fc-image-width: 42cqh;
-          --fc-image-min-width: 3.5rem;
-          --fc-image-max-width: 11rem;
-          --fc-image-object-fit: cover;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-
-          --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          --fc-header-gap: 0.15em;
-          --fc-content-gap: var(--boxel-sp-2xs);
-
-          --fc-eyebrow-font-size: max(9px, 0.62em);
-          --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(13px, 1.05em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 2;
-          --fc-footer-font-size: max(11px, 0.78em);
-          --fc-footer-gap: var(--boxel-sp-xs);
-          --fc-footer-justify: space-between;
-          --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-2xs);
-        }
-
-        .fit-eyebrow {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--smoke);
-          font-weight: 600;
-        }
-        .fit-title {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-
-        .s-pub {
-          font-weight: 700;
-        }
-        .s-count {
-          font-family: 'Playfair Display', Georgia, serif;
-          color: var(--primary-ink);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-
-        /* ---- quanta: visibility only ---- */
-        @container fitted-card (height <= 50px) {
-          .s-fit {
-            --fc-footer-display: none;
-            --fc-badge-right-display: none;
-            --fc-title-line-clamp: 1;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-
-        @container fitted-card (width <= 150px) {
-          .s-fit {
-            --fc-image-max-width: 100%;
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:media><Media
+            @src={{@model.coverImage.resolvedUrl}}
+            @alt={{if @model.cardTitle @model.cardTitle ''}}
+          ><TargetArrowIcon width='40%' height='40%' /></Media></:media>
+        <:title>{{if @model.cardTitle @model.cardTitle 'Untitled set'}}</:title>
+        <:status>{{#if @model.isPublic}}<StatePill
+              @label='Public'
+              @hue='slate'
+            />{{/if}}</:status>
+        <:subtitle>{{this.ruleLabel}} · {{this.countLabel}}</:subtitle>
+        <:metric><Metric
+            @value='{{@model.targetCount}}'
+            @label='Products'
+          /></:metric>
+      </RichFittedCard>
     </template>
   };
 

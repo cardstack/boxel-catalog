@@ -37,6 +37,11 @@
         "links": {
           "self": "../MaintenancePlan/it-laptop-refresh-check"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -71,7 +71,13 @@
       "active": true,
       "complianceWindowDays": 7,
       "lastCompletedAt": "2026-06-15",
-      "lastCompletedMeter": 12000
+      "lastCompletedMeter": 12000,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "asset": {

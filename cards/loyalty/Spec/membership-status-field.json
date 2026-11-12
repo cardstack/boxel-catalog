@@ -22,6 +22,11 @@
         "links": {
           "self": "../LoyaltyAccount/dev-okafor"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

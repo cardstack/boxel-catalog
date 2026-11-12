@@ -39,7 +39,7 @@ import { AssetCategory } from './asset-category';
 import { MaintenancePlan } from './maintenance-plan';
 import { Meter } from './meter';
 import { WorkOrder } from './work-order';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   Chip,
   Brief,
@@ -60,6 +60,7 @@ import {
   hueTone,
   type KvItem,
 } from './card-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * One physical thing worth tracking individually — tagged, located,
@@ -204,6 +205,7 @@ export class Asset extends CardDef {
           /></:fact>
         <:default>
           <KeyValue
+            class='kv-pad'
             @items={{summaryRows @model}}
             @labelStyle='eyebrow'
             @divided={{true}}
@@ -211,6 +213,11 @@ export class Asset extends CardDef {
           <LinkedRows @model={{@model}} @fields={{@fields}} />
         </:default>
       </Brief>
+      <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+      </style>
     </template>
   };
 
@@ -219,7 +226,7 @@ export class Asset extends CardDef {
       return nextDue(this.args.model.nextDueLabel);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='As' @size='lg' /></:avatar>
         <:title>{{if @model.name @model.name 'Untitled asset'}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -229,11 +236,33 @@ export class Asset extends CardDef {
             @strong={{this.next.plan}}
             @rest={{this.next.due}}
           /></:fact>
+        <:metric>{{#if @model.primaryMeterValue}}<Metric
+              @value={{num @model.primaryMeterValue @model.primaryMeterUnit}}
+              @label='Running hours'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.lastServicedAt}}<Detail
+              @label='Last serviced'
+              @value={{shortDate @model.lastServicedAt}}
+            />{{/if}}
+          {{#if @model.condition.code}}<Detail
+              @label='Condition'
+              @value={{@model.condition.code}}
+            />{{/if}}
+          {{#if @model.custodianName}}<Detail
+              @label='Custodian'
+              @value={{@model.custodianName}}
+            />{{/if}}
+          {{#if @model.warranty.endsOn}}<Detail
+              @label='Warranty to'
+              @value={{shortDate @model.warranty.endsOn}}
+            />{{/if}}
+        </:details>
         <:relations>
           {{#if @model.category}}<@fields.category @format='atom' />{{/if}}
           {{#if @model.location}}<@fields.location @format='atom' />{{/if}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
@@ -359,119 +388,132 @@ export class Asset extends CardDef {
     };
 
     <template>
-      <Sheet>
-        <:head>
-          <Head
-            @mark='As'
-            @title={{if @model.name @model.name 'Untitled asset'}}
-            @meta={{metaLine @model}}
-          >
-            <:status><StatusDots @model={{@model}} /></:status>
-            <:actions>
-              <Button
-                @size='s'
-                @disabled={{if @createCard false true}}
-                {{on 'click' this.raiseWorkOrder}}
-              >Raise work order</Button>
-              <Button
-                @tone='neutral'
-                @appearance='outlined'
-                @size='s'
-                @disabled={{if this.meter false true}}
-                {{on 'click' this.logReading}}
-              >Log reading</Button>
-            </:actions>
-          </Head>
-        </:head>
-        <:stats>
-          <Stat
-            @label='Running hours'
-            @value={{num @model.primaryMeterValue @model.primaryMeterUnit}}
-            @hint={{if
-              this.meter.lastReadAt
-              (concat 'read ' (shortDate this.meter.lastReadAt))
-              'no reading yet'
-            }}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Next due'
-            @value={{dash this.next.due}}
-            @hint={{dash this.next.plan}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Condition'
-            @value={{dash @model.condition.code}}
-            @hint={{if
-              @model.condition.valueRetention
-              (concat @model.condition.valueRetention '% value retained')
-              '—'
-            }}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Warranty'
-            @value={{monthYear @model.warranty.endsOn}}
-            @hint={{join @model.warranty.providerName @model.warranty.kind}}
-            @roll={{false}}
-          />
-        </:stats>
-        <:main>
-          {{#if @model.notes}}
-            <Section @title='Notes'><p>{{@model.notes}}</p></Section>
-          {{/if}}
-          <Section @title='Identity'>
-            <KeyValue
-              @items={{this.identity}}
-              @labelStyle='eyebrow'
-              @divided={{true}}
+      <IsoFrame>
+        <Sheet>
+          <:head>
+            <Head
+              @mark='As'
+              @title={{if @model.name @model.name 'Untitled asset'}}
+              @meta={{metaLine @model}}
+            >
+              <:status><StatusDots @model={{@model}} /></:status>
+              <:actions>
+                <Button
+                  @size='s'
+                  @disabled={{if @createCard false true}}
+                  {{on 'click' this.raiseWorkOrder}}
+                >Raise work order</Button>
+                <Button
+                  @tone='neutral'
+                  @appearance='outlined'
+                  @size='s'
+                  @disabled={{if this.meter false true}}
+                  {{on 'click' this.logReading}}
+                >Log reading</Button>
+              </:actions>
+            </Head>
+          </:head>
+          <:stats>
+            <Stat
+              @label='Running hours'
+              @value={{num @model.primaryMeterValue @model.primaryMeterUnit}}
+              @hint={{if
+                this.meter.lastReadAt
+                (concat 'read ' (shortDate this.meter.lastReadAt))
+                'no reading yet'
+              }}
+              @roll={{false}}
             />
-          </Section>
-          <Section @title='Acquisition & warranty'>
-            <KeyValue
-              @items={{this.acquisition}}
-              @labelStyle='eyebrow'
-              @divided={{true}}
+            <Stat
+              @label='Next due'
+              @value={{dash this.next.due}}
+              @hint={{dash this.next.plan}}
+              @roll={{false}}
             />
-          </Section>
-          <Section @title='Custody'>
-            {{#each @model.custodyLog as |c|}}
-              <Row
-                @title={{custodyTitle c}}
-                @meta={{join (shortDate c.at) c.toTeamName c.note}}
-                @state={{if c.conditionCode (concat 'grade ' c.conditionCode)}}
+            <Stat
+              @label='Condition'
+              @value={{dash @model.condition.code}}
+              @hint={{if
+                @model.condition.valueRetention
+                (concat @model.condition.valueRetention '% value retained')
+                '—'
+              }}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Warranty'
+              @value={{monthYear @model.warranty.endsOn}}
+              @hint={{join @model.warranty.providerName @model.warranty.kind}}
+              @roll={{false}}
+            />
+          </:stats>
+          <:main>
+            {{#if @model.notes}}
+              <Section @title='Notes'><p>{{@model.notes}}</p></Section>
+            {{/if}}
+            <Section @title='Identity'>
+              <KeyValue
+                class='kv-pad'
+                @items={{this.identity}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
               />
-            {{else}}
-              <Row @title='No custody events' />
-            {{/each}}
-          </Section>
-          <Section @title='Plans'>
-            {{#each this.plans as |p|}}
-              <Row
-                @title={{p.name}}
-                @meta={{p.dueLabel}}
-                @tone={{if p.active 'ok'}}
-                @state={{if p.active 'active' 'paused'}}
+            </Section>
+            <Section @title='Acquisition & warranty'>
+              <KeyValue
+                class='kv-pad'
+                @items={{this.acquisition}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
               />
-            {{else}}
-              <Row @title='No maintenance plans' />
-            {{/each}}
-          </Section>
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkedRows @model={{@model}} @fields={{@fields}} />
-          </Section>
-          <Section @title='Details'>
-            <KeyValue
-              @items={{this.details}}
-              @labelStyle='eyebrow'
-              @divided={{true}}
-            />
-          </Section>
-        </:side>
-      </Sheet>
+            </Section>
+            <Section @title='Custody'>
+              {{#each @model.custodyLog as |c|}}
+                <Row
+                  @title={{custodyTitle c}}
+                  @meta={{join (shortDate c.at) c.toTeamName c.note}}
+                  @state={{if
+                    c.conditionCode
+                    (concat 'grade ' c.conditionCode)
+                  }}
+                />
+              {{else}}
+                <Row @title='No custody events' />
+              {{/each}}
+            </Section>
+            <Section @title='Plans'>
+              {{#each this.plans as |p|}}
+                <Row
+                  @title={{p.name}}
+                  @meta={{p.dueLabel}}
+                  @tone={{if p.active 'ok'}}
+                  @state={{if p.active 'active' 'paused'}}
+                />
+              {{else}}
+                <Row @title='No maintenance plans' />
+              {{/each}}
+            </Section>
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkedRows @model={{@model}} @fields={{@fields}} />
+            </Section>
+            <Section @title='Details'>
+              <KeyValue
+                class='kv-pad'
+                @items={{this.details}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              />
+            </Section>
+          </:side>
+        </Sheet>
+      </IsoFrame>
+      <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+      </style>
     </template>
   };
 }
@@ -553,7 +595,12 @@ function relatedName(title?: string | null) {
 const LinkedRows: TemplateOnlyComponent<{
   Args: { model: Partial<Asset>; fields: any };
 }> = <template>
-  <KeyValue @items={{LINKED}} @labelStyle='eyebrow' @divided={{true}}>
+  <KeyValue
+    class='kv-pad'
+    @items={{LINKED}}
+    @labelStyle='eyebrow'
+    @divided={{true}}
+  >
     <:value as |item|>
       {{#if (eq item.key 'Category')}}
         {{#if @model.category}}<@fields.category
@@ -579,6 +626,10 @@ const LinkedRows: TemplateOnlyComponent<{
     </:value>
   </KeyValue>
   <style scoped>
+    .kv-pad {
+      --pretui-kv-pad-inline: var(--boxel-sp-sm);
+    }
+
     .person {
       display: inline-flex;
       align-items: center;

@@ -51,6 +51,11 @@
         "links": {
           "self": "../PropertyListing/1024-elm-street"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

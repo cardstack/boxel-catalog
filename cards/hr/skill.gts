@@ -10,6 +10,8 @@ import enumField from 'https://cardstack.com/base/enum';
 import TagIcon from '@cardstack/boxel-icons/tag';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { hueOf } from './hr-ui';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 
 export const SKILL_CATEGORIES = [
   'language',
@@ -58,19 +60,25 @@ export class Skill extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     <template>
-      <article class='skill-isolated'>
-        <span class='icon-chip'>
-          <TagIcon class='icon-chip-svg' />
-        </span>
-        <h1>{{@model.title}}</h1>
-        <StatePill
-          class='category-chip'
-          @label={{@model.category}}
-          @hue={{skillCategoryHue @model.category}}
-        />
-      </article>
+      <IsoFrame>
+        <article class='skill-isolated'>
+          <span class='icon-chip'>
+            <TagIcon class='icon-chip-svg' />
+          </span>
+          <h1>{{@model.title}}</h1>
+          <StatePill
+            class='category-chip'
+            @label={{@model.category}}
+            @hue={{skillCategoryHue @model.category}}
+          />
+        </article>
+      </IsoFrame>
       <style scoped>
         .skill-isolated {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp-xl);
           height: 100%;
           box-sizing: border-box;
@@ -79,7 +87,6 @@ export class Skill extends CardDef {
           flex-direction: column;
           align-items: flex-start;
           gap: var(--boxel-sp-sm);
-          background: var(--card);
           color: var(--card-foreground);
         }
         .icon-chip {
@@ -131,20 +138,23 @@ export class Skill extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <div class='fit'>
-        <StatePill
-          @label={{@model.title}}
-          @hue={{skillCategoryHue @model.category}}
-        />
-      </div>
+      <RichFittedCard>
+        <:avatar><TagIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:status>{{#if @model.category}}<StatePill
+              class='category-chip'
+              @label={{@model.category}}
+              @hue={{skillCategoryHue @model.category}}
+            />{{/if}}</:status>
+      </RichFittedCard>
       <style scoped>
-        .fit {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-          overflow: hidden;
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+        .category-chip {
+          text-transform: capitalize;
         }
       </style>
     </template>

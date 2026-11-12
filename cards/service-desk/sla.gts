@@ -17,10 +17,11 @@ import { SlaWindowField } from '@cardstack/catalog/fields/sla-window/sla-window-
 import { timerSnapshot, sortByUrgency } from './utils/sla';
 import { relativeStamp } from '@cardstack/catalog/fields/created-at/created-at';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Chip } from '@cardstack/pretui/components/chip';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * A pause on the clock, as an EVENT — never a boolean. While the ball is with
@@ -545,123 +546,125 @@ export class Sla extends CardDef {
       return slaView(this.args.model);
     }
     <template>
-      <article class='iso'>
-        <header class='ih'>
-          <span class='mark' aria-hidden='true'>SL</span>
-          <div class='t'>
-            <h1 class='name'>{{this.v.title}}</h1>
-            <p class='meta'>{{this.v.subline}}</p>
-          </div>
-          <span class='sts'>
-            <Chip
-              @label={{this.v.stateLabel}}
-              @tone={{this.v.stateTone}}
-              @appearance='plain'
-            />
-            {{#if this.v.firstMet}}<Chip
-                @label='first response met'
-                @tone='success'
+      <IsoFrame>
+        <article class='iso'>
+          <header class='ih'>
+            <span class='mark' aria-hidden='true'>SL</span>
+            <div class='t'>
+              <h1 class='name'>{{this.v.title}}</h1>
+              <p class='meta'>{{this.v.subline}}</p>
+            </div>
+            <span class='sts'>
+              <Chip
+                @label={{this.v.stateLabel}}
+                @tone={{this.v.stateTone}}
                 @appearance='plain'
-              />{{/if}}
-          </span>
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='First response'
-            @tone={{this.v.firstTone}}
-            @value={{this.v.firstStat}}
-            @hint={{this.v.firstHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Resolution'
-            @tone='primary'
-            @value={{this.v.resStat}}
-            @hint={{this.v.resHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Pauses'
-            @tone='warning'
-            @value={{this.v.pauseStat}}
-            @hint={{this.v.pauseHint}}
-            @roll={{false}}
-          />
-        </div>
-        <div class='cols'>
-          <div class='main'>
-            <section>
-              <h2>Timers</h2>
-              {{#each this.v.timers as |t|}}
-                <div class='row'>
-                  <span class='row-id'>
-                    <span class='row-name'>{{t.title}}</span>
-                    <span class='meta'>{{t.detail}}</span>
-                  </span>
-                  <Chip
-                    @label={{t.label}}
-                    @tone={{t.tone}}
-                    @appearance='plain'
-                  />
-                </div>
-              {{else}}
-                <p class='row meta'>No clocks running</p>
-              {{/each}}
-            </section>
-            {{#if this.v.pauses.length}}
+              />
+              {{#if this.v.firstMet}}<Chip
+                  @label='first response met'
+                  @tone='success'
+                  @appearance='plain'
+                />{{/if}}
+            </span>
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='First response'
+              @tone={{this.v.firstTone}}
+              @value={{this.v.firstStat}}
+              @hint={{this.v.firstHint}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Resolution'
+              @tone='primary'
+              @value={{this.v.resStat}}
+              @hint={{this.v.resHint}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Pauses'
+              @tone='warning'
+              @value={{this.v.pauseStat}}
+              @hint={{this.v.pauseHint}}
+              @roll={{false}}
+            />
+          </div>
+          <div class='cols'>
+            <div class='main'>
               <section>
-                <h2>Pauses</h2>
-                {{#each this.v.pauses as |p|}}
+                <h2>Timers</h2>
+                {{#each this.v.timers as |t|}}
                   <div class='row'>
                     <span class='row-id'>
-                      <span class='row-name'>{{p.title}}</span>
-                      <span class='meta'>{{p.detail}}</span>
+                      <span class='row-name'>{{t.title}}</span>
+                      <span class='meta'>{{t.detail}}</span>
                     </span>
                     <Chip
-                      @label={{p.label}}
-                      @tone={{p.tone}}
+                      @label={{t.label}}
+                      @tone={{t.tone}}
                       @appearance='plain'
                     />
                   </div>
+                {{else}}
+                  <p class='row meta'>No clocks running</p>
                 {{/each}}
               </section>
-            {{/if}}
-            <section>
-              <h2>Business hours</h2>
-              <dl class='kv'>
-                {{#each this.v.windowFacts as |f|}}
-                  <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
-                    >{{f.value}}</dd></div>
-                {{/each}}
-              </dl>
-            </section>
+              {{#if this.v.pauses.length}}
+                <section>
+                  <h2>Pauses</h2>
+                  {{#each this.v.pauses as |p|}}
+                    <div class='row'>
+                      <span class='row-id'>
+                        <span class='row-name'>{{p.title}}</span>
+                        <span class='meta'>{{p.detail}}</span>
+                      </span>
+                      <Chip
+                        @label={{p.label}}
+                        @tone={{p.tone}}
+                        @appearance='plain'
+                      />
+                    </div>
+                  {{/each}}
+                </section>
+              {{/if}}
+              <section>
+                <h2>Business hours</h2>
+                <dl class='kv'>
+                  {{#each this.v.windowFacts as |f|}}
+                    <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+                      >{{f.value}}</dd></div>
+                  {{/each}}
+                </dl>
+              </section>
+            </div>
+            <aside class='side'>
+              <section>
+                <h2>Linked</h2>
+                <dl class='kv'>
+                  {{#if @model.subject}}
+                    <div class='kv-r'><dt class='cap'>Subject</dt><dd
+                      ><@fields.subject @format='atom' /></dd></div>
+                  {{/if}}
+                  {{#if @model.policy}}
+                    <div class='kv-r'><dt class='cap'>Policy</dt><dd
+                      ><@fields.policy @format='atom' /></dd></div>
+                  {{/if}}
+                </dl>
+              </section>
+              <section>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  {{#each this.v.facts as |f|}}
+                    <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+                      >{{f.value}}</dd></div>
+                  {{/each}}
+                </dl>
+              </section>
+            </aside>
           </div>
-          <aside class='side'>
-            <section>
-              <h2>Linked</h2>
-              <dl class='kv'>
-                {{#if @model.subject}}
-                  <div class='kv-r'><dt class='cap'>Subject</dt><dd
-                    ><@fields.subject @format='atom' /></dd></div>
-                {{/if}}
-                {{#if @model.policy}}
-                  <div class='kv-r'><dt class='cap'>Policy</dt><dd
-                    ><@fields.policy @format='atom' /></dd></div>
-                {{/if}}
-              </dl>
-            </section>
-            <section>
-              <h2>Details</h2>
-              <dl class='kv'>
-                {{#each this.v.facts as |f|}}
-                  <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
-                    >{{f.value}}</dd></div>
-                {{/each}}
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+        </article>
+      </IsoFrame>
       <style scoped>
         .iso {
           container-type: inline-size;
@@ -821,7 +824,7 @@ export class Sla extends CardDef {
       return slaView(this.args.model);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>SL</span></:avatar>
         <:title><span
             class='ell'
@@ -834,32 +837,27 @@ export class Sla extends CardDef {
             @tone={{this.v.stateTone}}
             @appearance='plain'
           /></:status>
-        <:fact>
-          {{! rows ranked by priority; container queries drop whole rows }}
-          <dl class='fr'>
-            {{#each this.v.fitTop as |f|}}
-              <div class='fr-r'><dt class='cap'>{{f.key}}</dt><dd
-                >{{f.value}}</dd></div>
-            {{/each}}
-            {{#if @model.subject}}
-              <div class='fr-r'><dt class='cap'>Subject</dt><dd><@fields.subject
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></dd></div>
-            {{/if}}
-            {{#each this.v.fitRest as |f|}}
-              <div class='fr-r'><dt class='cap'>{{f.key}}</dt><dd
-                >{{f.value}}</dd></div>
-            {{/each}}
-            {{#if @model.policy}}
-              <div class='fr-r'><dt class='cap'>Policy</dt><dd><@fields.policy
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></dd></div>
-            {{/if}}
-          </dl>
-        </:fact>
-      </FitTile>
+        <:details>
+          {{#each this.v.fitTop as |f|}}
+            <Detail @label={{f.key}}>{{f.value}}</Detail>
+          {{/each}}
+          {{#if @model.subject}}
+            <Detail @label='Subject'><@fields.subject
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>
+          {{/if}}
+          {{#each this.v.fitRest as |f|}}
+            <Detail @label={{f.key}}>{{f.value}}</Detail>
+          {{/each}}
+          {{#if @model.policy}}
+            <Detail @label='Policy'><@fields.policy
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>
+          {{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .ell {
           display: block;
@@ -878,89 +876,6 @@ export class Sla extends CardDef {
           font-family: var(--font-mono);
           font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
-        }
-        .cap {
-          font-family: var(--font-mono);
-          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
-          font-weight: 600;
-          line-height: 1.2;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
-          white-space: normal;
-          color: var(--muted-foreground);
-        }
-        .fr {
-          display: grid;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--card-foreground);
-        }
-        .fr-r {
-          display: grid;
-          grid-template-columns: 5rem minmax(0, 1fr);
-          column-gap: var(--boxel-sp-2xs);
-          align-items: center;
-          block-size: 1.75rem;
-          border-top: 1px solid var(--border);
-          overflow: hidden;
-        }
-        .fr-r dd {
-          margin: 0;
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fr-r:nth-child(n + 13) {
-          display: none;
-        }
-        @container fitted-card (width < 250px) {
-          .fr-r {
-            grid-template-columns: minmax(0, 1fr);
-          }
-          .fr-r dt {
-            display: none;
-          }
-        }
-        @container fitted-card (width >= 400px) {
-          .fr-r {
-            grid-template-columns: 6.75rem minmax(0, 1fr);
-          }
-        }
-        @container fitted-card (height < 445px) and (width < 400px) {
-          .fr-r:nth-child(n + 7) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 445px) and (width >= 400px) {
-          .fr-r:nth-child(n + 8) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 275px) {
-          .fr-r:nth-child(n + 6) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 250px) and (width < 400px) {
-          .fr-r:nth-child(n + 3) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 250px) and (width >= 400px) {
-          .fr-r:nth-child(n + 4) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 170px) and (width < 400px) {
-          .fr {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 170px) and (width >= 400px) {
-          .fr-r:nth-child(n + 2) {
-            display: none;
-          }
         }
       </style>
     </template>

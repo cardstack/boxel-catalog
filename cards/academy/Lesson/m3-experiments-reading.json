@@ -12,7 +12,13 @@
       "summary": "Hypotheses, power, and what a p-value is not.",
       "content": {},
       "liveSessionAt": null,
-      "meetingUrl": null
+      "meetingUrl": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "cardInfo.theme": {

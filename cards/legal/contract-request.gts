@@ -24,16 +24,18 @@ import {
   Dots,
   EmbLayout,
   Facts,
-  FitLayout,
   IsoLayout,
   LinkRow,
   Mark,
   Section,
   Text,
+  fitParts,
   stats,
   type Dot,
   type Fact,
 } from './compact-card';
+import { Dot as DotChip } from '../shared/compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   dash,
   dayAndYear,
@@ -42,6 +44,7 @@ import {
   shortMoney,
   type Tone,
 } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * CONTRACT REQUEST — self-service intake for a new contract.
@@ -126,51 +129,55 @@ export class ContractRequest extends CardDef {
       return requestView(this.args.model);
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='Rq' @size='lg' /></:mark>
-        <:main>
-          {{#if @model.background}}
-            <Section @title='Background'><Text
-              >{{@model.background}}</Text></Section>
-          {{/if}}
-          {{#if @model.decisionNote}}
-            <Section @title='Decision'><Text
-              >{{@model.decisionNote}}</Text></Section>
-          {{/if}}
-          <Section @title='Request'><Facts
-              @items={{this.v.request}}
-            /></Section>
-          <Section @title='Status' @flush={{true}}><Dots
-              @items={{this.v.lifecycle}}
-            /></Section>
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkRow @label='Requested by'><@fields.requestedBy
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-            {{#if @model.counterparty}}
-              <LinkRow @label='Counterparty'><@fields.counterparty
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='Rq' @size='lg' /></:mark>
+          <:main>
+            {{#if @model.background}}
+              <Section @title='Background'><Text
+                >{{@model.background}}</Text></Section>
+            {{/if}}
+            {{#if @model.decisionNote}}
+              <Section @title='Decision'><Text
+                >{{@model.decisionNote}}</Text></Section>
+            {{/if}}
+            <Section @title='Request'><Facts
+                @items={{this.v.request}}
+              /></Section>
+            <Section @title='Status' @flush={{true}}><Dots
+                @items={{this.v.lifecycle}}
+              /></Section>
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkRow @label='Requested by'><@fields.requestedBy
                   @format='atom'
                   @displayContainer={{false}}
                 /></LinkRow>
-            {{/if}}
-            {{#if @model.resultingContract}}
-              <LinkRow @label='Contract'><@fields.resultingContract
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></LinkRow>
-            {{/if}}
-          </Section>
-          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+              {{#if @model.counterparty}}
+                <LinkRow @label='Counterparty'><@fields.counterparty
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></LinkRow>
+              {{/if}}
+              {{#if @model.resultingContract}}
+                <LinkRow @label='Contract'><@fields.resultingContract
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></LinkRow>
+              {{/if}}
+            </Section>
+            <Section @title='Details'><Facts
+                @items={{this.v.facts}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 
@@ -201,17 +208,28 @@ export class ContractRequest extends CardDef {
     get v() {
       return requestView(this.args.model);
     }
+    get fit() {
+      return fitParts(this.v.facts, this.v.fitStats);
+    }
     <template>
-      <FitLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @status={{this.v.state}}
-        @fact={{this.v.fact}}
-        @facts={{this.v.facts}}
-        @stats={{this.v.fitStats}}
-      >
-        <:mark><Mark @text='Rq' /></:mark>
-      </FitLayout>
+      <RichFittedCard>
+        <:avatar><Mark @text='Rq' /></:avatar>
+        <:title>{{this.v.title}}</:title>
+        <:status>{{#if this.v.state}}<DotChip
+              @label={{this.v.state.label}}
+              @tone={{this.v.state.tone}}
+            />{{/if}}</:status>
+        <:subtitle>{{this.v.subtitle}}</:subtitle>
+        <:fact>{{this.v.fact}}</:fact>
+        <:metric>{{#if this.fit.metric}}<Metric
+              @value={{this.fit.metric.value}}
+              @label={{this.fit.metric.key}}
+            />{{/if}}</:metric>
+        <:details>{{#each this.fit.details as |d|}}<Detail
+              @label={{d.key}}
+              @value={{d.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 

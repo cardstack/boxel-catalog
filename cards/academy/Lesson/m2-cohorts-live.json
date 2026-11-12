@@ -12,7 +12,13 @@
       "summary": "Hands-on: slice a signup table into cohorts.",
       "content": null,
       "liveSessionAt": "2026-09-02T10:00:00.000Z",
-      "meetingUrl": "https://meet.northwind.example/paf-101"
+      "meetingUrl": "https://meet.northwind.example/paf-101",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "cardInfo.theme": {

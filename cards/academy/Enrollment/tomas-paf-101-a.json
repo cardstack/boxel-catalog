@@ -6,7 +6,13 @@
       "enrolledAt": "2026-08-20T11:00:00.000Z",
       "withdrawnAt": "2026-08-29T16:20:00.000Z",
       "completedAt": null,
-      "paymentRef": null
+      "paymentRef": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "learner": {

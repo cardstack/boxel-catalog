@@ -9,6 +9,8 @@ import {
 } from '@cardstack/base/card-api';
 import enumField from '@cardstack/base/enum';
 import PackageIcon from '@cardstack/boxel-icons/package';
+import { IsoHead, IsoMark, IsoPage, Kv, Panel } from '../shared/compact-sheet';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 
 // Product — the one thing a business buys, sells or stocks, identified by its
 // SKU. Domain cards extend it with what their domain needs (fulfilment adds
@@ -120,50 +122,22 @@ export class Product extends CardDef {
     typeof Product
   > {
     <template>
-      <div class='fitted'>
-        <PackageIcon class='icon' width='20' height='20' />
-        <div class='info'>
-          <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.sku}}<span class='sku'>{{@model.sku}}</span>{{/if}}
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><PackageIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{@model.sku}}</:subtitle>
+        <:details>
+          {{#if @model.productType}}<Detail
+              @label='Type'
+              @value={{@model.productType}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          container-type: size;
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          overflow: hidden;
-        }
-        .icon {
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .info {
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-6xs);
-        }
-        .name {
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sku {
-          font-size: var(--boxel-font-size-xs);
-          font-family: var(--font-mono);
-          color: var(--muted-foreground);
-        }
-        @container (max-height: 3rem) {
-          .sku {
-            display: none;
-          }
         }
       </style>
     </template>
@@ -172,61 +146,31 @@ export class Product extends CardDef {
   static isolated: BaseDefComponent = class Isolated extends Component<
     typeof Product
   > {
+    get meta() {
+      return [this.args.model.sku, this.args.model.productType]
+        .filter(Boolean)
+        .join(' · ');
+    }
+    get items() {
+      return [
+        { key: 'SKU', value: this.args.model.sku },
+        { key: 'Type', value: this.args.model.productType },
+      ];
+    }
     <template>
-      <article class='product'>
-        <header>
-          <PackageIcon class='icon' width='32' height='32' />
-          <div>
-            <h1>{{@model.cardTitle}}</h1>
-            {{#if @model.productType}}
-              <span class='type'>{{@model.productType}}</span>
-            {{/if}}
-          </div>
-        </header>
-        <dl>
-          <dt>SKU</dt>
-          <dd class='sku'>{{if @model.sku @model.sku 'Not set'}}</dd>
-          <dt>Type</dt>
-          <dd>{{if @model.productType @model.productType 'Not set'}}</dd>
-        </dl>
-      </article>
-      <style scoped>
-        .product {
-          padding: var(--boxel-sp-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-lg);
-          color: var(--foreground);
-        }
-        header {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-sm);
-        }
-        .icon {
-          color: var(--muted-foreground);
-        }
-        .type {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        dl {
-          display: grid;
-          grid-template-columns: max-content 1fr;
-          gap: var(--boxel-sp-xs) var(--boxel-sp-lg);
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-        }
-        dt {
-          color: var(--muted-foreground);
-        }
-        dd {
-          margin: 0;
-        }
-        .sku {
-          font-family: var(--font-mono);
-        }
-      </style>
+      <IsoPage>
+        <:head>
+          <IsoHead @title={{@model.cardTitle}} @meta={{this.meta}}>
+            <:mark><IsoMark><PackageIcon
+                  width='16'
+                  height='16'
+                /></IsoMark></:mark>
+          </IsoHead>
+        </:head>
+        <:main>
+          <Panel @title='Details'><Kv @items={{this.items}} /></Panel>
+        </:main>
+      </IsoPage>
     </template>
   };
 }

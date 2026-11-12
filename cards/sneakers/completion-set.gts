@@ -23,17 +23,22 @@ import { CollectibleProduct } from './collectible-product';
 // level "for clarity".
 import { CollectionItem } from './collection-item';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
   SnKv,
-  SnMark,
   SnRow,
   SnSection,
   SnSheet,
   SnStat,
 } from './parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // CompletionSet — a curated collecting goal and the arithmetic for how far along
 // it is. "All Travis Scott x Nike", "every Chicago colourway", "my top 10 grails".
@@ -249,78 +254,80 @@ export class CompletionSet extends CardDef {
     }
 
     <template>
-      <SnSheet
-        @title={{@model.cardTitle}}
-        @src={{@model.coverImage.resolvedUrl}}
-      >
-        <:meta>{{metaLine @model}}</:meta>
-        <:actions><Visibility @model={{@model}} /></:actions>
-        <:stats>
-          <SnStat
-            @label='Owned'
-            @value={{if
-              this.isLoading
-              '…'
-              (ownedText this.result.ownedCount this.result.targetCount)
-            }}
-            @hint='linked products'
-          />
-          <SnStat
-            @label='Rule'
-            @value={{if (isAll @model) 'All' 'Any'}}
-            @hint={{if
-              (isAll @model)
-              'every variant counts'
-              'any variant counts'
-            }}
-          />
-          <SnStat
-            @label='Visibility'
-            @value={{if @model.isPublic 'Public' 'Private'}}
-            @hint={{if @model.isPublic 'on profile' 'only you'}}
-          />
-        </:stats>
-        <:main>
-          <SnSection @title='Goal'>
-            {{#if @model.goal}}<@fields.goal />{{else}}—{{/if}}
-          </SnSection>
-          <SnSection @title='Products' @flush={{true}}>
-            <SnKv>
-              {{#each this.owned as |p|}}
-                <SnRow @label={{p.cardTitle}}>{{p.colorway}}
-                  <DotLabel @label='owned' @hue='green' /></SnRow>
-              {{/each}}
-              {{#each this.missing as |p|}}
-                <SnRow @label={{p.cardTitle}}>{{p.colorway}}
-                  <DotLabel @label='missing' @hue='amber' /></SnRow>
-              {{/each}}
-              {{#unless this.products.length}}
-                <SnRow @label='Products'>—</SnRow>
-              {{/unless}}
-            </SnKv>
-          </SnSection>
-        </:main>
-        <:side>
-          <SnSection @title='Linked' @flush={{true}}>
-            <LinkedRows @model={{@model}} @fields={{@fields}} />
-          </SnSection>
-          <SnSection @title='Details' @flush={{true}}>
-            <SnKv>
-              <DetailRows @model={{@model}} />
-              <SnRow @label='Owned'>{{if
-                  this.isLoading
-                  '…'
-                  this.result.ownedCount
-                }}</SnRow>
-              <SnRow @label='Still needed'>{{if
-                  this.isLoading
-                  '…'
-                  this.result.missingProductIds.length
-                }}</SnRow>
-            </SnKv>
-          </SnSection>
-        </:side>
-      </SnSheet>
+      <IsoFrame>
+        <SnSheet
+          @title={{@model.cardTitle}}
+          @src={{@model.coverImage.resolvedUrl}}
+        >
+          <:meta>{{metaLine @model}}</:meta>
+          <:actions><Visibility @model={{@model}} /></:actions>
+          <:stats>
+            <SnStat
+              @label='Owned'
+              @value={{if
+                this.isLoading
+                '…'
+                (ownedText this.result.ownedCount this.result.targetCount)
+              }}
+              @hint='linked products'
+            />
+            <SnStat
+              @label='Rule'
+              @value={{if (isAll @model) 'All' 'Any'}}
+              @hint={{if
+                (isAll @model)
+                'every variant counts'
+                'any variant counts'
+              }}
+            />
+            <SnStat
+              @label='Visibility'
+              @value={{if @model.isPublic 'Public' 'Private'}}
+              @hint={{if @model.isPublic 'on profile' 'only you'}}
+            />
+          </:stats>
+          <:main>
+            <SnSection @title='Goal'>
+              {{#if @model.goal}}<@fields.goal />{{else}}—{{/if}}
+            </SnSection>
+            <SnSection @title='Products' @flush={{true}}>
+              <SnKv>
+                {{#each this.owned as |p|}}
+                  <SnRow @label={{p.cardTitle}}>{{p.colorway}}
+                    <DotLabel @label='owned' @hue='green' /></SnRow>
+                {{/each}}
+                {{#each this.missing as |p|}}
+                  <SnRow @label={{p.cardTitle}}>{{p.colorway}}
+                    <DotLabel @label='missing' @hue='amber' /></SnRow>
+                {{/each}}
+                {{#unless this.products.length}}
+                  <SnRow @label='Products'>—</SnRow>
+                {{/unless}}
+              </SnKv>
+            </SnSection>
+          </:main>
+          <:side>
+            <SnSection @title='Linked' @flush={{true}}>
+              <LinkedRows @model={{@model}} @fields={{@fields}} />
+            </SnSection>
+            <SnSection @title='Details' @flush={{true}}>
+              <SnKv>
+                <DetailRows @model={{@model}} />
+                <SnRow @label='Owned'>{{if
+                    this.isLoading
+                    '…'
+                    this.result.ownedCount
+                  }}</SnRow>
+                <SnRow @label='Still needed'>{{if
+                    this.isLoading
+                    '…'
+                    this.result.missingProductIds.length
+                  }}</SnRow>
+              </SnKv>
+            </SnSection>
+          </:side>
+        </SnSheet>
+      </IsoFrame>
     </template>
   };
 
@@ -353,16 +360,28 @@ export class CompletionSet extends CardDef {
 
   static fitted = class Fitted extends Component<typeof CompletionSet> {
     <template>
-      <FitTile>
-        <:avatar><SnMark
+      <RichFittedCard>
+        <:media><Media
             @src={{@model.coverImage.resolvedUrl}}
-            @size='lg'
-          /></:avatar>
+            @alt=''
+          ><TargetArrowIcon width='40%' height='40%' /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><Visibility @model={{@model}} /></:status>
         <:fact>{{productCount @model}} products</:fact>
-      </FitTile>
+        <:metric>{{#if @model.targetCount}}<Metric
+              @value='{{@model.targetCount}}'
+              @label='Products'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.products.length}}<Detail
+              @label='Products'
+            ><@fields.products
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

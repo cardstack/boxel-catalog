@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   CardDef,
   Component,
@@ -34,8 +35,6 @@ import { stateColorsOf } from './hr-ui';
 import { mediumDate } from '../procurement/vendor';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -43,7 +42,7 @@ import {
   SheetLine,
   StatStrip,
   type StripItem,
-} from './compact-sheet';
+} from '../shared/compact-sheet';
 import { DotLabel } from './dot-enum-field';
 
 export const PTO_TYPES = ['vacation', 'sick', 'personal', 'parental', 'unpaid'];
@@ -543,6 +542,10 @@ export class PtoRequest extends CardDef {
         { label: 'Status', value: v.statusLabel },
       ];
     }
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let v = this.v;
       return [
@@ -552,34 +555,38 @@ export class PtoRequest extends CardDef {
       ];
     }
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><PtoMark /></:mark>
+      <RichFittedCard>
+        <:avatar><PtoMark /></:avatar>
+        <:title>{{@model.title}}</:title>
         <:status><DotLabel
             @label={{this.v.statusLabel}}
             @hue={{toneHue this.v.statusTone}}
           /></:status>
-        <:default>
-          <FitRow @label='Dates'><span class='mono'>{{orDash
+        <:subtitle><span class='meta'>{{this.v.fact}}</span></:subtitle>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
+        <:details>
+          <Detail @label='Dates'><span class='mono'>{{orDash
                 this.v.range
-              }}</span></FitRow>
-          <FitRow @label='Type'>{{orDash this.v.type}}</FitRow>
-          {{#if this.v.fact}}<FitRow @left={{true}}><span
-                class='meta'
-              >{{this.v.fact}}</span></FitRow>{{/if}}
+              }}</span></Detail>
+          <Detail @label='Type'>{{orDash this.v.type}}</Detail>
+          {{#if this.v.fact}}{{/if}}
           {{#if @model.employee}}
-            <FitRow @label='Employee' @left={{true}}><@fields.employee
+            <Detail @label='Employee'><@fields.employee
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <StatStrip @compact={{true}} @items={{this.strip}} />
-          <FitRow @label='Requested'><span class='mono'>{{orDash
+
+          <Detail @label='Requested'><span class='mono'>{{orDash
                 this.v.requested
-              }}</span></FitRow>
-          <FitRow @label='Approval'>{{this.v.approvalLong}}</FitRow>
-          <FitRow @label='Reason'>{{orDash this.v.reasonShort}}</FitRow>
-        </:default>
-      </FitCard>
+              }}</span></Detail>
+          <Detail @label='Approval'>{{this.v.approvalLong}}</Detail>
+          <Detail @label='Reason'>{{orDash this.v.reasonShort}}</Detail>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

@@ -1,6 +1,13 @@
 {
   "data": {
     "type": "card",
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "attributes": {
       "name": "Marcus Idowu",
       "email": "marcus@solevault.example",

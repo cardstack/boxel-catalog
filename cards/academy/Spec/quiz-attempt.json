@@ -22,6 +22,11 @@
         "links": {
           "self": "../QuizAttempt/priya-metrics-1"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

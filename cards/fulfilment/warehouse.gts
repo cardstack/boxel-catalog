@@ -23,9 +23,22 @@ import WarehouseIcon from '@cardstack/boxel-icons/building-warehouse';
 // binding is only read inside the constructor, not at module evaluation.
 import { InventoryStock } from './inventory-stock';
 import { CompoundAtom } from './fulfilment-ui';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { type Hue } from '@cardstack/catalog/components/state-pill';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { Button } from '@cardstack/pretui/components/button';
+import {
+  DotLabel,
+  IsoHead,
+  IsoMark,
+  IsoPage,
+  Kv,
+  Panel,
+  SheetEmpty,
+  SheetLine,
+  StatStrip,
+  type StripItem,
+} from '../shared/compact-sheet';
 
 // A warehouse is not always a building you own. A 3PL holds your stock and
 // ships it for you; a dropship "location" holds nothing at all and exists so an
@@ -106,359 +119,115 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
     return (this.stockQuery?.instances ?? []).filter(Boolean);
   }
 
+  get strip(): StripItem[] {
+    let m = this.args.model;
+    return [
+      {
+        label: 'Utilisation',
+        value: pct(m.utilizationPercent),
+        hint: binsLine(m),
+        tone: statTone(bandTone(m)),
+      },
+      {
+        label: 'Zones',
+        value: String(count(m.zones)),
+        hint: dash(join(m.zones)),
+      },
+      {
+        label: 'Free bins',
+        value: freeBins(m),
+        hint: m.capacityBand ? lower(m.capacityBand.label) : '—',
+        tone: statTone(bandTone(m)),
+      },
+    ];
+  }
+
+  get capacityItems() {
+    return [{ key: 'Bins used', value: binsUsed(this.args.model) }];
+  }
+
+  get contactItems() {
+    let m = this.args.model;
+    return [
+      { key: 'Contact', value: dash(m.contactPerson) },
+      { key: 'Email', value: dash(m.contactEmail) },
+      { key: 'Phone', value: dash(m.contactPhone) },
+      { key: 'Hours', value: dash(m.operatingHours) },
+    ];
+  }
+
+  get addressItems() {
+    let m = this.args.model;
+    return [
+      { key: 'Street', value: street(m) },
+      { key: 'City', value: cityLine(m) },
+      { key: 'Country', value: dash(m.address?.country?.name) },
+      { key: 'Coordinates', value: coords(m) },
+    ];
+  }
+
   <template>
-    <article class='wh'>
-      <header class='ihead'>
-        <div class='who'>
-          <span class='mark' aria-hidden='true'>WH</span>
-          <div class='id'>
-            <h1 class='name'>{{@model.cardTitle}}</h1>
-            <p class='meta'>{{metaLine @model}}</p>
-          </div>
-        </div>
-        <div class='bar'>
-          {{#if @model.capacityBand}}
-            <span class='st' data-tone={{bandTone @model}}><span
-                class='dot'
-              ></span>{{lower @model.capacityBand.label}}</span>
-          {{/if}}
-          <span class='st' data-tone={{if @model.isActive 'ok'}}><span
-              class='dot'
-            ></span>{{if @model.isActive 'active' 'inactive'}}</span>
-        </div>
-      </header>
-
-      <div class='stats'>
-        <div class='stat'>
-          <span class='st cap' data-tone={{bandTone @model}}><span
-              class='dot'
-            ></span>Utilisation</span>
-          <span class='num'>{{pct @model.utilizationPercent}}</span>
-          <span class='meta'>{{binsLine @model}}</span>
-        </div>
-        <div class='stat'>
-          <span class='st cap'><span class='dot'></span>Zones</span>
-          <span class='num'>{{count @model.zones}}</span>
-          <span class='meta'>{{dash (join @model.zones)}}</span>
-        </div>
-        <div class='stat'>
-          <span class='st cap' data-tone={{bandTone @model}}><span
-              class='dot'
-            ></span>Free bins</span>
-          <span class='num'>{{freeBins @model}}</span>
-          <span class='meta'>{{if
-              @model.capacityBand
-              (lower @model.capacityBand.label)
-              '—'
-            }}</span>
-        </div>
-      </div>
-
-      <section class='blk'>
-        <h2>Capacity</h2>
-        <dl class='kv'>
-          <dt class='cap'>Bins used</dt>
-          <dd class='mono'>{{binsUsed @model}}</dd>
-        </dl>
-        {{#if @model.totalBins}}
-          <div class='rail'>
-            <ProgressBar
-              @value={{if @model.occupiedBins @model.occupiedBins 0}}
-              @max={{@model.totalBins}}
-              aria-hidden='true'
-            />
-          </div>
-        {{/if}}
-      </section>
-
-      <section class='blk'>
-        <h2>Contact</h2>
-        <dl class='kv'>
-          <dt class='cap'>Contact</dt>
-          <dd>{{dash @model.contactPerson}}</dd>
-          <dt class='cap'>Email</dt>
-          <dd>{{dash @model.contactEmail}}</dd>
-          <dt class='cap'>Phone</dt>
-          <dd>{{dash @model.contactPhone}}</dd>
-          <dt class='cap'>Hours</dt>
-          <dd>{{dash @model.operatingHours}}</dd>
-        </dl>
-      </section>
-
-      <section class='blk'>
-        <h2>Address</h2>
-        <dl class='kv'>
-          <dt class='cap'>Street</dt>
-          <dd>{{street @model}}</dd>
-          <dt class='cap'>City</dt>
-          <dd>{{cityLine @model}}</dd>
-          <dt class='cap'>Country</dt>
-          <dd>{{dash @model.address.country.name}}</dd>
-          <dt class='cap'>Coordinates</dt>
-          <dd class='mono'>{{coords @model}}</dd>
-        </dl>
-      </section>
-
-      <section class='blk'>
-        <h2>Linked</h2>
-        <dl class='kv'>
-          <dt class='cap'>Stock</dt>
-          <dd class='links'>
-            {{#if this.queryError}}
-              <span class='meta'>Could not read stock:
-                {{this.queryError}}</span>
-            {{else if this.isQueryLoading}}
-              <span class='meta'>Loading…</span>
-            {{else}}
-              {{#each this.rows as |r|}}
-                <button
-                  type='button'
-                  class='link'
-                  {{on 'click' (fn this.open r)}}
-                >
-                  <span class='strong mono'>{{r.cardTitle}}</span>
-                  <span class='st' data-tone={{stockTone r.stockState}}><span
-                      class='dot'
-                    ></span>{{r.stockState}}</span>
-                </button>
-              {{else}}
-                —
-              {{/each}}
+    <IsoPage>
+      <:head>
+        <IsoHead @title={{@model.cardTitle}} @meta={{metaLine @model}}>
+          <:mark><IsoMark>WH</IsoMark></:mark>
+          <:aside>
+            {{#if @model.capacityBand}}
+              <DotLabel
+                @label={{lower @model.capacityBand.label}}
+                @color={{toneColor (bandTone @model)}}
+              />
             {{/if}}
-          </dd>
-        </dl>
-      </section>
-    </article>
-
-    <style scoped>
-      .wh {
-        container-type: inline-size;
-        font-family: var(--font-sans);
-        font-size: var(--boxel-font-size-xs);
-        line-height: 1.4;
-        color: var(--card-foreground);
-        background-color: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        overflow: hidden;
-      }
-      .rail {
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-top: 1px solid var(--border);
-      }
-      .links {
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-5xs) var(--boxel-sp-sm);
-        padding-block: var(--boxel-sp-5xs);
-      }
-      .link {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--boxel-sp-5xs);
-        padding: 0;
-        border: 0;
-        background: none;
-        color: inherit;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-      }
-      .link:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
-      }
-      .ihead {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-      }
-      .who {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        min-width: 0;
-      }
-      .mark {
-        flex: none;
-        display: inline-grid;
-        place-items: center;
-        width: 1.375rem;
-        height: 1.375rem;
-        border-radius: calc(var(--radius) * 0.6);
-        background-color: var(--muted);
-        font-family: var(--font-mono);
-        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
-        font-weight: 700;
-        color: var(--foreground);
-      }
-      .id {
-        min-width: 0;
-      }
-      .name {
-        font-family: var(--font-sans);
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-        letter-spacing: normal;
-        text-transform: none;
-      }
-      .meta {
-        margin: 0;
-        font-size: var(--boxel-font-size-2xs);
-        color: var(--muted-foreground);
-      }
-      .bar {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
-      }
-      .st {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--boxel-sp-5xs);
-        font-weight: 600;
-        --tone: var(--muted-foreground);
-      }
-      .st[data-tone='bad'] {
-        --tone: var(--destructive);
-      }
-      .st[data-tone='warn'] {
-        --tone: var(--warning);
-      }
-      .st[data-tone='ok'] {
-        --tone: var(--success);
-      }
-      .dot {
-        flex: none;
-        width: 0.4375rem;
-        height: 0.4375rem;
-        border-radius: 50%;
-        background-color: var(--tone);
-      }
-      .cap {
-        font-family: var(--font-mono);
-        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
-        font-weight: 600;
-        letter-spacing: 0.13em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .stats {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        border-top: 1px solid var(--border);
-      }
-      .stat {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-6xs);
-        min-width: 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-      }
-      .stat + .stat {
-        border-left: 1px solid var(--border);
-      }
-      .stat .meta {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .num {
-        font-size: var(--boxel-font-size-lg);
-        font-weight: 700;
-        line-height: 1.1;
-        font-variant-numeric: tabular-nums;
-      }
-      @container (max-width: 30rem) {
-        .stats {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .stat + .stat {
-          border-left: 0;
-          border-top: 1px solid var(--border);
-        }
-      }
-      .blk h2 {
-        margin: 0;
-        padding: var(--boxel-sp-sm) var(--boxel-sp-sm) var(--boxel-sp-4xs);
-        font-family: var(--font-sans);
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        letter-spacing: normal;
-        text-transform: none;
-      }
-      .row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--boxel-sp-sm);
-        width: 100%;
-        min-height: 1.75rem;
-        margin: 0;
-        padding: 0 var(--boxel-sp-sm);
-        border: 0;
-        border-top: 1px solid var(--border);
-        background: none;
-        color: inherit;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        text-align: start;
-      }
-      button.row {
-        cursor: pointer;
-      }
-      @media (hover: hover) {
-        button.row:hover {
-          background-color: var(--muted);
-        }
-      }
-      button.row:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: -2px;
-      }
-      .rows {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      .strong {
-        flex: none;
-        font-weight: 600;
-      }
-      .kv {
-        display: grid;
-        grid-template-columns: minmax(7rem, 9.5rem) minmax(0, 1fr);
-        margin: 0;
-      }
-      .kv dt,
-      .kv dd {
-        display: flex;
-        align-items: center;
-        min-height: 1.75rem;
-        margin: 0;
-        border-top: 1px solid var(--border);
-      }
-      .kv dt {
-        padding-left: var(--boxel-sp-sm);
-      }
-      .kv dd {
-        padding: 0 var(--boxel-sp-sm);
-        min-width: 0;
-        overflow-wrap: break-word;
-        min-width: 0;
-      }
-      .mono {
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
-      }
-    </style>
+            <DotLabel
+              @label={{if @model.isActive 'active' 'inactive'}}
+              @color={{if @model.isActive 'var(--success)'}}
+            />
+          </:aside>
+          <:stats><StatStrip @items={{this.strip}} /></:stats>
+        </IsoHead>
+      </:head>
+      <:main>
+        <Panel @title='Capacity'>
+          <Kv @items={{this.capacityItems}} />
+          {{#if @model.totalBins}}
+            <SheetLine>
+              <ProgressBar
+                @value={{if @model.occupiedBins @model.occupiedBins 0}}
+                @max={{@model.totalBins}}
+                aria-hidden='true'
+              />
+            </SheetLine>
+          {{/if}}
+        </Panel>
+        <Panel @title='Stock'>
+          {{#if this.queryError}}
+            <SheetEmpty @title='Could not read stock: {{this.queryError}}' />
+          {{else if this.isQueryLoading}}
+            <SheetEmpty @title='Loading…' />
+          {{else}}
+            {{#each this.rows as |r|}}
+              <SheetLine>
+                <Button
+                  @appearance='link'
+                  @size='s'
+                  {{on 'click' (fn this.open r)}}
+                >{{r.cardTitle}}</Button>
+                <DotLabel
+                  @label={{r.stockState}}
+                  @color={{toneColor (stockTone r.stockState)}}
+                />
+              </SheetLine>
+            {{else}}
+              <SheetEmpty @title='No stock here' />
+            {{/each}}
+          {{/if}}
+        </Panel>
+      </:main>
+      <:aside>
+        <Panel @title='Contact'><Kv @items={{this.contactItems}} /></Panel>
+        <Panel @title='Address'><Kv @items={{this.addressItems}} /></Panel>
+      </:aside>
+    </IsoPage>
   </template>
 }
 
@@ -723,7 +492,7 @@ export class Warehouse extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Warehouse> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>WH</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -736,7 +505,29 @@ export class Warehouse extends CardDef {
           bins ·
           {{pct @model.utilizationPercent}}
           full</:fact>
-      </FitTile>
+        <:metric>{{#if @model.totalBins}}<Metric
+              @value={{freeBins @model}}
+              @label='Free bins'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.zones.length}}<Detail
+              @label='Zones'
+              @value={{join @model.zones}}
+            />{{/if}}
+          {{#if @model.contactPerson}}<Detail
+              @label='Contact'
+              @value={{@model.contactPerson}}
+            />{{/if}}
+          {{#if @model.contactPhone}}<Detail
+              @label='Phone'
+              @value={{@model.contactPhone}}
+            />{{/if}}
+          {{#if @model.operatingHours}}<Detail
+              @label='Hours'
+              @value={{@model.operatingHours}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;
@@ -830,6 +621,26 @@ function stockTone(state: string | undefined) {
       ? 'warn'
       : state === 'ok'
         ? 'ok'
+        : undefined;
+}
+
+function statTone(tone: string | undefined) {
+  return tone === 'bad'
+    ? 'danger'
+    : tone === 'warn'
+      ? 'warning'
+      : tone === 'ok'
+        ? 'success'
+        : undefined;
+}
+
+function toneColor(tone: string | undefined) {
+  return tone === 'bad'
+    ? 'var(--destructive)'
+    : tone === 'warn'
+      ? 'var(--warning)'
+      : tone === 'ok'
+        ? 'var(--success)'
         : undefined;
 }
 

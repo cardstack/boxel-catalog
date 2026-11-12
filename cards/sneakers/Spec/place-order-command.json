@@ -23,6 +23,11 @@
         "links": {
           "self": "../Listing/yeezy-350-zebra-11"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

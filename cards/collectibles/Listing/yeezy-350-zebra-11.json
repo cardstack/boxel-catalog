@@ -40,6 +40,11 @@
       }
     },
     "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      },
       "collectionItem": {
         "links": {
           "self": "../CollectionItem/yeezy-350-zebra-11"

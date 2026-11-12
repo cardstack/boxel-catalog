@@ -12,7 +12,13 @@
         "DPO"
       ],
       "isParallel": true,
-      "guidance": "Runs in parallel: none of the three blocks the others, and all must clear before signature."
+      "guidance": "Runs in parallel: none of the three blocks the others, and all must clear before signature.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

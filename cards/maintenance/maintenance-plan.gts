@@ -19,7 +19,7 @@ import BooleanField from '@cardstack/base/boolean';
 import DateField from '@cardstack/base/date';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 import { Asset } from './asset';
 import { AssetCategory } from './asset-category';
@@ -47,6 +47,7 @@ import {
   Stats,
   fmtDay,
 } from './card-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * Plain-data view of a plan's trigger, for `nextOccurrence`. Shared with the
@@ -306,76 +307,80 @@ export class MaintenancePlan extends CardDef {
       ];
     }
     <template>
-      <article class='mp'>
-        <Head @mark='Pl' @title={{@model.name}} @meta={{subjectLine @model}}>
-          <PlanDots @model={{@model}} />
-        </Head>
-        <Stats @items={{this.stats}} />
-        <div class='cols'>
-          <div class='col'>
-            <Section @title='Trigger'>
-              <Kv>
-                <KvRow @label='Calendar' @value={{calendarLine @model}} />
-                <KvRow @label='Meter' @value={{meterLine @model}} />
-                <KvRow @label='Rule' @value={{ruleLine @model}} />
-                <KvRow
-                  @label='Raise ahead'
-                  @value={{days @model.trigger.leadDays}}
-                />
-                <KvRow
-                  @label='Compliance window'
-                  @value={{days @model.complianceWindowDays}}
-                />
-              </Kv>
-            </Section>
-            <Section @title='Checklist'>
-              {{#each @model.checklist.items as |i|}}
-                <Row
-                  @title={{i.label}}
-                  @meta={{itemSub i}}
-                  @tone={{if i.required 'info' 'muted'}}
-                  @state={{if i.required 'required' 'optional'}}
-                />
-              {{else}}
-                <p class='empty'>No steps yet</p>
-              {{/each}}
-            </Section>
-            <Section @title='History'>
-              {{#each this.history as |w|}}
-                <Row
-                  @title={{w.cardTitle}}
-                  @meta={{historySub w}}
-                  @tone={{woTone w.status}}
-                  @state={{woLabel w.status}}
-                />
-              {{else}}
-                <p class='empty'>Not done yet</p>
-              {{/each}}
-            </Section>
-          </div>
-          <aside class='col side'>
-            <Section @title='Linked'>
-              <Kv>
-                {{#if @model.asset}}
-                  <KvRow @label='Asset'><@fields.asset @format='atom' /></KvRow>
+      <IsoFrame>
+        <article class='mp'>
+          <Head @mark='Pl' @title={{@model.name}} @meta={{subjectLine @model}}>
+            <PlanDots @model={{@model}} />
+          </Head>
+          <Stats @items={{this.stats}} />
+          <div class='cols'>
+            <div class='col'>
+              <Section @title='Trigger'>
+                <Kv>
+                  <KvRow @label='Calendar' @value={{calendarLine @model}} />
+                  <KvRow @label='Meter' @value={{meterLine @model}} />
+                  <KvRow @label='Rule' @value={{ruleLine @model}} />
+                  <KvRow
+                    @label='Raise ahead'
+                    @value={{days @model.trigger.leadDays}}
+                  />
+                  <KvRow
+                    @label='Compliance window'
+                    @value={{days @model.complianceWindowDays}}
+                  />
+                </Kv>
+              </Section>
+              <Section @title='Checklist'>
+                {{#each @model.checklist.items as |i|}}
+                  <Row
+                    @title={{i.label}}
+                    @meta={{itemSub i}}
+                    @tone={{if i.required 'info' 'muted'}}
+                    @state={{if i.required 'required' 'optional'}}
+                  />
                 {{else}}
-                  <KvRow @label='Category'>{{#if
-                      @model.category
-                    }}<@fields.category
+                  <p class='empty'>No steps yet</p>
+                {{/each}}
+              </Section>
+              <Section @title='History'>
+                {{#each this.history as |w|}}
+                  <Row
+                    @title={{w.cardTitle}}
+                    @meta={{historySub w}}
+                    @tone={{woTone w.status}}
+                    @state={{woLabel w.status}}
+                  />
+                {{else}}
+                  <p class='empty'>Not done yet</p>
+                {{/each}}
+              </Section>
+            </div>
+            <aside class='col side'>
+              <Section @title='Linked'>
+                <Kv>
+                  {{#if @model.asset}}
+                    <KvRow @label='Asset'><@fields.asset
                         @format='atom'
+                      /></KvRow>
+                  {{else}}
+                    <KvRow @label='Category'>{{#if
+                        @model.category
+                      }}<@fields.category
+                          @format='atom'
+                        />{{else}}—{{/if}}</KvRow>
+                  {{/if}}
+                  <KvRow @label='Next work'>{{#if this.nextWork}}<WoChip
+                        @wo={{this.nextWork}}
                       />{{else}}—{{/if}}</KvRow>
-                {{/if}}
-                <KvRow @label='Next work'>{{#if this.nextWork}}<WoChip
-                      @wo={{this.nextWork}}
-                    />{{else}}—{{/if}}</KvRow>
-              </Kv>
-            </Section>
-            <Section @title='Details'>
-              <PlanDetails @model={{@model}} />
-            </Section>
-          </aside>
-        </div>
-      </article>
+                </Kv>
+              </Section>
+              <Section @title='Details'>
+                <PlanDetails @model={{@model}} />
+              </Section>
+            </aside>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .mp {
           container-type: inline-size;
@@ -467,7 +472,7 @@ export class MaintenancePlan extends CardDef {
 
   static fitted = class Fitted extends Component<typeof MaintenancePlan> {
     <template>
-      <FitTile class='fit'>
+      <RichFittedCard class='fit'>
         <:avatar><Mark @text='Pl' @size='lg' /></:avatar>
         <:title>{{@model.name}}</:title>
         <:subtitle>{{subjectLine @model}}</:subtitle>
@@ -475,10 +480,32 @@ export class MaintenancePlan extends CardDef {
               @model={{@model}}
             /></span></:status>
         <:fact>{{dueFact @model}}</:fact>
+        <:metric><Metric
+            @value={{hours @model.estimatedHours}}
+            @label='Estimate'
+          /></:metric>
+        <:details>
+          {{#if @model.trigger.summary}}<Detail
+              @label='Trigger'
+              @value={{@model.trigger.summary}}
+            />{{/if}}
+          {{#if @model.assignTeamName}}<Detail
+              @label='Team'
+              @value={{@model.assignTeamName}}
+            />{{/if}}
+          {{#if @model.lastCompletedAt}}<Detail
+              @label='Last done'
+              @value={{fmtDay @model.lastCompletedAt true}}
+            />{{/if}}
+          {{#if @model.checklist.items.length}}<Detail
+              @label='Checklist'
+              @value='{{@model.checklist.items.length}} items'
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.asset}}<@fields.asset
               @format='atom'
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .fit {
           color: var(--card-foreground);

@@ -30,6 +30,8 @@ import { LifecycleDatesField } from '@cardstack/catalog/fields/lifecycle-dates/l
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { certificateAtRisk } from './severity-vocabulary';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 /**
  * What the certifier receives: a period, a boundary, the results, and a name
@@ -131,118 +133,124 @@ export class StandardEvaluationReport extends CardDef {
       return `${n} open ${n === 1 ? 'finding puts' : 'findings put'} the certificate at risk.`;
     }
     <template>
-      <article class='report'>
-        <header>
-          <p class='kicker'>Standard evaluation report</p>
-          <h1>{{@model.title}}</h1>
-          <div class='head-meta'>
-            <StatePill
-              @label={{@model.rollup.label}}
-              @hue={{this.hue}}
-              @dot={{true}}
+      <IsoFrame>
+        <article class='report'>
+          <header>
+            <p class='kicker'>Standard evaluation report</p>
+            <h1>{{@model.title}}</h1>
+            <div class='head-meta'>
+              <StatePill
+                @label={{@model.rollup.label}}
+                @hue={{this.hue}}
+                @dot={{true}}
+              />
+              {{#if @model.period}}
+                <span class='meta'><@fields.period /></span>
+              {{/if}}
+              {{#if @model.regime.regime}}
+                <span class='meta'>{{@model.regime.regime}}</span>
+              {{/if}}
+            </div>
+          </header>
+
+          {{! Written once per run, so the digits do not roll. }}
+          <section class='stats' aria-label='Run totals'>
+            <Stat
+              @label='Subjects'
+              @value={{this.totals.subjects}}
+              @roll={{false}}
             />
-            {{#if @model.period}}
-              <span class='meta'><@fields.period /></span>
-            {{/if}}
-            {{#if @model.regime.regime}}
-              <span class='meta'>{{@model.regime.regime}}</span>
-            {{/if}}
-          </div>
-        </header>
-
-        {{! Written once per run, so the digits do not roll. }}
-        <section class='stats' aria-label='Run totals'>
-          <Stat
-            @label='Subjects'
-            @value={{this.totals.subjects}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Results'
-            @value={{this.totals.results}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Findings'
-            @value={{this.totals.findings}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Coverage'
-            @value={{this.totals.coverage}}
-            @style='percent'
-            @roll={{false}}
-          />
-        </section>
-
-        {{#if @model.scope}}
-          <section>
-            <h2>Scope</h2>
-            <p class='scope'>{{@model.scope}}</p>
+            <Stat
+              @label='Results'
+              @value={{this.totals.results}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Findings'
+              @value={{this.totals.findings}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Coverage'
+              @value={{this.totals.coverage}}
+              @style='percent'
+              @roll={{false}}
+            />
           </section>
-        {{/if}}
 
-        {{#if @model.signOffBlocked}}
-          <Alert
-            @tone='danger'
-            @title='Sign-off is held'
-            style={{ALERT_STYLE.danger}}
-          >{{this.blockedMessage}}</Alert>
-        {{/if}}
+          {{#if @model.scope}}
+            <section>
+              <h2>Scope</h2>
+              <p class='scope'>{{@model.scope}}</p>
+            </section>
+          {{/if}}
 
-        <section>
-          <h2 id='{{this.findingsId}}'>Findings</h2>
-          {{#if this.findings.length}}
-            <Table @labelledBy={{this.findingsId}}>
-              <:head>
-                <tr>
-                  <th scope='col'>Finding</th>
-                  <th scope='col'>Rule</th>
-                  <th scope='col'>State</th>
-                </tr>
-              </:head>
-              <:body>
-                {{#each this.findings as |f|}}
+          {{#if @model.signOffBlocked}}
+            <Alert
+              @tone='danger'
+              @title='Sign-off is held'
+              style={{ALERT_STYLE.danger}}
+            >{{this.blockedMessage}}</Alert>
+          {{/if}}
+
+          <section>
+            <h2 id='{{this.findingsId}}'>Findings</h2>
+            {{#if this.findings.length}}
+              <Table @labelledBy={{this.findingsId}}>
+                <:head>
                   <tr>
-                    <th scope='row' class='mono'>{{f.findingId}}</th>
-                    <td class='mono'>{{f.rule.ruleId}}</td>
-                    <td>{{f.state}}</td>
+                    <th scope='col'>Finding</th>
+                    <th scope='col'>Rule</th>
+                    <th scope='col'>State</th>
                   </tr>
-                {{/each}}
-              </:body>
-            </Table>
-          {{else}}
-            <EmptyState
-              @title='No findings raised in this period.'
-              @texture={{false}}
-              @size='s'
-            />
-          {{/if}}
-        </section>
-
-        <section>
-          <h2>Results</h2>
-          {{#if @model.results.length}}
-            <@fields.results />
-          {{else}}
-            <EmptyState
-              @title='No results yet'
-              @message='The audit has not been run.'
-              @texture={{false}}
-              @size='s'
-            />
-          {{/if}}
-        </section>
-
-        {{#if @model.signOff}}
-          <section>
-            <h2>Sign-off</h2>
-            <@fields.signOff />
+                </:head>
+                <:body>
+                  {{#each this.findings as |f|}}
+                    <tr>
+                      <th scope='row' class='mono'>{{f.findingId}}</th>
+                      <td class='mono'>{{f.rule.ruleId}}</td>
+                      <td>{{f.state}}</td>
+                    </tr>
+                  {{/each}}
+                </:body>
+              </Table>
+            {{else}}
+              <EmptyState
+                @title='No findings raised in this period.'
+                @texture={{false}}
+                @size='s'
+              />
+            {{/if}}
           </section>
-        {{/if}}
-      </article>
+
+          <section>
+            <h2>Results</h2>
+            {{#if @model.results.length}}
+              <@fields.results />
+            {{else}}
+              <EmptyState
+                @title='No results yet'
+                @message='The audit has not been run.'
+                @texture={{false}}
+                @size='s'
+              />
+            {{/if}}
+          </section>
+
+          {{#if @model.signOff}}
+            <section>
+              <h2>Sign-off</h2>
+              <@fields.signOff />
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .report {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
@@ -364,66 +372,39 @@ export class StandardEvaluationReport extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get hue() {
+      return EVALUATION_HUE[this.args.model?.rollup?.status ?? ''] ?? 'slate';
+    }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.title}}</span>
-        <span class='fit-sub'>{{@model.rollup.label}}</span>
-        <div class='tier-tile'>
-          <span class='row'>{{@model.resultCount}}
-            results ·
-            {{@model.findingCount}}
-            findings</span>
-          <span class='row'>{{@model.coverage}}% coverage</span>
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><ClipboardCheckIcon
+            class='mark'
+            aria-hidden='true'
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:status>{{#if @model.rollup.label}}<StatePill
+              @label={{@model.rollup.label}}
+              @hue={{this.hue}}
+              @dot={{true}}
+            />{{/if}}</:status>
+        <:subtitle>{{@model.regime.regime}}</:subtitle>
+        <:fact>{{#if @model.signOffBlocked}}Sign-off blocked:
+            {{@model.openCriticalCount}}
+            open critical finding(s){{/if}}</:fact>
+        <:metric><Metric
+            @value='{{@model.coverage}}%'
+            @label='Coverage'
+          /></:metric>
+        <:details>
+          <Detail @label='Results' @value='{{@model.resultCount}}' />
+          <Detail @label='Findings' @value='{{@model.findingCount}}' />
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .fit-sub,
-        .row {
-          font-size: var(--boxel-font-size-xs);
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .tier-tile {
-          display: none;
-          flex-direction: column;
-          gap: var(--boxel-sp-6xs);
-          margin-top: auto;
-          padding-top: var(--boxel-sp-5xs);
-          border-top: 1px solid var(--border);
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 120px) {
-          .tier-tile {
-            display: flex;
-          }
         }
       </style>
     </template>

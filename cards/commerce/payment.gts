@@ -17,10 +17,13 @@ import {
 import { Token } from '@cardstack/pretui/components/token';
 import { Invoice } from './invoice';
 import { formatMoney } from './line-item-totals';
+import { fmtDate } from './compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { Money } from '../crm/money';
 import { hasNumber } from '../crm/utils';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // Payment Method lives in payment-method-field.gts (Payment Terms reuses it as
 // the preferred rail) and is re-exported here; defining it in this module put
@@ -118,170 +121,38 @@ export class Payment extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof Payment> {
+    get money() {
+      let a = this.args.model?.amount;
+      return formatMoney(a?.amount, a?.currency?.code);
+    }
     <template>
-      <div class='fitted'>
-        <div class='fmt badge'>
-          <CreditCardIcon class='doc-icon' />
-          <Money
-            class='figure'
-            @amount={{@model.amount.amount}}
-            @code={{@model.amount.currency.code}}
-          />
-          {{#if @model.method}}
-            <StatePill class='chip' @label={{@model.method}} />
-          {{/if}}
-        </div>
-        <div class='fmt strip'>
-          <CreditCardIcon class='doc-icon' />
-          <div class='info'>
-            <Money
-              class='figure'
-              @amount={{@model.amount.amount}}
-              @code={{@model.amount.currency.code}}
-            />
-            {{#if @model.method}}
-              <StatePill class='chip' @label={{@model.method}} />
-            {{/if}}
-          </div>
-          {{#if @model.paidAt}}
-            <span class='meta'><@fields.paidAt /></span>
-          {{/if}}
-        </div>
-        <div class='fmt tile'>
-          <CreditCardIcon class='doc-icon' />
-          <Money
-            class='figure figure-lg'
-            @amount={{@model.amount.amount}}
-            @code={{@model.amount.currency.code}}
-          />
-          {{#if @model.method}}
-            <StatePill class='chip' @label={{@model.method}} />
-          {{/if}}
-          {{#if @model.paidAt}}
-            <span class='meta'><@fields.paidAt /></span>
-          {{/if}}
-        </div>
-        <div class='fmt card'>
-          <div class='col'>
-            <div class='row'>
-              <CreditCardIcon class='doc-icon' />
-              <Money
-                class='figure figure-lg'
-                @amount={{@model.amount.amount}}
-                @code={{@model.amount.currency.code}}
-              />
-              {{#if @model.method}}
-                <StatePill class='chip' @label={{@model.method}} />
-              {{/if}}
-            </div>
-            {{#if @model.invoice.cardTitle}}
-              <span class='meta'>Applied to {{@model.invoice.cardTitle}}</span>
-            {{/if}}
-            {{#if @model.reference}}
-              <span class='meta'>Ref {{@model.reference}}</span>
-            {{/if}}
-          </div>
-          {{#if @model.paidAt}}
-            <span class='meta'><@fields.paidAt /></span>
-          {{/if}}
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><CreditCardIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#if @model.method}}<StatePill
+              @label={{@model.method}}
+            />{{/if}}</:status>
+        <:subtitle>{{#if @model.invoice.cardTitle}}Applied to
+            {{@model.invoice.cardTitle}}{{/if}}</:subtitle>
+        <:fact>{{#if @model.paidAt}}Paid
+            {{fmtDate @model.paidAt}}{{/if}}</:fact>
+        <:metric><Metric @value={{this.money}} @label='Amount' /></:metric>
+        <:details>
+          {{#if @model.reference}}<Detail
+              @label='Reference'
+              @value={{@model.reference}}
+            />{{/if}}
+          {{#if @model.invoice}}<Detail @label='Invoice'><@fields.invoice
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          color: var(--foreground);
-        }
-        .fmt {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-        .doc-icon {
-          width: 1.25rem;
-          height: 1.25rem;
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .figure {
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-        .figure-lg {
-          font-size: var(--boxel-font-size-md);
-        }
-        .chip {
-          flex-shrink: 0;
-        }
-        .meta {
-          font-size: var(--boxel-font-size-2xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .row {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-        }
-        .col,
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          min-width: 0;
-          flex: 1;
-        }
-        @container fitted-card (max-width: 150px) and (max-height: 169px) {
-          .badge {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: var(--boxel-sp-2xs);
-            padding: var(--boxel-sp-xs);
-            text-align: center;
-          }
-        }
-        @container fitted-card (min-width: 151px) and (max-height: 169px) {
-          .strip {
-            display: flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          }
-          .strip .info {
-            gap: var(--boxel-sp-6xs);
-          }
-          .strip .chip {
-            align-self: flex-start;
-          }
-        }
-        @container fitted-card (max-width: 399px) and (min-height: 170px) {
-          .tile {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            gap: var(--boxel-sp-2xs);
-            padding: var(--boxel-sp-sm);
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--boxel-sp);
-            padding: var(--boxel-sp-lg);
-          }
         }
       </style>
     </template>
@@ -297,39 +168,55 @@ export class Payment extends CardDef {
       return rows;
     }
     <template>
-      <article class='receipt-wrap'>
-        <div class='receipt'>
-          <header class='r-head'>
-            <p class='r-label'>Payment received</p>
-            <h1 class='r-amount'>{{#if (hasNumber @model.amount.amount)}}<Money
-                  @amount={{@model.amount.amount}}
-                  @code={{@model.amount.currency.code}}
-                />{{else}}—{{/if}}</h1>
-            {{#if @model.method}}
-              <StatePill @label={{@model.method}} />
+      <IsoFrame>
+        <article class='receipt-wrap'>
+          <div class='receipt'>
+            <header class='r-head'>
+              <p class='r-label'>Payment received</p>
+              <h1 class='r-amount'>{{#if
+                  (hasNumber @model.amount.amount)
+                }}<Money
+                    @amount={{@model.amount.amount}}
+                    @code={{@model.amount.currency.code}}
+                  />{{else}}—{{/if}}</h1>
+              {{#if @model.method}}
+                <StatePill @label={{@model.method}} />
+              {{/if}}
+            </header>
+            <div class='tear' aria-hidden='true'></div>
+            {{#if this.rows.length}}
+              <KeyValue
+                class='r-rows kv-pad'
+                @items={{this.rows}}
+                @valueAlign='end'
+              >
+                <:value as |row|>
+                  {{#if (eq row.value 'paidAt')}}
+                    <@fields.paidAt />
+                  {{else if (eq row.value 'reference')}}
+                    <Token
+                      @value={{@model.reference}}
+                      style={{ID_TOKEN_STYLE.sm}}
+                    />
+                  {{else}}
+                    <@fields.invoice @format='atom' />
+                  {{/if}}
+                </:value>
+              </KeyValue>
             {{/if}}
-          </header>
-          <div class='tear' aria-hidden='true'></div>
-          {{#if this.rows.length}}
-            <KeyValue class='r-rows' @items={{this.rows}} @valueAlign='end'>
-              <:value as |row|>
-                {{#if (eq row.value 'paidAt')}}
-                  <@fields.paidAt />
-                {{else if (eq row.value 'reference')}}
-                  <Token
-                    @value={{@model.reference}}
-                    style={{ID_TOKEN_STYLE.sm}}
-                  />
-                {{else}}
-                  <@fields.invoice @format='atom' />
-                {{/if}}
-              </:value>
-            </KeyValue>
-          {{/if}}
-        </div>
-      </article>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+
         .receipt-wrap {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp-2xl) var(--boxel-sp-lg);
           display: flex;
           justify-content: center;
@@ -340,7 +227,7 @@ export class Payment extends CardDef {
           background-color: var(--card);
           color: var(--card-foreground);
           border: 1px solid var(--border);
-          border-radius: 0.5rem;
+          border-radius: var(--radius);
           box-shadow: var(--shadow-md);
           overflow: hidden;
         }

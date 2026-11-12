@@ -15,14 +15,18 @@ import Tag from '@cardstack/base/tag';
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 import PackageIcon from '@cardstack/boxel-icons/package';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
-import { moneyText } from './money-format';
+import { formatMoney, moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
   SnKv,
-  SnMark,
   SnRow,
   SnSection,
   SnSheet,
@@ -31,6 +35,7 @@ import {
   instances,
   linkedQuery,
 } from './parts';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // CollectibleProduct — a catalogue entry for a manufactured collectible: the
 // thing itself, not anyone's copy of it.
@@ -123,70 +128,72 @@ export class CollectibleProduct extends CardDef {
     }
 
     <template>
-      <SnSheet @title={{@model.cardTitle}} @src={{photoOf @model}}>
-        <:meta>{{metaLine @model}}</:meta>
-        <:stats>
-          <SnStat
-            @label='Retail'
-            @value={{moneyText @model.retailPrice}}
-            @hint={{day @model.releaseDate}}
-          />
-          <SnStat
-            @label='Sizes'
-            @value={{sizeCount @model}}
-            @hint={{sizeRange @model}}
-          />
-          <SnStat
-            @label='In collection'
-            @value={{countText this.owned}}
-            @hint={{this.ownedHint}}
-          />
-        </:stats>
-        <:main>
-          <SnSection @title='Description'>
-            {{#if @model.productDescription}}<@fields.productDescription
-              />{{else}}—{{/if}}
-          </SnSection>
-          <SnSection @title='Available sizes'>
-            <span class='mono'>{{listText @model.availableVariants}}</span>
-          </SnSection>
-          <SnSection @title='Tags'>{{listText @model.tags}}</SnSection>
-        </:main>
-        <:side>
-          <SnSection @title='Linked' @flush={{true}}>
-            <SnKv>
-              {{#each this.owned as |copy|}}
-                <SnRow @label='Owned as'>
-                  {{#let (getComponent copy) as |Copy|}}
-                    <Copy @format='atom' @displayContainer={{false}} />
-                  {{/let}}
-                  {{#if copy.condition.code}}<DotLabel
-                      @label={{copy.condition.code}}
-                      @hue='green'
-                    />{{/if}}
-                </SnRow>
-              {{/each}}
-              {{#each this.sets as |set|}}
-                <SnRow @label='Set'>
-                  {{#let (getComponent set) as |SetCard|}}
-                    <SetCard @format='atom' @displayContainer={{false}} />
-                  {{/let}}
-                  <DotLabel
-                    @label={{if set.isPublic 'public' 'private'}}
-                    @hue={{if set.isPublic 'blue' 'slate'}}
-                  />
-                </SnRow>
-              {{/each}}
-              {{#unless this.owned.length}}{{#unless this.sets.length}}
-                  <SnRow @label='Owned as'>—</SnRow>
-                {{/unless}}{{/unless}}
-            </SnKv>
-          </SnSection>
-          <SnSection @title='Details' @flush={{true}}>
-            <DetailRows @model={{@model}} />
-          </SnSection>
-        </:side>
-      </SnSheet>
+      <IsoFrame>
+        <SnSheet @title={{@model.cardTitle}} @src={{photoOf @model}}>
+          <:meta>{{metaLine @model}}</:meta>
+          <:stats>
+            <SnStat
+              @label='Retail'
+              @value={{moneyText @model.retailPrice}}
+              @hint={{day @model.releaseDate}}
+            />
+            <SnStat
+              @label='Sizes'
+              @value={{sizeCount @model}}
+              @hint={{sizeRange @model}}
+            />
+            <SnStat
+              @label='In collection'
+              @value={{countText this.owned}}
+              @hint={{this.ownedHint}}
+            />
+          </:stats>
+          <:main>
+            <SnSection @title='Description'>
+              {{#if @model.productDescription}}<@fields.productDescription
+                />{{else}}—{{/if}}
+            </SnSection>
+            <SnSection @title='Available sizes'>
+              <span class='mono'>{{listText @model.availableVariants}}</span>
+            </SnSection>
+            <SnSection @title='Tags'>{{listText @model.tags}}</SnSection>
+          </:main>
+          <:side>
+            <SnSection @title='Linked' @flush={{true}}>
+              <SnKv>
+                {{#each this.owned as |copy|}}
+                  <SnRow @label='Owned as'>
+                    {{#let (getComponent copy) as |Copy|}}
+                      <Copy @format='atom' @displayContainer={{false}} />
+                    {{/let}}
+                    {{#if copy.condition.code}}<DotLabel
+                        @label={{copy.condition.code}}
+                        @hue='green'
+                      />{{/if}}
+                  </SnRow>
+                {{/each}}
+                {{#each this.sets as |set|}}
+                  <SnRow @label='Set'>
+                    {{#let (getComponent set) as |SetCard|}}
+                      <SetCard @format='atom' @displayContainer={{false}} />
+                    {{/let}}
+                    <DotLabel
+                      @label={{if set.isPublic 'public' 'private'}}
+                      @hue={{if set.isPublic 'blue' 'slate'}}
+                    />
+                  </SnRow>
+                {{/each}}
+                {{#unless this.owned.length}}{{#unless this.sets.length}}
+                    <SnRow @label='Owned as'>—</SnRow>
+                  {{/unless}}{{/unless}}
+              </SnKv>
+            </SnSection>
+            <SnSection @title='Details' @flush={{true}}>
+              <DetailRows @model={{@model}} />
+            </SnSection>
+          </:side>
+        </SnSheet>
+      </IsoFrame>
       <style scoped>
         .mono {
           font-family: var(--font-mono);
@@ -215,8 +222,11 @@ export class CollectibleProduct extends CardDef {
 
   static fitted = class Fitted extends Component<typeof CollectibleProduct> {
     <template>
-      <FitTile>
-        <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
+      <RichFittedCard>
+        <:media><Media @src={{photoOf @model}} @alt=''><PackageIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><DotLabel @label={{sizeRange @model}} /></:status>
@@ -224,7 +234,31 @@ export class CollectibleProduct extends CardDef {
           {{moneyText @model.retailPrice}}
           ·
           {{if @model.releaseDate (day @model.releaseDate) '—'}}</:fact>
-      </FitTile>
+        <:metric>{{#if (formatMoney @model.retailPrice)}}<Metric
+              @value={{formatMoney @model.retailPrice}}
+              @label='Retail'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.brand}}<Detail @label='Brand'><@fields.brand
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.silhouette}}<Detail
+              @label='Silhouette'
+            ><@fields.silhouette
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.collabPartner}}<Detail
+              @label='Collab'
+              @value={{@model.collabPartner}}
+            />{{/if}}
+          {{#if @model.availableVariants.length}}<Detail
+              @label='Variants'
+              @value={{sizeCount @model}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

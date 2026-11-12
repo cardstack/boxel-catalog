@@ -41,7 +41,13 @@
       ],
       "cardDescription": "One rubric criterion: name, description, weight and a ladder of scored levels; its maximum points are computed."
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

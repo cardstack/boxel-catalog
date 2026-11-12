@@ -17,12 +17,13 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/pretui/components/button';
 import TicketIcon from '@cardstack/boxel-icons/ticket';
 import { Alert } from '@cardstack/pretui/components/alert';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 import { Contact } from '../crm/contact';
 import { Event } from './event';
 import RsvpStatusField from './rsvp-status-field';
 import { statusField } from '@cardstack/catalog/fields/status/status';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * Money state, separate from attendance intent: a booking can be Going and
@@ -196,153 +197,154 @@ class BookingIsolated extends Component<typeof Booking> {
   };
 
   <template>
-    <article class='rec'>
-      <header class='head'>
-        <span class='mark' aria-hidden='true'>Bk</span>
-        <div class='id'>
-          <h1 class='name'>{{@model.cardTitle}}</h1>
-          {{#if this.subtitle}}<p class='meta'>{{this.subtitle}}</p>{{/if}}
-        </div>
-        <span class='sts'>
-          {{#if @model.paymentStatus}}
-            <span class='dot-text'><span
-                class='dot {{toneOf @model.paymentStatus}}'
-              ></span>{{lower @model.paymentStatus}}</span>
+    <IsoFrame>
+      <article class='rec'>
+        <header class='head'>
+          <span class='mark' aria-hidden='true'>Bk</span>
+          <div class='id'>
+            <h1 class='name'>{{@model.cardTitle}}</h1>
+            {{#if this.subtitle}}<p class='meta'>{{this.subtitle}}</p>{{/if}}
+          </div>
+          <span class='sts'>
+            {{#if @model.paymentStatus}}
+              <span class='dot-text'><span
+                  class='dot {{toneOf @model.paymentStatus}}'
+                ></span>{{lower @model.paymentStatus}}</span>
+            {{/if}}
+            {{#if @model.rsvp}}
+              <span class='dot-text'><span
+                  class='dot {{toneOf @model.rsvp}}'
+                ></span>{{lower @model.rsvp}}</span>
+            {{/if}}
+          </span>
+          {{#if this.canConfirm}}
+            <Button
+              @tone='neutral'
+              @appearance='outlined'
+              @size='s'
+              @busy={{eq this.runningAction 'confirm'}}
+              {{on 'click' this.confirm}}
+            >Confirm</Button>
           {{/if}}
-          {{#if @model.rsvp}}
-            <span class='dot-text'><span
-                class='dot {{toneOf @model.rsvp}}'
-              ></span>{{lower @model.rsvp}}</span>
+          {{#if this.canCheckIn}}
+            <Button
+              @tone='primary'
+              @appearance='accent'
+              @size='s'
+              @busy={{eq this.runningAction 'check-in'}}
+              {{on 'click' this.checkIn}}
+            >Check in</Button>
           {{/if}}
-        </span>
-        {{#if this.canConfirm}}
-          <Button
-            @tone='neutral'
-            @appearance='outlined'
-            @size='s'
-            @busy={{eq this.runningAction 'confirm'}}
-            {{on 'click' this.confirm}}
-          >Confirm</Button>
+        </header>
+        {{#if this.actionProblem}}
+          <Alert class='problem' @tone='danger'>{{this.actionProblem}}</Alert>
         {{/if}}
-        {{#if this.canCheckIn}}
-          <Button
-            @tone='primary'
-            @appearance='accent'
-            @size='s'
-            @busy={{eq this.runningAction 'check-in'}}
-            {{on 'click' this.checkIn}}
-          >Check in</Button>
-        {{/if}}
-      </header>
-      {{#if this.actionProblem}}
-        <Alert class='problem' @tone='danger'>{{this.actionProblem}}</Alert>
-      {{/if}}
-      <dl class='stats' aria-label='Key numbers'>
-        <div class='stat'>
-          <dt>Tickets</dt>
-          <dd class='num'>{{if @model.quantity @model.quantity 1}}</dd>
-          <dd class='sub'>{{if @model.rsvp @model.rsvp 'No RSVP'}}</dd>
+        <dl class='stats' aria-label='Key numbers'>
+          <div class='stat'>
+            <dt>Tickets</dt>
+            <dd class='num'>{{if @model.quantity @model.quantity 1}}</dd>
+            <dd class='sub'>{{if @model.rsvp @model.rsvp 'No RSVP'}}</dd>
+          </div>
+          <div class='stat'>
+            <dt>Total</dt>
+            <dd class='num'>{{if this.price this.price '—'}}</dd>
+            <dd class='sub'>{{if
+                @model.paymentStatus
+                (lower @model.paymentStatus)
+                '—'
+              }}</dd>
+          </div>
+          <div class='stat'>
+            <dt>Check-in</dt>
+            <dd class='num'>{{if this.checkedIn this.checkedIn '—'}}</dd>
+            <dd class='sub'>{{if
+                @model.checkedInAt
+                'arrived'
+                'not yet arrived'
+              }}</dd>
+          </div>
+        </dl>
+        <div class='cols'>
+          <div class='main'>
+            <section class='sec'>
+              <h2>Fixture</h2>
+              <dl class='kv'>
+                <dt>Event</dt><dd>{{if
+                    @model.eventTitle
+                    @model.eventTitle
+                    '—'
+                  }}</dd>
+                <dt>Kick-off</dt><dd>{{if this.kickOff this.kickOff '—'}}</dd>
+                <dt>Venue</dt><dd>{{if
+                    @model.event.venue.name
+                    @model.event.venue.name
+                    '—'
+                  }}</dd>
+              </dl>
+            </section>
+            <section class='sec'>
+              <h2>Payment</h2>
+              <dl class='kv'>
+                <dt>Total price</dt><dd>{{if this.price this.price '—'}}</dd>
+                <dt>Payment status</dt><dd>{{if
+                    @model.paymentStatus
+                    @model.paymentStatus
+                    '—'
+                  }}</dd>
+                <dt>RSVP</dt><dd>{{if @model.rsvp @model.rsvp '—'}}</dd>
+              </dl>
+            </section>
+          </div>
+          <aside class='side'>
+            <section class='sec'>
+              <h2>Linked</h2>
+              <dl class='kv'>
+                <dt>Holder</dt><dd>{{#if @model.holder}}<@fields.holder
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                <dt>Fixture</dt><dd>{{#if @model.event}}<@fields.event
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+              </dl>
+            </section>
+            <section class='sec'>
+              <h2>Details</h2>
+              <dl class='kv'>
+                <dt>Quantity</dt><dd>{{this.tickets}}</dd>
+                <dt>Total</dt><dd>{{if this.price this.price '—'}}</dd>
+                <dt>Payment</dt><dd>{{if
+                    @model.paymentStatus
+                    @model.paymentStatus
+                    '—'
+                  }}</dd>
+                <dt>RSVP</dt><dd>{{if @model.rsvp @model.rsvp '—'}}</dd>
+                <dt>Kick-off</dt><dd>{{if this.kickOff this.kickOff '—'}}</dd>
+                <dt>Checked in</dt><dd>{{if
+                    this.checkedIn
+                    this.checkedIn
+                    'Not yet'
+                  }}</dd>
+                <dt>Holder</dt><dd>{{if
+                    @model.holderName
+                    @model.holderName
+                    '—'
+                  }}</dd>
+                <dt>Fixture</dt><dd>{{if
+                    @model.eventTitle
+                    @model.eventTitle
+                    '—'
+                  }}</dd>
+              </dl>
+            </section>
+          </aside>
         </div>
-        <div class='stat'>
-          <dt>Total</dt>
-          <dd class='num'>{{if this.price this.price '—'}}</dd>
-          <dd class='sub'>{{if
-              @model.paymentStatus
-              (lower @model.paymentStatus)
-              '—'
-            }}</dd>
-        </div>
-        <div class='stat'>
-          <dt>Check-in</dt>
-          <dd class='num'>{{if this.checkedIn this.checkedIn '—'}}</dd>
-          <dd class='sub'>{{if
-              @model.checkedInAt
-              'arrived'
-              'not yet arrived'
-            }}</dd>
-        </div>
-      </dl>
-      <div class='cols'>
-        <div class='main'>
-          <section class='sec'>
-            <h2>Fixture</h2>
-            <dl class='kv'>
-              <dt>Event</dt><dd>{{if
-                  @model.eventTitle
-                  @model.eventTitle
-                  '—'
-                }}</dd>
-              <dt>Kick-off</dt><dd>{{if this.kickOff this.kickOff '—'}}</dd>
-              <dt>Venue</dt><dd>{{if
-                  @model.event.venue.name
-                  @model.event.venue.name
-                  '—'
-                }}</dd>
-            </dl>
-          </section>
-          <section class='sec'>
-            <h2>Payment</h2>
-            <dl class='kv'>
-              <dt>Total price</dt><dd>{{if this.price this.price '—'}}</dd>
-              <dt>Payment status</dt><dd>{{if
-                  @model.paymentStatus
-                  @model.paymentStatus
-                  '—'
-                }}</dd>
-              <dt>RSVP</dt><dd>{{if @model.rsvp @model.rsvp '—'}}</dd>
-            </dl>
-          </section>
-        </div>
-        <aside class='side'>
-          <section class='sec'>
-            <h2>Linked</h2>
-            <dl class='kv'>
-              <dt>Holder</dt><dd>{{#if @model.holder}}<@fields.holder
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</dd>
-              <dt>Fixture</dt><dd>{{#if @model.event}}<@fields.event
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}—{{/if}}</dd>
-            </dl>
-          </section>
-          <section class='sec'>
-            <h2>Details</h2>
-            <dl class='kv'>
-              <dt>Quantity</dt><dd>{{this.tickets}}</dd>
-              <dt>Total</dt><dd>{{if this.price this.price '—'}}</dd>
-              <dt>Payment</dt><dd>{{if
-                  @model.paymentStatus
-                  @model.paymentStatus
-                  '—'
-                }}</dd>
-              <dt>RSVP</dt><dd>{{if @model.rsvp @model.rsvp '—'}}</dd>
-              <dt>Kick-off</dt><dd>{{if this.kickOff this.kickOff '—'}}</dd>
-              <dt>Checked in</dt><dd>{{if
-                  this.checkedIn
-                  this.checkedIn
-                  'Not yet'
-                }}</dd>
-              <dt>Holder</dt><dd>{{if
-                  @model.holderName
-                  @model.holderName
-                  '—'
-                }}</dd>
-              <dt>Fixture</dt><dd>{{if
-                  @model.eventTitle
-                  @model.eventTitle
-                  '—'
-                }}</dd>
-            </dl>
-          </section>
-        </aside>
-      </div>
-    </article>
+      </article>
+    </IsoFrame>
     <style scoped>
       .rec {
         container-type: inline-size;
-        margin: var(--boxel-sp-sm);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         background-color: var(--card);
@@ -365,7 +367,7 @@ class BookingIsolated extends Component<typeof Booking> {
         flex-shrink: 0;
         width: 2rem;
         height: 2rem;
-        border-radius: 0.375rem;
+        border-radius: var(--radius);
         background-color: var(--muted);
         font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
@@ -758,8 +760,17 @@ export class Booking extends CardDef {
       let tickets = ticketsOf(this.args.model.quantity);
       return price ? `${tickets} · ${price}` : tickets;
     }
+    get price() {
+      return priceOf(this.args.model as Booking);
+    }
+    get kickOff() {
+      return whenOf(this.args.model.event?.startsAt);
+    }
+    get checkedIn() {
+      return whenOf(this.args.model.checkedInAt);
+    }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Bk</span></:avatar>
         <:title><span class='ref'>{{@model.cardTitle}}</span></:title>
         <:subtitle>{{if
@@ -780,11 +791,22 @@ export class Booking extends CardDef {
           {{/if}}
         </:status>
         <:fact>{{this.fact}}</:fact>
+        <:metric><Metric @value={{this.price}} @label='Total' /></:metric>
+        <:details>
+          {{#if this.kickOff}}<Detail
+              @label='Kick-off'
+              @value={{this.kickOff}}
+            />{{/if}}
+          {{#if this.checkedIn}}<Detail
+              @label='Checked in'
+              @value={{this.checkedIn}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.event}}<@fields.event
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

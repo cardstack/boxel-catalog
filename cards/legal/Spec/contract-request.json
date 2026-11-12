@@ -38,6 +38,11 @@
         "links": {
           "self": "../ContractRequest/reseller-apac"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

@@ -15,7 +15,6 @@ import { MarketplaceMember } from './marketplace-member';
 import { ConditionGrade } from '@cardstack/catalog/fields/condition-grade/condition-grade';
 import { Acquisition } from './acquisition';
 import ArchiveIcon from '@cardstack/boxel-icons/archive';
-import BadgeCheckIcon from '@cardstack/boxel-icons/badge-check';
 import CalendarIcon from '@cardstack/boxel-icons/calendar';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import CoinsIcon from '@cardstack/boxel-icons/coins';
@@ -25,7 +24,13 @@ import TrendingUpIcon from '@cardstack/boxel-icons/trending-up';
 import TrendingDownIcon from '@cardstack/boxel-icons/trending-down';
 import ImageOffIcon from '@cardstack/boxel-icons/image-off';
 import { tracked } from '@glimmer/tracking';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import {
+  RichFittedCard,
+  Detail,
+  Media,
+  Metric,
+} from '../shared/rich-fitted-card';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { formatMoney, formatMoneyDelta, moneyText } from './money-format';
 import { Accordion } from '@cardstack/pretui/components/accordion';
@@ -34,6 +39,7 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // CollectionItem — one physical thing someone owns, catalogued.
 //
@@ -649,259 +655,266 @@ export class CollectionItem extends CardDef {
     }
 
     <template>
-      <article class='card'>
-        <header class='hero'>
-          <div class='hero-photo'>
-            {{#if @model.photos.primaryUrl}}
-              <img src={{@model.photos.primaryUrl}} alt={{@model.itemTitle}} />
-            {{else}}
-              {{! Empty state, not a decorative placeholder box — it says the
-                  photo is missing rather than filling the slot with grey. }}
-              <div class='photo-empty'>
-                <ImageOffIcon width='28' height='28' aria-hidden='true' />
-                <span>No photo yet</span>
-              </div>
-            {{/if}}
-          </div>
-
-          <div class='hero-body'>
-            <p class='eyebrow'>
-              <ArchiveIcon
-                width='max(12px, 0.9em)'
-                height='max(12px, 0.9em)'
-                aria-hidden='true'
-              />
-              Collection item
-              {{#if @model.variantLabel}}
-                <span class='eyebrow-sep'>·</span>{{@model.variantLabel}}
-              {{/if}}
-            </p>
-
-            <h1 class='hero-title'>{{if
-                @model.itemTitle
-                @model.itemTitle
-                'Untitled item'
-              }}</h1>
-
-            <div class='answer'>
-              {{#if this.worthNow}}
-                <p class='worth'>{{moneyText @model.lastKnownValue}}</p>
-                {{#if this.delta}}
-                  <p class='delta delta--{{this.delta.direction}}'>
-                    {{#if (eq this.delta.direction 'up')}}
-                      <TrendingUpIcon
-                        width='max(14px, 1em)'
-                        height='max(14px, 1em)'
-                        aria-hidden='true'
-                      />
-                    {{else if (eq this.delta.direction 'down')}}
-                      <TrendingDownIcon
-                        width='max(14px, 1em)'
-                        height='max(14px, 1em)'
-                        aria-hidden='true'
-                      />
-                    {{/if}}
-                    {{this.delta.text}}
-                    {{#if this.delta.percent}}
-                      <span class='delta-pct'>({{this.delta.percent}})</span>
-                    {{/if}}
-                    <span class='delta-vs'>vs paid</span>
-                  </p>
-                {{/if}}
+      <IsoFrame>
+        <article class='card'>
+          <header class='hero'>
+            <div class='hero-photo'>
+              {{#if @model.photos.primaryUrl}}
+                <img
+                  src={{@model.photos.primaryUrl}}
+                  alt={{@model.itemTitle}}
+                />
               {{else}}
-                <p class='worth worth--unknown'>Not valued</p>
+                {{! Empty state, not a decorative placeholder box — it says the
+                  photo is missing rather than filling the slot with grey. }}
+                <div class='photo-empty'>
+                  <ImageOffIcon width='28' height='28' aria-hidden='true' />
+                  <span>No photo yet</span>
+                </div>
               {{/if}}
+            </div>
 
-              <div class='badges'>
-                {{#if @model.verified}}
-                  <StatePill
-                    @label='Authenticated'
-                    @hue='green'
-                    @dot={{true}}
-                  />
+            <div class='hero-body'>
+              <p class='eyebrow'>
+                <ArchiveIcon
+                  width='max(12px, 0.9em)'
+                  height='max(12px, 0.9em)'
+                  aria-hidden='true'
+                />
+                Collection item
+                {{#if @model.variantLabel}}
+                  <span class='eyebrow-sep'>·</span>{{@model.variantLabel}}
+                {{/if}}
+              </p>
+
+              <h1 class='hero-title'>{{if
+                  @model.itemTitle
+                  @model.itemTitle
+                  'Untitled item'
+                }}</h1>
+
+              <div class='answer'>
+                {{#if this.worthNow}}
+                  <p class='worth'>{{moneyText @model.lastKnownValue}}</p>
+                  {{#if this.delta}}
+                    <p class='delta delta--{{this.delta.direction}}'>
+                      {{#if (eq this.delta.direction 'up')}}
+                        <TrendingUpIcon
+                          width='max(14px, 1em)'
+                          height='max(14px, 1em)'
+                          aria-hidden='true'
+                        />
+                      {{else if (eq this.delta.direction 'down')}}
+                        <TrendingDownIcon
+                          width='max(14px, 1em)'
+                          height='max(14px, 1em)'
+                          aria-hidden='true'
+                        />
+                      {{/if}}
+                      {{this.delta.text}}
+                      {{#if this.delta.percent}}
+                        <span class='delta-pct'>({{this.delta.percent}})</span>
+                      {{/if}}
+                      <span class='delta-vs'>vs paid</span>
+                    </p>
+                  {{/if}}
                 {{else}}
-                  <StatePill @label='Not authenticated' @hue='slate' />
+                  <p class='worth worth--unknown'>Not valued</p>
                 {{/if}}
-                {{#if @model.forSale}}
-                  <StatePill @label='Listed' @hue='amber' @dot={{true}} />
-                {{/if}}
+
+                <div class='badges'>
+                  {{#if @model.verified}}
+                    <StatePill
+                      @label='Authenticated'
+                      @hue='green'
+                      @dot={{true}}
+                    />
+                  {{else}}
+                    <StatePill @label='Not authenticated' @hue='slate' />
+                  {{/if}}
+                  {{#if @model.forSale}}
+                    <StatePill @label='Listed' @hue='amber' @dot={{true}} />
+                  {{/if}}
+                </div>
               </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {{! AT A GLANCE — shape: ul. Three figures, and the only mark on the card
+          {{! AT A GLANCE — shape: ul. Three figures, and the only mark on the card
             is a proportion rail, because valueRetention IS a proportion of a
             whole. The paid→worth relationship is a single delta, so it is a
             figure with an arrow, not a chart. }}
-        <section class='sec glance'>
-          <h2><CoinsIcon class='sec-icon' aria-hidden='true' />At a glance</h2>
-          <ul class='stats'>
-            <li class='stat'>
-              {{! Live values, so the digits do not roll. }}
-              <Stat
-                @label='Paid'
-                @value={{this.paidAmount}}
-                @style='currency'
-                @currency={{@model.acquisition.price.currency.code}}
-                @roll={{false}}
-              />
-            </li>
-            <li class='stat'>
-              {{! Live values, so the digits do not roll. }}
-              <Stat
-                @label='Worth now'
-                @value={{this.worthAmount}}
-                @style='currency'
-                @currency={{@model.lastKnownValue.currency.code}}
-                @roll={{false}}
-              />
-            </li>
-            <li class='stat stat--rail'>
-              <span class='stat-k'>Condition</span>
-              <span class='stat-v'>
-                {{#if
-                  @model.condition.code
-                }}{{@model.condition.code}}{{else}}—{{/if}}
+          <section class='sec glance'>
+            <h2><CoinsIcon class='sec-icon' aria-hidden='true' />At a glance</h2>
+            <ul class='stats'>
+              <li class='stat'>
+                {{! Live values, so the digits do not roll. }}
+                <Stat
+                  @label='Paid'
+                  @value={{this.paidAmount}}
+                  @style='currency'
+                  @currency={{@model.acquisition.price.currency.code}}
+                  @roll={{false}}
+                />
+              </li>
+              <li class='stat'>
+                {{! Live values, so the digits do not roll. }}
+                <Stat
+                  @label='Worth now'
+                  @value={{this.worthAmount}}
+                  @style='currency'
+                  @currency={{@model.lastKnownValue.currency.code}}
+                  @roll={{false}}
+                />
+              </li>
+              <li class='stat stat--rail'>
+                <span class='stat-k'>Condition</span>
+                <span class='stat-v'>
+                  {{#if
+                    @model.condition.code
+                  }}{{@model.condition.code}}{{else}}—{{/if}}
+                  {{#if this.retention}}
+                    <span class='stat-sub'>{{this.retention}}% of market</span>
+                  {{/if}}
+                </span>
+                {{! A ProgressBar, so a screen reader announces the value. }}
                 {{#if this.retention}}
-                  <span class='stat-sub'>{{this.retention}}% of market</span>
-                {{/if}}
-              </span>
-              {{! A ProgressBar, so a screen reader announces the value. }}
-              {{#if this.retention}}
-                {{! aria-label attribute, not @label — @label renders as
+                  {{! aria-label attribute, not @label — @label renders as
                     visible text inside this 5px rail and shears. }}
-                <ProgressBar
-                  class='rail'
-                  @value={{this.retention}}
-                  @max={{100}}
-                  @hue='var(--primary-ink)'
-                  aria-label='Market value retained'
+                  <ProgressBar
+                    class='rail'
+                    @value={{this.retention}}
+                    @max={{100}}
+                    @hue='var(--primary-ink)'
+                    aria-label='Market value retained'
+                  />
+                {{/if}}
+              </li>
+            </ul>
+          </section>
+
+          <div class='cols'>
+            {{! SIGNATURE ELEMENT — shape: ol. The record's own lifecycle, drawn
+              from the event-fact dates. }}
+            <section class='sec'>
+              <h2><CalendarIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Provenance</h2>
+              {{#if this.hasProvenance}}
+                <ol class='prov'>
+                  {{#if @model.acquisition.acquiredOnDay}}
+                    <li class='prov-step prov-step--done'>
+                      <span class='prov-label'>Acquired</span>
+                      <span
+                        class='prov-when'
+                      >{{@model.acquisition.acquiredOnDay}}</span>
+                      {{#if @model.acquisition.source}}
+                        <span
+                          class='prov-note'
+                        >{{@model.acquisition.source}}</span>
+                      {{/if}}
+                    </li>
+                  {{/if}}
+                  {{#if @model.verified}}
+                    <li class='prov-step prov-step--done'>
+                      <span class='prov-label'>Authenticated</span>
+                      <span class='prov-when'><@fields.verifiedOn
+                          @format='atom'
+                        /></span>
+                      {{#if @model.verifiedBy}}
+                        <span class='prov-note'>{{@model.verifiedBy}}</span>
+                      {{/if}}
+                    </li>
+                  {{else}}
+                    <li class='prov-step prov-step--todo'>
+                      <span class='prov-label'>Authentication</span>
+                      <span class='prov-when'>Not submitted</span>
+                    </li>
+                  {{/if}}
+                  {{#if @model.forSale}}
+                    <li class='prov-step prov-step--done'>
+                      <span class='prov-label'>Listed for sale</span>
+                      <span class='prov-when'><@fields.listedAt
+                          @format='atom'
+                        /></span>
+                    </li>
+                  {{/if}}
+                </ol>
+              {{else}}
+                <EmptyState
+                  @title='No dates recorded yet — an acquisition date starts the trail.'
+                  @texture={{false}}
+                  style={{COMPACT_EMPTY_STYLE}}
                 />
               {{/if}}
-            </li>
-          </ul>
-        </section>
+            </section>
 
-        <div class='cols'>
-          {{! SIGNATURE ELEMENT — shape: ol. The record's own lifecycle, drawn
-              from the event-fact dates. }}
+            {{! shape: dl }}
+            <section class='sec'>
+              <h2><ReceiptIcon
+                  class='sec-icon'
+                  aria-hidden='true'
+                />Acquisition</h2>
+              <@fields.acquisition @format='embedded' />
+            </section>
+          </div>
+
+          {{! shape: ul of chips — identity, deliberately a different shape from the dl above }}
           <section class='sec'>
-            <h2><CalendarIcon
+            <h2><RulerIcon class='sec-icon' aria-hidden='true' />Specifics</h2>
+            <ul class='chips'>
+              <li><span class='chip-k'>Variant</span><span class='chip-v'>{{if
+                    @model.variantLabel
+                    @model.variantLabel
+                    '—'
+                  }}</span></li>
+              <li><span class='chip-k'>Packaging</span><span class='chip-v'>{{if
+                    @model.packaging
+                    @model.packaging
+                    '—'
+                  }}</span></li>
+              <li><span class='chip-k'>Cert. ref</span><span
+                  class='chip-v chip-v--id'
+                >{{if
+                    @model.verificationReference
+                    @model.verificationReference
+                    '—'
+                  }}</span></li>
+              <li><span class='chip-k'>Receipt ref</span><span
+                  class='chip-v chip-v--id'
+                >{{if
+                    @model.acquisition.reference
+                    @model.acquisition.reference
+                    '—'
+                  }}</span></li>
+            </ul>
+          </section>
+
+          {{! shape: prose }}
+          <section class='sec'>
+            <h2><NotebookPenIcon
                 class='sec-icon'
                 aria-hidden='true'
-              />Provenance</h2>
-            {{#if this.hasProvenance}}
-              <ol class='prov'>
-                {{#if @model.acquisition.acquiredOnDay}}
-                  <li class='prov-step prov-step--done'>
-                    <span class='prov-label'>Acquired</span>
-                    <span
-                      class='prov-when'
-                    >{{@model.acquisition.acquiredOnDay}}</span>
-                    {{#if @model.acquisition.source}}
-                      <span
-                        class='prov-note'
-                      >{{@model.acquisition.source}}</span>
-                    {{/if}}
-                  </li>
-                {{/if}}
-                {{#if @model.verified}}
-                  <li class='prov-step prov-step--done'>
-                    <span class='prov-label'>Authenticated</span>
-                    <span class='prov-when'><@fields.verifiedOn
-                        @format='atom'
-                      /></span>
-                    {{#if @model.verifiedBy}}
-                      <span class='prov-note'>{{@model.verifiedBy}}</span>
-                    {{/if}}
-                  </li>
-                {{else}}
-                  <li class='prov-step prov-step--todo'>
-                    <span class='prov-label'>Authentication</span>
-                    <span class='prov-when'>Not submitted</span>
-                  </li>
-                {{/if}}
-                {{#if @model.forSale}}
-                  <li class='prov-step prov-step--done'>
-                    <span class='prov-label'>Listed for sale</span>
-                    <span class='prov-when'><@fields.listedAt
-                        @format='atom'
-                      /></span>
-                  </li>
-                {{/if}}
-              </ol>
+              />Notes</h2>
+            {{#if @model.notes}}
+              <div class='prose'><@fields.notes /></div>
             {{else}}
               <EmptyState
-                @title='No dates recorded yet — an acquisition date starts the trail.'
+                @title='Nothing written down about this one yet.'
                 @texture={{false}}
                 style={{COMPACT_EMPTY_STYLE}}
               />
             {{/if}}
           </section>
 
-          {{! shape: dl }}
-          <section class='sec'>
-            <h2><ReceiptIcon
-                class='sec-icon'
-                aria-hidden='true'
-              />Acquisition</h2>
-            <@fields.acquisition @format='embedded' />
-          </section>
-        </div>
-
-        {{! shape: ul of chips — identity, deliberately a different shape from the dl above }}
-        <section class='sec'>
-          <h2><RulerIcon class='sec-icon' aria-hidden='true' />Specifics</h2>
-          <ul class='chips'>
-            <li><span class='chip-k'>Variant</span><span class='chip-v'>{{if
-                  @model.variantLabel
-                  @model.variantLabel
-                  '—'
-                }}</span></li>
-            <li><span class='chip-k'>Packaging</span><span class='chip-v'>{{if
-                  @model.packaging
-                  @model.packaging
-                  '—'
-                }}</span></li>
-            <li><span class='chip-k'>Cert. ref</span><span
-                class='chip-v chip-v--id'
-              >{{if
-                  @model.verificationReference
-                  @model.verificationReference
-                  '—'
-                }}</span></li>
-            <li><span class='chip-k'>Receipt ref</span><span
-                class='chip-v chip-v--id'
-              >{{if
-                  @model.acquisition.reference
-                  @model.acquisition.reference
-                  '—'
-                }}</span></li>
-          </ul>
-        </section>
-
-        {{! shape: prose }}
-        <section class='sec'>
-          <h2><NotebookPenIcon class='sec-icon' aria-hidden='true' />Notes</h2>
-          {{#if @model.notes}}
-            <div class='prose'><@fields.notes /></div>
-          {{else}}
-            <EmptyState
-              @title='Nothing written down about this one yet.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
-          {{/if}}
-        </section>
-
-        {{! NO ACTIONS ZONE: listing for sale, submitting for authentication and
+          {{! NO ACTIONS ZONE: listing for sale, submitting for authentication and
             logging a valuation run through the Create Listing and Authenticate
             Item commands, which the consuming app wires to its own controls. A
             control here that looks live and does nothing would teach the user to
             distrust every other control on the card. }}
-      </article>
-
+        </article>
+      </IsoFrame>
       <style scoped>
         /* --- Rule 1: an isolated card gets NO host container. Declaring our own
            is the one line that makes every @container rule below live rather than
@@ -1018,7 +1031,7 @@ export class CollectionItem extends CardDef {
           justify-items: center;
           gap: var(--boxel-sp-4xs);
           color: var(--smoke);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           text-align: center;
           padding: var(--boxel-sp-sm);
         }
@@ -1033,7 +1046,9 @@ export class CollectionItem extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.4em;
-          font-size: 0.6875rem; /* 11px floor — never smaller */
+          font-size: var(
+            --boxel-font-size-2xs
+          ); /* 11px floor — never smaller */
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--smoke);
@@ -1044,7 +1059,7 @@ export class CollectionItem extends CardDef {
         .hero-title {
           margin: 0;
           font-family: var(--font-display);
-          font-size: 1.75rem;
+          font-size: var(--boxel-font-size-xl);
           line-height: 1.15;
           font-weight: 700;
           letter-spacing: -0.01em;
@@ -1062,7 +1077,7 @@ export class CollectionItem extends CardDef {
           background: var(--ink-800);
           border: 1px solid var(--hairline);
           border-top: 3px solid var(--gold);
-          border-radius: 6px;
+          border-radius: var(--radius);
           box-shadow: var(--shadow-1);
           padding: var(--boxel-sp) var(--boxel-sp-lg);
         }
@@ -1093,7 +1108,7 @@ export class CollectionItem extends CardDef {
           }
         }
         .worth--unknown {
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 600;
           color: var(--smoke);
         }
@@ -1102,7 +1117,7 @@ export class CollectionItem extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: 0.3em;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           color: var(--paper);
@@ -1122,7 +1137,7 @@ export class CollectionItem extends CardDef {
         /* The spec leaves green doing double duty (authenticated AND price-up).
            This label is what disambiguates the axis, so it is not optional. */
         .delta-vs {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.06em;
@@ -1152,7 +1167,7 @@ export class CollectionItem extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.09em;
@@ -1190,20 +1205,20 @@ export class CollectionItem extends CardDef {
           align-content: start;
         }
         .stat-k {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
         }
         .stat-v {
           font-family: var(--font-display);
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }
         .stat-sub {
           display: block;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 500;
           color: var(--smoke);
         }
@@ -1225,7 +1240,7 @@ export class CollectionItem extends CardDef {
           position: relative;
           display: grid;
           gap: 0.1em;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .prov-step::before {
           content: '';
@@ -1246,12 +1261,12 @@ export class CollectionItem extends CardDef {
           font-weight: 600;
         }
         .prov-when {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--paper);
           font-variant-numeric: tabular-nums;
         }
         .prov-note {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--smoke);
         }
         .prov-step--todo .prov-label,
@@ -1272,17 +1287,17 @@ export class CollectionItem extends CardDef {
           display: grid;
           gap: 0.15em;
           padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-          border-radius: 6px;
+          border-radius: var(--radius);
           background: var(--ink-700);
         }
         .chip-k {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.07em;
           color: var(--smoke);
         }
         .chip-v {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 600;
         }
         /* Rule 3b: identifiers are read aloud and typed into other systems —
@@ -1295,7 +1310,7 @@ export class CollectionItem extends CardDef {
 
         /* ---------- prose + empty ---------- */
         .prose {
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.6;
           max-width: 68ch;
           color: var(--paper);
@@ -1306,7 +1321,7 @@ export class CollectionItem extends CardDef {
           align-items: center;
           gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp);
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--smoke);
           background: var(--ink-800);
           border: 1px solid var(--hairline);
@@ -1331,7 +1346,7 @@ export class CollectionItem extends CardDef {
             grid-template-columns: minmax(0, 1fr);
           }
           .hero-title {
-            font-size: 1.25rem;
+            font-size: var(--boxel-font-size-md);
           }
           .answer {
             padding: var(--boxel-sp-sm) var(--boxel-sp);
@@ -1347,232 +1362,56 @@ export class CollectionItem extends CardDef {
     </template>
   };
 
-  // STEP 0 FORK — FittedCard, not hand-rolled. This reverses the instinct the
-  // design brief creates ("dark identity-bearing card → hand-roll"), and it is
-  // reversed on evidence read out of the component, not on taste:
-  //
-  //   1. `FittedCard`'s root is `<article class='fitted-card' ...attributes>`, so
-  //      a wrapper class of ours lands on the real root — the dark ground and
-  //      every `--fc-*` override apply without forking anything.
-  //   2. It declares NO `container-type`/`container-name` — it queries the host's
-  //      `fitted-card` container, which is exactly the rule a hand-rolled
-  //      template has to obey anyway.
-  //   3. It already carries ~20 debugged `@container fitted-card` rules covering
-  //      the whole aspect-ratio × width × height matrix. Hand-rolling means
-  //      reimplementing the 16-size quanta that already exist and work.
-  //
-  // The content here IS the standard composition (image + eyebrow + title + badge
-  // + footer), which is precisely the case the fork rule sends to FittedCard. The
-  // identity we need is palette plus the photo carrying real width, and both are
-  // `--fc-*` knobs.
-  //
-  // SLOT DISCIPLINE — six distinct facts, six slots, zero repeats.
-  // `<:subtitle>` and `<:meta>` are deliberately NOT rendered. They are the two
-  // slots that would have to be padded with a value already shown elsewhere
-  // (variant, or the condition code), which is the documented failure mode: one
-  // nine-card family had a value duplicated across slots in 6 of 9 templates,
-  // and it survives source review because the repeat only appears at the quanta
-  // where both slots happen to be visible. A slot with nothing distinct to say is
-  // deleted, not filled.
-  //
-  // ONE BADGE, NOT TWO. `verified` and `forSale` are both badge-worthy, but two
-  // badges at the 150×40 quantum is two loud things and therefore no anchor. The
-  // split: `[FOR SALE]` is the tile marker, while `DS ✓Auth` sits inline in the text row — so for-sale takes the
-  // badge and verification rides as a glyph beside the condition in the footer.
   static fitted = class Fitted extends Component<typeof CollectionItem> {
     get worth() {
       return formatMoney(this.args.model?.lastKnownValue);
     }
+    get paid() {
+      return formatMoney(this.args.model?.acquisition?.price);
+    }
+    // the value rides on the subtitle too, so strips under 170 tall show it
+    get subtitle() {
+      let m = this.args.model;
+      return [m?.variantLabel, m?.condition?.code, this.worth]
+        .filter(Boolean)
+        .join(' · ');
+    }
 
     <template>
-      <FittedCard
-        class='ci-fit'
-        @imageUrl={{@model.photos.primaryUrl}}
-        @imageAlt={{@model.itemTitle}}
-        @titleTag='h3'
-      >
-        {{! Rule 2 anchor, tier 1 is the image; this is the tier-2 fallback and it
-            is the card's OWN static icon — the same one its isolated view and its
-            breadcrumb use, which is what makes it identity rather than filler.
-            Never an empty grey square. }}
-        <:placeholder>
-          <ArchiveIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
-        </:placeholder>
-
-        <:eyebrow><span
-            class='fit-eyebrow'
-          >{{@model.variantLabel}}</span></:eyebrow>
-
-        <:title><span class='fit-title'>{{if
-              @model.itemTitle
-              @model.itemTitle
-              'Untitled item'
-            }}</span></:title>
-
-        <:badgeRight>
-          {{#if @model.forSale}}
-            <StatePill
-              class='ci-sale'
+      <RichFittedCard>
+        <:media><Media
+            @src={{@model.photos.primaryUrl}}
+            @alt={{if @model.itemTitle @model.itemTitle ''}}
+          ><ArchiveIcon width='40%' height='40%' /></Media></:media>
+        <:title>{{if
+            @model.itemTitle
+            @model.itemTitle
+            'Untitled item'
+          }}</:title>
+        <:status>{{#if @model.forSale}}<StatePill
               @label='For sale'
               @hue='amber'
-              @emphatic={{true}}
-            />
-          {{/if}}
-        </:badgeRight>
-
-        <:footer>
-          {{#if @model.condition.code}}
-            <span class='ci-grade'>
-              {{@model.condition.code}}
-              {{#if @model.verified}}
-                <BadgeCheckIcon class='ci-check' aria-label='Authenticated' />
-              {{/if}}
-            </span>
-          {{/if}}
-          {{! Rule 1, data is all-or-nothing: routed through the one money
-              formatter so minor units always render, and `nowrap` so the value is
-              never ellipsised into an unreadable price. It is hidden wholesale at
-              the narrow quanta below rather than truncated. }}
-          {{#if this.worth}}
-            <span class='ci-worth'>{{moneyText @model.lastKnownValue}}</span>
-          {{/if}}
-        </:footer>
-      </FittedCard>
-
-      <style scoped>
-        /* NO container-type / container-name here — FittedCard queries the HOST's
-           `fitted-card` container, and declaring one would capture those queries.
-           Everything below is either a --fc-* knob or a visibility change. */
-        .ci-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --ink-950: var(--primary-foreground);
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-          --verified: var(--success-ink);
-          --font-display: var(--font-serif);
-
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          /* The miniature vault plaque: a 2px gold edge as an inset shadow, not
-             a border — the host draws the chrome and this must not fight it. */
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          /* The photo carries real width — the design direction is Object, and a
-             thumbnail-sized hero is the documented anti-pattern. */
-          --fc-image-width: 42cqh;
-          --fc-image-min-width: 3.5rem;
-          --fc-image-max-width: 11rem;
-          --fc-image-object-fit: cover;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-
-          --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          --fc-header-gap: 0.15em;
-          --fc-content-gap: var(--boxel-sp-2xs);
-
-          /* Rule 1: line-height >= 1.15 on every text role, so a descender is
-             never sheared even when the clamp math "fits". */
-          --fc-eyebrow-font-size: max(9px, 0.62em);
-          --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(13px, 1.05em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 2;
-          --fc-footer-font-size: max(11px, 0.78em);
-          --fc-footer-gap: var(--boxel-sp-xs);
-          --fc-footer-justify: space-between;
-          --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-2xs);
-        }
-
-        /* Rule 2: the eyebrow stays quiet so the title wins by CONTRAST, not only
-           by size. Two loud things would mean no anchor. */
-        .fit-eyebrow {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--smoke);
-          font-weight: 600;
-        }
-        .fit-title {
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-        .ci-sale {
-          font-weight: 700;
-        }
-
-        .ci-grade {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3em;
-          font-weight: 700;
-          white-space: nowrap;
-        }
-        .ci-check {
-          width: max(11px, 0.95em);
-          height: max(11px, 0.95em);
-          color: var(--verified);
-          flex: none;
-        }
-        .ci-worth {
-          /* Plaque value: serif + gold — the collector-catalog mark. */
-          font-family: var(--font-display);
-          color: var(--primary-ink);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          /* never ellipsis a value — it is hidden whole at narrow quanta instead */
-          white-space: nowrap;
-        }
-
-        /* ---- quanta: visibility only, never a shrink-into-a-clip ----
-           The type scale itself does not step; these rules hide whole rows. */
-
-        /* Badge tier (h <= 50): the title is usually the only survivor, and it
-           must still be the loudest thing. Everything else goes. */
-        @container fitted-card (height <= 50px) {
-          .ci-fit {
-            --fc-footer-display: none;
-            --fc-badge-right-display: none;
-            --fc-title-line-clamp: 1;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-
-        /* Very narrow strips: the money value is dropped WHOLE rather than
-           truncated, leaving the grade — a half-visible price is worse than an
-           absent one. */
-        @container fitted-card (width <= 200px) and (height <= 80px) {
-          .ci-fit .ci-worth {
-            display: none;
-          }
-        }
-
-        /* Narrow tiles: the image would starve the text column below the ~200px
-           content-column rule, so it yields width rather than the title clipping. */
-        @container fitted-card (width <= 150px) {
-          .ci-fit {
-            --fc-image-max-width: 100%;
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-      </style>
+            />{{/if}}{{#if @model.verified}}<StatePill
+              @label='Authenticated'
+              @hue='green'
+            />{{/if}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:metric>{{#if this.worth}}<Metric
+              @value={{this.worth}}
+              @label='Last value'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if this.paid}}<Detail @label='Paid' @value={{this.paid}} />{{/if}}
+          {{#if @model.packaging}}<Detail
+              @label='Packaging'
+              @value={{@model.packaging}}
+            />{{/if}}
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

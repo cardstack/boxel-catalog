@@ -4,7 +4,13 @@
     "attributes": {
       "name": "Floor 1",
       "kind": "Floor",
-      "description": null
+      "description": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

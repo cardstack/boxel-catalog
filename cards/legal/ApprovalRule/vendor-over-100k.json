@@ -20,7 +20,13 @@
         "CFO"
       ],
       "isParallel": false,
-      "guidance": "Standard high-value vendor path. Finance checks the commercial terms; the CFO signs."
+      "guidance": "Standard high-value vendor path. Finance checks the commercial terms; the CFO signs.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

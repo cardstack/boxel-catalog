@@ -22,6 +22,11 @@
         "links": {
           "self": "../Rubric/analytics-report-rubric"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

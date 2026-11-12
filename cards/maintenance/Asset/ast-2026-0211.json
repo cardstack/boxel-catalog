@@ -45,7 +45,13 @@
       "photoUrls": [],
       "lastServicedAt": "2026-06-20",
       "nextDueLabel": "38 days \u00b7 500-hour service",
-      "notes": null
+      "notes": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

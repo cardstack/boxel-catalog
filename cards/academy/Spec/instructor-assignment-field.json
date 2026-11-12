@@ -28,6 +28,11 @@
         "links": {
           "self": "../Cohort/paf-101-spring-a"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

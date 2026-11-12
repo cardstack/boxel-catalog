@@ -5,6 +5,8 @@ import {
   field,
   linksTo,
 } from '@cardstack/base/card-api';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
+import { Chip } from '@cardstack/pretui/components/chip';
 import StringField from '@cardstack/base/string';
 import MarkdownField from '@cardstack/base/markdown';
 import DatetimeField from '@cardstack/base/datetime';
@@ -14,9 +16,10 @@ import { array, hash } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
+
 import { RecordEmbedded, RecordPage, shortDate } from './record-views';
 import { User } from './user';
+import { IsoFrame } from '../shared/compact-sheet';
 
 const ActivityTypeField = enumField(StringField, {
   options: ['note', 'call', 'email', 'meeting', 'status change'],
@@ -107,30 +110,33 @@ export class Activity extends CardDef {
       return [when(m?.occurredAt), m?.author?.name].filter(Boolean).join(' · ');
     }
     <template>
-      <CompactFitted
-        @mark='Activity'
-        @title={{@model.cardTitle}}
-        @sub={{this.subtitle}}
-        @tags={{if
-          @model.activityType
-          (array (hash label=@model.activityType))
-        }}
-      >
-        <:rows>
-          {{#if @model.activityType}}<CompactRow
-              @k='Type'
-              @v={{@model.activityType}}
+      <RichFittedCard>
+        <:avatar><Avatar @name='Activity' @shape='square' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#each
+            (if @model.activityType (array (hash label=@model.activityType)))
+            as |t|
+          }}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:details>
+          {{#if @model.activityType}}<Detail
+              @label='Type'
+              @value={{@model.activityType}}
             />{{/if}}
-          {{#if @model.about}}<CompactRow @k='About'><@fields.about
+          {{#if @model.about}}<Detail @label='About'><@fields.about
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if @model.author}}<CompactRow @k='Author'><@fields.author
+              /></Detail>{{/if}}
+          {{#if @model.author}}<Detail @label='Author'><@fields.author
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-        </:rows>
-      </CompactFitted>
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 
@@ -186,40 +192,42 @@ export class Activity extends CardDef {
       return [when(m?.occurredAt), m?.author?.name].filter(Boolean).join(' · ');
     }
     <template>
-      <RecordPage
-        @mark='A C'
-        @title={{@model.cardTitle}}
-        @subtitle={{this.subtitle}}
-        @chips={{if
-          @model.activityType
-          (array (hash label=@model.activityType hue='slate'))
-        }}
-        @stats={{this.stats}}
-        @linked={{this.linked}}
-        @details={{this.details}}
-      >
-        <:main>
-          <h2 class='notes-h'>Notes</h2>
-          <div class='notes'><@fields.body /></div>
-        </:main>
-        <:value as |row|>
-          {{#if (eq row.value '@about')}}
-            <@fields.about @format='atom' @displayContainer={{false}} />
-          {{else if (eq row.value '@author')}}
-            <@fields.author @format='atom' @displayContainer={{false}} />
-          {{else}}{{row.value}}{{/if}}
-        </:value>
-      </RecordPage>
+      <IsoFrame>
+        <RecordPage
+          @mark='A C'
+          @title={{@model.cardTitle}}
+          @subtitle={{this.subtitle}}
+          @chips={{if
+            @model.activityType
+            (array (hash label=@model.activityType hue='slate'))
+          }}
+          @stats={{this.stats}}
+          @linked={{this.linked}}
+          @details={{this.details}}
+        >
+          <:main>
+            <h2 class='notes-h'>Notes</h2>
+            <div class='notes'><@fields.body /></div>
+          </:main>
+          <:value as |row|>
+            {{#if (eq row.value '@about')}}
+              <@fields.about @format='atom' @displayContainer={{false}} />
+            {{else if (eq row.value '@author')}}
+              <@fields.author @format='atom' @displayContainer={{false}} />
+            {{else}}{{row.value}}{{/if}}
+          </:value>
+        </RecordPage>
+      </IsoFrame>
       <style scoped>
         .notes-h {
           margin: 0;
-          padding: 0.5rem 0.625rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           font-weight: 700;
           border-block-end: 1px solid var(--border);
         }
         .notes {
-          padding: 0.5rem 0.625rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
       </style>
     </template>

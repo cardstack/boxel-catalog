@@ -51,7 +51,13 @@
       "assignTeamName": "Facilities",
       "active": true,
       "complianceWindowDays": 7,
-      "lastCompletedAt": "2026-08-01"
+      "lastCompletedAt": "2026-08-01",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "asset": {

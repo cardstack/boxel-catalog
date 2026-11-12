@@ -20,18 +20,21 @@ import {
   AtomLayout,
   EmbLayout,
   Facts,
-  FitLayout,
   IsoLayout,
   Mark,
   Rows,
   Section,
   Text,
+  fitParts,
   stats,
   type Dot,
   type Fact,
   type Row,
 } from './compact-card';
+import { Dot as DotChip } from '../shared/compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { cap, longMoney, shortMoney } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * APPROVAL RULE — a declarative approval-routing engine.
@@ -122,36 +125,38 @@ export class ApprovalRule extends CardDef {
       return ruleView(this.args.model);
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='AR' @size='lg' /></:mark>
-        <:main>
-          {{#if @model.guidance}}
-            <Section @title='Guidance'><Text
-              >{{@model.guidance}}</Text></Section>
-          {{/if}}
-          <Section @title='Required approvers' @flush={{true}}>
-            {{#if this.v.steps.length}}
-              <Rows @rows={{this.v.steps}} />
-            {{else}}
-              <Text>No approvers listed. A rule that fires and summons nobody
-                blocks the contract; add a role or deactivate the rule.</Text>
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='AR' @size='lg' /></:mark>
+          <:main>
+            {{#if @model.guidance}}
+              <Section @title='Guidance'><Text
+                >{{@model.guidance}}</Text></Section>
             {{/if}}
-          </Section>
-          <Section @title='Applies when'><Facts
-              @items={{this.v.conditions}}
-            /></Section>
-        </:main>
-        <:side>
-          <Section @title='Details'><Facts
-              @items={{this.v.details}}
-            /></Section>
-        </:side>
-      </IsoLayout>
+            <Section @title='Required approvers' @flush={{true}}>
+              {{#if this.v.steps.length}}
+                <Rows @rows={{this.v.steps}} />
+              {{else}}
+                <Text>No approvers listed. A rule that fires and summons nobody
+                  blocks the contract; add a role or deactivate the rule.</Text>
+              {{/if}}
+            </Section>
+            <Section @title='Applies when'><Facts
+                @items={{this.v.conditions}}
+              /></Section>
+          </:main>
+          <:side>
+            <Section @title='Details'><Facts
+                @items={{this.v.details}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 
@@ -176,17 +181,28 @@ export class ApprovalRule extends CardDef {
     get v() {
       return ruleView(this.args.model);
     }
+    get fit() {
+      return fitParts(this.v.embFacts, this.v.fitStats);
+    }
     <template>
-      <FitLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @status={{this.v.state}}
-        @fact={{this.v.chain}}
-        @facts={{this.v.embFacts}}
-        @stats={{this.v.fitStats}}
-      >
-        <:mark><Mark @text='AR' /></:mark>
-      </FitLayout>
+      <RichFittedCard>
+        <:avatar><Mark @text='AR' /></:avatar>
+        <:title>{{this.v.title}}</:title>
+        <:status>{{#if this.v.state}}<DotChip
+              @label={{this.v.state.label}}
+              @tone={{this.v.state.tone}}
+            />{{/if}}</:status>
+        <:subtitle>{{this.v.subtitle}}</:subtitle>
+        <:fact>{{this.v.chain}}</:fact>
+        <:metric>{{#if this.fit.metric}}<Metric
+              @value={{this.fit.metric.value}}
+              @label={{this.fit.metric.key}}
+            />{{/if}}</:metric>
+        <:details>{{#each this.fit.details as |d|}}<Detail
+              @label={{d.key}}
+              @value={{d.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 

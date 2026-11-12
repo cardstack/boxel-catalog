@@ -23,6 +23,11 @@
         "links": {
           "self": "../CollectibleProduct/aj1-lost-and-found"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -138,6 +138,12 @@
         "endedAt": "2026-06-15T03:00:00.000Z",
         "planned": true,
         "reason": "Quarterly service"
+      },
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
       }
     },
     "relationships": {

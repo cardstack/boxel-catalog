@@ -18,9 +18,10 @@ import { on } from '@ember/modifier';
 import { Button } from '@cardstack/pretui/components/button';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Chip } from '@cardstack/pretui/components/chip';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
+import { IsoFrame } from '../shared/compact-sheet';
 
 export const TRANSITION_GUARDS = [
   'none',
@@ -356,107 +357,109 @@ export class Workflow extends CardDef {
       this.args.editCard?.(this.args.model as Workflow);
     };
     <template>
-      <article class='iso'>
-        <header class='ih'>
-          <span class='mark' aria-hidden='true'>Wf</span>
-          <div class='t'>
-            <h1 class='name'>{{this.v.name}}</h1>
-            <p class='meta'>{{this.v.subline}}</p>
-          </div>
-          <span class='sts'>
-            {{#if this.v.version}}<Chip
-                @label={{this.v.version}}
+      <IsoFrame>
+        <article class='iso'>
+          <header class='ih'>
+            <span class='mark' aria-hidden='true'>Wf</span>
+            <div class='t'>
+              <h1 class='name'>{{this.v.name}}</h1>
+              <p class='meta'>{{this.v.subline}}</p>
+            </div>
+            <span class='sts'>
+              {{#if this.v.version}}<Chip
+                  @label={{this.v.version}}
+                  @tone='neutral'
+                  @appearance='plain'
+                />{{/if}}
+              <Chip
+                @label={{this.v.statesLabel}}
                 @tone='neutral'
                 @appearance='plain'
-              />{{/if}}
-            <Chip
-              @label={{this.v.statesLabel}}
+              />
+            </span>
+            {{#if @editCard}}
+              <Button
+                @tone='neutral'
+                @appearance='outlined'
+                @size='s'
+                @icon={{PencilIcon}}
+                {{on 'click' this.edit}}
+              >Edit</Button>
+            {{/if}}
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='States'
               @tone='neutral'
-              @appearance='plain'
+              @value={{this.v.statesCount}}
+              @hint={{this.pausesHint}}
+              @roll={{false}}
             />
-          </span>
-          {{#if @editCard}}
-            <Button
+            <Stat
+              @label='Transitions'
+              @tone='primary'
+              @value={{this.v.transitionsCount}}
+              @hint={{this.guardedHint}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Version'
               @tone='neutral'
-              @appearance='outlined'
-              @size='s'
-              @icon={{PencilIcon}}
-              {{on 'click' this.edit}}
-            >Edit</Button>
-          {{/if}}
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='States'
-            @tone='neutral'
-            @value={{this.v.statesCount}}
-            @hint={{this.pausesHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Transitions'
-            @tone='primary'
-            @value={{this.v.transitionsCount}}
-            @hint={{this.guardedHint}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Version'
-            @tone='neutral'
-            @value={{if this.v.version this.v.version '—'}}
-            @hint={{if @model.appliesTo @model.appliesTo '—'}}
-            @roll={{false}}
-          />
-        </div>
-        <div class='cols'>
-          <div class='main'>
-            <section>
-              <h2>States</h2>
-              {{#each this.v.stateRows as |s|}}
-                <div class='row'>
-                  <span class='row-id'>
-                    <span class='row-name'>{{s.label}}</span>
-                    <span class='meta'>{{s.detail}}</span>
-                  </span>
-                  <Chip
-                    @label={{s.kind}}
-                    @tone={{s.tone}}
-                    @appearance='plain'
-                  />
-                </div>
-              {{else}}
-                <p class='row meta'>No states yet</p>
-              {{/each}}
-            </section>
-            <section>
-              <h2>Transitions</h2>
-              {{#each this.v.transitionRows as |t|}}
-                <div class='row'>
-                  <span class='row-name'>{{t.route}}</span>
-                  <Chip
-                    @label={{t.guard}}
-                    @tone={{t.tone}}
-                    @appearance='plain'
-                  />
-                </div>
-              {{else}}
-                <p class='row meta'>No transitions yet</p>
-              {{/each}}
-            </section>
+              @value={{if this.v.version this.v.version '—'}}
+              @hint={{if @model.appliesTo @model.appliesTo '—'}}
+              @roll={{false}}
+            />
           </div>
-          <aside class='side'>
-            <section>
-              <h2>Details</h2>
-              <dl class='kv'>
-                {{#each this.v.facts as |f|}}
-                  <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
-                    >{{f.value}}</dd></div>
+          <div class='cols'>
+            <div class='main'>
+              <section>
+                <h2>States</h2>
+                {{#each this.v.stateRows as |s|}}
+                  <div class='row'>
+                    <span class='row-id'>
+                      <span class='row-name'>{{s.label}}</span>
+                      <span class='meta'>{{s.detail}}</span>
+                    </span>
+                    <Chip
+                      @label={{s.kind}}
+                      @tone={{s.tone}}
+                      @appearance='plain'
+                    />
+                  </div>
+                {{else}}
+                  <p class='row meta'>No states yet</p>
                 {{/each}}
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+              </section>
+              <section>
+                <h2>Transitions</h2>
+                {{#each this.v.transitionRows as |t|}}
+                  <div class='row'>
+                    <span class='row-name'>{{t.route}}</span>
+                    <Chip
+                      @label={{t.guard}}
+                      @tone={{t.tone}}
+                      @appearance='plain'
+                    />
+                  </div>
+                {{else}}
+                  <p class='row meta'>No transitions yet</p>
+                {{/each}}
+              </section>
+            </div>
+            <aside class='side'>
+              <section>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  {{#each this.v.facts as |f|}}
+                    <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+                      >{{f.value}}</dd></div>
+                  {{/each}}
+                </dl>
+              </section>
+            </aside>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .iso {
           container-type: inline-size;
@@ -616,7 +619,7 @@ export class Workflow extends CardDef {
       return wfView(this.args.model);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar>
           {{! the record's type mark, not a person: a square, not an Avatar }}
           <span class='mark' aria-hidden='true'>Wf</span>
@@ -636,16 +639,12 @@ export class Workflow extends CardDef {
               @tone='neutral'
               @appearance='plain'
             />{{/if}}</:status>
-        <:fact>
-          {{! rows ranked by priority; container queries drop whole rows }}
-          <dl class='fr'>
-            {{#each this.v.facts as |f|}}
-              <div class='fr-r'><dt class='cap'>{{f.key}}</dt><dd
-                >{{f.value}}</dd></div>
-            {{/each}}
-          </dl>
-        </:fact>
-      </FitTile>
+        <:details>
+          {{#each this.v.facts as |f|}}
+            <Detail @label={{f.key}}>{{f.value}}</Detail>
+          {{/each}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .ell {
           display: block;
@@ -664,89 +663,6 @@ export class Workflow extends CardDef {
           font-family: var(--font-mono);
           font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
-        }
-        .cap {
-          font-family: var(--font-mono);
-          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
-          font-weight: 600;
-          line-height: 1.2;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
-          white-space: normal;
-          color: var(--muted-foreground);
-        }
-        .fr {
-          display: grid;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--card-foreground);
-        }
-        .fr-r {
-          display: grid;
-          grid-template-columns: 5rem minmax(0, 1fr);
-          column-gap: var(--boxel-sp-2xs);
-          align-items: center;
-          block-size: 1.75rem;
-          border-top: 1px solid var(--border);
-          overflow: hidden;
-        }
-        .fr-r dd {
-          margin: 0;
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fr-r:nth-child(n + 13) {
-          display: none;
-        }
-        @container fitted-card (width < 250px) {
-          .fr-r {
-            grid-template-columns: minmax(0, 1fr);
-          }
-          .fr-r dt {
-            display: none;
-          }
-        }
-        @container fitted-card (width >= 400px) {
-          .fr-r {
-            grid-template-columns: 6.75rem minmax(0, 1fr);
-          }
-        }
-        @container fitted-card (height < 445px) and (width < 400px) {
-          .fr-r:nth-child(n + 7) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 445px) and (width >= 400px) {
-          .fr-r:nth-child(n + 8) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 275px) {
-          .fr-r:nth-child(n + 6) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 250px) and (width < 400px) {
-          .fr-r:nth-child(n + 3) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 250px) and (width >= 400px) {
-          .fr-r:nth-child(n + 4) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 170px) and (width < 400px) {
-          .fr {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 170px) and (width >= 400px) {
-          .fr-r:nth-child(n + 2) {
-            display: none;
-          }
         }
       </style>
     </template>

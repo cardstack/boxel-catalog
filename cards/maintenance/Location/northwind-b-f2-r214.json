@@ -4,7 +4,13 @@
     "attributes": {
       "name": "Room 214 \u2014 Compressor Room",
       "kind": "Room",
-      "description": null
+      "description": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

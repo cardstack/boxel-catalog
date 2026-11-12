@@ -6,6 +6,8 @@ import {
   StepList,
   type StepItem,
 } from '@cardstack/pretui/components/step-list';
+import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 
 // Each stage writes independently, so a stage's state is whether its field
 // is written, not its position in the list.
@@ -45,59 +47,63 @@ export class Brief extends CardDef {
 
   static isolated = class Isolated extends Component<typeof Brief> {
     <template>
-      <article class='brief'>
-        <header class='brief-header'>
-          <p class='eyebrow'>Brief</p>
-          <h1 class='title'>{{@model.cardTitle}}</h1>
-          <p class='summary'>{{@model.cardDescription}}</p>
-        </header>
+      <IsoFrame>
+        <article class='brief'>
+          <header class='brief-header'>
+            <p class='eyebrow'>Brief</p>
+            <h1 class='title'>{{@model.cardTitle}}</h1>
+            <p class='summary'>{{@model.cardDescription}}</p>
+          </header>
 
-        <section class='stage'>
-          <h2 class='stage-title'>Spec</h2>
-          {{#if @model.spec}}
-            <@fields.spec />
-          {{else}}
-            <EmptyState
-              @title='Not written yet'
-              @texture={{false}}
-              @size='s'
-            ><code>domain-interview</code> writes this.</EmptyState>
-          {{/if}}
-        </section>
+          <section class='stage'>
+            <h2 class='stage-title'>Spec</h2>
+            {{#if @model.spec}}
+              <@fields.spec />
+            {{else}}
+              <EmptyState
+                @title='Not written yet'
+                @texture={{false}}
+                @size='s'
+              ><code>domain-interview</code> writes this.</EmptyState>
+            {{/if}}
+          </section>
 
-        <section class='stage'>
-          <h2 class='stage-title'>Design direction</h2>
-          {{#if @model.designDirection}}
-            <@fields.designDirection />
-          {{else}}
-            <EmptyState
-              @title='Not written yet'
-              @texture={{false}}
-              @size='s'
-            ><code>design-direction</code> writes this.</EmptyState>
-          {{/if}}
-        </section>
+          <section class='stage'>
+            <h2 class='stage-title'>Design direction</h2>
+            {{#if @model.designDirection}}
+              <@fields.designDirection />
+            {{else}}
+              <EmptyState
+                @title='Not written yet'
+                @texture={{false}}
+                @size='s'
+              ><code>design-direction</code> writes this.</EmptyState>
+            {{/if}}
+          </section>
 
-        <section class='stage'>
-          <h2 class='stage-title'>Motion</h2>
-          {{#if @model.motion}}
-            <@fields.motion />
-          {{else}}
-            <EmptyState
-              @title='Not needed, or not written yet'
-              @texture={{false}}
-              @size='s'
-            ><code>motion-authoring</code>
-              writes this only when the direction asked for an arc.</EmptyState>
-          {{/if}}
-        </section>
-      </article>
-
+          <section class='stage'>
+            <h2 class='stage-title'>Motion</h2>
+            {{#if @model.motion}}
+              <@fields.motion />
+            {{else}}
+              <EmptyState
+                @title='Not needed, or not written yet'
+                @texture={{false}}
+                @size='s'
+              ><code>motion-authoring</code>
+                writes this only when the direction asked for an arc.</EmptyState>
+            {{/if}}
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .brief {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp-xl);
           color: var(--foreground);
-          background: var(--background);
         }
         .brief-header {
           padding-bottom: var(--boxel-sp-lg);
@@ -196,95 +202,27 @@ export class Brief extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Brief> {
     <template>
-      <div class='fit'>
-        <p class='eyebrow'>Brief</p>
-        <h3 class='title'>{{@model.cardTitle}}</h3>
-        <p class='summary'>{{@model.cardDescription}}</p>
-        <p class='stages'>
-          <span class='stage {{if @model.spec "is-written"}}'>Spec</span>
-          <span class='stage {{if @model.designDirection "is-written"}}'>
-            Direction
-          </span>
-          <span class='stage {{if @model.motion "is-written"}}'>Motion</span>
-        </p>
-      </div>
-
+      <RichFittedCard>
+        <:avatar><FileTextIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{@model.cardDescription}}</:subtitle>
+        <:details>
+          <Detail @label='Spec' @value={{if @model.spec 'Written' 'Not yet'}} />
+          <Detail
+            @label='Direction'
+            @value={{if @model.designDirection 'Written' 'Not yet'}}
+          />
+          <Detail
+            @label='Motion'
+            @value={{if @model.motion 'Written' 'Not yet'}}
+          />
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fit {
-          display: grid;
-          grid-template-rows: auto auto minmax(0, 1fr) auto;
-          gap: var(--boxel-sp-xxs);
-          height: 100%;
-          min-height: 0;
-          padding: var(--boxel-sp-sm);
-          color: var(--foreground);
-        }
-        .eyebrow,
-        .title,
-        .summary,
-        .stages {
-          margin: 0;
-        }
-        .eyebrow {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-        }
-        .title {
-          font-size: var(--boxel-font-size-sm);
-          line-height: var(--boxel-line-height-sm);
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .summary {
-          min-height: 0;
-          font-size: var(--boxel-font-size-xs);
-          line-height: var(--boxel-line-height-xs);
-          color: var(--muted-foreground);
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .stages {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-xs);
-          line-height: var(--boxel-line-height-xs);
-        }
-        .stage {
-          color: var(--muted-foreground);
-        }
-        .stage.is-written {
-          color: var(--foreground);
-          font-weight: 600;
-        }
-        @container fitted-card (height < 7.5rem) {
-          .summary {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 5rem) {
-          .fit {
-            grid-template-rows: auto;
-            grid-auto-flow: column;
-            align-items: center;
-          }
-          .eyebrow,
-          .stages {
-            display: none;
-          }
-        }
-        @container fitted-card (width < 12.5rem) {
-          .stages {
-            display: none;
-          }
         }
       </style>
     </template>

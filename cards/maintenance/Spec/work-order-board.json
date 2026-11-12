@@ -28,6 +28,11 @@
         "links": {
           "self": "../../asset-maintenance/AssetMaintenanceApp/main"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

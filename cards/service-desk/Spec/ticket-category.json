@@ -25,6 +25,11 @@
         "links": {
           "self": "../TicketCategory/outage"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

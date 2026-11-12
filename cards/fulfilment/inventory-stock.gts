@@ -16,9 +16,15 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Button } from '@cardstack/pretui/components/button';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { FitTile } from '../shared/fit-tile';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import { DotLabel } from '../hr/dot-enum-field';
 import { on } from '@ember/modifier';
+import { IsoFrame } from '../shared/compact-sheet';
 // Inventory Stock — one product, in one warehouse, at one bin.
 //
 // Three quantities are stored and one is computed, and which is which is the
@@ -211,105 +217,107 @@ export class InventoryStock extends CardDef {
       ];
     }
     <template>
-      <article class='page'>
-        <header>
-          <Avatar
-            @name={{if @model.productName @model.productName 'Stock'}}
-            @src={{@model.productImageUrl}}
-            @shape='square'
-            @size={{32}}
-          />
-          <div class='id'>
-            <h1>{{@model.cardTitle}}</h1>
-            <p>{{subLine @model}}</p>
-          </div>
-          <div class='acts'>
-            <DotLabel
-              @label={{stateWord @model}}
-              @hue={{@model.stockStateHue}}
+      <IsoFrame>
+        <article class='page'>
+          <header>
+            <Avatar
+              @name={{if @model.productName @model.productName 'Stock'}}
+              @src={{@model.productImageUrl}}
+              @shape='square'
+              @size={{32}}
             />
-            <DotLabel @label='{{num @model.quantityAvailable}} available' />
-            <Button
-              @variant='primary'
-              @size='sm'
-              {{on 'click' this.openProduct}}
-            >Reorder {{num @model.reorderQuantity}}</Button>
-            <Button
-              @variant='outline'
-              @size='sm'
-              {{on 'click' this.openWarehouse}}
-            >Count</Button>
+            <div class='id'>
+              <h1>{{@model.cardTitle}}</h1>
+              <p>{{subLine @model}}</p>
+            </div>
+            <div class='acts'>
+              <DotLabel
+                @label={{stateWord @model}}
+                @hue={{@model.stockStateHue}}
+              />
+              <DotLabel @label='{{num @model.quantityAvailable}} available' />
+              <Button
+                @variant='primary'
+                @size='sm'
+                {{on 'click' this.openProduct}}
+              >Reorder {{num @model.reorderQuantity}}</Button>
+              <Button
+                @variant='outline'
+                @size='sm'
+                {{on 'click' this.openWarehouse}}
+              >Count</Button>
+            </div>
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Available'
+              @tone={{stateTone @model}}
+              @value={{num @model.quantityAvailable}}
+              @hint='{{num @model.quantityOnHand}} on hand, {{num
+                @model.quantityReserved
+              }} reserved'
+              @roll={{false}}
+            />
+            <Stat
+              @label='Reorder point'
+              @tone='neutral'
+              @value={{num @model.reorderPoint}}
+              @hint='reorder {{num @model.reorderQuantity}} when hit'
+              @roll={{false}}
+            />
+            <Stat
+              @label='Incoming'
+              @tone='neutral'
+              @value={{num @model.quantityIncoming}}
+              @hint={{if @model.quantityIncoming 'on order' 'nothing on order'}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Last movement'
+              @tone='neutral'
+              @value={{shortDate @model.lastMovementAt}}
+              @hint={{shortTime @model.lastMovementAt}}
+              @roll={{false}}
+            />
           </div>
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Available'
-            @tone={{stateTone @model}}
-            @value={{num @model.quantityAvailable}}
-            @hint='{{num @model.quantityOnHand}} on hand, {{num
-              @model.quantityReserved
-            }} reserved'
-            @roll={{false}}
-          />
-          <Stat
-            @label='Reorder point'
-            @tone='neutral'
-            @value={{num @model.reorderPoint}}
-            @hint='reorder {{num @model.reorderQuantity}} when hit'
-            @roll={{false}}
-          />
-          <Stat
-            @label='Incoming'
-            @tone='neutral'
-            @value={{num @model.quantityIncoming}}
-            @hint={{if @model.quantityIncoming 'on order' 'nothing on order'}}
-            @roll={{false}}
-          />
-          <Stat
-            @label='Last movement'
-            @tone='neutral'
-            @value={{shortDate @model.lastMovementAt}}
-            @hint={{shortTime @model.lastMovementAt}}
-            @roll={{false}}
-          />
-        </div>
-        <section>
-          <h2>Quantities</h2>
-          <dl class='kv'>
-            {{#each this.quantities as |r|}}
-              <dt class='cap'>{{r.key}}</dt>
-              <dd>{{r.value}}</dd>
-            {{/each}}
-          </dl>
-        </section>
-        <section>
-          <h2>Location</h2>
-          <dl class='kv'>
-            {{#each this.location as |r|}}
-              <dt class='cap'>{{r.key}}</dt>
-              <dd>{{r.value}}</dd>
-            {{/each}}
-          </dl>
-        </section>
-        <section>
-          <h2>Linked</h2>
-          <dl class='kv'>
-            <dt class='cap'>Product</dt>
-            <dd><@fields.product
-                @format='atom'
-                @displayContainer={{false}}
-              /></dd>
-            <dt class='cap'>Warehouse</dt>
-            <dd><@fields.warehouse
-                @format='atom'
-                @displayContainer={{false}}
-              /></dd>
-          </dl>
-        </section>
-      </article>
+          <section>
+            <h2>Quantities</h2>
+            <dl class='kv'>
+              {{#each this.quantities as |r|}}
+                <dt class='cap'>{{r.key}}</dt>
+                <dd>{{r.value}}</dd>
+              {{/each}}
+            </dl>
+          </section>
+          <section>
+            <h2>Location</h2>
+            <dl class='kv'>
+              {{#each this.location as |r|}}
+                <dt class='cap'>{{r.key}}</dt>
+                <dd>{{r.value}}</dd>
+              {{/each}}
+            </dl>
+          </section>
+          <section>
+            <h2>Linked</h2>
+            <dl class='kv'>
+              <dt class='cap'>Product</dt>
+              <dd><@fields.product
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></dd>
+              <dt class='cap'>Warehouse</dt>
+              <dd><@fields.warehouse
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></dd>
+            </dl>
+          </section>
+        </article>
+      </IsoFrame>
       <style scoped>
         .page {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           --text-stat: 1.375rem;
           --text-ui-xs: 0.6875rem;
@@ -328,8 +336,8 @@ export class InventoryStock extends CardDef {
           display: flex;
           align-items: center;
           flex-wrap: wrap;
-          gap: 0.625rem;
-          padding: 0.75rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm);
         }
         .id {
           flex: 1 1 12rem;
@@ -338,7 +346,7 @@ export class InventoryStock extends CardDef {
         h1 {
           font-family: var(--font-sans);
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 700;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -346,7 +354,7 @@ export class InventoryStock extends CardDef {
         }
         p {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -356,7 +364,7 @@ export class InventoryStock extends CardDef {
           display: flex;
           align-items: center;
           flex-wrap: wrap;
-          gap: 0.625rem;
+          gap: var(--boxel-sp-xs);
           --control-height: 1.625rem;
         }
         .stats {
@@ -365,7 +373,7 @@ export class InventoryStock extends CardDef {
           border-block: 1px solid var(--border);
         }
         .stats > * {
-          padding: 0.4375rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         }
         .stats > * + * {
           border-inline-start: 1px solid var(--border);
@@ -386,8 +394,8 @@ export class InventoryStock extends CardDef {
         }
         section h2 {
           margin: 0;
-          padding: 0.75rem 0.75rem 0.375rem;
-          font-size: 0.75rem;
+          padding: var(--boxel-sp-sm) var(--boxel-sp-sm) var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .kv {
@@ -404,11 +412,7 @@ export class InventoryStock extends CardDef {
           margin: 0;
           border-top: 1px solid var(--border);
         }
-        .kv dt {
-          padding-left: 0.625rem;
-        }
         .kv dd {
-          padding: 0 0.625rem;
           min-width: 0;
         }
         .cap {
@@ -500,7 +504,7 @@ export class InventoryStock extends CardDef {
           white-space: nowrap;
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           border-block-start: 1px solid var(--border);
         }
         .linked {
@@ -558,13 +562,11 @@ export class InventoryStock extends CardDef {
 
   static fitted = class Fitted extends Component<typeof InventoryStock> {
     <template>
-      <FitTile>
-        <:avatar><Avatar
-            @name={{if @model.productName @model.productName 'Stock'}}
-            @src={{@model.productImageUrl}}
-            @shape='square'
-            @size={{32}}
-          /></:avatar>
+      <RichFittedCard>
+        <:media><Media @src={{@model.productImageUrl}} @alt=''><BoxesIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{subLine @model}}</:subtitle>
         <:status><DotLabel
@@ -577,11 +579,33 @@ export class InventoryStock extends CardDef {
           on hand ·
           {{num @model.quantityReserved}}
           reserved</:fact>
+        <:metric><Metric
+            @value={{num @model.quantityAvailable}}
+            @label='Available'
+          /></:metric>
+        <:details>
+          {{#if @model.quantityIncoming}}<Detail
+              @label='Incoming'
+              @value={{num @model.quantityIncoming}}
+            />{{/if}}
+          {{#if @model.reorderPoint}}<Detail
+              @label='Reorder point'
+              @value={{num @model.reorderPoint}}
+            />{{/if}}
+          {{#if @model.reorderQuantity}}<Detail
+              @label='Reorder qty'
+              @value={{num @model.reorderQuantity}}
+            />{{/if}}
+          {{#if @model.lastCountedAt}}<Detail
+              @label='Last counted'
+              @value={{longDate @model.lastCountedAt}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.warehouse}}<@fields.warehouse
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

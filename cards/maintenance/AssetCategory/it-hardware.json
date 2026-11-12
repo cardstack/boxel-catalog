@@ -10,7 +10,13 @@
         "level": "low"
       },
       "defaultTeamName": "IT Support",
-      "icon": "laptop"
+      "icon": "laptop",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

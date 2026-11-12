@@ -35,8 +35,9 @@ import {
   Sheet,
   Stat,
 } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import { KvList } from './components/desk-status';
+import { IsoFrame } from '../shared/compact-sheet';
 
 function hueOf(m: any) {
   return statusHue(EnrollmentStatusField, m?.enrollmentStatus);
@@ -127,73 +128,77 @@ class EnrollmentIsolated extends Component<typeof Enrollment> {
   };
 
   <template>
-    <Sheet @mark='En' @title={{@model.cardTitle}} @meta={{metaLine @model}}>
-      <:status>
-        <Dot @hue={{hueOf @model}}>{{@model.statusLabel}}</Dot>
-        {{#if @model.paymentRef}}<Dot>{{@model.paymentRef}}</Dot>{{/if}}
-      </:status>
-      <:actions>
-        {{#if this.canWithdraw}}
-          <Button
-            type='button'
-            @size='xs'
-            @tone='danger'
-            @appearance='outlined'
-            @busy={{this.busy}}
-            @disabled={{this.busy}}
-            {{on 'click' this.withdraw}}
-          >Withdraw</Button>
-        {{/if}}
-      </:actions>
-      <:stats>{{#each this.stats as |st|}}<Stat
-            @label={{st.label}}
-            @value={{st.value}}
-            @sub={{st.hint}}
-          />{{/each}}</:stats>
-      <:main>
-        {{#if this.error}}
-          <Alert @tone='danger' @title='Not withdrawn'>{{this.error}}</Alert>
-        {{/if}}
-        {{#if this.notice}}<Alert @tone='success'>{{this.notice}}</Alert>{{/if}}
+    <IsoFrame>
+      <Sheet @mark='En' @title={{@model.cardTitle}} @meta={{metaLine @model}}>
+        <:status>
+          <Dot @hue={{hueOf @model}}>{{@model.statusLabel}}</Dot>
+          {{#if @model.paymentRef}}<Dot>{{@model.paymentRef}}</Dot>{{/if}}
+        </:status>
+        <:actions>
+          {{#if this.canWithdraw}}
+            <Button
+              type='button'
+              @size='xs'
+              @tone='danger'
+              @appearance='outlined'
+              @busy={{this.busy}}
+              @disabled={{this.busy}}
+              {{on 'click' this.withdraw}}
+            >Withdraw</Button>
+          {{/if}}
+        </:actions>
+        <:stats>{{#each this.stats as |st|}}<Stat
+              @label={{st.label}}
+              @value={{st.value}}
+              @sub={{st.hint}}
+            />{{/each}}</:stats>
+        <:main>
+          {{#if this.error}}
+            <Alert @tone='danger' @title='Not withdrawn'>{{this.error}}</Alert>
+          {{/if}}
+          {{#if this.notice}}<Alert
+              @tone='success'
+            >{{this.notice}}</Alert>{{/if}}
 
-        <Section @title='Enrollment'><KvList
-            @items={{seatItems @model}}
-          /></Section>
-        <Section @title='Progress'>
-          <div class='pad'><LearnerProgress
-              @enrollment={{@model}}
-              @context={{@context}}
-              @compact={{true}}
-            /></div>
-        </Section>
-        {{#if @context.getCards}}
-          <Section @title='Work'>
-            <div class='pad'><LearnerActions
+          <Section @title='Enrollment'><KvList
+              @items={{seatItems @model}}
+            /></Section>
+          <Section @title='Progress'>
+            <div class='pad'><LearnerProgress
                 @enrollment={{@model}}
                 @context={{@context}}
+                @compact={{true}}
               /></div>
           </Section>
-        {{/if}}
-      </:main>
-      <:side>
-        <Section @title='Linked'>
-          <Kv @label='Learner'>{{#if @model.learner}}<@fields.learner
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</Kv>
-          <Kv @label='Cohort'>{{#if @model.cohort}}<@fields.cohort
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}—{{/if}}</Kv>
-          {{#if @model.certificate}}
-            <Kv @label='Certificate'><@fields.certificate
-                @format='atom'
-                @displayContainer={{false}}
-              /></Kv>
+          {{#if @context.getCards}}
+            <Section @title='Work'>
+              <div class='pad'><LearnerActions
+                  @enrollment={{@model}}
+                  @context={{@context}}
+                /></div>
+            </Section>
           {{/if}}
-        </Section>
-        <Section @title='Details'><KvList @items={{this.details}} /></Section>
-      </:side></Sheet>
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <Kv @label='Learner'>{{#if @model.learner}}<@fields.learner
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+            <Kv @label='Cohort'>{{#if @model.cohort}}<@fields.cohort
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+            {{#if @model.certificate}}
+              <Kv @label='Certificate'><@fields.certificate
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></Kv>
+            {{/if}}
+          </Section>
+          <Section @title='Details'><KvList @items={{this.details}} /></Section>
+        </:side></Sheet>
+    </IsoFrame>
     <style scoped>
       .pad {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
@@ -293,7 +298,7 @@ export class Enrollment extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='En' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -301,6 +306,26 @@ export class Enrollment extends CardDef {
             @hue={{hueOf @model}}
           >{{@model.statusLabel}}</Dot></:status>
         <:fact>{{factLine @model}}</:fact>
+        <:details>
+          {{#if @model.completedAt}}<Detail
+              @label='Completed'
+              @value={{fmtDate @model.completedAt}}
+            />{{/if}}
+          {{#if @model.withdrawnAt}}<Detail
+              @label='Withdrawn'
+              @value={{fmtDate @model.withdrawnAt}}
+            />{{/if}}
+          {{#if @model.certificate}}<Detail
+              @label='Certificate'
+            ><@fields.certificate
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.paymentRef}}<Detail
+              @label='Payment ref'
+              @value={{@model.paymentRef}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.learner}}<@fields.learner
               @format='atom'
               @displayContainer={{false}}
@@ -308,7 +333,7 @@ export class Enrollment extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

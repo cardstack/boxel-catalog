@@ -64,7 +64,13 @@
           }
         ]
       },
-      "downtime": {}
+      "downtime": {},
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "subjectAsset": {

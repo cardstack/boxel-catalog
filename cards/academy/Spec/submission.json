@@ -22,6 +22,11 @@
         "links": {
           "self": "../Submission/priya-a1-v1"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

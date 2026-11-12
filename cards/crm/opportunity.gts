@@ -1,4 +1,6 @@
 import { Button } from '@cardstack/pretui/components/button';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
+import { Chip } from '@cardstack/pretui/components/chip';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
 import { array, hash } from '@ember/helper';
@@ -27,7 +29,7 @@ import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { Account } from './account';
 import { User } from './user';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
+
 import {
   RecordEmbedded,
   RecordPage,
@@ -48,6 +50,7 @@ import {
   STAGE_COLORS,
   stageSlug,
 } from './pipeline-stage-field';
+import { IsoFrame } from '../shared/compact-sheet';
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
 const moduleURL: string = import.meta.url;
@@ -218,56 +221,58 @@ class OpportunityIsolated extends Component<typeof Opportunity> {
     return rows;
   }
   <template>
-    <RecordPage
-      @mark='O P'
-      @title={{@model.cardTitle}}
-      @subtitle={{this.subtitle}}
-      @chips={{this.chips}}
-      @stats={{this.stats}}
-      @linked={{this.linked}}
-      @details={{this.details}}
-    >
-      <:actions>
-        <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
-          activity</Button>
-        {{#if this.canCloseWon}}<Button
-            @appearance='accent'
-            @disabled={{this.closing}}
-            {{on 'click' this.closeWon}}
-          >Close won</Button>{{/if}}
-      </:actions>
-      <:main>
-        <h2 class='h'>Stage</h2>
-        <StepList @steps={{this.stages}} />
-        {{#if this.error}}
-          <p class='action-error' role='alert'>{{this.error}}</p>
-        {{/if}}
-        <RelatedList
-          @title='Activity'
-          @cards={{this.activityCards}}
-          @empty='No activity logged'
-        />
-      </:main>
-      <:value as |row|>
-        {{#if (eq row.value '@account')}}
-          <@fields.account @format='atom' @displayContainer={{false}} />
-        {{else if (eq row.value '@owner')}}
-          <@fields.owner @format='atom' @displayContainer={{false}} />
-        {{else}}{{row.value}}{{/if}}
-      </:value>
-    </RecordPage>
+    <IsoFrame>
+      <RecordPage
+        @mark='O P'
+        @title={{@model.cardTitle}}
+        @subtitle={{this.subtitle}}
+        @chips={{this.chips}}
+        @stats={{this.stats}}
+        @linked={{this.linked}}
+        @details={{this.details}}
+      >
+        <:actions>
+          <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
+            activity</Button>
+          {{#if this.canCloseWon}}<Button
+              @appearance='accent'
+              @disabled={{this.closing}}
+              {{on 'click' this.closeWon}}
+            >Close won</Button>{{/if}}
+        </:actions>
+        <:main>
+          <h2 class='h'>Stage</h2>
+          <StepList @steps={{this.stages}} />
+          {{#if this.error}}
+            <p class='action-error' role='alert'>{{this.error}}</p>
+          {{/if}}
+          <RelatedList
+            @title='Activity'
+            @cards={{this.activityCards}}
+            @empty='No activity logged'
+          />
+        </:main>
+        <:value as |row|>
+          {{#if (eq row.value '@account')}}
+            <@fields.account @format='atom' @displayContainer={{false}} />
+          {{else if (eq row.value '@owner')}}
+            <@fields.owner @format='atom' @displayContainer={{false}} />
+          {{else}}{{row.value}}{{/if}}
+        </:value>
+      </RecordPage>
+    </IsoFrame>
     <style scoped>
       .h {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         border-block-end: 1px solid var(--border);
       }
       .action-error {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
         color: var(--destructive);
       }
     </style>
@@ -437,35 +442,43 @@ export class Opportunity extends CardDef {
         .join(' · ');
     }
     <template>
-      <CompactFitted
-        @mark='Opportunity'
-        @title={{@model.cardTitle}}
-        @sub={{this.subtitle}}
-        @fact={{this.fact}}
-        @big={{usd @model.value.amount @model.value.currency.code}}
-        @bigLabel='Value'
-        @tags={{if @model.stage (array (hash label=@model.stage tone='info'))}}
-      >
-        <:rows>
-          <CompactRow @k='Weighted' @v={{this.weightedText}} />
-          {{#if @model.closeDate}}<CompactRow
-              @k='Close date'
-              @v={{shortDate @model.closeDate true}}
+      <RichFittedCard>
+        <:avatar><Avatar @name='Opportunity' @shape='square' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#each
+            (if @model.stage (array (hash label=@model.stage tone='info')))
+            as |t|
+          }}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{this.fact}}</:fact>
+        <:metric><Metric
+            @value={{usd @model.value.amount @model.value.currency.code}}
+            @label='Value'
+          /></:metric>
+        <:details>
+          <Detail @label='Weighted' @value={{this.weightedText}} />
+          {{#if @model.closeDate}}<Detail
+              @label='Close date'
+              @value={{shortDate @model.closeDate true}}
             />{{/if}}
-          {{#if @model.account}}<CompactRow @k='Account'><@fields.account
+          {{#if @model.account}}<Detail @label='Account'><@fields.account
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if @model.lastStageChangedAt}}<CompactRow
-              @k='In stage since'
-              @v={{shortDate @model.lastStageChangedAt true}}
+              /></Detail>{{/if}}
+          {{#if @model.lastStageChangedAt}}<Detail
+              @label='In stage since'
+              @value={{shortDate @model.lastStageChangedAt true}}
             />{{/if}}
-          {{#if @model.owner}}<CompactRow @k='Owner'><@fields.owner
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-        </:rows>
-      </CompactFitted>
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

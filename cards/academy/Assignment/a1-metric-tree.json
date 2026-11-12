@@ -12,7 +12,13 @@
       },
       "required": true,
       "allowResubmission": true,
-      "maxPoints": null
+      "maxPoints": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "rubric": {

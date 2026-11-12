@@ -11,6 +11,8 @@ import {
   linksToMany,
 } from '@cardstack/base/card-api';
 import type { Hue } from './compact-card';
+import { Dot as DotChip } from '../shared/compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import NumberField from '@cardstack/base/number';
 import DateField from '@cardstack/base/date';
 import UrlField from '@cardstack/base/url';
@@ -27,12 +29,12 @@ import {
   AtomLayout,
   EmbLayout,
   Facts,
-  FitLayout,
   IsoLayout,
   LinkRow,
   Mark,
   Section,
   Text,
+  fitParts,
   stats,
   type Dot,
   type Fact,
@@ -45,6 +47,7 @@ import {
   shortMoney,
   type Tone,
 } from '../shared/compact-format';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * A promise a contract compels, with a date and an owner.
@@ -357,44 +360,48 @@ export class Obligation extends CardDef {
       return obligationView(this.args.model);
     }
     <template>
-      <IsoLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @statuses={{this.v.statuses}}
-        @stats={{this.v.stats}}
-      >
-        <:mark><Mark @text='Ob' @size='lg' /></:mark>
-        <:main>
-          <Section @title='Description'><Text
-            >{{@model.description}}</Text></Section>
-          {{#if @model.consequence}}
-            <Section @title='Consequence'><Text
-              >{{@model.consequence}}</Text></Section>
-          {{/if}}
-          <Section @title='Schedule'><Facts
-              @items={{this.v.schedule}}
-            /></Section>
-        </:main>
-        <:side>
-          <Section @title='Linked'>
-            <LinkRow @label='Contract'><@fields.contract
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-            <LinkRow @label='Owner'><@fields.owner
-                @format='atom'
-                @displayContainer={{false}}
-              /></LinkRow>
-            {{#if @model.escalatedTo}}
-              <LinkRow @label='Escalates to'><@fields.escalatedTo
+      <IsoFrame>
+        <IsoLayout
+          @title={{this.v.title}}
+          @subtitle={{this.v.subtitle}}
+          @statuses={{this.v.statuses}}
+          @stats={{this.v.stats}}
+        >
+          <:mark><Mark @text='Ob' @size='lg' /></:mark>
+          <:main>
+            <Section @title='Description'><Text
+              >{{@model.description}}</Text></Section>
+            {{#if @model.consequence}}
+              <Section @title='Consequence'><Text
+                >{{@model.consequence}}</Text></Section>
+            {{/if}}
+            <Section @title='Schedule'><Facts
+                @items={{this.v.schedule}}
+              /></Section>
+          </:main>
+          <:side>
+            <Section @title='Linked'>
+              <LinkRow @label='Contract'><@fields.contract
                   @format='atom'
                   @displayContainer={{false}}
                 /></LinkRow>
-            {{/if}}
-          </Section>
-          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
-        </:side>
-      </IsoLayout>
+              <LinkRow @label='Owner'><@fields.owner
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></LinkRow>
+              {{#if @model.escalatedTo}}
+                <LinkRow @label='Escalates to'><@fields.escalatedTo
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></LinkRow>
+              {{/if}}
+            </Section>
+            <Section @title='Details'><Facts
+                @items={{this.v.facts}}
+              /></Section>
+          </:side>
+        </IsoLayout>
+      </IsoFrame>
     </template>
   };
 
@@ -402,17 +409,28 @@ export class Obligation extends CardDef {
     get v() {
       return obligationView(this.args.model);
     }
+    get fit() {
+      return fitParts(this.v.facts, this.v.fitStats);
+    }
     <template>
-      <FitLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @status={{this.v.state}}
-        @fact={{this.v.fact}}
-        @facts={{this.v.facts}}
-        @stats={{this.v.fitStats}}
-      >
-        <:mark><Mark @text='Ob' /></:mark>
-      </FitLayout>
+      <RichFittedCard>
+        <:avatar><Mark @text='Ob' /></:avatar>
+        <:title>{{this.v.title}}</:title>
+        <:status>{{#if this.v.state}}<DotChip
+              @label={{this.v.state.label}}
+              @tone={{this.v.state.tone}}
+            />{{/if}}</:status>
+        <:subtitle>{{this.v.subtitle}}</:subtitle>
+        <:fact>{{this.v.fact}}</:fact>
+        <:metric>{{#if this.fit.metric}}<Metric
+              @value={{this.fit.metric.value}}
+              @label={{this.fit.metric.key}}
+            />{{/if}}</:metric>
+        <:details>{{#each this.fit.details as |d|}}<Detail
+              @label={{d.key}}
+              @value={{d.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 

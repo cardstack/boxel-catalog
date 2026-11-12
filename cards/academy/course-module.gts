@@ -17,7 +17,8 @@ import { Assignment } from './assignment';
 import { Quiz } from './quiz';
 import { Course } from './course';
 import { Mark } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
+import { IsoFrame } from '../shared/compact-sheet';
 
 /**
  * A week-or-so of a course: an ordered bundle of lessons with the assignments
@@ -73,72 +74,80 @@ export class Module extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     <template>
-      <article class='module'>
-        <header class='hero'>
-          <span class='code'>{{if
-              @model.code
-              @model.code
-              (orderLabel @model.order)
-            }}</span>
-          <div class='hero-text'>
-            <span class='eyebrow'>Module{{#if @model.course}}
-                of
-                <@fields.course @format='atom' />{{/if}}</span>
-            <h1>{{@model.cardTitle}}</h1>
-            {{#if @model.summary}}<p
-                class='summary'
-              >{{@model.summary}}</p>{{/if}}
-            <p class='meta'>{{@model.lessonCount}}
-              lessons ·
-              {{minutesLabel @model.totalMinutes}}
-              ·
-              {{@model.releaseLabel}}</p>
-          </div>
-        </header>
-        <section>
-          <h2>Lessons</h2>
-          {{#if @model.lessons.length}}
-            <ol class='lessons'>
-              {{#each @model.lessons as |l|}}
-                <li>
-                  <span class='glyph'>{{glyphFor l.kind}}</span>
-                  <span class='l-title'>{{l.cardTitle}}</span>
-                  <span class='l-kind'>{{l.kindLabel}}</span>
-                  <span class='l-dur'>{{l.durationLabel}}</span>
-                </li>
-              {{/each}}
-            </ol>
-          {{else}}
-            <EmptyState
-              @size='s'
-              @title='No lessons linked yet'
-              @message='Link lessons in edit mode, in the order a learner takes them.'
-            />
+      <IsoFrame>
+        <article class='module'>
+          <header class='hero'>
+            <span class='code'>{{if
+                @model.code
+                @model.code
+                (orderLabel @model.order)
+              }}</span>
+            <div class='hero-text'>
+              <span class='eyebrow'>Module{{#if @model.course}}
+                  of
+                  <@fields.course @format='atom' />{{/if}}</span>
+              <h1>{{@model.cardTitle}}</h1>
+              {{#if @model.summary}}<p
+                  class='summary'
+                >{{@model.summary}}</p>{{/if}}
+              <p class='meta'>{{@model.lessonCount}}
+                lessons ·
+                {{minutesLabel @model.totalMinutes}}
+                ·
+                {{@model.releaseLabel}}</p>
+            </div>
+          </header>
+          <section>
+            <h2>Lessons</h2>
+            {{#if @model.lessons.length}}
+              <ol class='lessons'>
+                {{#each @model.lessons as |l|}}
+                  <li>
+                    <span class='glyph'>{{glyphFor l.kind}}</span>
+                    <span class='l-title'>{{l.cardTitle}}</span>
+                    <span class='l-kind'>{{l.kindLabel}}</span>
+                    <span class='l-dur'>{{l.durationLabel}}</span>
+                  </li>
+                {{/each}}
+              </ol>
+            {{else}}
+              <EmptyState
+                @size='s'
+                @title='No lessons linked yet'
+                @message='Link lessons in edit mode, in the order a learner takes them.'
+              />
+            {{/if}}
+          </section>
+          {{#if @model.assignments.length}}
+            <section>
+              <h2>Assignments</h2>
+              <div class='stack'><@fields.assignments
+                  @format='embedded'
+                /></div>
+            </section>
           {{/if}}
-        </section>
-        {{#if @model.assignments.length}}
-          <section>
-            <h2>Assignments</h2>
-            <div class='stack'><@fields.assignments @format='embedded' /></div>
-          </section>
-        {{/if}}
-        {{#if @model.quizzes.length}}
-          <section>
-            <h2>Quizzes</h2>
-            <div class='stack'><@fields.quizzes @format='embedded' /></div>
-          </section>
-        {{/if}}
-      </article>
+          {{#if @model.quizzes.length}}
+            <section>
+              <h2>Quizzes</h2>
+              <div class='stack'><@fields.quizzes @format='embedded' /></div>
+            </section>
+          {{/if}}
+        </article>
+      </IsoFrame>
       <style scoped>
         .module {
+          background: var(--card);
+          color: var(--card-foreground);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           max-width: 52rem;
           margin: 0 auto;
+          inline-size: 100%;
           container-type: inline-size;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
           color: var(--foreground);
-          background: var(--background);
         }
         .hero {
           display: grid;
@@ -310,7 +319,7 @@ export class Module extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Md' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{if @model.code @model.code (orderLabel @model.order)}}
@@ -319,7 +328,29 @@ export class Module extends CardDef {
           lessons ·
           {{minutesLabel @model.totalMinutes}}</:subtitle>
         <:fact>{{@model.releaseLabel}}</:fact>
-      </FitTile>
+        <:metric><Metric
+            @value={{minutesLabel @model.totalMinutes}}
+            @label='Duration'
+          /></:metric>
+        <:details>
+          {{#if @model.course}}<Detail @label='Course'><@fields.course
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.liveLessonCount}}<Detail
+              @label='Live lessons'
+              @value='{{@model.liveLessonCount}}'
+            />{{/if}}
+          {{#if @model.assignments.length}}<Detail
+              @label='Assignments'
+              @value='{{@model.assignments.length}}'
+            />{{/if}}
+          {{#if @model.quizzes.length}}<Detail
+              @label='Quizzes'
+              @value='{{@model.quizzes.length}}'
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

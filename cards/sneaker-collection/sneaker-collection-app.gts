@@ -43,7 +43,7 @@ import { Stat } from '@cardstack/pretui/components/stat';
 import { statusOption } from '@cardstack/catalog/fields/status/status';
 
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { Detail, Metric, RichFittedCard } from '../shared/rich-fitted-card';
 import { CollectionItem } from '../sneakers/collection-item';
 import { CompletionSet, computeCompletion } from '../sneakers/completion-set';
 import { Listing } from '../sneakers/listing';
@@ -177,7 +177,7 @@ const VIEW_OPTIONS = [
 // LayoutControl forms: `minWidth` in rem, richest first.
 const F = (...forms: [string, number][]) =>
   forms.map(([name, minWidth]) => ({ name, minWidth }));
-const SEARCH_FORMS = F(['field', 14], ['menu', 0]);
+const SEARCH_FORMS = F(['field', 14], ['collapsed', 1.75]);
 const CHIP_FORMS = F(['full', 12], ['menu', 0]);
 const VIEW_FORMS = F(['full', 12], ['menu', 0]);
 const ADD_FORMS = F(['label', 7], ['icon', 2]);
@@ -929,8 +929,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                         @priority={{2}}
                         @forms={{SEARCH_FORMS}}
                         @label='Search'
+                        as |form|
                       >
                         <div class='sc-search'><SearchInput
+                            @display={{if
+                              (eq form 'collapsed')
+                              'collapsed'
+                              'field'
+                            }}
                             @value={{this.search}}
                             @placeholder='Search your collection…'
                             @onInput={{this.setSearch}}
@@ -951,12 +957,12 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       </lc.Slot>
                       <lc.Slot
                         @id='view'
+                        @align='end'
                         @priority={{1}}
                         @forms={{VIEW_FORMS}}
                         @label='View'
                       >
                         <SegmentedControl
-                          class='sc-push'
                           @label='View'
                           @options={{VIEW_OPTIONS}}
                           @value={{this.view}}
@@ -1042,8 +1048,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       @priority={{1}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='sc-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.search}}
                           @placeholder='Search sets…'
                           @onInput={{this.setSearch}}
@@ -1051,6 +1063,7 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     </lc.Slot>
                     <lc.Slot
                       @id='add'
+                      @align='end'
                       @priority={{0}}
                       @pinned={{true}}
                       @forms={{ADD_FORMS}}
@@ -1058,7 +1071,6 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       as |form|
                     >
                       <Button
-                        class='sc-push'
                         @icon={{PlusIcon}}
                         @tone='primary'
                         @appearance='accent'
@@ -1159,8 +1171,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       @priority={{2}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='sc-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.search}}
                           @placeholder='Search active listings…'
                           @onInput={{this.setSearch}}
@@ -1168,12 +1186,12 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     </lc.Slot>
                     <lc.Slot
                       @id='view'
+                      @align='end'
                       @priority={{1}}
                       @forms={{VIEW_FORMS}}
                       @label='View'
                     >
                       <SegmentedControl
-                        class='sc-push'
                         @label='View'
                         @options={{VIEW_OPTIONS}}
                         @value={{this.view}}
@@ -1251,8 +1269,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                         @priority={{1}}
                         @forms={{SEARCH_FORMS}}
                         @label='Search'
+                        as |form|
                       >
                         <div class='sc-search'><SearchInput
+                            @display={{if
+                              (eq form 'collapsed')
+                              'collapsed'
+                              'field'
+                            }}
                             @value={{this.search}}
                             @placeholder='Search orders…'
                             @onInput={{this.setSearch}}
@@ -1375,8 +1399,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       @priority={{1}}
                       @forms={{SEARCH_FORMS}}
                       @label='Search'
+                      as |form|
                     >
                       <div class='sc-search'><SearchInput
+                          @display={{if
+                            (eq form 'collapsed')
+                            'collapsed'
+                            'field'
+                          }}
                           @value={{this.search}}
                           @placeholder='Search certificates…'
                           @onInput={{this.setSearch}}
@@ -1420,12 +1450,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                         @size='xs'
                         {{on 'click' (fn this.openCard row.card)}}
                       >
-                        {{#if row.photo}}<img
-                            class='sc-thumb'
-                            src={{row.photo}}
-                            alt=''
-                          />{{/if}}
-                        <span class='sc-name'>{{text}}</span>
+                        <span class='sc-item'>
+                          {{#if row.photo}}<img
+                              class='sc-thumb'
+                              src={{row.photo}}
+                              alt=''
+                            />{{/if}}
+                          <span class='sc-name'>{{text}}</span>
+                        </span>
                       </Button>
                     {{else}}
                       <span class='sc-cell'>{{text}}</span>
@@ -1601,9 +1633,6 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
       .sc-search {
         inline-size: 14rem;
       }
-      .sc-push {
-        margin-inline-start: auto;
-      }
       .sc-count,
       .sc-mono {
         font-family: var(--font-mono);
@@ -1630,6 +1659,15 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
       }
       .sc-open[aria-pressed='true'] {
         text-decoration-line: underline;
+      }
+      /* Button wraps its children in one label span, so the thumbnail and the
+         name need their own flex row to share a vertical centre */
+      .sc-item {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        min-inline-size: 0;
+        max-inline-size: 100%;
       }
       .sc-thumb {
         flex: none;
@@ -1712,11 +1750,66 @@ export class SneakerCollectionApp extends CardDef {
   static isolated = SneakerCollectionIsolated;
 
   static fitted = class Fitted extends Component<typeof SneakerCollectionApp> {
+    // The collection summary plus the active listings, from two queries that
+    // are not live: the tile shows the numbers as of its last render.
+    private query = (cls: typeof CardDef) => {
+      let ref = identifyCard(cls);
+      let query = ref ? { filter: { type: ref } } : undefined;
+      let url = this.args.model?.[realmURL];
+      let realms = url ? [url.href] : undefined;
+      return this.args.context?.getCards(
+        this,
+        () => query,
+        () => realms,
+      );
+    };
+    private items = this.query(CollectionItem);
+    private listings = this.query(Listing);
+    private rows(q: ReturnType<getCards> | undefined): any[] {
+      return (q?.instances ?? []).filter(Boolean);
+    }
+
+    // Undefined while loading, so the metric and details render nothing.
+    get s() {
+      if ([this.items, this.listings].some((q) => !q || q.isLoading)) {
+        return undefined;
+      }
+      let items = this.rows(this.items);
+      return {
+        pairs: String(items.length),
+        value: sumByCurrency(items.map((i) => i.lastKnownValue)),
+        verified: String(items.filter((i) => i.verified).length),
+        forSale: String(items.filter((i) => i.forSale).length),
+        listings: String(
+          this.rows(this.listings).filter((l) => l.listingStatus === 'active')
+            .length,
+        ),
+      };
+    }
+
     <template>
-      <FitTile>
+      <RichFittedCard>
+        <:avatar><GridIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>Sneaker Collection</:title>
         <:subtitle>{{@model.tagline}}</:subtitle>
-      </FitTile>
+        <:metric>{{#if this.s}}<Metric
+              @value={{this.s.pairs}}
+              @label='Pairs'
+            />{{/if}}</:metric>
+        <:details>{{#if this.s}}
+            <Detail @label='Collection value' @value={{this.s.value}} />
+            <Detail @label='Authenticated' @value={{this.s.verified}} />
+            <Detail @label='For sale' @value={{this.s.forSale}} />
+            <Detail @label='Active listings' @value={{this.s.listings}} />
+          {{/if}}</:details>
+      </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 }

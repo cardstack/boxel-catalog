@@ -29,7 +29,7 @@ import { Asset } from './asset';
 // Cyclic (a plan links to Asset); read only in the constructor.
 import { MaintenancePlan } from './maintenance-plan';
 import RecordMeterReadingCommand from './commands/record-meter-reading-command';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   Chip,
   Brief,
@@ -46,6 +46,7 @@ import {
   shortDate,
   type KvItem,
 } from './card-ui';
+import { IsoFrame } from '../shared/compact-sheet';
 
 function sorted(readings: MeterReadingField[] | null | undefined) {
   return (readings ?? [])
@@ -194,95 +195,103 @@ class MeterIsolated extends MeterView {
   };
 
   <template>
-    <Sheet>
-      <:head>
-        <Head @mark='Me' @title={{@model.name}} @meta={{metaLine @model}}>
-          <:status><MeterDots @model={{@model}} /></:status>
-          <:actions>
-            <form class='log' {{on 'submit' this.recordReading}}>
-              <Input
-                class='log-input'
-                aria-label='Reading value'
-                @value={{this.newValue}}
-                @onInput={{this.setNewValue}}
-                @placeholder={{if @model.unit @model.unit 'Value'}}
-                @type='number'
-              />
-              <Button
-                class='log-btn'
-                @size='s'
-                @disabled={{this.recordDisabled}}
-                type='submit'
-              >Log reading</Button>
-            </form>
-          </:actions>
-        </Head>
-        {{#if this.recordError}}
-          <p class='log-error' role='alert'>{{this.recordError}}</p>
-        {{/if}}
-      </:head>
-      <:stats>
-        <Stat
-          @label='Current'
-          @value={{num @model.current @model.unit}}
-          @hint={{if
-            this.last
-            (concat 'read ' (shortDate this.last.readAt))
-            'no readings yet'
-          }}
-          @roll={{false}}
-        />
-        <Stat
-          @label='Per week'
-          @value={{num @model.averagePerWeek @model.unit}}
-          @hint={{this.sinceLabel}}
-          @roll={{false}}
-        />
-        <Stat
-          @label='To service'
-          @value={{num this.toService @model.unit}}
-          @hint={{if
-            this.plan.nextDueMeter
-            (concat 'due at ' (num this.plan.nextDueMeter @model.unit))
-            'no meter plan'
-          }}
-          @roll={{false}}
-        />
-      </:stats>
-      <:main>
-        <Section @title='Readings'>
-          {{#each this.rows as |r|}}
-            <Row @title={{r.value}} @meta={{r.meta}} @state={{r.source}} />
-          {{else}}
-            <Row @title='No readings recorded yet' />
-          {{/each}}
-        </Section>
-        <Section @title='Thresholds'>
-          <KeyValue
-            @items={{this.thresholds}}
-            @labelStyle='eyebrow'
-            @divided={{true}}
+    <IsoFrame>
+      <Sheet>
+        <:head>
+          <Head @mark='Me' @title={{@model.name}} @meta={{metaLine @model}}>
+            <:status><MeterDots @model={{@model}} /></:status>
+            <:actions>
+              <form class='log' {{on 'submit' this.recordReading}}>
+                <Input
+                  class='log-input'
+                  aria-label='Reading value'
+                  @value={{this.newValue}}
+                  @onInput={{this.setNewValue}}
+                  @placeholder={{if @model.unit @model.unit 'Value'}}
+                  @type='number'
+                />
+                <Button
+                  class='log-btn'
+                  @size='s'
+                  @disabled={{this.recordDisabled}}
+                  type='submit'
+                >Log reading</Button>
+              </form>
+            </:actions>
+          </Head>
+          {{#if this.recordError}}
+            <p class='log-error' role='alert'>{{this.recordError}}</p>
+          {{/if}}
+        </:head>
+        <:stats>
+          <Stat
+            @label='Current'
+            @value={{num @model.current @model.unit}}
+            @hint={{if
+              this.last
+              (concat 'read ' (shortDate this.last.readAt))
+              'no readings yet'
+            }}
+            @roll={{false}}
           />
-        </Section>
-      </:main>
-      <:side>
-        <Section @title='Linked'>
-          <MeterLinks
-            @model={{@model}}
-            @fields={{@fields}}
-            @plan={{this.plan}}
+          <Stat
+            @label='Per week'
+            @value={{num @model.averagePerWeek @model.unit}}
+            @hint={{this.sinceLabel}}
+            @roll={{false}}
           />
-        </Section>
-        <Section @title='Details'>
-          <KeyValue
-            @items={{this.details}}
-            @labelStyle='eyebrow'
-            @divided={{true}}
+          <Stat
+            @label='To service'
+            @value={{num this.toService @model.unit}}
+            @hint={{if
+              this.plan.nextDueMeter
+              (concat 'due at ' (num this.plan.nextDueMeter @model.unit))
+              'no meter plan'
+            }}
+            @roll={{false}}
           />
-        </Section>
-      </:side>
-    </Sheet>
+        </:stats>
+        <:main>
+          <Section @title='Readings'>
+            {{#each this.rows as |r|}}
+              <Row @title={{r.value}} @meta={{r.meta}} @state={{r.source}} />
+            {{else}}
+              <Row @title='No readings recorded yet' />
+            {{/each}}
+          </Section>
+          <Section @title='Thresholds'>
+            <KeyValue
+              class='kv-pad'
+              @items={{this.thresholds}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+            />
+          </Section>
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <MeterLinks
+              @model={{@model}}
+              @fields={{@fields}}
+              @plan={{this.plan}}
+            />
+          </Section>
+          <Section @title='Details'>
+            <KeyValue
+              class='kv-pad'
+              @items={{this.details}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+            />
+          </Section>
+        </:side>
+      </Sheet>
+    </IsoFrame>
     <style scoped>
+      .kv-pad {
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
+      }
+
       .log-btn {
         flex: none;
       }
@@ -424,6 +433,7 @@ export class Meter extends CardDef {
           /></:fact>
         <:default>
           <KeyValue
+            class='kv-pad'
             @items={{this.details}}
             @labelStyle='eyebrow'
             @divided={{true}}
@@ -435,12 +445,17 @@ export class Meter extends CardDef {
           />
         </:default>
       </Brief>
+      <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+      </style>
     </template>
   };
 
   static fitted = class Fitted extends MeterView {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Me' @size='lg' /></:avatar>
         <:title>{{@model.name}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -450,10 +465,32 @@ export class Meter extends CardDef {
             @strong={{shortDate this.last.readAt}}
             @rest={{this.last.readByName}}
           /></:fact>
+        <:metric><Metric
+            @value={{num @model.current @model.unit}}
+            @label='Current'
+          /></:metric>
+        <:details>
+          {{#if this.toService}}<Detail
+              @label='To service'
+              @value={{num this.toService @model.unit}}
+            />{{/if}}
+          {{#if @model.averagePerWeek}}<Detail
+              @label='Per week'
+              @value={{num @model.averagePerWeek @model.unit}}
+            />{{/if}}
+          {{#if @model.lastDelta}}<Detail
+              @label='Last change'
+              @value={{num @model.lastDelta @model.unit}}
+            />{{/if}}
+          {{#if @model.readings.length}}<Detail
+              @label='Readings'
+              @value='{{@model.readings.length}}'
+            />{{/if}}
+        </:details>
         <:relations>
           {{#if @model.asset}}<@fields.asset @format='atom' />{{/if}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
@@ -494,7 +531,12 @@ const LINKS: KvItem[] = [
 const MeterLinks: TemplateOnlyComponent<{
   Args: { model: Partial<Meter>; fields: any; plan?: MaintenancePlan };
 }> = <template>
-  <KeyValue @items={{LINKS}} @labelStyle='eyebrow' @divided={{true}}>
+  <KeyValue
+    class='kv-pad'
+    @items={{LINKS}}
+    @labelStyle='eyebrow'
+    @divided={{true}}
+  >
     <:value as |item|>
       {{#if (eq item.key 'Asset')}}
         {{#if @model.asset}}<@fields.asset @format='atom' />{{else}}—{{/if}}
@@ -511,6 +553,11 @@ const MeterLinks: TemplateOnlyComponent<{
       {{else}}—{{/if}}
     </:value>
   </KeyValue>
+  <style scoped>
+    .kv-pad {
+      --pretui-kv-pad-inline: var(--boxel-sp-sm);
+    }
+  </style>
 </template>;
 
 function lastReader(m: Partial<Meter>) {

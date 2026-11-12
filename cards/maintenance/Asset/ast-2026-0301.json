@@ -45,7 +45,13 @@
       "photoUrls": [],
       "lastServicedAt": "2026-08-14",
       "nextDueLabel": "4 days \u00b7 Fire extinguisher round",
-      "notes": null
+      "notes": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

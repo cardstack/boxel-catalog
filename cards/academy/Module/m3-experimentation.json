@@ -10,6 +10,12 @@
         "mode": "offset_days",
         "offsetDays": 21,
         "releaseDate": null
+      },
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
       }
     },
     "relationships": {

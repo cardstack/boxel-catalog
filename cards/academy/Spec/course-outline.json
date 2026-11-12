@@ -22,6 +22,11 @@
         "links": {
           "self": "../Course/paf-101"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

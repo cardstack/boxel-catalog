@@ -13,7 +13,13 @@
         "Start date",
         "Reporting line"
       ],
-      "guidance": "People team owns this one. Legal reviews only non-standard terms."
+      "guidance": "People team owns this one. Legal reviews only non-standard terms.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "cardInfo.theme": {

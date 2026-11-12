@@ -27,6 +27,11 @@
         "links": {
           "self": "../SparePart/ahu-filt-g4"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

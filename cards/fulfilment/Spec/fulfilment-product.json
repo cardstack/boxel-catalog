@@ -20,6 +20,11 @@
         "links": {
           "self": "../FulfilmentProduct/bw-001"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {
