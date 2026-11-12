@@ -238,11 +238,14 @@ export class DeskList extends GlimmerComponent<ListSignature> {
           @pinned={{true}}
           @forms={{ADD_FORMS}}
           @label={{@newLabel}}
+          as |form|
         >
           <div class='push'><Button
               @icon={{PlusIcon}}
               @tone='primary'
               @size='s'
+              @display={{if (eq form 'icon') 'icon' 'label'}}
+              @label={{@newLabel}}
               {{on 'click' @onNew}}
             >{{@newLabel}}</Button></div>
         </lc.Slot>

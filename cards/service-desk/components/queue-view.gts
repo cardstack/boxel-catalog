@@ -744,12 +744,15 @@ export class QueueView extends GlimmerComponent<Signature> {
               @pinned={{true}}
               @forms={{ADD_FORMS}}
               @label='New ticket'
+              as |form|
             >
               <Button
                 @icon={{PlusIcon}}
                 @tone='primary'
                 @appearance='accent'
                 @size='s'
+                @display={{if (eq form 'icon') 'icon' 'label'}}
+                @label='New ticket'
                 @busy={{@creating}}
                 {{on 'click' @onNew}}
               >
