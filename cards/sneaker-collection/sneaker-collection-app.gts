@@ -957,12 +957,12 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       </lc.Slot>
                       <lc.Slot
                         @id='view'
+                        @align='end'
                         @priority={{1}}
                         @forms={{VIEW_FORMS}}
                         @label='View'
                       >
                         <SegmentedControl
-                          class='sc-push'
                           @label='View'
                           @options={{VIEW_OPTIONS}}
                           @value={{this.view}}
@@ -1063,6 +1063,7 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     </lc.Slot>
                     <lc.Slot
                       @id='add'
+                      @align='end'
                       @priority={{0}}
                       @pinned={{true}}
                       @forms={{ADD_FORMS}}
@@ -1070,7 +1071,6 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       as |form|
                     >
                       <Button
-                        class='sc-push'
                         @icon={{PlusIcon}}
                         @tone='primary'
                         @appearance='accent'
@@ -1186,12 +1186,12 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     </lc.Slot>
                     <lc.Slot
                       @id='view'
+                      @align='end'
                       @priority={{1}}
                       @forms={{VIEW_FORMS}}
                       @label='View'
                     >
                       <SegmentedControl
-                        class='sc-push'
                         @label='View'
                         @options={{VIEW_OPTIONS}}
                         @value={{this.view}}
@@ -1630,9 +1630,6 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
       }
       .sc-search {
         inline-size: 14rem;
-      }
-      .sc-push {
-        margin-inline-start: auto;
       }
       .sc-count,
       .sc-mono {

@@ -1698,6 +1698,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                 {{/if}}
                 <lc.Slot
                   @id='add'
+                  @align='end'
                   @priority={{0}}
                   @pinned={{true}}
                   @forms={{ADD_FORMS}}
@@ -1705,7 +1706,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                   as |form|
                 >
                   <Button
-                    class='desk-add'
                     @icon={{PlusIcon}}
                     @tone='primary'
                     @appearance='accent'
@@ -2668,9 +2668,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       }
       .desk-search {
         inline-size: 15rem;
-      }
-      .desk-add {
-        margin-inline-start: auto;
       }
 
       .desk-body {

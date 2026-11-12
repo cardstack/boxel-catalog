@@ -234,20 +234,21 @@ export class DeskList extends GlimmerComponent<ListSignature> {
       {{#if @onNew}}
         <lc.Slot
           @id='new'
+          @align='end'
           @priority={{0}}
           @pinned={{true}}
           @forms={{ADD_FORMS}}
           @label={{@newLabel}}
           as |form|
         >
-          <div class='push'><Button
-              @icon={{PlusIcon}}
-              @tone='primary'
-              @size='s'
-              @display={{if (eq form 'icon') 'icon' 'label'}}
-              @label={{@newLabel}}
-              {{on 'click' @onNew}}
-            >{{@newLabel}}</Button></div>
+          <Button
+            @icon={{PlusIcon}}
+            @tone='primary'
+            @size='s'
+            @display={{if (eq form 'icon') 'icon' 'label'}}
+            @label={{@newLabel}}
+            {{on 'click' @onNew}}
+          >{{@newLabel}}</Button>
         </lc.Slot>
       {{/if}}
     </LayoutControl>
@@ -346,9 +347,6 @@ export class DeskList extends GlimmerComponent<ListSignature> {
         font-family: var(--font-mono);
         font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
-      }
-      .push {
-        margin-inline-start: auto;
       }
       .status {
         text-transform: capitalize;

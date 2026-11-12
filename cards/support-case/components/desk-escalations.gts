@@ -172,6 +172,7 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
         </lc.Slot>
         <lc.Slot
           @id='raise'
+          @align='end'
           @priority={{0}}
           @pinned={{true}}
           @forms={{ADD_FORMS}}
@@ -179,7 +180,6 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
           as |form|
         >
           <Button
-            class='esc-add'
             @icon={{PlusIcon}}
             @tone='primary'
             @appearance='accent'
@@ -289,9 +289,6 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
       }
       .desk-search {
         inline-size: 15rem;
-      }
-      .esc-add {
-        margin-inline-start: auto;
       }
       .ecard {
         display: flex;

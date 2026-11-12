@@ -1308,12 +1308,12 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                   {{#if this.viewSpec}}
                     <lc.Slot
                       @id='view'
+                      @align='end'
                       @priority={{1}}
                       @forms={{VIEW_FORMS}}
                       @label='View'
                     >
                       <SegmentedControl
-                        class='of-push'
                         @label='View'
                         @options={{VIEW_OPTIONS}}
                         @value={{this.viewSpec.value}}
@@ -2090,9 +2090,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       }
       .of-search {
         inline-size: 17.5rem;
-      }
-      .of-push {
-        margin-inline-start: auto;
       }
 
       /* stat strip: every cell draws its right and bottom line and the frame

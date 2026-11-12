@@ -481,6 +481,7 @@ class PropertyMarketplaceIsolated extends Component<
                   </lc.Slot>
                   <lc.Slot
                     @id='sort'
+                    @align='end'
                     @priority={{3}}
                     @forms={{SELECT_FORMS}}
                     @label='Sort'
@@ -734,7 +735,6 @@ class PropertyMarketplaceIsolated extends Component<
         inline-size: 18rem;
       }
       .pm-sort {
-        margin-inline-start: auto;
         inline-size: 8rem;
       }
 

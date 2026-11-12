@@ -254,19 +254,20 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
           </lc.Slot>
           <lc.Slot
             @id='view'
+            @align='end'
             @priority={{2}}
             @forms={{VIEW_FORMS}}
             @label='View'
             @menuItems={{this.viewChoices}}
             as |form|
           >
-            <div class='push'><SegmentedControl
-                @label='View'
-                @display={{if (eq form 'icon') 'icon' 'text'}}
-                @options={{VIEWS}}
-                @value={{this.view}}
-                @onValueChange={{this.setView}}
-              /></div>
+            <SegmentedControl
+              @label='View'
+              @display={{if (eq form 'icon') 'icon' 'text'}}
+              @options={{VIEWS}}
+              @value={{this.view}}
+              @onValueChange={{this.setView}}
+            />
           </lc.Slot>
           {{#if this.canAdd}}
             <lc.Slot
@@ -402,9 +403,6 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
       .c {
         font-size: var(--boxel-font-size-xs);
         font-family: var(--font-sans);
-      }
-      .push {
-        margin-inline-start: auto;
       }
       .first {
         all: unset;

@@ -471,6 +471,7 @@ export class AuditComplianceDeskIsolated extends Component<
                   </lc.Slot>
                   <lc.Slot
                     @id='add'
+                    @align='end'
                     @priority={{0}}
                     @pinned={{true}}
                     @forms={{ADD_FORMS}}
@@ -478,7 +479,6 @@ export class AuditComplianceDeskIsolated extends Component<
                     as |form|
                   >
                     <Button
-                      class='push'
                       @icon={{PlusIcon}}
                       @tone='primary'
                       @size='s'
