@@ -22,7 +22,6 @@ import { Opportunity } from '../crm/opportunity';
 import { Contact } from '../crm/contact';
 import { formatMoney, hasNumber } from '../crm/utils';
 import { IsoFrame } from '../shared/compact-sheet';
-import { siblingModule } from '../shared/compact-format';
 
 function stageTone(stage?: string) {
   if (stage === 'closed won') return 'success' as const;
@@ -270,7 +269,7 @@ export class Deal extends Opportunity {
         this.args.context,
         () => this.args.model,
         // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-        siblingModule(import.meta.url, path),
+        new URL(path, import.meta.url).href,
         name,
         field,
       );

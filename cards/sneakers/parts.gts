@@ -7,7 +7,6 @@ import { Stat } from '@cardstack/pretui/components/stat';
 import { realmURL } from '@cardstack/base/card-api';
 import { identifyCard } from '@cardstack/runtime-common';
 import { DotLabel } from '../hr/dot-enum-field';
-import { siblingModule } from '../shared/compact-format';
 
 type Hue = DotLabel['args']['hue'];
 type Tone = 'neutral' | 'info' | 'success' | 'warning' | 'danger' | 'attention';
@@ -467,7 +466,7 @@ export function linkedQuery(
       if (!own) {
         return undefined;
       }
-      let on = { module: siblingModule(own.module, module), name };
+      let on = { module: new URL(module, own.module).href, name };
       return { filter: { on, eq: { [path]: id } } };
     },
     () => {

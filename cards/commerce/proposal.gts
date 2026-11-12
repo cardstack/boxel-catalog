@@ -21,7 +21,6 @@ import { formatMoney, hasNumber } from '../crm/utils';
 import { CompactFitted, CompactRow, fmtDate, orEmpty } from './compact-parts';
 import { Deal } from './deal';
 import { IsoFrame } from '../shared/compact-sheet';
-import { siblingModule } from '../shared/compact-format';
 
 const QUOTE_TONE: Record<string, 'success' | 'danger' | 'info' | 'neutral'> = {
   won: 'success',
@@ -250,7 +249,7 @@ export class Proposal extends CardDef {
         this.args.context,
         () => this.args.model,
         // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-        siblingModule(import.meta.url, path),
+        new URL(path, import.meta.url).href,
         name,
         field,
       );
