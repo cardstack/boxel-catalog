@@ -1119,10 +1119,6 @@ export class PerformanceReview extends CardDef {
       ].filter(Boolean) as DescriptionsItem[];
     }
 
-    get leadStat(): StripItem | undefined {
-      return this.strip[0];
-    }
-
     get strip(): StripItem[] {
       let m = this.args.model;
       return [
@@ -1260,6 +1256,10 @@ export class PerformanceReview extends CardDef {
   };
 
   static fitted: BaseDefComponent = class Fitted extends ReviewView {
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let m = this.args.model;
       return [
