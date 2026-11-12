@@ -14,7 +14,7 @@ import { codeRef, type getCards } from '@cardstack/runtime-common';
 import BallFootballIcon from '@cardstack/boxel-icons/ball-football';
 
 import { Event } from '../events/event';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import CountField from '@cardstack/catalog/fields/count/count-field';
 import { IsoFrame } from '../shared/compact-sheet';
 
@@ -380,7 +380,7 @@ export class Match extends Event {
       return soldLine(this.match);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><MatchMark @size='lg' /></:avatar>
         <:title>{{this.name}}</:title>
         <:subtitle>{{this.sub}}</:subtitle>
@@ -396,7 +396,7 @@ export class Match extends Event {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
