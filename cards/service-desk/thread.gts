@@ -22,7 +22,7 @@ import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import { PersonBase } from '../people/person-base';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { FittedExtras } from '../procurement/vendor';
 import {
   RecBlock,
@@ -299,14 +299,14 @@ export class Thread extends CardDef {
     <template>
       <FittedExtras @facts={{this.facts}} @relations={{this.relations}}>
         <:default>
-          <FitTile>
+          <RichFittedCard>
             <:avatar><span class='mark' aria-hidden='true'>Th</span></:avatar>
             <:title>{{@model.cardTitle}}</:title>
             <:subtitle>{{threadSub @model}}</:subtitle>
             <:status><ThreadStatus @model={{@model}} /></:status>
             <:fact>Last activity
               <strong>{{shortDate @model.lastActivityAt}}</strong></:fact>
-          </FitTile>
+          </RichFittedCard>
         </:default>
         <:relation>{{#if @model.about}}<@fields.about
               @format='atom'

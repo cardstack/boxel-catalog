@@ -36,7 +36,7 @@ import { SlaPolicy } from './sla-policy';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { FittedExtras } from '../procurement/vendor';
 import {
   RecCard,
@@ -376,7 +376,7 @@ export class Queue extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    // Whole ruled rows the tall fitted sizes add under the RichFittedCard.
     get facts() {
       let m = this.args.model;
       return [
@@ -391,7 +391,7 @@ export class Queue extends CardDef {
     <template>
       <FittedExtras @facts={{this.facts}}>
         <:default>
-          <FitTile>
+          <RichFittedCard>
             <:avatar><Avatar
                 @name={{queueMark @model.title}}
                 @shape='square'
@@ -407,7 +407,7 @@ export class Queue extends CardDef {
             </:status>
             <:fact>Default commitment
               {{if @model.policyName @model.policyName '—'}}</:fact>
-          </FitTile>
+          </RichFittedCard>
         </:default>
       </FittedExtras>
     </template>

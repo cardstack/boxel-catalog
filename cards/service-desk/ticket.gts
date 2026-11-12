@@ -35,7 +35,7 @@ import { Chip } from '@cardstack/pretui/components/chip';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { FittedExtras } from '../procurement/vendor';
 import { IsoFrame } from '../shared/compact-sheet';
 
@@ -858,7 +858,7 @@ export class Ticket extends CardDef {
     <template>
       <FittedExtras @facts={{this.facts}} @stats={{this.stats}}>
         <:default>
-          <FitTile>
+          <RichFittedCard>
             <:avatar><Avatar
                 @name='Ticket'
                 @shape='square'
@@ -882,7 +882,7 @@ export class Ticket extends CardDef {
             <:relations>{{@model.assigneeName}}{{#if @model.queueName}}
                 ·
                 {{@model.queueName}}{{/if}}</:relations>
-          </FitTile>
+          </RichFittedCard>
         </:default>
       </FittedExtras>
     </template>

@@ -17,7 +17,7 @@ import { SlaWindowField } from '@cardstack/catalog/fields/sla-window/sla-window-
 import { timerSnapshot, sortByUrgency } from './utils/sla';
 import { relativeStamp } from '@cardstack/catalog/fields/created-at/created-at';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Chip } from '@cardstack/pretui/components/chip';
@@ -824,7 +824,7 @@ export class Sla extends CardDef {
       return slaView(this.args.model);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>SL</span></:avatar>
         <:title><span
             class='ell'
@@ -862,7 +862,7 @@ export class Sla extends CardDef {
             {{/if}}
           </dl>
         </:fact>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .ell {
           display: block;

@@ -32,7 +32,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { FittedExtras } from '../procurement/vendor';
 import { initials } from './utils/initials';
 import {
@@ -369,7 +369,7 @@ export class SupportAgent extends PersonBase {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    // Whole ruled rows the tall fitted sizes add under the RichFittedCard.
     get facts() {
       let m = this.args.model;
       return [
@@ -382,7 +382,7 @@ export class SupportAgent extends PersonBase {
     <template>
       <FittedExtras @facts={{this.facts}}>
         <:default>
-          <FitTile>
+          <RichFittedCard>
             <:avatar><Avatar
                 @name={{if @model.title @model.title ''}}
                 @shape='square'
@@ -395,7 +395,7 @@ export class SupportAgent extends PersonBase {
                 >{{@model.tier}}</Chip>{{/if}}</:status>
             <:fact>Skills
               {{if @model.skillSummary @model.skillSummary '—'}}</:fact>
-          </FitTile>
+          </RichFittedCard>
         </:default>
       </FittedExtras>
     </template>

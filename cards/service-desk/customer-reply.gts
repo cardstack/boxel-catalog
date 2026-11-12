@@ -18,7 +18,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Panel } from '@cardstack/pretui/components/panel';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   KeyValue,
   type KeyValueItem,
@@ -513,7 +513,7 @@ export class CustomerReply extends CardDef {
     <template>
       <FitRows @items={{this.v.fitRows}}>
         <:tile>
-          <FitTile>
+          <RichFittedCard>
             <:avatar><TypeMark @label='Re' /></:avatar>
             <:title><span
                 class='fit-title'
@@ -527,7 +527,7 @@ export class CustomerReply extends CardDef {
                 @appearance='plain'
               >{{lowercase this.v.directionLabel}}</Chip>
             </:status>
-          </FitTile>
+          </RichFittedCard>
         </:tile>
         <:row as |item|>
           {{#if (eq item.key 'Author')}}

@@ -19,7 +19,7 @@ import {
 } from '@cardstack/catalog/components/state-pill';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { Chip } from '@cardstack/pretui/components/chip';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   KeyValue,
   type KeyValueItem,
@@ -733,7 +733,7 @@ export class Escalation extends CardDef {
     <template>
       <FitRows @items={{this.v.fitRows}}>
         <:tile>
-          <FitTile>
+          <RichFittedCard>
             <:avatar><TypeMark @label='Es' /></:avatar>
             <:title><span
                 class='fit-title'
@@ -746,7 +746,7 @@ export class Escalation extends CardDef {
                   this.v.statusLabel
                 }}</Chip>
             </:status>
-          </FitTile>
+          </RichFittedCard>
         </:tile>
         <:row as |item|>
           {{#if (eq item.key 'Subject')}}

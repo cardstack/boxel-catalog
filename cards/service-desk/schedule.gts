@@ -16,7 +16,7 @@ import { Stat } from '@cardstack/pretui/components/stat';
 import type { BusinessSchedule, DayWindow } from './utils/sla';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { FittedExtras } from '../procurement/vendor';
 import {
   RecCard,
@@ -485,7 +485,7 @@ export class Schedule extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    // Whole ruled rows the tall fitted sizes add under the RichFittedCard.
     get facts() {
       let m = this.args.model;
       return [
@@ -504,7 +504,7 @@ export class Schedule extends CardDef {
     <template>
       <FittedExtras @facts={{this.facts}}>
         <:default>
-          <FitTile>
+          <RichFittedCard>
             <:avatar><PretAvatar
                 @name='BH'
                 @shape='square'
@@ -517,7 +517,7 @@ export class Schedule extends CardDef {
                   @tone='info'
                 >default</Chip>{{/if}}</:status>
             <:fact>{{@model.summary}}</:fact>
-          </FitTile>
+          </RichFittedCard>
         </:default>
       </FittedExtras>
     </template>

@@ -20,7 +20,7 @@ import { formatMinutes, ALWAYS_ON, type BusinessSchedule } from './utils/sla';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { FittedExtras } from '../procurement/vendor';
 import {
   RecCard,
@@ -509,7 +509,7 @@ export class SlaPolicy extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    // Whole ruled rows the tall fitted sizes add under the RichFittedCard.
     get facts() {
       let m = this.args.model;
       return [
@@ -534,7 +534,7 @@ export class SlaPolicy extends CardDef {
     <template>
       <FittedExtras @facts={{this.facts}}>
         <:default>
-          <FitTile>
+          <RichFittedCard>
             <:avatar><PretAvatar
                 @name='SL'
                 @shape='square'
@@ -547,7 +547,7 @@ export class SlaPolicy extends CardDef {
                   @tone='info'
                 >default</Chip>{{/if}}</:status>
             <:fact>{{@model.targetSummary}}</:fact>
-          </FitTile>
+          </RichFittedCard>
         </:default>
       </FittedExtras>
     </template>

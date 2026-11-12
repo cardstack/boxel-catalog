@@ -16,7 +16,7 @@ import { on } from '@ember/modifier';
 import { Button } from '@cardstack/pretui/components/button';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Chip } from '@cardstack/pretui/components/chip';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { IsoFrame } from '../shared/compact-sheet';
 
 function plural(n: number, word: string) {
@@ -557,7 +557,7 @@ export class Role extends CardDef {
       return roleView(this.args.model);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar>
           {{! the record's type mark, not a person: a square, not an Avatar }}
           <span class='mark' aria-hidden='true'>Ro</span>
@@ -603,7 +603,7 @@ export class Role extends CardDef {
             {{/each}}
           </dl>
         </:fact>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .ell {
           display: block;

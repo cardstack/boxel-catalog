@@ -19,7 +19,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   DotLabel,
   IsoHead,
@@ -296,7 +296,7 @@ export class TicketCategory extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    // Whole ruled rows the tall fitted sizes add under the RichFittedCard.
     get facts() {
       let m = this.args.model;
       return [
@@ -314,7 +314,7 @@ export class TicketCategory extends CardDef {
     <template>
       <FittedExtras @facts={{this.facts}}>
         <:default>
-          <FitTile>
+          <RichFittedCard>
             <:avatar><PretAvatar
                 @name='C'
                 @shape='square'
@@ -327,7 +327,7 @@ export class TicketCategory extends CardDef {
                 >{{@model.defaultPriority}}</Chip>{{/if}}</:status>
             <:fact>Routes to
               {{if @model.defaultQueueName @model.defaultQueueName '—'}}</:fact>
-          </FitTile>
+          </RichFittedCard>
         </:default>
       </FittedExtras>
     </template>

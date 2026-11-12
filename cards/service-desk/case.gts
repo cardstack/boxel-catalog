@@ -30,7 +30,7 @@ import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Panel } from '@cardstack/pretui/components/panel';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { FitRows, TypeMark, lowercase } from './components/fit-rows';
 import {
   KeyValue,
@@ -758,7 +758,7 @@ export class Case extends CardDef {
     <template>
       <FitRows @items={{this.v.fitRows}}>
         <:tile>
-          <FitTile>
+          <RichFittedCard>
             <:avatar><TypeMark @label='Cs' /></:avatar>
             <:title><span
                 class='fit-title'
@@ -772,7 +772,7 @@ export class Case extends CardDef {
                   @appearance='plain'
                 >{{lowercase this.v.severityLabel}}</Chip>{{/if}}
             </:status>
-          </FitTile>
+          </RichFittedCard>
         </:tile>
         <:row as |item|>
           {{#if (isKey item.key 'Status')}}
