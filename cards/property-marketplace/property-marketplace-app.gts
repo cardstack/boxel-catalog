@@ -35,7 +35,7 @@ import {
 import { Stat } from '@cardstack/pretui/components/stat';
 
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   PropertyListing,
   PROPERTY_LISTING_STATUSES,
@@ -880,10 +880,10 @@ export class PropertyMarketplaceApp extends CardDef {
     typeof PropertyMarketplaceApp
   > {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:title>Property Marketplace</:title>
         <:subtitle>Value on the market, the book and what needs attention</:subtitle>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }
