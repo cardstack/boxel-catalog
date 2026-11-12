@@ -271,7 +271,7 @@ export class Team extends CardDef {
         .sub {
           flex: 1 1 6rem;
           min-width: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
       </style>

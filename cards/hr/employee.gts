@@ -482,7 +482,7 @@ class EmployeeIsolated extends Component<typeof Employee> {
     <style scoped>
       .muted {
         color: var(--muted-foreground);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       .grow {
         flex: 1 1 8rem;
@@ -490,7 +490,9 @@ class EmployeeIsolated extends Component<typeof Employee> {
         font-weight: 700;
       }
       .mono {
-        font: 500 0.6875rem var(--font-mono);
+        font-weight: 500;
+        font-size: var(--boxel-font-size-2xs);
+        font-family: var(--font-mono);
         color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
