@@ -32,7 +32,7 @@ import {
   SidebarItem,
   SidebarTrigger,
 } from '@cardstack/pretui/components/sidebar';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { CertificationAuthority } from '../audit/certification-authority';
 import { Employee } from '../hr/employee';
 import { Course, CourseStatusField, COURSE_STATUSES } from '../academy/course';
@@ -795,7 +795,7 @@ export class AcademyDesk extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{if
             @model.tagline
@@ -804,7 +804,7 @@ export class AcademyDesk extends CardDef {
           }}</:subtitle>
         <:fact>{{#if @model.actor}}Acting as
             {{@model.actor.name}}{{/if}}</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }
