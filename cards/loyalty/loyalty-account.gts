@@ -23,7 +23,7 @@ import ArrowsExchangeIcon from '@cardstack/boxel-icons/arrows-exchange';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 
 import { Contact } from '../crm/contact';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import LoyaltyTierField, { type TierOption } from './loyalty-tier-field';
 import MemberNumberField from './member-number-field';
 import PointsBalanceField from './points-balance-field';
@@ -404,7 +404,7 @@ export class LoyaltyAccount extends CardDef {
       return `${num(m?.pointsBalance)} pts · ${num(m?.lifetimePoints)} lifetime`;
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Avatar @name={{this.name}} @size={{32}} /></:avatar>
         <:title>{{this.name}}</:title>
         <:subtitle>{{this.meta}}</:subtitle>
@@ -420,7 +420,7 @@ export class LoyaltyAccount extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
@@ -1022,7 +1022,7 @@ export class PointsTransaction extends CardDef {
       return `${signed(m?.amount)} points${who ? ` to ${who}` : ''}`;
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><TxMark @size='lg' /></:avatar>
         <:title>{{reasonOf @model}}</:title>
         <:subtitle>{{txMeta @model}}</:subtitle>
@@ -1035,7 +1035,7 @@ export class PointsTransaction extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .amt {
           font-family: var(--font-mono);
