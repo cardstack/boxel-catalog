@@ -7,7 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { RfqToPaymentConsole } from './rfq-to-payment-console';
 
 // RFQ to Payment: the buyer's Procure-to-Pay console. It live-queries every
@@ -29,11 +29,11 @@ export class RfqToPaymentApp extends CardDef {
 
   static fitted = class Fitted extends Component<typeof RfqToPaymentApp> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:title>RFQ to Payment</:title>
         <:subtitle>Procure-to-Pay console</:subtitle>
         <:fact>Requisition, quote, approve, receive and pay</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }
