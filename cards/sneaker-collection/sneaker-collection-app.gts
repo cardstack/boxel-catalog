@@ -1450,12 +1450,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                         @size='xs'
                         {{on 'click' (fn this.openCard row.card)}}
                       >
-                        {{#if row.photo}}<img
-                            class='sc-thumb'
-                            src={{row.photo}}
-                            alt=''
-                          />{{/if}}
-                        <span class='sc-name'>{{text}}</span>
+                        <span class='sc-item'>
+                          {{#if row.photo}}<img
+                              class='sc-thumb'
+                              src={{row.photo}}
+                              alt=''
+                            />{{/if}}
+                          <span class='sc-name'>{{text}}</span>
+                        </span>
                       </Button>
                     {{else}}
                       <span class='sc-cell'>{{text}}</span>
@@ -1657,6 +1659,15 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
       }
       .sc-open[aria-pressed='true'] {
         text-decoration-line: underline;
+      }
+      /* Button wraps its children in one label span, so the thumbnail and the
+         name need their own flex row to share a vertical centre */
+      .sc-item {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        min-inline-size: 0;
+        max-inline-size: 100%;
       }
       .sc-thumb {
         flex: none;
