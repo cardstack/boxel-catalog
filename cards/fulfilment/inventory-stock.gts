@@ -407,11 +407,7 @@ export class InventoryStock extends CardDef {
           margin: 0;
           border-top: 1px solid var(--border);
         }
-        .kv dt {
-          padding-left: 0.625rem;
-        }
         .kv dd {
-          padding: 0 0.625rem;
           min-width: 0;
         }
         .cap {
@@ -503,7 +499,7 @@ export class InventoryStock extends CardDef {
           white-space: nowrap;
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           border-block-start: 1px solid var(--border);
         }
         .linked {

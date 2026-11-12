@@ -489,7 +489,7 @@ class InvoiceIsolated extends Component<typeof Invoice> {
         font-weight: 700;
       }
       .kv {
-        padding-inline: 0.625rem;
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
         row-gap: 0;
       }
     </style>
@@ -742,7 +742,7 @@ export class Invoice extends CardDef {
           padding: 0 0.625rem 0.5rem;
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
       </style>

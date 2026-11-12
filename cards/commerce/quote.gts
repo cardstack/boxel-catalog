@@ -114,6 +114,7 @@ export class Quote extends CardDef {
             />{{/if}}
         </header>
         <KeyValue
+          class='kv'
           @items={{this.rows}}
           @labelStyle='eyebrow'
           @divided={{true}}
@@ -381,7 +382,7 @@ export class Quote extends CardDef {
           border-inline-start: 1px solid var(--border);
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
         .linked .cap {
           font-family: var(--font-mono);

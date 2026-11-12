@@ -845,7 +845,7 @@ export const Kv: TemplateOnlyComponent<KvSignature> = <template>
       --boxel-sp-lg: 0.75rem;
       --boxel-sp-xs: 0.375rem;
       margin: 0;
-      padding-inline: var(--boxel-sp-sm);
+      --pretui-kv-pad-inline: var(--boxel-sp-sm);
       border-top: 1px solid var(--border);
       font-size: var(--boxel-font-size-xs);
       overflow-wrap: break-word;

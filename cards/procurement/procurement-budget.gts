@@ -349,11 +349,11 @@ export class ProcurementBudget extends CardDef {
           /* KeyValue pads divided rows with --boxel-sp-xs: 0.35rem gives 28px rows */
           --boxel-sp-xs: 0.35rem;
           --boxel-sp-lg: 0.75rem;
-          padding-inline: var(--boxel-sp-xs);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
         .kv.flush {
-          padding-inline: 0;
+          --pretui-kv-pad-inline: 0;
           margin-block-start: var(--boxel-sp-xs);
         }
         .list {
@@ -475,7 +475,7 @@ export class ProcurementBudget extends CardDef {
           /* KeyValue pads divided rows with --boxel-sp-xs: 0.35rem gives 28px rows */
           --boxel-sp-xs: 0.35rem;
           --boxel-sp-lg: 0.75rem;
-          padding-inline: var(--boxel-sp-xs);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           padding-block-end: var(--boxel-sp-4xs);
           row-gap: 0;
         }

@@ -390,7 +390,7 @@ export class VendorQuote extends CardDef {
           white-space: pre-wrap;
         }
         .kv {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
         @container (width < 40rem) {
@@ -495,6 +495,7 @@ export class VendorQuote extends CardDef {
           color: var(--muted-foreground);
         }
         .kv {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
       </style>

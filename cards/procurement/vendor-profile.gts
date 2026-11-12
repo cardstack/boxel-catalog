@@ -796,14 +796,16 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
       }
       .body {
         margin: 0;
-        padding: 0 0.625rem 0.625rem;
+        padding: 0 0 0.625rem;
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
         overflow-wrap: anywhere;
       }
       .kvv {
         font-size: 0.75rem;
       }
       .kv {
-        padding: 0 0.625rem 0.625rem;
+        padding: 0 0 0.625rem;
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
         overflow-wrap: anywhere;
       }
       .linked {
@@ -986,7 +988,7 @@ export class VendorProfile extends CardDef {
           border-top: 1px solid var(--border);
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
         .kvv {
           font-size: 0.75rem;

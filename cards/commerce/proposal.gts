@@ -239,7 +239,7 @@ export class Proposal extends CardDef {
           padding: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
         .kv {
-          padding-inline: var(--boxel-sp-xs);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
       </style>
@@ -435,7 +435,7 @@ export class Proposal extends CardDef {
           padding: var(--boxel-sp-xs);
         }
         .kv {
-          padding-inline: var(--boxel-sp-xs);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
       </style>

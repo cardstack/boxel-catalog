@@ -132,6 +132,7 @@ export class Subscription extends CardDef {
             />{{/if}}
         </header>
         <KeyValue
+          class='kv'
           @items={{this.rows}}
           @labelStyle='eyebrow'
           @divided={{true}}
@@ -351,6 +352,7 @@ export class Subscription extends CardDef {
               <section>
                 <h2>Details</h2>
                 <KeyValue
+                  class='kv'
                   @items={{this.rows}}
                   @labelStyle='eyebrow'
                   @divided={{true}}
@@ -368,7 +370,7 @@ export class Subscription extends CardDef {
           border-inline-start: 1px solid var(--border);
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
         .linked .cap {
           font-family: var(--font-mono);
@@ -402,7 +404,7 @@ export class Subscription extends CardDef {
           font-weight: 700;
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
         .page {
           font-size: 0.75rem;

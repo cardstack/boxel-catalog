@@ -138,7 +138,7 @@ export class Territory extends CardDef {
           padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
         }
         .kv {
-          padding-inline: var(--boxel-sp-xs);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           border-top: 1px solid var(--border);
         }
         h3 {
@@ -305,7 +305,7 @@ export class Territory extends CardDef {
           color: var(--muted-foreground);
         }
         .kv {
-          padding-inline: var(--boxel-sp-xs);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
         .stats > * {
           padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);

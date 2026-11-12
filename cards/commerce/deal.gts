@@ -259,7 +259,7 @@ export class Deal extends Opportunity {
           padding: 0 0.625rem 0.5rem;
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
       </style>
@@ -550,7 +550,7 @@ export class Deal extends Opportunity {
           padding: 0 0.625rem 0.5rem;
         }
         .kv {
-          padding-inline: 0.625rem;
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
           row-gap: 0;
         }
       </style>

@@ -172,6 +172,7 @@ export class AssetCategory extends CardDef {
           /></:fact>
         <:default>
           <KeyValue
+            class='kv-pad'
             @items={{this.rows}}
             @labelStyle='eyebrow'
             @divided={{true}}
@@ -179,6 +180,11 @@ export class AssetCategory extends CardDef {
           <AssetAtoms @assets={{this.assets}} />
         </:default>
       </Brief>
+      <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+      </style>
     </template>
   };
 
@@ -269,6 +275,7 @@ export class AssetCategory extends CardDef {
             {{/if}}
             <Section @title='Defaults'>
               <KeyValue
+                class='kv-pad'
                 @items={{this.defaults}}
                 @labelStyle='eyebrow'
                 @divided={{true}}
@@ -300,6 +307,7 @@ export class AssetCategory extends CardDef {
             </Section>
             <Section @title='Details'>
               <KeyValue
+                class='kv-pad'
                 @items={{this.details}}
                 @labelStyle='eyebrow'
                 @divided={{true}}
@@ -308,6 +316,11 @@ export class AssetCategory extends CardDef {
           </:side>
         </Sheet>
       </IsoFrame>
+      <style scoped>
+        .kv-pad {
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
+        }
+      </style>
     </template>
   };
 }
@@ -359,6 +372,7 @@ const CategoryDots: TemplateOnlyComponent<{
 const AssetAtoms: TemplateOnlyComponent<{ Args: { assets: Asset[] } }> =
   <template>
     <KeyValue
+      class='kv-pad'
       @items={{assetItems @assets}}
       @labelStyle='eyebrow'
       @divided={{true}}
@@ -373,6 +387,11 @@ const AssetAtoms: TemplateOnlyComponent<{ Args: { assets: Asset[] } }> =
         />
       </:value>
     </KeyValue>
+    <style scoped>
+      .kv-pad {
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
+      }
+    </style>
   </template>;
 
 // KeyValue items are strings; a row finds its asset again by name.
