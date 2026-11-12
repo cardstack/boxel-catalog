@@ -126,11 +126,7 @@ export class Proposal extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar
-            @name='Proposal'
-            @shape='square'
-            @size={{20}}
-          /></:avatar>
+        <:avatar><Avatar @name='Proposal' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:status>{{#each this.f.tags as |t|}}<Chip
               @label={{t.label}}

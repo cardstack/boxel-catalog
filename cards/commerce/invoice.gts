@@ -600,11 +600,7 @@ export class Invoice extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar
-            @name='Invoice'
-            @shape='square'
-            @size={{20}}
-          /></:avatar>
+        <:avatar><Avatar @name='Invoice' @shape='square' /></:avatar>
         <:title>{{this.f.number}}</:title>
         <:status>{{#each this.f.tags as |t|}}<Chip
               @label={{t.label}}

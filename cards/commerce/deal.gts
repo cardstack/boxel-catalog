@@ -114,7 +114,7 @@ export class Deal extends Opportunity {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar @name='Deal' @shape='square' @size={{20}} /></:avatar>
+        <:avatar><Avatar @name='Deal' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:status>{{#each this.f.tags as |t|}}<Chip
               @label={{t.label}}

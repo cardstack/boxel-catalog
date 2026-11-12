@@ -203,11 +203,7 @@ export class Subscription extends CardDef {
   static fitted = class Fitted extends Component<typeof Subscription> {
     <template>
       <RichFittedCard>
-        <:avatar><Avatar
-            @name='Subscription'
-            @shape='square'
-            @size={{32}}
-          /></:avatar>
+        <:avatar><Avatar @name='Subscription' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{@model.account.cardTitle}}
           ·

@@ -172,11 +172,7 @@ export class Territory extends CardDef {
   static fitted = class Fitted extends Component<typeof Territory> {
     <template>
       <RichFittedCard>
-        <:avatar><Avatar
-            @name='Territory'
-            @shape='square'
-            @size={{20}}
-          /></:avatar>
+        <:avatar><Avatar @name='Territory' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:status>{{#each
             if @model.region (array (hash label=@model.region))

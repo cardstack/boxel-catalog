@@ -191,7 +191,7 @@ export class Quote extends CardDef {
   static fitted = class Fitted extends Component<typeof Quote> {
     <template>
       <RichFittedCard>
-        <:avatar><Avatar @name='Quote' @shape='square' @size={{32}} /></:avatar>
+        <:avatar><Avatar @name='Quote' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{quoteSub @model}}</:subtitle>
         <:status>{{#if @model.status}}<StatusChip

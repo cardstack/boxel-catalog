@@ -11,6 +11,8 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import TargetIcon from '@cardstack/boxel-icons/target';
 import { Territory } from './territory';
 import { formatMoney } from './line-item-totals';
+import { fmtDate } from './compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { Money } from '../crm/money';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { eq } from '@cardstack/boxel-ui/helpers';
@@ -139,130 +141,46 @@ export class Forecast extends CardDef {
         ) || '—'
       );
     }
+    // the amount rides on the subtitle too, so strips under 170 tall show it
+    get subtitle() {
+      let m = this.args.model;
+      return [
+        m?.period,
+        formatMoney(
+          m?.projectedAmount?.amount,
+          m?.projectedAmount?.currency?.code,
+        ),
+      ]
+        .filter(Boolean)
+        .join(' · ');
+    }
     <template>
-      <div class='fitted'>
-        <div class='fmt badge'>
-          <TargetIcon class='doc-icon' width='20' height='20' />
-          <span class='figure'>{{this.amountDisplay}}</span>
-        </div>
-        <div class='fmt strip'>
-          <TargetIcon class='doc-icon' width='20' height='20' />
-          <div class='info'>
-            <span class='name'>{{@model.cardTitle}}</span>
-          </div>
-          <span class='figure'>{{this.amountDisplay}}</span>
-        </div>
-        <div class='fmt tile'>
-          <TargetIcon class='doc-icon' width='20' height='20' />
-          <span class='name'>{{@model.cardTitle}}</span>
-          <span class='figure figure-lg'>{{this.amountDisplay}}</span>
-        </div>
-        <div class='fmt card'>
-          <div class='col'>
-            <div class='row'>
-              <TargetIcon class='doc-icon' width='20' height='20' />
-              <span class='name name-lg'>{{@model.cardTitle}}</span>
-            </div>
-            {{#if @model.calculatedAt}}
-              <span class='meta'>as of
-                <@fields.calculatedAt /></span>
-            {{/if}}
-          </div>
-          <span class='figure figure-lg'>{{this.amountDisplay}}</span>
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><TargetIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{#if @model.calculatedAt}}As of
+            {{fmtDate @model.calculatedAt}}{{/if}}</:fact>
+        <:metric><Metric
+            @value={{this.amountDisplay}}
+            @label='Projected'
+          /></:metric>
+        <:details>
+          {{#if @model.territory}}<Detail @label='Territory'><@fields.territory
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.period}}<Detail
+              @label='Period'
+              @value={{@model.period}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          color: var(--foreground);
-        }
-        .fmt {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-        .doc-icon {
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-xs);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .name-lg {
-          font-size: var(--boxel-font-size);
-        }
-        .figure {
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-        .figure-lg {
-          font-size: var(--boxel-font-size-md);
-        }
-        .meta {
-          font-size: var(--boxel-font-size-2xs);
-          color: var(--muted-foreground);
-        }
-        .row {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-        }
-        .col,
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          min-width: 0;
-          flex: 1;
-        }
-        @container fitted-card (max-width: 150px) and (max-height: 169px) {
-          .badge {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: var(--boxel-sp-2xs);
-            padding: var(--boxel-sp-xs);
-            text-align: center;
-          }
-        }
-        @container fitted-card (min-width: 151px) and (max-height: 169px) {
-          .strip {
-            display: flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          }
-        }
-        @container fitted-card (max-width: 399px) and (min-height: 170px) {
-          .tile {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            gap: var(--boxel-sp-2xs);
-            padding: var(--boxel-sp-sm);
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--boxel-sp);
-            padding: var(--boxel-sp-lg);
-          }
         }
       </style>
     </template>
