@@ -17,7 +17,7 @@ import PackageIcon from '@cardstack/boxel-icons/package';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -218,7 +218,7 @@ export class CollectibleProduct extends CardDef {
 
   static fitted = class Fitted extends Component<typeof CollectibleProduct> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -227,7 +227,7 @@ export class CollectibleProduct extends CardDef {
           {{moneyText @model.retailPrice}}
           ·
           {{if @model.releaseDate (day @model.releaseDate) '—'}}</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

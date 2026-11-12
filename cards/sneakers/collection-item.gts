@@ -19,7 +19,7 @@ import { MarketplaceMember } from './marketplace-member';
 import { Acquisition } from './acquisition';
 import { formatMoneyDelta, moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -314,7 +314,7 @@ export class CollectionItem extends CardDef {
   // Attributes only: a prerendered grid tile cannot resolve links.
   static fitted = class Fitted extends Component<typeof CollectionItem> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -326,7 +326,7 @@ export class CollectionItem extends CardDef {
           {{moneyText @model.lastKnownValue}}
           · Paid
           {{moneyText @model.acquisition.price}}</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

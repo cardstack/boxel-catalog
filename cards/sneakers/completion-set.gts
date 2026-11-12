@@ -23,7 +23,7 @@ import { CollectibleProduct } from './collectible-product';
 // level "for clarity".
 import { CollectionItem } from './collection-item';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -356,7 +356,7 @@ export class CompletionSet extends CardDef {
 
   static fitted = class Fitted extends Component<typeof CompletionSet> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><SnMark
             @src={{@model.coverImage.resolvedUrl}}
             @size='lg'
@@ -365,7 +365,7 @@ export class CompletionSet extends CardDef {
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><Visibility @model={{@model}} /></:status>
         <:fact>{{productCount @model}} products</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

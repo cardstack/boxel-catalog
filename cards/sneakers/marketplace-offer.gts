@@ -30,7 +30,7 @@ import {
   moneyText,
 } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -343,7 +343,7 @@ export class MarketplaceOffer extends CardDef {
 
   static fitted = class Fitted extends Component<typeof MarketplaceOffer> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><SnMark @text='Of' @size='lg' /></:avatar>
         <:title>{{offerTitle @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -360,7 +360,7 @@ export class MarketplaceOffer extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

@@ -29,7 +29,7 @@ import {
   type OrderStatus,
 } from './order-status';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -349,7 +349,7 @@ export class Order extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Order> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><SnMark @text='Or' @size='lg' /></:avatar>
         <:title>{{orderTitle @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -369,7 +369,7 @@ export class Order extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
