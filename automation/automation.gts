@@ -2228,7 +2228,7 @@ class Isolated extends Component<typeof Automation> {
   triggerStatusAt = (index: number) =>
     statusOfTrigger(this.status, this.args.model.triggers?.[index]?.label);
   <template>
-    <article class='automation'>
+    <article class='automation' data-test-automation>
       <header class='automation__header'>
         <span class='automation__badge' aria-hidden='true'>
           <CalendarClockIcon width='28' height='28' />
