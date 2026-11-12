@@ -1,5 +1,9 @@
 import { RelatedList, relatedSearch } from '../crm/record-views';
 import {
+  resolveRRIReference,
+  type RealmResourceIdentifier,
+} from '@cardstack/runtime-common';
+import {
   Component,
   contains,
   containsMany,
@@ -269,7 +273,7 @@ export class Deal extends Opportunity {
         this.args.context,
         () => this.args.model,
         // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
-        new URL(path, import.meta.url).href,
+        resolveRRIReference(path, import.meta.url as RealmResourceIdentifier),
         name,
         field,
       );
