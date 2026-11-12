@@ -1,4 +1,5 @@
 import { Button } from '@cardstack/pretui/components/button';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { on } from '@ember/modifier';
 import {
   CardDef,
@@ -40,7 +41,7 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { formatMoney } from '../crm/utils';
-import { CompactFitted, CompactRow, fmtDate } from './compact-parts';
+import { fmtDate } from './compact-parts';
 import DueDateField from '@cardstack/catalog/fields/due-date/due-date';
 // ---- AP (buy-side) leg.
 import { PurchaseOrder } from '../procurement/purchase-order';
@@ -598,47 +599,56 @@ export class Invoice extends CardDef {
       return invoiceFacts(this.args.model as Invoice);
     }
     <template>
-      <CompactFitted
-        @mark='Invoice'
-        @title={{this.f.number}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.fact}}
-        @big={{this.f.balance}}
-        @bigLabel='Balance due'
-        @tags={{this.f.tags}}
-      >
-        <:rows>
-          <CompactRow @k='Total' @v={{this.f.total}} />
-          <CompactRow @k='Subtotal' @v={{this.f.subtotal}} />
-          {{#if @model.account}}<CompactRow @k='Account'><@fields.account
+      <RichFittedCard>
+        <:avatar><Avatar
+            @name='Invoice'
+            @shape='square'
+            @size={{20}}
+          /></:avatar>
+        <:title>{{this.f.number}}</:title>
+        <:status>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.fact}}</:fact>
+        <:metric><Metric
+            @value={{this.f.balance}}
+            @label='Balance due'
+          /></:metric>
+        <:details>
+          <Detail @label='Total' @value={{this.f.total}} />
+          <Detail @label='Subtotal' @value={{this.f.subtotal}} />
+          {{#if @model.account}}<Detail @label='Account'><@fields.account
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if this.f.taxText}}<CompactRow
-              @k='Tax'
-              @v={{this.f.taxText}}
+              /></Detail>{{/if}}
+          {{#if this.f.taxText}}<Detail
+              @label='Tax'
+              @value={{this.f.taxText}}
             />{{/if}}
-          {{#if this.f.issued}}<CompactRow
-              @k='Issued'
-              @v={{this.f.issued}}
+          {{#if this.f.issued}}<Detail
+              @label='Issued'
+              @value={{this.f.issued}}
             />{{/if}}
-          {{#if @model.quote}}<CompactRow @k='Quote'><@fields.quote
+          {{#if @model.quote}}<Detail @label='Quote'><@fields.quote
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if this.f.due}}<CompactRow @k='Due' @v={{this.f.due}} />{{/if}}
-          {{#if @model.owner}}<CompactRow @k='Owner'><@fields.owner
+              /></Detail>{{/if}}
+          {{#if this.f.due}}<Detail @label='Due' @value={{this.f.due}} />{{/if}}
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if @model.taxBreakdown.jurisdiction}}<CompactRow
-              @k='Tax jurisdiction'
+              /></Detail>{{/if}}
+          {{#if @model.taxBreakdown.jurisdiction}}<Detail
+              @label='Tax jurisdiction'
             ><@fields.taxBreakdown.jurisdiction
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-        </:rows>
-      </CompactFitted>
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

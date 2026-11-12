@@ -17,7 +17,7 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { Table } from '@cardstack/pretui/components/table';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { Money } from '../crm/money';
@@ -190,7 +190,7 @@ export class Quote extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Quote> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Avatar @name='Quote' @shape='square' @size={{32}} /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{quoteSub @model}}</:subtitle>
@@ -206,7 +206,7 @@ export class Quote extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

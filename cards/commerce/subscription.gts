@@ -15,7 +15,7 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { Account } from '../crm/account';
 import { Contract } from '../legal/contract';
 import { Money } from '../crm/money';
@@ -202,7 +202,7 @@ export class Subscription extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Subscription> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Avatar
             @name='Subscription'
             @shape='square'
@@ -226,7 +226,7 @@ export class Subscription extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
