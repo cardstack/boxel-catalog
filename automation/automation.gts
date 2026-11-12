@@ -71,6 +71,7 @@ import { NumberInput } from '@cardstack/pretui/components/number-input';
 import { PanelSection } from '@cardstack/pretui/components/panel-section';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Switch } from '@cardstack/pretui/components/switch';
+import { Stack } from '@cardstack/pretui/components/stack';
 import { Table } from '@cardstack/pretui/components/table';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
 import { Token } from '@cardstack/pretui/components/token';
@@ -1666,6 +1667,9 @@ type ServerStatus =
       triggers: TriggerStatus[];
     };
 type StatusState = {
+  // Whether the view knows what to show: the route answered, or the view
+  // has no way to ask (no tools, as in a prerender).
+  known: boolean;
   visible: boolean;
   status: ServerStatus | undefined;
 };
@@ -1681,21 +1685,36 @@ function automationStatus(
     tools: Tools | undefined;
   },
 ) {
+  let kept: { url: string | undefined; state: StatusState } | undefined;
   return use(
     owner,
     resource(({ on }) => {
       let { id, realm, realmId, tools } = args();
-      let state = new TrackedObject<StatusState>({
-        visible: false,
-        status: undefined,
-      });
       let path = id && realmId ? pathInRealm(id, realmId) : undefined;
-      if (!realm || path === undefined || !tools) {
+      let url =
+        realm && path !== undefined
+          ? `${realm}${STATUS_PATH}?automation=${encodeURIComponent(
+              realm + path,
+            )}`
+          : undefined;
+      // The answer lives across the resource's runs while the card is the
+      // same, so a run never swaps the status back to the reader's callout
+      // while it asks again.
+      if (!kept || kept.url !== url) {
+        kept = {
+          url,
+          state: new TrackedObject<StatusState>({
+            known: false,
+            visible: false,
+            status: undefined,
+          }),
+        };
+      }
+      let state = kept.state;
+      if (!realm || path === undefined || !url || !tools) {
+        state.known = true;
         return state;
       }
-      let url = `${realm}${STATUS_PATH}?automation=${encodeURIComponent(
-        realm + path,
-      )}`;
       let ended = false;
       let latest = 0;
       let read = async () => {
@@ -1717,10 +1736,12 @@ function automationStatus(
             : undefined;
           state.status = status;
           state.visible = Boolean(status);
+          state.known = true;
         } catch {
           if (!ended && asked === latest) {
             state.status = undefined;
             state.visible = false;
+            state.known = true;
           }
         }
       };
@@ -1783,7 +1804,7 @@ function stateSentence(status: ServerStatus): string {
     case 'waiting-for-credits':
       return 'The payer has no credits left, so Boxel holds every run. Boxel runs the automation again once the payer adds credits.';
     case 'done':
-      return 'Every trigger has started as many runs as the trigger allows, so Boxel runs nothing more. Adding a trigger starts the automation again.';
+      return "Every trigger has used up the trigger's runs or passed the trigger's end, so Boxel runs nothing more. Boxel runs the automation again when someone who can edit this workspace adds a trigger.";
     case 'paused':
       switch (status.pauseReason) {
         case 'realm-archived':
@@ -1791,9 +1812,9 @@ function stateSentence(status: ServerStatus): string {
         case 'payer-lost-access':
           return 'The payer can no longer edit this workspace, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and becomes the new payer.';
         case 'caps-raised':
-          return 'An edit raised a limit above what the payer agreed to pay for, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to the new limits.';
+          return 'Someone raised a limit above what the payer agreed to pay for, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to the new limits.';
         case 'batched-ai-enabled':
-          return 'An edit turned on batched AI after the payer agreed to the limits, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to batched AI.';
+          return 'Someone turned on batched AI after the payer agreed to the limits, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to batched AI.';
         default:
           return 'Someone who can edit this workspace paused the automation, so Boxel runs nothing until someone resumes the automation.';
       }
@@ -1818,7 +1839,7 @@ function lastRunText(status: ServerStatus): string | undefined {
     ? 'Completed'
     : status.lastResult === 'error'
       ? 'Failed'
-      : 'Canceled';
+      : 'Stopped';
 }
 
 function tally(n: number): string {
@@ -1849,7 +1870,7 @@ interface StatusItem {
 function statusItems(status: ServerStatus): StatusItem[] {
   let items: StatusItem[] = [
     { label: 'State', look: stateLook(status) },
-    { label: 'Paid by', value: payerText(status) },
+    { label: 'Payer', value: payerText(status) },
   ];
   if (status.switchedOn) {
     items.push(
@@ -1857,7 +1878,7 @@ function statusItems(status: ServerStatus): StatusItem[] {
         ? { label: 'Next run', value: 'None while paused' }
         : status.nextRun
           ? { label: 'Next run', date: status.nextRun }
-          : { label: 'Next run', value: 'None scheduled' },
+          : { label: 'Next run', value: 'None' },
     );
     let last = lastRunText(status);
     items.push(
@@ -1900,8 +1921,19 @@ function itemAt(items: StatusItem[], index: number): StatusItem | undefined {
   return items[index];
 }
 
-// A grid of status facts: plain values, times in the viewer's time zone, and
-// the state as a chip.
+// How a time reads in the status facts, with its zone named, since the
+// status reads in the viewer's zone and each trigger in the trigger's own.
+const DATE_TIME_OPTIONS: Record<string, unknown> = {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZoneName: 'short',
+};
+
+// A grid of status facts: plain values, times with their zone named, and the
+// state as a chip.
 class StatusFacts extends GlimmerComponent<{
   Args: { items: StatusItem[]; columns?: number; size?: 's' | 'm' };
 }> {
@@ -1923,8 +1955,7 @@ class StatusFacts extends GlimmerComponent<{
           {{else if fact.date}}
             <FormatDate
               @date={{fact.date}}
-              @dateStyle='medium'
-              @timeStyle='short'
+              @options={{DATE_TIME_OPTIONS}}
               @timeZone={{fact.timeZone}}
             />
           {{else}}
@@ -2181,6 +2212,9 @@ class Isolated extends Component<typeof Automation> {
   get status() {
     return this.server.current.visible ? this.server.current.status : undefined;
   }
+  get statusKnown() {
+    return this.server.current.known;
+  }
   get look() {
     return stateLook(this.status);
   }
@@ -2206,7 +2240,12 @@ class Isolated extends Component<typeof Automation> {
             <p class='automation__summary'><@fields.cardDescription /></p>
           {{/if}}
         </div>
-        <div class='automation__chips'>
+        <Stack
+          @orientation='horizontal'
+          @wrap={{true}}
+          @gap='xs'
+          @justify='end'
+        >
           {{#if this.look}}
             <Chip
               @label={{this.look.label}}
@@ -2217,7 +2256,7 @@ class Isolated extends Component<typeof Automation> {
           {{#if this.showsBatchedAI}}
             <Chip @label={{this.batchedAILabel}} @tone='info' />
           {{/if}}
-        </div>
+        </Stack>
       </header>
 
       {{#if this.status}}
@@ -2231,7 +2270,7 @@ class Isolated extends Component<typeof Automation> {
           </p>
           <StatusFacts @items={{this.statusItems}} />
         </PanelSection>
-      {{else}}
+      {{else if this.statusKnown}}
         <Callout
           @tone='info'
           @title='Who turns this automation on, and who pays'
@@ -2406,12 +2445,6 @@ class Isolated extends Component<typeof Automation> {
       .automation__progress {
         margin-top: var(--boxel-sp-xs);
         padding-inline-start: calc(2rem + var(--boxel-sp-sm));
-      }
-      .automation__chips {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: var(--boxel-sp-2xs);
       }
       @container (inline-size < 40rem) {
         .automation {
@@ -3360,28 +3393,30 @@ class Fitted extends WithStatus {
         </div>
       </:meta>
       <:footer>
-        {{#if this.look}}
-          <Chip
-            @label={{this.look.label}}
-            @tone={{this.look.tone}}
-            data-test-automation-fitted-state={{this.look.label}}
-          />
-        {{/if}}
-        {{#unless this.hasScript}}
-          <Chip
-            @label='No script yet'
-            @tone='warning'
-            data-test-automation-fitted-no-script
-          />
-        {{/unless}}
-        {{#if this.showsBatchedAI}}
-          <Chip
-            @label='Batched AI'
-            @tone='info'
-            class='automation-fitted__batched'
-            data-test-automation-fitted-batched-ai
-          />
-        {{/if}}
+        <Stack @orientation='horizontal' @wrap={{true}} @gap='xs'>
+          {{#if this.look}}
+            <Chip
+              @label={{this.look.label}}
+              @tone={{this.look.tone}}
+              data-test-automation-fitted-state={{this.look.label}}
+            />
+          {{/if}}
+          {{#unless this.hasScript}}
+            <Chip
+              @label='No script yet'
+              @tone='warning'
+              data-test-automation-fitted-no-script
+            />
+          {{/unless}}
+          {{#if this.showsBatchedAI}}
+            <Chip
+              @label='Batched AI'
+              @tone='info'
+              class='automation-fitted__batched'
+              data-test-automation-fitted-batched-ai
+            />
+          {{/if}}
+        </Stack>
       </:footer>
     </FittedCard>
     <style scoped>
@@ -3469,20 +3504,29 @@ class Embedded extends WithStatus {
         </:trailing>
       </Item>
       {{#if this.triggers.length}}
-        <ul class='automation-embedded__triggers'>
+        <Stack @gap='none' class='automation-embedded__triggers'>
           {{#each this.triggers as |trigger|}}
-            <li data-test-automation-embedded-trigger>
-              {{#if (eq trigger.kind 'cron')}}
-                <RepeatIcon width='14' height='14' aria-hidden='true' />
-              {{else if (eq trigger.kind 'once')}}
-                <CalendarCheckIcon width='14' height='14' aria-hidden='true' />
-              {{else}}
-                <ZapIcon width='14' height='14' aria-hidden='true' />
-              {{/if}}
-              <span>{{trigger.phrase}}</span>
-            </li>
+            <Item
+              @size='xs'
+              @title={{trigger.phrase}}
+              data-test-automation-embedded-trigger
+            >
+              <:leading>
+                {{#if (eq trigger.kind 'cron')}}
+                  <RepeatIcon width='14' height='14' aria-hidden='true' />
+                {{else if (eq trigger.kind 'once')}}
+                  <CalendarCheckIcon
+                    width='14'
+                    height='14'
+                    aria-hidden='true'
+                  />
+                {{else}}
+                  <ZapIcon width='14' height='14' aria-hidden='true' />
+                {{/if}}
+              </:leading>
+            </Item>
           {{/each}}
-        </ul>
+        </Stack>
       {{else}}
         <EmptyState
           @size='s'
@@ -3494,6 +3538,7 @@ class Embedded extends WithStatus {
     </div>
     <style scoped>
       .automation-embedded {
+        container-type: inline-size;
         display: grid;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-sm);
@@ -3508,23 +3553,7 @@ class Embedded extends WithStatus {
         color: var(--primary-foreground);
       }
       .automation-embedded__triggers {
-        display: grid;
-        gap: var(--boxel-sp-4xs);
-        margin: 0;
-        padding: 0;
-        list-style: none;
-        font-size: var(--boxel-font-size-xs);
-        line-height: var(--boxel-line-height-xs);
         color: var(--muted-foreground);
-      }
-      .automation-embedded__triggers li {
-        display: flex;
-        align-items: flex-start;
-        gap: var(--boxel-sp-2xs);
-      }
-      .automation-embedded__triggers svg {
-        flex-shrink: 0;
-        margin-top: 0.2em;
       }
     </style>
   </template>
