@@ -1,5 +1,4 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
-import { get } from '@ember/helper';
 import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   Component,
@@ -461,6 +460,10 @@ export class Contractor extends PersonBase {
       return contractorView(this.args.model);
     }
 
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let v = this.v;
       let d = this.args.model?.daysRemaining;
@@ -488,10 +491,10 @@ export class Contractor extends PersonBase {
               @displayContainer={{false}}
             />{{/if}}</:status>
         <:subtitle><span class='meta'>{{this.v.subtitle}}</span></:subtitle>
-        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
-                @value={{s.value}}
-                @label={{s.label}}
-              />{{/if}}{{/let}}</:metric>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
         <:details>
 
           <Detail @label='Rate'><span class='mono'>{{orDash

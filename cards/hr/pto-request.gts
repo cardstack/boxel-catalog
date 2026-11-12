@@ -16,7 +16,7 @@ import enumField from '@cardstack/base/enum';
 import PlaneDepartureIcon from '@cardstack/boxel-icons/plane-departure';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { fn, get } from '@ember/helper';
+import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
@@ -542,6 +542,10 @@ export class PtoRequest extends CardDef {
         { label: 'Status', value: v.statusLabel },
       ];
     }
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let v = this.v;
       return [
@@ -559,10 +563,10 @@ export class PtoRequest extends CardDef {
             @hue={{toneHue this.v.statusTone}}
           /></:status>
         <:subtitle><span class='meta'>{{this.v.fact}}</span></:subtitle>
-        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
-                @value={{s.value}}
-                @label={{s.label}}
-              />{{/if}}{{/let}}</:metric>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
         <:details>
           <Detail @label='Dates'><span class='mono'>{{orDash
                 this.v.range

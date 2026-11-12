@@ -16,7 +16,7 @@ import { dotEnumField } from './dot-enum-field';
 import { FileDef } from 'https://cardstack.com/base/file-api';
 import HandshakeIcon from '@cardstack/boxel-icons/handshake';
 import { on } from '@ember/modifier';
-import { fn, get } from '@ember/helper';
+import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
@@ -741,6 +741,10 @@ export class Offer extends CardDef {
       ).length;
     }
 
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let m = this.args.model;
       let k = (n?: number | null) =>
@@ -769,10 +773,10 @@ export class Offer extends CardDef {
               @displayContainer={{false}}
             />{{/if}}</:status>
         <:subtitle><span class='meta'>{{offerMeta @model}}</span></:subtitle>
-        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
-                @value={{s.value}}
-                @label={{s.label}}
-              />{{/if}}{{/let}}</:metric>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
         <:details>
 
           <Detail @label='Approval'>{{this.approvedCount}}

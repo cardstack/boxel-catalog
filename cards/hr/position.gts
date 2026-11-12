@@ -21,7 +21,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { on } from '@ember/modifier';
-import { fn, get } from '@ember/helper';
+import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 
 import { Employee } from './employee';
@@ -620,6 +620,10 @@ export class Position extends CardDef {
   };
 
   static fitted = class Fitted extends PositionView {
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let m = this.args.model;
       return [
@@ -640,10 +644,10 @@ export class Position extends CardDef {
               @displayContainer={{false}}
             />{{/if}}</:status>
         <:subtitle><span class='meta'>{{this.subline}}</span></:subtitle>
-        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
-                @value={{s.value}}
-                @label={{s.label}}
-              />{{/if}}{{/let}}</:metric>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
         <:details>
 
           <Detail @label='Level'>{{this.facts.level}}</Detail>

@@ -1,5 +1,4 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
-import { get } from '@ember/helper';
 import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   CardDef,
@@ -582,6 +581,10 @@ export class OnboardingChecklist extends CardDef {
     get moreFacts() {
       return this.keyFacts.slice(2);
     }
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       return [
         { label: 'Progress', value: this.summary.progress },
@@ -603,10 +606,10 @@ export class OnboardingChecklist extends CardDef {
             @hue={{hueOf ONBOARDING_CHECKLIST_STATUS_HUES @model.status}}
           /></:status>
         <:subtitle><span class='meta'>{{this.subline}}</span></:subtitle>
-        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
-                @value={{s.value}}
-                @label={{s.label}}
-              />{{/if}}{{/let}}</:metric>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
         <:details>
 
           <Detail @label='Progress'>{{this.summary.progress}} done</Detail>

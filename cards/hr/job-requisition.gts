@@ -7,7 +7,6 @@ import {
   StringField,
   type BaseDefComponent,
 } from '@cardstack/base/card-api';
-import { get } from '@ember/helper';
 import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
@@ -370,6 +369,10 @@ export class JobRequisition extends CardDef {
       return approvalChip(this.args.model);
     }
 
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let m = this.args.model;
       return [
@@ -405,10 +408,10 @@ export class JobRequisition extends CardDef {
               @displayContainer={{false}}
             />{{/if}}</:status>
         <:subtitle><span class='meta'>{{subLine @model}}</span></:subtitle>
-        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
-                @value={{s.value}}
-                @label={{s.label}}
-              />{{/if}}{{/let}}</:metric>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
         <:details>
 
           <Detail @label='Target fill'><span class='mono'>{{if

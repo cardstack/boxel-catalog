@@ -7,7 +7,6 @@ import {
   containsMany,
   StringField,
 } from '@cardstack/base/card-api';
-import { get } from '@ember/helper';
 import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
@@ -759,6 +758,10 @@ export class Vendor extends CardDef {
     get moreFacts(): KeyValueItem[] {
       return this.facts.slice(3);
     }
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let v = this.v;
       return [
@@ -781,10 +784,10 @@ export class Vendor extends CardDef {
               @hue={{toneHue this.v.ratingTone}}
             />{{/if}}</:status>
         <:subtitle><span class='meta'>{{this.v.subtitle}}</span></:subtitle>
-        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
-                @value={{s.value}}
-                @label={{s.label}}
-              />{{/if}}{{/let}}</:metric>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
         <:details>
           <Detail @label='Spend YTD'><span class='mono'>{{orDash
                 this.v.spend

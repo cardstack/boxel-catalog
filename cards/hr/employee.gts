@@ -1,5 +1,4 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
-import { get } from '@ember/helper';
 import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   Component,
@@ -688,6 +687,10 @@ export class Employee extends PersonBase {
   // RichFittedCard shows a row whole or not at all. Extends the isolated class for
   // its Team / Review / PTO live queries.
   static fitted = class Fitted extends EmployeeIsolated {
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let m = this.args.model;
       return [
@@ -710,10 +713,10 @@ export class Employee extends PersonBase {
               @displayContainer={{false}}
             />{{/if}}</:status>
         <:subtitle><span class='meta'>{{roleLine @model}}</span></:subtitle>
-        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
-                @value={{s.value}}
-                @label={{s.label}}
-              />{{/if}}{{/let}}</:metric>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
         <:details>
 
           <Detail @label='PTO'><span class='mono'>{{if

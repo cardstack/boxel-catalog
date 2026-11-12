@@ -14,7 +14,7 @@ import MarkdownField from 'https://cardstack.com/base/markdown';
 import ListChecksIcon from '@cardstack/boxel-icons/list-checks';
 import { on } from '@ember/modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { fn, get } from '@ember/helper';
+import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Avatar } from '@cardstack/pretui/components/avatar';
@@ -503,6 +503,10 @@ export class InterviewPlan extends CardDef {
     get facts() {
       return planFacts(this.args.model);
     }
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let f = this.facts;
       return [
@@ -521,10 +525,10 @@ export class InterviewPlan extends CardDef {
           /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle><span class='meta'>{{this.facts.subline}}</span></:subtitle>
-        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
-                @value={{s.value}}
-                @label={{s.label}}
-              />{{/if}}{{/let}}</:metric>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
         <:details>
 
           <Detail @label='Rounds'>{{this.facts.roundLine}}</Detail>

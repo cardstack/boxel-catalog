@@ -9,7 +9,6 @@ import {
   realmURL,
   StringField,
 } from '@cardstack/base/card-api';
-import { get } from '@ember/helper';
 import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import type { ComponentLike } from '@glint/template';
 import UsersIcon from '@cardstack/boxel-icons/users';
@@ -360,6 +359,10 @@ export class Team extends CardDef {
       return teamView(this.args.model, this.projects);
     }
 
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       return [
         { label: 'Members', value: String(this.v.size) },
@@ -377,10 +380,10 @@ export class Team extends CardDef {
           /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle><span class='meta'>{{@model.mission}}</span></:subtitle>
-        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
-                @value={{s.value}}
-                @label={{s.label}}
-              />{{/if}}{{/let}}</:metric>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
         <:details>
           <Detail @label='Headcount'><span
               class='mono'
