@@ -43,7 +43,7 @@ import { Stat } from '@cardstack/pretui/components/stat';
 import { statusOption } from '@cardstack/catalog/fields/status/status';
 
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { CollectionItem } from '../sneakers/collection-item';
 import { CompletionSet, computeCompletion } from '../sneakers/completion-set';
 import { Listing } from '../sneakers/listing';
@@ -1751,10 +1751,10 @@ export class SneakerCollectionApp extends CardDef {
 
   static fitted = class Fitted extends Component<typeof SneakerCollectionApp> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:title>Sneaker Collection</:title>
         <:subtitle>{{@model.tagline}}</:subtitle>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }
