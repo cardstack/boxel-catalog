@@ -27,7 +27,7 @@ import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { Employee } from '../hr/employee';
 import { DotLabel, dotEnumField } from '../hr/dot-enum-field';
 import { daysBetween } from '../hr/utils';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { PublishChecklist } from './components/publish-checklist';
 import { ChannelSelector } from './components/channel-selector';
 import { SchedulePicker } from './components/schedule-picker';
@@ -911,7 +911,7 @@ export class PropertyListing extends CardDef {
       return new ListingFacts(this.args.model as PropertyListing);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar>{{#if this.f.hero}}<img
               class='pf-thumb'
               src={{this.f.hero}}
@@ -929,7 +929,7 @@ export class PropertyListing extends CardDef {
             <@fields.agent @format='atom' @displayContainer={{false}} />
           {{/if}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .pf-thumb {
           display: block;
