@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { get } from '@ember/helper';
 import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { realmURL } from 'https://cardstack.com/base/card-api';
 import { codeRef } from '@cardstack/runtime-common';

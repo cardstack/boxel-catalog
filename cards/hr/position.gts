@@ -21,7 +21,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
+import { fn, get } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 
 import { Employee } from './employee';

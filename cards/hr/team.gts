@@ -9,6 +9,7 @@ import {
   realmURL,
   StringField,
 } from '@cardstack/base/card-api';
+import { get } from '@ember/helper';
 import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import type { ComponentLike } from '@glint/template';
 import UsersIcon from '@cardstack/boxel-icons/users';

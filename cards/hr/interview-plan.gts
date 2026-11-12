@@ -14,7 +14,7 @@ import MarkdownField from 'https://cardstack.com/base/markdown';
 import ListChecksIcon from '@cardstack/boxel-icons/list-checks';
 import { on } from '@ember/modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { fn } from '@ember/helper';
+import { fn, get } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Avatar } from '@cardstack/pretui/components/avatar';

@@ -16,7 +16,7 @@ import enumField from '@cardstack/base/enum';
 import PlaneDepartureIcon from '@cardstack/boxel-icons/plane-departure';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
+import { fn, get } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';

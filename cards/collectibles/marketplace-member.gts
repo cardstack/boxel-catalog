@@ -546,7 +546,7 @@ export class MarketplaceMember extends PersonBase {
     <template>
       <RichFittedCard>
         <:avatar><Avatar
-            @name={{@model.title}}
+            @name={{if @model.title @model.title ''}}
             @src={{@model.photo.resolvedUrl}}
           /></:avatar>
         <:title>{{@model.title}}</:title>

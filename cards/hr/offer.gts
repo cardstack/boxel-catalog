@@ -16,7 +16,7 @@ import { dotEnumField } from './dot-enum-field';
 import { FileDef } from 'https://cardstack.com/base/file-api';
 import HandshakeIcon from '@cardstack/boxel-icons/handshake';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
+import { fn, get } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';

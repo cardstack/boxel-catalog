@@ -7,6 +7,7 @@ import {
   containsMany,
   StringField,
 } from '@cardstack/base/card-api';
+import { get } from '@ember/helper';
 import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
