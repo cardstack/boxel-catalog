@@ -257,6 +257,7 @@ export class Task extends CardDef {
           border-radius: var(--radius);
           max-width: 44rem;
           margin: 0 auto;
+          inline-size: 100%;
           padding: 2rem 1.5rem;
           display: flex;
           flex-direction: column;

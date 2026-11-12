@@ -167,6 +167,7 @@ export class Lesson extends CardDef {
           border-radius: var(--radius);
           max-width: 52rem;
           margin: 0 auto;
+          inline-size: 100%;
           container-type: inline-size;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;

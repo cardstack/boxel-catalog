@@ -223,6 +223,7 @@ export class User extends CardDef {
           border-radius: var(--radius);
           max-width: 40rem;
           margin: 0 auto;
+          inline-size: 100%;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
