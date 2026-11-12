@@ -272,7 +272,7 @@ export class Notification extends CardDef {
       </IsoFrame>
       <style scoped>
         .kv-pad {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
 
         /* Rule 1: isolated has no host container — declare our own or every

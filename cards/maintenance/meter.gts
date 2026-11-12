@@ -289,7 +289,7 @@ class MeterIsolated extends MeterView {
     </IsoFrame>
     <style scoped>
       .kv-pad {
-        padding-inline: var(--boxel-sp-sm);
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
       }
 
       .log-btn {
@@ -447,7 +447,7 @@ export class Meter extends CardDef {
       </Brief>
       <style scoped>
         .kv-pad {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
       </style>
     </template>
@@ -533,7 +533,7 @@ const MeterLinks: TemplateOnlyComponent<{
   </KeyValue>
   <style scoped>
     .kv-pad {
-      padding-inline: var(--boxel-sp-sm);
+      --pretui-kv-pad-inline: var(--boxel-sp-sm);
     }
   </style>
 </template>;

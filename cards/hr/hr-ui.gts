@@ -106,7 +106,7 @@ export const FactList: TemplateOnlyComponent<FactListSignature> = <template>
   {{/if}}
   <style scoped>
     .kv-pad {
-      padding-inline: var(--boxel-sp-sm);
+      --pretui-kv-pad-inline: var(--boxel-sp-sm);
     }
 
     .hr-facts {

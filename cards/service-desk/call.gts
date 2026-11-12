@@ -281,7 +281,7 @@ export class Call extends CardDef {
       </IsoFrame>
       <style scoped>
         .kv-pad {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
 
         /* Rule 1: an isolated card gets no host container, so it declares its

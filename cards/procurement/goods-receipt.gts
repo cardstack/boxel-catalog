@@ -346,7 +346,7 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
     </article>
     <style scoped>
       .kv-pad {
-        padding-inline: var(--boxel-sp-sm);
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
       }
 
       .gr {
@@ -563,7 +563,7 @@ export class GoodsReceipt extends CardDef {
       </article>
       <style scoped>
         .kv-pad {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
 
         .emb {

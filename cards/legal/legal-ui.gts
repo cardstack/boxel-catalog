@@ -33,7 +33,7 @@ export const LegalFacts: TemplateOnlyComponent<LegalFactsSignature> = <template>
   {{/if}}
   <style scoped>
     .kv-pad {
-      padding-inline: var(--boxel-sp-sm);
+      --pretui-kv-pad-inline: var(--boxel-sp-sm);
     }
 
     /* Doubled class so the alignment outranks KeyValue's own centring

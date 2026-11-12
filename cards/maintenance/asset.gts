@@ -215,7 +215,7 @@ export class Asset extends CardDef {
       </Brief>
       <style scoped>
         .kv-pad {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
       </style>
     </template>
@@ -489,7 +489,7 @@ export class Asset extends CardDef {
       </IsoFrame>
       <style scoped>
         .kv-pad {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
       </style>
     </template>
@@ -605,7 +605,7 @@ const LinkedRows: TemplateOnlyComponent<{
   </KeyValue>
   <style scoped>
     .kv-pad {
-      padding-inline: var(--boxel-sp-sm);
+      --pretui-kv-pad-inline: var(--boxel-sp-sm);
     }
 
     .person {

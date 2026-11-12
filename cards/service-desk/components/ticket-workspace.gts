@@ -1912,7 +1912,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
 
     <style scoped>
       .kv-pad {
-        padding-inline: var(--boxel-sp-sm);
+        --pretui-kv-pad-inline: var(--boxel-sp-sm);
       }
 
       .ws {

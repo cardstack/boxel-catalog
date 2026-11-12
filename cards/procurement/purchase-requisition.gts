@@ -324,7 +324,7 @@ export class PurchaseRequisition extends CardDef {
       </article>
       <style scoped>
         .kv-pad {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
 
         .ip {
@@ -497,7 +497,7 @@ export class PurchaseRequisition extends CardDef {
       </article>
       <style scoped>
         .kv-pad {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
 
         .emb {

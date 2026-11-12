@@ -213,7 +213,7 @@ export class User extends CardDef {
       </IsoFrame>
       <style scoped>
         .kv-pad {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
 
         .user-page {

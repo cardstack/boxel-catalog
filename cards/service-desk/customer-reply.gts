@@ -226,7 +226,7 @@ export class CustomerReply extends CardDef {
       </article>
       <style scoped>
         .kv-pad {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
 
         @layer PretComponent {
@@ -411,7 +411,7 @@ export class CustomerReply extends CardDef {
       </article>
       <style scoped>
         .kv-pad {
-          padding-inline: var(--boxel-sp-sm);
+          --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
 
         @layer PretComponent {

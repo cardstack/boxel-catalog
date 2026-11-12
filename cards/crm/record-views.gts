@@ -115,7 +115,7 @@ export const RecordEmbedded: TemplateOnlyComponent<{
   </article>
   <style scoped>
     .kv-pad {
-      padding-inline: var(--boxel-sp-sm);
+      --pretui-kv-pad-inline: var(--boxel-sp-sm);
     }
 
     .rv-embedded {
@@ -228,7 +228,7 @@ export const RecordPage: TemplateOnlyComponent<{
   </article>
   <style scoped>
     .kv-pad {
-      padding-inline: var(--boxel-sp-sm);
+      --pretui-kv-pad-inline: var(--boxel-sp-sm);
     }
 
     .rv-page {
