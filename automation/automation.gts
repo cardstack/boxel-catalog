@@ -1804,7 +1804,7 @@ function stateSentence(status: ServerStatus): string {
     case 'waiting-for-credits':
       return 'The payer has no credits left, so Boxel holds every run. Boxel runs the automation again once the payer adds credits.';
     case 'done':
-      return "The automation has no runs left on any trigger, so Boxel runs nothing more. Boxel runs the automation again when someone who can edit this workspace adds a trigger.";
+      return 'The automation has no runs left on any trigger, so Boxel runs nothing more. Boxel runs the automation again when someone who can edit this workspace adds a trigger.';
     case 'paused':
       switch (status.pauseReason) {
         case 'realm-archived':
