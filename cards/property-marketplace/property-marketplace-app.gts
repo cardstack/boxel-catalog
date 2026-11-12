@@ -881,9 +881,17 @@ export class PropertyMarketplaceApp extends CardDef {
   > {
     <template>
       <RichFittedCard>
+        <:avatar><HouseIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>Property Marketplace</:title>
         <:subtitle>Value on the market, the book and what needs attention</:subtitle>
       </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 }

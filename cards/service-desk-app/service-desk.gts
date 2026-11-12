@@ -932,11 +932,19 @@ export class ServiceDesk extends CardDef {
   static fitted = class Fitted extends Component<typeof this> {
     <template>
       <RichFittedCard>
+        <:avatar><LifeBuoyIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>Support console</:subtitle>
         <:fact>Queue, teams, articles, commitments, hours, categories, customers
           and agents, each a live query.</:fact>
       </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 

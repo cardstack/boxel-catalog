@@ -1309,10 +1309,18 @@ export class ContractExecutionApp extends CardDef {
   static fitted = class Fitted extends Component<typeof ContractExecutionApp> {
     <template>
       <RichFittedCard>
+        <:avatar><ScaleIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Contract lifecycle desk</:subtitle>
         <:fact>Repository · approvals · obligations · renewals</:fact>
       </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 

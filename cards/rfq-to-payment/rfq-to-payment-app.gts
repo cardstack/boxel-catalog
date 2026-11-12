@@ -30,10 +30,18 @@ export class RfqToPaymentApp extends CardDef {
   static fitted = class Fitted extends Component<typeof RfqToPaymentApp> {
     <template>
       <RichFittedCard>
+        <:avatar><ReceiptIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>RFQ to Payment</:title>
         <:subtitle>Procure-to-Pay console</:subtitle>
         <:fact>Requisition, quote, approve, receive and pay</:fact>
       </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 }

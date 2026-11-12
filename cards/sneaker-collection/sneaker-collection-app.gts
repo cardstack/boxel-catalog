@@ -1752,9 +1752,17 @@ export class SneakerCollectionApp extends CardDef {
   static fitted = class Fitted extends Component<typeof SneakerCollectionApp> {
     <template>
       <RichFittedCard>
+        <:avatar><GridIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>Sneaker Collection</:title>
         <:subtitle>{{@model.tagline}}</:subtitle>
       </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 }

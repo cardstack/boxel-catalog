@@ -796,6 +796,7 @@ export class AcademyDesk extends CardDef {
   static fitted = class Fitted extends Component<typeof this> {
     <template>
       <RichFittedCard>
+        <:avatar><SchoolIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{if
             @model.tagline
@@ -805,6 +806,13 @@ export class AcademyDesk extends CardDef {
         <:fact>{{#if @model.actor}}Acting as
             {{@model.actor.name}}{{/if}}</:fact>
       </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 }

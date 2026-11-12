@@ -100,10 +100,18 @@ export class AssetMaintenanceApp extends CardDef {
   static fitted = class Fitted extends Component<typeof AssetMaintenanceApp> {
     <template>
       <RichFittedCard>
+        <:avatar><WrenchIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Facilities</:subtitle>
         <:fact>Assets · work orders · plans · parts</:fact>
       </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 }

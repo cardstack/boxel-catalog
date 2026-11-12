@@ -70,6 +70,7 @@ export class OrderFulfilmentApp extends CardDef {
   static fitted = class Fitted extends Component<typeof OrderFulfilmentApp> {
     <template>
       <RichFittedCard>
+        <:avatar><PackageIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Order fulfilment</:subtitle>
         <:fact>{{if
@@ -78,6 +79,13 @@ export class OrderFulfilmentApp extends CardDef {
             'Board · Inventory · Ship desk · In transit · Returns'
           }}</:fact>
       </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 }
