@@ -163,12 +163,12 @@ export async function searchAll(
   let out: any[] = [];
   // A page can come back short when a row on it fails to load, so only an empty page ends the walk.
   for (let number = 0; ; number++) {
-    if (number * SEARCH_PAGE >= max) throw new Error(tooMany);
     let page = (await store.search(
       { ...query, page: { size: SEARCH_PAGE, number } },
       realms,
     )) as any[];
     if (!page.length) return out;
     out.push(...page);
+    if (out.length > max) throw new Error(tooMany);
   }
 }

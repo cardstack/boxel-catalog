@@ -1640,15 +1640,15 @@ export function runTests() {
         let refusedWith = async (
           call: () => Promise<unknown>,
           text: string,
+          lockRefusal = false,
         ) => {
           try {
             await call();
           } catch (e: any) {
-            // The realm may refuse at its write lock before the program's own check runs, when
-            // this in-browser realm can't type the stored card; either way nothing is written.
             return (
               String(e?.detail ?? e?.message).includes(text) ||
-              e?.status === 403
+              e?.status === 400 ||
+              (lockRefusal && e?.status === 403)
             );
           }
           return false;
@@ -1671,6 +1671,8 @@ export function runTests() {
             async () =>
               (await ops('Invoice/draft')).addLines({ lines: timeLine }),
             'Bill time from the time page',
+            // This in-browser realm can't type the stored draft at the write lock, so it may 403 first.
+            true,
           ),
           'adding a time line to a draft is refused',
         );

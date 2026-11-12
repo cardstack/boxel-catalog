@@ -14,6 +14,7 @@ import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
 import { timeInvoiceLines } from '../../../cards/accounting/ledger-time';
+import { searchAll } from '../../../cards/accounting/all-cards';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
@@ -124,6 +125,23 @@ export function runTests() {
         /Give the service SVC-GONE an income account/,
         'a service without an income account is refused, not guessed',
       );
+    });
+
+    test('reading unbilled time walks every page up to the cap, and refuses past it', async function (assert) {
+      let storeOf = (count: number) => ({
+        async search(query: { page: { size: number; number: number } }) {
+          let { size, number } = query.page;
+          return Array.from(
+            { length: Math.max(0, Math.min(size, count - size * number)) },
+            (_, i) => ({ id: `t-${size * number + i}` }),
+          );
+        },
+      });
+      let read = (count: number) =>
+        searchAll(storeOf(count), {}, undefined, 500, 'too many');
+      assert.strictEqual((await read(450)).length, 450, '450 of 500 are read');
+      assert.strictEqual((await read(500)).length, 500, 'exactly 500 are read');
+      await assert.rejects(read(501), /too many/, '501 is refused');
     });
   });
 

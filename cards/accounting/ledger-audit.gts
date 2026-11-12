@@ -18,7 +18,7 @@ import { OpeningBalances } from './ledger-opening';
 import { MonthClose, BankReconciliation } from './ledger-close';
 import { YearClose } from './ledger-year';
 import { instancesOf, loadingOf } from './ledger-report-custom';
-import { AllCards } from './all-cards';
+import { AllCards, SEARCH_PAGE } from './all-cards';
 import { toHome } from './ledger-document';
 
 export type AuditKind =
@@ -326,7 +326,7 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
     if (this.loading || this.failNote) return '';
     let full = this.sources.filter(([r]) => r.truncated);
     return full.length
-      ? `The log read only the newest ${full.map(([, size, noun]) => `${size} ${noun}`).join(' and ')}, so older events are missing. Set a From and To date to read a shorter period.`
+      ? `The log read only the newest ${full.map(([, size, noun]) => `${Math.ceil(size / SEARCH_PAGE) * SEARCH_PAGE} ${noun}`).join(' and ')}, so older events are missing. Set a From and To date to read a shorter period.`
       : '';
   }
   untimed = UNTIMED;
