@@ -16,6 +16,12 @@ import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
 import { timeInvoiceLines } from '../../../cards/accounting/ledger-time';
+import {
+  AllCards,
+  searchAll,
+  MAX_SEARCH_PAGES,
+  SEARCH_PAGE,
+} from '../../../cards/accounting/all-cards';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
@@ -126,6 +132,137 @@ export function runTests() {
         /Give the service SVC-GONE an income account/,
         'a service without an income account is refused, not guessed',
       );
+    });
+
+    test('reading unbilled time walks every page up to the cap, and refuses past it', async function (assert) {
+      let storeOf = (count: number) => ({
+        async search(query: { page: { size: number; number: number } }) {
+          let { size, number } = query.page;
+          return Array.from(
+            { length: Math.max(0, Math.min(size, count - size * number)) },
+            (_, i) => ({ id: `t-${size * number + i}` }),
+          );
+        },
+      });
+      let read = (count: number) =>
+        searchAll(storeOf(count), {}, undefined, 500, 'too many');
+      assert.strictEqual((await read(450)).length, 450, '450 of 500 are read');
+      assert.strictEqual((await read(500)).length, 500, 'exactly 500 are read');
+      await assert.rejects(read(501), /too many/, '501 is refused');
+    });
+  });
+
+  module('Catalog | accounting - reading every page', function () {
+    // Stand-ins for getCards' page resources: each answers, fails or is still loading, as told.
+    const fakeContext = (rows: { id: string }[]) => {
+      let pages: {
+        state: 'loading' | 'answered' | 'failed';
+        getQuery: () => any;
+      }[] = [];
+      let context = {
+        getCards(_parent: object, getQuery: () => any) {
+          let page = { state: 'loading' as const, getQuery } as any;
+          pages.push(page);
+          return {
+            get isLoading() {
+              return !!page.getQuery() && page.state === 'loading';
+            },
+            get instances() {
+              let q = page.getQuery();
+              if (!q || page.state !== 'answered') return [];
+              let { size, number } = q.page;
+              return rows.slice(size * number, size * (number + 1));
+            },
+            get meta() {
+              return page.state === 'failed'
+                ? { page: { total: 0 }, incomplete: true }
+                : page.state === 'answered'
+                  ? { page: { total: rows.length } }
+                  : { page: { total: 0 } };
+            },
+          };
+        },
+      };
+      let answer = (n: number) => (pages[n].state = 'answered');
+      let fail = (n: number) => (pages[n].state = 'failed');
+      return { context, pages, answer, fail };
+    };
+    const ids = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({ id: `c-${i}` }));
+    const query = () => ({ filter: {} });
+    // Pages past the first are created after the read that finds them missing.
+    const afterRender = () => new Promise((r) => setTimeout(r, 0));
+
+    test('a read is complete only once every page it needs has answered', async function (assert) {
+      let f = fakeContext(ids(250));
+      let all = new AllCards(f.context, {}, query);
+      assert.true(all.isLoading, 'loading before the first page answers');
+      f.answer(0);
+      assert.strictEqual(all.total, 250);
+      assert.false(all.isComplete, 'pages 1 and 2 have not been created');
+      await afterRender();
+      assert.strictEqual(f.pages.length, 3, 'the count calls for three pages');
+      assert.false(all.isComplete, 'pages 1 and 2 have not answered');
+      f.answer(1);
+      assert.false(all.isComplete, 'page 2 has not answered');
+      f.answer(2);
+      assert.true(all.isComplete);
+      assert.strictEqual(all.instances.length, 250);
+    });
+
+    test('a failed first page is a failed read with no total', function (assert) {
+      let f = fakeContext(ids(250));
+      let all = new AllCards(f.context, {}, query);
+      f.fail(0);
+      assert.true(all.failed);
+      assert.strictEqual(all.total, undefined);
+      assert.false(all.isComplete);
+      assert.false(all.isLoading);
+    });
+
+    test('a later page failing fails the read', async function (assert) {
+      let f = fakeContext(ids(250));
+      let all = new AllCards(f.context, {}, query);
+      f.answer(0);
+      assert.true(all.isLoading);
+      await afterRender();
+      f.fail(1);
+      f.answer(2);
+      assert.true(all.failed);
+      assert.false(all.isComplete, 'its rows are not the whole set');
+    });
+
+    test('more than the cap matched is too many', function (assert) {
+      let f = fakeContext(ids(MAX_SEARCH_PAGES * SEARCH_PAGE + 1));
+      let all = new AllCards(f.context, {}, query);
+      f.answer(0);
+      assert.true(all.tooMany);
+      assert.false(all.isComplete);
+    });
+
+    test('a limited read reads whole pages up to its limit, and says more matched', async function (assert) {
+      let f = fakeContext(ids(500));
+      let all = new AllCards(f.context, {}, query, undefined, { limit: 240 });
+      f.answer(0);
+      assert.true(all.isLoading);
+      await afterRender();
+      assert.strictEqual(f.pages.length, 3, 'three pages hold the limit');
+      for (let n = 0; n < f.pages.length; n++) f.answer(n);
+      assert.true(all.truncated);
+      assert.false(all.isComplete, 'a truncated read is not every record');
+      assert.strictEqual(all.instances.length, 300);
+    });
+
+    test('a card on two pages is counted once', async function (assert) {
+      let rows = ids(150);
+      rows[120] = rows[50];
+      let f = fakeContext(rows);
+      let all = new AllCards(f.context, {}, query);
+      f.answer(0);
+      assert.true(all.isLoading);
+      await afterRender();
+      f.answer(1);
+      assert.strictEqual(all.instances.length, 149);
     });
   });
 

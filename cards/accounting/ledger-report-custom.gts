@@ -33,6 +33,7 @@ import {
   type ReportEntry,
 } from './ledger-report-settings';
 import { CUSTOMER_KINDS, VENDOR_KINDS } from './ledger-report-library';
+import { AllCards } from './all-cards';
 import { JournalMonth, KIND_LABEL } from './ledger-journal';
 import { LedgerAccount, Bill } from './ledger-cards';
 import { Invoice } from './ledger-sales';
@@ -642,14 +643,6 @@ export class ReportActions extends GlimmerComponent<ActionsSignature> {
 export const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
 export const loadingOf = (r: unknown) => (r as any)?.isLoading !== false;
-/** Whether a search answered a full page, or says more matched than it holds. */
-export const isCapped = (r: unknown, size: number) => {
-  let n = instancesOf(r).length,
-    total = (r as any)?.meta?.page?.total;
-  return n >= size || (typeof total === 'number' && total > n);
-};
-const MONTH_PAGE = 240;
-const DOC_PAGE = 1000;
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 /** Whether a value is a whole month, yyyy-mm. */
 export const isMonth = (ym: string | undefined) => MONTH.test(ym ?? '');
@@ -839,7 +832,8 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
       return 'The From month must come before the To month.';
     return '';
   }
-  journalData = this.args.context?.getCards(
+  journalData = new AllCards(
+    this.args.context,
     this,
     () =>
       (this.periodError
@@ -854,7 +848,6 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
                 },
               ],
             },
-            page: { size: MONTH_PAGE },
           }) as never,
     () => this.args.realms,
     { isLive: true },
@@ -878,17 +871,17 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
               },
             ],
           },
-          // Newest first, so a full page drops the oldest and the report says so.
           sort: [{ by: 'date', on: identifyCard(type), direction: 'desc' }],
-          page: { size: DOC_PAGE },
         }) as never;
-  invoiceData = this.args.context?.getCards(
+  invoiceData = new AllCards(
+    this.args.context,
     this,
     this.docQuery(Invoice),
     () => this.args.realms,
     { isLive: true },
   );
-  billData = this.args.context?.getCards(
+  billData = new AllCards(
+    this.args.context,
     this,
     this.docQuery(Bill),
     () => this.args.realms,
@@ -909,27 +902,30 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
     () => this.args.realms,
     { isLive: true },
   );
-  accountData = this.args.context?.getCards(
+  accountData = new AllCards(
+    this.args.context,
     this,
-    () =>
-      ({
-        filter: { type: identifyCard(LedgerAccount) },
-        page: { size: 500 },
-      }) as never,
+    () => ({ filter: { type: identifyCard(LedgerAccount) } }) as never,
     () => this.args.refRealms ?? this.args.realms,
     { isLive: true },
   );
-  // A source that came back a full page may be missing postings, so the totals would be wrong.
+  // A source that couldn't be read whole would leave postings out, so the report shows no totals.
   get capNote() {
-    let full = (
+    if (this.periodError || this.loading) return '';
+    let failed = (
       [
-        [this.journalData, MONTH_PAGE, 'journal months'],
-        [this.invoiceData, DOC_PAGE, 'invoices'],
-        [this.billData, DOC_PAGE, 'bills'],
-      ] as [unknown, number, string][]
-    ).filter(([r, size]) => isCapped(r, size));
-    return full.length
-      ? `This report read only the first page of ${full.map(([, size, noun]) => `${size} ${noun}`).join(' and ')}, so its lines and totals are incomplete. Narrow the period${this.basis === 'cash' ? ' or use the accrual basis' : ''}.`
+        [this.journalData, 'journal months'],
+        [this.invoiceData, 'invoices'],
+        [this.billData, 'bills'],
+        [this.accountData, 'accounts'],
+      ] as [AllCards, string][]
+    ).filter(([r]) => !r.isComplete);
+    let opening = (this.openingData as any)?.errors?.length
+      ? ['opening balances']
+      : [];
+    let nouns = [...failed.map(([, noun]) => noun), ...opening];
+    return nouns.length
+      ? `This report couldn't read all of its ${nouns.join(', ')}, so it shows no lines or totals. ${failed.some(([r]) => r.tooMany) ? 'Narrow the period.' : 'Reload to try again.'}`
       : '';
   }
   get loading() {
@@ -940,11 +936,17 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         this.invoiceData,
         this.billData,
         this.openingData,
+        this.accountData,
       ].some(loadingOf)
     );
   }
   get canExport() {
-    return !this.loading && !this.periodError && this.table.count > 0;
+    return (
+      !this.loading &&
+      !this.periodError &&
+      !this.capNote &&
+      this.table.count > 0
+    );
   }
   get accounts() {
     return new Map(
@@ -1197,7 +1199,7 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         </div>
       {{/if}}
       {{#if this.capNote}}<Callout
-          @tone='warning'
+          @tone='danger'
           @title='Incomplete'
           data-report-capped
         >{{this.capNote}}</Callout>{{/if}}
@@ -1207,7 +1209,7 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         <div class='skeletons'><Skeleton @height='2rem' /><Skeleton
             @height='2rem'
           /><Skeleton @height='2rem' /></div>
-      {{else if this.table.count}}
+      {{else if this.capNote}}{{else if this.table.count}}
         <StatementTable
           @label={{this.title}}
           @columns={{this.table.cols}}
