@@ -1,0 +1,58 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Sunset Brew Branding + Website",
+      "status": "draft",
+      "discountPercent": 11,
+      "lines": [
+        {
+          "qty": 1
+        },
+        {
+          "qty": 4
+        },
+        {
+          "qty": 1
+        }
+      ],
+      "approvalDecision": null,
+      "approvedBy": null,
+      "approvalNote": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "client": {
+        "links": {
+          "self": "../Client/studio-kopi-senja"
+        }
+      },
+      "lines.0.item": {
+        "links": {
+          "self": "../ServiceItem/desain-logo"
+        }
+      },
+      "lines.1.item": {
+        "links": {
+          "self": "../ServiceItem/revisi-desain"
+        }
+      },
+      "lines.2.item": {
+        "links": {
+          "self": "../ServiceItem/pembuatan-website"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../quote",
+        "name": "Quote"
+      }
+    }
+  }
+}

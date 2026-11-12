@@ -1,0 +1,16 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Design revisions",
+      "unit": "time",
+      "price": 150000
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../service-item",
+        "name": "ServiceItem"
+      }
+    }
+  }
+}

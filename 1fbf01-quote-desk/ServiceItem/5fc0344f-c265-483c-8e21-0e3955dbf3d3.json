@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Instagram post design",
+      "unit": "package",
+      "price": 400000,
+      "description": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../service-item",
+        "name": "ServiceItem"
+      }
+    }
+  }
+}
