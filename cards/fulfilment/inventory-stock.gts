@@ -312,7 +312,7 @@ export class InventoryStock extends CardDef {
       </IsoFrame>
       <style scoped>
         .page {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           --text-stat: 1.375rem;
           --text-ui-xs: 0.6875rem;
@@ -331,8 +331,8 @@ export class InventoryStock extends CardDef {
           display: flex;
           align-items: center;
           flex-wrap: wrap;
-          gap: 0.625rem;
-          padding: 0.75rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm);
         }
         .id {
           flex: 1 1 12rem;
@@ -341,7 +341,7 @@ export class InventoryStock extends CardDef {
         h1 {
           font-family: var(--font-sans);
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 700;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -349,7 +349,7 @@ export class InventoryStock extends CardDef {
         }
         p {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -359,7 +359,7 @@ export class InventoryStock extends CardDef {
           display: flex;
           align-items: center;
           flex-wrap: wrap;
-          gap: 0.625rem;
+          gap: var(--boxel-sp-xs);
           --control-height: 1.625rem;
         }
         .stats {
@@ -368,7 +368,7 @@ export class InventoryStock extends CardDef {
           border-block: 1px solid var(--border);
         }
         .stats > * {
-          padding: 0.4375rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         }
         .stats > * + * {
           border-inline-start: 1px solid var(--border);
@@ -389,8 +389,8 @@ export class InventoryStock extends CardDef {
         }
         section h2 {
           margin: 0;
-          padding: 0.75rem 0.75rem 0.375rem;
-          font-size: 0.75rem;
+          padding: var(--boxel-sp-sm) var(--boxel-sp-sm) var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .kv {

@@ -255,7 +255,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       .shp {
         container-type: inline-size;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.4;
         color: var(--foreground);
         background-color: var(--card);
@@ -269,13 +269,13 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 0.5rem 0.75rem;
-        padding: 0.5rem 0.625rem;
+        gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
       }
       .who {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         min-width: 0;
       }
       .mark {
@@ -297,26 +297,26 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       .name {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-sm);
         font-weight: 600;
         letter-spacing: normal;
         text-transform: none;
       }
       .meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .bar {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.5rem 0.75rem;
+        gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .st {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
         font-weight: 600;
         --tone: var(--muted-foreground);
       }
@@ -353,14 +353,14 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       .stat {
         display: flex;
         flex-direction: column;
-        gap: 0.125rem;
-        padding: 0.5rem 0.625rem;
+        gap: var(--boxel-sp-6xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         border-right: 1px solid var(--border);
         border-bottom: 1px solid var(--border);
         margin-bottom: -1px;
       }
       .num {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         line-height: 1.15;
         font-variant-numeric: tabular-nums;
@@ -373,25 +373,25 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .blk h2 {
         margin: 0;
-        padding: 0.625rem 0.625rem 0.375rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-2xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 0.75rem;
+        gap: var(--boxel-sp-sm);
         min-height: 1.75rem;
         margin: 0;
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
       }
       .lead {
         display: flex;
         flex-wrap: wrap;
         align-items: baseline;
-        column-gap: 0.5rem;
+        column-gap: var(--boxel-sp-xs);
         min-width: 0;
       }
       .lead .st {
@@ -402,7 +402,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .kv {
@@ -419,10 +419,10 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         border-top: 1px solid var(--border);
       }
       .kv dt {
-        padding-left: 0.625rem;
+        padding-left: var(--boxel-sp-xs);
       }
       .kv dd {
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
         min-width: 0;
       }
       @container (width < 560px) {
