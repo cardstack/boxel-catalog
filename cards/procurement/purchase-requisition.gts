@@ -335,9 +335,9 @@ export class PurchaseRequisition extends CardDef {
           --boxel-sp-xs: 0.35rem;
           container-type: inline-size;
           display: grid;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.25;
           color: var(--card-foreground);
 
@@ -355,8 +355,8 @@ export class PurchaseRequisition extends CardDef {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
         }
         .id {
           flex: 1;
@@ -365,18 +365,18 @@ export class PurchaseRequisition extends CardDef {
         h1 {
           margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .tags {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.625rem;
+          gap: var(--boxel-sp-xs);
         }
         .stats {
           display: grid;
@@ -384,7 +384,7 @@ export class PurchaseRequisition extends CardDef {
           border-block-start: 1px solid var(--border);
         }
         .stats > * {
-          padding: 0.5rem 0.625rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
           box-shadow:
             1px 0 0 var(--border),
             0 1px 0 var(--border);
@@ -392,33 +392,33 @@ export class PurchaseRequisition extends CardDef {
         .cols {
           display: grid;
           grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           align-items: start;
         }
         .col {
           display: grid;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           min-inline-size: 0;
         }
         h2 {
           margin: 0;
-          padding: 0.4375rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           border-block-end: 1px solid var(--border);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .body {
           margin: 0;
-          padding: 0.4375rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           white-space: pre-wrap;
         }
         .muted {
           color: var(--muted-foreground);
         }
         .lines {
-          padding-inline: 0.625rem;
-          font-size: 0.75rem;
+          padding-inline: var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
         }
         .mono,
         .kv {
@@ -426,10 +426,10 @@ export class PurchaseRequisition extends CardDef {
         }
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
         }
         .kv {
-          padding: 0.25rem 0.625rem;
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
           row-gap: 0;
         }
         @container (width < 40rem) {

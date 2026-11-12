@@ -493,9 +493,9 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         padding: var(--boxel-sp-sm);
         display: grid;
         align-content: start;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.25;
         color: var(--card-foreground);
         background: var(--background);
@@ -514,8 +514,8 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.625rem;
-        padding: 0.625rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs);
       }
       .id {
         flex: 1 1 12rem;
@@ -524,22 +524,22 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       h1 {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-sm);
         font-weight: 700;
       }
       .meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .tags,
       .acts {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: var(--boxel-sp-sm);
       }
       .acts {
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
       }
       .stats {
         display: grid;
@@ -548,19 +548,19 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         overflow: hidden;
       }
       .stats > * {
-        padding: 0.4375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         border-inline-end: 1px solid var(--border);
         margin-inline-end: -1px;
       }
       .cols {
         display: grid;
         grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         align-items: start;
       }
       .col {
         display: grid;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         min-inline-size: 0;
       }
       @container (width < 40rem) {
@@ -570,17 +570,17 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       }
       h2 {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         border-block-end: 1px solid var(--border);
       }
       .row {
         display: flex;
         align-items: center;
-        gap: 0.625rem;
+        gap: var(--boxel-sp-xs);
         min-block-size: 1.75rem;
-        padding: 0.4375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       }
       .row + .row {
         border-block-start: 1px solid var(--border);
@@ -591,13 +591,13 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         display: grid;
       }
       .rmeta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .num,
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .num {
@@ -606,13 +606,13 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
       .kv {
         --boxel-sp-xs: 0.375rem;
         --boxel-sp-lg: 0.75rem;
-        padding: 0 0.625rem 0.25rem;
+        padding: 0 var(--boxel-sp-xs) var(--boxel-sp-4xs);
         row-gap: 0;
       }
       .empty-note {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.6875rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
     </style>

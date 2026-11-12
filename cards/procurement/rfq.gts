@@ -449,7 +449,7 @@ class RfqIsolated extends Component<typeof Rfq> {
         background: var(--background);
         color: var(--card-foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.25;
         --text-stat: 1.375rem;
         --text-ui-xs: 0.6875rem;
@@ -466,8 +466,8 @@ class RfqIsolated extends Component<typeof Rfq> {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.625rem;
-        padding: 0.5rem 0.625rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
       }
       .id {
         flex: 1 1 10rem;
@@ -476,21 +476,21 @@ class RfqIsolated extends Component<typeof Rfq> {
       h1 {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.625rem;
+        gap: var(--boxel-sp-xs);
       }
       .flash {
-        margin: 0 0.625rem 0.5rem;
+        margin: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
       }
       .stats {
         display: grid;
@@ -498,7 +498,7 @@ class RfqIsolated extends Component<typeof Rfq> {
         border-block-start: 1px solid var(--border);
       }
       .stats > * {
-        padding: 0.4375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         min-inline-size: 0;
       }
       .stats > :not(:first-child) {
@@ -531,21 +531,21 @@ class RfqIsolated extends Component<typeof Rfq> {
       }
       h2 {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .ul {
         list-style: none;
         margin: 0;
-        padding: 0 0 0.25rem;
+        padding: 0 0 var(--boxel-sp-4xs);
       }
       .li {
         display: flex;
         align-items: center;
-        gap: 0.625rem;
+        gap: var(--boxel-sp-xs);
         min-block-size: 1.75rem;
-        padding: 0.3125rem 0.625rem;
+        padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
         border-block-start: 1px solid var(--border);
       }
       .two {
@@ -559,14 +559,14 @@ class RfqIsolated extends Component<typeof Rfq> {
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .kv {
         display: grid;
         grid-template-columns: 6.5rem minmax(0, 1fr);
         margin: 0;
-        padding: 0 0.625rem 0.25rem;
+        padding: 0 var(--boxel-sp-xs) var(--boxel-sp-4xs);
       }
       .kv dt,
       .kv dd {

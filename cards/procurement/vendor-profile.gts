@@ -656,7 +656,7 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
     </article>
     <style scoped>
       .vp {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.4;
         color: var(--foreground);
         --pretui-kv-label-font-size: 0.5625rem;
@@ -666,7 +666,7 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
         container-type: inline-size;
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-sm);
         box-sizing: border-box;
         min-block-size: 100%;
@@ -684,8 +684,8 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 0.75rem;
-        padding: 0.625rem;
+        gap: var(--boxel-sp-sm);
+        padding: var(--boxel-sp-xs);
       }
       .id {
         flex: 1 1 12rem;
@@ -696,7 +696,7 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
       h1 {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         line-height: 1.3;
       }
@@ -704,10 +704,10 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 0.625rem;
+        gap: var(--boxel-sp-xs);
       }
       .meta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .strong {
@@ -716,7 +716,7 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
       .cap {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
         font-family: var(--font-mono);
         font-size: 0.5625rem;
         font-weight: 600;
@@ -746,14 +746,14 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
       .stat {
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
-        padding: 0.4375rem 0.625rem;
+        gap: var(--boxel-sp-4xs);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         border-inline-start: 1px solid var(--border);
         margin-inline-start: -1px;
         min-inline-size: 0;
       }
       .num {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         line-height: 1;
         font-variant-numeric: tabular-nums;
@@ -761,50 +761,50 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
       .grid2 {
         display: grid;
         grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         align-items: start;
       }
       .col {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         min-inline-size: 0;
       }
       h2 {
         margin: 0;
-        padding: 0.4375rem 0.625rem 0.3125rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs) var(--boxel-sp-3xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .rows {
         list-style: none;
         margin: 0;
-        padding: 0 0.625rem;
+        padding: 0 var(--boxel-sp-xs);
       }
       .rows li {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
       }
       .two {
         display: flex;
         flex-direction: column;
-        padding-block: 0.4375rem;
+        padding-block: var(--boxel-sp-2xs);
         min-inline-size: 0;
       }
       .body {
         margin: 0;
-        padding: 0 0 0.625rem;
+        padding: 0 0 var(--boxel-sp-xs);
         --pretui-kv-pad-inline: var(--boxel-sp-sm);
         overflow-wrap: anywhere;
       }
       .kvv {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
       }
       .kv {
-        padding: 0 0 0.625rem;
+        padding: 0 0 var(--boxel-sp-xs);
         --pretui-kv-pad-inline: var(--boxel-sp-sm);
         overflow-wrap: anywhere;
       }
@@ -812,9 +812,9 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 0.75rem;
+        gap: var(--boxel-sp-sm);
         min-block-size: 1.75rem;
-        margin: 0 0.625rem 0.625rem;
+        margin: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
       }
       .linked .cap {
