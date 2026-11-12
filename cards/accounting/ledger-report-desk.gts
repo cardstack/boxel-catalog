@@ -121,6 +121,32 @@ type SavedRow = {
   visibility: string;
   card: SavedLike | undefined;
 };
+// A saved report card's values, copied out of the card: a report reopened from them reads plain
+// values, not card fields that may still be settling while it renders.
+const plainSaved = (card: any): SavedLike => ({
+  id: card.id,
+  name: card.name ?? null,
+  kind: card.kind ?? null,
+  kindLabel: card.kindLabel ?? null,
+  fromMonth: card.fromMonth ?? null,
+  toMonth: card.toMonth ?? null,
+  asOfMonth: card.asOfMonth ?? null,
+  basis: card.basis ?? null,
+  columns: card.columns ?? null,
+  compare: card.compare ?? null,
+  account: card.account ?? null,
+  statement: card.statement ?? null,
+  columnKeys: card.columnKeys ?? null,
+  filters: ((card.filters ?? []) as any[]).filter(Boolean).map((f) => ({
+    dimension: f.dimension ?? null,
+    value: f.value ?? null,
+  })),
+  groupBy: card.groupBy ?? null,
+  sortBy: card.sortBy ?? null,
+  sortDir: card.sortDir ?? null,
+  visibility: card.visibility ?? null,
+  savedBy: card.savedBy ?? null,
+});
 /** A search row's saved report, as its stored values: from the row's serialization when it carries
  *  one, else from the card itself, which a row answered as prerendered HTML doesn't. */
 export const savedOfEntry = (
@@ -170,7 +196,7 @@ export class MyReports extends GlimmerComponent<MineSignature> {
         // The store answers a card it couldn't load with an error document rather than throwing.
         let card = (await this.args.context?.store?.get(id)) as any;
         if (card && typeof card === 'object' && 'kind' in card) {
-          this.cards = { ...this.cards, [id]: card as SavedLike };
+          this.cards = { ...this.cards, [id]: plainSaved(card) };
           return;
         }
         failure =
