@@ -41,6 +41,7 @@ import {
   subscribeToRealm,
   type ResolvedCodeRef,
 } from '@cardstack/runtime-common';
+import AuthedFetchTool from '@cardstack/boxel-host/tools/authed-fetch';
 import ReadSourceTool from '@cardstack/boxel-host/tools/read-source';
 import WriteTextFileTool from '@cardstack/boxel-host/tools/write-text-file';
 import { FittedCard } from '@cardstack/boxel-ui/components';
@@ -62,6 +63,7 @@ import { InputGroup } from '@cardstack/pretui/components/input-group';
 import { Fieldset } from '@cardstack/pretui/components/fieldset';
 import { FormSection } from '@cardstack/pretui/components/form-section';
 import { FormatBytes } from '@cardstack/pretui/components/format-bytes';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
 import { Input } from '@cardstack/pretui/components/input';
 import { Item } from '@cardstack/pretui/components/item';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
@@ -69,6 +71,7 @@ import { NumberInput } from '@cardstack/pretui/components/number-input';
 import { PanelSection } from '@cardstack/pretui/components/panel-section';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Switch } from '@cardstack/pretui/components/switch';
+import { Stack } from '@cardstack/pretui/components/stack';
 import { Table } from '@cardstack/pretui/components/table';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
 import { Token } from '@cardstack/pretui/components/token';
@@ -1629,6 +1632,351 @@ function fileName(url: string | undefined): string | undefined {
   return url?.split('/').pop();
 }
 
+// What the server knows about an automation: whether someone switched the
+// automation on, its state, who pays, and how far each trigger has got. The
+// realm's `_automation-status` route answers only the realm's direct writers,
+// so for anyone else `visible` stays false and the views show the card's own
+// fields alone.
+type AutomationState = 'active' | 'paused' | 'waiting-for-credits' | 'done';
+type PauseReason =
+  | 'requested'
+  | 'realm-archived'
+  | 'payer-lost-access'
+  | 'caps-raised'
+  | 'batched-ai-enabled';
+interface TriggerStatus {
+  label: string;
+  runs: number;
+  runsLeft?: number;
+  runsLeftAtLeast?: boolean;
+  until?: string;
+  nextRun?: string;
+  spent?: boolean;
+}
+type ServerStatus =
+  | { switchedOn: false }
+  | {
+      switchedOn: true;
+      state: AutomationState;
+      pauseReason: PauseReason | null;
+      payer: string | null;
+      viewerIsPayer: boolean;
+      nextRun: string | null;
+      lastResult: 'complete' | 'error' | 'canceled' | null;
+      lastFinishedAt: string | null;
+      triggers: TriggerStatus[];
+    };
+type StatusState = {
+  // Whether the view knows what to show: the route answered, or the view
+  // has no way to ask (no tools, as in a prerender).
+  known: boolean;
+  visible: boolean;
+  status: ServerStatus | undefined;
+};
+
+const STATUS_PATH = '_automation-status';
+
+function automationStatus(
+  owner: object,
+  args: () => {
+    id: string | undefined;
+    realm: string | undefined;
+    realmId: string | undefined;
+    tools: Tools | undefined;
+  },
+) {
+  let kept: { url: string | undefined; state: StatusState } | undefined;
+  return use(
+    owner,
+    resource(({ on }) => {
+      let { id, realm, realmId, tools } = args();
+      let path = id && realmId ? pathInRealm(id, realmId) : undefined;
+      let url =
+        realm && path !== undefined
+          ? `${realm}${STATUS_PATH}?automation=${encodeURIComponent(
+              realm + path,
+            )}`
+          : undefined;
+      // The answer lives across the resource's runs while the card is the
+      // same, so a run never swaps the status back to the reader's callout
+      // while it asks again.
+      if (!kept || kept.url !== url) {
+        kept = {
+          url,
+          state: new TrackedObject<StatusState>({
+            known: false,
+            visible: false,
+            status: undefined,
+          }),
+        };
+      }
+      let state = kept.state;
+      if (!realm || path === undefined || !url || !tools) {
+        state.known = true;
+        return state;
+      }
+      let ended = false;
+      let latest = 0;
+      let read = async () => {
+        let asked = ++latest;
+        await Promise.resolve();
+        if (ended || asked !== latest) {
+          return;
+        }
+        try {
+          let result = await new AuthedFetchTool(tools).execute({
+            url,
+            acceptHeader: 'application/json',
+          });
+          if (ended || asked !== latest) {
+            return;
+          }
+          let status = result.ok
+            ? (result.body?.data?.attributes as ServerStatus | undefined)
+            : undefined;
+          state.status = status;
+          state.visible = Boolean(status);
+          state.known = true;
+        } catch {
+          if (!ended && asked === latest) {
+            state.status = undefined;
+            state.visible = false;
+            state.known = true;
+          }
+        }
+      };
+      read();
+      // An edit to the card changes its triggers, so their runs left change
+      // too.
+      let unsubscribe = subscribeToRealm(realm, (event) => {
+        if (
+          event.eventName === 'index' &&
+          'invalidations' in event &&
+          event.invalidations.some(
+            (u) => u === realm + path || u === `${realm}${path}.json`,
+          )
+        ) {
+          read();
+        }
+      });
+      on.cleanup(() => {
+        ended = true;
+        unsubscribe?.();
+      });
+      return state;
+    }),
+  );
+}
+
+type Tone = 'neutral' | 'success' | 'warning' | 'info';
+interface StateLook {
+  label: string;
+  tone: Tone;
+}
+
+function stateLook(status: ServerStatus | undefined): StateLook | undefined {
+  if (!status) {
+    return undefined;
+  }
+  if (!status.switchedOn) {
+    return { label: 'Off', tone: 'neutral' };
+  }
+  switch (status.state) {
+    case 'active':
+      return { label: 'On', tone: 'success' };
+    case 'paused':
+      return { label: 'Paused', tone: 'warning' };
+    case 'waiting-for-credits':
+      return { label: 'Waiting for credits', tone: 'warning' };
+    case 'done':
+      return { label: 'Done', tone: 'info' };
+  }
+}
+
+// What the state means for the next run, as a sentence.
+function stateSentence(status: ServerStatus): string {
+  if (!status.switchedOn) {
+    return 'Nobody has turned this automation on, so Boxel runs nothing. Anyone who can edit this workspace can turn the automation on, and that person then pays for every run.';
+  }
+  switch (status.state) {
+    case 'active':
+      return 'Boxel runs this automation each time a trigger fires and charges the payer for every run.';
+    case 'waiting-for-credits':
+      return 'The payer has no credits left, so Boxel holds every run. Boxel runs the automation again once the payer adds credits.';
+    case 'done':
+      return 'The automation has no runs left on any trigger, so Boxel runs nothing more. Boxel runs the automation again when someone who can edit this workspace adds a trigger.';
+    case 'paused':
+      switch (status.pauseReason) {
+        case 'realm-archived':
+          return 'Someone archived this workspace, so Boxel paused the automation. Boxel runs nothing until someone restores the workspace and resumes the automation.';
+        case 'payer-lost-access':
+          return 'The payer can no longer edit this workspace, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and becomes the new payer.';
+        case 'caps-raised':
+          return 'Someone raised a limit above what the payer agreed to pay for, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to the new limits.';
+        case 'batched-ai-enabled':
+          return 'Someone turned on batched AI after the payer agreed to the limits, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to batched AI.';
+        default:
+          return 'Someone who can edit this workspace paused the automation, so Boxel runs nothing until someone resumes the automation.';
+      }
+  }
+}
+
+function payerText(status: ServerStatus): string {
+  if (!status.switchedOn) {
+    return 'Nobody yet';
+  }
+  if (status.viewerIsPayer) {
+    return 'You';
+  }
+  return status.payer ?? 'A person who shares no workspace with you';
+}
+
+function lastRunText(status: ServerStatus): string | undefined {
+  if (!status.switchedOn || !status.lastResult) {
+    return undefined;
+  }
+  return status.lastResult === 'complete'
+    ? 'Completed'
+    : status.lastResult === 'error'
+      ? 'Failed'
+      : 'Stopped';
+}
+
+function tally(n: number): string {
+  return n.toLocaleString('en-US');
+}
+
+// "26", "At least 10,000", "None", or undefined for a trigger with no bound.
+function runsLeftText(trigger: TriggerStatus): string | undefined {
+  if (trigger.runsLeft === undefined) {
+    return undefined;
+  }
+  if (trigger.runsLeft === 0) {
+    return 'None';
+  }
+  let left = tally(trigger.runsLeft);
+  return trigger.runsLeftAtLeast ? `At least ${left}` : left;
+}
+
+interface StatusItem {
+  label: string;
+  value?: string;
+  date?: string;
+  // The zone a `date` reads in; the viewer's own when absent.
+  timeZone?: string;
+  look?: StateLook;
+}
+
+function statusItems(status: ServerStatus): StatusItem[] {
+  let items: StatusItem[] = [
+    { label: 'State', look: stateLook(status) },
+    { label: 'Payer', value: payerText(status) },
+  ];
+  if (status.switchedOn) {
+    items.push(
+      status.state === 'paused'
+        ? { label: 'Next run', value: 'None while paused' }
+        : status.nextRun
+          ? { label: 'Next run', date: status.nextRun }
+          : { label: 'Next run', value: 'None' },
+    );
+    let last = lastRunText(status);
+    items.push(
+      last && status.lastFinishedAt
+        ? { label: `Last run: ${last}`, date: status.lastFinishedAt }
+        : { label: 'Last run', value: 'No runs yet' },
+    );
+  }
+  return items;
+}
+
+// A trigger's times read in the trigger's own zone, as the trigger's
+// sentences do.
+function triggerItems(
+  trigger: TriggerStatus,
+  timeZone: string | null | undefined,
+): StatusItem[] {
+  let zone = timeZone && isTimeZone(timeZone) ? timeZone : undefined;
+  let items: StatusItem[] = [
+    { label: 'Runs so far', value: tally(trigger.runs) },
+  ];
+  let left = runsLeftText(trigger);
+  if (left) {
+    items.push({ label: 'Runs left', value: left });
+  }
+  if (trigger.until) {
+    items.push({
+      label: 'Ends no later than',
+      date: trigger.until,
+      timeZone: zone,
+    });
+  }
+  if (trigger.nextRun) {
+    items.push({ label: 'Next run', date: trigger.nextRun, timeZone: zone });
+  }
+  return items;
+}
+
+function itemAt(items: StatusItem[], index: number): StatusItem | undefined {
+  return items[index];
+}
+
+// A grid of status facts: plain values, times with their zone named (the
+// status reads in the viewer's zone and each trigger in the trigger's own),
+// and the state as a chip.
+class StatusFacts extends GlimmerComponent<{
+  Args: { items: StatusItem[]; columns?: number; size?: 's' | 'm' };
+}> {
+  <template>
+    <Descriptions
+      @items={{@items}}
+      @columns={{if @columns @columns 4}}
+      @layout='vertical'
+      @size={{if @size @size 'm'}}
+    >
+      <:value as |_item index|>
+        {{#let (itemAt @items index) as |fact|}}
+          {{#if fact.look}}
+            <Chip
+              @label={{fact.look.label}}
+              @tone={{fact.look.tone}}
+              data-test-automation-state={{fact.look.label}}
+            />
+          {{else if fact.date}}
+            <FormatDate
+              @date={{fact.date}}
+              @month='short'
+              @day='numeric'
+              @year='numeric'
+              @hour='numeric'
+              @minute='2-digit'
+              @timeZoneName='short'
+              @timeZone={{fact.timeZone}}
+            />
+          {{else}}
+            {{fact.value}}
+          {{/if}}
+        {{/let}}
+      </:value>
+    </Descriptions>
+  </template>
+}
+
+// The status of one trigger, by its label, for a direct writer.
+function statusOfTrigger(
+  status: ServerStatus | undefined,
+  label: string | null | undefined,
+): TriggerStatus | undefined {
+  if (!status?.switchedOn || !label) {
+    return undefined;
+  }
+  let trigger = status.triggers.find((t) => t.label === label);
+  // A paused automation runs nothing, whatever its schedule says.
+  return trigger && status.state === 'paused'
+    ? { ...trigger, nextRun: undefined }
+    : trigger;
+}
+
 // The linked script, read-only.
 class ScriptView extends GlimmerComponent<{
   Args: {
@@ -1850,8 +2198,32 @@ class Isolated extends Component<typeof Automation> {
   get realmId() {
     return instanceRealmId(this.args.model as Automation);
   }
+  private server = automationStatus(this, () => ({
+    id: this.args.model.id,
+    realm: this.realmHref,
+    realmId: this.realmId,
+    tools: toolsOf(this.args.context),
+  }));
+  get status() {
+    return this.server.current.visible ? this.server.current.status : undefined;
+  }
+  get statusKnown() {
+    return this.server.current.known;
+  }
+  get look() {
+    return stateLook(this.status);
+  }
+  get stateSentence() {
+    return this.status ? stateSentence(this.status) : undefined;
+  }
+  get statusItems() {
+    return this.status ? statusItems(this.status) : [];
+  }
+  timeZoneAt = (index: number) => this.args.model.triggers?.[index]?.timeZone;
+  triggerStatusAt = (index: number) =>
+    statusOfTrigger(this.status, this.args.model.triggers?.[index]?.label);
   <template>
-    <article class='automation'>
+    <article class='automation' data-test-automation>
       <header class='automation__header'>
         <span class='automation__badge' aria-hidden='true'>
           <CalendarClockIcon width='28' height='28' />
@@ -1863,15 +2235,46 @@ class Isolated extends Component<typeof Automation> {
             <p class='automation__summary'><@fields.cardDescription /></p>
           {{/if}}
         </div>
-        {{#if this.showsBatchedAI}}
-          <Chip @label={{this.batchedAILabel}} @tone='info' />
-        {{/if}}
+        <Stack
+          @orientation='horizontal'
+          @wrap={{true}}
+          @gap='xs'
+          @justify='end'
+        >
+          {{#if this.look}}
+            <Chip
+              @label={{this.look.label}}
+              @tone={{this.look.tone}}
+              data-test-automation-header-state={{this.look.label}}
+            />
+          {{/if}}
+          {{#if this.showsBatchedAI}}
+            <Chip @label={{this.batchedAILabel}} @tone='info' />
+          {{/if}}
+        </Stack>
       </header>
 
-      <Callout @tone='info' @title='Who turns this automation on, and who pays'>
-        This automation runs only after someone who can edit this workspace
-        turns the automation on. That person pays for every run.
-      </Callout>
+      {{#if this.status}}
+        <PanelSection
+          @title='Status'
+          @collapsible={{false}}
+          data-test-automation-status
+        >
+          <p class='automation__lead' data-test-automation-state-sentence>
+            {{this.stateSentence}}
+          </p>
+          <StatusFacts @items={{this.statusItems}} @columns={{2}} />
+        </PanelSection>
+      {{else if this.statusKnown}}
+        <Callout
+          @tone='info'
+          @title='Who turns this automation on, and who pays'
+          data-test-automation-who-pays
+        >
+          This automation runs only after someone who can edit this workspace
+          turns the automation on. That person pays for every run.
+        </Callout>
+      {{/if}}
 
       <PanelSection @title='Script' @collapsible={{false}}>
         <p class='automation__lead'>
@@ -1898,8 +2301,23 @@ class Isolated extends Component<typeof Automation> {
         {{#if @model.triggers.length}}
           <p class='automation__lead'>{{this.triggerLead}}</p>
           <div class='automation__rows'>
-            {{#each @fields.triggers as |Trigger|}}
-              <Trigger class='automation__row' />
+            {{#each @fields.triggers as |Trigger index|}}
+              <div class='automation__row'>
+                <Trigger />
+                {{#let (this.triggerStatusAt index) as |progress|}}
+                  {{#if progress}}
+                    <div
+                      class='automation__progress'
+                      data-test-automation-trigger-progress={{progress.label}}
+                    >
+                      <StatusFacts
+                        @items={{triggerItems progress (this.timeZoneAt index)}}
+                        @size='s'
+                      />
+                    </div>
+                  {{/if}}
+                {{/let}}
+              </div>
             {{/each}}
           </div>
         {{else}}
@@ -2018,6 +2436,10 @@ class Isolated extends Component<typeof Automation> {
       }
       .automation__row {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      .automation__progress {
+        margin-top: var(--boxel-sp-xs);
+        padding-inline-start: calc(2rem + var(--boxel-sp-sm));
       }
       @container (inline-size < 40rem) {
         .automation {
@@ -2887,7 +3309,22 @@ function triggerPhrase(trigger: AutomationTrigger): string {
     : 'When a delivery arrives';
 }
 
-class Fitted extends Component<typeof Automation> {
+// The server's view of an automation, for a view that shows only its state.
+class WithStatus extends Component<typeof Automation> {
+  private server = automationStatus(this, () => ({
+    id: this.args.model.id,
+    realm: this.args.model[realmURL]?.href,
+    realmId: instanceRealmId(this.args.model as Automation),
+    tools: toolsOf(this.args.context),
+  }));
+  get look() {
+    return this.server.current.visible
+      ? stateLook(this.server.current.status)
+      : undefined;
+  }
+}
+
+class Fitted extends WithStatus {
   get triggers() {
     return this.args.model.triggers ?? [];
   }
@@ -2951,21 +3388,30 @@ class Fitted extends Component<typeof Automation> {
         </div>
       </:meta>
       <:footer>
-        {{#unless this.hasScript}}
-          <Chip
-            @label='No script yet'
-            @tone='warning'
-            data-test-automation-fitted-no-script
-          />
-        {{/unless}}
-        {{#if this.showsBatchedAI}}
-          <Chip
-            @label='Batched AI'
-            @tone='info'
-            class='automation-fitted__batched'
-            data-test-automation-fitted-batched-ai
-          />
-        {{/if}}
+        <Stack @orientation='horizontal' @wrap={{true}} @gap='xs'>
+          {{#if this.look}}
+            <Chip
+              @label={{this.look.label}}
+              @tone={{this.look.tone}}
+              data-test-automation-fitted-state={{this.look.label}}
+            />
+          {{/if}}
+          {{#unless this.hasScript}}
+            <Chip
+              @label='No script yet'
+              @tone='warning'
+              data-test-automation-fitted-no-script
+            />
+          {{/unless}}
+          {{#if this.showsBatchedAI}}
+            <Chip
+              @label='Batched AI'
+              @tone='info'
+              class='automation-fitted__batched'
+              data-test-automation-fitted-batched-ai
+            />
+          {{/if}}
+        </Stack>
       </:footer>
     </FittedCard>
     <style scoped>
@@ -3020,6 +3466,94 @@ class Fitted extends Component<typeof Automation> {
   </template>
 }
 
+// One line per trigger, in words, with the automation's state for a direct
+// writer.
+class Embedded extends WithStatus {
+  get triggers() {
+    return (this.args.model.triggers ?? []).map((trigger) => ({
+      kind: trigger.kind,
+      phrase: triggerPhrase(trigger),
+    }));
+  }
+  <template>
+    <div class='automation-embedded' data-test-automation-embedded>
+      <Item
+        @size='s'
+        @alignStart={{true}}
+        @title={{@model.cardTitle}}
+        @description={{@model.cardDescription}}
+      >
+        <:leading>
+          <span class='automation-embedded__icon' aria-hidden='true'>
+            <CalendarClockIcon width='20' height='20' />
+          </span>
+        </:leading>
+        <:trailing>
+          {{#if this.look}}
+            <Chip
+              @label={{this.look.label}}
+              @tone={{this.look.tone}}
+              data-test-automation-embedded-state={{this.look.label}}
+            />
+          {{/if}}
+        </:trailing>
+      </Item>
+      {{#if this.triggers.length}}
+        <Stack @gap='none' class='automation-embedded__triggers'>
+          {{#each this.triggers as |trigger|}}
+            <Item
+              @size='xs'
+              @title={{trigger.phrase}}
+              data-test-automation-embedded-trigger
+            >
+              <:leading>
+                {{#if (eq trigger.kind 'cron')}}
+                  <RepeatIcon width='14' height='14' aria-hidden='true' />
+                {{else if (eq trigger.kind 'once')}}
+                  <CalendarCheckIcon
+                    width='14'
+                    height='14'
+                    aria-hidden='true'
+                  />
+                {{else}}
+                  <ZapIcon width='14' height='14' aria-hidden='true' />
+                {{/if}}
+              </:leading>
+            </Item>
+          {{/each}}
+        </Stack>
+      {{else}}
+        <EmptyState
+          @size='s'
+          @texture={{false}}
+          @title='No triggers'
+          @message='Add a schedule, a one-time run or a webhook in the edit view.'
+        />
+      {{/if}}
+    </div>
+    <style scoped>
+      .automation-embedded {
+        container-type: inline-size;
+        display: grid;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-sm);
+      }
+      .automation-embedded__icon {
+        display: grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: var(--radius);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+      }
+      .automation-embedded__triggers {
+        color: var(--muted-foreground);
+      }
+    </style>
+  </template>
+}
+
 export class Automation extends CardDef {
   static displayName = 'Automation';
   static icon = CalendarClockIcon;
@@ -3067,6 +3601,7 @@ export class Automation extends CardDef {
   } satisfies OperationDeclaration;
 
   static isolated = Isolated;
+  static embedded = Embedded;
   static fitted = Fitted;
   static edit = Edit;
 }
