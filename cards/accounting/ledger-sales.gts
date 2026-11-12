@@ -392,6 +392,7 @@ ${TAX_CHECKS}${FX_CHECKS}
     transformations: bxl`
       assert(if .status == null then true else .status == "draft" end; "Only a draft invoice's lines can change.");
       assert((params("lines") | length) > 0; "Send at least one line to add.");
+      assert([params("lines")[] | .timeId] | all(. == null); "Bill time from the time page, which marks it billed with the invoice.");
       assert(if .currency == null then true else .currency == "" end; "Lines are added in the home currency, so a draft in another currency can't take them.");
       .lines = .lines + params("lines");
     `,
@@ -703,6 +704,7 @@ ${TAX_CHECKS}
     transformations: bxl`
       assert(if .status == null then true else .status == "draft" end; "Only a draft sales receipt's lines can change.");
       assert((params("lines") | length) > 0; "Send at least one line to add.");
+      assert([params("lines")[] | .timeId] | all(. == null); "Bill time from the time page, which marks it billed with the invoice.");
       assert(if .currency == null then true else .currency == "" end; "Lines are added in the home currency, so a draft in another currency can't take them.");
       .lines = .lines + params("lines");
     `,
@@ -1103,9 +1105,16 @@ export class Customer extends Account {
   @field shipState = contains(StringField);
   @field defaultTerms = linksTo(() => PaymentTerm);
 
-  /** Draft an invoice to this customer; Invoice.post checks it. */
+  /** Draft an invoice to this customer; Invoice.post checks it. A draft that bills time is entered
+   *  with enterTimeInvoice instead, in the batch that marks the time billed, and an opening-balance
+   *  kind only by a writer, so this one, which roles may hold, takes neither. */
   @operation static enterInvoice = {
     base: 'create',
+    input: bxl`
+      assert(if .lines == null then true else ([.lines[] | .timeId] | all(. == null)) end; "Bill time from the time page, which marks it billed with the invoice.");
+      assert(if .kind == null then true else .kind == "sale" end; "Only a sale can be entered here.");
+      .
+    `,
     of: Invoice,
     params: {
       taxCode: StringField, // the sale's tax code: its customer's default, or the code for its address; null for none
@@ -1143,6 +1152,19 @@ export class Customer extends Account {
     ...this.enterInvoice,
     params: { ...this.enterInvoice.params, terms: linkTo(PaymentTerm) },
     fill: { ...this.enterInvoice.fill, terms: params('terms') },
+  } satisfies OperationDeclaration;
+  /** Draft an invoice that bills time, sent with each activity's markBilled. Writers only: no role
+   *  is granted it, since alone it would bill time without marking it. */
+  @operation static enterTimeInvoice = {
+    base: 'create',
+    of: Invoice,
+    params: this.enterInvoice.params,
+    fill: this.enterInvoice.fill,
+  } satisfies OperationDeclaration;
+  @operation static enterTimeInvoiceOnTerms = {
+    ...this.enterTimeInvoice,
+    params: { ...this.enterTimeInvoice.params, terms: linkTo(PaymentTerm) },
+    fill: { ...this.enterTimeInvoice.fill, terms: params('terms') },
   } satisfies OperationDeclaration;
   /** Draft a sales receipt (paid at the time of sale); SalesReceipt.post checks it. */
   @operation static enterSalesReceipt = {
