@@ -1,9 +1,9 @@
 // The compact card parts the contract-execution cards share (legal/* and
 // audit/audit-entry): one isolated layout, one embedded layout, one fitted
-// layout over FitTile, and one atom, so every card reads the same way.
+// layout over RichFittedCard, and one atom, so every card reads the same way.
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { Dot as DotChip, StatStrip, type Stat } from '../shared/compact-parts';
 
 import { riskTone, type Tone } from '../shared/compact-format';
@@ -443,7 +443,7 @@ export const EmbLayout: TemplateOnlyComponent<EmbeddedSignature> = <template>
   </style>
 </template>;
 
-// ── Fitted: FitTile, then ruled fact rows that fill the rest ─────────────
+// ── Fitted: RichFittedCard, then ruled fact rows that fill the rest ─────────────
 interface FittedStat {
   key: string;
   value: string;
@@ -462,7 +462,7 @@ interface FittedSignature {
 export const FitLayout: TemplateOnlyComponent<FittedSignature> = <template>
   <div class='cc-fitx'>
     <div class='cc-fitx-tile'>
-      <FitTile class='cc-fit'>
+      <RichFittedCard class='cc-fit'>
         <:avatar>{{yield to='mark'}}</:avatar>
         <:title><span
             class='cc-fit-title'
@@ -475,7 +475,7 @@ export const FitLayout: TemplateOnlyComponent<FittedSignature> = <template>
               @tone={{@status.tone}}
             />{{/if}}</:status>
         <:fact>{{@fact}}</:fact>
-      </FitTile>
+      </RichFittedCard>
     </div>
     {{#if @stats}}
       <dl class='cc-fitx-stats'>
