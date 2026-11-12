@@ -392,7 +392,6 @@ export class Learner extends PersonBase {
         <:avatar><Avatar
             @name={{learnerName @model.title}}
             @src={{@model.photo.resolvedUrl}}
-            @size={{32}}
           /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>

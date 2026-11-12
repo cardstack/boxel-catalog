@@ -405,7 +405,7 @@ export class LoyaltyAccount extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar @name={{this.name}} @size={{32}} /></:avatar>
+        <:avatar><Avatar @name={{this.name}} /></:avatar>
         <:title>{{this.name}}</:title>
         <:subtitle>{{this.meta}}</:subtitle>
         <:status>

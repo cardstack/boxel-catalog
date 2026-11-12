@@ -1509,7 +1509,6 @@ export class TalentResourceTracker extends CardDef {
         <:avatar><Avatar
             @name={{if @model.cardTitle @model.cardTitle ''}}
             @hue='var(--primary)'
-            @size={{32}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.cardTitle}}</:title>

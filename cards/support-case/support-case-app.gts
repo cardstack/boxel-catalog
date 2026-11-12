@@ -143,7 +143,6 @@ export class SupportCaseApp extends CardDef {
         <:avatar><Avatar
             @name={{if @model.title @model.title ''}}
             @hue='var(--primary)'
-            @size={{32}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.title}}</:title>
