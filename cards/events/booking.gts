@@ -345,7 +345,6 @@ class BookingIsolated extends Component<typeof Booking> {
     <style scoped>
       .rec {
         container-type: inline-size;
-        margin: var(--boxel-sp-sm);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         background-color: var(--card);

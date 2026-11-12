@@ -346,7 +346,6 @@ export class Document extends CardDef {
       </IsoFrame>
       <style scoped>
         .doc {
-          margin: var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           overflow: hidden;

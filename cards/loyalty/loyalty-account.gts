@@ -659,7 +659,6 @@ export class LoyaltyAccount extends CardDef {
       </IsoFrame>
       <style scoped>
         .page {
-          margin: var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           background-color: var(--card);
@@ -1109,124 +1108,127 @@ export class PointsTransaction extends CardDef {
     }
 
     <template>
-      <article class='page'>
-        <header class='head'>
-          <TxMark @size='lg' />
-          <div class='id'>
-            <h1 class='name'>{{reasonOf @model}}</h1>
-            <p class='meta'>{{txMeta @model}}</p>
-          </div>
-          <div class='tags'>
-            <span class='amt {{sign @model.amount}}'>{{signed @model.amount}}
-              pts</span>
-            {{#if @model.expiresAt}}<DotText
-                @label={{dayMonth @model.expiresAt}}
-                @tone='warning'
-              />{{/if}}
-          </div>
-        </header>
+      <IsoFrame>
+        <article class='page'>
+          <header class='head'>
+            <TxMark @size='lg' />
+            <div class='id'>
+              <h1 class='name'>{{reasonOf @model}}</h1>
+              <p class='meta'>{{txMeta @model}}</p>
+            </div>
+            <div class='tags'>
+              <span class='amt {{sign @model.amount}}'>{{signed @model.amount}}
+                pts</span>
+              {{#if @model.expiresAt}}<DotText
+                  @label={{dayMonth @model.expiresAt}}
+                  @tone='warning'
+                />{{/if}}
+            </div>
+          </header>
 
-        <dl class='stats' aria-label='Key numbers'>
-          <div class='stat'>
-            <dt class='label'>Amount</dt>
-            <dd class='value {{sign @model.amount}}'>{{signed
-                @model.amount
-              }}</dd>
-            <dd class='sub'>{{this.amountHint}}</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Source</dt>
-            <dd class='value'>{{if @model.source @model.source '—'}}</dd>
-            <dd class='sub'>{{reasonOf @model}}</dd>
-          </div>
-          <div class='stat'>
-            <dt class='label'>Expires</dt>
-            <dd class='value'>{{if
-                @model.expiresAt
-                (dayMonth @model.expiresAt)
-                'Never'
-              }}</dd>
-            <dd class='sub'>{{if
-                @model.expiresAt
-                (when @model.expiresAt)
-                'no expiry'
-              }}</dd>
-          </div>
-        </dl>
+          <dl class='stats' aria-label='Key numbers'>
+            <div class='stat'>
+              <dt class='label'>Amount</dt>
+              <dd class='value {{sign @model.amount}}'>{{signed
+                  @model.amount
+                }}</dd>
+              <dd class='sub'>{{this.amountHint}}</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Source</dt>
+              <dd class='value'>{{if @model.source @model.source '—'}}</dd>
+              <dd class='sub'>{{reasonOf @model}}</dd>
+            </div>
+            <div class='stat'>
+              <dt class='label'>Expires</dt>
+              <dd class='value'>{{if
+                  @model.expiresAt
+                  (dayMonth @model.expiresAt)
+                  'Never'
+                }}</dd>
+              <dd class='sub'>{{if
+                  @model.expiresAt
+                  (when @model.expiresAt)
+                  'no expiry'
+                }}</dd>
+            </div>
+          </dl>
 
-        <div class='cols'>
-          <div class='main'>
-            <section class='sec'>
-              <h2>Transaction</h2>
-              <dl class='kv'>
-                <dt>Reason</dt><dd>{{reasonOf @model}}</dd>
-                <dt>Source</dt><dd>{{if @model.source @model.source '—'}}</dd>
-                <dt>Amount</dt><dd class='num'>{{signed @model.amount}}
-                  points</dd>
-                <dt>Occurred</dt><dd>{{when @model.occurredAt}}</dd>
-                <dt>Expires</dt><dd>{{if
-                    @model.expiresAt
-                    (when @model.expiresAt)
-                    'Never'
-                  }}</dd>
-              </dl>
-            </section>
-            {{#if this.sameAccount.length}}
+          <div class='cols'>
+            <div class='main'>
               <section class='sec'>
-                <h2>Same account</h2>
-                <ul class='rows'>
-                  {{#each this.sameAccount key='id' as |t|}}
-                    <li class='row'>
-                      <span class='date'>{{day t.occurredAt}}</span>
-                      <span class='what'><strong>{{reasonOf t}}</strong>
-                        {{#if t.source}}<span class='muted'>·
-                            {{t.source}}</span>{{/if}}</span>
-                      <span class='amt {{sign t.amount}}'>{{signed
-                          t.amount
-                        }}</span>
-                    </li>
-                  {{/each}}
-                </ul>
+                <h2>Transaction</h2>
+                <dl class='kv'>
+                  <dt>Reason</dt><dd>{{reasonOf @model}}</dd>
+                  <dt>Source</dt><dd>{{if @model.source @model.source '—'}}</dd>
+                  <dt>Amount</dt><dd class='num'>{{signed @model.amount}}
+                    points</dd>
+                  <dt>Occurred</dt><dd>{{when @model.occurredAt}}</dd>
+                  <dt>Expires</dt><dd>{{if
+                      @model.expiresAt
+                      (when @model.expiresAt)
+                      'Never'
+                    }}</dd>
+                </dl>
               </section>
-            {{/if}}
-          </div>
+              {{#if this.sameAccount.length}}
+                <section class='sec'>
+                  <h2>Same account</h2>
+                  <ul class='rows'>
+                    {{#each this.sameAccount key='id' as |t|}}
+                      <li class='row'>
+                        <span class='date'>{{day t.occurredAt}}</span>
+                        <span class='what'><strong>{{reasonOf t}}</strong>
+                          {{#if t.source}}<span class='muted'>·
+                              {{t.source}}</span>{{/if}}</span>
+                        <span class='amt {{sign t.amount}}'>{{signed
+                            t.amount
+                          }}</span>
+                      </li>
+                    {{/each}}
+                  </ul>
+                </section>
+              {{/if}}
+            </div>
 
-          <aside class='side'>
-            <section class='sec'>
-              <h2>Linked</h2>
-              <dl class='kv'>
-                <dt>Account</dt>
-                <dd>{{#if @model.account}}<@fields.account
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{else}}—{{/if}}</dd>
-              </dl>
-            </section>
-            <section class='sec'>
-              <h2>Details</h2>
-              <dl class='kv'>
-                <dt>Amount</dt><dd class='num'>{{signed @model.amount}}</dd>
-                <dt>Source</dt><dd>{{if @model.source @model.source '—'}}</dd>
-                <dt>Occurred</dt><dd>{{day @model.occurredAt}}</dd>
-                <dt>Expires</dt><dd>{{if
-                    @model.expiresAt
-                    (day @model.expiresAt)
-                    'Never'
-                  }}</dd>
-                <dt>Account</dt><dd>{{if
-                    @model.account.holder.name
-                    @model.account.holder.name
-                    '—'
-                  }}</dd>
-                <dt>Balance after</dt><dd class='num'>{{this.balanceAfter}}</dd>
-              </dl>
-            </section>
-          </aside>
-        </div>
-      </article>
+            <aside class='side'>
+              <section class='sec'>
+                <h2>Linked</h2>
+                <dl class='kv'>
+                  <dt>Account</dt>
+                  <dd>{{#if @model.account}}<@fields.account
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{else}}—{{/if}}</dd>
+                </dl>
+              </section>
+              <section class='sec'>
+                <h2>Details</h2>
+                <dl class='kv'>
+                  <dt>Amount</dt><dd class='num'>{{signed @model.amount}}</dd>
+                  <dt>Source</dt><dd>{{if @model.source @model.source '—'}}</dd>
+                  <dt>Occurred</dt><dd>{{day @model.occurredAt}}</dd>
+                  <dt>Expires</dt><dd>{{if
+                      @model.expiresAt
+                      (day @model.expiresAt)
+                      'Never'
+                    }}</dd>
+                  <dt>Account</dt><dd>{{if
+                      @model.account.holder.name
+                      @model.account.holder.name
+                      '—'
+                    }}</dd>
+                  <dt>Balance after</dt><dd
+                    class='num'
+                  >{{this.balanceAfter}}</dd>
+                </dl>
+              </section>
+            </aside>
+          </div>
+        </article>
+      </IsoFrame>
       <style scoped>
         .page {
-          margin: var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           background-color: var(--card);

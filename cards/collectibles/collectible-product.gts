@@ -447,10 +447,10 @@ export class CollectibleProduct extends CardDef {
           background: var(--ink-900);
           color: var(--paper);
           font-family: var(--font-sans);
-          padding: 2rem;
+          padding: var(--boxel-sp-sm);
           display: flex;
           flex-direction: column;
-          gap: 1.75rem;
+          gap: var(--boxel-sp-xs);
 
           scrollbar-color: var(--gold) var(--ink-800);
         }

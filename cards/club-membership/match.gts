@@ -595,7 +595,6 @@ export class Match extends Event {
       <style scoped>
         .page {
           container-type: inline-size;
-          margin: var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           background-color: var(--card);
