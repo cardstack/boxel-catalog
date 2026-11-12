@@ -454,7 +454,7 @@ export class Deal extends Opportunity {
       </IsoFrame>
       <style scoped>
         .dp {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           --text-stat: 1.375rem;
           --text-ui-xs: 0.6875rem;
@@ -465,15 +465,15 @@ export class Deal extends Opportunity {
           border: 1px solid var(--border);
           border-radius: var(--radius);
           overflow: hidden;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.25;
           color: var(--card-foreground);
         }
         .dh {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
         }
         .id {
           flex: 1;
@@ -482,17 +482,17 @@ export class Deal extends Opportunity {
         h1 {
           font-family: var(--font-sans);
           margin: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .tags {
           display: flex;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
         }
         .stats {
           display: grid;
@@ -503,7 +503,7 @@ export class Deal extends Opportunity {
           border-inline-start: 1px solid var(--border);
         }
         .stats > * {
-          padding: 0.5rem 0.625rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
         .cols {
           display: grid;
@@ -527,12 +527,12 @@ export class Deal extends Opportunity {
         }
         h2 {
           margin: 0;
-          padding: 0.625rem 0.625rem 0.25rem;
-          font-size: 0.75rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-4xs);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .pad {
-          padding: 0 0.625rem 0.5rem;
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
         .rows {
           margin: 0;
@@ -540,14 +540,14 @@ export class Deal extends Opportunity {
           list-style: none;
         }
         .rows > li {
-          padding: 0.25rem 0.625rem;
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
           border-block-start: 1px solid var(--border);
         }
         .people {
           display: flex;
           flex-direction: column;
-          gap: 0.25rem;
-          padding: 0 0.625rem 0.5rem;
+          gap: var(--boxel-sp-4xs);
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
         }
         .kv {
           --pretui-kv-pad-inline: var(--boxel-sp-sm);

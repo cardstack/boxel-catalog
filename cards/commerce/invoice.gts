@@ -396,12 +396,12 @@ class InvoiceIsolated extends Component<typeof Invoice> {
     <style scoped>
       .empty-note {
         margin: 0;
-        padding: 0.4375rem 0.625rem;
-        font-size: 0.6875rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .ip {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.4;
         --text-stat: 1.375rem;
         --text-ui-xs: 0.6875rem;
@@ -412,15 +412,15 @@ class InvoiceIsolated extends Component<typeof Invoice> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         overflow: hidden;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.25;
         color: var(--card-foreground);
       }
       .ih {
         display: flex;
         align-items: center;
-        gap: 0.625rem;
-        padding: 0.625rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs);
       }
       .id {
         flex: 1;
@@ -429,17 +429,17 @@ class InvoiceIsolated extends Component<typeof Invoice> {
       h1 {
         font-family: var(--font-sans);
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .tags {
         display: flex;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       .stats {
         display: grid;
@@ -450,7 +450,7 @@ class InvoiceIsolated extends Component<typeof Invoice> {
         border-inline-start: 1px solid var(--border);
       }
       .stats > * {
-        padding: 0.5rem 0.625rem;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
       }
       .cols {
         display: grid;
@@ -474,12 +474,12 @@ class InvoiceIsolated extends Component<typeof Invoice> {
       }
       h2 {
         margin: 0;
-        padding: 0.625rem 0.625rem 0.25rem;
-        font-size: 0.75rem;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-4xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .lines {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       .num {
         text-align: end;

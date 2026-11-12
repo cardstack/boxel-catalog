@@ -357,7 +357,7 @@ export class Payment extends CardDef {
           background-color: var(--card);
           color: var(--card-foreground);
           border: 1px solid var(--border);
-          border-radius: 0.5rem;
+          border-radius: var(--radius);
           box-shadow: var(--shadow-md);
           overflow: hidden;
         }

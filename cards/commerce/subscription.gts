@@ -364,7 +364,7 @@ export class Subscription extends CardDef {
       </IsoFrame>
       <style scoped>
         .stats > * {
-          padding: 0.4375rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         }
         .stats > * + * {
           border-inline-start: 1px solid var(--border);
@@ -395,8 +395,8 @@ export class Subscription extends CardDef {
         .steps {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.75rem;
-          padding: 0.4375rem 0.625rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           color: var(--muted-foreground);
         }
         .step[data-current] {
@@ -407,7 +407,7 @@ export class Subscription extends CardDef {
           --pretui-kv-pad-inline: var(--boxel-sp-sm);
         }
         .page {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           --text-stat: 1.375rem;
           --text-ui-xs: 0.6875rem;
@@ -426,8 +426,8 @@ export class Subscription extends CardDef {
         header {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.75rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm);
           border-bottom: 1px solid var(--border);
         }
         .id {
@@ -437,12 +437,12 @@ export class Subscription extends CardDef {
         h1 {
           font-family: var(--font-sans);
           margin: 0;
-          font-size: 1rem;
+          font-size: var(--boxel-font-size);
           font-weight: 700;
         }
         p {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .stats {
@@ -452,16 +452,16 @@ export class Subscription extends CardDef {
         }
         section h2 {
           margin: 0;
-          padding: 0.5rem 0.75rem;
-          font-size: 0.75rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           border-bottom: 1px solid var(--border);
         }
         .linked {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.375rem 0.75rem;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-sm);
           border-bottom: 1px solid var(--border);
         }
         .cap {

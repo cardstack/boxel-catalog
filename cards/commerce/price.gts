@@ -273,7 +273,7 @@ export class Price extends CardDef {
         }
         .subject {
           border: 1px solid var(--border);
-          border-radius: 0.5rem;
+          border-radius: var(--radius);
         }
       </style>
     </template>

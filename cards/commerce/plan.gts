@@ -310,7 +310,7 @@ export class Plan extends CardDef {
         }
         .panel {
           border: 1px solid var(--border);
-          border-radius: 0.75rem;
+          border-radius: var(--radius);
           padding: var(--boxel-sp) var(--boxel-sp-lg);
           background: var(--card);
         }
