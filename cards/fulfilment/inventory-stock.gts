@@ -16,7 +16,7 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Button } from '@cardstack/pretui/components/button';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Media } from '../shared/rich-fitted-card';
 import { DotLabel } from '../hr/dot-enum-field';
 import { on } from '@ember/modifier';
 import { IsoFrame } from '../shared/compact-sheet';
@@ -558,12 +558,10 @@ export class InventoryStock extends CardDef {
   static fitted = class Fitted extends Component<typeof InventoryStock> {
     <template>
       <RichFittedCard>
-        <:avatar><Avatar
-            @name={{if @model.productName @model.productName 'Stock'}}
-            @src={{@model.productImageUrl}}
-            @shape='square'
-            @size={{32}}
-          /></:avatar>
+        <:media><Media @src={{@model.productImageUrl}} @alt=''><BoxesIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{subLine @model}}</:subtitle>
         <:status><DotLabel

@@ -359,7 +359,6 @@ export class MarketplaceMember extends PersonBase {
         <:avatar><Avatar
             @name={{if @model.name @model.name '?'}}
             @src={{@model.photo.resolvedUrl}}
-            @size={{32}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.title}}</:title>

@@ -15,12 +15,11 @@ import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { CollectionItem } from './collection-item';
 import { DotLabel } from '../hr/dot-enum-field';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Media } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
   SnKv,
-  SnMark,
   SnRow,
   SnSection,
   SnSheet,
@@ -218,7 +217,10 @@ export class AuthenticationRecord extends CardDef {
   static fitted = class Fitted extends Component<typeof AuthenticationRecord> {
     <template>
       <RichFittedCard>
-        <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
+        <:media><Media @src={{photoOf @model}} @alt=''><ShieldCheckIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{titleOf @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><Outcome @model={{@model}} /></:status>

@@ -19,12 +19,11 @@ import { MarketplaceMember } from './marketplace-member';
 import { Acquisition } from './acquisition';
 import { formatMoneyDelta, moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Media } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
   SnKv,
-  SnMark,
   SnRow,
   SnSection,
   SnSheet,
@@ -315,7 +314,10 @@ export class CollectionItem extends CardDef {
   static fitted = class Fitted extends Component<typeof CollectionItem> {
     <template>
       <RichFittedCard>
-        <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
+        <:media><Media @src={{photoOf @model}} @alt=''><ArchiveIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><DotLabel

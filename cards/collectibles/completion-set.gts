@@ -18,8 +18,8 @@ import BadgeCheckIcon from '@cardstack/boxel-icons/badge-check';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
 import NotebookPenIcon from '@cardstack/boxel-icons/notebook-pen';
 import { tracked } from '@glimmer/tracking';
-import { FittedCard, FieldContainer } from '@cardstack/boxel-ui/components';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { RichFittedCard, Media, Metric } from '../shared/rich-fitted-card';
 import { identifyCard } from '@cardstack/runtime-common';
 // CollectionItem is read ONLY inside the isolated component's methods, never at
 // module-evaluation time. That is what keeps this import cycle legal —
@@ -873,155 +873,36 @@ export class CompletionSet extends CardDef {
     </template>
   };
 
-  // FITTED — FittedCard, same fork and same knobs as the rest of the family.
-  //
-  // NO PROGRESS BAR HERE, and this is the important decision rather than an
-  // omission. Progress needs the owner's collection, which means a query, and a
-  // prerendered fitted tile can neither run a query nor resolve a link — so any
-  // percentage drawn here would be an invented number. The isolated view runs
-  // that query; the tile shows only what this card actually owns.
-  //
-  // SLOT DISCIPLINE — three distinct facts, three slots. `<:subtitle>` and
-  // `<:meta>` are not rendered: the remaining values are the rule (already the
-  // eyebrow) and the count (already the footer).
+  // No progress here: it needs the owner's collection, a query a prerendered
+  // fitted view cannot run, so the view shows only what this card owns.
   static fitted = class Fitted extends Component<typeof CompletionSet> {
     get countLabel() {
       let n = this.args.model?.targetCount ?? 0;
       return n === 1 ? '1 product' : `${n} products`;
     }
+    get ruleLabel() {
+      return this.args.model?.completionRule === 'own-all'
+        ? 'Own every variant'
+        : 'Own any variant';
+    }
 
     <template>
-      <FittedCard
-        class='s-fit'
-        @imageUrl={{@model.coverImage.resolvedUrl}}
-        @imageAlt={{@model.cardTitle}}
-        @titleTag='h3'
-      >
-        {{! Rule 2 anchor: tier 1 is the cover image; tier 2 is the card's own
-            static icon, the same one its isolated view and atom use. }}
-        <:placeholder>
-          <TargetArrowIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
-        </:placeholder>
-
-        <:eyebrow><span class='fit-eyebrow'>{{if
-              (eq @model.completionRule 'own-all')
-              'Own every variant'
-              'Own any variant'
-            }}</span></:eyebrow>
-
-        <:title><span class='fit-title'>{{if
-              @model.cardTitle
-              @model.cardTitle
-              'Untitled set'
-            }}</span></:title>
-
-        <:badgeRight>
-          {{#if @model.isPublic}}
-            <StatePill class='s-pub' @label='Public' @hue='slate' />
-          {{/if}}
-        </:badgeRight>
-
-        <:footer>
-          {{! The one real number this card owns without a query. Rendered in
-              full or not at all — never ellipsised. }}
-          <span class='s-count'>{{this.countLabel}}</span>
-        </:footer>
-      </FittedCard>
-
-      <style scoped>
-        /* No container-type / container-name — FittedCard queries the HOST's
-           `fitted-card` container. */
-        .s-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          /* The miniature vault plaque — inset shadow, not a border. */
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          --fc-image-width: 42cqh;
-          --fc-image-min-width: 3.5rem;
-          --fc-image-max-width: 11rem;
-          --fc-image-object-fit: cover;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-
-          --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          --fc-header-gap: 0.15em;
-          --fc-content-gap: var(--boxel-sp-2xs);
-
-          --fc-eyebrow-font-size: max(9px, 0.62em);
-          --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(13px, 1.05em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 2;
-          --fc-footer-font-size: max(11px, 0.78em);
-          --fc-footer-gap: var(--boxel-sp-xs);
-          --fc-footer-justify: space-between;
-          --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-2xs);
-        }
-
-        .fit-eyebrow {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--smoke);
-          font-weight: 600;
-        }
-        .fit-title {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-
-        .s-pub {
-          font-weight: 700;
-        }
-        .s-count {
-          font-family: 'Playfair Display', Georgia, serif;
-          color: var(--primary-ink);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-
-        /* ---- quanta: visibility only ---- */
-        @container fitted-card (height <= 50px) {
-          .s-fit {
-            --fc-footer-display: none;
-            --fc-badge-right-display: none;
-            --fc-title-line-clamp: 1;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-
-        @container fitted-card (width <= 150px) {
-          .s-fit {
-            --fc-image-max-width: 100%;
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:media><Media
+            @src={{@model.coverImage.resolvedUrl}}
+            @alt={{if @model.cardTitle @model.cardTitle ''}}
+          ><TargetArrowIcon width='40%' height='40%' /></Media></:media>
+        <:title>{{if @model.cardTitle @model.cardTitle 'Untitled set'}}</:title>
+        <:status>{{#if @model.isPublic}}<StatePill
+              @label='Public'
+              @hue='slate'
+            />{{/if}}</:status>
+        <:subtitle>{{this.ruleLabel}} · {{this.countLabel}}</:subtitle>
+        <:metric><Metric
+            @value='{{@model.targetCount}}'
+            @label='Products'
+          /></:metric>
+      </RichFittedCard>
     </template>
   };
 

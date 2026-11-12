@@ -23,7 +23,7 @@ import { CollectibleProduct } from './collectible-product';
 import { SellerProfile } from './seller-profile';
 import { moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Media } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -267,11 +267,10 @@ export class Listing extends CardDef {
   static fitted = class Fitted extends Component<typeof Listing> {
     <template>
       <RichFittedCard>
-        <:avatar><SnMark
-            @src={{@model.photos.primaryUrl}}
-            @text='Li'
-            @size='lg'
-          /></:avatar>
+        <:media><Media @src={{@model.photos.primaryUrl}} @alt=''><TagIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><DotLabel

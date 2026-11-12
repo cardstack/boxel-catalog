@@ -11,7 +11,9 @@ import MailIcon from '@cardstack/boxel-icons/mail';
 import PhoneIcon from '@cardstack/boxel-icons/phone';
 import TagIcon from '@cardstack/boxel-icons/tag';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { identifyCard } from '@cardstack/runtime-common';
 import { PersonBase } from '../people/person-base';
 // NOT a static import of `./listing` on purpose. listing.gts now imports
@@ -533,7 +535,7 @@ export class MarketplaceMember extends PersonBase {
     </template>
   };
 
-  // FITTED — FittedCard, same knobs as the rest of the collectibles cards.
+  // FITTED — RichFittedCard, the person photo as the avatar.
   //
   // SLOT DISCIPLINE — two distinct facts, two slots. No eyebrow: the only
   // string left is the email, which is already the footer, and "Person" as a
@@ -542,137 +544,14 @@ export class MarketplaceMember extends PersonBase {
     typeof MarketplaceMember
   > {
     <template>
-      <FittedCard
-        class='p-fit'
-        @imageUrl={{@model.photo.resolvedUrl}}
-        @imageAlt={{@model.title}}
-        @titleTag='h3'
-      >
-        {{! Rule 2 anchor: tier 1 is the photo. The tier-2 fallback here is the
-            INITIALS rather than the generic user glyph — a person's initials
-            identify this record, where a placeholder avatar is exactly the
-            "decoration where content should be" the rules warn against. The
-            icon stays as the last resort for an unnamed person, where
-            `initialsOf` yields '?'. }}
-        <:placeholder>
-          {{#if @model.name}}
-            <span class='p-init'>{{@model.initials}}</span>
-          {{else}}
-            <UserIcon
-              width='max(18px, 34%)'
-              height='max(18px, 34%)'
-              aria-hidden='true'
-            />
-          {{/if}}
-        </:placeholder>
-
-        <:title><span class='fit-title'>{{@model.title}}</span></:title>
-
-        <:footer>
-          {{! An email is an identifier — it gets typed and read aloud — so it
-              never ellipsises. It is hidden WHOLE at the narrow quanta below. }}
-          {{#if @model.email}}
-            <span class='p-mail'>{{@model.email}}</span>
-          {{/if}}
-        </:footer>
-      </FittedCard>
-
-      <style scoped>
-        /* No container-type / container-name — FittedCard queries the host's
-           `fitted-card` container. */
-        .p-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          /* The miniature vault plaque — inset shadow, not a border. */
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          /* A person reads as a portrait, so the image is square and sits
-             tighter than the product tiles' 11rem. */
-          --fc-image-width: 42cqh;
-          --fc-image-min-width: 3rem;
-          --fc-image-max-width: 7rem;
-          --fc-image-object-fit: cover;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-
-          --fc-content-padding: 0.4rem 0.7rem;
-          --fc-header-gap: 0.15em;
-          --fc-content-gap: 0.25rem;
-
-          --fc-title-font-size: max(13px, 1.05em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 2;
-          --fc-footer-font-size: max(11px, 0.78em);
-          --fc-footer-gap: 0.5rem;
-          --fc-footer-justify: flex-start;
-          --fc-footer-flex-wrap: nowrap;
-        }
-
-        /* Rule 2: the name is the anchor, so it is the loud thing at every
-           size — there is no eyebrow competing with it. */
-        .fit-title {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-
-        /* Initials as the anchor: serif gold, the family's plaque treatment, so
-           a photo-less person still reads as this app rather than as a gap. */
-        .p-init {
-          font-family: 'Playfair Display', Georgia, serif;
-          /* Rule 1: the scale is CAPPED, not just floored. A bare
-             `max(14px, 30cqh)` reaches ~82px in the tallest quantum, and two
-             capital letters at that size are wider than the 7rem image column —
-             so it would overflow horizontally instead of clipping vertically,
-             which is the same defect wearing a different axis. clamp() bounds
-             both ends; 1.15 line-height keeps descenders intact at the floor. */
-          font-size: clamp(14px, 30cqh, 40px);
-          line-height: 1.15;
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          color: var(--primary-ink);
-        }
-        .p-mail {
-          color: var(--smoke);
-          white-space: nowrap;
-        }
-
-        /* ---- quanta: visibility only, never a shrink-into-a-clip ---- */
-        @container fitted-card (height <= 50px) {
-          .p-fit {
-            --fc-footer-display: none;
-            --fc-title-line-clamp: 1;
-            --fc-content-padding: 0.15rem 0.3rem;
-          }
-        }
-
-        /* The email is dropped WHOLE rather than truncated to a stub — a
-           half-visible address is worse than an absent one. */
-        @container fitted-card (width <= 220px) and (height <= 80px) {
-          .p-fit .p-mail {
-            display: none;
-          }
-        }
-
-        @container fitted-card (width <= 150px) {
-          .p-fit {
-            --fc-image-max-width: 100%;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:avatar><Avatar
+            @name={{@model.title}}
+            @src={{@model.photo.resolvedUrl}}
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{@model.email}}</:subtitle>
+      </RichFittedCard>
     </template>
   };
 

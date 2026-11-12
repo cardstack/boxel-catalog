@@ -15,7 +15,6 @@ import { MarketplaceMember } from './marketplace-member';
 import { ConditionGrade } from '@cardstack/catalog/fields/condition-grade/condition-grade';
 import { Acquisition } from './acquisition';
 import ArchiveIcon from '@cardstack/boxel-icons/archive';
-import BadgeCheckIcon from '@cardstack/boxel-icons/badge-check';
 import CalendarIcon from '@cardstack/boxel-icons/calendar';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import CoinsIcon from '@cardstack/boxel-icons/coins';
@@ -25,7 +24,13 @@ import TrendingUpIcon from '@cardstack/boxel-icons/trending-up';
 import TrendingDownIcon from '@cardstack/boxel-icons/trending-down';
 import ImageOffIcon from '@cardstack/boxel-icons/image-off';
 import { tracked } from '@glimmer/tracking';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import {
+  RichFittedCard,
+  Detail,
+  Media,
+  Metric,
+} from '../shared/rich-fitted-card';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { formatMoney, formatMoneyDelta, moneyText } from './money-format';
 import { Accordion } from '@cardstack/pretui/components/accordion';
@@ -1357,232 +1362,56 @@ export class CollectionItem extends CardDef {
     </template>
   };
 
-  // STEP 0 FORK — FittedCard, not hand-rolled. This reverses the instinct the
-  // design brief creates ("dark identity-bearing card → hand-roll"), and it is
-  // reversed on evidence read out of the component, not on taste:
-  //
-  //   1. `FittedCard`'s root is `<article class='fitted-card' ...attributes>`, so
-  //      a wrapper class of ours lands on the real root — the dark ground and
-  //      every `--fc-*` override apply without forking anything.
-  //   2. It declares NO `container-type`/`container-name` — it queries the host's
-  //      `fitted-card` container, which is exactly the rule a hand-rolled
-  //      template has to obey anyway.
-  //   3. It already carries ~20 debugged `@container fitted-card` rules covering
-  //      the whole aspect-ratio × width × height matrix. Hand-rolling means
-  //      reimplementing the 16-size quanta that already exist and work.
-  //
-  // The content here IS the standard composition (image + eyebrow + title + badge
-  // + footer), which is precisely the case the fork rule sends to FittedCard. The
-  // identity we need is palette plus the photo carrying real width, and both are
-  // `--fc-*` knobs.
-  //
-  // SLOT DISCIPLINE — six distinct facts, six slots, zero repeats.
-  // `<:subtitle>` and `<:meta>` are deliberately NOT rendered. They are the two
-  // slots that would have to be padded with a value already shown elsewhere
-  // (variant, or the condition code), which is the documented failure mode: one
-  // nine-card family had a value duplicated across slots in 6 of 9 templates,
-  // and it survives source review because the repeat only appears at the quanta
-  // where both slots happen to be visible. A slot with nothing distinct to say is
-  // deleted, not filled.
-  //
-  // ONE BADGE, NOT TWO. `verified` and `forSale` are both badge-worthy, but two
-  // badges at the 150×40 quantum is two loud things and therefore no anchor. The
-  // split: `[FOR SALE]` is the tile marker, while `DS ✓Auth` sits inline in the text row — so for-sale takes the
-  // badge and verification rides as a glyph beside the condition in the footer.
   static fitted = class Fitted extends Component<typeof CollectionItem> {
     get worth() {
       return formatMoney(this.args.model?.lastKnownValue);
     }
+    get paid() {
+      return formatMoney(this.args.model?.acquisition?.price);
+    }
+    // the value rides on the subtitle too, so strips under 170 tall show it
+    get subtitle() {
+      let m = this.args.model;
+      return [m?.variantLabel, m?.condition?.code, this.worth]
+        .filter(Boolean)
+        .join(' · ');
+    }
 
     <template>
-      <FittedCard
-        class='ci-fit'
-        @imageUrl={{@model.photos.primaryUrl}}
-        @imageAlt={{@model.itemTitle}}
-        @titleTag='h3'
-      >
-        {{! Rule 2 anchor, tier 1 is the image; this is the tier-2 fallback and it
-            is the card's OWN static icon — the same one its isolated view and its
-            breadcrumb use, which is what makes it identity rather than filler.
-            Never an empty grey square. }}
-        <:placeholder>
-          <ArchiveIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
-        </:placeholder>
-
-        <:eyebrow><span
-            class='fit-eyebrow'
-          >{{@model.variantLabel}}</span></:eyebrow>
-
-        <:title><span class='fit-title'>{{if
-              @model.itemTitle
-              @model.itemTitle
-              'Untitled item'
-            }}</span></:title>
-
-        <:badgeRight>
-          {{#if @model.forSale}}
-            <StatePill
-              class='ci-sale'
+      <RichFittedCard>
+        <:media><Media
+            @src={{@model.photos.primaryUrl}}
+            @alt={{if @model.itemTitle @model.itemTitle ''}}
+          ><ArchiveIcon width='40%' height='40%' /></Media></:media>
+        <:title>{{if
+            @model.itemTitle
+            @model.itemTitle
+            'Untitled item'
+          }}</:title>
+        <:status>{{#if @model.forSale}}<StatePill
               @label='For sale'
               @hue='amber'
-              @emphatic={{true}}
-            />
-          {{/if}}
-        </:badgeRight>
-
-        <:footer>
-          {{#if @model.condition.code}}
-            <span class='ci-grade'>
-              {{@model.condition.code}}
-              {{#if @model.verified}}
-                <BadgeCheckIcon class='ci-check' aria-label='Authenticated' />
-              {{/if}}
-            </span>
-          {{/if}}
-          {{! Rule 1, data is all-or-nothing: routed through the one money
-              formatter so minor units always render, and `nowrap` so the value is
-              never ellipsised into an unreadable price. It is hidden wholesale at
-              the narrow quanta below rather than truncated. }}
-          {{#if this.worth}}
-            <span class='ci-worth'>{{moneyText @model.lastKnownValue}}</span>
-          {{/if}}
-        </:footer>
-      </FittedCard>
-
-      <style scoped>
-        /* NO container-type / container-name here — FittedCard queries the HOST's
-           `fitted-card` container, and declaring one would capture those queries.
-           Everything below is either a --fc-* knob or a visibility change. */
-        .ci-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --ink-950: var(--primary-foreground);
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-          --verified: var(--success-ink);
-          --font-display: var(--font-serif);
-
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          /* The miniature vault plaque: a 2px gold edge as an inset shadow, not
-             a border — the host draws the chrome and this must not fight it. */
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          /* The photo carries real width — the design direction is Object, and a
-             thumbnail-sized hero is the documented anti-pattern. */
-          --fc-image-width: 42cqh;
-          --fc-image-min-width: 3.5rem;
-          --fc-image-max-width: 11rem;
-          --fc-image-object-fit: cover;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-
-          --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          --fc-header-gap: 0.15em;
-          --fc-content-gap: var(--boxel-sp-2xs);
-
-          /* Rule 1: line-height >= 1.15 on every text role, so a descender is
-             never sheared even when the clamp math "fits". */
-          --fc-eyebrow-font-size: max(9px, 0.62em);
-          --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(13px, 1.05em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 2;
-          --fc-footer-font-size: max(11px, 0.78em);
-          --fc-footer-gap: var(--boxel-sp-xs);
-          --fc-footer-justify: space-between;
-          --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-2xs);
-        }
-
-        /* Rule 2: the eyebrow stays quiet so the title wins by CONTRAST, not only
-           by size. Two loud things would mean no anchor. */
-        .fit-eyebrow {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--smoke);
-          font-weight: 600;
-        }
-        .fit-title {
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-        .ci-sale {
-          font-weight: 700;
-        }
-
-        .ci-grade {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3em;
-          font-weight: 700;
-          white-space: nowrap;
-        }
-        .ci-check {
-          width: max(11px, 0.95em);
-          height: max(11px, 0.95em);
-          color: var(--verified);
-          flex: none;
-        }
-        .ci-worth {
-          /* Plaque value: serif + gold — the collector-catalog mark. */
-          font-family: var(--font-display);
-          color: var(--primary-ink);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          /* never ellipsis a value — it is hidden whole at narrow quanta instead */
-          white-space: nowrap;
-        }
-
-        /* ---- quanta: visibility only, never a shrink-into-a-clip ----
-           The type scale itself does not step; these rules hide whole rows. */
-
-        /* Badge tier (h <= 50): the title is usually the only survivor, and it
-           must still be the loudest thing. Everything else goes. */
-        @container fitted-card (height <= 50px) {
-          .ci-fit {
-            --fc-footer-display: none;
-            --fc-badge-right-display: none;
-            --fc-title-line-clamp: 1;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-
-        /* Very narrow strips: the money value is dropped WHOLE rather than
-           truncated, leaving the grade — a half-visible price is worse than an
-           absent one. */
-        @container fitted-card (width <= 200px) and (height <= 80px) {
-          .ci-fit .ci-worth {
-            display: none;
-          }
-        }
-
-        /* Narrow tiles: the image would starve the text column below the ~200px
-           content-column rule, so it yields width rather than the title clipping. */
-        @container fitted-card (width <= 150px) {
-          .ci-fit {
-            --fc-image-max-width: 100%;
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-      </style>
+            />{{/if}}{{#if @model.verified}}<StatePill
+              @label='Authenticated'
+              @hue='green'
+            />{{/if}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:metric>{{#if this.worth}}<Metric
+              @value={{this.worth}}
+              @label='Last value'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if this.paid}}<Detail @label='Paid' @value={{this.paid}} />{{/if}}
+          {{#if @model.packaging}}<Detail
+              @label='Packaging'
+              @value={{@model.packaging}}
+            />{{/if}}
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

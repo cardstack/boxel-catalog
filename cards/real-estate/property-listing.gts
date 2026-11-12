@@ -27,7 +27,8 @@ import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { Employee } from '../hr/employee';
 import { DotLabel, dotEnumField } from '../hr/dot-enum-field';
 import { daysBetween } from '../hr/utils';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import HomeIcon from '@cardstack/boxel-icons/home';
+import { RichFittedCard, Media } from '../shared/rich-fitted-card';
 import { PublishChecklist } from './components/publish-checklist';
 import { ChannelSelector } from './components/channel-selector';
 import { SchedulePicker } from './components/schedule-picker';
@@ -912,11 +913,10 @@ export class PropertyListing extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar>{{#if this.f.hero}}<img
-              class='pf-thumb'
-              src={{this.f.hero}}
-              alt=''
-            />{{/if}}</:avatar>
+        <:media><Media @src={{this.f.hero}} @alt=''><HomeIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{this.f.place}}</:subtitle>
         <:status><DotLabel
@@ -930,15 +930,6 @@ export class PropertyListing extends CardDef {
           {{/if}}
         </:relations>
       </RichFittedCard>
-      <style scoped>
-        .pf-thumb {
-          display: block;
-          inline-size: 2rem;
-          block-size: 2rem;
-          object-fit: cover;
-          border-radius: var(--radius);
-        }
-      </style>
     </template>
   };
 }

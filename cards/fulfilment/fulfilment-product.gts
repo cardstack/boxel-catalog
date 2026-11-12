@@ -19,7 +19,7 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
 import { money } from './fulfilment-format';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Media } from '../shared/rich-fitted-card';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import { Product } from '../commerce/product';
 import { realmURL } from 'https://cardstack.com/base/card-api';
@@ -605,14 +605,10 @@ export class FulfilmentProduct extends Product {
   static fitted = class Fitted extends Component<typeof FulfilmentProduct> {
     <template>
       <RichFittedCard>
-        <:avatar>{{#if @model.image.resolvedUrl}}<img
-              class='mark'
-              src={{@model.image.resolvedUrl}}
-              alt=''
-            />{{else}}<span
-              class='mark'
-              aria-hidden='true'
-            >Pr</span>{{/if}}</:avatar>
+        <:media><Media @src={{@model.image.resolvedUrl}} @alt=''><PackageIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><span class='st' data-tone={{if @model.isActive 'ok'}}><span
@@ -632,20 +628,6 @@ export class FulfilmentProduct extends Product {
             />{{/if}}</:relations>
       </RichFittedCard>
       <style scoped>
-        .mark {
-          display: inline-grid;
-          place-items: center;
-          width: 2rem;
-          height: 2rem;
-          margin-right: var(--boxel-sp-xs);
-          border-radius: calc(var(--radius) * 0.6);
-          background-color: var(--muted);
-          object-fit: cover;
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
-          font-weight: 700;
-          color: var(--card-foreground);
-        }
         .st {
           display: inline-flex;
           align-items: center;
