@@ -45,6 +45,10 @@ import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import { ContractTypeField, contractTypeLabel } from './contract-type';
 import { IsoFrame } from '../shared/compact-sheet';
+import { Mark } from './compact-card';
+import { Dot as DotChip } from '../shared/compact-parts';
+import type { Tone } from '../shared/compact-format';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
@@ -1183,8 +1187,7 @@ export class Contract extends CardDef {
     </template>
   };
 
-  // Rows in priority order; container queries drop whole rows as the tile
-  // shrinks (identity → status → key fact → state → linked → numbers).
+  // Status, risk and renewal as chips; the notice date is the fact.
   static fitted = class Fitted extends Component<typeof Contract> {
     get valueDisplay() {
       return formatMoney(
@@ -1192,214 +1195,48 @@ export class Contract extends CardDef {
         this.args.model?.value?.currency?.code,
       );
     }
+    get statusTone(): Tone {
+      let tone = statusTone(this.args.model?.status);
+      return tone === 'ok' ? 'success' : tone === 'bad' ? 'danger' : 'info';
+    }
     <template>
-      <article class='cf'>
-        <div class='r head'>
-          <span class='mark' aria-hidden='true'>Ct</span>
-          <strong class='name'>{{@model.cardTitle}}</strong>
-          {{#if @model.status}}
-            <span
-              class='dot st-inline'
-              data-tone={{statusTone @model.status}}
-            >{{contractStatusLabel @model.status}}</span>
-          {{/if}}
-        </div>
-        <div class='r meta'>{{contractMeta @model}}</div>
-        {{#if @model.status}}
-          <div class='r st-row'><span
-              class='dot'
-              data-tone={{statusTone @model.status}}
-            >{{contractStatusLabel @model.status}}</span></div>
-        {{/if}}
-        {{#if @model.noticeBy}}
-          <div class='r fact'>Notice by
+      <RichFittedCard>
+        <:avatar><Mark @text='Ct' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#if @model.status}}<DotChip
+              @label={{contractStatusLabel @model.status}}
+              @tone={{this.statusTone}}
+            />{{/if}}{{#if @model.riskGrade}}<DotChip
+              @label='{{@model.riskGrade}} risk'
+              @tone='warning'
+            />{{/if}}{{#if @model.autoRenews}}<DotChip
+              @label='auto-renews'
+            />{{/if}}</:status>
+        <:subtitle>{{contractMeta @model}}</:subtitle>
+        <:fact>{{#if @model.noticeBy}}Notice by
             {{shortDate @model.noticeBy true}}{{#if @model.daysToNotice}}
               ·
               {{@model.daysToNotice}}
-              days left{{/if}}</div>
-        {{/if}}
-        <div class='r flags'>
-          {{#if @model.riskGrade}}
-            <span class='dot' data-tone='warn'>{{@model.riskGrade}} risk</span>
-          {{/if}}
-          {{#if @model.autoRenews}}<span
-              class='dot renews'
-            >auto-renews</span>{{/if}}
-        </div>
-        {{#if @model.owner}}
-          <div class='r kv owner'><span class='cap'>Owner</span><@fields.owner
-              @format='atom'
-              @displayContainer={{false}}
-            /></div>
-        {{/if}}
-        <div class='r kv val'><span class='cap'>Value</span><span>{{pick
-              this.valueDisplay
-              '—'
-            }}</span></div>
-        <div class='r kv term'><span class='cap'>Signed</span><span
-            class='mono'
-          >{{pick (shortDate @model.signedAt true) '—'}}</span></div>
-        <div class='r kv prov'><span class='cap'>Provider</span><span>{{pick
-              @model.signatureProvider
-              '—'
-            }}</span></div>
-      </article>
-      <style scoped>
-        .cf {
-          block-size: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          font-family: var(--font-sans);
-          font-size: 0.75rem;
-          color: var(--foreground);
-        }
-        .r {
-          flex: none;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          min-block-size: 1.75rem;
-          padding-inline: 0.625rem;
-          border-top: 1px solid var(--border);
-          min-width: 0;
-          overflow: hidden;
-          white-space: nowrap;
-        }
-        .head {
-          border-top: 0;
-          min-block-size: 2.375rem;
-        }
-        .mark {
-          flex: none;
-          display: inline-grid;
-          place-items: center;
-          inline-size: 1.25rem;
-          block-size: 1.25rem;
-          border: 1px solid var(--border);
-          border-radius: 0.25rem;
-          background-color: var(--muted);
-          font-family: var(--font-mono);
-          font-size: 0.5625rem;
-          font-weight: 600;
-        }
-        .name {
-          flex: 1;
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-weight: 700;
-        }
-        .meta,
-        .fact {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          text-overflow: ellipsis;
-          display: block;
-          line-height: 1.75rem;
-        }
-        .kv {
-          justify-content: space-between;
-        }
-        .cap {
-          font-family: var(--font-mono);
-          font-size: 0.5625rem;
-          font-weight: 600;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .mono {
-          font-family: var(--font-mono);
-          font-size: 0.6875rem;
-        }
-        .dot {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          white-space: nowrap;
-          text-transform: lowercase;
-        }
-        .dot::before {
-          content: '';
-          flex: none;
-          inline-size: 0.4375rem;
-          block-size: 0.4375rem;
-          border-radius: 50%;
-          background-color: var(--muted-foreground);
-        }
-        .dot[data-tone='ok']::before {
-          background-color: var(--success);
-        }
-        .dot[data-tone='warn']::before {
-          background-color: var(--warning);
-        }
-        .dot[data-tone='bad']::before {
-          background-color: var(--destructive);
-        }
-
-        /* Narrow (< 250): status gets its own row; wide: beside the title. */
-        .st-inline {
-          display: none;
-        }
-        @container fitted-card (min-width: 250px) {
-          .st-inline {
-            display: inline-flex;
-          }
-          .st-row {
-            display: none;
-          }
-        }
-        /* Height budget: hide whole rows from the bottom up. */
-        @container fitted-card (max-height: 64px) {
-          .r:not(.head) {
-            display: none;
-          }
-          .head {
-            block-size: 100%;
-          }
-        }
-        @container fitted-card (max-height: 104px) {
-          .st-row,
-          .fact {
-            display: none;
-          }
-        }
-        @container fitted-card (max-height: 169px) {
-          .flags,
-          .owner {
-            display: none;
-          }
-        }
-        @container fitted-card (max-height: 274px) {
-          .val,
-          .term,
-          .prov {
-            display: none;
-          }
-        }
-        @container fitted-card (min-height: 275px) and (max-height: 400px) {
-          .prov {
-            display: none;
-          }
-        }
-        @container fitted-card (max-width: 249px) and (max-height: 274px) {
-          .owner {
-            display: none;
-          }
-        }
-        @container fitted-card (max-width: 249px) and (min-height: 250px) {
-          .owner {
-            display: flex;
-          }
-        }
-        @container fitted-card (max-width: 249px) {
-          .renews {
-            display: none;
-          }
-        }
-      </style>
+              days left{{/if}}{{/if}}</:fact>
+        <:metric>{{#if this.valueDisplay}}<Metric
+              @value={{this.valueDisplay}}
+              @label='Value'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.signedAt}}<Detail
+              @label='Signed'
+              @value={{shortDate @model.signedAt true}}
+            />{{/if}}
+          {{#if @model.signatureProvider}}<Detail
+              @label='Provider'
+              @value={{@model.signatureProvider}}
+            />{{/if}}
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

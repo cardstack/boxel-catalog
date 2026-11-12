@@ -206,7 +206,6 @@ export class CertificationAuthority extends CardDef {
             @name={{sealName @model.name}}
             @src={{@model.seal.resolvedUrl}}
             @hue={{AVATAR_HUE}}
-            @size={{20}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.cardTitle}}</:title>

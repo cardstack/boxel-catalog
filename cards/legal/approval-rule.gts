@@ -20,17 +20,19 @@ import {
   AtomLayout,
   EmbLayout,
   Facts,
-  FitLayout,
   IsoLayout,
   Mark,
   Rows,
   Section,
   Text,
+  fitParts,
   stats,
   type Dot,
   type Fact,
   type Row,
 } from './compact-card';
+import { Dot as DotChip } from '../shared/compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { cap, longMoney, shortMoney } from '../shared/compact-format';
 import { IsoFrame } from '../shared/compact-sheet';
 
@@ -179,17 +181,28 @@ export class ApprovalRule extends CardDef {
     get v() {
       return ruleView(this.args.model);
     }
+    get fit() {
+      return fitParts(this.v.embFacts, this.v.fitStats);
+    }
     <template>
-      <FitLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @status={{this.v.state}}
-        @fact={{this.v.chain}}
-        @facts={{this.v.embFacts}}
-        @stats={{this.v.fitStats}}
-      >
-        <:mark><Mark @text='AR' /></:mark>
-      </FitLayout>
+      <RichFittedCard>
+        <:avatar><Mark @text='AR' /></:avatar>
+        <:title>{{this.v.title}}</:title>
+        <:status>{{#if this.v.state}}<DotChip
+              @label={{this.v.state.label}}
+              @tone={{this.v.state.tone}}
+            />{{/if}}</:status>
+        <:subtitle>{{this.v.subtitle}}</:subtitle>
+        <:fact>{{this.v.chain}}</:fact>
+        <:metric>{{#if this.fit.metric}}<Metric
+              @value={{this.fit.metric.value}}
+              @label={{this.fit.metric.key}}
+            />{{/if}}</:metric>
+        <:details>{{#each this.fit.details as |d|}}<Detail
+              @label={{d.key}}
+              @value={{d.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 

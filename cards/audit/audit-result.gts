@@ -27,6 +27,7 @@ import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { AuditFacts } from './audit-ui';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 
 /**
  * One rule, one subject, one verdict — the atom an audit is made of.
@@ -283,68 +284,35 @@ export class AuditResult extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get hue() {
+      return EVALUATION_HUE[this.args.model?.status?.status ?? ''] ?? 'slate';
+    }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.cardTitle}}</span>
-        <span class='fit-sub'>{{@model.status.label}}</span>
-        <div class='tier-tile'>
-          <span class='row mono'>{{@model.observedValue}}</span>
-          {{#if @model.hasFinding}}
-            <span class='row'>{{@model.finding.findingId}}</span>
-          {{/if}}
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><SquareFunctionIcon
+            class='mark'
+            aria-hidden='true'
+          /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#if @model.status.label}}<StatePill
+              @label={{@model.status.label}}
+              @hue={{this.hue}}
+              @dot={{true}}
+            />{{/if}}{{#if @model.finding.severity.level}}<SeverityBadge
+              @level={{@model.finding.severity.level}}
+              @compact={{true}}
+            />{{/if}}</:status>
+        <:subtitle>{{@model.observedValue}}</:subtitle>
+        <:details>{{#if @model.hasFinding}}<Detail
+              @label='Finding'
+              @value={{@model.finding.findingId}}
+            />{{/if}}</:details>
+      </RichFittedCard>
       <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .fit-sub,
-        .row {
-          font-size: var(--boxel-font-size-xs);
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .mono {
-          font-family: var(--font-mono);
-        }
-        .tier-tile {
-          display: none;
-          flex-direction: column;
-          gap: var(--boxel-sp-6xs);
-          margin-top: auto;
-          padding-top: var(--boxel-sp-5xs);
-          border-top: 1px solid var(--border);
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 120px) {
-          .tier-tile {
-            display: flex;
-          }
         }
       </style>
     </template>

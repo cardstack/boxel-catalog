@@ -11,6 +11,7 @@ import HistoryIcon from '@cardstack/boxel-icons/history';
 
 import { AuditEntry } from '../audit-entry';
 import { AuditTimeline } from '../components/audit-timeline';
+import { RichFittedCard } from '../../shared/rich-fitted-card';
 
 // Usage page for the Audit Timeline block: a short real trail over one
 // report, with a sign-off moment set so the after-sign-off marker is visible
@@ -88,28 +89,10 @@ export class AuditTimelineExample extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <div class='fit'>
-        <span class='fit-name'>Audit Timeline</span>
-        <span class='fit-sub'>usage page</span>
-      </div>
-      <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-        }
-        .fit-sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-      </style>
+      <RichFittedCard>
+        <:title>Audit Timeline</:title>
+        <:subtitle>usage page</:subtitle>
+      </RichFittedCard>
     </template>
   };
 }

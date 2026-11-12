@@ -18,6 +18,7 @@ import { Token } from '@cardstack/pretui/components/token';
 import { LegalFacts } from './legal-ui';
 import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 
 export const LEGAL_ENTITY_TYPES = [
   'corporation',
@@ -311,48 +312,22 @@ export class LegalEntity extends CardDef {
       return LEGAL_ENTITY_TYPE_LABELS[this.args.model?.entityType ?? ''] ?? '—';
     }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.legalName}}</span>
-        <span class='fit-sub'>{{this.typeLabel}}
-          ·
-          {{@model.jurisdiction}}</span>
-      </div>
-      <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .fit-sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:title>{{@model.legalName}}</:title>
+        <:subtitle>{{this.typeLabel}}{{#if @model.jurisdiction}}
+            ·
+            {{@model.jurisdiction}}{{/if}}</:subtitle>
+        <:details>
+          {{#if @model.registrationNumber}}<Detail
+              @label='Registration'
+              @value={{@model.registrationNumber}}
+            />{{/if}}
+          {{#if @model.signatoryName}}<Detail
+              @label='Signatory'
+              @value={{@model.signatoryName}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

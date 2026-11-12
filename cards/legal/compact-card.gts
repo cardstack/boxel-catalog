@@ -1,9 +1,8 @@
 // The compact card parts the contract-execution cards share (legal/* and
-// audit/audit-entry): one isolated layout, one embedded layout, one fitted
-// layout over RichFittedCard, and one atom, so every card reads the same way.
+// audit/audit-entry): one isolated layout, one embedded layout, the parts
+// of a RichFittedCard fitted view, and one atom, so every card reads the same way.
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
-import { RichFittedCard } from '../shared/rich-fitted-card';
 import { Dot as DotChip, StatStrip, type Stat } from '../shared/compact-parts';
 
 import { riskTone, type Tone } from '../shared/compact-format';
@@ -443,164 +442,24 @@ export const EmbLayout: TemplateOnlyComponent<EmbeddedSignature> = <template>
   </style>
 </template>;
 
-// ── Fitted: RichFittedCard, then ruled fact rows that fill the rest ─────────────
-interface FittedStat {
-  key: string;
-  value: string;
+// ── Fitted: the parts each card hands RichFittedCard ─────────────────────
+/** The fitted metric (the first stat) and the detail rows under it: the facts,
+ *  then the other stats, each key once. */
+export function fitParts(
+  facts: Fact[] = [],
+  stats: { key: string; value: string }[] = [],
+) {
+  let [metric, ...rest] = stats;
+  let seen = new Set(metric ? [metric.key] : []);
+  let details: { key: string; value: string }[] = [];
+  for (let d of [...facts, ...rest]) {
+    if (!seen.has(d.key)) {
+      seen.add(d.key);
+      details.push(d);
+    }
+  }
+  return { metric, details };
 }
-interface FittedSignature {
-  Args: {
-    title: string;
-    subtitle?: string;
-    status?: Dot;
-    fact?: string;
-    facts?: Fact[];
-    stats?: FittedStat[];
-  };
-  Blocks: { mark: [] };
-}
-export const FitLayout: TemplateOnlyComponent<FittedSignature> = <template>
-  <div class='cc-fitx'>
-    <div class='cc-fitx-tile'>
-      <RichFittedCard class='cc-fit'>
-        <:avatar>{{yield to='mark'}}</:avatar>
-        <:title><span
-            class='cc-fit-title'
-            role='heading'
-            aria-level='3'
-          >{{@title}}</span></:title>
-        <:subtitle>{{@subtitle}}</:subtitle>
-        <:status>{{#if @status}}<DotChip
-              @label={{@status.label}}
-              @tone={{@status.tone}}
-            />{{/if}}</:status>
-        <:fact>{{@fact}}</:fact>
-      </RichFittedCard>
-    </div>
-    {{#if @stats}}
-      <dl class='cc-fitx-stats'>
-        {{#each @stats as |s|}}
-          <div class='cc-fitx-stat'><dt>{{s.key}}</dt><dd>{{s.value}}</dd></div>
-        {{/each}}
-      </dl>
-    {{/if}}
-    {{#if @facts}}
-      {{! a column of whole rows: a row that does not fit wraps into a second
-        column past the right edge, so the list fills any height and never
-        shows half a row }}
-      <dl class='cc-fitx-facts'>
-        {{#each @facts as |f|}}
-          <div class='cc-fitx-fact'>
-            <dt>{{f.key}}</dt>
-            <dd class={{if f.mono 'is-mono'}}>{{f.value}}</dd>
-          </div>
-        {{/each}}
-      </dl>
-    {{/if}}
-  </div>
-  <style scoped>
-    .cc-fitx {
-      display: flex;
-      flex-direction: column;
-      block-size: 100%;
-      overflow: hidden;
-      font-family: var(--font-sans);
-    }
-    .cc-fitx-tile {
-      flex: 1 1 0;
-      min-block-size: 0;
-    }
-    .cc-fit-title {
-      display: block;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .cc-fitx-stats,
-    .cc-fitx-facts {
-      display: none;
-      margin: 0;
-      padding: 0 var(--boxel-sp-sm);
-    }
-    .cc-fitx-stats {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      border-top: 1px solid var(--border);
-    }
-    .cc-fitx-stat {
-      padding: var(--boxel-sp-5xs) var(--boxel-sp-xs) var(--boxel-sp-5xs) 0;
-      border-inline-end: 1px solid var(--border);
-      min-inline-size: 0;
-    }
-    .cc-fitx-stat:last-child {
-      border-inline-end: 0;
-    }
-    .cc-fitx-stat dt,
-    .cc-fitx-fact dt {
-      font-family: var(--font-mono);
-      font-size: 0.5625rem; /* 9px ladder label: no token */
-      font-weight: var(--boxel-eyebrow-font-weight);
-      line-height: var(--boxel-eyebrow-line-height);
-      letter-spacing: var(--boxel-eyebrow-letter-spacing);
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-      white-space: nowrap;
-    }
-    .cc-fitx-stat dd {
-      margin: 0;
-      font-size: var(--boxel-font-size-xs);
-      font-weight: 700;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .cc-fitx-facts {
-      flex: 1 1 0;
-      min-block-size: 0;
-      flex-direction: column;
-      flex-wrap: wrap;
-      align-content: flex-start;
-      column-gap: var(--boxel-sp-xl);
-      overflow: hidden;
-    }
-    .cc-fitx-fact {
-      box-sizing: border-box;
-      inline-size: 100%;
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: var(--boxel-sp-xs);
-      padding-block: var(--boxel-sp-5xs);
-      border-top: 1px solid var(--border);
-    }
-    .cc-fitx-fact dd {
-      margin: 0;
-      min-inline-size: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: var(--boxel-font-size-xs);
-    }
-    .cc-fitx-fact dd.is-mono {
-      font-family: var(--font-mono);
-      font-size: var(--boxel-font-size-2xs);
-      font-variant-numeric: tabular-nums;
-    }
-    /* 170 tall and up: the tile keeps its own height, the rows fill the rest */
-    @container fitted-card (height >= 170px) {
-      .cc-fitx-tile {
-        flex: none;
-      }
-      .cc-fitx-facts {
-        display: flex;
-      }
-    }
-    @container fitted-card (height >= 400px) and (width >= 400px) {
-      .cc-fitx-stats {
-        display: grid;
-      }
-    }
-  </style>
-</template>;
 
 // ── Atom: mark + name on one line ────────────────────────────────────────
 interface AtomSignature {
