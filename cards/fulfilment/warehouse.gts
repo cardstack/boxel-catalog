@@ -23,7 +23,7 @@ import WarehouseIcon from '@cardstack/boxel-icons/building-warehouse';
 // binding is only read inside the constructor, not at module evaluation.
 import { InventoryStock } from './inventory-stock';
 import { CompoundAtom } from './fulfilment-ui';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { type Hue } from '@cardstack/catalog/components/state-pill';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { Button } from '@cardstack/pretui/components/button';
@@ -492,7 +492,7 @@ export class Warehouse extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Warehouse> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>WH</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -505,7 +505,7 @@ export class Warehouse extends CardDef {
           bins ·
           {{pct @model.utilizationPercent}}
           full</:fact>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

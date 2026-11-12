@@ -23,7 +23,7 @@ import { FulfilmentOrder } from './fulfilment-order';
 import { Button } from '@cardstack/pretui/components/button';
 import { Input } from '@cardstack/pretui/components/input';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { IsoFrame } from '../shared/compact-sheet';
 
 export const PICK_LIST_STATUSES = [
@@ -907,7 +907,7 @@ export class PickList extends CardDef {
 
   static fitted = class Fitted extends Component<typeof PickList> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Pk</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -921,7 +921,7 @@ export class PickList extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

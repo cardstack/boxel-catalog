@@ -21,7 +21,7 @@ import { tracked } from '@glimmer/tracking';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import { Button } from '@cardstack/pretui/components/button';
 import { type Hue } from '@cardstack/catalog/components/state-pill';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { FulfilmentLineItemField } from './fulfilment-line-item';
 import {
   OrderStatusField,
@@ -732,7 +732,7 @@ export class FulfilmentOrder extends CardDef {
 
   static fitted = class Fitted extends Component<typeof FulfilmentOrder> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Or</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -748,7 +748,7 @@ export class FulfilmentOrder extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

@@ -15,7 +15,7 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import { on } from '@ember/modifier';
 import { Button } from '@cardstack/pretui/components/button';
 import PackageIcon from '@cardstack/boxel-icons/package';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import TrackingNumberField from './tracking-number';
 import ParcelDimensionsField from './parcel-dimensions';
 import DeliveryWindowField from './delivery-window';
@@ -721,7 +721,7 @@ export class Shipment extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Shipment> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Sh</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -738,7 +738,7 @@ export class Shipment extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

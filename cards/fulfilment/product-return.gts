@@ -23,7 +23,7 @@ import { Shipment } from './shipment';
 import { type StatusStyle } from './fulfilment-status-chip';
 import { money } from './fulfilment-format';
 import { CompoundAtom } from './fulfilment-ui';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import {
   DotLabel,
@@ -703,7 +703,7 @@ export class ProductReturn extends CardDef {
 
   static fitted = class Fitted extends Component<typeof ProductReturn> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Rt</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -721,7 +721,7 @@ export class ProductReturn extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .st[style] {
           --tone: var(--st-hue);

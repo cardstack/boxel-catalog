@@ -14,7 +14,7 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import FactoryIcon from '@cardstack/boxel-icons/building-factory';
 import { CompoundAtom } from './fulfilment-ui';
 import { money } from './fulfilment-format';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import { on } from '@ember/modifier';
@@ -593,7 +593,7 @@ export class FulfilmentVendor extends CardDef {
 
   static fitted = class Fitted extends Component<typeof FulfilmentVendor> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>{{initials
               @model.vendorName
             }}</span></:avatar>
@@ -610,7 +610,7 @@ export class FulfilmentVendor extends CardDef {
         <:fact>{{daysText @model.leadTimeDays}}
           lead · min
           {{amountOr @model.minimumOrder 0}}</:fact>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

@@ -19,7 +19,7 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
 import { money } from './fulfilment-format';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import { Product } from '../commerce/product';
 import { realmURL } from 'https://cardstack.com/base/card-api';
@@ -604,7 +604,7 @@ export class FulfilmentProduct extends Product {
 
   static fitted = class Fitted extends Component<typeof FulfilmentProduct> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar>{{#if @model.image.resolvedUrl}}<img
               class='mark'
               src={{@model.image.resolvedUrl}}
@@ -630,7 +630,7 @@ export class FulfilmentProduct extends Product {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

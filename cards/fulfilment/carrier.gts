@@ -22,7 +22,7 @@ import { Shipment } from './shipment';
 import { isShipmentException } from './shipment-status';
 import { CompoundAtom } from './fulfilment-ui';
 import { money } from './fulfilment-format';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { IsoFrame } from '../shared/compact-sheet';
 
 // A carrier's service level: the promise, and what it costs.
@@ -779,7 +779,7 @@ export class Carrier extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Carrier> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>{{carrierMark
               @model.code
             }}</span></:avatar>
@@ -796,7 +796,7 @@ export class Carrier extends CardDef {
         <:fact>{{count @model.services}}
           services ·
           {{dash (join @model.supportedCountries)}}</:fact>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;
