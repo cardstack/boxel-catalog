@@ -17,7 +17,7 @@ import DateTimeField from '@cardstack/base/datetime';
 import MarkdownField from '@cardstack/base/markdown';
 import WrenchIcon from '@cardstack/boxel-icons/wrench';
 import { Button } from '@cardstack/pretui/components/button';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 
 import { Asset } from './asset';
 import { Location } from '../events/location';
@@ -679,7 +679,7 @@ export class WorkOrder extends CardDef {
 
   static fitted = class Fitted extends Component<typeof WorkOrder> {
     <template>
-      <FitTile class='fit'>
+      <RichFittedCard class='fit'>
         <:avatar><Mark @text='WO' @size='lg' /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -696,7 +696,7 @@ export class WorkOrder extends CardDef {
               @name={{@model.ownership.ownerName}}
             />{{/if}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .fit {
           color: var(--card-foreground);

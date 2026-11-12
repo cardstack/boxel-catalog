@@ -29,7 +29,7 @@ import { Asset } from './asset';
 // Cyclic (a plan links to Asset); read only in the constructor.
 import { MaintenancePlan } from './maintenance-plan';
 import RecordMeterReadingCommand from './commands/record-meter-reading-command';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   Chip,
   Brief,
@@ -455,7 +455,7 @@ export class Meter extends CardDef {
 
   static fitted = class Fitted extends MeterView {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Me' @size='lg' /></:avatar>
         <:title>{{@model.name}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -468,7 +468,7 @@ export class Meter extends CardDef {
         <:relations>
           {{#if @model.asset}}<@fields.asset @format='atom' />{{/if}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

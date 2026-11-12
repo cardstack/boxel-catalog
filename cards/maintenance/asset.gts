@@ -39,7 +39,7 @@ import { AssetCategory } from './asset-category';
 import { MaintenancePlan } from './maintenance-plan';
 import { Meter } from './meter';
 import { WorkOrder } from './work-order';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   Chip,
   Brief,
@@ -226,7 +226,7 @@ export class Asset extends CardDef {
       return nextDue(this.args.model.nextDueLabel);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='As' @size='lg' /></:avatar>
         <:title>{{if @model.name @model.name 'Untitled asset'}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -240,7 +240,7 @@ export class Asset extends CardDef {
           {{#if @model.category}}<@fields.category @format='atom' />{{/if}}
           {{#if @model.location}}<@fields.location @format='atom' />{{/if}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

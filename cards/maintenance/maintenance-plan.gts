@@ -19,7 +19,7 @@ import BooleanField from '@cardstack/base/boolean';
 import DateField from '@cardstack/base/date';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 
 import { Asset } from './asset';
 import { AssetCategory } from './asset-category';
@@ -472,7 +472,7 @@ export class MaintenancePlan extends CardDef {
 
   static fitted = class Fitted extends Component<typeof MaintenancePlan> {
     <template>
-      <FitTile class='fit'>
+      <RichFittedCard class='fit'>
         <:avatar><Mark @text='Pl' @size='lg' /></:avatar>
         <:title>{{@model.name}}</:title>
         <:subtitle>{{subjectLine @model}}</:subtitle>
@@ -483,7 +483,7 @@ export class MaintenancePlan extends CardDef {
         <:relations>{{#if @model.asset}}<@fields.asset
               @format='atom'
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .fit {
           color: var(--card-foreground);

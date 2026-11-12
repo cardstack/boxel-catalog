@@ -13,7 +13,7 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import PackageIcon from '@cardstack/boxel-icons/package';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 
 import { Asset } from './asset';
 import { AssetCategory } from './asset-category';
@@ -360,7 +360,7 @@ export class SparePart extends CardDef {
       return Math.min(100, Math.round(((m.onHand ?? 0) / max) * 100));
     }
     <template>
-      <FitTile class='fit'>
+      <RichFittedCard class='fit'>
         <:avatar><Mark @text='Pt' @size='lg' /></:avatar>
         <:title>{{@model.name}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -381,7 +381,7 @@ export class SparePart extends CardDef {
         <:relations>{{#if @model.preferredVendor}}<@fields.preferredVendor
               @format='atom'
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .fit {
           color: var(--card-foreground);
