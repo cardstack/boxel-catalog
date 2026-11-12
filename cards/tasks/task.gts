@@ -258,17 +258,17 @@ export class Task extends CardDef {
           max-width: 44rem;
           margin: 0 auto;
           inline-size: 100%;
-          padding: 2rem 1.5rem;
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: var(--boxel-sp-lg);
         }
         header {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: 1.25rem;
+          padding-bottom: var(--boxel-sp-lg);
         }
         .head-row {
           display: flex;
@@ -277,7 +277,7 @@ export class Task extends CardDef {
         }
         h1 {
           margin: 0;
-          font-size: 1.625rem;
+          font-size: var(--boxel-font-size-lg);
           line-height: 1.15;
         }
         .meta {
@@ -302,12 +302,12 @@ export class Task extends CardDef {
         }
         .panel {
           border: 1px solid var(--border);
-          border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
+          border-radius: var(--radius);
+          padding: var(--boxel-sp) var(--boxel-sp-lg);
           background-color: var(--card);
         }
         h2 {
-          margin: 0 0 0.75rem;
+          margin: 0 0 var(--boxel-sp-sm);
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
