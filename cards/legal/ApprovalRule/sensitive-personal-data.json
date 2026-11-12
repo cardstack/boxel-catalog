@@ -6,7 +6,11 @@
       "priority": 1,
       "isActive": true,
       "requiresSensitiveData": true,
-      "requiredRoles": ["Legal", "Security", "DPO"],
+      "requiredRoles": [
+        "Legal",
+        "Security",
+        "DPO"
+      ],
       "isParallel": true,
       "guidance": "Runs in parallel: none of the three blocks the others, and all must clear before signature."
     },
@@ -14,6 +18,13 @@
       "adoptsFrom": {
         "module": "../approval-rule",
         "name": "ApprovalRule"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

@@ -4,7 +4,7 @@
     "attributes": {
       "signedOffAt": "2026-09-07T14:00:00.000Z",
       "cardInfo": {
-        "name": "Audit Timeline — a trail with a sign-off",
+        "name": "Audit Timeline \u2014 a trail with a sign-off",
         "summary": "Four entries over one report; the last falls after sign-off",
         "notes": null,
         "cardThumbnailURL": null
@@ -29,6 +29,11 @@
       "entries.3": {
         "links": {
           "self": "../../AuditEntry/trail-4-amended"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/site-tools"
         }
       }
     },

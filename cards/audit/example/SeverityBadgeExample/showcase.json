@@ -6,7 +6,7 @@
         "level": "major"
       },
       "cardInfo": {
-        "name": "Severity Badge — every state",
+        "name": "Severity Badge \u2014 every state",
         "summary": "Usage page for the Severity Badge block",
         "notes": null,
         "cardThumbnailURL": null
@@ -18,6 +18,13 @@
         "name": "SeverityBadgeExample"
       },
       "_touched": 1788429719144
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/site-tools"
+        }
+      }
     }
   }
 }

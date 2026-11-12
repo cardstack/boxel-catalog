@@ -19,6 +19,11 @@
         "links": {
           "self": "../Member/dev-okafor"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

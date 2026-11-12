@@ -11,7 +11,7 @@
       "kind": "preventive",
       "priority": "P3",
       "status": "closed",
-      "title": "Quarterly service — Screw compressor #2",
+      "title": "Quarterly service \u2014 Screw compressor #2",
       "requestedByName": "Generate PM Work Orders",
       "requestedAt": "2026-06-01T01:00:00.000Z",
       "scheduledFor": "2026-06-15",
@@ -75,7 +75,7 @@
             "required": true,
             "result": "pass",
             "expectedValue": 90,
-            "unit": "°C",
+            "unit": "\u00b0C",
             "tolerance": 5,
             "completedByName": "Marcus Webb",
             "completedAt": "2026-06-15T02:40:00.000Z",
@@ -149,6 +149,11 @@
       "plan": {
         "links": {
           "self": "../MaintenancePlan/ast-0041-quarterly"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

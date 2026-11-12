@@ -14,24 +14,25 @@ import enumField from '@cardstack/base/enum';
 import { realmURL } from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 
-import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
-import { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
+import { LineItem } from '../commerce/line-item';
+import { Vendor } from './vendor';
 import { VendorQuote } from './vendor-quote';
 import { PurchaseRequisition } from './purchase-requisition';
 import { on } from '@ember/modifier';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { concat } from '@ember/helper';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { Stat } from '@cardstack/pretui/components/stat';
+import {
+  CompactFitted,
+  CompactRow,
+  type CompactTag,
+} from '../commerce/compact-parts';
+import { lineTotal, sumLineItems } from '../commerce/line-item-totals';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import {
-  ALERT_STYLE,
-  COMPACT_EMPTY_STYLE,
-} from '@cardstack/catalog/components/pretui-helpers';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
-import { RfqComparisonBoard } from './components/rfq-comparison-board';
 import AwardRfqCommand from './commands/award-rfq-command';
 import SendRfqCommand from './commands/send-rfq-command';
 import {
@@ -63,17 +64,6 @@ export const RFQ_STATUS_COLORS: Record<string, StateColor> = {
   cancelled: stateColor('red'),
 };
 
-const STATUS_HUES: Record<
-  string,
-  'slate' | 'blue' | 'amber' | 'green' | 'red'
-> = {
-  draft: 'slate',
-  sent: 'blue',
-  comparing: 'amber',
-  awarded: 'green',
-  cancelled: 'red',
-};
-
 export const RfqStatusField = markDefinition(
   enumField(StringField, {
     options: RFQ_STATUSES.map((value) => ({
@@ -84,585 +74,525 @@ export const RfqStatusField = markDefinition(
   }),
 );
 
-class RfqEdit extends Component<typeof Rfq> {
-  @tracked activeSection = 'basics';
+type Tone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+const STATUS_TONES: Record<string, Tone> = {
+  draft: 'neutral',
+  sent: 'info',
+  comparing: 'warning',
+  awarded: 'success',
+  cancelled: 'danger',
+};
 
-  sections = [
-    { id: 'basics', label: 'RFQ Basics' },
-    { id: 'lines', label: 'Requested Lines' },
-    { id: 'vendors-quotes', label: 'Vendors & Quotes' },
-  ];
+// DateField holds local midnight; compact-parts' fmtDate reads UTC and shows the day before.
+function fmtDate(d?: Date | string | null, year = true): string {
+  if (!d) return '';
+  let date = d instanceof Date ? d : new Date(d);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: year ? 'numeric' : undefined,
+  });
+}
 
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.rfq-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+function money(n: number | undefined, code = 'USD'): string {
+  if (n === undefined || !Number.isFinite(n)) return '—';
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: code,
+      maximumFractionDigits: 0,
+    }).format(n);
+  } catch {
+    return `${n}`;
+  }
+}
+
+function safe<T>(read: () => T, fallback: T): T {
+  try {
+    return read() ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+interface QuoteRow {
+  quote: VendorQuote;
+  vendor: string;
+  total: number;
+  lead?: number;
+  meta: string;
+  tag?: { label: string; tone: Tone };
+}
+
+// Every format reads the same facts, so isolated, embedded and fitted agree.
+function rfqFacts(m: Rfq | undefined) {
+  let status = m?.status || 'draft';
+  let lines = safe(() => (m?.lineItems ?? []).filter(Boolean), []);
+  let invited = safe(() => (m?.invitedVendors ?? []).filter(Boolean), []);
+  let quotes = safe(() => (m?.quotes ?? []).filter(Boolean), []);
+  let est = sumLineItems(lines as any);
+  let code = est.code ?? 'USD';
+  let rows: QuoteRow[] = quotes.map((q) => {
+    let total = Number(safe(() => q.totalAmount, 0)) || 0;
+    let lead = safe(() => q.leadTimeDays, undefined as number | undefined);
+    let vendor = safe(
+      () => q.vendor?.name || q.vendor?.cardTitle || q.cardTitle,
+      'Vendor',
+    );
+    let meta = [
+      money(total, code),
+      lead !== undefined ? `${lead}-day lead` : '',
+      q.validUntil ? `valid to ${fmtDate(q.validUntil)}` : '',
+      q.notes ? q.notes.replace(/\.$/, '').toLowerCase() : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    return { quote: q, vendor, total, lead, meta };
+  });
+  let priced = rows.filter((r) => r.total > 0);
+  let low = priced.reduce<QuoteRow | undefined>(
+    (a, r) => (!a || r.total < a.total ? r : a),
+    undefined,
+  );
+  let high = priced.reduce<QuoteRow | undefined>(
+    (a, r) => (!a || r.total > a.total ? r : a),
+    undefined,
+  );
+  let fast = rows
+    .filter((r) => r.lead !== undefined)
+    .reduce<
+      QuoteRow | undefined
+    >((a, r) => (!a || r.lead! < a.lead! ? r : a), undefined);
+  if (low) low.tag = { label: 'lowest', tone: 'success' };
+  if (fast && fast !== low) fast.tag = { label: 'fastest', tone: 'info' };
+  let awardedId = safe(
+    () => m?.awardedQuote?.id,
+    undefined as string | undefined,
+  );
+  let awarded = rows.find((r) => r.quote.id === awardedId);
+  if (awarded) awarded.tag = { label: 'awarded', tone: 'success' };
+  let spread = low && high ? high.total - low.total : undefined;
+  let quotesIn = `${rows.length} / ${invited.length || rows.length}`;
+  let deadline = fmtDate(m?.responseDeadline);
+  return {
+    status,
+    statusLabel: RFQ_STATUS_LABELS[status]?.toLowerCase() ?? status,
+    tone: STATUS_TONES[status] ?? 'neutral',
+    title: m?.cardTitle || 'Untitled RFQ',
+    sub: `${invited.length} vendors invited · ${lines.length} lines`,
+    subShort: `${invited.length} vendors · ${lines.length} lines`,
+    lines: lines.map((l: any) => ({
+      description: l?.description || '—',
+      meta: `${l?.quantity ?? 0} × ${money(l?.unitPrice?.amount, code)} estimate`,
+      total: money(lineTotal(l), code),
+    })),
+    rows,
+    low,
+    high,
+    fast,
+    awarded,
+    quotesIn,
+    quotesOf: `${rows.length} of ${invited.length || rows.length}`,
+    lowest: low ? money(low.total, code) : '—',
+    lowestFact: low
+      ? `Lowest ${money(low.total, code)} · ${low.vendor}`
+      : 'No quotes yet',
+    highest: high ? money(high.total, code) : '—',
+    fastest: fast ? `${fast.lead} days` : '—',
+    estimate: money(est.total, code),
+    spread: spread !== undefined ? money(spread, code) : '—',
+    spreadPct:
+      spread !== undefined && low?.total
+        ? `${((spread / low.total) * 100).toFixed(1)}% between quotes`
+        : 'needs two quotes',
+    deadline: deadline || '—',
+    deadlineShort: fmtDate(m?.responseDeadline, false) || '—',
+    deadlineYear: m?.responseDeadline
+      ? `${new Date(m.responseDeadline as any).getFullYear()}`
+      : 'no deadline',
+    lineCount: `${lines.length}`,
+    awardedText: awarded ? awarded.vendor : 'not yet',
+  };
+}
+
+class RfqIsolated extends Component<typeof Rfq> {
+  @tracked busy = false;
+  @tracked error: string | undefined;
+  @tracked message: string | undefined;
+
+  get f() {
+    return rfqFacts(this.args.model as Rfq);
+  }
+  get isDraft() {
+    return this.f.status === 'draft';
+  }
+  get canAward() {
+    return this.f.status === 'comparing' || this.f.status === 'sent'
+      ? Boolean(this.f.low)
+      : false;
+  }
+
+  run = async (make: (ctx: any) => Promise<unknown>) => {
+    let ctx = this.args.context?.commandContext;
+    if (!ctx) {
+      this.error = 'Commands are unavailable in this mode';
+      return;
+    }
+    this.error = undefined;
+    this.message = undefined;
+    this.busy = true;
+    try {
+      let result = await make(ctx);
+      this.message = (result as any)?.message;
+    } catch (e: any) {
+      this.error = e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
+  send = () =>
+    this.run((ctx) =>
+      new SendRfqCommand(ctx).execute({ rfq: this.args.model } as any),
+    );
+
+  // Awards the lowest quote, the one the comparison marks.
+  award = () => {
+    let model = this.args.model as any;
+    let realm = model?.[realmURL]?.href;
+    if (!realm) {
+      this.error = 'Could not determine the realm for the new PO';
+      return;
+    }
+    return this.run((ctx) =>
+      new AwardRfqCommand(ctx).execute({
+        rfq: model,
+        quote: this.f.low?.quote,
+        realm,
+      } as any),
+    );
   };
 
   <template>
-    <div class='rfq-edit'>
-      {{! responsive grid lives on the inner wrapper — the container
-          element cannot be restyled by its own query }}
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "basics") "focused"}}'
-            data-sect='basics'
-          >
-            <h3>RFQ Basics</h3>
-            <div class='row'>
-              <FieldContainer @label='Status' @vertical={{true}}>
-                <@fields.status />
-              </FieldContainer>
-              <FieldContainer @label='Response deadline' @vertical={{true}}>
-                <@fields.responseDeadline />
-              </FieldContainer>
-            </div>
-            <FieldContainer
-              @label='Source requisition (optional)'
-              @vertical={{true}}
-            >
-              <@fields.requisition />
-            </FieldContainer>
-          </section>
+    <div class='ip'>
+      <article class='card'>
+        <header class='ih'>
+          <Avatar @name='R Q' @shape='square' @size={{24}} />
+          <div class='id'>
+            <h1>{{this.f.title}}</h1>
+            <p class='meta'>{{this.f.sub}}</p>
+          </div>
+          <span class='tags'>
+            <Chip
+              @label={{this.f.statusLabel}}
+              @tone={{this.f.tone}}
+              @appearance='plain'
+            />
+            <Chip
+              @label={{concat this.f.quotesIn ' quotes'}}
+              @tone='info'
+              @appearance='plain'
+            />
+          </span>
+          {{#if this.isDraft}}
+            <Button
+              @appearance='accent'
+              @size='s'
+              @disabled={{this.busy}}
+              {{on 'click' this.send}}
+            >Send RFQ</Button>
+          {{else if this.canAward}}
+            <Button
+              @appearance='accent'
+              @size='s'
+              @disabled={{this.busy}}
+              {{on 'click' this.award}}
+            >Award quote</Button>
+          {{/if}}
+        </header>
+        {{#if this.error}}
+          <Alert class='flash' @tone='danger' style={{ALERT_STYLE.danger}}>
+            {{this.error}}
+          </Alert>
+        {{/if}}
+        {{#if this.message}}
+          <Alert class='flash' @tone='success' style={{ALERT_STYLE.success}}>
+            {{this.message}}
+          </Alert>
+        {{/if}}
+        <div class='stats'>
+          <Stat
+            @label='Quotes in'
+            @tone='success'
+            @value={{this.f.quotesIn}}
+            @roll={{false}}
+            @hint='of invited vendors'
+          />
+          <Stat
+            @label='Lowest quote'
+            @tone='success'
+            @value={{this.f.lowest}}
+            @roll={{false}}
+            @hint={{if
+              this.f.low
+              (concat this.f.low.vendor ' · ' this.f.low.lead '-day lead')
+            }}
+          />
+          <Stat
+            @label='Deadline'
+            @value={{this.f.deadlineShort}}
+            @roll={{false}}
+            @hint={{this.f.deadlineYear}}
+          />
+          <Stat
+            @label='Spread'
+            @value={{this.f.spread}}
+            @roll={{false}}
+            @hint={{this.f.spreadPct}}
+          />
+        </div>
+      </article>
 
-          <section
-            class='sect lines {{if (eq this.activeSection "lines") "focused"}}'
-            data-sect='lines'
-          >
-            <h3>Requested Lines
-              <span class='sect-hint'>usually copied from the requisition —
-                these are the lines vendors quote against</span></h3>
-            <FieldContainer
-              @label='Lines (description, qty, unit price)'
-              @vertical={{true}}
-            >
-              <@fields.lineItems />
-            </FieldContainer>
+      <div class='cols'>
+        <div class='col'>
+          <section class='card'>
+            <h2>Quote comparison</h2>
+            <ul class='ul'>
+              {{#each this.f.rows as |r|}}
+                <li class='li'>
+                  <span class='two'>
+                    <strong>{{r.vendor}}</strong>
+                    <span class='meta'>{{r.meta}}</span>
+                  </span>
+                  {{#if r.tag}}
+                    <Chip
+                      @label={{r.tag.label}}
+                      @tone={{r.tag.tone}}
+                      @appearance='plain'
+                    />
+                  {{/if}}
+                </li>
+              {{else}}
+                <li class='li meta'>No quotes received yet</li>
+              {{/each}}
+            </ul>
           </section>
-
-          <section
-            class='sect
-              {{if (eq this.activeSection "vendors-quotes") "focused"}}'
-            data-sect='vendors-quotes'
-          >
-            <h3>Vendors &amp; Quotes
-              <span class='sect-hint'>the awarded quote is normally set by the
-                Award command</span></h3>
-            <FieldContainer @label='Invited vendors' @vertical={{true}}>
-              <@fields.invitedVendors />
-            </FieldContainer>
-            <FieldContainer @label='Quotes received' @vertical={{true}}>
-              <@fields.quotes />
-            </FieldContainer>
-            <FieldContainer @label='Awarded quote' @vertical={{true}}>
-              <@fields.awardedQuote />
-            </FieldContainer>
+          <section class='card'>
+            <h2>Line items</h2>
+            <ul class='ul'>
+              {{#each this.f.lines as |l|}}
+                <li class='li'>
+                  <span class='two'>
+                    <strong>{{l.description}}</strong>
+                    <span class='meta'>{{l.meta}}</span>
+                  </span>
+                  <span class='mono'>{{l.total}}</span>
+                </li>
+              {{else}}
+                <li class='li meta'>No lines yet — copy them from the
+                  requisition.</li>
+              {{/each}}
+            </ul>
+          </section>
+        </div>
+        <div class='col'>
+          <section class='card'>
+            <h2>Linked</h2>
+            <dl class='kv'>
+              {{#if @model.requisition}}
+                <dt>Requisition</dt>
+                <dd><@fields.requisition
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></dd>
+              {{/if}}
+              {{#each @fields.invitedVendors as |V|}}
+                <dt>Vendor</dt>
+                <dd><V @format='atom' @displayContainer={{false}} /></dd>
+              {{/each}}
+              {{#if @model.awardedQuote}}
+                <dt>Awarded</dt>
+                <dd><@fields.awardedQuote
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></dd>
+              {{/if}}
+            </dl>
+          </section>
+          <section class='card'>
+            <h2>Details</h2>
+            <dl class='kv'>
+              <dt>Deadline</dt><dd class='mono'>{{this.f.deadline}}</dd>
+              <dt>Quotes in</dt><dd class='mono'>{{this.f.quotesOf}}</dd>
+              <dt>Lowest</dt><dd class='mono'>{{this.f.lowest}}</dd>
+              <dt>Highest</dt><dd class='mono'>{{this.f.highest}}</dd>
+              <dt>Fastest lead</dt><dd class='mono'>{{this.f.fastest}}</dd>
+              <dt>Estimate</dt><dd class='mono'>{{this.f.estimate}}</dd>
+              <dt>Lines</dt><dd class='mono'>{{this.f.lineCount}}</dd>
+              <dt>Awarded</dt><dd>{{this.f.awardedText}}</dd>
+            </dl>
           </section>
         </div>
       </div>
     </div>
     <style scoped>
-      .rfq-edit {
+      .ip {
         container-type: inline-size;
-        container-name: edit;
-        height: 100%;
+        box-sizing: border-box;
+        block-size: 100%;
         overflow-y: auto;
-        padding: var(--boxel-sp);
-        background: var(--background);
-        color: var(--foreground);
-        /* the procurement family's brand ink, declared ONCE — a linked
-           Theme overrides via --procurement-ink */
-        --rq-ink: var(--procurement-ink, var(--primary-ink));
-        --rq-ink-fg: var(--procurement-ink-fg, var(--card));
-      }
-      .edit-body {
+        padding: var(--boxel-sp-sm);
         display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect-nav {
-        position: sticky;
-        top: 0;
-        --edit-section-nav-ink: var(--rq-ink);
-        --edit-section-nav-ink-fg: var(--rq-ink-fg);
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      .sect.focused {
-        outline-color: var(--rq-ink);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--rq-ink) 12%, transparent);
-      }
-      .sect.lines {
-        border-left: 0.1875rem solid var(--rq-ink);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
+        align-content: start;
         gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
+        background: var(--background);
+        color: var(--card-foreground);
         font-family: var(--font-sans);
         font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
+        line-height: 1.25;
+        --text-stat: 1.375rem;
+        --text-ui-xs: 0.6875rem;
       }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
-        align-items: start;
-      }
-      @container edit (width < 640px) {
-        .row {
-          grid-template-columns: 1fr;
-        }
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
-        }
-      }
-    </style>
-  </template>
-}
-
-class RfqIsolated extends Component<typeof Rfq> {
-  @tracked awardBusy = false;
-  @tracked awardError: string | undefined;
-  @tracked awardMessage: string | undefined;
-
-  get statusHue() {
-    return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
-  }
-  get statusLabel() {
-    return RFQ_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft';
-  }
-  get quotes() {
-    try {
-      return (this.args.model?.quotes ?? []).filter(Boolean);
-    } catch {
-      return [];
-    }
-  }
-  get decided() {
-    let s = this.args.model?.status;
-    return s === 'awarded' || s === 'cancelled';
-  }
-  get isDraft() {
-    let s = this.args.model?.status;
-    return !s || s === 'draft';
-  }
-  get awardedId() {
-    try {
-      return this.args.model?.awardedQuote?.id;
-    } catch {
-      return undefined;
-    }
-  }
-  get deadlineLabel() {
-    let d = this.args.model?.responseDeadline;
-    return d
-      ? d.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })
-      : 'no deadline set';
-  }
-  get invitedCount() {
-    try {
-      return (this.args.model?.invitedVendors ?? []).length;
-    } catch {
-      return 0;
-    }
-  }
-
-  send = async () => {
-    let model = this.args.model;
-    if (!model) {
-      return;
-    }
-    let commandContext = this.args.context?.commandContext;
-    if (!commandContext) {
-      this.awardError = 'Commands are unavailable in this mode';
-      return;
-    }
-    this.awardError = undefined;
-    this.awardMessage = undefined;
-    this.awardBusy = true;
-    try {
-      let result = await new SendRfqCommand(commandContext).execute({
-        rfq: model,
-      } as any);
-      this.awardMessage = (result as any)?.message;
-    } catch (error: any) {
-      this.awardError = error?.message ?? String(error);
-    } finally {
-      this.awardBusy = false;
-    }
-  };
-
-  openProfile = (profile: unknown) => {
-    (this.args as any).viewCard?.(profile, 'isolated');
-  };
-
-  award = async (quote: VendorQuote) => {
-    let model = this.args.model;
-    if (!model) {
-      return;
-    }
-    let commandContext = this.args.context?.commandContext;
-    if (!commandContext) {
-      this.awardError = 'Commands are unavailable in this mode';
-      return;
-    }
-    let realm = (model as any)?.[realmURL]?.href;
-    if (!realm) {
-      this.awardError = 'Could not determine the realm for the new PO';
-      return;
-    }
-    this.awardError = undefined;
-    this.awardMessage = undefined;
-    this.awardBusy = true;
-    try {
-      let result = await new AwardRfqCommand(commandContext).execute({
-        rfq: model,
-        quote,
-        realm,
-      } as any);
-      this.awardMessage = (result as any)?.message;
-    } catch (error: any) {
-      this.awardError = error?.message ?? String(error);
-    } finally {
-      this.awardBusy = false;
-    }
-  };
-
-  <template>
-    <article class='rfq'>
-      <header class='head command-band'>
-        <div>
-          <p class='kicker'>Request for Quote</p>
-          <h1>{{@model.cardTitle}}</h1>
-          <p class='sub'>{{this.quotes.length}}
-            quotes ·
-            {{this.invitedCount}}
-            vendors invited · deadline
-            {{this.deadlineLabel}}</p>
-        </div>
-        <div class='head-right'>
-          <StatePill
-            @label={{this.statusLabel}}
-            @hue={{this.statusHue}}
-            @emphatic={{true}}
-          />
-          {{#if this.isDraft}}
-            <Button
-              class='send'
-              @variant='primary'
-              @size='s'
-              @disabled={{this.awardBusy}}
-              {{on 'click' this.send}}
-            >Send RFQ</Button>
-          {{/if}}
-        </div>
-      </header>
-
-      {{#if this.awardError}}
-        <Alert class='flash' @tone='danger' style={{ALERT_STYLE.danger}}>
-          {{this.awardError}}
-        </Alert>
-      {{/if}}
-      {{#if this.awardMessage}}
-        <Alert class='flash' @tone='success' style={{ALERT_STYLE.success}}>
-          {{this.awardMessage}}
-        </Alert>
-      {{/if}}
-
-      <section class='panel board-panel'>
-        <h2>Quote Comparison</h2>
-        <RfqComparisonBoard
-          @quotes={{this.quotes}}
-          @onAward={{this.award}}
-          @busy={{this.awardBusy}}
-          @awardedId={{this.awardedId}}
-          @decided={{this.decided}}
-          @onOpenProfile={{this.openProfile}}
-        />
-      </section>
-
-      <div class='grid'>
-        <section class='panel'>
-          <h2>Requested Lines</h2>
-          <div class='lines'>
-            {{#each @fields.lineItems as |Line|}}
-              <Line />
-            {{else}}
-              <EmptyState
-                style={{COMPACT_EMPTY_STYLE}}
-                @texture={{false}}
-                @title='No lines yet'
-                @message='Copy them from the requisition.'
-              />
-            {{/each}}
-          </div>
-        </section>
-
-        <section class='panel'>
-          <h2>Provenance</h2>
-          {{#if @model.requisition}}
-            <@fields.requisition @format='embedded' />
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @texture={{false}}
-              @title='Direct RFQ'
-              @message='No requisition linked.'
-            />
-          {{/if}}
-          {{#if @model.invitedVendors.length}}
-            <h2 class='mt'>Invited Vendors</h2>
-            <div class='vendor-list'>
-              {{#each @fields.invitedVendors as |V|}}
-                <V @format='atom' />
-              {{/each}}
-            </div>
-          {{/if}}
-        </section>
-      </div>
-    </article>
-    <style scoped>
-      /* A linked card sizes to its content. The card container's base
-         height: 100% would otherwise fill a stretched grid panel and spill
-         past the heading above it. */
-      .rfq :deep(.field-component-card.embedded-format) {
-        height: auto;
-      }
-      .rfq {
-        /* command-console adapter tokens */
-        --console-ink: var(--procurement-ink, var(--primary-ink));
-        --console-ink-fg: var(--procurement-ink-fg, var(--card));
-        container-type: inline-size;
-        padding: 0 var(--boxel-sp-lg) var(--boxel-sp-lg);
-        background:
-          radial-gradient(
-            75rem 23.75rem at 18% -8%,
-            color-mix(in oklch, var(--console-ink) 7%, transparent),
-            transparent 65%
-          ),
-          var(--background);
-      }
-      .command-band {
-        background: linear-gradient(
-          120deg,
-          color-mix(in oklch, var(--console-ink) 96%, black),
-          var(--console-ink) 55%,
-          color-mix(in oklch, var(--console-ink) 82%, var(--console-ink-fg))
-        );
-        color: var(--console-ink-fg);
-        margin: 0 calc(-1 * var(--boxel-sp-lg)) var(--boxel-sp);
-        padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-sm);
-        position: relative;
-        overflow: hidden;
-      }
-      .command-band::after {
-        /* fine ledger grid — the ambient texture of the cockpit */
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image:
-          linear-gradient(
-            color-mix(in oklch, var(--console-ink-fg) 7%, transparent) 1px,
-            transparent 1px
-          ),
-          linear-gradient(
-            90deg,
-            color-mix(in oklch, var(--console-ink-fg) 7%, transparent) 1px,
-            transparent 1px
-          );
-        background-size: 1.75rem 1.75rem;
-        mask-image: linear-gradient(to bottom, black, transparent 90%);
-        pointer-events: none;
-      }
-      .head {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: var(--boxel-sp);
-      }
-      .kicker {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: color-mix(in oklch, var(--console-ink-fg) 65%, transparent);
-      }
-      h1 {
-        margin: var(--boxel-sp-5xs) 0;
-        font-size: 1.75rem;
-        line-height: 1.15;
-        letter-spacing: -0.015em;
-      }
-      .sub {
-        margin: 0;
-        color: color-mix(in oklch, var(--console-ink-fg) 72%, transparent);
-        font-variant-numeric: tabular-nums;
-      }
-      .head-right {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: var(--boxel-sp-xxs);
-      }
-      /* the band is the console ink, so the primary action inverts onto it */
-      .send {
-        --pretui-button-bg: var(--console-ink-fg);
-        --pretui-button-fg: var(--console-ink);
-      }
-      .flash {
-        margin-bottom: var(--boxel-sp);
-      }
-      .panel {
+      .card {
+        background: var(--card);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        background: var(--card);
+        min-inline-size: 0;
       }
-      .board-panel {
-        margin-bottom: var(--boxel-sp);
-      }
-      h2 {
-        margin: 0 0 var(--boxel-sp-xs);
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      h2.mt {
-        margin-top: var(--boxel-sp);
-      }
-      .grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--boxel-sp);
-      }
-      .lines {
-        display: grid;
-        gap: var(--boxel-sp-5xs);
-      }
-      .vendor-list {
+      .ih {
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.5rem 0.625rem;
+      }
+      .id {
+        flex: 1 1 10rem;
+        min-inline-size: 0;
+      }
+      h1 {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .meta {
+        margin: 0;
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.625rem;
+      }
+      .flash {
+        margin: 0 0.625rem 0.5rem;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border-block-start: 1px solid var(--border);
+      }
+      .stats > * {
+        padding: 0.4375rem 0.625rem;
+        min-inline-size: 0;
+      }
+      .stats > :not(:first-child) {
+        border-inline-start: 1px solid var(--border);
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
         gap: var(--boxel-sp-xs);
+        align-items: start;
       }
-      @media (prefers-reduced-motion: no-preference) {
-        .command-band {
-          animation: rfq-band-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .board-panel {
-          animation: rfq-rise 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
-          animation-delay: 120ms;
-        }
-        .grid > .panel {
-          animation: rfq-rise 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .grid > .panel:nth-child(1) {
-          animation-delay: 220ms;
-        }
-        .grid > .panel:nth-child(2) {
-          animation-delay: 290ms;
-        }
+      .col {
+        display: grid;
+        gap: var(--boxel-sp-xs);
+        min-inline-size: 0;
       }
-      @keyframes rfq-band-in {
-        from {
-          opacity: 0;
-          transform: translateY(-0.5rem);
+      @container (width < 40rem) {
+        .cols {
+          grid-template-columns: minmax(0, 1fr);
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .stats > :nth-child(3) {
+          border-inline-start: 0;
+        }
+        .stats > :nth-child(n + 3) {
+          border-block-start: 1px solid var(--border);
         }
       }
-      @keyframes rfq-rise {
-        from {
-          opacity: 0;
-          transform: translateY(0.75rem);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      h2 {
+        margin: 0;
+        padding: 0.4375rem 0.625rem;
+        font-size: 0.75rem;
+        font-weight: 700;
       }
-      @container (max-width: 640px) {
-        .grid {
-          grid-template-columns: 1fr;
-        }
-        .head {
-          flex-direction: column;
-        }
+      .ul {
+        list-style: none;
+        margin: 0;
+        padding: 0 0 0.25rem;
+      }
+      .li {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        min-block-size: 1.75rem;
+        padding: 0.3125rem 0.625rem;
+        border-block-start: 1px solid var(--border);
+      }
+      .two {
+        flex: 1;
+        min-inline-size: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .two strong {
+        font-weight: 600;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .kv {
+        display: grid;
+        grid-template-columns: 6.5rem minmax(0, 1fr);
+        margin: 0;
+        padding: 0 0.625rem 0.25rem;
+      }
+      .kv dt,
+      .kv dd {
+        margin: 0;
+        min-block-size: 1.75rem;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        min-inline-size: 0;
+        border-block-start: 1px solid var(--border);
+      }
+      .kv dt {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
       }
     </style>
   </template>
 }
 
 // A formal ask for competitive prices: which lines, sent to which vendors,
-// with the buyer recording each inbound quote (open-comparison mode — quotes
-// are visible as they arrive; the deadline is informational). The isolated
-// format IS the comparison board: quotes line up column-per-vendor and Award
-// converts the winner into a draft Purchase Order via AwardRfqCommand.
+// with the buyer recording each inbound quote. Award converts the lowest
+// quote into a draft Purchase Order via AwardRfqCommand.
 export class Rfq extends CardDef {
   static displayName = 'RFQ';
-  static headerColor = '#3e4e88';
   static prefersWideFormat = true;
 
   @field requisition = linksTo(() => PurchaseRequisition);
@@ -676,140 +606,188 @@ export class Rfq extends CardDef {
   static isolated = RfqIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
-    }
-    get statusLabel() {
-      return RFQ_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft';
-    }
-    get quoteCount() {
-      try {
-        return (this.args.model?.quotes ?? []).length;
-      } catch {
-        return 0;
-      }
+    get f() {
+      return rfqFacts(this.args.model as Rfq);
     }
     <template>
-      <div class='row'>
-        <span class='name'>{{@model.cardTitle}}</span>
-        <span class='count'>{{this.quoteCount}} quotes</span>
-        <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
-      </div>
+      <article class='emb'>
+        <header class='eh'>
+          <div class='eh1'>
+            <Avatar @name='R Q' @shape='square' @size={{20}} />
+            <strong class='nm'>{{this.f.title}}</strong>
+            <Chip
+              @label={{this.f.statusLabel}}
+              @tone={{this.f.tone}}
+              @appearance='plain'
+            />
+          </div>
+          <div class='eh2'>
+            <span class='meta'>{{this.f.sub}}</span>
+            <Chip
+              @label={{concat this.f.quotesIn ' quotes'}}
+              @tone='info'
+              @appearance='plain'
+            />
+          </div>
+        </header>
+        <p class='fact'>{{#if this.f.low}}Lowest
+            <strong>{{this.f.lowest}}</strong>
+            {{this.f.low.vendor}}
+            · due
+            {{this.f.deadlineShort}}{{else}}No quotes yet · due
+            {{this.f.deadlineShort}}{{/if}}</p>
+        <dl class='kv'>
+          <dt>Deadline</dt><dd class='mono'>{{this.f.deadline}}</dd>
+          <dt>Quotes in</dt><dd class='mono'>{{this.f.quotesOf}}</dd>
+          <dt>Lowest</dt><dd class='mono'>{{this.f.lowest}}</dd>
+          <dt>Highest</dt><dd class='mono'>{{this.f.highest}}</dd>
+          <dt>Fastest lead</dt><dd class='mono'>{{this.f.fastest}}</dd>
+          <dt>Estimate</dt><dd class='mono'>{{this.f.estimate}}</dd>
+          {{#if @model.requisition}}
+            <dt>Requisition</dt>
+            <dd><@fields.requisition
+                @format='atom'
+                @displayContainer={{false}}
+              /></dd>
+          {{/if}}
+          {{#each @fields.quotes as |Q|}}
+            <dt>Quote</dt>
+            <dd><Q @format='atom' @displayContainer={{false}} /></dd>
+          {{/each}}
+          {{#each @fields.invitedVendors as |V|}}
+            <dt>Vendor</dt>
+            <dd><V @format='atom' @displayContainer={{false}} /></dd>
+          {{/each}}
+        </dl>
+      </article>
       <style scoped>
-        .row {
+        .emb {
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          line-height: 1.25;
+          color: var(--card-foreground);
+          overflow-x: auto;
+        }
+        .eh {
+          padding: 0.4375rem 0.625rem;
           display: grid;
-          grid-template-columns: 1fr auto auto;
-          gap: var(--boxel-sp-sm);
+          gap: 0.125rem;
+        }
+        .eh1,
+        .eh2 {
+          display: flex;
+          flex-wrap: wrap;
           align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          gap: 0.375rem 0.5rem;
         }
-        .name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        .nm {
+          flex: 1 1 6rem;
+          min-inline-size: 0;
+          font-weight: 700;
         }
-        .count {
-          font-size: 0.8125rem;
+        .meta {
+          flex: 1 1 6rem;
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
+        }
+        .fact {
+          margin: 0;
+          padding: 0.4375rem 0.625rem;
+          border-block-start: 1px solid var(--border);
+        }
+        .fact strong {
+          font-weight: 700;
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
           font-variant-numeric: tabular-nums;
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 6.5rem minmax(0, 1fr);
+          margin: 0;
+          padding: 0 0.625rem 0.25rem;
+        }
+        .kv dt,
+        .kv dd {
+          margin: 0;
+          min-block-size: 1.75rem;
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          min-inline-size: 0;
+          border-block-start: 1px solid var(--border);
+        }
+        .kv dt {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
+    get f() {
+      return rfqFacts(this.args.model as Rfq);
+    }
     <template>
-      <span class='atom'>{{@model.cardTitle}}</span>
+      <span class='atom' title={{this.f.statusLabel}}>
+        <Avatar @name='R Q' @shape='square' @size={{16}} />
+        <span class='name'>{{this.f.title}}</span>
+        <Chip @label='' @tone={{this.f.tone}} @appearance='plain' />
+      </span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          min-inline-size: 0;
+          max-inline-size: 100%;
+          font-size: 0.6875rem;
+          font-weight: 600;
+        }
+        .name {
+          min-inline-size: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
+    get f() {
+      return rfqFacts(this.args.model as Rfq);
     }
-    get statusLabel() {
-      return RFQ_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft';
-    }
-    get lineCount() {
-      return (this.args.model?.lineItems ?? []).length;
-    }
-    get deadlineLabel() {
-      let d = this.args.model?.responseDeadline;
-      return d
-        ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        : '';
+    get tags(): CompactTag[] {
+      return [{ label: this.f.statusLabel, tone: this.f.tone }];
     }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.cardTitle}}</span>
-        <span class='fit-sub'>{{this.lineCount}}
-          lines{{#if this.deadlineLabel}}
-            · quotes due
-            {{this.deadlineLabel}}{{/if}}</span>
-        <StatePill
-          class='fit-status'
-          @label={{this.statusLabel}}
-          @hue={{this.statusHue}}
-        />
-      </div>
-      <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .fit-sub {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-        }
-        .fit-status {
-          margin-top: auto;
-          flex-shrink: 0;
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-sub {
-            display: none;
-          }
-          .fit-status {
-            margin-top: 0;
-            margin-left: auto;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-      </style>
+      <CompactFitted
+        @mark='R Q'
+        @title={{this.f.title}}
+        @sub={{this.f.sub}}
+        @fact={{this.f.lowestFact}}
+        @tags={{this.tags}}
+      >
+        <:rows>
+          <CompactRow @k='Deadline' @v={{this.f.deadline}} />
+          <CompactRow @k='Quotes in' @v={{this.f.quotesOf}} />
+          <CompactRow @k='Highest' @v={{this.f.highest}} />
+          <CompactRow @k='Fastest lead' @v={{this.f.fastest}} />
+          <CompactRow @k='Lines' @v={{this.f.lineCount}} />
+          <CompactRow @k='Awarded' @v={{this.f.awardedText}} />
+          {{#each this.f.lines as |l|}}
+            <CompactRow @k={{l.description}} @v={{l.total}} />
+          {{/each}}
+        </:rows>
+      </CompactFitted>
     </template>
   };
-
-  // Grouped by the RFQ lifecycle (where does it stand → what are we asking
-  // for → who's bidding and what came back), not schema order. Three
-  // sections — no nav rail. The awarded quote and status
-  // are normally driven by SendRfqCommand/AwardRfqCommand; they're editable
-  // here only to correct mistakes.
-  static edit = RfqEdit;
 }

@@ -46,6 +46,13 @@
         "module": "../vendor-profile",
         "name": "VendorProfile"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

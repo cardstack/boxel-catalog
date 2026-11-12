@@ -1,23 +1,37 @@
+import type { ComponentLike } from '@glint/template';
 import GlimmerComponent from '@glimmer/component';
+import { ContractorStatusField } from '../../hr/contractor';
+import type { RenderableSearchEntryLike } from '@cardstack/runtime-common';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
-import ListIcon from '@cardstack/boxel-icons/list';
-import TableIcon from '@cardstack/boxel-icons/table';
-import { htmlSafe } from '@ember/template';
+import { eq } from '@cardstack/pretui/helpers';
 import {
   Contractor,
   CONTRACTOR_STATUSES,
-  CONTRACTOR_STATUS_COLORS,
-  EXPIRY_TONE_COLORS,
   expiryTone,
+  statusLabel,
+  statusTone,
 } from '../../hr/contractor';
-import { Button } from '@cardstack/pretui/components/button';
-import { IconButton } from '@cardstack/pretui/components/icon-button';
-import { Input } from '@cardstack/pretui/components/input';
-import { stateColorOf } from '../../../components/state-pill';
+import {
+  DataTable,
+  type DataColumn,
+} from '@cardstack/pretui/components/data-table';
+import { LoadingState } from '@cardstack/pretui/components/loading-state';
+import { Grid } from '@cardstack/pretui/components/grid';
 import type { TrackerView } from '../talent-resource-tracker';
+import {
+  AlertPill,
+  ColumnFit,
+  getComponent,
+  TrackerSection,
+  RowOpen,
+  ListToolbar,
+  TrackerEmpty,
+  TrackerPage,
+  StatusDot,
+} from '../shared';
+
+const HYPHEN_RE = /-/g;
 
 interface Signature {
   Args: {
@@ -27,8 +41,14 @@ interface Signature {
 }
 
 export class ContractorsTab extends GlimmerComponent<Signature> {
-  setContractorsView = (view: 'grid' | 'strip' | 'table') => {
-    this.args.tracker.contractorsView = view;
+  // the status column renders the field's own format: dot + label
+  StatusAtom = ContractorStatusField.atom as unknown as ComponentLike<{
+    Args: { model: string | undefined };
+  }>;
+  asEntries = (entries: unknown) => entries as RenderableSearchEntryLike[];
+
+  setContractorsView = (view: string) => {
+    this.args.tracker.contractorsView = view as 'grid' | 'strip' | 'table';
   };
 
   setContractorSearch = (value: string) => {
@@ -52,412 +72,269 @@ export class ContractorsTab extends GlimmerComponent<Signature> {
     });
   }
 
-  contractorStatusStyle = (status: string | undefined) => {
-    let color = stateColorOf(CONTRACTOR_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
-
-  // Amber/red tint on the Contractors table's end-date cell — the same tone
-  // map (expiryTone + EXPIRY_TONE_COLORS) contractor.gts's own formats use,
-  // so table and tile can never disagree about what "expiring" means.
-  contractorEndDateStyle = (contractor: Contractor) => {
-    let tone = expiryTone(contractor.daysRemaining ?? undefined);
-    if (!tone) {
-      return undefined;
-    }
-    let color = stateColorOf(EXPIRY_TONE_COLORS, tone);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
-
   rateLabel = (rate: number | undefined): string => {
     return rate ? `$${rate}/hr` : '—';
   };
 
+  viewOptions = [
+    { value: 'grid', label: 'Grid' },
+    { value: 'strip', label: 'List' },
+    { value: 'table', label: 'Table' },
+  ];
+
+  statusOptions = [
+    { value: 'all', label: 'All' },
+    ...CONTRACTOR_STATUSES.map((value) => ({
+      value,
+      label: (value.charAt(0).toUpperCase() + value.slice(1)).replace(
+        HYPHEN_RE,
+        ' ',
+      ),
+    })),
+  ];
+
+  columns: DataColumn<Contractor>[] = [
+    { key: 'name', label: 'Name' },
+    { key: 'status', label: 'Status' },
+    {
+      key: 'rate',
+      label: 'Rate',
+      align: 'end',
+      value: (c) => this.rateLabel(c.billableRate),
+    },
+    {
+      key: 'invoiceFrequency',
+      label: 'Invoice frequency',
+      value: (c) => statusLabel(c.invoiceFrequency),
+    },
+    {
+      key: 'contractEnd',
+      label: 'Contract end',
+      value: (c) => c.contractEndDate,
+    },
+  ];
+
+  statusLabel = statusLabel;
+  statusTone = statusTone;
+
+  endLabel = (contractor: Contractor): string => {
+    let days = contractor.daysRemaining ?? 0;
+    return days < 0
+      ? 'Expired'
+      : days === 0
+        ? 'Ends today'
+        : `Ends in ${days} d`;
+  };
+
+  // "5 Nov 2026": day first, short English month, as the mockup writes it.
+  endDate = (value: Date | string | undefined): string => {
+    if (!value) {
+      return '—';
+    }
+    let d = new Date(value);
+    let month = d.toLocaleString('en-US', { month: 'short' });
+    return `${d.getDate()} ${month} ${d.getFullYear()}`;
+  };
+
+  rowKey = (c: Contractor) => c.id ?? c.name ?? '';
+
+  endTone = (contractor: Contractor) =>
+    expiryTone(contractor.daysRemaining ?? undefined);
+
+  get subtitle(): string {
+    return 'Current contractor roster';
+  }
+
+  get panelMeta(): string {
+    let n = this.filteredContractors.length;
+    return this.args.tracker.isLoading
+      ? '—'
+      : `${n} ${n === 1 ? 'contractor' : 'contractors'}`;
+  }
+
+  get expiringCount(): number {
+    return this.args.tracker.contractors.filter(
+      (c) =>
+        c.status === 'active' &&
+        c.daysRemaining != null &&
+        c.daysRemaining <= 30,
+    ).length;
+  }
+
+  showActive = () => this.setContractorStatusFilter('active');
+
+  fit = new ColumnFit();
+  get visibleColumns(): string[] {
+    return this.fit.pick(this.columns.map((c) => c.key));
+  }
+  get notTable(): boolean {
+    return this.args.tracker.contractorsView !== 'table';
+  }
+
   <template>
-    <section class='tab-section'>
-      <div class='sec-head'>
-        <div class='htext'>
-          <h2>Contractors</h2>
-          <p class='byline'>Current contractor roster</p>
-        </div>
-        {{#if @tracker.canCreate}}
-          <Button
-            type='button'
-            @tone='primary'
-            @appearance='accent'
-            class='btn-review'
-            @loading={{@tracker.addCard.isRunning}}
-            {{on 'click' (fn @tracker.addNew Contractor)}}
-          >+ Add contractor</Button>
-        {{/if}}
-      </div>
-      <div class='list-toolbar'>
-        <div class='list-search'>
-          <Input
-            @type='search'
-            @value={{@tracker.contractorSearch}}
-            @placeholder='Search contractors…'
-            @onInput={{this.setContractorSearch}}
-            aria-label='Search contractors'
-          />
-        </div>
-        <div class='directory-chips'>
-          <Button
-            type='button'
-            @tone='neutral'
-            @appearance='outlined'
-            class='chip
-              {{if (eq @tracker.contractorStatusFilter "all") "active"}}'
-            {{on 'click' (fn this.setContractorStatusFilter 'all')}}
-          >All</Button>
-          {{#each this.contractorStatuses as |status|}}
-            <Button
-              type='button'
-              @tone='neutral'
-              @appearance='outlined'
-              class='chip
-                {{if (eq @tracker.contractorStatusFilter status) "active"}}'
-              {{on 'click' (fn this.setContractorStatusFilter status)}}
-            >{{status}}</Button>
-          {{/each}}
-        </div>
-        <div class='view-toggle' role='group' aria-label='View'>
-          <IconButton
-            type='button'
-            class='view-btn'
-            @variant={{if
-              (eq @tracker.contractorsView 'grid')
-              'primary'
-              'ghost'
-            }}
-            aria-pressed={{if
-              (eq @tracker.contractorsView 'grid')
-              'true'
-              'false'
-            }}
-            @label='Grid view'
-            {{on 'click' (fn this.setContractorsView 'grid')}}
-          ><LayoutGridIcon
-              class='view-icon'
-              width='16'
-              height='16'
-            /></IconButton>
-          <IconButton
-            type='button'
-            class='view-btn'
-            @variant={{if
-              (eq @tracker.contractorsView 'strip')
-              'primary'
-              'ghost'
-            }}
-            aria-pressed={{if
-              (eq @tracker.contractorsView 'strip')
-              'true'
-              'false'
-            }}
-            @label='List view'
-            {{on 'click' (fn this.setContractorsView 'strip')}}
-          ><ListIcon class='view-icon' width='16' height='16' /></IconButton>
-          <IconButton
-            type='button'
-            class='view-btn'
-            @variant={{if
-              (eq @tracker.contractorsView 'table')
-              'primary'
-              'ghost'
-            }}
-            aria-pressed={{if
-              (eq @tracker.contractorsView 'table')
-              'true'
-              'false'
-            }}
-            @label='Table view'
-            {{on 'click' (fn this.setContractorsView 'table')}}
-          ><TableIcon class='view-icon' width='16' height='16' /></IconButton>
-        </div>
-      </div>
-      {{#if (eq @tracker.contractorsView 'table')}}
-        {{#if this.filteredContractors.length}}
-          <div class='data-table-wrap'>
-            <table class='data-table'>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Status</th>
-                  <th>Rate</th>
-                  <th>Invoice frequency</th>
-                  <th>Contract end</th>
-                </tr>
-              </thead>
-              <tbody>
-                {{#each this.filteredContractors as |contractor|}}
-                  <tr>
-                    <td>{{contractor.name}}</td>
-                    <td>
-                      <span
-                        class='status-pill'
-                        style={{this.contractorStatusStyle contractor.status}}
-                      >{{contractor.status}}</span>
-                    </td>
-                    <td>{{this.rateLabel contractor.billableRate}}</td>
-                    <td>{{if
-                        contractor.invoiceFrequency
-                        contractor.invoiceFrequency
-                        '—'
-                      }}</td>
-                    <td>
-                      {{#if contractor.contractEndDate}}
-                        {{#let
-                          (this.contractorEndDateStyle contractor)
-                          as |endTone|
-                        }}
-                          {{#if endTone}}
-                            <span class='status-pill' style={{endTone}}>
-                              {{@tracker.formatDate contractor.contractEndDate}}
-                              ·
-                              {{contractor.expiryLabel}}
-                            </span>
-                          {{else}}
-                            {{@tracker.formatDate contractor.contractEndDate}}
-                          {{/if}}
-                        {{/let}}
-                      {{else}}
-                        —
-                      {{/if}}
-                    </td>
-                  </tr>
-                {{/each}}
-              </tbody>
-            </table>
+    <TrackerPage
+      @group='Resources'
+      @title='Contractors'
+      @subtitle={{this.subtitle}}
+    >
+      <:default>
+        {{#if this.expiringCount}}
+          <div class='alert-row' role='group' aria-label='Needs attention'>
+            <AlertPill
+              @tone='warning'
+              @onClick={{this.showActive}}
+            >{{this.expiringCount}}
+              contractor
+              {{if (eq this.expiringCount 1) 'contract' 'contracts'}}
+              ending ≤30d</AlertPill>
           </div>
-        {{else if @tracker.contractorsQuery.isLoading}}
-          <p class='empty-note' role='status'>Loading…</p>
-        {{else}}
-          <p class='empty-note' role='status'>No contractors</p>
         {{/if}}
-      {{else}}
-        {{#let (component @context.searchResultsComponent) as |Search|}}
-          <Search
-            @query={{@tracker.contractorsSearchQuery}}
-            @mode='none'
-            as |results|
-          >
-            <div
-              class='tile-grid
-                {{if (eq @tracker.contractorsView "strip") "strip-view"}}'
+        <ListToolbar
+          @label='Contractors'
+          @searchValue={{@tracker.contractorSearch}}
+          @searchPlaceholder='Search contractors…'
+          @onSearch={{this.setContractorSearch}}
+          @filterLabel='Filter by status'
+          @filterOptions={{this.statusOptions}}
+          @filterValue={{@tracker.contractorStatusFilter}}
+          @onFilter={{this.setContractorStatusFilter}}
+          @viewOptions={{this.viewOptions}}
+          @view={{@tracker.contractorsView}}
+          @onView={{this.setContractorsView}}
+          as |bar|
+        >
+          {{#if @tracker.canCreate}}
+            <bar.Action
+              @id='add-contractor'
+              @label='Add contractor'
+              @primary={{true}}
+              @loading={{@tracker.addCard.isRunning}}
+              @onClick={{fn @tracker.addNew Contractor}}
+            />
+          {{/if}}
+        </ListToolbar>
+        <TrackerSection
+          {{this.fit.measure}}
+          @title='Roster'
+          @meta={{this.panelMeta}}
+          @padded={{this.notTable}}
+        >
+          {{#if (eq @tracker.contractorsView 'table')}}
+            <DataTable
+              @visibleColumns={{this.visibleColumns}}
+              @loading={{@tracker.contractorsQuery.isLoading}}
+              @columns={{this.columns}}
+              @rows={{this.filteredContractors}}
+              @key={{this.rowKey}}
+              @label='Contractor roster'
+              @columnMenu={{false}}
+              @sortable={{false}}
+              @flush={{true}}
+              @striped={{false}}
             >
-              {{#each results.entries key='id' as |entry|}}
-                <div
-                  class='tile
-                    {{if (eq @tracker.contractorsView "strip") "strip-tile"}}'
-                  role={{if @tracker.cardCrudFunctions.viewCard 'button'}}
-                  tabindex={{if @tracker.cardCrudFunctions.viewCard '0'}}
-                  {{on 'click' (fn @tracker.viewEntry entry.id)}}
-                  {{on 'keydown' (fn @tracker.viewEntryOnKeydown entry.id)}}
-                >
-                  <entry.component />
-                </div>
-              {{else}}
-                {{#if results.isLoading}}
-                  <p class='empty-note' role='status'>Loading…</p>
+              <:empty>{{#if @tracker.contractorsQuery.isLoading}}<LoadingState
+                    @label='Loading'
+                  />{{else}}<TrackerEmpty>No contractors</TrackerEmpty>{{/if}}</:empty>
+              <:cell as |text row col|>
+                {{#if (eq col.key 'name')}}
+                  <RowOpen @onOpen={{fn @tracker.openRowCard row}}>{{#let
+                      (getComponent row)
+                      as |Atom|
+                    }}{{#if Atom}}<Atom
+                          @format='atom'
+                          @displayContainer={{false}}
+                        />{{else}}{{if text text '—'}}{{/if}}{{/let}}</RowOpen>
+                {{else if (eq col.key 'status')}}
+                  <this.StatusAtom @model={{row.status}} />
+                {{else if (eq col.key 'contractEnd')}}
+                  {{#if row.contractEndDate}}
+                    <span class='end'>
+                      {{#if (this.endTone row)}}
+                        <StatusDot
+                          @tone={{if
+                            (eq (this.endTone row) 'expired')
+                            'danger'
+                            'warning'
+                          }}
+                          @label={{this.endLabel row}}
+                        />
+                      {{/if}}
+                      {{this.endDate row.contractEndDate}}
+                    </span>
+                  {{else}}
+                    —
+                  {{/if}}
                 {{else}}
-                  <p class='empty-note' role='status'>No contractors</p>
+                  {{if text text '—'}}
                 {{/if}}
-              {{/each}}
-            </div>
-          </Search>
-        {{/let}}
-      {{/if}}
-    </section>
+              </:cell>
+            </DataTable>
+          {{else}}
+            {{#let (component @context.searchResultsComponent) as |Search|}}
+              <Search
+                @query={{@tracker.contractorsSearchQuery}}
+                @mode='none'
+                as |results|
+              >
+                {{#if results.entries.length}}
+                  <Grid
+                    @items={{this.asEntries results.entries}}
+                    @size={{if
+                      (eq @tracker.contractorsView 'strip')
+                      'double-wide-strip'
+                      'regular-tile'
+                    }}
+                    as |entry Item|
+                  >
+                    <Item>
+                      <div
+                        class='tile'
+                        role={{if @tracker.cardCrudFunctions.viewCard 'button'}}
+                        tabindex={{if @tracker.cardCrudFunctions.viewCard '0'}}
+                        {{on 'click' (fn @tracker.viewEntry entry.id)}}
+                        {{on
+                          'keydown'
+                          (fn @tracker.viewEntryOnKeydown entry.id)
+                        }}
+                      >
+                        <entry.component />
+                      </div>
+                    </Item>
+                  </Grid>
+                {{else}}
+                  {{#if results.isLoading}}<LoadingState
+                      @label='Loading'
+                    />{{else}}<TrackerEmpty>No contractors</TrackerEmpty>{{/if}}
+                {{/if}}
+              </Search>
+            {{/let}}
+          {{/if}}
+        </TrackerSection>
+      </:default>
+    </TrackerPage>
     <style scoped>
-      .sec-head {
+      .alert-row {
         display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp);
-        padding-bottom: var(--boxel-sp);
-        border-bottom: 0.125rem solid var(--card-foreground);
-        margin: 0 0 var(--boxel-sp-lg);
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp-4xs) var(--boxel-sp-lg);
+        padding: var(--boxel-sp-xs) 0;
+        border-block: 1px solid var(--border);
       }
-      .sec-head .htext {
-        margin-right: auto;
-      }
-      .sec-head .htext h2 {
-        font-family: var(--font-sans);
-        font-weight: 700;
-        font-size: 1.25rem;
-        margin: 0 0 0.1875rem;
-      }
-      .sec-head .htext .byline {
-        font-family: var(--font-mono);
-        font-size: 0.7188rem;
-        letter-spacing: 0.02em;
-        color: var(--muted-foreground);
-        margin: 0;
-      }
-      .chip:focus-visible {
-        outline: 0.125rem solid var(--primary);
-        outline-offset: 0.125rem;
-      }
-      .tab-section {
-        animation: tracker-tab-fade-in 0.2s ease-out;
-      }
-      @keyframes tracker-tab-fade-in {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tab-section {
-          animation: none;
-        }
-      }
-      .data-table {
-        margin-top: 0;
-      }
-      .btn-review {
-        margin-bottom: var(--boxel-sp-5xs);
-      }
-      .empty-note {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        color: var(--muted-foreground);
-      }
-      .tile-grid {
-        margin-top: var(--boxel-sp);
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-        gap: var(--boxel-sp);
-      }
-      .data-table-wrap {
-        margin-top: var(--boxel-sp);
-        overflow-x: auto;
-        border: 1px solid var(--border);
-        border-radius: 1rem;
-        background: var(--card);
-        box-shadow: var(--shadow-xs);
-      }
-      .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .data-table th {
-        text-align: left;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-family: var(--font-mono);
-        font-size: 0.6875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--muted-foreground);
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;
-      }
-      .data-table td {
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;
-      }
-      .data-table tbody tr:last-child td {
-        border-bottom: none;
-      }
-      .data-table tbody tr:hover {
-        background: var(--muted);
-      }
-      .status-pill {
-        display: inline-block;
-        padding: 0.125rem 0.5rem;
-        border-radius: 62.4375rem;
-        font-size: 0.6875rem;
-        text-transform: capitalize;
-        white-space: nowrap;
+      .end {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
       }
       .tile {
-        border: 1px solid var(--border);
-        border-radius: 1.25rem;
-        overflow: hidden;
-
-        height: 13.5rem;
-        background: var(--card);
-        box-shadow: var(--shadow-xs);
-        transition:
-          border-color 0.15s ease-out,
-          box-shadow 0.15s ease-out;
-      }
-      .tile:hover {
-        border-color: var(--primary-ink);
-        box-shadow: var(--shadow-sm);
-      }
-      .tile:focus-within {
-        border-color: var(--primary-ink);
+        height: 100%;
       }
       .tile[role='button'] {
         cursor: pointer;
       }
       .tile[role='button']:focus-visible {
-        outline: 0.125rem solid var(--primary);
+        outline: 0.125rem solid var(--ring);
         outline-offset: 0.125rem;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tile {
-          transition: none;
-        }
-      }
-      .tile-grid.strip-view {
-        grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-        gap: var(--boxel-sp-xs);
-      }
-      .tile.strip-tile {
-        height: 4rem;
-      }
-      .directory-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-4xs);
-      }
-      .chip {
-        text-transform: capitalize;
-        transition:
-          background-color 0.15s ease-out,
-          color 0.15s ease-out,
-          border-color 0.15s ease-out;
-      }
-      .list-toolbar {
-        margin-top: var(--boxel-sp-lg);
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--boxel-sp);
-        margin-bottom: var(--boxel-sp);
-      }
-      .list-search {
-        flex: 1;
-        min-width: 12rem;
-        max-width: 20rem;
-      }
-      .view-toggle {
-        display: flex;
-        margin-left: auto;
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius);
-        overflow: hidden;
-        flex: none;
-      }
-      .sec-head {
-        flex: none;
-      }
-      @keyframes action-busy-pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.55;
-        }
       }
     </style>
   </template>

@@ -16,6 +16,13 @@
         "module": "../service",
         "name": "Service"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

@@ -21,6 +21,11 @@
         "links": {
           "self": "./access-issues"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

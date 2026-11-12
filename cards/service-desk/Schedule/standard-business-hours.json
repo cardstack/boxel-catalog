@@ -68,13 +68,20 @@
       "isDefault": true,
       "cardInfo": {
         "name": "Standard Business Hours",
-        "summary": "Mon–Fri 09:00–18:00, Sat half day, KL time."
+        "summary": "Mon\u2013Fri 09:00\u201318:00, Sat half day, KL time."
       }
     },
     "meta": {
       "adoptsFrom": {
         "module": "../schedule",
         "name": "Schedule"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

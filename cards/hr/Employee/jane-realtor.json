@@ -3,7 +3,7 @@
     "type": "card",
     "attributes": {
       "name": "Jane Realtor",
-      "email": "jane@springfieldrealty.com",
+      "email": "jane@example.com",
       "phone": "(555) 123-4567",
       "role": "Listing Agent",
       "department": "Springfield Realty Group",
@@ -17,6 +17,13 @@
       "adoptsFrom": {
         "module": "../employee",
         "name": "Employee"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

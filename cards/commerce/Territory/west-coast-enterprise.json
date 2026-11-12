@@ -16,6 +16,11 @@
         "links": {
           "self": "../../crm/User/priya-shah"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

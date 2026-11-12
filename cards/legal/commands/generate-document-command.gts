@@ -14,15 +14,15 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
 
-import { Contract } from '@cardstack/catalog/cards/legal/contract';
-import { ContractClause } from '@cardstack/catalog/cards/legal/contract-clause';
-import { Signatory } from '@cardstack/catalog/cards/legal/signatory';
-import { contractTypeLabel } from '@cardstack/catalog/cards/legal/contract-type';
-import { clauseTypeLabel } from '@cardstack/catalog/cards/legal/clause';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { Contract } from '../contract';
+import { ContractClause } from '../contract-clause';
+import { Signatory } from '../signatory';
+import { contractTypeLabel } from '../contract-type';
+import { clauseTypeLabel } from '../clause';
+import { formatMoney } from '../../commerce/line-item-totals';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { governingLawLabel } from '@cardstack/catalog/cards/legal/governing-law-field';
-import { sortedBlocks } from '@cardstack/catalog/cards/legal/signature-block-field';
+import { governingLawLabel } from '../governing-law-field';
+import { sortedBlocks } from '../signature-block-field';
 
 // Generate Document — assembles the full agreement text from what the desk
 // already knows, and writes it to the contract's `fullText`.

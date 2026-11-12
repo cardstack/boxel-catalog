@@ -21,7 +21,7 @@
     "relationships": {
       "linkedExamples.0": {
         "links": {
-          "self": "../Subscription/acme-workspace-pro"
+          "self": "../Subscription/workspace-pro-annual"
         }
       },
       "linkedExamples.1": {
@@ -32,6 +32,11 @@
       "linkedExamples.2": {
         "links": {
           "self": "../Subscription/acme-data-addon"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

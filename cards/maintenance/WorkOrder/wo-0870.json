@@ -10,7 +10,7 @@
       "kind": "corrective",
       "priority": "P1",
       "status": "in-progress",
-      "title": "Forklift 3 — brake fault",
+      "title": "Forklift 3 \u2014 brake fault",
       "description": "Reported by dock lead: pedal soft, stopping distance doubled. Truck taken out of service pending repair.",
       "requestedByName": "Mara Lindqvist",
       "requestedAt": "2026-09-08T02:12:00.000Z",
@@ -54,7 +54,7 @@
             "result": "pending"
           },
           {
-            "label": "Brake test — stopping distance",
+            "label": "Brake test \u2014 stopping distance",
             "kind": "measure",
             "required": true,
             "result": "pending",
@@ -95,7 +95,7 @@
       "downtime": {
         "startedAt": "2026-09-08T02:10:00.000Z",
         "planned": false,
-        "reason": "Brake fault — forklift 3"
+        "reason": "Brake fault \u2014 forklift 3"
       },
       "failure": {
         "symptom": "Brake pedal soft, stopping distance doubled",
@@ -110,6 +110,11 @@
       "subjectAsset": {
         "links": {
           "self": "../Asset/ast-2026-0210"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

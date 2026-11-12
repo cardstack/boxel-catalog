@@ -9,7 +9,7 @@ import {
 import DateField from '@cardstack/base/date';
 import BooleanField from '@cardstack/base/boolean';
 import LinkIcon from '@cardstack/boxel-icons/link';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Field } from '@cardstack/pretui/components/field';
 
 import { Clause, clauseTypeLabel } from './clause';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
@@ -90,7 +90,7 @@ export class ClauseReferenceField extends FieldDef {
         .cr-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
           font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
@@ -157,7 +157,7 @@ export class ClauseReferenceField extends FieldDef {
         .cr {
           display: flex;
           flex-direction: column;
-          gap: 0.2rem;
+          gap: var(--boxel-sp-5xs);
           font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
         }
@@ -165,7 +165,7 @@ export class ClauseReferenceField extends FieldDef {
           display: flex;
           align-items: center;
           flex-wrap: wrap;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
         }
         /* Doubled class so the flush margin outranks Token's own. */
         .cr-section.cr-section {
@@ -175,7 +175,6 @@ export class ClauseReferenceField extends FieldDef {
           font-weight: 600;
         }
         .cr-pin {
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
@@ -191,15 +190,15 @@ ClauseReferenceField.edit = class Edit extends Component<
 > {
   <template>
     <div class='cr-edit'>
-      <FieldContainer @label='Section' @vertical={{true}}>
+      <Field @label='Section'>
         <@fields.section />
-      </FieldContainer>
-      <FieldContainer @label='Library clause' @vertical={{true}}>
+      </Field>
+      <Field @label='Library clause'>
         <@fields.clause />
-      </FieldContainer>
-      <FieldContainer @label='Pinned to revision of' @vertical={{true}}>
+      </Field>
+      <Field @label='Pinned to revision of'>
         <@fields.pinnedRevision />
-      </FieldContainer>
+      </Field>
       {{#if @model.isSuperseded}}
         <p class='cr-warn'>The library clause has been re-reviewed since this
           pin — re-read it before relying on this reference.</p>
@@ -215,8 +214,7 @@ ClauseReferenceField.edit = class Edit extends Component<
       }
       .cr-warn {
         grid-column: 1 / -1;
-        margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--attention-ink);
       }
       @container (max-width: 480px) {

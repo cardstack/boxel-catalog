@@ -28,6 +28,11 @@
         "links": {
           "self": "../User/dana-whitfield"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

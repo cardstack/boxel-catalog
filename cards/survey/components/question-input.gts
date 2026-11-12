@@ -111,7 +111,6 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
           class='qi-choices'
           role='group'
           aria-label={{this.label}}
-          aria-invalid={{if @invalid 'true'}}
           aria-describedby={{if @invalid @errorId}}
         >
           {{#each this.options as |option|}}

@@ -26,7 +26,7 @@
       "status": "onboarded",
       "notes": "Monitor supplier. Insurance certificate lapsed at the end of August; renewal requested.",
       "cardInfo": {
-        "name": "TechSource — Profile"
+        "name": "TechSource \u2014 Profile"
       },
       "address": {
         "addressLine1": "480 Oakmead Pkwy",
@@ -57,6 +57,11 @@
       "linkedVendor": {
         "links": {
           "self": "../Vendor/techsource"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

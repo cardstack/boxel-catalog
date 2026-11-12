@@ -5,7 +5,10 @@
       "direction": "outbound",
       "outcome": "connected",
       "phoneNumber": "+14155550132",
-      "participantNames": ["Sarah Baker", "Dana Kim"],
+      "participantNames": [
+        "Sarah Baker",
+        "Dana Kim"
+      ],
       "startedAt": "2026-09-11T14:05:00.000Z",
       "durationSeconds": 494,
       "subject": "Renewal terms \u2014 Sarah Baker",
@@ -20,6 +23,11 @@
       "regarding": {
         "links": {
           "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

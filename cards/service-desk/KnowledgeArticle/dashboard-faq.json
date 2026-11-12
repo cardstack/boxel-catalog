@@ -25,6 +25,11 @@
         "links": {
           "self": "../TicketCategory/access-issues"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

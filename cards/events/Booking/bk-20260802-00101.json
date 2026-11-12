@@ -30,14 +30,18 @@
         "links": {
           "self": "../../crm/Contact/priya-shah"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {
       "adoptsFrom": {
         "module": "../booking",
         "name": "Booking"
-      },
-      "_touched": 1787195029841
+      }
     }
   }
 }

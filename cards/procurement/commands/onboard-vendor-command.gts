@@ -10,7 +10,7 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
-import { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
+import { Vendor } from '../vendor';
 import { VendorProfile } from '../vendor-profile';
 
 // Onboard Vendor — the single writer for the profile → vendor transition.

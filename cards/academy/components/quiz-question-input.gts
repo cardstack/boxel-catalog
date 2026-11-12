@@ -281,7 +281,6 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
       .qi-fb,
       .qi-hint,
       .qi-expl {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }

@@ -13,30 +13,23 @@
         "summary": "Right-to-work status per jurisdiction with expiry and restrictions, storing no document numbers by design."
       },
       "containedExamples": [
-        {
-          "jurisdiction": "GB",
-          "status": "visa-holder",
-          "visaType": "Skilled Worker",
-          "validFrom": "2024-03-01",
-          "expiresOn": "2027-02-28",
-          "restrictions": ["employer-tied"],
-          "verifiedOn": "2024-02-20",
-          "verifiedBy": "People Ops"
-        },
-        {
-          "jurisdiction": "GB",
-          "status": "citizen",
-          "verifiedOn": "2023-11-04",
-          "verifiedBy": "People Ops"
-        }
+        {},
+        {}
       ],
       "cardTitle": "Work Authorization Field",
       "cardDescription": "A right-to-work record: jurisdiction, status, visa type, validity window, restrictions and who verified it."
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

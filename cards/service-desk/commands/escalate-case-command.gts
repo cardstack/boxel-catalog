@@ -12,7 +12,7 @@ import { loaded } from '../record-helpers';
 import { displayTitle } from '../record-helpers';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../../hr/employee';
 import { Escalation, ESCALATION_REASONS } from '../escalation';
 import {
   ESCALATION_LEVELS,

@@ -12,8 +12,8 @@ import TextAreaField from '@cardstack/base/text-area';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { Case } from '@cardstack/catalog/cards/service-desk/case';
-import { CASE_STATUSES } from '@cardstack/catalog/cards/service-desk/case';
+import { Case } from '../case';
+import { CASE_STATUSES } from '../case';
 import {
   isValidIdentifierPattern,
   mintIdentifier,
@@ -23,11 +23,12 @@ import {
   ExternalReferenceField,
   IntegrationReferenceField,
 } from '@cardstack/catalog/fields/external-reference/external-reference-field';
-import { parseCsvRecords, headerIndex, parseCsvDate } from '../../../utils/csv';
 import {
-  loaded,
-  loadedById,
-} from '@cardstack/catalog/cards/service-desk/record-helpers';
+  parseCsvRecords,
+  headerIndex,
+  parseCsvDate,
+} from '@cardstack/catalog/utils/csv';
+import { loaded, loadedById } from '../record-helpers';
 
 export class ImportLegacyDataInput extends CardDef {
   /** The scalable path: the export lives in the realm as a CSV file card, so

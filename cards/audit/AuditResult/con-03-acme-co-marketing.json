@@ -8,7 +8,7 @@
         "regime": {
           "regime": "Contract Policy",
           "version": "2026",
-          "clause": "§4.1",
+          "clause": "\u00a74.1",
           "clauseTitle": "Signing limits"
         },
         "kind": "threshold",
@@ -30,7 +30,7 @@
         "sourceVersion": "contract-controls v1"
       },
       "cardInfo": {
-        "name": "CON-03 · acme-co-marketing",
+        "name": "CON-03 \u00b7 acme-co-marketing",
         "summary": "300000 is above 250000.",
         "notes": null,
         "cardThumbnailURL": null
@@ -43,7 +43,7 @@
           "regime": {
             "regime": "Contract Policy",
             "version": "2026",
-            "clause": "§4.1",
+            "clause": "\u00a74.1",
             "clauseTitle": "Signing limits"
           },
           "kind": "threshold",
@@ -100,6 +100,11 @@
       "finding.evidence.0.document": {
         "links": {
           "self": "../Document/risk-score-export-fy26h2"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

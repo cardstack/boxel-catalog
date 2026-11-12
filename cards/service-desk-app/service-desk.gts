@@ -13,14 +13,27 @@ import GlimmerComponent from '@glimmer/component';
 import { type getCards, identifyCard } from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { array } from '@ember/helper';
-import { gt } from '@cardstack/boxel-ui/helpers';
-import { FittedCard } from '@cardstack/boxel-ui/components';
+import { array, fn } from '@ember/helper';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { FitTile } from '../shared/fit-tile';
+import InboxIcon from '@cardstack/boxel-icons/inbox';
+import UsersIcon from '@cardstack/boxel-icons/users';
+import BookOpenIcon from '@cardstack/boxel-icons/book-open';
+import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
+import ClockIcon from '@cardstack/boxel-icons/clock';
+import TagIcon from '@cardstack/boxel-icons/tag';
+import UserIcon from '@cardstack/boxel-icons/user';
+import HeadsetIcon from '@cardstack/boxel-icons/headset';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
-import { Tabs } from '@cardstack/pretui/components/tabs';
+import {
+  Sidebar,
+  SidebarGroup,
+  SidebarItem,
+  SidebarTrigger,
+} from '@cardstack/pretui/components/sidebar';
+import { Stat } from '@cardstack/pretui/components/stat';
 import { consume } from 'ember-provide-consume-context';
 import { CardCrudFunctionsContextName } from '@cardstack/runtime-common';
 import LifeBuoyIcon from '@cardstack/boxel-icons/life-buoy';
@@ -33,12 +46,17 @@ import { TicketCategory } from '../service-desk/ticket-category';
 import { SupportContact } from '../service-desk/support-contact';
 import { SupportAgent } from '../service-desk/support-agent';
 import { KnowledgeArticle } from '../service-desk/knowledge-article';
-import { CollectionPanel } from '../../components/collection-panel';
-import type { TableColumn } from '../../components/table';
+import {
+  CataloguePanel,
+  type CatalogueColumn,
+} from '../service-desk/components/catalogue-panel';
 import { QueueView } from '../service-desk/components/queue-view';
-import { WorkRail } from '../service-desk/components/work-rail';
 import { TicketWorkspace } from '../service-desk/components/ticket-workspace';
-import type { Lens } from '../service-desk/utils/queue-lens';
+import {
+  LENSES,
+  matchesLens,
+  type Lens,
+} from '../service-desk/utils/queue-lens';
 
 interface Panel {
   id: string;
@@ -52,10 +70,12 @@ interface Panel {
    */
   cardClass?: typeof CardDef;
   /** Table columns for the catalogue panels. Keys read off the instance. */
-  columns?: TableColumn[];
+  columns?: CatalogueColumn[];
   searchPlaceholder?: string;
   /** Singular noun for the New button — "New" alone says nothing about what. */
   newLabel?: string;
+  icon: typeof InboxIcon;
+  avatar?: boolean;
   /** True for the one panel that renders the queue rather than a catalogue. */
   isQueue?: boolean;
 }
@@ -76,6 +96,7 @@ const SECTIONS: Section[] = [
     panels: [
       {
         id: 'queue',
+        icon: InboxIcon,
         label: 'Queue',
         purpose:
           'What needs attention right now. The counts are the filters — click one to narrow.',
@@ -83,6 +104,7 @@ const SECTIONS: Section[] = [
       },
       {
         id: 'queues',
+        icon: UsersIcon,
         label: 'Teams',
         purpose:
           'Which baskets are healthy and which are drowning — the team lead’s view.',
@@ -92,7 +114,7 @@ const SECTIONS: Section[] = [
         columns: [
           { key: 'title', label: 'Queue' },
           { key: 'tierLabel', label: 'Tier' },
-          { key: 'agentCount', label: 'Agents' },
+          { key: 'agentCount', label: 'Agents', mono: true },
           { key: 'policyName', label: 'Default policy', showAbove: 640 },
         ],
       },
@@ -104,6 +126,7 @@ const SECTIONS: Section[] = [
     panels: [
       {
         id: 'articles',
+        icon: BookOpenIcon,
         label: 'Articles',
         purpose:
           'Answers worth writing down once. These are what the workspace suggests while an agent types.',
@@ -113,8 +136,8 @@ const SECTIONS: Section[] = [
         columns: [
           { key: 'title', label: 'Article' },
           { key: 'categoryName', label: 'Category' },
-          { key: 'status', label: 'Status' },
-          { key: 'visibility', label: 'Visibility', showAbove: 640 },
+          { key: 'status', label: 'Status', dot: true },
+          { key: 'visibility', label: 'Visibility', dot: true, showAbove: 640 },
         ],
       },
     ],
@@ -125,6 +148,7 @@ const SECTIONS: Section[] = [
     panels: [
       {
         id: 'sla',
+        icon: ShieldCheckIcon,
         label: 'Commitments',
         purpose: 'What was promised, to whom, and how each priority scales it.',
         cardClass: SlaPolicy,
@@ -139,6 +163,7 @@ const SECTIONS: Section[] = [
       },
       {
         id: 'hours',
+        icon: ClockIcon,
         label: 'Business hours',
         purpose: 'The calendars every SLA deadline is calculated against.',
         cardClass: Schedule,
@@ -146,13 +171,19 @@ const SECTIONS: Section[] = [
         newLabel: 'schedule',
         columns: [
           { key: 'title', label: 'Schedule' },
-          { key: 'summary', label: 'Open' },
-          { key: 'timeZone', label: 'Time zone' },
-          { key: 'holidayCount', label: 'Holidays', showAbove: 640 },
+          { key: 'summary', label: 'Open', mono: true },
+          { key: 'timeZone', label: 'Time zone', mono: true },
+          {
+            key: 'holidayCount',
+            label: 'Holidays',
+            showAbove: 640,
+            mono: true,
+          },
         ],
       },
       {
         id: 'categories',
+        icon: TagIcon,
         label: 'Categories',
         purpose:
           'Where a new ticket’s priority and queue come from. Both stay overridable.',
@@ -161,12 +192,14 @@ const SECTIONS: Section[] = [
         newLabel: 'category',
         columns: [
           { key: 'path', label: 'Category' },
-          { key: 'defaultPriority', label: 'Default priority' },
+          { key: 'defaultPriority', label: 'Default priority', dot: true },
           { key: 'defaultQueueName', label: 'Routes to' },
         ],
       },
       {
         id: 'people',
+        avatar: true,
+        icon: UserIcon,
         label: 'Customers',
         purpose: 'Who is asking, and what they were promised.',
         cardClass: SupportContact,
@@ -175,11 +208,13 @@ const SECTIONS: Section[] = [
         columns: [
           { key: 'title', label: 'Customer' },
           { key: 'company', label: 'Company' },
-          { key: 'tier', label: 'Tier' },
+          { key: 'tier', label: 'Tier', dot: true },
         ],
       },
       {
         id: 'agents',
+        avatar: true,
+        icon: HeadsetIcon,
         label: 'Agents',
         purpose: 'Who answers, at which tier, with which skills.',
         cardClass: SupportAgent,
@@ -236,6 +271,24 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
       () => (this.args.realm ? [this.args.realm] : []),
       { isLive: true },
     );
+    let counts: Record<string, ReturnType<getCards> | undefined> = {};
+    for (let sec of SECTIONS) {
+      for (let p of sec.panels) {
+        let cls = p.cardClass;
+        if (!cls) continue;
+        counts[p.id] = this.args.context?.getCards(
+          this,
+          () => {
+            if (!this.isInteractive) return undefined;
+            let ref = identifyCard(cls);
+            return ref ? { filter: { type: ref } } : undefined;
+          },
+          () => (this.args.realm ? [this.args.realm] : []),
+          { isLive: true },
+        );
+      }
+    }
+    this.countQueries = counts;
   }
 
   get sectionOptions() {
@@ -288,6 +341,42 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
   get showRail(): boolean {
     return !(this.isLoadingTickets && this.tickets.length === 0);
   }
+
+  @tracked private countQueries: Record<
+    string,
+    ReturnType<getCards> | undefined
+  > = {};
+
+  // SidebarItem's @badge takes a string.
+  countOf = (p: Panel): string | undefined => {
+    let n = p.isQueue
+      ? this.tickets.filter((t) => matchesLens(t, 'open')).length
+      : this.countQueries[p.id]?.instances?.length;
+    return n === undefined ? undefined : String(n);
+  };
+
+  get lensStats() {
+    return LENSES.map((spec) => ({
+      ...spec,
+      count: this.tickets.filter((t) => matchesLens(t, spec.key)).length,
+      active: spec.key === this.lens,
+    }));
+  }
+
+  // On the phone the rail is a drawer; picking a destination closes it.
+  navTo = (
+    bar: { mobile?: boolean; toggle?: () => void },
+    sectionId: string,
+    panelId: string,
+  ) => {
+    this.selectNav(sectionId, panelId);
+    if (bar.mobile) bar.toggle?.();
+  };
+
+  selectNav = (sectionId: string, panelId: string) => {
+    this.sectionId = sectionId;
+    this.panelId = panelId;
+  };
 
   selectSection = (id: string) => {
     this.sectionId = id;
@@ -378,224 +467,330 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
   }
 
   <template>
-    <div class='console'>
-      <header class='console-head'>
-        <h1>{{@title}}</h1>
-        {{! One quiet control picks the section, so the only filled thing on
-            the masthead is the action. }}
-        <SegmentedControl
-          class='sections'
-          @label='Sections'
-          @options={{this.sectionOptions}}
-          @value={{this.sectionId}}
-          @onValueChange={{this.selectSection}}
-        />
-        {{! Every search sits in the toolbar of the thing it searches, so the
-            masthead holds only the action. }}
-        <div class='head-tools'>
-          <Button
-            class='new-ticket'
-            @tone='primary'
-            @appearance='filled'
-            @size='s'
-            @busy={{this.creating}}
-            {{on 'click' this.newTicket}}
-          >
-            {{#unless this.creating}}
-              <PlusIcon width='15' height='15' aria-hidden='true' />
+    <div class='app'>
+      <Sidebar
+        class='shell-sidebar'
+        @label='Service Desk'
+        @collapsible='rail'
+        @railBreakpoint={{1100}}
+        @mobileBreakpoint={{720}}
+        @bordered={{true}}
+        @scroll='content'
+        @resizable={{true}}
+      >
+        <:header as |bar|>
+          <div class='brand'>
+            <span class='brand-mark' aria-hidden='true'>SD</span>
+            {{#unless bar.collapsed}}
+              <span class='brand-name'>Service Desk<small>Support operations</small></span>
             {{/unless}}
-            New ticket
-          </Button>
-        </div>
-      </header>
+          </div>
+        </:header>
+        <:nav as |bar|>
+          {{#each this.sections as |sec|}}
+            <SidebarGroup @label={{sec.label}} @hideLabel={{bar.collapsed}}>
+              {{#each sec.panels as |p|}}
+                <SidebarItem
+                  @label={{p.label}}
+                  @badge={{unless bar.collapsed (this.countOf p)}}
+                  @active={{eq p.id this.panelId}}
+                  @collapsed={{bar.collapsed}}
+                  @onClick={{fn this.navTo bar sec.id p.id}}
+                >
+                  <:icon><p.icon aria-hidden='true' /></:icon>
+                </SidebarItem>
+              {{/each}}
+            </SidebarGroup>
+          {{/each}}
+        </:nav>
+        <:default as |bar|>
+          <main class='main'>
+            {{#if this.createProblem}}
+              <Alert @tone='danger'>{{this.createProblem}}</Alert>
+            {{/if}}
 
-      {{#if this.createProblem}}
-        <Alert @tone='danger'>{{this.createProblem}}</Alert>
-      {{/if}}
-
-      {{#if (gt this.section.panels.length 1)}}
-        <Tabs
-          class='panels'
-          @options={{this.panelOptions}}
-          @value={{this.panelId}}
-          @onValueChange={{this.selectPanel}}
-        />
-      {{/if}}
-
-      <section class='panel' aria-label={{this.panel.label}}>
-        <p class='purpose'>{{this.panel.purpose}}</p>
-
-        {{#if this.isInteractive}}
-
-          {{#if this.canShowQueue}}
-            {{! Master-detail. The list is a fixed column and the detail fills
-                what is left; below 68rem the three regions stack into one
-                column. }}
-            <div class='split {{if this.selectedTicket "split-picked"}}'>
-              {{#if this.showRail}}
-                <WorkRail
-                  class='split-rail'
-                  @tickets={{this.tickets}}
-                  @lens={{this.lens}}
-                  @onLens={{this.setLens}}
-                  @queueName={{this.queueName}}
-                  @onQueue={{this.setQueue}}
-                />
-              {{else}}
-                <div
-                  class='split-rail'
-                  role='status'
-                  aria-busy='true'
-                  aria-label='Loading ticket counts'
-                ></div>
-              {{/if}}
-              <div class='split-list'>
-                <QueueView
-                  @tickets={{this.tickets}}
-                  @isLoading={{this.isLoadingTickets}}
-                  @onSelect={{this.selectTicket}}
-                  @selectedId={{this.selectedTicket.id}}
-                  @lens={{this.lens}}
-                  @onLens={{this.setLens}}
-                  @queueName={{this.queueName}}
-                  @onClearQueue={{this.clearQueue}}
-                />
-              </div>
-              <div class='split-detail'>
-                {{#if this.selectedTicket}}
-                  <Button
-                    class='back'
-                    @tone='neutral'
-                    @appearance='link'
-                    @size='s'
-                    {{on 'click' this.clearTicket}}
-                  >Back to the queue</Button>
-                  {{! Keyed on the ticket id, so selecting a different row
-                      builds a new workspace instead of swapping one argument
-                      under the old one. Without the key, tracked editor state
-                      (a half-typed reply, an open subject edit, the escalate
-                      and merge panels) would carry over to the next ticket. }}
-                  {{#each (array this.selectedTicket) key='id' as |picked|}}
-                    <TicketWorkspace
-                      @ticket={{picked}}
-                      @context={{@context}}
-                      @realms={{this.realms}}
-                      @onLeftQueue={{this.clearTicket}}
-                    />
-                  {{/each}}
-                {{else}}
-                  <EmptyState
-                    class='pick'
-                    @size='s'
-                    @title='Pick a ticket'
-                    @message='It opens here, beside the queue, so you keep your place in the list while you work.'
-                  />
-                {{/if}}
-              </div>
-            </div>
-          {{else if this.canShowPanel}}
-            {{! Keyed on the panel so switching tabs builds a fresh panel with
-                its own query and an empty search box. }}
-            {{#each (array this.panel) key='id' as |panel|}}
-              <CollectionPanel
-                @cardClass={{panel.cardClass}}
-                @context={{@context}}
-                @realms={{this.realms}}
-                @columns={{panel.columns}}
-                @label={{panel.label}}
-                @searchPlaceholder={{panel.searchPlaceholder}}
-                @newLabel={{panel.newLabel}}
+            {{#if bar.mobile}}
+              <SidebarTrigger
+                @open={{bar.open}}
+                @onToggle={{bar.toggle}}
+                @controls={{bar.controls}}
+                @label='Menu'
               />
-            {{/each}}
-          {{else}}
-            <EmptyState
-              @size='s'
-              @title='Nothing to query yet'
-              @message='This console is not saved in a realm yet.'
-            />
-          {{/if}}
-        {{else}}
-          <p class='shell'>The console is live when you open it: queues, timers
-            and search all read the realm directly.</p>
-        {{/if}}
-      </section>
+            {{/if}}
+            <div class='head-row'>
+              <header class='head'>
+                <p class='cap'>{{this.section.label}}</p>
+                <h1>{{this.panel.label}}</h1>
+                <p class='sub'>{{this.panel.purpose}}</p>
+              </header>
+              <Button
+                @icon={{PlusIcon}}
+                class='new-ticket'
+                @tone='neutral'
+                @appearance='outlined'
+                @size='s'
+                @busy={{this.creating}}
+                {{on 'click' this.newTicket}}
+              >
+                New ticket
+              </Button>
+            </div>
+
+            {{#if this.isInteractive}}
+              {{#if this.canShowQueue}}
+                <section class='strip' aria-label='Queue filters'>
+                  <div class='cells'>
+                    {{#each this.lensStats as |s|}}
+                      <button
+                        type='button'
+                        class='cell {{if s.active "active"}}'
+                        aria-pressed={{if s.active 'true' 'false'}}
+                        {{on 'click' (fn this.setLens s.key)}}
+                      >
+                        <Stat
+                          @label={{s.label}}
+                          @value={{s.count}}
+                          @tone={{if s.tone s.tone 'neutral'}}
+                          @hint={{s.hint}}
+                          @roll={{false}}
+                        />
+                      </button>
+                    {{/each}}
+                  </div>
+                </section>
+                <div class='split {{if this.selectedTicket "split-picked"}}'>
+                  <div class='split-list'>
+                    <QueueView
+                      @tickets={{this.tickets}}
+                      @isLoading={{this.isLoadingTickets}}
+                      @onSelect={{this.selectTicket}}
+                      @selectedId={{this.selectedTicket.id}}
+                      @lens={{this.lens}}
+                      @onLens={{this.setLens}}
+                      @queueName={{this.queueName}}
+                      @onClearQueue={{this.clearQueue}}
+                      @onQueue={{this.setQueue}}
+                    />
+                  </div>
+                  <div class='split-detail'>
+                    {{#if this.selectedTicket}}
+                      <Button
+                        class='back'
+                        @tone='neutral'
+                        @appearance='link'
+                        @size='s'
+                        {{on 'click' this.clearTicket}}
+                      >Back to the queue</Button>
+                      {{#each (array this.selectedTicket) key='id' as |picked|}}
+                        <TicketWorkspace
+                          @ticket={{picked}}
+                          @context={{@context}}
+                          @realms={{this.realms}}
+                          @onLeftQueue={{this.clearTicket}}
+                        />
+                      {{/each}}
+                    {{else}}
+                      <EmptyState
+                        class='pick'
+                        @size='s'
+                        @title='Pick a ticket'
+                        @message='It opens here, beside the queue, so you keep your place in the list while you work.'
+                      />
+                    {{/if}}
+                  </div>
+                </div>
+              {{else if this.canShowPanel}}
+                {{#each (array this.panel) key='id' as |panel|}}
+                  <CataloguePanel
+                    @cardClass={{panel.cardClass}}
+                    @context={{@context}}
+                    @realms={{this.realms}}
+                    @columns={{panel.columns}}
+                    @label={{panel.label}}
+                    @searchPlaceholder={{panel.searchPlaceholder}}
+                    @newLabel={{panel.newLabel}}
+                    @avatar={{panel.avatar}}
+                  />
+                {{/each}}
+              {{else}}
+                <EmptyState
+                  @size='s'
+                  @title='Nothing to query yet'
+                  @message='This console is not saved in a realm yet.'
+                />
+              {{/if}}
+            {{else}}
+              <p class='shell'>The console is live when you open it: queues,
+                timers and search all read the realm directly.</p>
+            {{/if}}
+          </main>
+        </:default>
+      </Sidebar>
     </div>
 
     <style scoped>
-      .console {
+      .app {
         container-type: inline-size;
+        block-size: 100%;
+        min-block-size: 0;
+        overflow: hidden;
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-xs);
+      }
+      .shell-sidebar {
+        block-size: 100%;
+        min-block-size: 0;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        inline-size: 1.75rem;
+        block-size: 1.75rem;
+        border: 1px solid var(--border);
+        color: var(--foreground);
+        font-family: var(--font-mono);
+        font-weight: 600;
+        font-size: var(--boxel-font-size-xs);
+        line-height: var(--boxel-line-height-xs);
+      }
+      .brand-name {
+        display: grid;
+        font-weight: 700;
+        font-size: var(--boxel-font-size-xs);
+        line-height: var(--boxel-line-height-xs);
+      }
+      .brand-name small {
+        font-family: var(--font-mono);
+        font-weight: 600;
+        font-size: var(--boxel-font-size-xs);
+        line-height: var(--boxel-line-height-xs);
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .main {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-sm);
         padding: var(--boxel-sp-lg);
-        min-height: 100%;
-        background: var(--background);
-        color: var(--foreground);
-        font-family: var(--font-sans);
+        min-width: 0;
       }
-      .console-head {
+      .head-row {
         display: flex;
-        align-items: center;
-        gap: var(--boxel-sp);
-        flex-wrap: wrap;
-        padding-bottom: var(--boxel-sp-xs);
-        border-bottom: 0.125rem solid var(--foreground);
-      }
-      .console-head h1 {
-        flex: 1;
-        min-width: 10rem;
-      }
-      .sections {
-        flex: none;
-      }
-      .head-tools {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        margin-left: var(--boxel-sp-sm);
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: var(--boxel-sp-sm);
       }
       .new-ticket {
-        gap: var(--boxel-sp-5xs);
         white-space: nowrap;
+        flex: none;
       }
-      .panel {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
+      .head {
+        display: grid;
+        gap: var(--boxel-sp-4xs);
+      }
+      .cap {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      h1 {
+        font-family: var(--boxel-heading-font-family);
+        font-weight: 400;
+        font-size: 2.5rem; /* ladder 40px page title: no Boxel display token */
+        line-height: var(--boxel-line-height-xl);
+        text-transform: uppercase;
+      }
+      .sub {
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+      }
+      /* Divided grid: every cell draws its RIGHT and BOTTOM line; the cells
+         overhang the frame by 1px and the frame clips them, so a part-filled
+         last row still has all its dividers and the frame is one border. */
+      .strip {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        overflow: hidden;
+      }
+      .cells {
+        --text-stat: 1.375rem;
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        margin: 0 -1px -1px 0;
+      }
+      .cell {
+        all: unset;
+        box-sizing: border-box;
+        cursor: pointer;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        min-width: 0;
+        box-shadow:
+          1px 0 0 var(--border),
+          0 1px 0 var(--border);
+      }
+      .cell.active {
+        background: var(--muted);
+      }
+      @media (hover: hover) {
+        .cell:hover {
+          background: var(--muted);
+        }
+      }
+      .cell.active {
+        box-shadow:
+          1px 0 0 var(--border),
+          0 1px 0 var(--border),
+          inset 0 -2px 0 var(--foreground);
+      }
+      .cell:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: -2px;
+      }
+      /* Whole rows only: 6, then 3 + 3, then 2 + 2 + 2. */
+      @container (width <= 75rem) {
+        .cells {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+      @container (width <= 40rem) {
+        .cells {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
       .split {
         display: grid;
-        grid-template-columns: 11rem 24rem minmax(0, 1fr);
-        gap: var(--boxel-sp-sm);
+        grid-template-columns: minmax(0, 1fr) 18rem;
         align-items: start;
-        min-height: 32rem;
-      }
-      .split-rail {
-        position: sticky;
-        top: var(--boxel-sp-sm);
-        padding-right: var(--boxel-sp-xs);
-        border-right: 1px solid var(--border);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        overflow: hidden;
       }
       .split-list {
         min-width: 0;
       }
-      /* The back control only exists in the one-column layout. */
       .back {
         display: none;
       }
       .split-detail {
         min-width: 0;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        overflow: hidden;
-        background: var(--card);
-        position: sticky;
-        top: var(--boxel-sp-sm);
+        border-inline-start: 1px solid var(--border);
+        min-height: 20rem;
       }
-      /* The split aligns to start so the pane can be sticky, so an empty pane
-         needs its own height. A flex column lets the placeholder fill it. */
       .split-detail:has(.pick) {
-        min-height: 34rem;
         display: flex;
         flex-direction: column;
       }
@@ -603,29 +798,14 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
         flex: 1;
         justify-content: center;
       }
-      /* Narrow reflows and never deletes: the rail becomes a strip above the
-         list, and the detail becomes a mode you enter and leave. */
-      @container (width <= 68rem) {
+      @container (width <= 60rem) {
         .split {
           grid-template-columns: minmax(0, 1fr);
-          grid-template-areas: 'rail' 'list' 'detail';
-        }
-        .split-rail {
-          grid-area: rail;
-          position: static;
-          padding: 0 0 var(--boxel-sp-xs);
-          border-right: none;
-          border-bottom: 1px solid var(--border);
-        }
-        .split-list {
-          grid-area: list;
         }
         .split-detail {
-          grid-area: detail;
-          position: static;
+          border-inline-start: none;
+          border-block-start: 1px solid var(--border);
         }
-        /* Opening a ticket swaps the list for the conversation, instead of
-           stacking them and making the reader scroll past every row. */
         .split-picked .split-list {
           display: none;
         }
@@ -634,24 +814,9 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
           margin: var(--boxel-sp-xs);
         }
       }
-      .purpose {
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
-        max-width: 72ch;
-        line-height: 1.6;
-      }
       .shell {
-        padding: var(--boxel-sp-lg) 0;
         max-width: 60ch;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.6;
         color: var(--muted-foreground);
-      }
-      @media (prefers-reduced-motion: reduce) {
-        * {
-          transition: none !important;
-          animation: none !important;
-        }
       }
     </style>
   </template>
@@ -767,22 +932,12 @@ export class ServiceDesk extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:placeholder><LifeBuoyIcon role='presentation' /></:placeholder>
+      <FitTile>
         <:title>{{@model.title}}</:title>
-        <:subtitle>Front line, queues, commitments, business hours, knowledge,
-          customers and agents, each a live query.</:subtitle>
-        <:footer><span class='fit-meta'>Support console</span></:footer>
-      </FittedCard>
-
-      <style scoped>
-        .fit-meta {
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: var(--boxel-lsp-sm);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-      </style>
+        <:subtitle>Support console</:subtitle>
+        <:fact>Queue, teams, articles, commitments, hours, categories, customers
+          and agents, each a live query.</:fact>
+      </FitTile>
     </template>
   };
 

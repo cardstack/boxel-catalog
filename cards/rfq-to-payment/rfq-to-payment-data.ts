@@ -1,4 +1,4 @@
-import type { TableColumn } from '../../components/table';
+import type { TableColumn } from '@cardstack/catalog/components/table';
 import { formatMoney, sumLineItems } from '../commerce/line-item-totals';
 
 import type { PurchaseRequisition } from '../procurement/purchase-requisition';
@@ -368,7 +368,12 @@ export const RFQ_COLUMNS: TableColumn[] = [
 
 export const REQUISITION_COLUMNS: TableColumn[] = [
   { key: 'title', label: 'Requisition', value: (i: any) => i.title },
-  { key: 'requester', label: 'Requester', value: (i: any) => i.requester },
+  {
+    key: 'requester',
+    label: 'Requester',
+    showAbove: 640,
+    value: (i: any) => i.requester,
+  },
   { key: 'status', label: 'Status', value: (i: any) => i.status },
   {
     key: 'total',
@@ -412,6 +417,7 @@ export const RECEIPT_COLUMNS: TableColumn[] = [
   {
     key: 'posted',
     label: 'Posted',
+    showAbove: 640,
     value: (i: any) => (i.posted ? 'posted' : 'draft'),
   },
   { key: 'match', label: 'Match', value: (i: any) => i.matchResult },

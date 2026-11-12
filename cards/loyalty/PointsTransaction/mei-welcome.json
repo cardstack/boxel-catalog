@@ -19,6 +19,11 @@
         "links": {
           "self": "../LoyaltyAccount/mei-fong"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

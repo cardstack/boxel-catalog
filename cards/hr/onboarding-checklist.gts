@@ -13,21 +13,32 @@ import {
 import DateField from '@cardstack/base/date';
 import TextAreaField from '@cardstack/base/text-area';
 import enumField from '@cardstack/base/enum';
+import { DotLabel, dotEnumField } from './dot-enum-field';
 import ChecklistIcon from '@cardstack/boxel-icons/checklist';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { type DescriptionsItem } from '@cardstack/pretui/components/descriptions';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from './employee';
 import { Contractor } from './contractor';
 import { OnboardingTemplate } from './onboarding-template';
-import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { type Hue } from '@cardstack/catalog/components/state-pill';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
+import { hueOf, stateColorsOf } from './hr-ui';
 import {
-  AVATAR_HUE,
-  COMPACT_EMPTY_STYLE,
-} from '@cardstack/catalog/components/pretui-helpers';
-import { QUIET_AVATAR_HUE, hueOf, stateColorsOf } from './hr-ui';
+  EmbCard,
+  FitCard,
+  FitRow,
+  IsoHead,
+  IsoPage,
+  Kv,
+  kv,
+  Panel,
+  SheetEmpty,
+  SheetLine,
+  StatStrip,
+  type StripItem,
+} from './compact-sheet';
 
 export const ONBOARDING_CHECKLIST_STATUSES = [
   'not-started',
@@ -46,6 +57,20 @@ export const ONBOARDING_CHECKLIST_STATUS_HUES: Record<string, Hue> = {
   'in-progress': 'amber',
   complete: 'green',
 };
+
+const ONBOARDING_CHECKLIST_STATUS_TONES: Record<string, PretuiToneArg> = {
+  'not-started': 'neutral',
+  'in-progress': 'warning',
+  complete: 'success',
+};
+
+export function statusTone(status?: string | null): PretuiToneArg {
+  return (status && ONBOARDING_CHECKLIST_STATUS_TONES[status]) || 'neutral';
+}
+
+export function statusLabel(status?: string | null): string {
+  return (status && ONBOARDING_CHECKLIST_STATUS_LABELS[status]) || '—';
+}
 
 export const ONBOARDING_CHECKLIST_STATUS_COLORS = stateColorsOf(
   ONBOARDING_CHECKLIST_STATUS_HUES,
@@ -69,14 +94,40 @@ function taskStatusLabel(status?: string | null): string {
   );
 }
 
+type DateLike = Date | string | null | undefined;
+
+/** "Aug 6" */
+function shortDate(date: DateLike): string {
+  return date
+    ? new Date(date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      })
+    : '';
+}
+
+/** "Aug 6, 2026" */
+function longDate(date: DateLike): string {
+  return date
+    ? new Date(date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : '';
+}
+
 export const OnboardingChecklistStatusField = markDefinition(
-  enumField(StringField, {
-    options: ONBOARDING_CHECKLIST_STATUSES.map((status) => ({
-      value: status,
-      label: ONBOARDING_CHECKLIST_STATUS_LABELS[status],
-    })),
-    displayName: 'Onboarding Checklist Status',
-  }),
+  dotEnumField(
+    {
+      options: ONBOARDING_CHECKLIST_STATUSES.map((status) => ({
+        value: status,
+        label: ONBOARDING_CHECKLIST_STATUS_LABELS[status],
+      })),
+      displayName: 'Onboarding Checklist Status',
+    },
+    ONBOARDING_CHECKLIST_STATUS_HUES,
+  ),
 );
 
 // One task in an OnboardingChecklist — tracking completion state for a
@@ -102,87 +153,100 @@ export class OnboardingChecklistTaskField extends FieldDef {
   @field completedDate = contains(DateField);
   @field notes = contains(TextAreaField);
 
+  // One list row: title, "Due Aug 2 · done Aug 4 · <assignee>", state.
   static embedded: BaseDefComponent = class Embedded extends Component<
     typeof this
   > {
+    get dateLine() {
+      let { dueDate, completedDate } = this.args.model ?? {};
+      return [
+        dueDate && `Due ${shortDate(dueDate)}`,
+        completedDate && `done ${shortDate(completedDate)}`,
+      ]
+        .filter(Boolean)
+        .join(' · ');
+    }
+
     <template>
-      <div class='task-card'>
-        <div class='task-top'>
+      <div class='task-row'>
+        <div class='task-text'>
           <span class='task-title'>{{@model.title}}</span>
-          {{#if @model.status}}
-            <StatePill
-              @label={{taskStatusLabel @model.status}}
-              @hue={{hueOf TASK_STATUS_HUES @model.status}}
-              @dot={{true}}
-            />
-          {{/if}}
+          <span class='task-sub'>{{this.dateLine}}{{#if @model.assignee}}{{#if
+                this.dateLine
+              }} · {{/if}}<@fields.assignee
+                @format='atom'
+                @displayContainer={{false}}
+              />{{/if}}</span>
         </div>
-        {{#if @model.assignee}}
-          <div class='task-meta'>
-            <span class='meta-label'>Assigned to:</span>
-            <@fields.assignee @format='atom' @displayContainer={{false}} />
-          </div>
-        {{/if}}
-        {{#if @model.dueDate}}
-          <div class='task-meta'>
-            <span class='meta-label'>Due:</span>
-            <@fields.dueDate @format='atom' @displayContainer={{false}} />
-          </div>
-        {{/if}}
-        {{#if @model.notes}}
-          <p class='task-notes'>{{@model.notes}}</p>
+        {{#if @model.status}}
+          <DotLabel
+            @label={{taskStatusLabel @model.status}}
+            @hue={{hueOf TASK_STATUS_HUES @model.status}}
+          />
         {{/if}}
       </div>
       <style scoped>
-        .task-card {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          padding: var(--boxel-sp-sm);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          background: var(--card);
-        }
-        .task-top {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-        }
-        .task-title {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          flex: 1;
-          min-width: 0;
-        }
-        .task-meta {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: var(--boxel-font-size-xs);
-        }
-        .meta-label {
-          color: var(--muted-foreground);
-          font-weight: 600;
-          flex: none;
-        }
-        .task-notes {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          line-height: 1.5;
+        @layer PretComponent {
+          .task-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--boxel-sp-sm);
+          }
+          .task-text {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-6xs);
+          }
+          .task-title {
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 700;
+            overflow-wrap: break-word;
+          }
+          .task-sub {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0 var(--boxel-sp-4xs);
+            font-size: var(--boxel-font-size-2xs);
+            color: var(--muted-foreground);
+          }
         }
       </style>
     </template>
   };
 }
 
-// Instance of an onboarding checklist — tracks completion status for tasks
-// from a template, linked to either an Employee or Contractor.
-function statusLabel(status?: string | null) {
-  return ONBOARDING_CHECKLIST_STATUS_LABELS[status ?? ''] ?? status;
+// Every format reads the same counts off `tasks`. tasks is containsMany, so
+// its data lives on the instance and is safe to read in prerendered fitted.
+function summarize(tasks?: (OnboardingChecklistTaskField | null)[] | null) {
+  let list = (tasks ?? []).filter((t): t is OnboardingChecklistTaskField =>
+    Boolean(t),
+  );
+  let done = list.filter((t) => t.status === 'complete').length;
+  let inProgress = list.filter((t) => t.status === 'in-progress').length;
+  return {
+    total: list.length,
+    done,
+    inProgress,
+    pending: list.length - done - inProgress,
+    pct: list.length ? Math.round((done / list.length) * 100) : 0,
+    next: list.find((t) => t.status !== 'complete'),
+    progress: `${done} / ${list.length}`,
+  };
 }
 
+/** "Engineering Onboarding · started Aug 1" */
+function subline(templateTitle?: string | null, createdDate?: DateLike) {
+  return [templateTitle, createdDate && `started ${shortDate(createdDate)}`]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+// Instance of an onboarding checklist — tracks completion status for tasks
+// from a template, linked to either an Employee or Contractor.
 export class OnboardingChecklist extends CardDef {
   static displayName = 'Onboarding Checklist';
   static icon = ChecklistIcon;
@@ -226,12 +290,7 @@ export class OnboardingChecklist extends CardDef {
         return `${person.name}'s Onboarding`;
       }
       if (this.createdDate) {
-        let date = new Date(this.createdDate);
-        let formatted = date.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        });
-        return `Team Onboarding — Started ${formatted}`;
+        return `Team Onboarding — Started ${shortDate(this.createdDate)}`;
       }
       return 'Unnamed Onboarding';
     },
@@ -248,10 +307,6 @@ export class OnboardingChecklist extends CardDef {
       );
     }
 
-    get hasPerson() {
-      return Boolean(this.args.model?.employee || this.args.model?.contractor);
-    }
-
     get personPhoto() {
       return (
         this.args.model?.employee?.photo?.resolvedUrl ??
@@ -259,133 +314,136 @@ export class OnboardingChecklist extends CardDef {
       );
     }
 
-    get progressCount() {
-      return `${this.completedTaskCount} of ${this.args.model?.tasks?.length ?? 0} tasks`;
+    get summary() {
+      return summarize(this.args.model?.tasks);
     }
 
-    get completedTaskCount(): number {
-      let tasks = this.args.model?.tasks ?? [];
-      return tasks.filter((t) => t && t.status === 'complete').length;
+    get subline() {
+      return subline(
+        this.args.model?.template?.title,
+        this.args.model?.createdDate,
+      );
+    }
+
+    get linked(): DescriptionsItem[] {
+      let m = this.args.model;
+      return [
+        m?.employee && { label: 'Employee', key: 'employee' },
+        m?.contractor && { label: 'Contractor', key: 'contractor' },
+        m?.template && { label: 'Template', key: 'template' },
+      ].filter((i): i is { label: string; key: string } => Boolean(i));
+    }
+
+    get details(): DescriptionsItem[] {
+      let s = this.summary;
+      let m = this.args.model;
+      return [
+        { label: 'Progress', value: `${s.done} of ${s.total} tasks` },
+        { label: 'Next task', value: s.next?.title ?? undefined },
+        { label: 'Due', value: longDate(s.next?.dueDate) || undefined },
+        { label: 'Created', value: longDate(m?.createdDate) || undefined },
+        { label: 'Template', value: m?.template?.title ?? undefined },
+        { label: 'In progress', value: String(s.inProgress) },
+        { label: 'Pending', value: String(s.pending) },
+      ];
+    }
+
+    get startedYear() {
+      let d = this.args.model?.createdDate;
+      return d ? String(new Date(d).getFullYear()) : undefined;
+    }
+
+    get strip(): StripItem[] {
+      let s = this.summary;
+      let m = this.args.model;
+      return [
+        {
+          label: 'Progress',
+          value: s.progress,
+          hint: s.pct + '% complete',
+          tone: 'info',
+        },
+        {
+          label: 'Next due',
+          value: s.next?.dueDate ? shortDate(s.next.dueDate) : '—',
+          hint: s.next ? s.next.title : 'All tasks complete',
+          tone: 'warning',
+        },
+        {
+          label: 'Started',
+          value: m?.createdDate ? shortDate(m.createdDate) : '—',
+          hint: this.startedYear,
+        },
+      ];
+    }
+    get taskCount(): string {
+      return String(this.summary.total);
+    }
+    get linkRows() {
+      return this.linked.map((l) => ({ key: String(l.key), value: '' }));
     }
 
     <template>
-      <article class='checklist-isolated'>
-        <header class='header'>
-          <div class='header-top'>
-            {{#if this.hasPerson}}
-              <Avatar
-                @name={{this.personName}}
-                @src={{this.personPhoto}}
-                @hue={{AVATAR_HUE}}
-                @size={{52}}
+      <IsoPage>
+        <:head>
+          <IsoHead @title={{@model.title}} @meta={{this.subline}}>
+            <:mark><Avatar
+                @name='On'
+                @hue='var(--muted)'
+                @shape='rounded'
+                @size={{36}}
                 aria-hidden='true'
-              />
-            {{/if}}
-            <div class='header-text'>
-              <h1>{{this.personName}}</h1>
-              <StatePill
+              /></:mark>
+            <:aside><DotLabel
                 @label={{statusLabel @model.status}}
                 @hue={{hueOf ONBOARDING_CHECKLIST_STATUS_HUES @model.status}}
-                @dot={{true}}
-              />
-            </div>
-          </div>
-        </header>
-
-        <div class='body'>
-          {{#if @model.tasks.length}}
-            <ProgressBar
-              class='progress-section'
-              @value={{this.completedTaskCount}}
-              @max={{@model.tasks.length}}
-              @label='Progress'
-              @count={{this.progressCount}}
-              @hue='var(--success)'
-            />
-
-            <div class='tasks-section'>
-              <h2 class='section-title'>Tasks</h2>
-              <ul class='tasks-list'>
-                <@fields.tasks @format='embedded' />
-              </ul>
-            </div>
-          {{else}}
-            <EmptyState
-              @title='No tasks in this checklist'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
+              /></:aside>
+            <:stats><StatStrip @items={{this.strip}} /></:stats>
+          </IsoHead>
+        </:head>
+        <:main>
+          <Panel @title='Tasks' @meta={{this.taskCount}}>
+            {{#each @fields.tasks as |Task|}}
+              <SheetLine><span class='task'><Task
+                    @format='embedded'
+                  /></span></SheetLine>
+            {{else}}
+              <SheetEmpty @title='No tasks in this checklist' />
+            {{/each}}
+          </Panel>
+        </:main>
+        <:aside>
+          {{#if this.linked.length}}
+            <Panel @title='Linked'>
+              <Kv @items={{this.linkRows}}>
+                <:value as |item|>
+                  {{#if (eq item.key 'employee')}}
+                    <@fields.employee
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else if (eq item.key 'contractor')}}
+                    <@fields.contractor
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{else}}
+                    <@fields.template
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />
+                  {{/if}}
+                </:value>
+              </Kv>
+            </Panel>
           {{/if}}
-        </div>
-      </article>
+          <Panel @title='Details'><Kv @items={{kv this.details}} /></Panel>
+        </:aside>
+      </IsoPage>
       <style scoped>
-        .checklist-isolated {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          background: var(--background);
-          color: var(--foreground);
-        }
-        .header {
-          flex: none;
-          padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border);
-        }
-        .header-top {
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-sm);
-        }
-        .header-text {
+        .task {
           flex: 1;
           min-width: 0;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 0.5rem;
-        }
-        h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 750;
-          line-height: 1.2;
-          overflow-wrap: anywhere;
-        }
-        .body {
-          flex: 1;
-          padding: var(--boxel-sp-lg);
-          min-width: 0;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-lg);
-        }
-        .progress-section {
-          padding: var(--boxel-sp-sm);
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-        }
-        .tasks-section {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-sm);
-        }
-        .section-title {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground);
-        }
-        .tasks-list {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-sm);
         }
       </style>
     </template>
@@ -402,17 +460,6 @@ export class OnboardingChecklist extends CardDef {
       );
     }
 
-    get completionPercentage(): number {
-      let tasks = this.args.model?.tasks ?? [];
-      if (tasks.length === 0) return 0;
-      let completed = tasks.filter((t) => t && t.status === 'complete').length;
-      return Math.round((completed / tasks.length) * 100);
-    }
-
-    get hasPerson() {
-      return Boolean(this.args.model?.employee || this.args.model?.contractor);
-    }
-
     get personPhoto() {
       return (
         this.args.model?.employee?.photo?.resolvedUrl ??
@@ -420,71 +467,57 @@ export class OnboardingChecklist extends CardDef {
       );
     }
 
+    get summary() {
+      return summarize(this.args.model?.tasks);
+    }
+
+    get subline() {
+      return subline(
+        this.args.model?.template?.title,
+        this.args.model?.createdDate,
+      );
+    }
+
+    get facts(): DescriptionsItem[] {
+      let s = this.summary;
+      let m = this.args.model;
+      return [
+        { label: 'Progress', value: `${s.done} of ${s.total} tasks` },
+        { label: 'Next task', value: s.next?.title ?? undefined },
+        { label: 'Due', value: longDate(s.next?.dueDate) || undefined },
+        { label: 'Created', value: longDate(m?.createdDate) || undefined },
+        { label: 'Template', value: m?.template?.title ?? undefined },
+        { label: 'In progress', value: String(s.inProgress) },
+      ];
+    }
+
+    get rows() {
+      return [...kv(this.facts), { key: 'Employee', value: '' }];
+    }
     <template>
-      <div class='checklist-embedded'>
-        {{#if this.hasPerson}}
-          <Avatar
-            @name={{this.personName}}
-            @src={{this.personPhoto}}
-            @hue={{QUIET_AVATAR_HUE}}
-            @size={{32}}
+      <EmbCard @title={{@model.title}} @meta={{this.subline}}>
+        <:mark><Avatar
+            @name='On'
+            @hue='var(--muted)'
+            @shape='rounded'
+            @size={{24}}
             aria-hidden='true'
-          />
-        {{/if}}
-        <div class='content'>
-          <span class='person-name'>{{this.personName}}</span>
-          <div class='progress'>
-            <ProgressBar
-              class='progress-rail'
-              @value={{this.completionPercentage}}
-              @hue='var(--success)'
-              aria-label='Onboarding progress'
-            />
-            <span class='progress-text'>{{this.completionPercentage}}%</span>
-          </div>
-        </div>
-      </div>
-      <style scoped>
-        .checklist-embedded {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-sm);
-          padding: var(--boxel-sp-sm);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          background: var(--card);
-        }
-        .content {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-        .person-name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .progress {
-          display: flex;
-          align-items: center;
-          gap: 0.3rem;
-        }
-        .progress-rail {
-          flex: 1;
-          min-width: 0;
-        }
-        .progress-text {
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          color: var(--muted-foreground);
-          flex: none;
-          white-space: nowrap;
-        }
-      </style>
+          /></:mark>
+        <:aside><DotLabel
+            @label={{statusLabel @model.status}}
+            @hue={{hueOf ONBOARDING_CHECKLIST_STATUS_HUES @model.status}}
+          /></:aside>
+        <:default>
+          <Kv @items={{this.rows}}>
+            <:value as |row|>{{#if (eq row.key 'Employee')}}{{#if
+                  @model.employee
+                }}<@fields.employee
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}{{this.personName}}{{/if}}{{else}}{{row.value}}{{/if}}</:value>
+          </Kv>
+        </:default>
+      </EmbCard>
     </template>
   };
 
@@ -498,255 +531,144 @@ export class OnboardingChecklist extends CardDef {
       return this.args.model?.personName || 'Onboarding';
     }
 
-    // tasks is containsMany — its data lives on the instance itself, so it
-    // is safe to read in prerendered fitted (unlike linksTo/linksToMany).
-    get completedTaskCount(): number {
-      let tasks = this.args.model?.tasks ?? [];
-      return tasks.filter((t) => t && t.status === 'complete').length;
+    get summary() {
+      return summarize(this.args.model?.tasks);
     }
 
-    get completionPercentage(): number {
-      let tasks = this.args.model?.tasks ?? [];
-      if (tasks.length === 0) return 0;
-      return Math.round((this.completedTaskCount / tasks.length) * 100);
+    get subline() {
+      return subline(
+        this.args.model?.template?.title,
+        this.args.model?.createdDate,
+      );
     }
 
-    // First few task rows for tall cells — same containsMany-preview
-    // treatment onboarding-template's fitted uses.
-    get previewTasks() {
-      return (this.args.model?.tasks ?? []).slice(0, 4);
+    get startedLabel() {
+      let d = this.args.model?.createdDate;
+      return d ? shortDate(d) : '—';
     }
 
-    get moreCount(): number {
-      let n = this.args.model?.tasks?.length ?? 0;
-      return Math.max(0, n - 4);
+    get nextDueLabel() {
+      let d = this.summary.next?.dueDate;
+      return d ? shortDate(d) : '—';
     }
 
+    // Each key fact names the sizes that show it: `narrow` is the 250-wide
+    // large tile, `two` the 400 × 275 card's two columns; 445 tall shows all.
+    get keyFacts() {
+      let s = this.summary;
+      let m = this.args.model;
+      return [
+        {
+          key: 'Progress',
+          value: `${s.done} of ${s.total} tasks`,
+          narrow: true,
+          two: true,
+        },
+        { key: 'Next task', value: s.next?.title || '—', narrow: true },
+        { key: 'Due', value: longDate(s.next?.dueDate) || '—', two: true },
+        { key: 'Created', value: longDate(m?.createdDate) || '—', two: true },
+        { key: 'Template', value: m?.template?.title || '—' },
+        { key: 'In progress', value: String(s.inProgress), two: true },
+        { key: 'Pending', value: String(s.pending), two: true },
+        {
+          key: 'Completed',
+          value: longDate(m?.completedDate) || '—',
+          two: true,
+        },
+      ];
+    }
+
+    // the head rows already say progress and the next task
+    get moreFacts() {
+      return this.keyFacts.slice(2);
+    }
+    get strip(): StripItem[] {
+      return [
+        { label: 'Progress', value: this.summary.progress },
+        { label: 'Next due', value: this.nextDueLabel },
+        { label: 'Started', value: this.startedLabel },
+      ];
+    }
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{this.personName}}</h3>
-          </div>
-          <span class='fit-pct'>{{this.completionPercentage}}%</span>
-          {{#if @model.status}}
-            <StatePill
-              class='fit-pill'
-              @label={{statusLabel @model.status}}
-              @hue={{hueOf ONBOARDING_CHECKLIST_STATUS_HUES @model.status}}
-              @dot={{true}}
-            />
-          {{/if}}
-        </div>
-
-        <div class='fit-mid'>
-          <span class='fit-sub'>{{this.completedTaskCount}}
-            of
-            {{@model.tasks.length}}
-            tasks complete</span>
-        </div>
-
-        {{#if this.previewTasks.length}}
-          <ul class='fit-tasks'>
-            {{#each this.previewTasks as |task|}}
-              <li
-                class='fit-task {{if (eq task.status "complete") "done"}}'
-              ><span class='fit-tick'>{{if
-                    (eq task.status 'complete')
-                    '✓'
-                    '○'
-                  }}</span>{{task.title}}</li>
-            {{/each}}
-            {{#if this.moreCount}}
-              <li class='fit-task fit-more'>+{{this.moreCount}} more</li>
-            {{/if}}
-          </ul>
-        {{/if}}
-
-        <div class='fit-add'>
-          <ProgressBar
-            @value={{this.completionPercentage}}
-            @hue='var(--success)'
-            aria-label='Onboarding progress'
-          />
-        </div>
-      </article>
+      <FitCard @title={{this.personName}}>
+        <:mark><Avatar
+            @name='On'
+            @hue='var(--muted)'
+            @shape='rounded'
+            @size={{20}}
+            aria-hidden='true'
+          /></:mark>
+        <:status><DotLabel
+            @label={{statusLabel @model.status}}
+            @hue={{hueOf ONBOARDING_CHECKLIST_STATUS_HUES @model.status}}
+          /></:status>
+        <:default>
+          <FitRow @left={{true}}><span
+              class='meta'
+            >{{this.subline}}</span></FitRow>
+          <FitRow @label='Progress'>{{this.summary.progress}} done</FitRow>
+          <FitRow @label='Next'>{{if
+              this.summary.next
+              this.summary.next.title
+              '—'
+            }}</FitRow>
+          <StatStrip @compact={{true}} @items={{this.strip}} />
+          {{#each this.moreFacts as |f|}}
+            <FitRow @label={{f.key}}>{{f.value}}</FitRow>
+          {{/each}}
+        </:default>
+      </FitCard>
       <style scoped>
-        /* Four tiers, each ADDING content. 11px floor. Percent never hidden. */
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background: var(--card);
-          color: var(--card-foreground);
-          font-family: var(--font-sans);
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.4rem;
-          flex-wrap: wrap;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-pct {
-          flex: none;
-          font-size: var(--fit-name);
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-          color: var(--card-foreground);
-        }
-        .fit-pill {
-          flex: none;
-          align-self: flex-start;
-          display: none;
-        }
-        .fit-mid {
-          flex: none;
-          display: none;
-          flex-direction: column;
-          gap: 1px;
-        }
-        .fit-sub {
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
+        .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-        .fit-tasks {
-          display: none;
-          list-style: none;
-          margin: 0;
-          padding: 0.3rem 0 0;
-          border-top: 1px dashed var(--border);
-        }
-        .fit-task {
-          font-size: var(--fit-small);
-          font-weight: 600;
-          line-height: 1.5;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .fit-tick {
-          margin-right: 0.35em;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
-        }
-        .fit-task.done .fit-tick {
-          color: var(--card-foreground);
-        }
-        .fit-more {
-          font-weight: 400;
-          color: var(--muted-foreground);
-        }
-        .fit-add {
-          display: none;
-          margin-top: auto;
-          padding-top: 0.3rem;
-        }
-        /* Same bar style the embedded format uses. */
-
-        /* TIER 2 — status pill joins above the 50px strip. */
-        @container fitted-card (height > 50px) {
-          .fit-pill {
-            display: inline-flex;
-          }
-        }
-        /* TIER 3 — task tally line. */
-        @container fitted-card (height > 80px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        @container fitted-card (width > 240px) and (height > 50px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        /* TIER 4 — progress bar pinned to the bottom edge. */
-        @container fitted-card (height > 130px) and (width >= 170px) {
-          .fit-add {
-            display: block;
-          }
-        }
-        /* TIER 5 — first task rows on tall cells (Full Card, Expanded). */
-        @container fitted-card (height >= 170px) and (width >= 170px) {
-          .fit-tasks {
-            display: block;
-          }
-        }
-        /* Short strip: horizontal, single-line name. */
-        @container fitted-card (height <= 90px) {
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
-          }
-          .fit-pill {
-            align-self: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
         }
       </style>
     </template>
   };
 
   static atom: BaseDefComponent = class Atom extends Component<typeof this> {
-    get personName() {
-      return (
-        this.args.model?.employee?.name ||
-        this.args.model?.contractor?.name ||
-        'Unknown'
-      );
+    get summary() {
+      return summarize(this.args.model?.tasks);
     }
 
     <template>
       <span class='checklist-atom'>
-        <span class='atom-name'>{{this.personName}}</span>
-        <StatePill
-          @label={{statusLabel @model.status}}
-          @hue={{hueOf ONBOARDING_CHECKLIST_STATUS_HUES @model.status}}
-        />
+        <ChecklistIcon class='atom-icon' aria-hidden='true' />
+        <span class='atom-name'>{{@model.title}}</span>
+        {{#if this.summary.total}}
+          <DotLabel
+            @label={{this.summary.progress}}
+            @hue={{hueOf ONBOARDING_CHECKLIST_STATUS_HUES @model.status}}
+          />
+        {{/if}}
       </span>
       <style scoped>
-        .checklist-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .atom-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        @layer PretComponent {
+          .checklist-atom {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            max-width: 100%;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
+            color: var(--foreground);
+            white-space: nowrap;
+          }
+          .atom-icon {
+            flex: none;
+            width: var(--boxel-icon-xs);
+            height: var(--boxel-icon-xs);
+            color: var(--muted-foreground);
+          }
+          .atom-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
       </style>
     </template>

@@ -66,6 +66,11 @@
         "links": {
           "self": "../Warehouse/wh-east"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

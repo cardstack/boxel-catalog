@@ -9,18 +9,31 @@ import {
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import enumField from '@cardstack/base/enum';
+import { dotEnumField } from './dot-enum-field';
 import ShieldIcon from '@cardstack/boxel-icons/shield';
 
-import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
-import { Project } from '@cardstack/catalog/cards/projects/project';
-import { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
+import { PersonBase } from '../people/person-base';
+import { Project } from '../projects/project';
+import { RecordAtom, Vendor, mediumDate } from '../procurement/vendor';
 import { Avatar } from '@cardstack/pretui/components/avatar';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { eq } from '@cardstack/boxel-ui/helpers';
 
-import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
-import { FactList, QUIET_AVATAR_HUE, hueOf, stateColorsOf } from './hr-ui';
+import { type Hue } from '@cardstack/catalog/components/state-pill';
+import { stateColorsOf } from './hr-ui';
 import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import { daysUntil } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import {
+  EmbCard,
+  FitCard,
+  FitRow,
+  IsoHead,
+  IsoPage,
+  Kv,
+  Panel,
+  StatStrip,
+  type StripItem,
+} from './compact-sheet';
 
 // Inside this window the contract window turns amber; past zero it turns red.
 const EXPIRY_WARNING_DAYS = 30;
@@ -59,14 +72,98 @@ export const CONTRACTOR_STATUS_HUES: Record<string, Hue> = {
 
 export const CONTRACTOR_STATUS_COLORS = stateColorsOf(CONTRACTOR_STATUS_HUES);
 
+const CONTRACTOR_STATUS_TONES: Record<string, PretuiToneArg> = {
+  active: 'success',
+  inactive: 'warning',
+  terminated: 'danger',
+};
+
+const EXPIRY_TONES: Record<string, PretuiToneArg> = {
+  warning: 'warning',
+  expired: 'danger',
+};
+
+export function statusTone(status?: string | null): PretuiToneArg {
+  return CONTRACTOR_STATUS_TONES[status ?? ''] ?? 'neutral';
+}
+
+export function statusLabel(status?: string | null): string {
+  return capitalize(status) ?? '—';
+}
+
+function capitalize(value?: string | null): string | undefined {
+  return value ? value[0].toUpperCase() + value.slice(1) : undefined;
+}
+
+// Every format reads the same labels, so a tile and the isolated view can
+// never word the same contract differently.
+function contractorView(m?: Partial<Contractor>) {
+  let rate = m?.billableRate;
+  let days = m?.daysRemaining ?? undefined;
+  let start = mediumDate(m?.contractStartDate);
+  let end = mediumDate(m?.contractEndDate);
+  let tone = expiryTone(days);
+  let months: number | undefined;
+  let elapsed: number | undefined;
+  if (m?.contractStartDate && m?.contractEndDate) {
+    let from = new Date(m.contractStartDate).getTime();
+    let to = new Date(m.contractEndDate).getTime();
+    months = Math.max(1, Math.round((to - from) / (30.44 * 86400000)));
+    elapsed =
+      to > from
+        ? Math.min(100, Math.max(0, ((Date.now() - from) / (to - from)) * 100))
+        : undefined;
+  }
+  let daysText =
+    days == null
+      ? undefined
+      : days < 0
+        ? 'expired'
+        : days === 0
+          ? 'ends today'
+          : `${days} days`;
+  return {
+    rateShort: rate == null ? undefined : `$${rate}/h`,
+    rateLong: rate == null ? undefined : `$${rate} / hour`,
+    invoicing: capitalize(m?.invoiceFrequency),
+    invoicingLower: m?.invoiceFrequency || undefined,
+    start,
+    end,
+    range: start && end ? `${start} – ${end}` : (start ?? end),
+    daysText,
+    daysChip:
+      days == null
+        ? undefined
+        : days < 0 || days === 0
+          ? daysText
+          : `${days} days left`,
+    daysTone: tone ? EXPIRY_TONES[tone] : ('neutral' as PretuiToneArg),
+    months: months == null ? undefined : `${months} months`,
+    elapsed: elapsed == null ? undefined : Math.round(elapsed),
+    statusLabel: capitalize(m?.status),
+    subtitle:
+      [m?.vendorName, rate == null ? undefined : `$${rate}/h`]
+        .filter(Boolean)
+        .join(' · ') || undefined,
+    statusTone: CONTRACTOR_STATUS_TONES[m?.status ?? ''] ?? 'neutral',
+  };
+}
+
+function orDash(value?: string) {
+  return value || '—';
+}
+
 export const ContractorStatusField = markDefinition(
-  enumField(StringField, {
-    options: CONTRACTOR_STATUSES.map((status) => ({
-      value: status,
-      label: status,
-    })),
-    displayName: 'Contract Status',
-  }),
+  dotEnumField(
+    {
+      options: CONTRACTOR_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Contract Status',
+    },
+    CONTRACTOR_STATUS_HUES,
+  ),
 );
 
 export const InvoiceFrequencyOptions = ['monthly', 'quarterly', 'annually'];
@@ -159,545 +256,287 @@ export class Contractor extends PersonBase {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get rateLabel(): string | undefined {
-      let rate = this.args.model?.billableRate;
-      if (rate == null) {
-        return undefined;
-      }
-      return `$${rate}/hr`;
+    get v() {
+      return contractorView(this.args.model);
     }
 
-    get expiryToneKey(): string | undefined {
-      return expiryTone(this.args.model?.daysRemaining ?? undefined);
-    }
-
-    get daysRemainingLabel(): string | undefined {
-      let days = this.args.model?.daysRemaining;
-      if (days == null) {
-        return undefined;
-      }
-      if (days < 0) {
-        return `expired ${Math.abs(days)}d ago`;
-      }
-      if (days === 0) {
-        return 'ends today';
-      }
-      return `${days} days remaining`;
-    }
-
-    get contactFacts() {
-      let m = this.args.model;
+    get contractItems() {
+      let v = this.v;
       return [
-        { key: 'Email', value: m?.email || '—' },
-        { key: 'Phone', value: m?.phone || '—' },
+        { key: 'Start', value: orDash(v.start) },
+        { key: 'End', value: v.end ?? '— open-ended' },
+        { key: 'Invoice frequency', value: orDash(v.invoicing) },
+        { key: 'VAT ID', value: orDash(this.args.model?.vatId) },
       ];
     }
 
-    get termsFacts() {
+    get contactItems() {
+      let m = this.args.model;
       return [
-        { key: 'Billable rate', value: this.rateLabel ?? '—' },
+        { key: 'Email', value: orDash(m?.email) },
+        { key: 'Phone', value: orDash(m?.phone) },
+      ];
+    }
+
+    get linkedItems() {
+      return [
+        { key: 'Vendor', value: '— direct' },
+        { key: 'Project', value: '— unassigned' },
+      ];
+    }
+
+    get detailItems() {
+      let v = this.v;
+      let m = this.args.model;
+      return [
+        { key: 'Rate', value: orDash(v.rateLong) },
+        { key: 'Contract', value: orDash(v.range) },
+        { key: 'Ends in', value: orDash(v.daysText) },
+        { key: 'Invoicing', value: orDash(v.invoicing) },
+        { key: 'VAT ID', value: orDash(m?.vatId) },
+        { key: 'Email', value: orDash(m?.email) },
+        { key: 'Phone', value: orDash(m?.phone) },
+        { key: 'Status', value: orDash(v.statusLabel) },
+      ];
+    }
+
+    get strip(): StripItem[] {
+      let v = this.v;
+      return [
         {
-          key: 'Invoice frequency',
-          value: this.args.model?.invoiceFrequency || '—',
+          label: 'Billable rate',
+          value: v.rateShort,
+          hint: v.invoicingLower ? `${v.invoicingLower} invoices` : undefined,
+          tone: 'success',
+        },
+        { label: 'Ends in', value: v.daysText, hint: v.end, tone: 'warning' },
+        {
+          label: 'Contract length',
+          value: v.months,
+          hint: v.start ? `from ${v.start}` : undefined,
+          tone: 'neutral',
         },
       ];
     }
 
-    get contractFacts() {
-      return [
-        { key: 'Status', value: this.args.model?.status || '—' },
-        { key: 'Starts', value: '' },
-        { key: 'Ends', value: '' },
-        { key: 'Remaining', value: '' },
-        { key: 'Vendor', value: '' },
-        { key: 'Project', value: '' },
-        { key: 'VAT ID', value: this.args.model?.vatId || '—' },
-      ];
-    }
-
     <template>
-      <article class='contractor-isolated'>
-        <header class='hero'>
-          <Avatar
-            @name={{if @model.name @model.name '?'}}
-            @src={{@model.photo.resolvedUrl}}
-            @hue={{AVATAR_HUE}}
-            @size={{52}}
-            aria-hidden='true'
-          />
-          <div class='hero-text'>
-            <h1>{{@model.title}}</h1>
-            <p class='byline'>Contractor</p>
-            <div class='pill-row'>
-              {{#if @model.status}}
-                <StatePill
-                  @label={{@model.status}}
-                  @hue={{hueOf CONTRACTOR_STATUS_HUES @model.status}}
-                  @dot={{true}}
-                />
-              {{/if}}
-              {{#if this.rateLabel}}
-                <StatePill @label={{this.rateLabel}} />
-              {{/if}}
-            </div>
-          </div>
-        </header>
-
-        <div class='body'>
-          <div class='main'>
-            <h2 class='panel-title'>Contact</h2>
-            <FactList @items={{this.contactFacts}} />
-
-            <h2 class='panel-title spaced'>Rate & Terms</h2>
-            <FactList @items={{this.termsFacts}} />
-          </div>
-
-          <aside class='side'>
-            <h2 class='panel-title'>Contract</h2>
-            <FactList @items={{this.contractFacts}}>
+      <IsoPage>
+        <:head>
+          <IsoHead @title={{@model.title}} @meta={{this.v.subtitle}}>
+            <:mark><Avatar
+                @name={{if @model.name @model.name '?'}}
+                @src={{@model.photo.resolvedUrl}}
+                @hue={{AVATAR_HUE}}
+                @size={{36}}
+                aria-hidden='true'
+              /></:mark>
+            <:aside>{{#if @model.status}}<@fields.status
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{/if}}</:aside>
+            <:stats><StatStrip @items={{this.strip}} /></:stats>
+          </IsoHead>
+        </:head>
+        <:main>
+          <Panel @title='Contract'><Kv @items={{this.contractItems}} /></Panel>
+          <Panel @title='Contact'><Kv @items={{this.contactItems}} /></Panel>
+        </:main>
+        <:aside>
+          <Panel @title='Linked'>
+            <Kv @items={{this.linkedItems}}>
               <:value as |row|>
-                {{#if (eq row.key 'Starts')}}
-                  {{#if @model.contractStartDate}}<@fields.contractStartDate
-                    />{{else}}&mdash;{{/if}}
-                {{else if (eq row.key 'Ends')}}
-                  {{#if @model.contractEndDate}}<@fields.contractEndDate
-                    />{{else}}&mdash; open-ended{{/if}}
-                {{else if (eq row.key 'Remaining')}}
-                  {{#if this.daysRemainingLabel}}
-                    <StatePill
-                      @label={{this.daysRemainingLabel}}
-                      @hue={{hueOf EXPIRY_TONE_HUES this.expiryToneKey}}
-                    />
-                  {{else}}&mdash;{{/if}}
-                {{else if (eq row.key 'Vendor')}}
+                {{#if (eq row.key 'Vendor')}}
                   {{#if @model.vendor}}<@fields.vendor
                       @format='atom'
                       @displayContainer={{false}}
-                    />{{else}}&mdash; direct{{/if}}
-                {{else if (eq row.key 'Project')}}
+                    />{{else}}{{row.value}}{{/if}}
+                {{else}}
                   {{#if @model.project}}<@fields.project
                       @format='atom'
                       @displayContainer={{false}}
-                    />{{else}}&mdash; unassigned{{/if}}
-                {{else}}
-                  {{row.value}}
+                    />{{else}}{{row.value}}{{/if}}
                 {{/if}}
               </:value>
-            </FactList>
-          </aside>
-        </div>
-      </article>
-      <style scoped>
-        .contractor-isolated {
-          container-type: inline-size;
-          container-name: iso;
-          height: 100%;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          background: var(--background);
-          color: var(--foreground);
-          font-family: var(--font-sans);
-        }
-        .hero {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp);
-          padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border);
-        }
-        .hero-text {
-          flex: 1;
-          min-width: 0;
-        }
-        h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 750;
-          letter-spacing: -0.02em;
-          line-height: 1.2;
-          overflow-wrap: anywhere;
-        }
-        .byline {
-          margin: var(--boxel-sp-5xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .pill-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-5xs);
-          margin-top: var(--boxel-sp-xs);
-        }
-        .body {
-          display: grid;
-          grid-template-columns: 1fr 17rem;
-          flex: 1;
-          min-height: 0;
-          align-content: start;
-        }
-        .main {
-          padding: var(--boxel-sp-lg);
-          min-width: 0;
-        }
-        .side {
-          padding: var(--boxel-sp-lg);
-          border-left: 1px solid var(--border);
-          background: var(--muted);
-        }
-        .panel-title {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-        }
-        .panel-title.spaced {
-          margin-top: var(--boxel-sp-lg);
-        }
-        @container iso (max-width: 40rem) {
-          .body {
-            grid-template-columns: 1fr;
-          }
-          .side {
-            border-left: 0;
-            border-top: 1px solid var(--border);
-          }
-          .hero {
-            flex-wrap: wrap;
-          }
-        }
-      </style>
+            </Kv>
+          </Panel>
+          <Panel @title='Details'>
+            <Kv @items={{this.detailItems}}>
+              <:value as |row|>{{#if (eq row.key 'Status')}}{{#if
+                    @model.status
+                  }}<@fields.status
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}{{else}}{{row.value}}{{/if}}</:value>
+            </Kv>
+          </Panel>
+        </:aside>
+      </IsoPage>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    // The expiry chip only appears when the window is closing (or closed);
-    // an expiry that needs no action is noise in a one-line row.
-    get expiryTone() {
-      return expiryTone(this.args.model?.daysRemaining ?? undefined);
+    get v() {
+      return contractorView(this.args.model);
+    }
+
+    get kvItems() {
+      let v = this.v;
+      return [
+        { label: 'Rate', value: v.rateLong },
+        { label: 'Contract', value: v.range },
+        { label: 'Ends in', value: v.daysText },
+        { label: 'Invoicing', value: v.invoicing },
+        { label: 'VAT ID', value: this.args.model?.vatId ?? undefined },
+        { label: 'Email', value: this.args.model?.email ?? undefined },
+      ];
+    }
+
+    get rows() {
+      return [
+        ...this.kvItems.map((i) => ({ key: i.label, value: i.value ?? '—' })),
+        { key: 'Vendor', value: '— direct' },
+        { key: 'Project', value: '— unassigned' },
+      ];
     }
 
     <template>
-      <div class='contractor-embedded'>
-        <Avatar
-          @name={{if @model.name @model.name '?'}}
-          @src={{@model.photo.resolvedUrl}}
-          @hue={{QUIET_AVATAR_HUE}}
-          @size={{28}}
-          aria-hidden='true'
-        />
-        <div class='ce-main'>
-          <span class='ce-name'>{{if @model.name @model.name 'Unnamed'}}</span>
-        </div>
-        <div class='ce-side'>
-          {{#if @model.status}}
-            <StatePill
-              @label={{@model.status}}
-              @hue={{hueOf CONTRACTOR_STATUS_HUES @model.status}}
-            />
+      <EmbCard @title={{@model.title}} @meta={{this.v.subtitle}}>
+        <:mark><Avatar
+            @name={{if @model.name @model.name '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{24}}
+            aria-hidden='true'
+          /></:mark>
+        <:aside>{{#if @model.status}}<@fields.status
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:aside>
+        <:default>
+          {{#if this.v.end}}
+            <p class='emb-fact'>Contract ends
+              <strong>{{this.v.end}}</strong>{{#if this.v.invoicingLower}}
+                · invoices
+                {{this.v.invoicingLower}}{{/if}}</p>
           {{/if}}
-          {{#if this.expiryTone}}
-            <StatePill
-              @label={{@model.expiryLabel}}
-              @hue={{hueOf EXPIRY_TONE_HUES this.expiryTone}}
-            />
-          {{/if}}
-        </div>
-      </div>
+          <Kv @items={{this.rows}}>
+            <:value as |row|>
+              {{#if (eq row.key 'Vendor')}}
+                {{#if @model.vendor}}<@fields.vendor
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}{{row.value}}{{/if}}
+              {{else if (eq row.key 'Project')}}
+                {{#if @model.project}}<@fields.project
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}{{row.value}}{{/if}}
+              {{else}}{{row.value}}{{/if}}
+            </:value>
+          </Kv>
+        </:default>
+      </EmbCard>
       <style scoped>
-        .contractor-embedded {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.75rem;
-          font-size: 0.8125rem;
-        }
-        .ce-main {
-          display: flex;
-          flex-direction: column;
-          gap: 0.0625rem;
-          min-width: 0;
-          flex: 1;
-        }
-        .ce-name {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .ce-side {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 0.1875rem;
-          flex-shrink: 0;
+        .emb-fact {
+          margin: 0;
+          padding: 0.4375rem 0.625rem;
+          border-top: 1px solid var(--border);
+          font-size: 0.75rem;
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
-    get expiryTone() {
-      return expiryTone(this.args.model?.daysRemaining ?? undefined);
-    }
-
     <template>
-      <span class='contractor-atom'>
-        <span class='contractor-atom-name'>{{@model.title}}</span>
-        {{#if this.expiryTone}}
-          <StatePill
-            class='contractor-atom-chip'
-            @label={{@model.expiryLabel}}
-            @hue={{hueOf EXPIRY_TONE_HUES this.expiryTone}}
-          />
-        {{/if}}
-      </span>
-      <style scoped>
-        .contractor-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .contractor-atom-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .contractor-atom-chip {
-          flex: none;
-        }
-      </style>
+      <RecordAtom @name={{@model.title}} @src={{@model.photo.resolvedUrl}} />
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get rateLabel(): string | undefined {
-      let rate = this.args.model?.billableRate;
-      if (rate == null) {
-        return undefined;
-      }
-      return `$${rate}/hr`;
+    // Attribute-only: every label comes from the contractor's own
+    // (denormalized/computed-scalar) attributes; only the relations render
+    // linked cards, as their own atoms.
+    get v() {
+      return contractorView(this.args.model);
     }
 
-    // Attribute-only: expiryLabel and daysRemaining are the contractor's OWN
-    // (denormalized/computed-scalar) attributes — no linksTo read happens in
-    // this prerendered format.
-    get expiryTone() {
-      return expiryTone(this.args.model?.daysRemaining ?? undefined);
+    get strip(): StripItem[] {
+      let v = this.v;
+      let d = this.args.model?.daysRemaining;
+      return [
+        { label: 'Rate', value: v.rateShort },
+        { label: 'Ends in', value: d == null ? '—' : `${d} d` },
+        {
+          label: 'Length',
+          value: v.months ? v.months.replace(' months', ' mo') : '—',
+        },
+      ];
     }
 
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <Avatar
-            class='avatar'
+      <FitCard @title={{@model.title}}>
+        <:mark><Avatar
             @name={{if @model.name @model.name '?'}}
             @src={{@model.photo.resolvedUrl}}
             @hue={{AVATAR_HUE}}
-            @size={{28}}
+            @size={{20}}
             aria-hidden='true'
-          />
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
-          </div>
-          {{#if @model.status}}
-            <StatePill
-              class='fit-pill'
-              @label={{@model.status}}
-              @hue={{hueOf CONTRACTOR_STATUS_HUES @model.status}}
-              @dot={{true}}
-            />
+          /></:mark>
+        <:status>{{#if @model.status}}<@fields.status
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:status>
+        <:default>
+          <FitRow @left={{true}}><span
+              class='meta'
+            >{{this.v.subtitle}}</span></FitRow>
+          <FitRow @label='Rate'><span class='mono'>{{orDash
+                this.v.rateLong
+              }}</span></FitRow>
+          <FitRow @label='Ends in'><span class='mono'>{{orDash
+                this.v.daysText
+              }}</span></FitRow>
+          {{#if @model.vendor}}
+            <FitRow @label='Vendor' @left={{true}}><@fields.vendor
+                @format='atom'
+                @displayContainer={{false}}
+              /></FitRow>
           {{/if}}
-        </div>
-
-        <div class='fit-mid'>
-          {{#if this.rateLabel}}
-            <span class='money'>{{this.rateLabel}}</span>
+          <StatStrip @compact={{true}} @items={{this.strip}} />
+          {{#if @model.project}}
+            <FitRow @label='Project' @left={{true}}><@fields.project
+                @format='atom'
+                @displayContainer={{false}}
+              /></FitRow>
           {{/if}}
-          {{#if @model.expiryLabel}}
-            {{#if this.expiryTone}}
-              <StatePill
-                class='fit-expiry'
-                @label={{@model.expiryLabel}}
-                @hue={{hueOf EXPIRY_TONE_HUES this.expiryTone}}
-              />
-            {{else}}
-              <span class='fit-sub'>{{@model.expiryLabel}}</span>
-            {{/if}}
-          {{/if}}
-        </div>
-
-        <dl class='fit-add'>
-          {{#if @model.contractEndDate}}
-            <div><dt>Ends</dt><dd><@fields.contractEndDate /></dd></div>
-          {{/if}}
-          {{#if @model.invoiceFrequency}}
-            <div><dt>Invoice</dt><dd>{{@model.invoiceFrequency}}</dd></div>
-          {{/if}}
-          {{#if @model.vatId}}
-            <div><dt>VAT</dt><dd>{{@model.vatId}}</dd></div>
-          {{/if}}
-          {{! Denormalized own attributes — safe in prerendered fitted. }}
-          {{#if @model.vendorName}}
-            <div class='deep'><dt>Vendor</dt><dd
-              >{{@model.vendorName}}</dd></div>
-          {{/if}}
-          {{#if @model.projectName}}
-            <div class='deep'><dt>Project</dt><dd
-              >{{@model.projectName}}</dd></div>
-          {{/if}}
-        </dl>
-      </article>
+          <FitRow @label='Contract'><span class='mono'>{{orDash
+                this.v.range
+              }}</span></FitRow>
+          <FitRow @label='Invoicing'>{{orDash this.v.invoicing}}</FitRow>
+          <FitRow @label='VAT ID'><span class='mono'>{{orDash
+                @model.vatId
+              }}</span></FitRow>
+          <FitRow @label='Email'><span class='mono'>{{orDash
+                @model.email
+              }}</span></FitRow>
+          <FitRow @label='Phone'><span class='mono'>{{orDash
+                @model.phone
+              }}</span></FitRow>
+        </:default>
+      </FitCard>
       <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background: var(--card);
-          color: var(--card-foreground);
-          font-family: var(--font-sans);
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.4rem;
-          flex-wrap: wrap;
-          overflow: visible;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-pill {
-          flex: none;
-          align-self: flex-start;
-        }
-        .fit-mid {
-          flex: none;
-          display: none;
-          flex-direction: column;
-          gap: 1px;
-        }
-        .money {
-          font-size: calc(var(--fit-name) * 1.15);
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-sub {
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
+        .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-        .fit-expiry {
-          align-self: flex-start;
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          margin-top: auto;
-          padding-top: 0.3rem;
-          border-top: 1px dashed var(--border);
-          grid-template-columns: 1fr 1fr;
-          gap: 0.05rem 0.5rem;
-        }
-        .fit-add > div {
-          display: flex;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .fit-add dt {
-          flex: none;
-          font-size: var(--fit-small);
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
-        .fit-add dd {
-          margin: 0;
-          font-size: var(--fit-small);
-          font-weight: 600;
-          white-space: nowrap;
+        .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-
-        /* Vendor/project rows only join on the tall cells. */
-        .fit-add > .deep {
-          display: none;
-        }
-
-        @container fitted-card (height > 80px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        @container fitted-card (width > 240px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        /* Double Strip (250×65): the expiry chip row half-clips — the rate
-           figure alone fits, so the chip yields below 105px. */
-        @container fitted-card (height < 105px) {
-          .fit-expiry,
-          .fit-mid .fit-sub {
-            display: none;
-          }
-        }
-        @container fitted-card (height > 130px) and (width >= 170px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-        }
-        @container fitted-card (width > 340px) and (height > 130px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        /* TIER 5 — vendor + project names on tall cells. */
-        @container fitted-card (height >= 170px) and (width >= 170px) {
-          .fit-add > .deep {
-            display: flex;
-          }
-        }
-        @container fitted-card (height <= 90px) {
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
-          }
-          .fit-pill {
-            align-self: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
+          font: 500 0.6875rem var(--font-mono);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

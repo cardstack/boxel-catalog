@@ -17,6 +17,13 @@
         "module": "../asset-category",
         "name": "AssetCategory"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

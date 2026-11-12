@@ -1,5 +1,5 @@
 import GlimmerComponent from '@glimmer/component';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Fieldset } from '@cardstack/pretui/components/fieldset';
 
 // Payment Terms Editor — the form for one PaymentTermsField, laid out the
 // way the terms are spoken: the net period first, the early-pay discount as
@@ -23,27 +23,27 @@ export class PaymentTermsEditor extends GlimmerComponent<Signature> {
           {{@shorthand}}</p>
       {{/if}}
       <div class='row'>
-        <FieldContainer @label='Net days' @vertical={{true}}>
+        <Fieldset @legend='Net days'>
           <@fields.netDays />
-        </FieldContainer>
-        <FieldContainer @label='Preferred method' @vertical={{true}}>
+        </Fieldset>
+        <Fieldset @legend='Preferred method'>
           <@fields.method />
-        </FieldContainer>
+        </Fieldset>
       </div>
       <div class='discount'>
         <span class='discount-label'>Early-payment discount</span>
         <div class='row'>
-          <FieldContainer @label='Discount %' @vertical={{true}}>
+          <Fieldset @legend='Discount %'>
             <@fields.discountPct />
-          </FieldContainer>
-          <FieldContainer @label='…if paid within (days)' @vertical={{true}}>
+          </Fieldset>
+          <Fieldset @legend='…if paid within (days)'>
             <@fields.discountDays />
-          </FieldContainer>
+          </Fieldset>
         </div>
       </div>
-      <FieldContainer @label='Notes' @vertical={{true}}>
+      <Fieldset @legend='Notes'>
         <@fields.notes />
-      </FieldContainer>
+      </Fieldset>
     </div>
     <style scoped>
       .terms-editor {
@@ -51,10 +51,9 @@ export class PaymentTermsEditor extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-sm);
       }
       .preview {
-        margin: 0;
         font-variant-numeric: tabular-nums;
         font-weight: 700;
-        font-size: 1.0625rem;
+        font-size: var(--boxel-font-size);
       }
       .preview-label {
         font-family: var(--boxel-eyebrow-font-family);
@@ -64,7 +63,7 @@ export class PaymentTermsEditor extends GlimmerComponent<Signature> {
         letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
-        margin-right: var(--boxel-sp-xs);
+        margin-inline-end: var(--boxel-sp-xs);
       }
       .row {
         display: grid;

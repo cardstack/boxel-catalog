@@ -56,7 +56,7 @@ export class EducationEntryField extends FieldDef {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 0.3rem;
+          gap: var(--boxel-sp-3xs);
         }
         .ed-school {
           font-size: var(--boxel-font-size-sm);

@@ -10,16 +10,13 @@ import {
 import DateField from '@cardstack/base/date';
 import TextAreaField from '@cardstack/base/text-area';
 import enumField from '@cardstack/base/enum';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from './employee';
 import {
   CompensationBreakdown,
   type CompComponent,
 } from './components/compensation-breakdown';
 import { CompensationField } from './compensation-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 export const COMP_CHANGE_REASONS = [
@@ -62,7 +59,6 @@ const PAY_PERIODS_PER_YEAR: Record<string, number> = {
 
 export class Compensation extends CardDef {
   static displayName = 'Compensation';
-  static headerColor = '#2f4f4f';
 
   @field employee = linksTo(() => Employee);
   @field effectiveDate = contains(DateField);
@@ -164,9 +160,8 @@ export class Compensation extends CardDef {
         .comp-rec {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background);
-          color: var(--foreground);
-          font-family: var(--font-sans);
+          background: var(--card);
+          color: var(--card-foreground);
           display: grid;
           gap: var(--boxel-sp);
         }
@@ -180,14 +175,14 @@ export class Compensation extends CardDef {
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
         }
         .sub {
           margin: 0;
@@ -206,7 +201,7 @@ export class Compensation extends CardDef {
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.08em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -215,12 +210,12 @@ export class Compensation extends CardDef {
           margin: 0;
           color: var(--muted-foreground);
           font-style: italic;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .notes {
           margin: 0;
           white-space: pre-wrap;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         @container (max-width: 480px) {
           .grid {
@@ -251,10 +246,10 @@ export class Compensation extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .pkg {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
           color: var(--muted-foreground);
         }
@@ -269,7 +264,7 @@ export class Compensation extends CardDef {
         {{@model.package.summary}}</span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -293,13 +288,13 @@ export class Compensation extends CardDef {
         }
         .fit-name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .fit-pkg {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           overflow: hidden;
@@ -321,64 +316,4 @@ export class Compensation extends CardDef {
   // made: who/when/why first (the audit facts), then the package itself and
   // its sign-off. cardTitle is computed and never appears here. Two
   // sections tracked by a left anchor rail (EditSectionNav).
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'decision', label: 'Decision' },
-      { id: 'package-approval', label: 'Package & Approval' },
-    ];
-
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Compensation sections'
-        as |e|
-      >
-        <e.Section
-          @id='decision'
-          @title='Decision'
-          @hint='a correction is a new record — history never rewrites itself'
-        >
-          <div class='row'>
-            <FieldContainer @label='Employee' @vertical={{true}}>
-              <@fields.employee />
-            </FieldContainer>
-            <FieldContainer @label='Effective date' @vertical={{true}}>
-              <@fields.effectiveDate />
-            </FieldContainer>
-            <FieldContainer @label='Reason' @vertical={{true}}>
-              <@fields.reason />
-            </FieldContainer>
-          </div>
-        </e.Section>
-        <e.Section @id='package-approval' @title='Package & Approval'>
-          <FieldContainer
-            @label='Package (salary, bonus, equity)'
-            @vertical={{true}}
-          >
-            <@fields.package />
-          </FieldContainer>
-          <FieldContainer @label='Approved by' @vertical={{true}}>
-            <@fields.approvedBy />
-          </FieldContainer>
-          <FieldContainer @label='Notes' @vertical={{true}}>
-            <@fields.notes />
-          </FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-      <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: var(--boxel-sp-sm);
-          align-items: start;
-        }
-        @container (width < 40rem) {
-          .row,
-          .row[class*='cols-'] {
-            grid-template-columns: 1fr;
-          }
-        }
-      </style>
-    </template>
-  };
 }

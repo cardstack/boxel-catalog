@@ -1,24 +1,27 @@
 import GlimmerComponent from '@glimmer/component';
+import {
+  BarList,
+  type BarListItem,
+} from '@cardstack/pretui/components/bar-list';
 import type { ContractExecutionView } from '../contract-execution-app';
-import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import { cssVar } from '@cardstack/boxel-ui/helpers';
 import { CONTRACT_STATUSES } from '../../legal/contract-status';
 import { riskGradeLabel } from '../../legal/contract-risk';
 import { formatMoney } from '../../commerce/line-item-totals';
-import { StatePill, type Hue } from '../../../components/state-pill';
-
+import { personLabelOrUndefined, scaleBands } from '../contract-execution-data';
 import {
-  personLabelOrUndefined,
-  scaleBands,
+  compactMoney,
+  hueTone,
+  riskTone,
   toLocalDate,
-} from '../contract-execution-data';
-import { NoticeTable } from './notice-table';
+} from '../../shared/compact-format';
+import { Block, CeTable, StatStrip, toneHue, type Stat } from '../components';
+import { NOTICE_COLUMNS } from './renewals';
 
 interface Signature {
   Args: { app: ContractExecutionView };
 }
 
-export class ComplianceTab extends GlimmerComponent<Signature> {
+class ComplianceData extends GlimmerComponent<Signature> {
   get compliancePct(): number {
     let s = this.args.app.complianceScore;
     return typeof s === 'number' ? s : 0;
@@ -118,13 +121,7 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
             count: total,
             amount: total,
             currency: code || undefined,
-            hue: (grade === 'critical'
-              ? 'red'
-              : grade === 'high'
-                ? 'orange'
-                : grade === 'medium'
-                  ? 'amber'
-                  : 'green') as Hue,
+            tone: riskTone(grade),
           };
         })
         .filter((row) => row.count > 0);
@@ -219,7 +216,7 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
     let rows = CONTRACT_STATUSES.map((o) => ({
       value: o.value,
       label: o.label ?? o.value,
-      hue: (o.hue ?? 'slate') as Hue,
+      tone: hueTone(o.hue),
       count: this.args.app.contracts.filter((c) => c.status === o.value).length,
     })).filter((b) => b.count);
     return scaleBands(rows);
@@ -251,354 +248,187 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
     }
     return months;
   }
+}
+
+// The tab's four headline numbers, drawn under the desk strip by the shell.
+export class ComplianceStats extends ComplianceData {
+  get stats(): Stat[] {
+    let median = this.medianExecutionDays;
+    let next = this.args.app.nearestNotice;
+    return [
+      {
+        label: 'Median execution time',
+        value: median ?? '—',
+        unit: median !== undefined ? 'd' : undefined,
+        hint: 'Approval start to signature',
+      },
+      {
+        label: 'Obligations met',
+        value: this.args.app.complianceLabel,
+        meter: this.compliancePct || undefined,
+      },
+      {
+        label: 'Clause deviations',
+        value: this.deviationCount,
+        hint: `${this.unapprovedDeviations} unapproved`,
+        tone: this.unapprovedDeviations ? 'danger' : 'neutral',
+      },
+      {
+        label: 'Notice inside 90 days',
+        value: this.args.app.noticeSoonCount,
+        hint: next !== undefined ? `nearest in ${next} days` : 'none due',
+      },
+    ];
+  }
 
   <template>
-    <section class='cx-sec' aria-label='Compliance'>
-      <div class='cx-kpis'>
-        <div class='cx-kpi'>
-          <p class='cx-kpi-l'>Median execution time</p>
-          {{#if this.medianExecutionDays}}
-            <p class='cx-kpi-v'>{{this.medianExecutionDays}}<span
-                class='cx-kpi-u'
-              >d</span></p>
-            <p class='cx-kpi-d'>Approval start to signature</p>
-          {{else}}
-            <p class='cx-kpi-v is-none'>—</p>
-            <p class='cx-kpi-d'>No contract yet has both an approval start and a
-              signature date</p>
-          {{/if}}
-        </div>
+    <StatStrip @stats={{this.stats}} @label='Compliance summary' />
+  </template>
+}
 
-        <div class='cx-kpi'>
-          <p class='cx-kpi-l'>Obligations met</p>
-          <p class='cx-kpi-v'>{{@app.complianceLabel}}</p>
-          <ProgressBar
-            class='cx-meter'
-            @value={{this.compliancePct}}
-            @max={{100}}
-            @hue='var(--primary)'
-            aria-label='Share of open obligations being met'
+export class ComplianceTab extends ComplianceData {
+  noticeColumns = NOTICE_COLUMNS;
+
+  get stageRows(): BarListItem[] {
+    return this.statusBands.map((b) => ({
+      name: b.label,
+      value: b.count,
+      hue: toneHue(b.tone),
+    }));
+  }
+
+  // One list per currency: a bar compares amounts in one currency only.
+  get riskGroups() {
+    let groups = new Map<string, BarListItem[]>();
+    for (let b of this.valueByRisk as any[]) {
+      let code = b.currency ?? '';
+      groups.set(code, [
+        ...(groups.get(code) ?? []),
+        { name: b.label, value: b.amount, hue: toneHue(b.tone) },
+      ]);
+    }
+    return [...groups].map(([code, rows]) => ({
+      rows,
+      format: (v: number) =>
+        code ? compactMoney(v, code) : formatMoney(v, undefined),
+    }));
+  }
+
+  get contractRows(): BarListItem[] {
+    return this.complianceByContract.map((r) => ({
+      name: r.label,
+      value: r.count,
+      hue: toneHue('neutral', r.count < 100),
+    }));
+  }
+
+  get trendRows(): BarListItem[] {
+    return this.complianceTrend.map((m) => ({ name: m.label, value: m.pct }));
+  }
+
+  get stepRows(): BarListItem[] {
+    return this.timeByStep.map((r) => ({
+      name: r.label,
+      value: r.count,
+      hue: toneHue('neutral', r.isWorst),
+    }));
+  }
+
+  formatPercent = (v: number) => `${v}%`;
+  formatDays = (v: number) => `${v}d`;
+
+  <template>
+    <div class='cp-grid'>
+      <Block
+        @title='By lifecycle stage'
+        @count='{{@app.contracts.length}} contracts'
+      >
+        <BarList
+          @rows={{this.stageRows}}
+          @ranked={{false}}
+          @label='Contracts by stage'
+        />
+        <p class='cp-foot'>Bars scale to the largest band, so an even split
+          reads as even rather than as four invisible slivers.</p>
+      </Block>
+      <Block
+        @title='Portfolio value by risk grade'
+        @count={{this.portfolioValueLabel}}
+      >
+        {{#each this.riskGroups as |g|}}
+          <BarList
+            @rows={{g.rows}}
+            @ranked={{false}}
+            @format={{g.format}}
+            @label='Value by risk grade'
           />
-        </div>
-
-        <div class='cx-kpi'>
-          <p class='cx-kpi-l'>Clause deviations</p>
-          <p
-            class='cx-kpi-v {{if this.unapprovedDeviations "is-alarm"}}'
-          >{{this.deviationCount}}</p>
-          <p class='cx-kpi-d'>{{this.unapprovedDeviations}}
-            unapproved</p>
-        </div>
-
-        <div class='cx-kpi'>
-          <p class='cx-kpi-l'>Notice inside 90 days</p>
-          <p class='cx-kpi-v'>{{@app.noticeSoonCount}}</p>
-          <p class='cx-kpi-d'>{{this.noticeLede}}</p>
-        </div>
-      </div>
-
-      <div class='cx-charts'>
-        <section class='cx-chart' aria-label='Contracts by lifecycle stage'>
-          <h2 class='cx-h'>By lifecycle stage
-            <span class='cx-h-sub'>{{@app.contracts.length}}
-              contracts</span></h2>
-          {{#each this.statusBands as |b|}}
-            <div class='cx-band'>
-              <StatePill @label={{b.label}} @hue={{b.hue}} @dot={{true}} />
-              <span class='cx-bar' aria-hidden='true'><span
-                  class='cx-bar-fill cx-hue-{{b.hue}}'
-                  style={{cssVar _cx-pct=b.pct}}
-                ></span></span>
-              <span class='cx-num'>{{b.count}}</span>
-            </div>
-          {{else}}
-            <p class='cx-empty'>No contracts yet.</p>
-          {{/each}}
-          <p class='cx-chart-note'>Bars scale to the largest band, so an even
-            split reads as even rather than as four invisible slivers.</p>
-        </section>
-
-        <section class='cx-chart' aria-label='Portfolio value by risk grade'>
-          <h2 class='cx-h'>Portfolio value by risk grade
-            <span class='cx-h-sub'>{{this.portfolioValueLabel}}</span></h2>
-          {{#each this.valueByRisk as |b|}}
-            <div class='cx-band'>
-              <StatePill @label={{b.label}} @hue={{b.hue}} @dot={{true}} />
-              <span class='cx-bar' aria-hidden='true'><span
-                  class='cx-bar-fill cx-hue-{{b.hue}}'
-                  style={{cssVar _cx-pct=b.pct}}
-                ></span></span>
-              <span class='cx-num is-money'>{{b.money}}</span>
-            </div>
-          {{else}}
-            <p class='cx-empty'>No contract carries both a risk grade and a
-              value.</p>
-          {{/each}}
-          <p class='cx-chart-note'>Weighted by value, not by count — four
-            low-value contracts are not the same exposure as one large one.</p>
-        </section>
-
-        <section class='cx-chart' aria-label='Compliance by contract'>
-          <h2 class='cx-h'>By contract
-            <span class='cx-h-sub'>worst first</span></h2>
-          {{#each this.complianceByContract as |b|}}
-            <div class='cx-band'>
-              <span class='cx-band-l'>{{b.label}}</span>
-              <span class='cx-bar' aria-hidden='true'><span
-                  class='cx-bar-fill
-                    {{if b.overdue "cx-hue-red" "cx-hue-green"}}'
-                  style={{cssVar _cx-pct=b.pct}}
-                ></span></span>
-              <span class='cx-num'>{{b.count}}%</span>
-            </div>
-          {{else}}
-            <p class='cx-empty'>No contract has an open obligation yet.</p>
-          {{/each}}
-          <p class='cx-chart-note'>A contract with nothing owed is left out
-            rather than shown at 0% — no obligations is not the same as failing
-            them.</p>
-        </section>
-
-        <section class='cx-chart' aria-label='Compliance trend'>
-          <h2 class='cx-h'>Trend
-            <span class='cx-h-sub'>last 6 months</span></h2>
-          {{#if this.trendHasData}}
-            {{#each this.complianceTrend as |m|}}
-              <div class='cx-band'>
-                <span class='cx-band-l'>{{m.label}}</span>
-                <span class='cx-bar' aria-hidden='true'><span
-                    class='cx-bar-fill cx-hue-accent'
-                    style={{cssVar _cx-pct=m.pct}}
-                  ></span></span>
-                <span class='cx-num'>{{if m.n m.pct '—'}}</span>
-              </div>
-            {{/each}}
-            <p class='cx-chart-note'>Share of obligations due that month that
-              were closed. Derived from completion dates — the realm stores no
-              snapshots, and a fabricated series on a compliance screen is worse
-              than none.</p>
-          {{else}}
-            <p class='cx-empty'>Nothing fell due in the last six months, so
-              there is no trend to draw yet.</p>
-          {{/if}}
-        </section>
-
-        <section
-          class='cx-chart'
-          aria-label='Median days held per approval step'
-        >
-          <h2 class='cx-h'>Time per approval step
-            <span class='cx-h-sub'>median days</span></h2>
-          {{#each this.timeByStep as |b|}}
-            <div class='cx-band'>
-              <span class='cx-band-l'>{{b.label}}</span>
-              <span class='cx-bar' aria-hidden='true'><span
-                  class='cx-bar-fill
-                    {{if b.isWorst "cx-hue-red" "cx-hue-accent"}}'
-                  style={{cssVar _cx-pct=b.pct}}
-                ></span></span>
-              <span class='cx-num'>{{b.count}}d</span>
-            </div>
-          {{else}}
-            <p class='cx-empty'>No approval step has been opened yet.</p>
-          {{/each}}
-          <p class='cx-chart-note'><span class='cx-swatch cx-hue-red'></span>
-            Slowest step — where intervening pays.</p>
-        </section>
-      </div>
-
-      <h2 class='cx-h'>Notice deadlines inside 90 days
-        <span class='cx-h-sub'>{{@app.noticeSoonCount}}</span></h2>
-      <NoticeTable @app={{@app}} />
-    </section>
-
+        {{/each}}
+        <p class='cp-foot'>Weighted by value, not by count — four low-value
+          contracts are not the same exposure as one large one.</p>
+      </Block>
+      <Block @title='By contract' @count='worst first'>
+        {{#if this.contractRows.length}}
+          <BarList
+            @rows={{this.contractRows}}
+            @ranked={{false}}
+            @max={{100}}
+            @format={{this.formatPercent}}
+            @label='Obligations met by contract'
+          />
+        {{/if}}
+        <p class='cp-foot'>A contract with nothing owed is left out rather than
+          shown at 0% — no obligations is not the same as failing them.</p>
+      </Block>
+      <Block @title='Trend' @count='last 6 months'>
+        {{#if this.trendHasData}}
+          <BarList
+            @rows={{this.trendRows}}
+            @ranked={{false}}
+            @max={{100}}
+            @format={{this.formatPercent}}
+            @label='Obligations met per month'
+          />
+        {{/if}}
+        <p class='cp-foot'>Share of obligations due that month that were closed,
+          derived from completion dates.</p>
+      </Block>
+      <Block @title='Time per approval step' @count='median days'>
+        {{#if this.stepRows.length}}
+          <BarList
+            @rows={{this.stepRows}}
+            @ranked={{false}}
+            @format={{this.formatDays}}
+            @label='Median days per approver'
+          />
+        {{/if}}
+        <p class='cp-foot'>Red marks the slowest step — where intervening pays.</p>
+      </Block>
+    </div>
+    <Block
+      @title='Notice deadlines inside 90 days'
+      @count={{@app.renewalRows.length}}
+    >
+      {{#if @app.renewalRows.length}}
+        <CeTable
+          @label='Notice deadlines inside 90 days'
+          @columns={{this.noticeColumns}}
+          @rows={{@app.renewalRows}}
+          @onOpen={{@app.openInWorkspace}}
+        />
+      {{else}}
+        <p class='cp-foot'>No notice window closes in the next 90 days.</p>
+      {{/if}}
+    </Block>
     <style scoped>
-      .cx-sec {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp);
-      }
-      .cx-h {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-2xs);
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
-      }
-      .cx-num {
-        font-variant-numeric: tabular-nums;
-        font-weight: 600;
-      }
-      .cx-empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
-      }
-      .cx-kpi {
-        outline: 1px solid var(--border);
-        outline-offset: -0.5px;
-        padding: var(--boxel-sp-xs) var(--boxel-sp);
-        background: var(--background);
-        min-width: 0;
-      }
-      .cx-kpi-l {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .cx-kpi-v {
-        margin: var(--boxel-sp-4xs) 0 0;
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
-        font-size: 1.9rem;
-        font-weight: 650;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-      }
-      .cx-kpi-v.is-alarm {
-        color: var(--destructive-ink);
-      }
-      .cx-kpi-v.is-none {
-        color: var(--muted-foreground);
-      }
-      .cx-kpi-u {
-        font-size: 0.95rem;
-        font-weight: 500;
-        color: var(--muted-foreground);
-      }
-      .cx-kpi-d {
-        margin: var(--boxel-sp-5xs) 0 0;
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-        line-height: 1.4;
-      }
-
-      .cx-charts {
+      .cp-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-        /* Each tile draws its own rule, so a short last row leaves no
-           rule-coloured gap behind it. */
-        gap: 0;
-        margin-bottom: var(--boxel-sp);
-      }
-      .cx-chart {
-        background: var(--background);
-        padding: var(--boxel-sp-xs) var(--boxel-sp) var(--boxel-sp);
-        min-width: 0;
-      }
-      .cx-h-sub {
-        margin-left: var(--boxel-sp-2xs);
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
-        font-weight: 400;
-        color: var(--muted-foreground);
-      }
-      .cx-chart-note {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-xs);
-        line-height: 1.45;
-        color: var(--muted-foreground);
-      }
-      .cx-band-l {
-        font-size: var(--boxel-font-size-sm);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .cx-swatch {
-        display: inline-block;
-        width: 0.5625rem;
-        height: 0.5625rem;
-        border-radius: var(--boxel-border-radius-xs);
-        margin-right: var(--boxel-sp-3xs);
-        background: var(--_cx-band-hue);
-      }
-      .cx-hue-accent {
-        --_cx-band-hue: var(--primary);
-      }
-      .cx-num.is-money {
-        white-space: nowrap;
-      }
-      .cx-kpis {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
-        gap: 0.0625rem;
-        background: var(--border);
-        border-block: 1px solid var(--border);
-        margin-bottom: var(--boxel-sp);
-      }
-      .cx-kpis > .cx-kpi:first-child {
-        padding-left: 0;
-      }
-      .cx-charts > .cx-chart:first-child {
-        padding-left: 0;
-      }
-      .cx-kpi {
-        background: var(--background);
-        padding: var(--boxel-sp-xs) var(--boxel-sp);
-      }
-      .cx-kpi.is-alarm {
-        --stat-value-color: var(--destructive-ink);
-        color: var(--destructive-ink);
-      }
-      .cx-meter {
-        max-width: var(--_cx-measure);
-      }
-      .cx-band {
-        display: grid;
-        grid-template-columns: minmax(0, 11rem) minmax(2rem, 1fr) auto;
-        align-items: center;
+        grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
         gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp-5xs) 0;
-        max-width: var(--_cx-measure);
       }
-      .cx-bar {
-        display: block;
-        height: 0.5rem;
-        border-radius: 999px;
-        background: color-mix(in oklch, currentColor 8%, transparent);
-        overflow: hidden;
-      }
-      .cx-bar-fill {
-        display: block;
-        height: 100%;
-        width: max(0.375rem, calc(var(--_cx-pct) * 1%));
-        border-radius: inherit;
-        background: var(--_cx-band-hue);
-      }
-      .cx-hue-red {
-        --_cx-band-hue: var(--destructive);
-      }
-      .cx-hue-orange {
-        --_cx-band-hue: var(--warning);
-      }
-      .cx-hue-amber {
-        --_cx-band-hue: var(--attention);
-      }
-      .cx-hue-green {
-        --_cx-band-hue: var(--success);
-      }
-      .cx-hue-blue {
-        --_cx-band-hue: var(--chart-1);
-      }
-      .cx-hue-slate {
-        --_cx-band-hue: var(--muted-foreground);
-      }
-      .cx-hue-purple {
-        --_cx-band-hue: var(--chart-4);
-      }
-      .cx-hue-teal {
-        --_cx-band-hue: var(--chart-2);
-      }
-      .cx-band .cx-num {
-        text-align: right;
-        font-variant-numeric: tabular-nums;
-        white-space: nowrap;
-        min-width: 2.5rem;
+      .cp-foot {
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

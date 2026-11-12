@@ -113,6 +113,11 @@
         "links": {
           "self": "../Asset/ast-2026-0113"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

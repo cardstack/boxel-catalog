@@ -1,0 +1,13 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": { "name": "cardstack/boxel" },
+      "owner": "cardstack",
+      "repo": "boxel"
+    },
+    "meta": {
+      "adoptsFrom": { "module": "../github-repository", "name": "GitHubRepository" }
+    }
+  }
+}

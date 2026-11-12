@@ -9,7 +9,7 @@ import {
 import DateTimeField from '@cardstack/base/datetime';
 import UserPenIcon from '@cardstack/boxel-icons/user-pen';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 
 /**
  * Who produced an artefact and where it came from.
@@ -62,7 +62,7 @@ export class AttributionField extends FieldDef {
           flex-wrap: wrap;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .source {
@@ -71,7 +71,7 @@ export class AttributionField extends FieldDef {
         }
         .license {
           font-family: var(--font-mono);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>
@@ -82,7 +82,7 @@ export class AttributionField extends FieldDef {
       <span class='atom'>{{@model.summary}}</span>
       <style scoped>
         .atom {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>

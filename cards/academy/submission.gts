@@ -13,19 +13,29 @@ import DateTimeField from '@cardstack/base/datetime';
 import MarkdownField from '@cardstack/base/markdown';
 import NumberField from '@cardstack/base/number';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
-
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
+import { Button } from '@cardstack/pretui/components/button';
+import { concat } from '@ember/helper';
+import { on } from '@ember/modifier';
 
 import {
   SubmissionStatusField,
   SUBMISSION_STATUSES,
 } from './submission-status-field';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Enrollment } from './enrollment';
 import { Assignment } from './assignment';
 import { Grade } from './grade';
+import { FitTile } from '../shared/fit-tile';
+import {
+  AtomChip,
+  Dot,
+  Embed,
+  Kv,
+  Mark,
+  Section,
+  Sheet,
+  Stat,
+} from './components/record-sheet';
 
 /**
  * One hand-in: a version of a learner's answer to one assignment. A
@@ -91,122 +101,174 @@ export class Submission extends CardDef {
         this.args.model?.submissionStatus,
       );
     }
+    get scores() {
+      return ((this.args.model?.grade as any)?.criterionScores ?? []) as any[];
+    }
+    get comments() {
+      return this.scores.filter((c) => c?.comment);
+    }
+    openGrade = () => {
+      let g = this.args.model?.grade;
+      if (g) this.args.viewCard?.(g as any, 'isolated');
+    };
     <template>
-      <article class='submission'>
-        <header class='hero'>
-          <div class='hero-text'>
-            <span class='eyebrow'>Submission v{{if
+      <Sheet @mark='Sb' @title={{headline @model}} @meta={{metaLine @model}}>
+        <:status>
+          <Dot @hue={{this.hue}}>{{lower @model.statusLabel}}</Dot>
+          {{#if @model.submittedAt}}
+            <Dot @hue={{if @model.isLate 'red' 'green'}}>{{lateLabel
+                @model
+              }}</Dot>
+          {{/if}}
+        </:status>
+        <:actions>
+          {{#if @model.grade}}
+            <Button
+              @size='s'
+              @tone='primary'
+              @appearance='accent'
+              {{on 'click' this.openGrade}}
+            >Open grade</Button>
+          {{/if}}
+        </:actions>
+        <:stats>
+          <Stat
+            @label='Grade'
+            @value={{gradeLetter @model}}
+            @sub={{gradeLine @model}}
+          />
+          <Stat
+            @label='Version'
+            @value={{concat 'v' (if @model.version @model.version 1)}}
+            @sub={{if
+              @model.assignment.allowResubmission
+              'resubmission allowed'
+              'single submission'
+            }}
+          />
+          <Stat
+            @label='Late'
+            @value={{concat (if @model.daysLate @model.daysLate 0) ' days'}}
+            @sub={{dueLine @model}}
+          />
+        </:stats>
+        <:main>
+          <Section @title='Answer'>
+            <div class='answer'>{{#if @model.text}}<@fields.text />{{else}}<span
+                  class='muted'
+                >No text answer.</span>{{/if}}</div>
+          </Section>
+          {{#if this.scores.length}}
+            <Section @title='Rubric score'>
+              {{#each this.scores as |c|}}
+                <div class='row'>
+                  <span class='lead'>{{c.criterionName}}{{#if c.levelLabel}}
+                      <span class='muted'>·
+                        {{c.levelLabel}}</span>{{/if}}</span>
+                  <span class='mono'>{{c.points}} / {{c.maxPoints}}</span>
+                </div>
+              {{/each}}
+            </Section>
+          {{/if}}
+          {{#if this.comments.length}}
+            <Section @title='Grader comment'>
+              {{#each this.comments as |c|}}
+                <div class='row'>
+                  <span class='lead'>{{c.criterionName}}
+                    <span class='muted'>{{c.comment}}</span></span>
+                  <span class='mono'>{{c.points}} / {{c.maxPoints}}</span>
+                </div>
+              {{/each}}
+            </Section>
+          {{/if}}
+          {{#if @model.files.length}}
+            <Section @title='Files'>
+              <div class='files'><@fields.files
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></div>
+            </Section>
+          {{/if}}
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <Kv @label='Enrollment'>{{#if @model.enrollment}}<@fields.enrollment
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+            <Kv @label='Assignment'>{{#if @model.assignment}}<@fields.assignment
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+            <Kv @label='Grade'>{{#if @model.grade}}<@fields.grade
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</Kv>
+          </Section>
+          <Section @title='Details'>
+            <Kv @label='Assignment'>{{dash @model.assignmentTitle}}</Kv>
+            <Kv @label='Version' @mono={{true}}>{{if
                 @model.version
                 @model.version
                 1
-              }}
-              ·
-              {{#if @model.assignment}}<@fields.assignment
-                  @format='atom'
-                />{{/if}}</span>
-            <h1>{{if
-                @model.learnerName
-                @model.learnerName
-                'Unlinked learner'
-              }}</h1>
-            <p class='meta'>
-              <StatePill
-                @label={{@model.statusLabel}}
-                @hue={{this.hue}}
-                @dot={{true}}
-              />
-              {{#if @model.submittedAt}}<span>handed in
-                  {{fmtDateTime @model.submittedAt}}</span>{{/if}}
-              {{#if @model.isLate}}<StatePill
-                  @label='{{@model.daysLate}}d late'
-                  @hue='amber'
-                />{{/if}}
-            </p>
-          </div>
-          {{#if @model.grade}}
-            <div class='grade-box'><@fields.grade @format='embedded' /></div>
-          {{/if}}
-        </header>
-        <section class='panel'>
-          <h2>Answer</h2>
-          {{#if @model.text}}
-            <@fields.text />
-          {{else}}
-            <p class='empty'>No written answer.</p>
-          {{/if}}
-        </section>
-        {{#if @model.files.length}}
-          <section class='panel'>
-            <h2>Files</h2>
-            <div class='stack'><@fields.files @format='embedded' /></div>
-          </section>
-        {{/if}}
-      </article>
+              }}</Kv>
+            <Kv @label='Submitted' @mono={{true}}>{{fmtDay
+                @model.submittedAt
+              }}</Kv>
+            <Kv @label='Due' @mono={{true}}>{{fmtDay
+                @model.assignment.dueWindow.dueAt
+              }}</Kv>
+            <Kv @label='Late'>{{if
+                @model.isLate
+                (concat @model.daysLate ' days')
+                'no'
+              }}</Kv>
+            <Kv @label='Grade'>{{gradeShort @model}}</Kv>
+            <Kv @label='Graded' @mono={{true}}>{{fmtDay
+                @model.grade.gradedAt
+              }}</Kv>
+            <Kv @label='Files' @mono={{true}}>{{if
+                @model.files.length
+                @model.files.length
+                'none'
+              }}</Kv>
+          </Section>
+        </:side>
+      </Sheet>
       <style scoped>
-        .submission {
-          max-width: 52rem;
-          margin: 0 auto;
-          container-type: inline-size;
-          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
-          display: grid;
-          gap: var(--boxel-sp-lg);
-          color: var(--foreground);
-          background: var(--background);
+        .answer {
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          border-block-start: 1px solid var(--border);
         }
-        .hero {
+        .row {
           display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp);
-          align-items: flex-start;
-          flex-wrap: wrap;
-        }
-        .eyebrow {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        h1 {
-          margin: var(--boxel-sp-4xs) 0 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          line-height: 1.15;
-        }
-        .meta {
-          margin: var(--boxel-sp-xs) 0 0;
-          display: flex;
-          gap: var(--boxel-sp-sm);
           align-items: center;
+          justify-content: space-between;
+          gap: var(--boxel-sp-sm);
+          min-block-size: 1.75rem;
+          padding: var(--boxel-sp-5xs) var(--boxel-sp-sm);
+          border-block-start: 1px solid var(--border);
+        }
+        .lead {
+          min-inline-size: 0;
+          font-weight: 600;
+        }
+        .muted {
+          font-weight: 400;
+          color: var(--muted-foreground);
+        }
+        .mono {
+          flex: none;
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          font-variant-numeric: tabular-nums;
+        }
+        .files {
+          display: flex;
           flex-wrap: wrap;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .grade-box {
-          min-width: 16rem;
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          background: var(--card);
-        }
-        .panel {
-          padding: var(--boxel-sp);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          background: var(--card);
-          line-height: 1.6;
-        }
-        h2 {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground);
-        }
-        .stack {
-          display: grid;
           gap: var(--boxel-sp-xs);
-        }
-        .empty {
-          margin: 0;
-          color: var(--muted-foreground);
-          font-style: italic;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          border-block-start: 1px solid var(--border);
         }
       </style>
     </template>
@@ -220,131 +282,62 @@ export class Submission extends CardDef {
       );
     }
     <template>
-      <div class='row'>
-        <span class='v'>v{{if @model.version @model.version 1}}</span>
-        <div class='text'>
-          <span class='title'>{{if
-              @model.learnerName
-              @model.learnerName
-              'Learner'
-            }}
-            ·
-            {{@model.assignmentTitle}}</span>
-          <span class='sub'>{{#if @model.submittedAt}}{{fmtDateTime
-                @model.submittedAt
-              }}{{else}}not handed in{{/if}}{{#if @model.isLate}}
-              ·
-              {{@model.daysLate}}d late{{/if}}</span>
-        </div>
-        <StatePill @label={{@model.statusLabel}} @hue={{this.hue}} />
-      </div>
-      <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: auto 1fr auto;
-          gap: var(--boxel-sp-xs);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        }
-        .v {
-          min-width: 2.25rem;
-          height: 2.25rem;
-          display: grid;
-          place-items: center;
-          border-radius: var(--boxel-border-radius-sm);
-          background: var(--muted);
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          font-family: var(--font-mono);
-        }
-        .text {
-          display: grid;
-          min-width: 0;
-        }
-        .title {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-      </style>
+      <Embed @mark='Sb' @title={{headline @model}} @meta={{metaLine @model}}>
+        <:status>
+          <Dot @hue={{this.hue}}>{{lower @model.statusLabel}}</Dot>
+          {{#if @model.submittedAt}}
+            <Dot @hue={{if @model.isLate 'red' 'green'}}>{{lateLabel
+                @model
+              }}</Dot>
+          {{/if}}
+        </:status>
+        <:fact>Grade
+          <strong>{{gradeLetter @model}}</strong>
+          ·
+          {{gradeFact @model}}</:fact>
+        <:default>
+          <Kv @label='Assignment'>{{dash @model.assignmentTitle}}</Kv>
+          <Kv @label='Version' @mono={{true}}>{{if
+              @model.version
+              @model.version
+              1
+            }}</Kv>
+          <Kv @label='Submitted' @mono={{true}}>{{fmtDay
+              @model.submittedAt
+            }}</Kv>
+          <Kv @label='Due' @mono={{true}}>{{fmtDay
+              @model.assignment.dueWindow.dueAt
+            }}</Kv>
+          <Kv @label='Late'>{{if
+              @model.isLate
+              (concat @model.daysLate ' days')
+              'no'
+            }}</Kv>
+          <Kv @label='Grade'>{{gradeShort @model}}</Kv>
+          <Kv @label='Enrollment'>{{#if @model.enrollment}}<@fields.enrollment
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+          <Kv @label='Assignment'>{{#if @model.assignment}}<@fields.assignment
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+        </:default>
+      </Embed>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
+    get hue() {
+      return statusHue(
+        SubmissionStatusField,
+        this.args.model?.submissionStatus,
+      );
+    }
     <template>
-      <span class='atom'>{{@model.cardTitle}}</span>
-      <style scoped>
-        .atom {
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'context', label: 'Context' },
-      { id: 'answer', label: 'Answer' },
-      { id: 'files', label: 'Files' },
-      { id: 'grade', label: 'Grade' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Submission sections'
-        as |e|
-      >
-        <e.Section
-          @id='context'
-          @title='Context'
-          @hint='set by Submit Assignment'
-          @cols={{3}}
-        >
-          <FieldContainer
-            @label='Enrollment'
-            @vertical={{true}}
-          ><@fields.enrollment @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Assignment'
-            @vertical={{true}}
-          ><@fields.assignment @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Status'
-            @vertical={{true}}
-          ><@fields.submissionStatus @format='atom' /></FieldContainer>
-          <FieldContainer @label='Version' @vertical={{true}}><@fields.version
-              @format='atom'
-            /></FieldContainer>
-          <FieldContainer
-            @label='Submitted at'
-            @vertical={{true}}
-          ><@fields.submittedAt @format='atom' /></FieldContainer>
-        </e.Section>
-        <e.Section @id='answer' @title='Answer' @cols={{1}}>
-          <FieldContainer
-            @label='Written answer'
-            @vertical={{true}}
-          ><@fields.text /></FieldContainer>
-        </e.Section>
-        <e.Section @id='files' @title='Files' @cols={{1}}>
-          <FieldContainer
-            @label='Attached files'
-            @vertical={{true}}
-          ><@fields.files /></FieldContainer>
-        </e.Section>
-        <e.Section @id='grade' @title='Grade' @cols={{1}}>
-          <FieldContainer
-            @label='Grade record'
-            @vertical={{true}}
-          ><@fields.grade @format='atom' /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
+      <AtomChip @mark='Sb' @title={{headline @model}}><Dot
+          @hue={{this.hue}}
+        >{{lower @model.statusLabel}}</Dot></AtomChip>
     </template>
   };
 
@@ -356,23 +349,84 @@ export class Submission extends CardDef {
       );
     }
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>{{@model.assignmentTitle}}
-          · v{{if @model.version @model.version 1}}</:eyebrow>
-        <:title>{{if @model.learnerName @model.learnerName 'Learner'}}</:title>
-        <:subtitle>{{if
-            @model.submittedAt
-            (fmtDateTime @model.submittedAt)
-            'Not handed in'
-          }}{{#if @model.isLate}} · {{@model.daysLate}}d late{{/if}}</:subtitle>
-        <:badgeRight><StatePill
-            @label={{@model.statusLabel}}
-            @hue={{this.hue}}
-          /></:badgeRight>
-        <:footer>{{@model.files.length}} files</:footer>
-      </FittedCard>
+      <FitTile>
+        <:avatar><Mark @text='Sb' /></:avatar>
+        <:title>{{headline @model}}</:title>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><Dot @hue={{this.hue}}>{{lower
+              @model.statusLabel
+            }}</Dot></:status>
+        <:fact>Grade {{gradeLetter @model}} · {{gradeFact @model}}</:fact>
+        <:relations>{{#if @model.enrollment}}<@fields.enrollment
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}{{#if @model.assignment}}<@fields.assignment
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
     </template>
   };
+}
+
+function headline(m?: Partial<Submission> | null): string {
+  return m?.cardTitle ?? 'Submission';
+}
+function metaLine(m?: Partial<Submission> | null): string {
+  let what = (m?.assignment as any)?.title ?? m?.assignmentTitle ?? '';
+  let when = m?.submittedAt
+    ? `submitted ${fmtShort(m.submittedAt)}`
+    : 'not handed in';
+  return [what, when].filter(Boolean).join(' · ');
+}
+function lateLabel(m?: Partial<Submission> | null): string {
+  return m?.isLate ? `${m.daysLate} days late` : 'on time';
+}
+function dueLine(m?: Partial<Submission> | null): string {
+  let due = (m?.assignment as any)?.dueWindow?.dueAt;
+  return due ? `due ${fmtShort(due)}` : 'no due date';
+}
+function gradeLetter(m?: Partial<Submission> | null): string {
+  return (m?.grade as any)?.letter || '—';
+}
+function gradeShort(m?: Partial<Submission> | null): string {
+  let g = m?.grade as any;
+  if (!g) return '—';
+  return [g.letter, g.total != null ? `${g.total} / ${g.maxPoints ?? '—'}` : '']
+    .filter(Boolean)
+    .join(' · ');
+}
+function gradeLine(m?: Partial<Submission> | null): string {
+  let g = m?.grade as any;
+  if (!g || g.total == null) return 'not graded';
+  return `${g.total} / ${g.maxPoints ?? '—'}${g.pct != null ? ` · ${g.pct}%` : ''}`;
+}
+function gradeFact(m?: Partial<Submission> | null): string {
+  let g = m?.grade as any;
+  if (!g || g.total == null) return 'not graded';
+  return [`${g.total} / ${g.maxPoints ?? '—'}`, g.graderName]
+    .filter(Boolean)
+    .join(' · ');
+}
+function fmtShort(d: Date | string): string {
+  return new Date(d).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+function fmtDay(d?: Date | string | null): string {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+function dash(v: unknown): string {
+  return v == null || v === '' ? '—' : String(v);
+}
+function lower(v?: string | null) {
+  return (v ?? '').toLowerCase();
 }
 
 export function daysLateOf(s: Partial<Submission> | null | undefined): number {

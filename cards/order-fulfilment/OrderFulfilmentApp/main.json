@@ -4,7 +4,7 @@
     "attributes": {
       "operationName": "Northlight Goods",
       "cardInfo": {
-        "name": "Northlight Goods — Fulfilment",
+        "name": "Northlight Goods \u2014 Fulfilment",
         "summary": "Warehouse and logistics workspace for a small business: order board, multi-warehouse stock, carrier rate comparison, live tracking and full RMA returns."
       }
     },
@@ -12,6 +12,13 @@
       "adoptsFrom": {
         "module": "../order-fulfilment-app",
         "name": "OrderFulfilmentApp"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

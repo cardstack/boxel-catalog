@@ -16,6 +16,11 @@
         "links": {
           "self": "../Deal/acme-enterprise-renewal"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

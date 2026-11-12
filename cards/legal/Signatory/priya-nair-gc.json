@@ -27,6 +27,11 @@
         "links": {
           "self": "../../hr/Employee/priya-nair"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

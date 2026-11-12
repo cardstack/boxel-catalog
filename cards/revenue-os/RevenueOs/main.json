@@ -19,7 +19,7 @@
     "relationships": {
       "cardInfo.theme": {
         "links": {
-          "self": "../../../Theme/ledger"
+          "self": "../../Theme/site-tools"
         }
       }
     }

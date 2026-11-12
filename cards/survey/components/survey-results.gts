@@ -5,7 +5,6 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { BarList } from '@cardstack/pretui/components/bar-list';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import type { SurveyQuestion } from '../survey-question';
 
 /* @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS */
@@ -176,11 +175,11 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         <div class='results-list'>
           {{#each this.aggregates as |agg|}}
             <section class='agg'>
-              <h3 class='agg-prompt'>{{if
+              <h2 class='agg-prompt'>{{if
                   agg.prompt
                   agg.prompt
                   'Untitled question'
-                }}</h3>
+                }}</h2>
               <p class='agg-meta'>
                 {{agg.count}}
                 answered
@@ -218,7 +217,6 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
           @title='No responses yet'
           @message='Responses submitted to this survey appear here.'
           @texture={{false}}
-          style={{COMPACT_EMPTY_STYLE}}
         />
       {{/if}}
     </div>
@@ -243,33 +241,30 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         background: var(--card);
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       .agg-prompt {
-        margin: 0;
-        font-size: 1rem;
+        font-size: var(--boxel-font-size);
         font-weight: 700;
       }
       .agg-meta {
-        margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         color: var(--muted-foreground);
       }
       .agg-texts {
         margin: 0;
-        padding-left: 1.1rem;
+        padding-left: var(--boxel-sp);
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
-        font-size: 0.875rem;
+        gap: var(--boxel-sp-4xs);
+        font-size: var(--boxel-font-size-sm);
       }
       .agg-texts li {
         color: var(--foreground);
       }
       .agg-empty {
-        margin: 0;
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
         font-style: italic;
       }

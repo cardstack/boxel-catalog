@@ -27,13 +27,18 @@
         }
       ],
       "cardInfo": {
-        "name": "INV N-4466 — Acme Supply"
+        "name": "INV N-4466 \u2014 Acme Supply"
       }
     },
     "relationships": {
       "purchaseOrder": {
         "links": {
           "self": "../../procurement/PurchaseOrder/po-2026-0029"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

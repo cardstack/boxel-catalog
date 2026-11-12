@@ -11,6 +11,13 @@
         "module": "../vendor-onboarding-app",
         "name": "VendorOnboardingApp"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

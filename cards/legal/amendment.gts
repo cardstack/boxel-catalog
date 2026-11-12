@@ -7,9 +7,6 @@ import {
   linksTo,
   StringField,
 } from '@cardstack/base/card-api';
-import { tracked } from '@glimmer/tracking';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { eq } from '@cardstack/boxel-ui/helpers';
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import TextAreaField from '@cardstack/base/text-area';
@@ -20,190 +17,7 @@ import { ModDocStatusField } from './addendum';
 import { ClauseReferenceField } from './clause-reference-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { EditSectionNav } from '../../components/edit-section-nav';
 import FileDiffIcon from '@cardstack/boxel-icons/file-diff';
-
-class AmendmentEdit extends Component<typeof Amendment> {
-  @tracked activeSection = 'identity';
-
-  sections = [
-    { id: 'identity', label: 'Identity' },
-    { id: 'the-change', label: 'The Change' },
-    { id: 'approval', label: 'Approval' },
-  ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.doc-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
-
-  <template>
-    <div class='doc-edit'>
-      {{! root is the container + only scroller; the responsive grid
-          lives on this inner wrapper }}
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "identity") "focused"}}'
-            data-sect='identity'
-          >
-            <h3>Identity</h3>
-            <FieldContainer @label='Amends contract' @vertical={{true}}>
-              <@fields.contract />
-            </FieldContainer>
-            <div class='row'>
-              <FieldContainer @label='Amendment number' @vertical={{true}}>
-                <@fields.amendmentNumber />
-              </FieldContainer>
-              <FieldContainer @label='Effective date' @vertical={{true}}>
-                <@fields.effectiveDate />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "the-change") "focused"}}'
-            data-sect='the-change'
-          >
-            <h3>The Change
-              <span class='sect-hint'>amended text replaces the clause verbatim</span></h3>
-            <FieldContainer
-              @label='Summary of changes (one paragraph, read before the redline)'
-              @vertical={{true}}
-            >
-              <@fields.changesSummary />
-            </FieldContainer>
-            <FieldContainer @label='Amended terms' @vertical={{true}}>
-              <@fields.changedTerms />
-            </FieldContainer>
-            <FieldContainer
-              @label='Clauses affected (library clause, section, pinned revision)'
-              @vertical={{true}}
-            >
-              <@fields.changedClauses />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "approval") "focused"}}'
-            data-sect='approval'
-          >
-            <h3>Approval</h3>
-            <div class='row'>
-              <FieldContainer @label='Status' @vertical={{true}}>
-                <@fields.status />
-              </FieldContainer>
-              <FieldContainer @label='Executed on' @vertical={{true}}>
-                <@fields.executedOn />
-              </FieldContainer>
-            </div>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .doc-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background-color: var(--background);
-        color: var(--foreground);
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-      }
-      /* the root is the scroller, so sticky pins the nav to its top;
-         no ink knobs — the legal family keeps the rail's neutral
-         foreground/background default */
-      .sect-nav {
-        position: sticky;
-        top: 0;
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      /* the section the rail points at mirrors the rail's active state
-         in the same neutral ink */
-      .sect.focused {
-        outline-color: var(--foreground);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--foreground) 10%, transparent);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
-        align-items: start;
-      }
-      @container edit (width < 640px) {
-        .row {
-          grid-template-columns: 1fr;
-        }
-        /* narrow panel: nav becomes a horizontal chip row above the form */
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
-        }
-      }
-    </style>
-  </template>
-}
 
 // An amendment CHANGES existing terms of an executed contract — a new
 // price, a moved end date, a rewritten section. Numbered per contract so
@@ -213,7 +27,6 @@ class AmendmentEdit extends Component<typeof Amendment> {
 // and a waiver (excuses one obligation without changing text).
 export class Amendment extends CardDef {
   static displayName = 'Amendment';
-  static headerColor = '#41337a';
 
   @field contract = linksTo(() => Contract);
   @field amendmentNumber = contains(NumberField);
@@ -325,9 +138,8 @@ export class Amendment extends CardDef {
           padding-bottom: var(--boxel-sp);
         }
         .kicker {
-          margin: 0;
           font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
           font-weight: var(--boxel-eyebrow-font-weight);
           line-height: var(--boxel-eyebrow-line-height);
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
@@ -336,10 +148,9 @@ export class Amendment extends CardDef {
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
         }
         .sub {
-          margin: 0;
           color: var(--muted-foreground);
         }
         .panel {
@@ -351,7 +162,7 @@ export class Amendment extends CardDef {
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
           font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
           font-weight: var(--boxel-eyebrow-font-weight);
           line-height: var(--boxel-eyebrow-line-height);
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
@@ -360,8 +171,7 @@ export class Amendment extends CardDef {
         }
         .summary,
         .empty {
-          margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           white-space: pre-wrap;
         }
         .empty {
@@ -406,33 +216,36 @@ export class Amendment extends CardDef {
       </article>
       <style scoped>
         .fit {
-          --type-ratio: 1.24;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          --type-base: clamp(
+          --_fit-type-ratio: 1.24;
+          --_fit-ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
+          --_fit-type-base: clamp(
             0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--_fit-ar)), 10cqb),
             1.0625rem
           );
-          --meta-size: max(
+          --_fit-meta-size: max(
             0.625rem,
-            calc(var(--type-base) / var(--type-ratio))
+            calc(var(--_fit-type-base) / var(--_fit-type-ratio))
           );
-          --anchor-size: max(
+          --_fit-anchor-size: max(
             0.6875rem,
             min(
-              calc(var(--type-base) * var(--type-ratio) * var(--type-ratio)),
+              calc(
+                var(--_fit-type-base) * var(--_fit-type-ratio) *
+                  var(--_fit-type-ratio)
+              ),
               26cqb
             )
           );
-          --glyph: max(0.6875rem, min(3cqi, 14cqb));
-          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
+          --_fit-glyph: max(0.6875rem, min(3cqi, 14cqb));
+          --_fit-pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
           width: 100%;
           height: 100%;
           box-sizing: border-box;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.125rem;
-          padding: var(--pad);
+          gap: var(--boxel-sp-6xs);
+          padding: var(--_fit-pad);
           overflow: hidden;
           background-color: var(--card);
           color: var(--card-foreground);
@@ -446,11 +259,11 @@ export class Amendment extends CardDef {
         .r-head {
           display: flex;
           align-items: center;
-          gap: 0.375rem;
+          gap: var(--boxel-sp-2xs);
         }
-        .r-head > :deep(svg) {
-          width: var(--glyph);
-          height: var(--glyph);
+        .r-head > svg {
+          width: var(--_fit-glyph);
+          height: var(--_fit-glyph);
           flex: none;
           color: var(--accent);
         }
@@ -458,7 +271,7 @@ export class Amendment extends CardDef {
           font-family: var(--boxel-eyebrow-font-family);
           font-size: max(
             var(--boxel-eyebrow-font-size),
-            calc(var(--meta-size) * 0.85)
+            calc(var(--_fit-meta-size) * 0.85)
           );
           font-weight: var(--boxel-eyebrow-font-weight);
           line-height: var(--boxel-eyebrow-line-height);
@@ -476,11 +289,10 @@ export class Amendment extends CardDef {
         .r-body {
           display: grid;
           align-content: start;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
         }
         .anchor {
-          margin: 0;
-          font-size: var(--anchor-size);
+          font-size: var(--_fit-anchor-size);
           font-weight: 700;
           line-height: 1.18;
           letter-spacing: -0.01em;
@@ -490,8 +302,7 @@ export class Amendment extends CardDef {
           overflow: hidden;
         }
         .sub {
-          margin: 0;
-          font-size: var(--meta-size);
+          font-size: var(--_fit-meta-size);
           line-height: 1.3;
           color: var(--muted-foreground);
           display: -webkit-box;
@@ -502,8 +313,8 @@ export class Amendment extends CardDef {
         .r-meta {
           display: flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: var(--meta-size);
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--_fit-meta-size);
           line-height: 1.3;
           color: var(--muted-foreground);
           white-space: nowrap;
@@ -579,7 +390,7 @@ export class Amendment extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -593,16 +404,9 @@ export class Amendment extends CardDef {
       <span class='atom'>{{@model.cardTitle}}</span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>
   };
-
-  // Edit grouped the way a reviewer reads a modification document: which
-  // contract and when (identity) → what actually changes (the substance) →
-  // has it been signed (approval). Anchor rail on the left. Shares its
-  // section shape and class names with Addendum so the modification
-  // documents edit as siblings.
-  static edit = AmendmentEdit;
 }

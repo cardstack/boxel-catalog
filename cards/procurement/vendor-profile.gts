@@ -18,15 +18,14 @@ import BooleanField from '@cardstack/base/boolean';
 import { realmURL } from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { gt, eq } from '@cardstack/boxel-ui/helpers';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Token } from '@cardstack/pretui/components/token';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { StatusChip } from '@cardstack/pretui/components/status-chip';
 
-import { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
+import { Vendor } from './vendor';
 import {
   statusField,
   statusHue,
@@ -34,8 +33,6 @@ import {
 import { PaymentTermsField } from '../commerce/payment-terms-field';
 import { LifecycleDatesField } from '@cardstack/catalog/fields/lifecycle-dates/lifecycle-dates-field';
 import OnboardVendorCommand from './commands/onboard-vendor-command';
-import { VendorWorkspace } from './components/vendor-workspace';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 import {
   StatePill,
   stateColor,
@@ -43,7 +40,6 @@ import {
 } from '@cardstack/catalog/components/state-pill';
 import {
   ALERT_STYLE,
-  COMPACT_EMPTY_STYLE,
   ID_TOKEN_STYLE,
 } from '@cardstack/catalog/components/pretui-helpers';
 
@@ -263,257 +259,102 @@ export const VendorProfileStatusField = markDefinition(
   }),
 );
 
-const CONTACT_FACTS = [
-  { key: 'Contact', value: 'contactName' },
-  { key: 'Email', value: 'email' },
-  { key: 'Phone', value: 'phone' },
-  { key: 'Address', value: 'address' },
-];
+// ── Shared derivations for every format ────────────────────────────────
+function fmtDate(d?: Date | null, short = false): string {
+  if (!d) {
+    return '—';
+  }
+  return d.toLocaleDateString(
+    'en-US',
+    short
+      ? { month: 'short', day: 'numeric' }
+      : { month: 'short', day: 'numeric', year: 'numeric' },
+  );
+}
 
-const REMITTANCE_FACTS = [
-  { key: 'Tax ID', value: 'taxId' },
-  { key: 'Bank', value: 'bank' },
-  { key: 'Terms', value: 'terms' },
-  { key: 'Lifecycle', value: 'lifecycle' },
-];
+function phoneLabel(raw?: string | null): string {
+  if (!raw) {
+    return '—';
+  }
+  // NANP numbers read as "+1 415 555 0134"; anything else stays as entered.
+  let m = /^\+?1?(\d{3})(\d{3})(\d{4})$/.exec(raw.replace(/[\s().-]/g, ''));
+  return m ? `+1 ${m[1]} ${m[2]} ${m[3]}` : raw;
+}
 
-const COMPLIANCE_FACTS = [{ key: 'Insurance', value: 'insurance' }];
+function netLabel(p?: Partial<VendorProfile> | null): string {
+  let n = p?.paymentTerms?.netDays;
+  return n == null ? '—' : `Net-${n}`;
+}
 
-class VendorProfileEdit extends Component<typeof VendorProfile> {
-  // Left section nav: clicking anchors that section to the top of the
-  // form's own scroller (the root — never a nested
-  // scroller). Scoped through the event's own root so several open edit
-  // panels never cross-scroll each other.
-  @tracked activeSection = 'identity';
+function termsLabel(p?: Partial<VendorProfile> | null): string {
+  let t = p?.paymentTerms;
+  if (t?.netDays == null) {
+    return '—';
+  }
+  return t.discountPct && t.discountDays
+    ? `Net-${t.netDays}, ${t.discountPct}% / ${t.discountDays}`
+    : `Net-${t.netDays}`;
+}
 
-  sections = [
-    { id: 'identity', label: 'Identity' },
-    { id: 'contact', label: 'Contact' },
-    { id: 'compliance', label: 'Compliance' },
-    { id: 'remittance', label: 'Tax & Remittance' },
-    { id: 'notes', label: 'Notes' },
+function discountLabel(p?: Partial<VendorProfile> | null): string {
+  let t = p?.paymentTerms;
+  return t?.discountPct && t?.discountDays
+    ? `${t.discountPct}% if paid in ${t.discountDays} days`
+    : 'no early-pay discount';
+}
+
+function validCertCount(p?: Partial<VendorProfile> | null): number {
+  return (p?.certifications ?? []).filter((c) => c && !c.isExpired).length;
+}
+
+function certCount(p?: Partial<VendorProfile> | null): number {
+  return (p?.certifications ?? []).filter(Boolean).length;
+}
+
+function profileSub(p?: Partial<VendorProfile> | null): string {
+  return [p?.serviceCategory, p?.contactName].filter(Boolean).join(' · ');
+}
+
+function statusText(p?: Partial<VendorProfile> | null): string {
+  return (
+    VENDOR_PROFILE_STATUS_LABELS[p?.status ?? ''] ?? 'Intake'
+  ).toLowerCase();
+}
+
+function profileHue(p?: Partial<VendorProfile> | null) {
+  return statusHue(VendorProfileStatusField, p?.status);
+}
+
+function detailRows(p?: Partial<VendorProfile> | null) {
+  return [
+    { key: 'Contact', value: p?.contactName || '—' },
+    { key: 'Insurance', value: fmtDate(p?.insuranceExpiry) },
+    { key: 'Certifications', value: `${validCertCount(p)} valid` },
+    { key: 'Terms', value: termsLabel(p) },
+    { key: 'Tax ID', value: p?.maskedTaxId || '—' },
+    { key: 'Bank', value: p?.bankDetails?.bankName || '—' },
   ];
+}
 
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.profile-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
+function insuredFact(p?: Partial<VendorProfile> | null, short = false): string {
+  return p?.insuranceExpiry
+    ? `Insured to ${fmtDate(p.insuranceExpiry, short)}`
+    : 'Insurance not on file';
+}
 
-  <template>
-    <div class='profile-edit'>
-      {{! the container element cannot be restyled by its own query — the responsive grid lives on
-          this inner wrapper instead }}
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "identity") "focused"}}'
-            data-sect='identity'
-          >
-            <h3>Identity</h3>
-            <div class='row identity'>
-              <FieldContainer @label='Company' @vertical={{true}}>
-                <@fields.companyName />
-              </FieldContainer>
-              <FieldContainer @label='Category' @vertical={{true}}>
-                <@fields.serviceCategory />
-              </FieldContainer>
-              <FieldContainer @label='Status' @vertical={{true}}>
-                <@fields.status />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "contact") "focused"}}'
-            data-sect='contact'
-          >
-            <h3>Contact</h3>
-            <div class='row'>
-              <FieldContainer @label='Contact name' @vertical={{true}}>
-                <@fields.contactName />
-              </FieldContainer>
-              <FieldContainer @label='Email' @vertical={{true}}>
-                <@fields.email />
-              </FieldContainer>
-              <FieldContainer @label='Phone' @vertical={{true}}>
-                <@fields.phone />
-              </FieldContainer>
-            </div>
-            <FieldContainer @label='Address' @vertical={{true}}>
-              <@fields.address />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect compliance
-              {{if (eq this.activeSection "compliance") "focused"}}'
-            data-sect='compliance'
-          >
-            <h3>Compliance
-              <span class='sect-hint'>expired credentials block RFQ awards</span></h3>
-            <div class='row'>
-              <FieldContainer @label='Insurance valid until' @vertical={{true}}>
-                <@fields.insuranceExpiry />
-              </FieldContainer>
-            </div>
-            <FieldContainer
-              @label='Certifications (name, issuer, dates)'
-              @vertical={{true}}
-            >
-              <@fields.certifications />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "remittance") "focused"}}'
-            data-sect='remittance'
-          >
-            <h3>Tax &amp; Remittance
-              <span class='sect-hint'>shown masked everywhere except here</span></h3>
-            <div class='row'>
-              <FieldContainer @label='Tax ID' @vertical={{true}}>
-                <@fields.taxId />
-              </FieldContainer>
-            </div>
-            <FieldContainer @label='Bank details' @vertical={{true}}>
-              <@fields.bankDetails />
-            </FieldContainer>
-            <FieldContainer @label='Payment terms' @vertical={{true}}>
-              <@fields.paymentTerms />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "notes") "focused"}}'
-            data-sect='notes'
-          >
-            <h3>Notes</h3>
-            <FieldContainer @label='Internal notes' @vertical={{true}}>
-              <@fields.notes />
-            </FieldContainer>
-            <FieldContainer @label='Active vendor record' @vertical={{true}}>
-              <@fields.linkedVendor />
-            </FieldContainer>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .profile-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background-color: var(--background);
-        color: var(--foreground);
-        /* the procurement family's brand ink, declared once — a linked
-           Theme overrides it via --procurement-ink */
-        --vp-ink: var(--procurement-ink, var(--primary-ink));
-        --vp-ink-fg: var(--procurement-ink-fg, var(--card));
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-      }
-      /* the root is the scroller, so sticky pins the nav to its top */
-      .sect-nav {
-        position: sticky;
-        top: 0;
-        /* hand the family ink pair to the rail's published knobs */
-        --edit-section-nav-ink: var(--vp-ink);
-        --edit-section-nav-ink-fg: var(--vp-ink-fg);
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      /* the section the rail points at mirrors the rail's active state:
-         same pinned brand ink, diluted for the halo */
-      .sect.focused {
-        outline-color: var(--vp-ink);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--vp-ink) 12%, transparent);
-      }
-      .sect.compliance {
-        border-left: 0.1875rem solid var(--vp-ink);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
-        align-items: start;
-      }
-      .identity {
-        grid-template-columns: 2fr 1fr 1fr;
-      }
-      @container edit (width < 640px) {
-        .row,
-        .identity {
-          grid-template-columns: 1fr;
-        }
-        /* narrow panel: nav becomes a horizontal chip row above the form */
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        /* narrow: the rail flips horizontal (consumer's scope attribute
-           rides ...attributes onto the component root, so these apply) */
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
-        }
-      }
-    </style>
-  </template>
+function addressLine(p?: Partial<VendorProfile> | null): string {
+  let a = p?.address;
+  if (!a) {
+    return '—';
+  }
+  let line = [
+    a.addressLine1,
+    a.city,
+    [a.state, a.postalCode].filter(Boolean).join(' '),
+  ]
+    .filter(Boolean)
+    .join(', ');
+  return line || '—';
 }
 
 class VendorProfileIsolated extends Component<typeof VendorProfile> {
@@ -560,290 +401,430 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
     }
   };
 
-  get statusHue() {
-    return statusHue(VendorProfileStatusField, this.args.model?.status);
+  get m() {
+    return this.args.model as VendorProfile;
   }
-  get statusLabel() {
-    return (
-      VENDOR_PROFILE_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Intake'
-    );
+  get certs() {
+    return (this.m?.certifications ?? []).filter(Boolean).map((c) => ({
+      name: c.name || 'Certification',
+      meta: [
+        c.issuer,
+        c.issuedOn ? `issued ${fmtDate(c.issuedOn)}` : null,
+        c.expiresOn ? `expires ${fmtDate(c.expiresOn)}` : null,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      expired: c.isExpired,
+    }));
+  }
+  get contactRows() {
+    let m = this.m;
+    return [
+      { key: 'Contact', value: m?.contactName || '—' },
+      { key: 'Email', value: m?.email || '—' },
+      { key: 'Phone', value: phoneLabel(m?.phone) },
+      { key: 'Address', value: addressLine(m) },
+    ];
+  }
+  get financeRows() {
+    let m = this.m;
+    let b = m?.bankDetails;
+    let t = m?.paymentTerms;
+    return [
+      { key: 'Tax ID', value: m?.maskedTaxId || '—' },
+      {
+        key: 'Bank',
+        value:
+          [b?.bankName, b?.maskedAccountNumber].filter(Boolean).join(' · ') ||
+          '—',
+      },
+      {
+        key: 'Terms',
+        value:
+          t?.netDays == null
+            ? '—'
+            : [
+                `Net-${t.netDays}`,
+                t.discountPct && t.discountDays
+                  ? `${t.discountPct}% in ${t.discountDays} days`
+                  : null,
+                t.method,
+              ]
+                .filter(Boolean)
+                .join(' · '),
+      },
+    ];
+  }
+  get lifecycleRows() {
+    let l = this.m?.lifecycle;
+    return [
+      { key: 'Created', value: fmtDate(l?.createdAt) },
+      { key: 'Activated', value: fmtDate(l?.activatedAt) },
+      { key: 'Last reviewed', value: fmtDate(l?.lastReviewedAt) },
+    ];
+  }
+  get detailRows() {
+    let m = this.m;
+    return [
+      ...detailRows(m),
+      { key: 'Phone', value: phoneLabel(m?.phone) },
+      { key: 'Email', value: m?.email || '—' },
+    ];
   }
   get insuranceExpired() {
-    return isPastDay(this.args.model?.insuranceExpiry);
+    return isPastDay(this.m?.insuranceExpiry);
   }
-  get complianceLabel() {
-    return this.args.model?.complianceOk
-      ? 'Compliance current'
-      : 'Compliance lapsed — award blocked';
+  get insuranceYear() {
+    return this.m?.insuranceExpiry
+      ? String(this.m.insuranceExpiry.getFullYear())
+      : 'not on file';
   }
-  get insuranceDateLabel() {
-    let d = this.args.model?.insuranceExpiry;
-    return d
-      ? d.toLocaleDateString('en-US', {
-          month: 'short',
-          year: 'numeric',
-        })
-      : '';
+  get certsValue() {
+    return `${validCertCount(this.m)} / ${certCount(this.m)}`;
+  }
+  get pipelineHint() {
+    let a = this.m?.lifecycle?.activatedAt;
+    return a ? `onboarded ${fmtDate(a)}` : statusText(this.m);
   }
 
-  // The live-query workspace mounts only in interactive contexts —
-  // prerender gets the static sections. Known Glimmer backtracking
-  // assertion fires when getCards-backed components mount during
-  // prerender (see app-factory notes); CRUD-function presence is the
-  // documented gate.
-  get isInteractive() {
-    return Boolean((this.args as any).viewCard);
-  }
   <template>
-    <article class='profile'>
-      <header class='head'>
-        <div>
-          <p class='kicker'>Vendor Profile</p>
-          <h1>{{@model.companyName}}</h1>
-          <p class='sub'>{{@model.serviceCategory}}</p>
-        </div>
-        <div class='head-pills'>
-          <StatePill
-            @label={{this.statusLabel}}
-            @hue={{this.statusHue}}
-            @emphatic={{true}}
+    <article class='vp'>
+      <section class='card'>
+        <header class='ih'>
+          <Avatar
+            @name={{if @model.companyName @model.companyName 'Vendor'}}
+            @shape='rounded'
+            @size={{22}}
           />
-          <StatePill
-            @label={{this.complianceLabel}}
-            @hue={{if @model.complianceOk 'green' 'red'}}
-            @dot={{true}}
+          <div class='id'>
+            <h1>{{@model.title}}</h1>
+            <span class='meta'>{{profileSub @model}}</span>
+          </div>
+          <div class='sts'>
+            <StatusChip
+              @value={{statusText @model}}
+              @hue={{profileHue @model}}
+              @appearance='plain'
+            />
+            <StatusChip
+              @value={{if @model.complianceOk 'compliant' 'lapsed'}}
+              @hue={{if @model.complianceOk 'green' 'red'}}
+              @appearance='plain'
+            />
+            {{#if this.canOnboard}}
+              <Button
+                @variant='primary'
+                @size='sm'
+                @disabled={{this.busy}}
+                {{on 'click' this.onboard}}
+              >{{if this.busy 'Onboarding…' 'Onboard vendor'}}</Button>
+            {{/if}}
+          </div>
+        </header>
+        {{#if this.error}}
+          <Alert
+            @tone='danger'
+            @title={{this.error}}
+            style={{ALERT_STYLE.danger}}
           />
-          {{#if this.canOnboard}}
-            <Button
-              @variant='primary'
-              @size='s'
-              @busy={{this.busy}}
-              @disabled={{this.busy}}
-              {{on 'click' this.onboard}}
-            >Onboard as Vendor</Button>
-          {{/if}}
+        {{/if}}
+        {{#if this.message}}
+          <Alert
+            @tone='success'
+            @title={{this.message}}
+            style={{ALERT_STYLE.success}}
+          />
+        {{/if}}
+        <div class='stats'>
+          <div class='stat'>
+            <span class='cap'><span
+                class='dot {{if this.insuranceExpired "bad"}}'
+              ></span>Insurance until</span>
+            <span class='num'>{{fmtDate @model.insuranceExpiry true}}</span>
+            <span class='meta'>{{this.insuranceYear}}</span>
+          </div>
+          <div class='stat'>
+            <span class='cap'><span
+                class='dot {{if @model.complianceOk "ok" "bad"}}'
+              ></span>Certifications</span>
+            <span class='num'>{{this.certsValue}}</span>
+            <span class='meta'>valid</span>
+          </div>
+          <div class='stat'>
+            <span class='cap'><span class='dot'></span>Payment terms</span>
+            <span class='num'>{{netLabel @model}}</span>
+            <span class='meta'>{{discountLabel @model}}</span>
+          </div>
+          <div class='stat'>
+            <span class='cap'><span class='dot'></span>In pipeline</span>
+            <span class='num'>{{fmtDate @model.lifecycle.createdAt true}}</span>
+            <span class='meta'>{{this.pipelineHint}}</span>
+          </div>
         </div>
-      </header>
+      </section>
 
-      {{#if this.error}}
-        <Alert
-          class='flash'
-          @tone='danger'
-          @title='Could not onboard this vendor'
-          style={{ALERT_STYLE.danger}}
-        >
-          <:default>{{this.error}}</:default>
-        </Alert>
-      {{/if}}
-      {{#if this.message}}
-        <Alert
-          class='flash'
-          @tone='success'
-          role='status'
-          style={{ALERT_STYLE.success}}
-        >
-          <:default>{{this.message}}</:default>
-        </Alert>
-      {{/if}}
-
-      <div class='grid'>
-        <section class='panel'>
-          <h2>Contact</h2>
-          <KeyValue class='facts' @items={{CONTACT_FACTS}}>
-            <:value as |row|>
-              {{#if (eq row.value 'contactName')}}
-                {{@model.contactName}}
-              {{else if (eq row.value 'email')}}
-                {{#if @model.email}}<@fields.email />{{/if}}
-              {{else if (eq row.value 'phone')}}
-                {{#if @model.phone}}<@fields.phone @format='atom' />{{/if}}
-              {{else}}
-                {{@model.address.fullAddress}}
-              {{/if}}
-            </:value>
-          </KeyValue>
-        </section>
-
-        <section class='panel'>
-          <h2>Tax &amp; Remittance</h2>
-          <KeyValue class='facts' @items={{REMITTANCE_FACTS}}>
-            <:value as |row|>
-              {{#if (eq row.value 'taxId')}}
-                {{#if @model.maskedTaxId}}
-                  <Token
-                    @value={{@model.maskedTaxId}}
-                    style={{ID_TOKEN_STYLE.sm}}
-                  />
-                {{/if}}
-              {{else if (eq row.value 'bank')}}
-                <@fields.bankDetails />
-              {{else if (eq row.value 'terms')}}
-                {{#if @model.paymentTerms.shorthand}}
-                  <@fields.paymentTerms @format='embedded' />
-                {{else}}not negotiated yet{{/if}}
-              {{else}}
-                <@fields.lifecycle @format='embedded' />
-              {{/if}}
-            </:value>
-          </KeyValue>
-        </section>
-
-        <section class='panel span'>
-          <h2>Compliance</h2>
-          <KeyValue class='facts' @items={{COMPLIANCE_FACTS}}>
-            <:value>
-              {{#if @model.insuranceExpiry}}
-                <StatePill
-                  @label='{{if
-                    this.insuranceExpired
-                    "expired"
-                    "valid to"
-                  }} {{this.insuranceDateLabel}}'
-                  @hue={{if this.insuranceExpired 'red' 'green'}}
-                  @dot={{true}}
+      <div class='grid2'>
+        <div class='col'>
+          <section class='card'>
+            <h2>Certifications</h2>
+            {{#if this.certs.length}}
+              <ul class='rows'>
+                {{#each this.certs as |c|}}
+                  <li>
+                    <span class='two'>
+                      <span class='strong'>{{c.name}}</span>
+                      <span class='meta'>{{c.meta}}</span>
+                    </span>
+                    <StatusChip
+                      @value={{if c.expired 'expired' 'valid'}}
+                      @hue={{if c.expired 'red' 'green'}}
+                      @appearance='plain'
+                    />
+                  </li>
+                {{/each}}
+              </ul>
+            {{else}}
+              <p class='body'>No certifications on file.</p>
+            {{/if}}
+          </section>
+          <section class='card'>
+            <h2>Notes</h2>
+            <p class='body'>{{if @model.notes @model.notes '—'}}</p>
+          </section>
+        </div>
+        <div class='col'>
+          <section class='card'>
+            <h2>Contact</h2>
+            <KeyValue
+              class='kv'
+              @items={{this.contactRows}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+            >
+              <:value as |row|><span class='kvv'>{{row.value}}</span></:value>
+            </KeyValue>
+          </section>
+          <section class='card'>
+            <h2>Finance</h2>
+            <KeyValue
+              class='kv'
+              @items={{this.financeRows}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+            >
+              <:value as |row|><span class='kvv'>{{row.value}}</span></:value>
+            </KeyValue>
+          </section>
+          <section class='card'>
+            <h2>Lifecycle</h2>
+            <KeyValue
+              class='kv'
+              @items={{this.lifecycleRows}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+            >
+              <:value as |row|><span class='kvv'>{{row.value}}</span></:value>
+            </KeyValue>
+          </section>
+          <section class='card'>
+            <h2>Linked</h2>
+            <div class='linked'>
+              <span class='cap'>Vendor</span>
+              {{#if @model.linkedVendor}}
+                <@fields.linkedVendor
+                  @format='atom'
+                  @displayContainer={{false}}
                 />
               {{else}}
-                <StatePill @label='not on file' @hue='amber' @dot={{true}} />
+                <span class='meta'>not onboarded yet</span>
               {{/if}}
-            </:value>
-          </KeyValue>
-          <div class='certs'>
-            {{#each @fields.certifications as |Cert|}}
-              <Cert />
-            {{else}}
-              <EmptyState
-                style={{COMPACT_EMPTY_STYLE}}
-                @texture={{false}}
-                @title='No certifications recorded yet'
-              />
-            {{/each}}
-          </div>
-        </section>
-
-        {{#if @model.notes}}
-          <section class='panel span'>
-            <h2>Notes</h2>
-            <p class='notes'>{{@model.notes}}</p>
+            </div>
           </section>
-        {{/if}}
-
-        {{#if @model.linkedVendor}}
-          <section class='panel span'>
-            <h2>Active Vendor Record</h2>
-            <@fields.linkedVendor @format='embedded' />
+          <section class='card'>
+            <h2>Details</h2>
+            <KeyValue
+              class='kv'
+              @items={{this.detailRows}}
+              @labelStyle='eyebrow'
+              @divided={{true}}
+            >
+              <:value as |row|><span class='kvv'>{{row.value}}</span></:value>
+            </KeyValue>
           </section>
-          {{#if this.isInteractive}}
-            <section class='panel span'>
-              <h2>Vendor Workspace</h2>
-              <VendorWorkspace
-                @vendor={{@model.linkedVendor}}
-                @context={{@context}}
-              />
-            </section>
-          {{/if}}
-        {{/if}}
+        </div>
       </div>
     </article>
     <style scoped>
-      /* A linked card sizes to its content. The card container's base
-         height: 100% would otherwise fill a stretched grid panel and spill
-         past the heading above it. */
-      .profile :deep(.field-component-card.embedded-format) {
-        height: auto;
-      }
-      .profile {
+      .vp {
+        font-size: 0.75rem;
+        line-height: 1.4;
+        color: var(--foreground);
+        --pretui-kv-label-font-size: 0.5625rem;
+        --pretui-kv-label-color: var(--muted-foreground);
+        --boxel-sp-xs: 0.375rem;
+        --boxel-sp-lg: 0.75rem;
         container-type: inline-size;
-        padding: var(--boxel-sp-lg);
-      }
-      .head {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: var(--boxel-sp);
-        border-bottom: 1px solid var(--border);
-        padding-bottom: var(--boxel-sp);
-        margin-bottom: var(--boxel-sp-lg);
-      }
-      .kicker {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      h1 {
-        margin: var(--boxel-sp-5xs) 0 var(--boxel-sp-5xs);
-        font-size: 1.75rem;
-        line-height: 1.15;
-      }
-      .sub {
-        margin: 0;
-        color: var(--muted-foreground);
-      }
-      .head-pills {
         display: flex;
         flex-direction: column;
-        align-items: flex-end;
-        gap: var(--boxel-sp-xxs);
+        gap: 0.5rem;
+        padding: 0.5rem;
+        box-sizing: border-box;
+        min-block-size: 100%;
+        background: var(--background);
       }
-      .flash {
-        margin-bottom: var(--boxel-sp);
-      }
-      .grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--boxel-sp);
-      }
-      .panel {
+      .card {
+        background: var(--card);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        background-color: var(--card);
-        color: var(--card-foreground);
+        min-inline-size: 0;
       }
-      .panel.span {
-        grid-column: 1 / -1;
+      .ih {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding: 0.625rem;
       }
-      h2 {
-        margin: 0 0 var(--boxel-sp-xs);
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+      .id {
+        flex: 1 1 12rem;
+        min-inline-size: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      h1 {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      .sts {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.625rem;
+      }
+      .meta {
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
+      }
+      .strong {
+        font-weight: 700;
+      }
+      .cap {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
-      /* Pret UI KeyValue at the panel's text size and column gap */
-      .facts {
-        --text-ui: 0.8125rem;
-        --text-ui-md: 0.875rem;
-        --space-6: var(--boxel-sp-xs);
-        align-items: baseline;
+      .dot {
+        inline-size: 0.375rem;
+        block-size: 0.375rem;
+        border-radius: 50%;
+        background: var(--muted-foreground);
+        flex: none;
       }
-      .certs {
-        margin-top: var(--boxel-sp-xs);
+      .dot.ok {
+        background: var(--success-ink);
+      }
+      .dot.bad {
+        background: var(--destructive);
+      }
+      .stats {
         display: grid;
-        gap: var(--boxel-sp-5xs);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border-top: 1px solid var(--border);
+        overflow: hidden;
       }
-      .notes {
+      .stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.4375rem 0.625rem;
+        border-inline-start: 1px solid var(--border);
+        margin-inline-start: -1px;
+        min-inline-size: 0;
+      }
+      .num {
+        font-size: 1.375rem;
+        font-weight: 700;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        gap: 0.5rem;
+        align-items: start;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-inline-size: 0;
+      }
+      h2 {
         margin: 0;
-        font-size: 0.875rem;
-        white-space: pre-wrap;
+        padding: 0.4375rem 0.625rem 0.3125rem;
+        font-size: 0.75rem;
+        font-weight: 700;
       }
-      @container (max-width: 560px) {
-        .grid {
-          grid-template-columns: 1fr;
+      .rows {
+        list-style: none;
+        margin: 0;
+        padding: 0 0.625rem;
+      }
+      .rows li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        border-top: 1px solid var(--border);
+      }
+      .two {
+        display: flex;
+        flex-direction: column;
+        padding-block: 0.4375rem;
+        min-inline-size: 0;
+      }
+      .body {
+        margin: 0;
+        padding: 0 0.625rem 0.625rem;
+        overflow-wrap: anywhere;
+      }
+      .kvv {
+        font-size: 0.75rem;
+      }
+      .kv {
+        padding: 0 0.625rem 0.625rem;
+        overflow-wrap: anywhere;
+      }
+      .linked {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        min-block-size: 1.75rem;
+        margin: 0 0.625rem 0.625rem;
+        border-top: 1px solid var(--border);
+      }
+      .linked .cap {
+        min-inline-size: 7.5rem;
+      }
+      @container (max-width: 45rem) {
+        .grid2 {
+          grid-template-columns: minmax(0, 1fr);
         }
-        .head {
-          flex-direction: column;
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
-        .head-pills {
-          align-items: flex-start;
-          flex-direction: row;
+        .stat:nth-child(n + 3) {
+          border-top: 1px solid var(--border);
         }
       }
     </style>
@@ -919,50 +900,111 @@ export class VendorProfile extends CardDef {
   static isolated = VendorProfileIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusHue() {
-      return statusHue(VendorProfileStatusField, this.args.model?.status);
-    }
-    get statusLabel() {
-      return (
-        VENDOR_PROFILE_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Intake'
-      );
-    }
     <template>
-      <div class='row'>
-        <div class='who'>
-          <span class='name'>{{@model.companyName}}</span>
-          <span class='cat'>{{@model.serviceCategory}}</span>
-        </div>
-        <StatePill
-          @label={{if @model.complianceOk 'compliant' 'lapsed'}}
-          @hue={{if @model.complianceOk 'green' 'red'}}
-          @dot={{true}}
-        />
-        <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
-      </div>
+      <article class='emb'>
+        <header>
+          <div class='h1'>
+            <Avatar
+              @name={{if @model.companyName @model.companyName 'Vendor'}}
+              @shape='rounded'
+              @size={{22}}
+            />
+            <span class='nm'>{{@model.title}}</span>
+            <StatusChip
+              @value={{statusText @model}}
+              @hue={{profileHue @model}}
+              @appearance='plain'
+            />
+          </div>
+          <div class='h2'>
+            <span class='meta'>{{profileSub @model}}</span>
+            <StatusChip
+              @value={{if @model.complianceOk 'compliant' 'lapsed'}}
+              @hue={{if @model.complianceOk 'green' 'red'}}
+              @appearance='plain'
+            />
+          </div>
+        </header>
+        <p class='fact'>{{insuredFact @model}} · {{netLabel @model}}</p>
+        <KeyValue
+          class='kv'
+          @items={{detailRows @model}}
+          @labelStyle='eyebrow'
+          @divided={{true}}
+        >
+          <:value as |row|><span class='kvv'>{{row.value}}</span></:value>
+        </KeyValue>
+        {{#if @model.linkedVendor}}
+          <div class='linked'>
+            <span class='cap'>Vendor</span>
+            <@fields.linkedVendor @format='atom' @displayContainer={{false}} />
+          </div>
+        {{/if}}
+      </article>
       <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: 1fr auto auto;
-          gap: var(--boxel-sp-sm);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        .emb {
+          font-size: 0.75rem;
+          line-height: 1.4;
+          color: var(--foreground);
+          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-color: var(--muted-foreground);
+          --boxel-sp-xs: 0.375rem;
+          --boxel-sp-lg: 0.75rem;
+          padding-block-end: 0.4375rem;
         }
-        .who {
+        header {
+          padding: 0.4375rem 0.625rem;
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
+          gap: 0.25rem;
         }
-        .name {
-          font-weight: 600;
-          font-size: 0.9375rem;
+        .h1,
+        .h2 {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 0.375rem 0.5rem;
+        }
+        .nm {
+          flex: 1 1 6rem;
+          min-inline-size: 0;
+          font-weight: 700;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .cat {
-          font-size: 0.8125rem;
+        .meta {
+          flex: 1 1 8rem;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .fact {
+          margin: 0;
+          padding: 0.3125rem 0.625rem;
+          border-top: 1px solid var(--border);
+        }
+        .kv {
+          padding-inline: 0.625rem;
+        }
+        .kvv {
+          font-size: 0.75rem;
+        }
+        .linked {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+          min-block-size: 1.75rem;
+          margin-inline: 0.625rem;
+          border-top: 1px solid var(--border);
+        }
+        .cap {
+          min-inline-size: 7.5rem;
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
           color: var(--muted-foreground);
         }
       </style>
@@ -972,189 +1014,266 @@ export class VendorProfile extends CardDef {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='atom'>
-        <span class='dot {{if @model.complianceOk "ok" "bad"}}'></span>
-        {{@model.companyName}}
+        <Avatar
+          @name={{if @model.companyName @model.companyName 'Vendor'}}
+          @shape='rounded'
+          @size={{18}}
+        />
+        <span class='n'>{{@model.title}}</span>
+        <StatusChip
+          @value={{statusText @model}}
+          @hue={{profileHue @model}}
+          @appearance='plain'
+        />
       </span>
       <style scoped>
         .atom {
           display: inline-flex;
           align-items: center;
-          gap: var(--boxel-sp-5xs);
-          font-size: 0.8125rem;
+          gap: 0.375rem;
+          min-inline-size: 0;
+          max-inline-size: 100%;
+          font-size: 0.6875rem;
+          color: var(--foreground);
         }
-        .dot {
-          width: 0.4375rem;
-          height: 0.4375rem;
-          border-radius: 50%;
-        }
-        .dot.ok {
-          background-color: var(--success-ink);
-        }
-        .dot.bad {
-          background-color: var(--destructive-ink);
+        .n {
+          font-weight: 600;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          min-inline-size: 0;
         }
       </style>
     </template>
   };
 
+  // Rows are 28px with a hairline between. The column wraps, so a row that
+  // does not fit moves into a second column outside the tile and is clipped
+  // whole — never a half-cut row, no thresholds to keep in sync.
   static fitted = class Fitted extends Component<typeof this> {
-    get statusHue() {
-      return statusHue(VendorProfileStatusField, this.args.model?.status);
+    get certs() {
+      return (this.args.model?.certifications ?? []).filter(Boolean);
     }
-    get moreCertsLabel() {
-      return `+${this.certCount}`;
-    }
-    get statusLabel() {
-      return (
-        VENDOR_PROFILE_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Intake'
-      );
-    }
-    get certCount() {
-      return (this.args.model?.certifications ?? []).length;
-    }
-    get topCerts() {
-      return (this.args.model?.certifications ?? [])
-        .filter(Boolean)
-        .slice(0, 2);
-    }
-    get insuranceLabel() {
-      let d = this.args.model?.insuranceExpiry;
-      if (!d) {
-        return 'insurance not on file';
-      }
-      let label = d.toLocaleDateString('en-US', {
-        month: 'short',
-        year: 'numeric',
-      });
-      return d < new Date()
-        ? `insurance expired ${label}`
-        : `insured to ${label}`;
+    // Under 250 wide the mock shows short values and skips Certifications.
+    get rows() {
+      let m = this.args.model as VendorProfile;
+      let short: Record<string, string> = {
+        Insurance: fmtDate(m?.insuranceExpiry, true),
+        Terms: netLabel(m),
+      };
+      return detailRows(m).map((r) => ({
+        ...r,
+        short: short[r.key] ?? r.value,
+        wideOnly: r.key === 'Certifications',
+      }));
     }
     <template>
       <div class='fit'>
-        <div class='fit-head'>
-          <span class='fit-name'>{{@model.companyName}}</span>
-          <span class='fit-flag {{if @model.complianceOk "ok" "bad"}}'>{{if
-              @model.complianceOk
-              '✓'
-              '⚠'
-            }}</span>
-        </div>
-        <span class='fit-cat'>{{@model.serviceCategory}}</span>
-        <div class='fit-mid'>
-          <span
-            class='fit-insurance {{unless @model.complianceOk "bad"}}'
-          >{{this.insuranceLabel}}</span>
-          {{#if (gt this.certCount 0)}}
-            <div class='fit-cert-pills'>
-              {{#each this.topCerts as |cert|}}
-                <StatePill
-                  class={{if cert.isExpired 'expired'}}
-                  @label={{cert.name}}
-                  @hue={{if cert.isExpired 'red' 'slate'}}
-                />
-              {{/each}}
-              {{#if (gt this.certCount 2)}}
-                <StatePill @label={{this.moreCertsLabel}} @chrome={{true}} />
-              {{/if}}
+        <div class='fx'>
+          <div class='fr fh'>
+            <Avatar
+              @name={{if @model.companyName @model.companyName 'Vendor'}}
+              @shape='rounded'
+              @size={{20}}
+            />
+            <span class='nm'>{{@model.title}}</span>
+            <span class='wide'><StatusChip
+                @value={{statusText @model}}
+                @hue={{profileHue @model}}
+                @appearance='plain'
+              /></span>
+            <span class='narrow dot' title={{statusText @model}}><StatusChip
+                @value={{statusText @model}}
+                @hue={{profileHue @model}}
+                @appearance='plain'
+              /></span>
+          </div>
+          <div class='fr'>
+            <span class='meta wide'>{{profileSub @model}}</span>
+            <span class='meta narrow'>{{if
+                @model.contactName
+                @model.contactName
+                @model.serviceCategory
+              }}</span>
+          </div>
+          <div class='fr'>
+            <span class='mono wide'>{{insuredFact @model}}
+              ·
+              {{netLabel @model}}</span>
+            <span class='mono narrow'>{{insuredFact @model true}}</span>
+          </div>
+          <div class='fr narrow-row'>
+            <StatusChip
+              @value={{statusText @model}}
+              @hue={{profileHue @model}}
+              @appearance='plain'
+            />
+          </div>
+          <div class='frs'>
+            <div class='stat'><span class='cap'>Insured to</span><span
+                class='num'
+              >{{fmtDate @model.insuranceExpiry true}}</span></div>
+            <div class='stat'><span class='cap'>Certs</span><span
+                class='num'
+              >{{validCertCount @model}} / {{certCount @model}}</span></div>
+            <div class='stat'><span class='cap'>Terms</span><span
+                class='num'
+              >{{netLabel @model}}</span></div>
+          </div>
+          {{#each this.rows as |row|}}
+            <div class='fr fk {{if row.wideOnly "wide-row"}}'>
+              <span class='cap'>{{row.key}}</span>
+              <span class='mono v wide'>{{row.value}}</span>
+              <span class='mono v narrow'>{{row.short}}</span>
             </div>
-          {{/if}}
-        </div>
-        <div class='fit-more'>
-          <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
-          {{#if @model.contactName}}
-            <span class='fit-contact'>{{@model.contactName}}</span>
+          {{/each}}
+          {{#if this.certs.length}}
+            <div class='fr'><span class='cap'>Certifications</span></div>
+            {{#each this.certs as |c|}}
+              <div class='fr'>
+                <span class='ln'>{{c.name}}</span>
+                <StatusChip
+                  @value={{if c.isExpired 'expired' 'valid'}}
+                  @hue={{if c.isExpired 'red' 'green'}}
+                  @appearance='plain'
+                />
+              </div>
+            {{/each}}
           {{/if}}
         </div>
       </div>
       <style scoped>
         .fit {
-          height: 100%;
+          container-type: size;
+          block-size: 100%;
+          inline-size: 100%;
+          overflow: hidden;
+          font-size: 0.75rem;
+          line-height: 1.3;
+          color: var(--foreground);
+        }
+        .fx {
           display: flex;
           flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
+          flex-wrap: wrap;
+          align-content: flex-start;
+          block-size: 100%;
         }
-        .fit-head {
+        .fr,
+        .frs {
+          flex: none;
+          inline-size: 100%;
+          box-sizing: border-box;
+        }
+        .fr {
           display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: var(--boxel-sp-5xs);
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-          line-height: 1.2;
+          align-items: center;
+          gap: 0.375rem;
+          block-size: 1.75rem;
+          padding-inline: 0.625rem;
           overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
+          white-space: nowrap;
+          min-inline-size: 0;
         }
-        .fit-flag.ok {
-          color: var(--success-ink);
+        .fr + .fr,
+        .fr + .frs,
+        .frs + .fr {
+          border-top: 1px solid var(--border);
         }
-        .fit-flag.bad {
-          color: var(--destructive-ink);
-        }
-        .fit-cat {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
+        .nm {
+          flex: 1;
+          min-inline-size: 0;
           overflow: hidden;
           text-overflow: ellipsis;
+          font-weight: 700;
+        }
+        .fk {
+          justify-content: space-between;
+          gap: 0.5rem;
+        }
+        .meta,
+        .mono,
+        .ln,
+        .v {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          min-inline-size: 0;
+        }
+        .ln {
+          flex: 1;
+        }
+        .meta {
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          font-variant-numeric: tabular-nums;
+          color: var(--muted-foreground);
+        }
+        .cap {
+          flex: none;
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .frs {
+          display: none;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          block-size: 3.5rem;
+          overflow: hidden;
+        }
+        .stat {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 0.25rem;
+          padding-inline: 0.625rem;
+          min-inline-size: 0;
           white-space: nowrap;
         }
-        .fit-mid {
+        .stat + .stat {
+          border-inline-start: 1px solid var(--border);
+        }
+        .num {
+          font-size: 1.375rem;
+          font-weight: 700;
+          line-height: 1;
+          font-variant-numeric: tabular-nums;
+        }
+        .wide,
+        .wide-row {
           display: none;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          font-size: 0.75rem;
         }
-        .fit-insurance {
-          color: var(--muted-foreground);
+        .dot {
+          flex: none;
+          inline-size: 0.5rem;
+          overflow: hidden;
         }
-        .fit-insurance.bad {
-          color: var(--destructive-ink);
-          font-weight: 600;
-        }
-        .fit-cert-pills {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.25rem;
-        }
-        .expired {
-          text-decoration: line-through;
-        }
-        .fit-more {
-          display: none;
-          margin-top: auto;
-          gap: var(--boxel-sp-xs);
-          justify-content: space-between;
-          align-items: center;
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-        }
-        @container fitted-card (height > 120px) {
-          .fit-more {
-            display: flex;
+        @container (min-width: 250px) {
+          .wide {
+            display: inline;
           }
-        }
-        @container fitted-card (height > 160px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-          }
-          .fit-cat,
-          .fit-more {
+          .narrow,
+          .narrow-row {
             display: none;
           }
-          .fit-name {
-            -webkit-line-clamp: 1;
+          .wide-row {
+            display: flex;
+          }
+        }
+        @container (min-width: 400px) and (min-height: 250px) {
+          .frs {
+            display: grid;
+          }
+        }
+        @container (max-height: 45px) {
+          .fh {
+            block-size: 100cqh;
           }
         }
       </style>
@@ -1164,5 +1283,4 @@ export class VendorProfile extends CardDef {
   // A form someone fills in during a call with the vendor — grouped by how
   // the conversation actually goes (who are you → how do we reach you → are
   // you compliant → how do we pay you), not by schema declaration order.
-  static edit = VendorProfileEdit;
 }

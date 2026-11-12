@@ -12,7 +12,7 @@
     "relationships": {
       "opportunities.0": {
         "links": {
-          "self": "../../Opportunity/acme-plant-expansion"
+          "self": "../../Opportunity/acme-plant-2-expansion"
         }
       },
       "opportunities.1": {
@@ -33,6 +33,11 @@
       "opportunities.4": {
         "links": {
           "self": "../../Opportunity/brightleaf-workspace"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/site-tools"
         }
       }
     },

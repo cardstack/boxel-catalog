@@ -1,33 +1,19 @@
 import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { on } from '@ember/modifier';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Button } from '@cardstack/pretui/components/button';
+import { fn } from '@ember/helper';
 import { contractTypeLabel } from '../../legal/contract-type';
-import { Signatory } from '../../legal/signatory';
 import { formatMoney } from '../../commerce/line-item-totals';
-import { CollectionPanel } from '../../../components/collection-panel';
-import { StatePill } from '../../../components/state-pill';
-import { SIGNATORY_COLUMNS, openStep, asAny } from '../contract-execution-data';
+import { openStep } from '../contract-execution-data';
+import { Block, CeTable, type Col } from '../components';
+
 interface Signature {
   Args: { app: ContractExecutionView };
 }
 
 export class SignatoriesTab extends GlimmerComponent<Signature> {
-  /** Money keeps its minor units — a ceiling missing a digit is $25K vs $250K. */
-  authorityLabel = (sg: any): string =>
-    formatMoney(
-      sg?.signatureAuthority?.amount,
-      sg?.signatureAuthority?.currency?.code,
-    ) || '—';
-
-  /** An empty type list means unrestricted, which is the opposite of "none". */
-  signScope = (sg: any): string => {
-    let types = (sg?.contractTypes ?? []).filter(Boolean);
-    return types.length
-      ? types.map((t: string) => contractTypeLabel(t)).join(' · ')
-      : 'All contract types';
-  };
-
-  /** Contracts whose open approval step sits with this signatory's person. */
   routedCount = (sg: any): number => {
     let pid = sg?.person?.id;
     if (!pid) return 0;
@@ -37,56 +23,96 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
     }).length;
   };
 
-  <template>
-    <CollectionPanel
-      @cardClass={{Signatory}}
-      @context={{@app.context}}
-      @realms={{@app.realmList}}
-      @columns={{SIGNATORY_COLUMNS}}
-      @label='Signatories'
-      @searchPlaceholder='Search signatories…'
-      @newLabel='signatory'
-      @defaultView='table'
-      @sortBy='signingTitle'
-    >
-      <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-          {{#if (eq column.key 'signatureAuthority')}}
-            <span class='cx-fig is-money'>{{this.authorityLabel row}}</span>
-          {{else if (eq column.key 'mySign')}}
-            <span class='cx-scope'>{{this.signScope row}}</span>
-          {{else if (eq column.key 'routed')}}
-            {{#let (this.routedCount row) as |n|}}
-              {{#if n}}
-                <span class='cx-fig'>{{n}}</span>
-              {{else}}
-                <span class='cx-none'>—</span>
-              {{/if}}
-            {{/let}}
-          {{else if (eq column.key 'isActive')}}
-            {{#if row.isActive}}
-              <StatePill @label='Active' @hue='green' @dot={{true}} />
-            {{else}}
-              <StatePill @label='Inactive' @hue='red' @dot={{true}} />
-            {{/if}}
-          {{/if}}
-        {{/let}}</:cell>
-    </CollectionPanel>
+  columns: Col[] = [
+    { label: 'Signatory', kind: 'custom' },
+    {
+      label: 'Authority ceiling',
+      kind: 'mono',
+      align: 'end',
+      value: (sg) =>
+        formatMoney(
+          sg.signatureAuthority?.amount,
+          sg.signatureAuthority?.currency?.code,
+        ) || '—',
+    },
+    {
+      label: 'May sign',
+      value: (sg) => {
+        let types = (sg.contractTypes ?? []).filter(Boolean);
+        return types.length
+          ? types.map((t: string) => contractTypeLabel(t)).join(', ')
+          : 'Any contract type';
+      },
+    },
+    {
+      label: 'Routed here',
+      kind: 'mono',
+      align: 'end',
+      value: (sg) => this.routedCount(sg) || '—',
+    },
+    {
+      label: 'Status',
+      kind: 'dot',
+      value: (sg) => (sg.isActive ? 'Active' : 'Inactive'),
+      tone: (sg) => (sg.isActive ? 'success' : 'danger'),
+    },
+  ];
 
+  get rows() {
+    let all = (this.args.app.signatoryQuery?.instances ?? []).filter(
+      Boolean,
+    ) as any[];
+    return this.args.app.search(all, (sg) => [
+      sg.cardTitle,
+      sg.signingTitle,
+      sg.person?.cardTitle,
+    ]);
+  }
+
+  nameOf = (sg: any): string => sg.person?.cardTitle || sg.cardTitle || '—';
+
+  <template>
+    <Block @title='Signatories' @count={{this.rows.length}}>
+      {{#if this.rows.length}}
+        <CeTable
+          @label='Signatories'
+          @columns={{this.columns}}
+          @rows={{this.rows}}
+          @onOpen={{@app.openCard}}
+        >
+          <:cell as |row|>
+            <Button
+              @tone='neutral'
+              @appearance='plain'
+              @size='xs'
+              {{on 'click' (fn @app.openCard row)}}
+            >
+              <Avatar
+                @name={{this.nameOf row}}
+                @size={{20}}
+                aria-hidden='true'
+              />
+              <strong>{{this.nameOf row}}</strong>
+              {{#if row.person}}<span
+                  class='sg-title'
+                >{{row.signingTitle}}</span>{{/if}}
+            </Button>
+          </:cell>
+        </CeTable>
+      {{else}}
+        <p class='tab-empty'>No signatories match.</p>
+      {{/if}}
+    </Block>
     <style scoped>
-      .cx-fig {
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
-        font-weight: 650;
-      }
-      .cx-fig.is-money {
-        white-space: nowrap;
-      }
-      .cx-none {
+      .sg-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
-        font-size: var(--boxel-font-size-sm);
       }
-      .cx-scope {
-        font-size: var(--boxel-font-size-sm);
+      .tab-empty {
+        padding: var(--boxel-sp-xs);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

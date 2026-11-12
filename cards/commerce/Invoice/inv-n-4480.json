@@ -29,13 +29,18 @@
         }
       ],
       "cardInfo": {
-        "name": "INV N-4480 — Acme Supply"
+        "name": "INV N-4480 \u2014 Acme Supply"
       }
     },
     "relationships": {
       "purchaseOrder": {
         "links": {
           "self": "../../procurement/PurchaseOrder/po-2026-0051"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

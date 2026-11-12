@@ -7,10 +7,20 @@
       "useCase": "Two-way confidentiality",
       "isPublished": true,
       "lastReviewedAt": "2026-05-15",
-      "requiredInputs": ["Counterparty", "Purpose", "Term length"],
+      "requiredInputs": [
+        "Counterparty",
+        "Purpose",
+        "Term length"
+      ],
       "guidance": "Default for exploratory conversations where both sides share information."
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "../contract-template",

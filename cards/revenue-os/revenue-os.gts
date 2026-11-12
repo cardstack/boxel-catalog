@@ -5,12 +5,11 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/pretui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
 import { Select } from '@cardstack/pretui/components/select';
 import { Switch } from '@cardstack/pretui/components/switch';
-import { Tabs } from '@cardstack/pretui/components/tabs';
 import {
   identifyCard,
   realmURL,
@@ -19,13 +18,32 @@ import {
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 import ChartAreaIcon from '@cardstack/boxel-icons/chart-area';
-import { Board, type BoardColumn } from '../../components/board';
-import { type ImportRowResult } from '../../components/import';
-import { toDate } from '../../fields/effective-period/effective-period-field';
+import { Board, type BoardColumn } from '@cardstack/catalog/components/board';
+import { type ImportRowResult } from '@cardstack/catalog/components/import';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import {
+  Sidebar,
+  SidebarGroup,
+  SidebarItem,
+} from '@cardstack/pretui/components/sidebar';
+import { LayoutControl } from '@cardstack/pretui/components/layout-control';
+import PlusIcon from '@cardstack/boxel-icons/plus';
+import LayoutKanbanIcon from '@cardstack/boxel-icons/layout-kanban';
+import LayoutDashboardIcon from '@cardstack/boxel-icons/layout-dashboard';
+import BuildingIcon from '@cardstack/boxel-icons/building-2';
+import ReceiptIcon from '@cardstack/boxel-icons/receipt';
+import TargetIcon from '@cardstack/boxel-icons/target';
+import MapPinIcon from '@cardstack/boxel-icons/map-pin';
+import FileTextIcon from '@cardstack/boxel-icons/file-text';
+import TagIcon from '@cardstack/boxel-icons/tag';
+import { PageHead } from './components/page-head';
+import { StatStrip } from './components/stat-strip';
 import { AccountsPane } from './components/accounts-pane';
 import { DashboardPane } from './components/dashboard-pane';
 import { InvoicesPane } from './components/invoices-pane';
-import { CardList } from './components/card-list';
+import { RecordTable, type RecordColumn } from './components/record-table';
+import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
+import { SearchInput } from '@cardstack/pretui/components/search-input';
 import { Opportunity, PIPELINE_STAGES, STAGE_COLORS } from '../crm/opportunity';
 import { Account } from '../crm/account';
 import { Invoice } from '../commerce/invoice';
@@ -40,18 +58,9 @@ import { Activity } from '../crm/activity';
 import ConvertLeadCommand from '../crm/commands/convert-lead';
 import RecordPaymentCommand from '../commerce/commands/record-payment';
 import CloseWonCommand from '../crm/commands/close-won';
-import DuplicateCommand from '../../commands/duplicate';
-import ClassifyCommand from '../../commands/classify';
+import DuplicateCommand from '@cardstack/catalog/commands/duplicate';
+import ClassifyCommand from '@cardstack/catalog/commands/classify';
 import { formatMoney, outstandingBalance } from '../commerce/line-item-totals';
-import PostToBooksCommand from '../accounting/commands/post-to-books-command';
-import { Ledger } from '../accounting/ledger-cards';
-import {
-  Invoice as BooksInvoice,
-  CustomerPayment as BooksPayment,
-} from '../accounting/ledger-sales';
-import { isBookable, isPayable } from '../accounting/ledger-bridge';
-import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
-import { getCard } from '@cardstack/catalog/utils/find-card';
 
 import {
   BASE_CURRENCY,
@@ -93,10 +102,6 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
   private territoryList: ReturnType<getCards> | undefined;
   private proposalList: ReturnType<getCards> | undefined;
   private quoteList: ReturnType<getCards> | undefined;
-  // The books this console posts into: the Ledger in its realm, and what's already in them.
-  private ledgerList: ReturnType<getCards> | undefined;
-  private bookedInvoiceList: ReturnType<getCards> | undefined;
-  private bookedPaymentList: ReturnType<getCards> | undefined;
 
   constructor(owner: Owner, args: any) {
     super(owner, args);
@@ -127,38 +132,18 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
     this.territoryList = ctx?.getCards(this, queryFor(Territory), realms, live);
     this.proposalList = ctx?.getCards(this, queryFor(Proposal), realms, live);
     this.quoteList = ctx?.getCards(this, queryFor(Quote), realms, live);
-    this.ledgerList = ctx?.getCards(this, queryFor(Ledger), realms, live);
-    let madeFrom = (type: any, link: string) => () => {
-      let ref = identifyCard(type);
-      return ref
-        ? {
-            filter: {
-              every: [
-                { type: ref },
-                { on: ref, not: { eq: { [`${link}.id`]: null } } },
-              ],
-            },
-            page: { size: 500 },
-          }
-        : undefined;
-    };
-    this.bookedInvoiceList = ctx?.getCards(
-      this,
-      madeFrom(BooksInvoice, 'sourceInvoice'),
-      realms,
-      live,
-    );
-    this.bookedPaymentList = ctx?.getCards(
-      this,
-      madeFrom(BooksPayment, 'sourcePayment'),
-      realms,
-      live,
-    );
   }
 
+  // One array per realm href: the 13 getCards thunks read this on every render, and a
+  // fresh array each time re-sets realmsToSearch after it was consumed (autotracking error).
+  private realmsCache: { href: string; list: string[] } | undefined;
   private get realms(): string[] | undefined {
-    let url = (this.args.model as any)?.[realmURL];
-    return url ? [url.href] : undefined;
+    let href = (this.args.model as any)?.[realmURL]?.href as string | undefined;
+    if (!href) return undefined;
+    if (this.realmsCache?.href !== href) {
+      this.realmsCache = { href, list: [href] };
+    }
+    return this.realmsCache.list;
   }
 
   get realm(): string | undefined {
@@ -195,76 +180,6 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
   get accounts(): Account[] {
     return ((this.accountList?.instances ?? []) as Account[]).filter(Boolean);
   }
-  // ── the books ─────────────────────────────────────────────────────
-  get ledger(): Ledger | undefined {
-    return ((this.ledgerList?.instances ?? []) as Ledger[]).filter(Boolean)[0];
-  }
-  // The commerce documents and quotes the books hold something for, with that document's status.
-  get bookedSources(): Map<string, string> {
-    let ids = new Map<string, string>();
-    for (let [list, links] of [
-      [this.bookedInvoiceList, ['sourceInvoice', 'quote']],
-      [this.bookedPaymentList, ['sourcePayment']],
-    ] as const)
-      for (let d of ((list?.instances ?? []) as CardDef[]).filter(Boolean))
-        for (let link of links) {
-          let id = linkedId(d, link);
-          if (id) ids.set(id, String((d as any).status ?? 'draft'));
-        }
-    return ids;
-  }
-  // What the books can take from a customer's invoice: the invoice itself (or the quote it was raised
-  // from), then, once that has posted, each payment against it. A vendor's invoice is not revenue.
-  booksStateOf = (
-    item: CardDef,
-  ): 'post' | 'drafted' | 'payments' | 'booked' | 'none' => {
-    let inv = item as Invoice;
-    if (!this.ledger || !isBookable(inv as any) || isPayable(inv as any))
-      return 'none';
-    let booked = this.bookedSources,
-      quote = linkedId(inv, 'quote'),
-      status = booked.get(inv.id) ?? (quote ? booked.get(quote) : undefined);
-    if (!status) return 'post';
-    if (status === 'draft') return 'drafted';
-    let payments = linkedIds(inv, 'payments');
-    if (payments.some((id) => !booked.has(id))) return 'payments';
-    // A payment the books hold only as a draft hasn't reached them yet.
-    return payments.some((id) => booked.get(id) === 'draft')
-      ? 'drafted'
-      : 'booked';
-  };
-  @action async postToBooks(item: CardDef) {
-    let inv = item as Invoice;
-    if (!this.commandContext || !this.ledger) return;
-    this.busy = true;
-    try {
-      let post = (source: CardDef) =>
-        new PostToBooksCommand(this.commandContext!).execute({
-          source,
-          ledger: this.ledger,
-        } as never);
-      let messages: string[] = [];
-      // Each payment posts on its own, so one refused doesn't stop the rest or hide what posted.
-      let attempt = async (source: () => Promise<CardDef>) => {
-        try {
-          messages.push(((await post(await source())) as any)?.message ?? '');
-        } catch (e: any) {
-          messages.push(e?.message ?? 'Posting to the books failed');
-        }
-      };
-      if (this.booksStateOf(inv) === 'post') await attempt(async () => inv);
-      else
-        for (let id of linkedIds(inv, 'payments'))
-          if (!this.bookedSources.has(id))
-            await attempt(() => getCard(this.commandContext!, id));
-      this.statusMessage = messages.filter(Boolean).join(' ') || 'In the books';
-    } catch (e: any) {
-      this.statusMessage = e?.message ?? 'Posting to the books failed';
-    } finally {
-      this.busy = false;
-    }
-  }
-
   get invoices(): Invoice[] {
     return ((this.invoiceList?.instances ?? []) as Invoice[]).filter(Boolean);
   }
@@ -310,6 +225,10 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       this.accountList,
       this.invoiceList,
       this.subscriptionList,
+      // read here, at the top of the pane, so each search resource is first consumed
+      // outside a nested list's render (consuming it inside re-sets its realms mid-render)
+      this.contactList,
+      this.activityList,
     ].some((list: any) => list?.isLoading);
   }
 
@@ -612,7 +531,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       mrr: formatMoney(mrr, code),
       arr: formatMoney(mrr * 12, code),
       secondary: [
-        { label: 'Pipeline', value: this.stageTotals.total, tab: 'pipeline' },
+        { label: 'Pipeline', value: this.stageTotals.total },
         {
           label: 'Weighted forecast',
           value: this.stageTotals.weighted,
@@ -620,8 +539,6 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         {
           label: 'Outstanding',
           value: formatMoney(balanceOf(open), code),
-          tab: 'invoices',
-          filter: 'open',
         },
       ],
     };
@@ -654,7 +571,11 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         mrr += s.billingCycle === 'yearly' ? p / 12 : p;
       }
       months.push({
-        label: at.toLocaleDateString('en-US', { month: 'short' }),
+        // Pret UI Chart sorts a point axis alphabetically; i leading zero-width
+        // spaces keep the months in calendar order without changing how they read.
+        label:
+          '\u200b'.repeat(7 - back) +
+          at.toLocaleDateString('en-US', { month: 'short' }),
         value: Math.round(mrr),
       });
     }
@@ -978,6 +899,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
   }
 
   @action setTab(key: string) {
+    this.listQuery = '';
     this.activeTab = key;
     this.statusMessage = '';
   }
@@ -995,292 +917,593 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
     this.setTab('accounts');
   }
 
-  @action drillTo(tab: string, filter?: string) {
-    if (filter) this.invoiceFilter = filter;
-    this.setTab(tab);
-  }
-
   cardComponent = (card: CardDef) => {
     return (card.constructor as typeof CardDef).getComponent(card);
   };
 
+  FORMS = [
+    { name: 'full', minWidth: 11 },
+    { name: 'menu', minWidth: 0 },
+  ];
+  PRIMARY_FORMS = [{ name: 'full', minWidth: 7 }];
+
+  get navItems() {
+    let openDeals = this.opportunities.filter((o) =>
+      OPEN_STAGES.includes(o.stage as (typeof OPEN_STAGES)[number]),
+    ).length;
+    let openInvoices = this.invoices.filter((i) =>
+      OPEN_INVOICE_STATUSES.includes(i.status ?? ''),
+    ).length;
+    let counts: Record<string, number> = {
+      pipeline: openDeals,
+      accounts: this.accounts.length,
+      invoices: openInvoices,
+      leads: this.leads.length,
+      territories: this.territories.length,
+      proposals: this.proposals.length,
+      quotes: this.quotes.length,
+    };
+    let icons: Record<string, any> = {
+      pipeline: LayoutKanbanIcon,
+      dashboard: LayoutDashboardIcon,
+      accounts: BuildingIcon,
+      invoices: ReceiptIcon,
+      leads: TargetIcon,
+      territories: MapPinIcon,
+      proposals: FileTextIcon,
+      quotes: TagIcon,
+    };
+    return TABS.map((t) => ({
+      value: t.value,
+      label: t.label,
+      icon: icons[t.value],
+      badge: counts[t.value],
+      active: this.activeTab === t.value,
+    }));
+  }
+
+  get activeLabel() {
+    return TABS.find((t) => t.value === this.activeTab)?.label ?? '';
+  }
+
+  get pipelineStats() {
+    let [won, rate] = this.periodMetrics;
+    return [
+      {
+        label: 'Open pipeline',
+        value: this.stageTotals.total,
+        hint: `${this.stageTotals.count} deals on the board`,
+        tone: 'info',
+      },
+      {
+        label: 'Weighted forecast',
+        value: this.stageTotals.weighted,
+        hint: 'by stage probability',
+        tone: 'neutral',
+      },
+      {
+        label: 'Closed won',
+        value: won.value,
+        hint: won.note,
+        tone: 'success',
+      },
+      {
+        label: 'Win rate',
+        value: rate.value.startsWith('no closed') ? '—' : rate.value,
+        hint: rate.value.startsWith('no closed')
+          ? 'no closed deals yet'
+          : rate.note,
+        tone: 'warning',
+      },
+      {
+        label: 'Outstanding',
+        value: this.dash.secondary[2].value,
+        hint: 'unpaid invoices',
+        tone: 'danger',
+      },
+    ];
+  }
+
+  @tracked listQuery = '';
+  @action setListQuery(value: string) {
+    this.listQuery = value;
+  }
+  SEARCH_FORMS = [
+    { name: 'full', minWidth: 14 },
+    { name: 'menu', minWidth: 0 },
+  ];
+  matches = <T extends CardDef>(list: readonly T[]): T[] => {
+    let q = this.listQuery.trim().toLowerCase();
+    return q
+      ? list.filter((c) => (c.cardTitle ?? '').toLowerCase().includes(q))
+      : [...list];
+  };
+  money = (n: number | undefined) =>
+    typeof n === 'number'
+      ? formatMoney(n, BASE_CURRENCY).replace(/\.00$/, '')
+      : '—';
+
+  leadColumns: RecordColumn[] = [
+    { label: 'Lead', kind: 'title', value: (c) => c },
+    {
+      label: 'Company · Source',
+      kind: 'text',
+      value: (c) => (c as Lead).company || '—',
+      meta: (c) => (c as Lead).source ?? undefined,
+    },
+    { label: 'Status', kind: 'status', value: (c) => (c as Lead).status },
+    {
+      label: 'Score',
+      kind: 'mono',
+      align: 'end',
+      value: (c) => (c as Lead).score ?? '—',
+    },
+  ];
+  territoryColumns: RecordColumn[] = [
+    { label: 'Territory', kind: 'title', value: (c) => c },
+    {
+      label: 'Region',
+      kind: 'text',
+      value: (c) => (c as Territory).region || '—',
+    },
+    { label: 'Owner', kind: 'atom', value: (c) => (c as Territory).owner },
+  ];
+  proposalColumns: RecordColumn[] = [
+    { label: 'Proposal', kind: 'title', value: (c) => c },
+    { label: 'Deal', kind: 'atom', value: (c) => (c as Proposal).deal },
+  ];
+  quoteColumns: RecordColumn[] = [
+    { label: 'Quote', kind: 'title', value: (c) => c },
+    { label: 'Deal', kind: 'atom', value: (c) => (c as Quote).deal },
+    { label: 'Status', kind: 'status', value: (c) => (c as Quote).status },
+    {
+      label: 'Supersedes',
+      kind: 'mono',
+      value: (c) =>
+        (c as Quote).supersedes
+          ? `v${(c as Quote).supersedes?.version ?? 1}`
+          : '—',
+    },
+    {
+      label: 'Total',
+      kind: 'mono',
+      align: 'end',
+      value: (c) => this.money((c as Quote).total),
+    },
+  ];
+
+  get leadStats() {
+    let n = (s: string) => this.leads.filter((l) => l.status === s).length;
+    return [
+      {
+        label: 'Leads',
+        value: this.leads.length,
+        hint: 'in the funnel',
+        tone: 'neutral',
+      },
+      { label: 'New', value: n('new'), hint: 'not yet worked', tone: 'info' },
+      {
+        label: 'Converted',
+        value: n('converted'),
+        hint: 'became accounts',
+        tone: 'success',
+      },
+    ];
+  }
+
   <template>
     {{#unless this.isInteractive}}
       <div class='app'>
-        <header class='app-head'>
-          <div class='brand'>
-            <span class='brand-mark'><ChartAreaIcon
-                width='22'
-                height='22'
-              /></span>
-            <h1>{{@model.cardTitle}}</h1>
-          </div>
-        </header>
-        <p class='empty'>Open in Interact mode for the pipeline, dashboard, and
-          collections workspace.</p>
+        <main class='main'>
+          <PageHead
+            @title={{if @model.cardTitle @model.cardTitle 'Revenue OS'}}
+          />
+          <p class='empty'>Open in Interact mode for the pipeline, dashboard,
+            and collections workspace.</p>
+        </main>
       </div>
     {{/unless}}
     {{#if this.isInteractive}}
       <div class='app'>
-        <header class='app-head'>
-          <div class='brand'>
-            <span class='brand-mark'><ChartAreaIcon
-                width='22'
-                height='22'
-              /></span>
-            <h1>{{@model.cardTitle}}</h1>
-          </div>
-          <Tabs
-            class='tabs'
-            @items={{TABS}}
-            @value={{this.activeTab}}
-            @onValueChange={{this.setTab}}
-          />
-        </header>
+        <Sidebar
+          class='shell'
+          @label='Revenue OS'
+          @collapsible='rail'
+          @railBreakpoint={{1100}}
+          @mobileBreakpoint={{720}}
+          @bordered={{true}}
+          @scroll='content'
+          @resizable={{true}}
+        >
+          <:header as |bar|>
+            <div class='brand'>
+              <span class='brand-mark' aria-hidden='true'><ChartAreaIcon
+                  width='16'
+                  height='16'
+                /></span>
+              {{#unless bar.collapsed}}
+                <span class='brand-name'>Revenue OS<small
+                  >{{@model.orgName}}</small></span>
+              {{/unless}}
+            </div>
+          </:header>
+          <:nav as |bar|>
+            <SidebarGroup @label='Workspace' @hideLabel={{bar.collapsed}}>
+              {{#each this.navItems key='value' as |item|}}
+                <SidebarItem
+                  @label={{item.label}}
+                  @badge={{unless bar.collapsed item.badge}}
+                  @active={{item.active}}
+                  @collapsed={{bar.collapsed}}
+                  @onClick={{fn this.setTab item.value}}
+                >
+                  <:icon><item.icon aria-hidden='true' /></:icon>
+                </SidebarItem>
+              {{/each}}
+            </SidebarGroup>
+          </:nav>
+          <:default>
+            <main class='main'>
+              {{#if this.statusMessage}}
+                <Alert class='status-banner' @tone='info' role='status'>
+                  {{this.statusMessage}}
+                </Alert>
+              {{/if}}
 
-        {{#if this.statusMessage}}
-          <Alert class='status-banner' @tone='info' role='status'>
-            {{this.statusMessage}}
-          </Alert>
-        {{/if}}
-
-        {{#if (eq this.activeTab 'pipeline')}}
-          <section class='pane'>
-            <div class='board-toolbar'>
-              <h2>Pipeline</h2>
-              <div class='toolbar-controls'>
-                <label class='switch-wrap'>
-                  <Switch
-                    @checked={{this.showAllStages}}
-                    @onCheckedChange={{this.toggleAllStages}}
+              {{#if (eq this.activeTab 'pipeline')}}
+                <section class='pane'>
+                  <PageHead
+                    @title='Pipeline'
+                    @subtitle='{{this.stageTotals.count}} open deals across {{this.boardColumns.length}} stages · drag a deal to change its stage'
                   />
-                  <span class='switch-text'>All stages</span>
-                </label>
-                {{#if this.owners.length}}
-                  <div class='owner-select'>
-                    <Select
-                      @options={{this.ownerOptions}}
-                      @value={{this.ownerFilter}}
-                      @onValueChange={{this.setOwnerFilter}}
-                      @label='Owner'
+                  <StatStrip
+                    @stats={{this.pipelineStats}}
+                    @label='Pipeline totals'
+                  />
+                  <LayoutControl @label='Pipeline filters' as |lc|>
+                    <lc.Slot
+                      @id='stages'
+                      @priority={{3}}
+                      @forms={{this.FORMS}}
+                      @label='Stages'
+                    >
+                      <label class='switch-wrap'>
+                        <Switch
+                          @checked={{this.showAllStages}}
+                          @onCheckedChange={{this.toggleAllStages}}
+                        />
+                        <span class='switch-text'>All stages</span>
+                      </label>
+                    </lc.Slot>
+                    {{#if this.owners.length}}
+                      <lc.Slot
+                        @id='owner'
+                        @priority={{2}}
+                        @forms={{this.FORMS}}
+                        @label='Owner'
+                      >
+                        <Select
+                          @options={{this.ownerOptions}}
+                          @value={{this.ownerFilter}}
+                          @onValueChange={{this.setOwnerFilter}}
+                          @label='Owner'
+                        />
+                      </lc.Slot>
+                    {{/if}}
+                    <lc.Slot
+                      @id='close'
+                      @priority={{2}}
+                      @forms={{this.FORMS}}
+                      @label='Close date'
+                    >
+                      <Select
+                        @options={{this.closeWindowOptions}}
+                        @value={{this.closeWindow}}
+                        @onValueChange={{this.setCloseWindow}}
+                        @label='Close date'
+                      />
+                    </lc.Slot>
+                    <lc.Slot
+                      @id='sort'
+                      @priority={{1}}
+                      @forms={{this.FORMS}}
+                      @label='Sort'
+                    >
+                      <Select
+                        @options={{this.boardSortOptions}}
+                        @value={{this.boardSort}}
+                        @onValueChange={{this.setBoardSort}}
+                        @label='Sort'
+                      />
+                    </lc.Slot>
+                    <span class='spacer'></span>
+                    <lc.Slot
+                      @id='new'
+                      @priority={{0}}
+                      @pinned={{true}}
+                      @forms={{this.PRIMARY_FORMS}}
+                      @label='New deal'
+                    >
+                      <Button
+                        @icon={{PlusIcon}}
+                        @appearance='accent'
+                        {{on 'click' (fn this.addDealToStage null)}}
+                      >New deal</Button>
+                    </lc.Slot>
+                  </LayoutControl>
+                  <div class='block'>
+                    <div class='block-head'>
+                      <h2>Deals by stage</h2>
+                      <span class='meta'>{{this.stageTotals.count}}
+                        open deals</span>
+                    </div>
+                    {{#if this.selectedDeal}}
+                      <div class='selection-bar'>
+                        <span
+                          class='selection-name'
+                        >{{this.selectedDeal.cardTitle}}</span>
+                        <Button
+                          @appearance='outlined'
+                          {{on 'click' (fn this.openCard this.selectedDeal)}}
+                        >Open</Button>
+                        <Button
+                          @appearance='outlined'
+                          {{on 'click' this.logDealActivity}}
+                        >Log activity</Button>
+                      </div>
+                    {{/if}}
+                    <div class='board-wrap'>
+                      {{#if this.queriesSettled}}
+                        <Board
+                          @boardLabel='Pipeline'
+                          @items={{this.boardItems}}
+                          @columns={{this.boardColumns}}
+                          @columnKeyFor={{this.columnKeyFor}}
+                          @onMove={{this.onMove}}
+                          @onOpen={{this.openCard}}
+                          @onSelect={{this.selectDeal}}
+                          @onAddCard={{this.addDealToStage}}
+                          @hideEmpty={{unless this.showAllStages true}}
+                        />
+                      {{else}}
+                        <p class='empty'>Loading pipeline…</p>
+                      {{/if}}
+                    </div>
+                  </div>
+                </section>
+              {{/if}}
+
+              {{#if (eq this.activeTab 'dashboard')}}
+                <DashboardPane @console={{this}} />
+              {{/if}}
+
+              {{#if (eq this.activeTab 'accounts')}}
+                <AccountsPane @console={{this}} @context={{@context}} />
+              {{/if}}
+
+              {{#if (eq this.activeTab 'invoices')}}
+                <InvoicesPane @console={{this}} />
+              {{/if}}
+
+              {{#if (eq this.activeTab 'leads')}}
+                <section class='pane'>
+                  <PageHead
+                    @title='Leads'
+                    @subtitle='{{this.leads.length}} leads on file'
+                  />
+                  <StatStrip @stats={{this.leadStats}} @label='Lead totals' />
+                  <LayoutControl @label='Leads search' as |lc|>
+                    <lc.Slot
+                      @id='search'
+                      @priority={{1}}
+                      @forms={{this.SEARCH_FORMS}}
+                      @label='Search'
+                    >
+                      <label>
+                        <VisuallyHidden>Search leads</VisuallyHidden>
+                        <SearchInput
+                          @placeholder='Search leads'
+                          @value={{this.listQuery}}
+                          @onInput={{this.setListQuery}}
+                        />
+                      </label>
+                    </lc.Slot>
+                    <span class='spacer'></span>
+                    <lc.Slot
+                      @id='new'
+                      @priority={{0}}
+                      @pinned={{true}}
+                      @forms={{this.PRIMARY_FORMS}}
+                      @label='New lead'
+                    >
+                      <Button
+                        @icon={{PlusIcon}}
+                        @appearance='accent'
+                        {{on 'click' this.newLead}}
+                      >New lead</Button>
+                    </lc.Slot>
+                  </LayoutControl>
+                  <div class='block'>
+                    <h2 class='block-title'>Leads</h2>
+                    <RecordTable
+                      @rows={{this.matches this.leadCards}}
+                      @columns={{this.leadColumns}}
+                      @label='Leads'
+                      @onOpen={{this.openCard}}
+                      @emptyMessage='No leads'
+                    >
+                      <:actions as |lead|>
+                        {{#if (this.canConvertCard lead)}}
+                          <Button
+                            @appearance='plain'
+                            @disabled={{this.busy}}
+                            {{on 'click' (fn this.scoreLeadCard lead)}}
+                          >Score</Button>
+                          <Button
+                            @appearance='plain'
+                            @disabled={{this.busy}}
+                            {{on 'click' (fn this.convertLeadCard lead)}}
+                          >Convert</Button>
+                        {{else if (this.accountOfLead lead)}}
+                          <Button
+                            @appearance='plain'
+                            {{on
+                              'click'
+                              (fn this.openCard (this.accountOfLead lead))
+                            }}
+                          >View account →</Button>
+                        {{/if}}
+                      </:actions>
+                    </RecordTable>
+                  </div>
+                </section>
+              {{/if}}
+              {{#if (eq this.activeTab 'territories')}}
+                <section class='pane'>
+                  <PageHead @title='Territories' />
+                  <LayoutControl @label='Territories search' as |lc|>
+                    <lc.Slot
+                      @id='search'
+                      @priority={{1}}
+                      @forms={{this.SEARCH_FORMS}}
+                      @label='Search'
+                    >
+                      <label>
+                        <VisuallyHidden>Search territories</VisuallyHidden>
+                        <SearchInput
+                          @placeholder='Search territories'
+                          @value={{this.listQuery}}
+                          @onInput={{this.setListQuery}}
+                        />
+                      </label>
+                    </lc.Slot>
+                  </LayoutControl>
+                  <div class='block'>
+                    <h2 class='block-title'>Territories</h2>
+                    <RecordTable
+                      @rows={{this.matches this.territories}}
+                      @columns={{this.territoryColumns}}
+                      @label='Territories'
+                      @onOpen={{this.openCard}}
+                      @emptyMessage='No territories'
                     />
                   </div>
-                {{/if}}
-                <div class='owner-select'>
-                  <Select
-                    @options={{this.closeWindowOptions}}
-                    @value={{this.closeWindow}}
-                    @onValueChange={{this.setCloseWindow}}
-                    @label='Close date'
-                  />
-                </div>
-                <div class='owner-select'>
-                  <Select
-                    @options={{this.boardSortOptions}}
-                    @value={{this.boardSort}}
-                    @onValueChange={{this.setBoardSort}}
-                    @label='Sort'
-                  />
-                </div>
-              </div>
-              <div class='board-stats'>
-                <span class='stat'><span
-                    class='stat-value'
-                  >{{this.stageTotals.count}}</span>
-                  open</span>
-                <span class='stat'><span
-                    class='stat-value'
-                  >{{this.stageTotals.total}}</span>
-                  total</span>
-                <span class='stat'><span
-                    class='stat-value'
-                  >{{this.stageTotals.weighted}}</span>
-                  weighted</span>
-              </div>
-            </div>
-            {{#if this.selectedDeal}}
-              <div class='selection-bar'>
-                <span
-                  class='selection-name'
-                >{{this.selectedDeal.cardTitle}}</span>
-                <Button
-                  @appearance='outlined'
-                  @size='sm'
-                  {{on 'click' (fn this.openCard this.selectedDeal)}}
-                >Open</Button>
-                <Button
-                  @appearance='outlined'
-                  @size='sm'
-                  {{on 'click' this.logDealActivity}}
-                >Log activity</Button>
-              </div>
-            {{/if}}
-            <div class='board-wrap'>
-              {{#if this.queriesSettled}}
-                <Board
-                  @boardLabel='Pipeline'
-                  @items={{this.boardItems}}
-                  @columns={{this.boardColumns}}
-                  @columnKeyFor={{this.columnKeyFor}}
-                  @onMove={{this.onMove}}
-                  @onOpen={{this.openCard}}
-                  @onSelect={{this.selectDeal}}
-                  @onAddCard={{this.addDealToStage}}
-                  @hideEmpty={{unless this.showAllStages true}}
-                />
-              {{else}}
-                <p class='empty'>Loading pipeline…</p>
+                </section>
               {{/if}}
-            </div>
-          </section>
-        {{/if}}
-
-        {{#if (eq this.activeTab 'dashboard')}}
-          <DashboardPane @console={{this}} />
-        {{/if}}
-
-        {{#if (eq this.activeTab 'accounts')}}
-          <AccountsPane @console={{this}} @context={{@context}} />
-        {{/if}}
-
-        {{#if (eq this.activeTab 'invoices')}}
-          <InvoicesPane @console={{this}} />
-        {{/if}}
-
-        {{#if (eq this.activeTab 'leads')}}
-          <section class='pane'>
-            <div class='pane-head'>
-              <h2>Leads</h2>
-              <Button
-                @appearance='outlined'
-                @size='sm'
-                {{on 'click' this.newLead}}
-              >New lead</Button>
-            </div>
-            <CardList
-              @items={{this.leadCards}}
-              @label='Leads'
-              @cardComponent={{this.cardComponent}}
-              @loading={{this.isLoading}}
-              @onOpen={{this.openCard}}
-              @emptyMessage='No leads'
-            >
-              <:actions as |lead|>
-                {{#if (this.canConvertCard lead)}}
-                  <Button
-                    @appearance='plain'
-                    @size='sm'
-                    @disabled={{this.busy}}
-                    {{on 'click' (fn this.scoreLeadCard lead)}}
-                  >Score</Button>
-                  <Button
-                    @appearance='outlined'
-                    @size='sm'
-                    @disabled={{this.busy}}
-                    {{on 'click' (fn this.convertLeadCard lead)}}
-                  >Convert</Button>
-                {{else if (this.accountOfLead lead)}}
-                  <Button
-                    @appearance='plain'
-                    @size='sm'
-                    {{on 'click' (fn this.openCard (this.accountOfLead lead))}}
-                  >View account →</Button>
-                {{/if}}
-              </:actions>
-            </CardList>
-          </section>
-        {{/if}}
-        {{#if (eq this.activeTab 'territories')}}
-          <section class='pane'>
-            <div class='pane-head'>
-              <h2>Territories</h2>
-            </div>
-            <CardList
-              @items={{this.territories}}
-              @label='Territories'
-              @cardComponent={{this.cardComponent}}
-              @loading={{this.isLoading}}
-              @onOpen={{this.openCard}}
-              @emptyMessage='No territories'
-            />
-          </section>
-        {{/if}}
-
-        {{#if (eq this.activeTab 'proposals')}}
-          <section class='pane'>
-            <div class='pane-head'>
-              <h2>Proposals</h2>
-            </div>
-            <CardList
-              @items={{this.proposals}}
-              @label='Proposals'
-              @cardComponent={{this.cardComponent}}
-              @loading={{this.isLoading}}
-              @onOpen={{this.openCard}}
-              @emptyMessage='No proposals'
-            />
-          </section>
-        {{/if}}
-
-        {{#if (eq this.activeTab 'quotes')}}
-          <section class='pane'>
-            <div class='pane-head'>
-              <h2>Quotes</h2>
-            </div>
-            <CardList
-              @items={{this.quotes}}
-              @label='Quotes'
-              @cardComponent={{this.cardComponent}}
-              @loading={{this.isLoading}}
-              @onOpen={{this.openCard}}
-              @emptyMessage='No quotes'
-            />
-          </section>
-        {{/if}}
+              {{#if (eq this.activeTab 'proposals')}}
+                <section class='pane'>
+                  <PageHead @title='Proposals' />
+                  <LayoutControl @label='Proposals search' as |lc|>
+                    <lc.Slot
+                      @id='search'
+                      @priority={{1}}
+                      @forms={{this.SEARCH_FORMS}}
+                      @label='Search'
+                    >
+                      <label>
+                        <VisuallyHidden>Search proposals</VisuallyHidden>
+                        <SearchInput
+                          @placeholder='Search proposals'
+                          @value={{this.listQuery}}
+                          @onInput={{this.setListQuery}}
+                        />
+                      </label>
+                    </lc.Slot>
+                  </LayoutControl>
+                  <div class='block'>
+                    <h2 class='block-title'>Proposals</h2>
+                    <RecordTable
+                      @rows={{this.matches this.proposals}}
+                      @columns={{this.proposalColumns}}
+                      @label='Proposals'
+                      @onOpen={{this.openCard}}
+                      @emptyMessage='No proposals'
+                    />
+                  </div>
+                </section>
+              {{/if}}
+              {{#if (eq this.activeTab 'quotes')}}
+                <section class='pane'>
+                  <PageHead @title='Quotes' />
+                  <LayoutControl @label='Quotes search' as |lc|>
+                    <lc.Slot
+                      @id='search'
+                      @priority={{1}}
+                      @forms={{this.SEARCH_FORMS}}
+                      @label='Search'
+                    >
+                      <label>
+                        <VisuallyHidden>Search quotes</VisuallyHidden>
+                        <SearchInput
+                          @placeholder='Search quotes'
+                          @value={{this.listQuery}}
+                          @onInput={{this.setListQuery}}
+                        />
+                      </label>
+                    </lc.Slot>
+                  </LayoutControl>
+                  <div class='block'>
+                    <h2 class='block-title'>Quotes</h2>
+                    <RecordTable
+                      @rows={{this.matches this.quotes}}
+                      @columns={{this.quoteColumns}}
+                      @label='Quotes'
+                      @onOpen={{this.openCard}}
+                      @emptyMessage='No quotes'
+                    />
+                  </div>
+                </section>
+              {{/if}}
+            </main>
+          </:default>
+        </Sidebar>
       </div>
     {{/if}}
     <style scoped>
       .app {
-        min-height: 100%;
-        padding: 1.25rem 1.5rem 2rem;
-        box-sizing: border-box;
         display: flex;
-        flex-direction: column;
-        gap: 1rem;
+        block-size: 100%;
+        min-block-size: 0;
+        overflow: hidden;
         color: var(--foreground);
         background: var(--background);
+        font-family: var(--font-sans);
         --_board-height: 26.25rem;
       }
-      .app-head {
+      .shell {
+        block-size: 100%;
+        min-block-size: 0;
+      }
+      .main {
+        min-block-size: 100%;
+        box-sizing: border-box;
+        flex: 1;
+        min-width: 0;
+        padding: var(--boxel-sp-lg) var(--boxel-sp-lg) var(--boxel-sp-xl);
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        flex-wrap: wrap;
-        border-bottom: 0.25rem double var(--foreground);
-        padding-bottom: 0.875rem;
+        flex-direction: column;
+        gap: var(--boxel-sp-sm);
       }
       .brand {
         display: flex;
         align-items: center;
-        gap: 0.625rem;
+        gap: var(--boxel-sp-xs);
       }
       .brand-mark {
         display: inline-flex;
-        padding: var(--boxel-sp-xs);
-        border-radius: var(--boxel-border-radius-lg);
-        background: var(--primary);
-        color: var(--primary-foreground);
+        padding: var(--boxel-sp-xxs);
+        background: var(--muted);
+        color: var(--foreground);
       }
-      h1 {
-        margin: 0;
-        font-size: 1.375rem;
-        font-family: var(--font-sans);
+      .brand-name {
+        display: grid;
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
       }
-      .tabs {
-        display: flex;
-        gap: 0.25rem;
-        flex-wrap: wrap;
+      .brand-name small {
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        color: var(--muted-foreground);
       }
       .status-banner {
         margin: 0;
@@ -1288,92 +1511,66 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       .pane {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: var(--boxel-sp-sm);
       }
-      .pane-head {
+      .block {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        overflow: hidden;
+      }
+      .block-title {
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .block-head {
         display: flex;
         align-items: baseline;
-        justify-content: space-between;
-        gap: 1rem;
-        flex-wrap: wrap;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       h2 {
-        margin: 0;
-        font-size: 1.0625rem;
-        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
+      }
+      .meta {
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
       }
       .board-wrap {
         height: var(--_board-height);
       }
-      .board-toolbar {
-        display: flex;
-        align-items: center;
-        gap: 1.25rem;
-        flex-wrap: wrap;
-      }
-      .toolbar-controls {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
       .switch-wrap {
         display: flex;
         align-items: center;
-        gap: 0.4375rem;
+        gap: var(--boxel-sp-xs);
       }
       .switch-text {
-        font-size: 0.8125rem;
-        font-weight: 500;
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 600;
         color: var(--muted-foreground);
         white-space: nowrap;
-      }
-      .board-stats {
-        margin-left: auto;
-        display: flex;
-        align-items: baseline;
-        gap: 1.25rem;
-      }
-      .stat {
-        font-size: 0.75rem;
-        color: var(--muted-foreground);
-        white-space: nowrap;
-      }
-      .stat-value {
-        font-size: 0.9375rem;
-        font-weight: 700;
-        color: var(--foreground);
-        font-variant-numeric: tabular-nums;
-        margin-right: 0.25rem;
       }
       .selection-bar {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 0.75rem;
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius);
-        background: var(--card);
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xxs) var(--boxel-sp-sm);
+        border-top: 1px solid var(--border);
       }
       .selection-name {
         font-weight: 600;
-        font-size: 0.8125rem;
-        margin-right: auto;
-      }
-      h3 {
-        margin: 0 0 0.75rem;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground);
+        font-size: var(--boxel-font-size-xs);
+        margin-inline-end: auto;
       }
       .empty {
-        margin: 0;
-        font-size: 0.8125rem;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
-      }
-      .owner-select {
-        min-width: 11rem;
       }
     </style>
   </template>
@@ -1381,6 +1578,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
 
 export class RevenueOs extends CardDef {
   static displayName = 'Revenue OS';
+  static prefersWideFormat = true;
   static icon = ChartAreaIcon;
 
   @field orgName = contains(StringField);

@@ -21,19 +21,53 @@ import {
 } from '@cardstack/base/card-api';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { FilterChips } from '@cardstack/pretui/components/filter-chips';
-import { Tabs } from '@cardstack/pretui/components/tabs';
-import { FittedCard } from '@cardstack/boxel-ui/components';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { identifyCard, type getCards } from '@cardstack/runtime-common';
+import { fn } from '@ember/helper';
+import { on } from '@ember/modifier';
+import { eq } from '@cardstack/pretui/helpers';
+import {
+  RealmPaths,
+  identifyCard,
+  join,
+  type RealmResourceIdentifier,
+  type getCards,
+} from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
+import {
+  Sidebar,
+  SidebarGroup,
+  SidebarItem,
+  SidebarTrigger,
+} from '@cardstack/pretui/components/sidebar';
+import {
+  LayoutControl,
+  type LayoutControlForm,
+} from '@cardstack/pretui/components/layout-control';
+import { FilterChips } from '@cardstack/pretui/components/filter-chips';
+import { SearchInput } from '@cardstack/pretui/components/search-input';
+import { Button } from '@cardstack/pretui/components/button';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
 import ScaleIcon from '@cardstack/boxel-icons/scale';
-import TriangleAlertIcon from '@cardstack/boxel-icons/triangle-alert';
+import HomeIcon from '@cardstack/boxel-icons/home';
+import FolderIcon from '@cardstack/boxel-icons/folder';
+import FileTextIcon from '@cardstack/boxel-icons/file-text';
+import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
+import ListChecksIcon from '@cardstack/boxel-icons/list-checks';
+import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
+import BookIcon from '@cardstack/boxel-icons/book';
+import PenLineIcon from '@cardstack/boxel-icons/pen-line';
+import RefreshCwIcon from '@cardstack/boxel-icons/refresh-cw';
+import LayoutTemplateIcon from '@cardstack/boxel-icons/layout-template';
+import InboxIcon from '@cardstack/boxel-icons/inbox';
+import HistoryIcon from '@cardstack/boxel-icons/history';
+import BookmarkIcon from '@cardstack/boxel-icons/bookmark';
+import PlusIcon from '@cardstack/boxel-icons/plus';
+import DownloadIcon from '@cardstack/boxel-icons/download';
 import { Contract } from '../legal/contract';
 import { contractTypeLabel } from '../legal/contract-type';
 import {
   CONTRACT_STATUSES,
   contractStatusLabel,
+  isInForce,
 } from '../legal/contract-status';
 import { Obligation } from '../legal/obligation';
 import { Clause } from '../legal/clause';
@@ -46,31 +80,86 @@ import { ContractRequest } from '../legal/contract-request';
 import { Signatory } from '../legal/signatory';
 import { Employee } from '../hr/employee';
 import { riskGradeLabel } from '../legal/contract-risk';
-import { StatePill, type Hue } from '../../components/state-pill';
+import { TABS, NOTICE_WINDOW_DAYS, openStep } from './contract-execution-data';
 import {
-  TABS,
-  NOTICE_WINDOW_DAYS,
-  scaleBands,
-  openStep,
-} from './contract-execution-data';
-/**
- * Contract Execution — the app that composes the contract blocks.
- *
- * WHAT THIS CARD DOES NOT DO, on purpose:
- *
- *   - It holds no `linksToMany` collections. Every pane is a live realm query,
- *     so a contract created by a command appears without a reload and two
- *     panes can never disagree about what exists.
- *   - It renders no table, no search box and no create button of its own.
- *     Repository, Clauses and Signatories are all `CollectionPanel`, which
- *     already carries query + search + grid/table switch + create. The two
- *     panes that are NOT a plain collection — the approval queue and the
- *     obligation tracker — mount `Table` (table.gts) directly, because they
- *     group and sort by something a generic panel has no opinion about.
- *   - It never styles a block's internals. Where a block needs to look
- *     different here, that is an argument on the block, not CSS reaching into
- *     it from this file.
- */
+  compactMoney,
+  hueTone,
+  isoDate,
+  riskTone,
+  type Tone,
+} from '../shared/compact-format';
+import { FitTile } from '../shared/fit-tile';
+import { Note, StatStrip, type Stat } from './components';
+import { ObligationStats } from './tabs/obligations';
+import { ComplianceStats } from './tabs/compliance';
+
+/** A cell starting with one of these is read as a formula by spreadsheets. */
+const CSV_FORMULA = /^[=+\-@\t\r]/;
+
+const TAB_ICONS: Record<string, unknown> = {
+  home: HomeIcon,
+  repository: FolderIcon,
+  workspace: FileTextIcon,
+  approvals: CircleCheckIcon,
+  obligations: ListChecksIcon,
+  compliance: ShieldCheckIcon,
+  clauses: BookIcon,
+  signatories: PenLineIcon,
+  renewals: RefreshCwIcon,
+  templates: LayoutTemplateIcon,
+  requests: InboxIcon,
+  audit: HistoryIcon,
+};
+
+// The toolbar per tab: which list it searches and what its primary action
+// makes. A tab not listed has the saved-view chips only.
+const TOOLBARS: Record<
+  string,
+  { search: string; create?: string; card?: unknown; exportCsv?: boolean }
+> = {
+  home: { search: 'Search contracts', create: 'New contract', card: Contract },
+  repository: {
+    search: 'Search contracts…',
+    create: 'New contract',
+    card: Contract,
+  },
+  clauses: {
+    search: 'Search approved language…',
+    create: 'New clause',
+    card: Clause,
+  },
+  signatories: {
+    search: 'Search signatories…',
+    create: 'New signatory',
+    card: Signatory,
+  },
+  templates: {
+    search: 'Search templates by name or use case',
+    create: 'New template',
+    card: ContractTemplate,
+  },
+  requests: {
+    search: 'Search requests by what they are for',
+    create: 'New request',
+    card: ContractRequest,
+  },
+  audit: { search: 'Search by person, action or contract', exportCsv: true },
+};
+
+// rem, richest form first
+const SEARCH_FORMS: LayoutControlForm[] = [
+  { name: 'field', minWidth: 14 },
+  { name: 'collapsed', minWidth: 1.75 },
+];
+const VIEW_FORMS: LayoutControlForm[] = [
+  { name: 'chips', minWidth: 34 },
+  { name: 'few', minWidth: 14 },
+  { name: 'menu', minWidth: 0 },
+];
+const ACTION_FORMS: LayoutControlForm[] = [
+  { name: 'label', minWidth: 8 },
+  { name: 'icon', minWidth: 1.75 },
+];
 
 export class ContractExecutionView extends Component<
   typeof ContractExecutionApp
@@ -203,8 +292,12 @@ export class ContractExecutionView extends Component<
     }
   }
 
+  get realmURLValue(): URL | undefined {
+    return (this.args.model as any)?.[realmURL];
+  }
+
   get realms(): string[] | undefined {
-    let url = (this.args.model as any)?.[realmURL];
+    let url = this.realmURLValue;
     return url ? [url.href] : undefined;
   }
 
@@ -425,41 +518,6 @@ export class ContractExecutionView extends Component<
     this.activeViewName = name;
   };
 
-  /**
-   * The rail belongs to the Repository only.
-   *
-   * Saved views belong to one object: "All contracts · 3" beside
-   * "Obligations 4" would read as a contradiction rather than as a scope.
-   *
-   * The SCOPE still travels: you set it here, and every derived tab recomputes
-   * against it and says so in a banner with a way out. Setting it belongs to
-   * one place; obeying it belongs everywhere.
-   */
-  get railApplies(): boolean {
-    return this.tab === 'repository';
-  }
-
-  /** Row severity, encoded at the row edge by `Table`'s `@rowClass`. */
-  contractSeverity = (c: any): string => {
-    if (c?.riskGrade === 'critical' || c?.riskGrade === 'high')
-      return 'sev-over';
-    if (
-      typeof c?.daysToNotice === 'number' &&
-      c.daysToNotice <= NOTICE_WINDOW_DAYS
-    )
-      return 'sev-note';
-    if (c?.status === 'signed') return 'sev-ok';
-    return 'sev-cool';
-  };
-
-  obligationSeverity = (o: any): string => {
-    let st = o?.status;
-    if (st === 'overdue' || st === 'due_today') return 'sev-over';
-    if (st === 'due_soon') return 'sev-note';
-    if (st === 'closed') return '';
-    return 'sev-ok';
-  };
-
   /** A tab with nothing behind it shows no count rather than a zero. */
   tabCount = (key: string): number => {
     switch (key) {
@@ -485,14 +543,6 @@ export class ContractExecutionView extends Component<
         return 0;
     }
   };
-
-  /** Overdue work is the one count that earns an alarm colour. */
-  get tabOptions(): { value: string; label: string }[] {
-    return TABS.map((t) => {
-      let n = this.tabCount(t.key);
-      return { value: t.key, label: n ? `${t.label} ${n}` : t.label };
-    });
-  }
 
   /** The contract at the head of the queue — the one the rail is drawn for. */
   /**
@@ -552,28 +602,6 @@ export class ContractExecutionView extends Component<
           )
       : [];
 
-  get riskBands() {
-    let bands = ['critical', 'high', 'medium', 'low'];
-    let rows = bands
-      .map((grade) => {
-        let cards = this.contracts.filter((c) => c.riskGrade === grade);
-        return {
-          grade,
-          label: riskGradeLabel(grade),
-          count: cards.length,
-          hue: (grade === 'critical'
-            ? 'red'
-            : grade === 'high'
-              ? 'orange'
-              : grade === 'medium'
-                ? 'amber'
-                : 'green') as Hue,
-        };
-      })
-      .filter((b) => b.count);
-    return scaleBands(rows);
-  }
-
   get renewalRows(): Contract[] {
     return this.contracts
       .filter((c) => {
@@ -622,23 +650,14 @@ export class ContractExecutionView extends Component<
 
   statusLabelOf = (value?: string | null): string => contractStatusLabel(value);
 
-  statusHueOf = (value?: string | null): Hue =>
-    (CONTRACT_STATUSES.find((o) => o.value === value)?.hue ?? 'slate') as Hue;
+  statusToneOf = (value?: string | null): Tone =>
+    hueTone(CONTRACT_STATUSES.find((o) => o.value === value)?.hue);
 
   typeLabelOf = (value?: string | null): string => contractTypeLabel(value);
 
   riskLabelOf = (value?: string | null): string => riskGradeLabel(value);
 
-  riskHueOf = (grade?: string | null): Hue =>
-    grade === 'critical'
-      ? 'red'
-      : grade === 'high'
-        ? 'orange'
-        : grade === 'medium'
-          ? 'amber'
-          : grade === 'low'
-            ? 'green'
-            : 'slate';
+  riskToneOf = (grade?: string | null): Tone => riskTone(grade);
 
   /** Deviating clauses on a contract — an input to the rules engine. */
   deviationCountFor = (contractId?: string): number =>
@@ -656,14 +675,26 @@ export class ContractExecutionView extends Component<
    */
   localDirFor = (folder: string): string | undefined => {
     let id = (this.args.model as any)?.id as string | undefined;
-    let realm = this.realmList[0];
-    if (!id || !realm) return undefined;
-    let rest = id.startsWith(realm) ? id.slice(realm.length) : '';
-    let parts = rest.split('/').filter(Boolean);
-    // drop ['ContractExecutionApp', '<id>'] to leave the mirror prefix
-    let prefix = parts.slice(0, -2).join('/');
-    return prefix ? `${prefix}/${folder}` : folder;
+    let url = this.realmURLValue;
+    if (!id || !url) return undefined;
+    try {
+      let segments = new RealmPaths(url)
+        .local(id as RealmResourceIdentifier)
+        .split('/');
+      // drop ['ContractExecutionApp', '<id>'] to leave the mirror prefix
+      return join(...segments.slice(0, -2), folder);
+    } catch {
+      return undefined;
+    }
   };
+
+  /** The Site tools theme the app is linked to, for records it creates. */
+  get themeRelationship() {
+    let id = (this.args.model as any)?.cardInfo?.theme?.id as
+      | string
+      | undefined;
+    return id ? { 'cardInfo.theme': { links: { self: id } } } : {};
+  }
 
   get clauseUses(): ContractClause[] {
     return ((this.clauseUseQuery?.instances ?? []) as any[]).filter(
@@ -671,332 +702,546 @@ export class ContractExecutionView extends Component<
     ) as ContractClause[];
   }
 
+  // ---- shell: nav, toolbar, KPIs -------------------------------------------
+
+  get navItems() {
+    return TABS.map((t) => {
+      let n = this.tabCount(t.key);
+      let badge: string | undefined =
+        t.key === 'obligations'
+          ? this.overdueCount
+            ? `${this.overdueCount} overdue`
+            : undefined
+          : n
+            ? String(n)
+            : undefined;
+      return { ...t, icon: TAB_ICONS[t.key], badge };
+    });
+  }
+
+  get tabLabel(): string {
+    return TABS.find((t) => t.key === this.tab)?.label ?? '';
+  }
+
+  get pageTitle(): string {
+    return this.tab === 'home' ? 'Legal Home' : this.tabLabel;
+  }
+
+  get toolbar() {
+    return TOOLBARS[this.tab];
+  }
+
+  get todayLabel(): string {
+    return new Date().toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  }
+
+  @tracked query = '';
+
+  setQuery = (value: string) => {
+    this.query = value ?? '';
+  };
+
+  /** The toolbar search, applied by every list tab to its own rows. */
+  search = <T,>(rows: T[], text: (row: T) => unknown[]): T[] => {
+    let q = this.query.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((r) =>
+      text(r).some((v) =>
+        String(v ?? '')
+          .toLowerCase()
+          .includes(q),
+      ),
+    );
+  };
+
+  @tracked createProblem: string | undefined;
+
+  @action async createRecord() {
+    let card = this.toolbar?.card;
+    let ref = card ? identifyCard(card as typeof CardDef) : undefined;
+    let realm = this.realmURLValue;
+    if (!ref || !realm || !this.args.createCard) {
+      this.createProblem =
+        "You can't create records here. Open this app in a realm you can edit.";
+      return;
+    }
+    this.createProblem = undefined;
+    try {
+      await this.args.createCard(ref, realm, {
+        realmURL: realm,
+        localDir: this.localDirFor('name' in ref ? ref.name : 'Contract'),
+        doc: {
+          data: {
+            meta: { adoptsFrom: ref },
+            relationships: this.themeRelationship,
+          },
+        },
+      } as any);
+    } catch (error: any) {
+      this.createProblem = `Couldn't create the record${
+        error?.message ? ` (${error.message})` : ''
+      }. Check your connection and try again.`;
+    }
+  }
+
+  /**
+   * Audit log as CSV, built from the rows on screen.
+   *
+   * A cell that starts with = + - or @ is read as a formula by spreadsheets,
+   * so it is prefixed with a quote to stay text.
+   */
+  @action exportAuditCsv() {
+    let esc = (v: unknown) => {
+      let text = String(v ?? '');
+      if (CSV_FORMULA.test(text)) text = `'${text}`;
+      return `"${text.replace(/"/g, '""')}"`;
+    };
+    let lines = [
+      ['When', 'Who', 'Action', 'Subject', 'Conditions'].map(esc).join(','),
+      ...this.audits.map((a: any) =>
+        [
+          isoDate(a?.occurredAt),
+          a?.doneBy?.cardTitle,
+          a?.action,
+          a?.subjectTitle,
+          a?.conditions,
+        ]
+          .map(esc)
+          .join(','),
+      ),
+    ];
+    let url = URL.createObjectURL(
+      new Blob([lines.join('\n')], { type: 'text/csv' }),
+    );
+    let link = document.createElement('a');
+    link.href = url;
+    link.download = 'audit-trail.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  @action pickTab(key: string, bar?: { mobile: boolean; toggle: () => void }) {
+    this.tab = key;
+    this.query = '';
+    if (bar?.mobile) bar.toggle();
+  }
+
+  pickView = (name: string, bar?: { mobile: boolean; toggle: () => void }) => {
+    this.activeViewName = name;
+    if (bar?.mobile) bar.toggle();
+  };
+
+  /** Value in force, per currency: the largest currency leads. */
+  get valueInForce(): { lead: string; sub: string } {
+    let inForce = this.contracts.filter(
+      (c: any) => isInForce(c.status) && typeof c.value?.amount === 'number',
+    );
+    let byCode = new Map<string, number>();
+    for (let c of inForce as any[]) {
+      let code = c.value.currency?.code ?? '';
+      byCode.set(code, (byCode.get(code) ?? 0) + c.value.amount);
+    }
+    let sorted = [...byCode].sort((a, b) => b[1] - a[1]);
+    let lead = sorted[0];
+    let others = sorted.length - 1;
+    return {
+      lead: lead ? compactMoney(lead[1], lead[0]) : '—',
+      sub: `${inForce.length} agreements${
+        others > 0
+          ? ` · ${others} other currenc${others === 1 ? 'y' : 'ies'}`
+          : ''
+      }`,
+    };
+  }
+
+  get longestWait(): number {
+    return Math.max(
+      0,
+      ...this.approvalRows.map((c) => openStep(c)?.waitingDays ?? 0),
+    );
+  }
+
+  get nearestNotice(): number | undefined {
+    // a passed notice date is not "nearest"; it is already missed
+    return (
+      this.renewalRows.find((c) => (c.daysToNotice ?? -1) >= 0)?.daysToNotice ??
+      undefined
+    );
+  }
+
+  get openDeviations(): ContractClause[] {
+    return this.clauseUses.filter(
+      (u: any) => u?.isDeviation && u?.deviationSeverity !== 'approved',
+    );
+  }
+
+  get worstDeviation(): string | undefined {
+    let order = ['critical', 'high', 'major', 'medium', 'minor', 'low'];
+    let levels = this.openDeviations.map(
+      (u: any) => u?.riskLevel ?? u?.deviationSeverity,
+    );
+    return order.find((o) => levels.includes(o));
+  }
+
+  get kpis(): Stat[] {
+    let v = this.valueInForce;
+    let loading = this.countsLoading;
+    let n = (x: number | string) => (loading ? '—' : x);
+    return [
+      { label: 'Value in force', value: n(v.lead), hint: v.sub },
+      {
+        label: 'Overdue obligations',
+        value: n(this.overdueCount),
+        hint: `of ${this.obligations.length} tracked`,
+        tone: this.overdueCount ? 'danger' : 'neutral',
+      },
+      {
+        label: 'In approval',
+        value: n(this.awaitingCount),
+        hint: this.awaitingCount
+          ? `longest waiting ${this.longestWait} days`
+          : 'nothing waiting',
+      },
+      {
+        label: 'Notice inside 90 days',
+        value: n(this.noticeSoonCount),
+        hint:
+          this.nearestNotice !== undefined
+            ? `nearest in ${this.nearestNotice} days`
+            : 'none due',
+        tone: this.noticeSoonCount ? 'warning' : 'neutral',
+      },
+      {
+        label: 'Open deviations',
+        value: n(this.openDeviations.length),
+        hint: this.worstDeviation
+          ? `worst is ${this.worstDeviation}`
+          : 'all on playbook',
+      },
+      {
+        label: 'Compliance',
+        value: n(this.complianceLabel),
+        hint: 'open obligations met',
+      },
+    ];
+  }
+
+  get viewMenuItems() {
+    return this.savedViewOptions.map((o) => ({
+      label: `${o.label} ${o.count}`,
+      value: o.value,
+      group: 'saved-views',
+      checked: o.value === this.currentViewName,
+      onSelect: () => this.pickView(o.value),
+    }));
+  }
+
   <template>
-    <div class='cx'>
-      <header class='cx-mast' aria-label='Workspace summary'>
-        <div class='cx-brand'>
-          <span class='cx-seal'><ScaleIcon
-              width='18'
-              height='18'
-              role='presentation'
-            /></span>
-          <div>
-            <h1 class='cx-title'>{{@model.cardTitle}}</h1>
-            <p class='cx-sub'>Contract lifecycle management</p>
+    <section class='cx'>
+      <Sidebar
+        class='cx-shell'
+        @label='Contract execution sections'
+        @collapsible='rail'
+        @railBreakpoint={{1100}}
+        @mobileBreakpoint={{720}}
+        @bordered={{true}}
+        @scroll='content'
+        @resizable={{true}}
+      >
+        <:header as |bar|>
+          <div class='cx-brand'>
+            <span class='cx-mark' aria-hidden='true'>CE</span>
+            {{#unless bar.collapsed}}
+              <span class='cx-brand-text'>
+                <strong>Contract Execution</strong>
+                <span class='cx-cap'>Legal desk</span>
+              </span>
+            {{/unless}}
           </div>
-        </div>
-
-        <dl class='cx-counters'>
-          <div class='cx-ct {{if this.overdueCount "is-alarm"}}'>
-            <dt>Overdue</dt>
-            <dd>
-              {{#if this.countsLoading}}
-                —
-              {{else}}
-                {{#if this.overdueCount}}
-                  <TriangleAlertIcon
-                    width='14'
-                    height='14'
-                    role='presentation'
-                  />
-                {{/if}}
-                {{this.overdueCount}}
-              {{/if}}
-            </dd>
-          </div>
-          <div class='cx-ct'>
-            <dt>In approval</dt>
-            <dd>{{if this.countsLoading '—' this.awaitingCount}}</dd>
-          </div>
-          <div class='cx-ct'>
-            <dt>Notice 90d</dt>
-            <dd>{{if this.countsLoading '—' this.noticeSoonCount}}</dd>
-          </div>
-          <div class='cx-ct'>
-            <dt>Compliance</dt>
-            <dd>{{if this.countsLoading '—' this.complianceLabel}}</dd>
-          </div>
-        </dl>
-      </header>
-
-      {{#if this.isInteractive}}
-        {{#if this.unresolvedNote}}
-          <p class='cx-unresolved' role='status'>{{this.unresolvedNote}}</p>
-        {{/if}}
-
-        <div class='cx-tabbar'>
-          <Tabs
-            class='cx-tabs'
-            aria-label='Sections'
-            @options={{this.tabOptions}}
-            @value={{this.tab}}
-            @onValueChange={{this.setTab}}
-          />
-        </div>
-
-        <div class='cx-split {{unless this.railApplies "is-full"}}'>
-          {{#if this.railApplies}}
-            <nav class='cx-rail' aria-label='Saved views'>
-              <p class='cx-rail-h'>Saved views</p>
-              <FilterChips
-                @label='Saved views'
-                @options={{this.savedViewOptions}}
-                @value={{this.currentViewName}}
-                @onValueChange={{this.setViewByName}}
+        </:header>
+        <:nav as |bar|>
+          <SidebarGroup @label='Desk' @hideLabel={{bar.collapsed}}>
+            {{#each this.navItems as |item|}}
+              <SidebarItem
+                @label={{item.label}}
+                @icon={{item.icon}}
+                @badge={{unless bar.collapsed item.badge}}
+                @active={{eq item.key this.tab}}
+                @collapsed={{bar.collapsed}}
+                @onClick={{fn this.pickTab item.key bar}}
               />
-            </nav>
+            {{/each}}
+          </SidebarGroup>
+          <SidebarGroup @label='Saved views' @hideLabel={{bar.collapsed}}>
+            {{#each this.savedViewOptions as |sv|}}
+              <SidebarItem
+                @label={{sv.label}}
+                @icon={{BookmarkIcon}}
+                @badge={{unless bar.collapsed sv.count}}
+                @active={{eq sv.value this.currentViewName}}
+                @collapsed={{bar.collapsed}}
+                @onClick={{fn this.pickView sv.value bar}}
+              />
+            {{/each}}
+          </SidebarGroup>
+        </:nav>
+        <:default as |bar|>
+          {{#if bar.mobile}}
+            <header class='cx-topbar'>
+              <SidebarTrigger
+                @open={{bar.open}}
+                @onToggle={{bar.toggle}}
+                @controls={{bar.controls}}
+                @label='contract execution sections'
+              />
+              <strong>{{this.pageTitle}}</strong>
+            </header>
           {{/if}}
+          <main class='cx-page'>
+            <header class='cx-head'>
+              <p class='cx-cap'>Contract execution · Desk</p>
+              <h1 class='cx-title'>{{this.pageTitle}}</h1>
+              <p class='cx-sub'>Contract lifecycle management ·
+                {{this.currentViewName}}
+                · today
+                {{this.todayLabel}}</p>
+            </header>
 
-          <main class='cx-panel'>
-            {{#if (eq this.tab 'home')}}
-              <HomeTab @app={{this}} />
-            {{else if (eq this.tab 'workspace')}}
-              <WorkspaceTab @app={{this}} />
-            {{else if (eq this.tab 'repository')}}
-              <RepositoryTab @app={{this}} />
-            {{else if (eq this.tab 'approvals')}}
-              <ApprovalsTab @app={{this}} />
-            {{else if (eq this.tab 'obligations')}}
-              <ObligationsTab @app={{this}} />
-            {{else if (eq this.tab 'compliance')}}
-              <ComplianceTab @app={{this}} />
-            {{else if (eq this.tab 'clauses')}}
-              <ClausesTab @app={{this}} />
-            {{else if (eq this.tab 'signatories')}}
-              <SignatoriesTab @app={{this}} />
-            {{else if (eq this.tab 'renewals')}}
-              <RenewalsTab @app={{this}} />
-            {{else if (eq this.tab 'templates')}}
-              <TemplatesTab @app={{this}} />
-            {{else if (eq this.tab 'requests')}}
-              <RequestsTab @app={{this}} />
-            {{else if (eq this.tab 'audit')}}
-              <AuditTab @app={{this}} />
+            {{#if this.isInteractive}}
+              {{#if this.unresolvedNote}}
+                <Note @tone='warning' @lead={{this.unresolvedNote}} />
+              {{/if}}
+              <StatStrip @stats={{this.kpis}} @label='Desk summary' />
+
+              {{#if (eq this.tab 'obligations')}}
+                <ObligationStats @app={{this}} />
+              {{else if (eq this.tab 'compliance')}}
+                <ComplianceStats @app={{this}} />
+              {{/if}}
+
+              <LayoutControl
+                class='cx-toolbar'
+                @label='{{this.tabLabel}} toolbar'
+                @controlHeight='1.625rem'
+                as |lc|
+              >
+                {{#if this.toolbar}}
+                  <lc.Slot
+                    @id='search'
+                    @label='Search'
+                    @priority={{2}}
+                    @forms={{SEARCH_FORMS}}
+                    as |form|
+                  >
+                    <SearchInput
+                      @value={{this.query}}
+                      @placeholder={{this.toolbar.search}}
+                      @onInput={{this.setQuery}}
+                      @display={{if (eq form 'collapsed') 'collapsed' 'field'}}
+                    />
+                  </lc.Slot>
+                {{/if}}
+                <lc.Slot
+                  @id='views'
+                  @label='Saved views'
+                  @priority={{1}}
+                  @forms={{VIEW_FORMS}}
+                  @menuItems={{this.viewMenuItems}}
+                  as |form|
+                >
+                  <FilterChips
+                    @label='Saved views'
+                    @options={{this.savedViewOptions}}
+                    @value={{this.currentViewName}}
+                    @onValueChange={{this.pickView}}
+                    @display={{if (eq form 'few') 'few' 'all'}}
+                  />
+                </lc.Slot>
+                {{#if this.toolbar.create}}
+                  <lc.Slot
+                    @id='create'
+                    @label={{this.toolbar.create}}
+                    @pinned={{true}}
+                    @priority={{0}}
+                    @forms={{ACTION_FORMS}}
+                    as |form|
+                  >
+                    {{#if (eq form 'icon')}}
+                      <IconButton
+                        @label={{this.toolbar.create}}
+                        @icon={{PlusIcon}}
+                        @tone='primary'
+                        @appearance='accent'
+                        {{on 'click' this.createRecord}}
+                      />
+                    {{else}}
+                      <Button
+                        @size='xs'
+                        @tone='primary'
+                        @appearance='accent'
+                        @icon={{PlusIcon}}
+                        {{on 'click' this.createRecord}}
+                      >{{this.toolbar.create}}</Button>
+                    {{/if}}
+                  </lc.Slot>
+                {{else if this.toolbar.exportCsv}}
+                  <lc.Slot
+                    @id='export'
+                    @label='Export CSV'
+                    @pinned={{true}}
+                    @priority={{0}}
+                    @forms={{ACTION_FORMS}}
+                    as |form|
+                  >
+                    {{#if (eq form 'icon')}}
+                      <IconButton
+                        @label='Export CSV'
+                        @icon={{DownloadIcon}}
+                        @appearance='outlined'
+                        {{on 'click' this.exportAuditCsv}}
+                      />
+                    {{else}}
+                      <Button
+                        @size='xs'
+                        @appearance='outlined'
+                        @icon={{DownloadIcon}}
+                        {{on 'click' this.exportAuditCsv}}
+                      >Export CSV</Button>
+                    {{/if}}
+                  </lc.Slot>
+                {{/if}}
+              </LayoutControl>
+              {{#if this.createProblem}}
+                <Note @tone='danger' @lead={{this.createProblem}} />
+              {{/if}}
+
+              {{#if (eq this.tab 'home')}}
+                <HomeTab @app={{this}} />
+              {{else if (eq this.tab 'workspace')}}
+                <WorkspaceTab @app={{this}} />
+              {{else if (eq this.tab 'repository')}}
+                <RepositoryTab @app={{this}} />
+              {{else if (eq this.tab 'approvals')}}
+                <ApprovalsTab @app={{this}} />
+              {{else if (eq this.tab 'obligations')}}
+                <ObligationsTab @app={{this}} />
+              {{else if (eq this.tab 'compliance')}}
+                <ComplianceTab @app={{this}} />
+              {{else if (eq this.tab 'clauses')}}
+                <ClausesTab @app={{this}} />
+              {{else if (eq this.tab 'signatories')}}
+                <SignatoriesTab @app={{this}} />
+              {{else if (eq this.tab 'renewals')}}
+                <RenewalsTab @app={{this}} />
+              {{else if (eq this.tab 'templates')}}
+                <TemplatesTab @app={{this}} />
+              {{else if (eq this.tab 'requests')}}
+                <RequestsTab @app={{this}} />
+              {{else if (eq this.tab 'audit')}}
+                <AuditTab @app={{this}} />
+              {{/if}}
+            {{else}}
+              <p class='cx-sub'>Repository, approvals, obligations and renewals
+                over live records. Open this card in the app to work with them.</p>
             {{/if}}
           </main>
-        </div>
-      {{else}}
-        <main class='cx-panel cx-static'>
-          <p class='cx-static-note'>Contract lifecycle management — repository,
-            approvals, obligations and renewals. Open this card in the app to
-            work with live records.</p>
-          <ul class='cx-legend'>
-            {{#each CONTRACT_STATUSES as |o|}}
-              <li><StatePill
-                  @label={{o.label}}
-                  @hue={{o.hue}}
-                  @dot={{true}}
-                /></li>
-            {{/each}}
-          </ul>
-        </main>
-      {{/if}}
-    </div>
+        </:default>
+      </Sidebar>
+    </section>
 
     <style scoped>
       .cx {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        min-height: 0;
+        container: cx-app / inline-size;
+        position: relative;
+        block-size: 100%;
         overflow: hidden;
         background: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
-        container-type: inline-size;
-        container-name: cx-app;
-
-        /* The measure every text-and-figure block is capped to.
-           Without it, a `1fr` column on a 2000px display stretches a
-           label/value pair ~870px apart and the pair stops reading as a pair.
-           Tables are exempt — they legitimately use the full width. */
-        --_cx-measure: 68rem;
+        font-size: var(--boxel-font-size-xs);
+        line-height: 1.3;
       }
-
-      .cx-mast {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--boxel-sp);
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border);
+      .cx-shell {
+        block-size: 100%;
+        min-block-size: 0;
+        --pretui-sidebar-width: 13.5rem;
+        --pretui-sidebar-rail-width: 3.5rem;
+        --pretui-sidebar-bg: var(--card);
+        --pretui-selected: var(--primary);
+        --pretui-primary-ink: var(--primary-foreground);
       }
       .cx-brand {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
-      .cx-seal {
-        width: 2rem;
-        height: 2rem;
-        border-radius: var(--boxel-border-radius-sm);
+      .cx-mark {
         display: grid;
         place-items: center;
         flex: none;
-        background: color-mix(in oklch, var(--foreground) 8%, transparent);
-      }
-      .cx-title {
-        margin: 0;
-        font-size: var(--boxel-font-size-lg);
-        font-weight: 600;
-        line-height: 1.15;
-      }
-      .cx-sub {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-
-      .cx-counters {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-lg);
-        margin: 0 0 0 auto;
-      }
-      .cx-ct dt {
-        font-size: var(--boxel-font-size-2xs);
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .cx-ct dd {
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-3xs);
-        font-size: var(--boxel-font-size-lg);
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
-      }
-      /* The alarm is never colour alone — the glyph carries it too. */
-      .cx-ct.is-alarm dd {
-        color: var(--destructive-ink);
-      }
-
-      .cx-unresolved {
-        margin: 0;
-        padding: var(--boxel-sp-2xs) var(--boxel-sp-lg);
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-        color: var(--destructive-ink);
-        background: color-mix(in oklch, var(--destructive) 8%, transparent);
-        border-bottom: 1px solid var(--border);
-      }
-      /* Twelve tabs outgrow a narrow card: the bar scrolls sideways and each
-         tab keeps its label on one line. */
-      .cx-tabbar {
-        overflow-x: auto;
-        border-bottom: 1px solid var(--border);
-        padding: 0 var(--boxel-sp-lg);
-      }
-      .cx-tabs {
-        width: max-content;
-      }
-
-      .cx-panel {
-        min-height: 0;
-        min-width: 0;
-        overflow: auto;
-        padding: var(--boxel-sp-lg);
-      }
-      .cx-static {
-        display: grid;
-        gap: var(--boxel-sp);
-        align-content: start;
-      }
-      .cx-static-note {
-        margin: 0;
-        max-width: 52ch;
-        color: var(--muted-foreground);
-      }
-      .cx-legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-2xs);
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-
-      /* ============================================================
-         APPROVAL CHAIN RAIL
-         Drawn for the APPROVER, not the workflow author. `is-now` is the
-         viewer's own step and is the only one that takes the accent.
-         ============================================================ */
-      /* ============================================================
-         SPLIT: saved-view rail + work surface
-         ============================================================ */
-      /* ============================================================
-         COMPLIANCE: KPI row + three charts
-         ============================================================ */
-      /* Same rule as the rail's assign control: an editable field is taller
-         than the text around it, so it reads as editable at rest. */
-      /* Destructive action carries the semantic danger colour and sits apart
-         from the primary, per the platform's own guidance. */
-      /* A blocked capability is stated in-product, not hidden. Neutral ground,
-         not an error colour — nothing has gone wrong, it simply cannot run. */
-
-      /* A submit that fails must say why. Without this the button did nothing
-         visible when no rule matched, which reads as a broken control rather
-         than as a configuration answer. */
-
-      /* ---- Workspace tab (Contract Lifecycle Desk) ---- */
-      /* An identifier or amount never ellipsises — it is read aloud and typed
-         into other systems, so a neighbour shrinks instead. */
-
-      /* `.cx-split` is the flex child of `.cx`: the grid stretches and each
-         column scrolls on its own. */
-      .cx-split {
-        display: grid;
-        grid-template-columns: 13rem minmax(0, 1fr);
-        gap: var(--boxel-sp);
-        align-items: stretch;
-        flex: 1;
-        min-height: 0;
-      }
-      .cx-rail {
-        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
-        border-right: 1px solid var(--border);
-        min-height: 0;
-        overflow-y: auto;
-      }
-      .cx-split.is-full {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .cx-rail-h {
-        margin: 0 0 var(--boxel-sp-xs);
-        padding-left: var(--boxel-sp-2xs);
+        inline-size: 1.75rem;
+        block-size: 1.75rem;
+        border-radius: var(--boxel-border-radius-sm);
+        background: var(--muted);
         font-family: var(--font-mono);
         font-size: var(--boxel-font-size-2xs);
-        letter-spacing: 0.13em;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .cx-brand-text {
+        display: grid;
+        min-inline-size: 0;
+      }
+      .cx-cap {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
-
-      /* ============================================================
-         KPI ROLL-UP
-         ============================================================ */
-      /* Full-bleed to the section edge so the KPI strip's first text lands on
-         the same left as every other block. Measured 37.3 vs 21.3 before. */
-
-      @container cx-app (width < 45rem) {
-        /* the rail becomes a horizontal scroller rather than eating half a
-           narrow panel — the views stay reachable, they stop being a column */
-        .cx-split {
-          grid-template-columns: 1fr;
-        }
-        .cx-rail {
-          border-right: 0;
-          border-bottom: 1px solid var(--border);
-          overflow-x: auto;
-        }
+      .cx-topbar {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp);
+        border-bottom: 1px solid var(--border);
+        background: var(--card);
       }
-
+      .cx-page {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-lg) var(--boxel-sp-lg) var(--boxel-sp-xl);
+        min-inline-size: 0;
+      }
+      .cx-head {
+        display: grid;
+        gap: var(--boxel-sp-4xs);
+      }
+      .cx-title {
+        font-family: var(--boxel-heading-font-family);
+        font-size: var(--boxel-font-size-2xl);
+        line-height: 1;
+        text-transform: uppercase;
+      }
+      .cx-sub {
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+      }
+      .cx-toolbar {
+        min-inline-size: 0;
+      }
       @container cx-app (width < 45rem) {
-        .cx-counters {
-          gap: var(--boxel-sp);
+        .cx-page {
+          padding: var(--boxel-sp) var(--boxel-sp);
         }
       }
     </style>
@@ -1031,55 +1276,43 @@ export class ContractExecutionApp extends CardDef {
           height='16'
           role='presentation'
         />
-        <span>{{@model.cardTitle}}</span>
+        <span class='cx-emb-id'>
+          <strong>{{@model.cardTitle}}</strong>
+          <span class='cx-emb-sub'>Repository · approvals · obligations ·
+            renewals</span>
+        </span>
       </div>
       <style scoped>
         .cx-emb {
-          /* The host wraps a linked card in a CardContainer that draws a
-           boundary and deliberately adds NO padding (base/field-component.gts),
-           because padding there would shift the container-query breakpoints the
-           inner card reasons about. So the inset has to come from here, or the
-           text sits flush against the pill the host draws. */
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           display: flex;
           align-items: center;
-          gap: var(--boxel-sp-2xs);
-          font-weight: 600;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
         }
         .cx-emb-icon {
+          flex: none;
           color: var(--muted-foreground);
+        }
+        .cx-emb-id {
+          display: grid;
+          min-inline-size: 0;
+        }
+        .cx-emb-sub {
+          color: var(--muted-foreground);
+          font-size: var(--boxel-font-size-2xs);
         }
       </style>
     </template>
   };
 
-  /**
-   * Attribute-only. An app card is mounted in workspace grids, and the default
-   * fitted would give it no identity at the badge quantum.
-   */
   static fitted = class Fitted extends Component<typeof ContractExecutionApp> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow><span class='fit-eyebrow'>Contract lifecycle</span></:eyebrow>
+      <FitTile>
         <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>Repository · Approvals · Obligations</:subtitle>
-        <:footer>
-          <ScaleIcon
-            class='fit-glyph'
-            width='16'
-            height='16'
-            role='presentation'
-          />
-        </:footer>
-      </FittedCard>
-      <style scoped>
-        .fit-eyebrow {
-          color: var(--primary-ink);
-        }
-        .fit-glyph {
-          color: var(--primary-ink);
-        }
-      </style>
+        <:subtitle>Contract lifecycle desk</:subtitle>
+        <:fact>Repository · approvals · obligations · renewals</:fact>
+      </FitTile>
     </template>
   };
 

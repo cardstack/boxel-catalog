@@ -23,6 +23,11 @@
         "links": {
           "self": "../Lead/kenji-tanaka"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

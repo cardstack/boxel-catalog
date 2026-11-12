@@ -2,10 +2,10 @@ import { CardDef, contains, field, linksTo } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import { Command, realmURL } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import { Lead } from '@cardstack/catalog/cards/crm/lead';
-import { Account } from '@cardstack/catalog/cards/crm/account';
-import { Contact } from '@cardstack/catalog/cards/crm/contact';
-import { Opportunity } from '@cardstack/catalog/cards/crm/opportunity';
+import { Lead, convertBlocker } from '../lead';
+import { Account } from '../account';
+import { Contact } from '../contact';
+import { Opportunity } from '../opportunity';
 import { findCard, inputCard } from '@cardstack/catalog/utils/find-card';
 
 export class ConvertLeadInput extends CardDef {
@@ -36,20 +36,14 @@ export default class ConvertLeadCommand extends Command<
     if (!lead) throw new Error('A lead is required');
     let realm = input.realm?.trim() || (lead as any)[realmURL]?.href;
     if (!realm) throw new Error('A realm is required');
-    if (lead.status === 'disqualified') {
-      throw new Error('A disqualified lead cannot be converted');
-    }
-    if (lead.status === 'converted') {
-      throw new Error('This lead has already been converted');
-    }
+    let blocker = convertBlocker(lead.status);
+    if (blocker) throw new Error(blocker);
 
     let save = async <T extends CardDef>(card: T): Promise<T> =>
       (await new SaveCardCommand(ctx).execute({ card, realm } as any)) as T;
 
-    let name = lead.name?.trim() ?? '';
-    let email = lead.email?.trim() || undefined;
-    let emailDomain = email?.split('@')[1] ?? null;
-    let accountName = lead.company?.trim() || name || 'New Account';
+    let emailDomain = lead.email?.split('@')[1] ?? null;
+    let accountName = lead.company?.trim() || lead.name || 'New Account';
     // The lead is marked converted last, and each record is looked up before
     // it is made, so a run interrupted part way is finished by running it
     // again instead of creating a second account, contact and opportunity.
@@ -63,32 +57,29 @@ export default class ConvertLeadCommand extends Command<
       (await save(new Account({ name: accountName, domain: emailDomain })));
 
     // Named for the lead, so two leads at one company each get their own deal.
-    let opportunityName = `${accountName} — ${name || 'first deal'}`;
-    // An empty value is saved as unset, so the lookup's `null` finds it.
-    let nameParts = name.split(/\s+/);
-    let firstName = nameParts[0] || undefined;
-    let lastName = nameParts.slice(1).join(' ') || undefined;
+    let opportunityName = `${accountName} — ${lead.name || 'first deal'}`;
+    let nameParts = (lead.name ?? '').trim().split(/\s+/);
     let contact =
       (await findCard<Contact>(
         ctx,
         Contact,
         // With no email, the lead's name keeps it from matching another
         // email-less contact on the account.
-        email
-          ? { 'account.id': account.id, email }
+        lead.email
+          ? { 'account.id': account.id, email: lead.email }
           : {
               'account.id': account.id,
               email: null,
-              firstName: firstName ?? null,
-              lastName: lastName ?? null,
+              firstName: nameParts[0] || null,
+              lastName: nameParts.slice(1).join(' ') || null,
             },
         realm,
       )) ||
       (await save(
         new Contact({
-          firstName,
-          lastName,
-          email,
+          firstName: nameParts[0],
+          lastName: nameParts.slice(1).join(' ') || undefined,
+          email: lead.email,
           phone: lead.phone,
           account,
         }),
@@ -117,7 +108,7 @@ export default class ConvertLeadCommand extends Command<
       account,
       contact,
       opportunity,
-      message: `Converted ${name || 'the lead'} into ${accountName} (account + contact + qualified opportunity)`,
+      message: `Converted ${lead.name} into ${accountName} (account + contact + qualified opportunity)`,
     });
   }
 }

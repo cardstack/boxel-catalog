@@ -95,6 +95,11 @@
         "links": {
           "self": "../Carrier/royal-mail"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "recipientRef": "lucas",
+      "recipientRef": "desk-lead",
       "subject": "Follow up with Sarah Baker",
       "body": "You said you would confirm the 32-seat discount tier by Friday.",
       "severity": "warning",
@@ -13,13 +13,18 @@
       "actionLabel": "Open the call",
       "cardInfo": {
         "name": "Follow up with Sarah Baker",
-        "summary": "Produced by RemindParticipant at the -24h offset. Expires the day after the deadline — a reminder about a meeting that already happened helps nobody."
+        "summary": "Produced by RemindParticipant at the -24h offset. Expires the day after the deadline \u2014 a reminder about a meeting that already happened helps nobody."
       }
     },
     "relationships": {
       "subjectCard": {
         "links": {
           "self": "../Call/sarah-baker-renewal"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

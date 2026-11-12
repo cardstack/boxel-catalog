@@ -84,6 +84,13 @@
         "module": "../workflow",
         "name": "Workflow"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
     }
   }
 }

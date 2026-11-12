@@ -9,7 +9,7 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import DateTimeField from '@cardstack/base/datetime';
 import PowerOffIcon from '@cardstack/boxel-icons/power-off';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Dot } from './card-ui';
 
 import { hoursBetween, roundHours, formatHours } from './utils/maintenance';
 import { absoluteStamp } from './utils/relative-time';
@@ -55,10 +55,10 @@ export class DowntimeField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
-    get hue() {
+    get tone() {
       let m = this.args.model;
-      if (!m.startedAt) return 'slate';
-      return m.planned ? 'slate' : m.isOpen ? 'red' : 'orange';
+      if (!m.startedAt || m.planned) return 'muted' as const;
+      return m.isOpen ? ('bad' as const) : ('warn' as const);
     }
     get from() {
       return absoluteStamp(this.args.model.startedAt ?? undefined);
@@ -68,14 +68,13 @@ export class DowntimeField extends FieldDef {
     }
     <template>
       <div class='dt'>
-        <StatePill
+        <Dot
+          @tone={{this.tone}}
           @label={{if
             @model.startedAt
             (if @model.planned 'planned' 'unplanned')
             'none'
           }}
-          @hue={{this.hue}}
-          @dot={{@model.isOpen}}
         />
         {{#if @model.startedAt}}
           <span class='dt-hours'>{{@model.title}}</span>

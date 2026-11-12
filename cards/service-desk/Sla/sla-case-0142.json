@@ -84,7 +84,7 @@
         }
       ],
       "cardInfo": {
-        "name": "SLA · CASE-2026-0142",
+        "name": "SLA \u00b7 CASE-2026-0142",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -105,6 +105,11 @@
       "policy": {
         "links": {
           "self": "../SlaPolicy/standard-support"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     }

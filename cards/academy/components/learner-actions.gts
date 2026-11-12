@@ -266,7 +266,6 @@ export class LearnerActions extends GlimmerComponent<Signature> {
         background: var(--card);
       }
       h2 {
-        margin: 0;
         font-size: var(--boxel-font-size-sm);
         text-transform: uppercase;
         letter-spacing: 0.06em;
@@ -279,7 +278,6 @@ export class LearnerActions extends GlimmerComponent<Signature> {
         flex-wrap: wrap;
       }
       .muted {
-        margin: 0;
         color: var(--muted-foreground);
         font-size: var(--boxel-font-size-sm);
       }

@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "Tomás Ribeiro",
+      "name": "Tom\u00e1s Ribeiro",
       "email": "tomas.ribeiro@example.com",
       "phone": "+1 555 0142",
       "status": "offer",
@@ -11,7 +11,7 @@
       "appliedDate": "2026-06-20",
       "overallScore": 5,
       "cardInfo": {
-        "name": "Tomás Ribeiro",
+        "name": "Tom\u00e1s Ribeiro",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -78,6 +78,11 @@
       "hiredAs": {
         "links": {
           "self": "../Employee/124fd97a-4f35-4af9-a68f-74ee6a2020a0"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

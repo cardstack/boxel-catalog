@@ -1,0 +1,92 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Open issues digest",
+        "summary": "Every weekday morning, summarizes a GitHub repository's open issues for the stand-up and writes the digest into the workspace."
+      },
+      "triggers": [
+        {
+          "kind": "cron",
+          "label": "weekday-mornings",
+          "expression": "30 8 * * 1-5",
+          "timeZone": "America/New_York",
+          "untilDate": null,
+          "untilTime": null,
+          "count": null,
+          "date": null,
+          "time": null,
+          "webhookPath": null
+        },
+        {
+          "kind": "cron",
+          "label": "release-weeks",
+          "expression": "0 13,17 * * 2,4",
+          "timeZone": "America/New_York",
+          "untilDate": "2030-12-20",
+          "untilTime": null,
+          "count": null,
+          "date": null,
+          "time": null,
+          "webhookPath": null
+        },
+        {
+          "kind": "once",
+          "label": "kickoff",
+          "expression": null,
+          "timeZone": "America/New_York",
+          "untilDate": null,
+          "untilTime": null,
+          "count": null,
+          "date": "2030-11-18",
+          "time": "09:00",
+          "webhookPath": null
+        }
+      ],
+      "operations": [
+        {
+          "targetType": {
+            "module": "../examples/github-repository",
+            "name": "GitHubRepository"
+          },
+          "operation": "openIssues"
+        }
+      ],
+      "caps": {
+        "callApiCalls": 5,
+        "responseBytes": 2000000,
+        "resolveCalls": 0,
+        "aiCredits": 0,
+        "writes": 1,
+        "seconds": 300,
+        "dailyCredits": 40,
+        "monthlyCredits": 400
+      },
+      "params": [
+        {
+          "name": "repository",
+          "value": "automation/examples/GitHubRepository/boxel"
+        },
+        {
+          "name": "reportPath",
+          "value": "reports/open-issues.md"
+        }
+      ],
+      "batchedAI": false
+    },
+    "relationships": {
+      "script": {
+        "links": {
+          "self": "../scripts/open-issues-digest.js"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../automation",
+        "name": "Automation"
+      }
+    }
+  }
+}

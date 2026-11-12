@@ -14,10 +14,16 @@
         "name": "Create Onboarding Checklist"
       }
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
       }
     }

@@ -17,6 +17,11 @@
         "links": {
           "self": "../Location/northwind-plant"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

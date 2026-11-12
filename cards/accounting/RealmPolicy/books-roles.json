@@ -1,0 +1,370 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Cinder & Crumb · Roles"
+      },
+      "rules": [
+        {
+          "targetType": {
+            "module": "../ledger-cards",
+            "name": "Ledger"
+          },
+          "grants": [
+            {
+              "operation": "saveReport",
+              "where": "actor() == \"@demo-purchases:example.com\""
+            },
+            {
+              "operation": "enterBill",
+              "where": "actor() == \"@demo-purchases:example.com\""
+            },
+            {
+              "operation": "enterBillOnTerms",
+              "where": "actor() == \"@demo-purchases:example.com\""
+            },
+            {
+              "operation": "billFromPurchaseOrder",
+              "where": "actor() == \"@demo-purchases:example.com\""
+            },
+            {
+              "operation": "enterPayment",
+              "where": "actor() == \"@demo-purchases:example.com\""
+            },
+            {
+              "operation": "enterVendorCredit",
+              "where": "actor() == \"@demo-purchases:example.com\""
+            },
+            {
+              "operation": "saveReport",
+              "where": "actor() == \"@demo-reports:example.com\""
+            },
+            {
+              "operation": "saveReport",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "saveReport",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterBill",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterBillOnTerms",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "billFromPurchaseOrder",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterVendorCredit",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterDeposit",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterTransfer",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterBankPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterTaxPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterPayroll",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterTime",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterLoanPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterCardCharge",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterRoast",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterFulfillment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterCount",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterLanded",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterJournal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterScheduled",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterDepreciation",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterDisposal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cards",
+            "name": "Bill"
+          },
+          "grants": [
+            {
+              "operation": "useCurrency",
+              "where": "actor() == \"@demo-purchases:example.com\""
+            },
+            {
+              "operation": "useCurrency",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-saved-report",
+            "name": "SavedReport"
+          },
+          "grants": [
+            {
+              "operation": "delete",
+              "where": "(.savedBy == \"@demo-purchases:example.com\") and (actor() == \"@demo-purchases:example.com\")"
+            },
+            {
+              "operation": "delete",
+              "where": "(.savedBy == \"@demo-reports:example.com\") and (actor() == \"@demo-reports:example.com\")"
+            },
+            {
+              "operation": "delete",
+              "where": "(.savedBy == \"@demo-sales:example.com\") and (actor() == \"@demo-sales:example.com\")"
+            },
+            {
+              "operation": "delete",
+              "where": "(.savedBy == \"@demo-standard:example.com\") and (actor() == \"@demo-standard:example.com\")"
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "Customer"
+          },
+          "grants": [
+            {
+              "operation": "enterInvoice",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "enterInvoiceOnTerms",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "enterSalesReceipt",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "enterRefundReceipt",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "invoiceFromQuote",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "receivePayment",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "enterInvoice",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterInvoiceOnTerms",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterSalesReceipt",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterRefundReceipt",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "invoiceFromQuote",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "receivePayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "Invoice"
+          },
+          "grants": [
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "useCurrency",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "useCurrency",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterCredit",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterWriteOff",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "SalesReceipt"
+          },
+          "grants": [
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "RefundReceipt"
+          },
+          "grants": [
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-close",
+            "name": "MonthClose"
+          },
+          "grants": [
+            {
+              "operation": "reconcile",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-close",
+            "name": "BankReconciliation"
+          },
+          "grants": [
+            {
+              "operation": "record",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/realm-policy/realm-policy",
+        "name": "RealmPolicy"
+      }
+    }
+  }
+}

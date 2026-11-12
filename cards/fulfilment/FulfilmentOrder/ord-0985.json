@@ -66,6 +66,11 @@
         "links": {
           "self": "../Warehouse/wh-drop"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

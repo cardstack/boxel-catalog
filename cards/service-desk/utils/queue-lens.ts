@@ -1,10 +1,7 @@
-import type { Ticket } from '@cardstack/catalog/cards/service-desk/ticket';
-import { statusIsTerminal } from '@cardstack/catalog/cards/service-desk/ticket-taxonomy';
-import {
-  timerSnapshot,
-  urgencyRank,
-} from '@cardstack/catalog/cards/service-desk/utils/sla';
-import { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock';
+import type { Ticket } from '../ticket';
+import { statusIsTerminal } from '../ticket-taxonomy';
+import { timerSnapshot, urgencyRank } from './sla';
+import { slaClock } from './sla-clock';
 
 /**
  * The six questions an agent asks the queue.
@@ -71,14 +68,11 @@ export const LENSES: LensSpec[] = [
 /**
  * The governing timer's state, computed NOW.
  *
- * These predicates used to read `ticket.slaState`, which is a computed field:
- * it is evaluated when the card is loaded or indexed and has no tracked
- * dependency on the clock, so it holds whatever was true at load time. The
- * row badges meanwhile compute live off `slaClock`. The two therefore
- * disagreed on screen — a ticket would breach while the console was open, its
- * badge would turn red, and the rail's "Overdue" count would stay at 0 with
- * the filter rendering "Nothing matches these filters" over the very row that
- * was showing red.
+ * These predicates do not read `ticket.slaState`: that computed field is
+ * evaluated at load or index time and has no tracked dependency on the clock,
+ * while the row badges compute live off `slaClock`. Reading the same clock
+ * keeps the rail's "Overdue" count in step with a badge that turns red while
+ * the console is open.
  *
  * Reading `slaClock.now` also subscribes the caller's render to the tick, so
  * the counts move for the same reason the badges do.

@@ -10,7 +10,7 @@ import NumberField from '@cardstack/base/number';
 import DateTimeField from '@cardstack/base/datetime';
 import FingerprintIcon from '@cardstack/boxel-icons/fingerprint';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 
 /**
  * Who touched a record, when, and against which version of the rules.
@@ -70,7 +70,7 @@ export class AuditMetadataField extends FieldDef {
           flex-wrap: wrap;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .mono {
@@ -89,7 +89,7 @@ export class AuditMetadataField extends FieldDef {
       <span class='atom'>{{@model.summary}}</span>
       <style scoped>
         .atom {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>

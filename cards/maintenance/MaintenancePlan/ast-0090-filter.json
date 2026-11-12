@@ -24,7 +24,7 @@
             "result": "pending"
           },
           {
-            "label": "Replace G4 panel filters (×4)",
+            "label": "Replace G4 panel filters (\u00d74)",
             "kind": "check",
             "required": true,
             "result": "pending"
@@ -57,6 +57,11 @@
       "asset": {
         "links": {
           "self": "../Asset/ast-2026-0090"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

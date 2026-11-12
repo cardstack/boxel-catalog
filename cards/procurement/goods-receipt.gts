@@ -13,32 +13,44 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { Alert } from '@cardstack/pretui/components/alert';
+import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Button } from '@cardstack/pretui/components/button';
+import { Chip } from '@cardstack/pretui/components/chip';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
 } from '@cardstack/catalog/components/pretui-helpers';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import {
+  CompactFitted,
+  CompactRow,
+  type CompactTag,
+} from '../commerce/compact-parts';
+
+// DateField hands back local midnight, so format in local time (a UTC
+// formatter shows the previous day west of Greenwich).
+function fmtDate(d?: Date | null, year = true): string {
+  return d
+    ? d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: year ? 'numeric' : undefined,
+      })
+    : '';
+}
 
 import { PurchaseOrder } from './purchase-order';
 import ReceiveGoodsCommand from './commands/receive-goods-command';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
-import {
-  stateColor,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
-import { eq } from '@cardstack/boxel-ui/helpers';
 
 export type MatchState = 'matched' | 'short' | 'over';
-
-export const MATCH_STATE_COLORS: Record<MatchState, StateColor> = {
-  matched: stateColor('green'),
-  short: stateColor('amber'),
-  over: stateColor('red'),
-};
+type Tone = CompactTag['tone'];
 
 export function matchStateOf(
   ordered?: number | null,
@@ -54,6 +66,22 @@ export function matchStateOf(
   }
   return 'matched';
 }
+
+const LINE_TONE: Record<string, Tone> = {
+  matched: 'success',
+  short: 'warning',
+  over: 'danger',
+};
+const MATCH: Record<string, { label: string; tone: Tone; hint: string }> = {
+  matched: {
+    label: 'Matched',
+    tone: 'success',
+    hint: 'no short or over lines',
+  },
+  partial: { label: 'Partial', tone: 'warning', hint: 'short lines' },
+  over: { label: 'Over', tone: 'danger', hint: 'over-receipt, check notes' },
+  empty: { label: 'No lines', tone: 'neutral', hint: 'nothing recorded' },
+};
 
 // One received line, checked against the PO's ordered quantity. qtyOrdered
 // is a SNAPSHOT taken when the receipt is recorded — the receipt is an audit
@@ -74,234 +102,82 @@ export class ReceiptLineField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
-    get hue(): 'green' | 'amber' | 'red' {
-      switch (this.args.model?.matchState) {
-        case 'short':
-          return 'amber';
-        case 'over':
-          return 'red';
-        default:
-          return 'green';
-      }
-    }
-    get delta() {
-      let o = this.args.model?.qtyOrdered ?? 0;
-      let r = this.args.model?.qtyReceived ?? 0;
-      let d = r - o;
-      if (d === 0) {
-        return 'matched';
-      }
-      return d > 0 ? `over +${d}` : `short ${d}`;
+    get tone() {
+      return LINE_TONE[this.args.model?.matchState ?? 'matched'];
     }
     <template>
       <div class='line'>
-        <span class='desc'>{{@model.description}}</span>
-        <span class='qty'>{{@model.qtyReceived}} / {{@model.qtyOrdered}}</span>
-        <StatePill @label={{this.delta}} @hue={{this.hue}} @dot={{true}} />
-        {{#if @model.note}}<span class='note'>{{@model.note}}</span>{{/if}}
+        <span class='two'>
+          <strong>{{if @model.description @model.description '—'}}</strong>
+          <span class='meta'>{{@model.qtyOrdered}}
+            ordered ·
+            {{@model.qtyReceived}}
+            received{{#if @model.note}} · {{@model.note}}{{/if}}</span>
+        </span>
+        <Chip
+          @label={{@model.matchState}}
+          @tone={{this.tone}}
+          @appearance='plain'
+        />
       </div>
       <style scoped>
         .line {
-          display: grid;
-          grid-template-columns: 1fr auto auto;
-          gap: var(--boxel-sp-sm);
+          display: flex;
           align-items: center;
-          padding: var(--boxel-sp-4xs) 0;
-          font-size: 0.875rem;
+          justify-content: space-between;
+          gap: 0.5rem;
+          min-block-size: 1.75rem;
+          padding: 0.4375rem 0.625rem;
+          font-size: 0.75rem;
+          line-height: 1.25;
         }
-        .desc {
+        .two {
+          display: flex;
+          flex-direction: column;
+          min-inline-size: 0;
+        }
+        .two strong {
           font-weight: 600;
         }
-        .qty {
-          font-variant-numeric: tabular-nums;
+        .meta {
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
-        }
-        .note {
-          grid-column: 1 / -1;
-          font-size: 0.8125rem;
-          color: var(--muted-foreground);
-          font-style: italic;
         }
       </style>
     </template>
   };
 }
 
-class GoodsReceiptEdit extends Component<typeof GoodsReceipt> {
-  @tracked activeSection = 'identity';
-
-  sections = [
-    { id: 'identity', label: 'Receipt Identity' },
-    { id: 'purchase-order', label: 'Against Purchase Order' },
-    { id: 'lines', label: 'Received Lines' },
+function grFacts(m?: GoodsReceipt) {
+  let lines = (m?.lines ?? []).filter(Boolean);
+  let ordered = lines.reduce((s, l) => s + (l.qtyOrdered ?? 0), 0);
+  let received = lines.reduce((s, l) => s + (l.qtyReceived ?? 0), 0);
+  let po = m?.purchaseOrder?.poNumber ?? '';
+  let by = m?.receivedBy ?? '';
+  let day = fmtDate(m?.receivedOn, false);
+  let match = MATCH[m?.matchResult ?? 'empty'] ?? MATCH.empty;
+  let posted = m?.posted ? 'posted' : 'draft';
+  let tags: CompactTag[] = [
+    { label: posted, tone: m?.posted ? 'success' : 'neutral' },
+    { label: match.label.toLowerCase(), tone: match.tone },
   ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.gr-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  return {
+    lines,
+    ordered,
+    received,
+    by,
+    day,
+    full: fmtDate(m?.receivedOn) || '—',
+    year: m?.receivedOn ? String(m.receivedOn.getFullYear()) : '',
+    match,
+    tags,
+    postedTag: tags[0],
+    matchTag: tags[1],
+    postedYes: m?.posted ? 'Yes' : 'No',
+    sub: [po, by && `received by ${by}`].filter(Boolean).join(' · '),
+    fact: `${received} of ${ordered} in${day ? ` · ${day}` : ''}`,
+    count: `${lines.length} line${lines.length === 1 ? '' : 's'}`,
   };
-
-  <template>
-    <div class='gr-edit'>
-      {{! responsive grid lives on the inner wrapper — the container
-          element cannot be restyled by its own query (edit-card Rule 1) }}
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "identity") "focused"}}'
-            data-sect='identity'
-          >
-            <h3>Receipt Identity
-              <span class='sect-hint'>posted is flipped by the Receive Goods
-                command — a posted receipt cannot be posted twice</span></h3>
-            <div class='row'>
-              <FieldContainer @label='Received on' @vertical={{true}}>
-                <@fields.receivedOn />
-              </FieldContainer>
-              <FieldContainer @label='Received by' @vertical={{true}}>
-                <@fields.receivedBy />
-              </FieldContainer>
-              <FieldContainer @label='Posted' @vertical={{true}}>
-                <@fields.posted />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect
-              {{if (eq this.activeSection "purchase-order") "focused"}}'
-            data-sect='purchase-order'
-          >
-            <h3>Against Purchase Order</h3>
-            <FieldContainer @label='Purchase order' @vertical={{true}}>
-              <@fields.purchaseOrder />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect lines {{if (eq this.activeSection "lines") "focused"}}'
-            data-sect='lines'
-          >
-            <h3>Received Lines
-              <span class='sect-hint'>ordered qty is a snapshot at receipt time
-                — the audit trail keeps saying what was ordered then</span></h3>
-            <FieldContainer
-              @label='Lines (description, ordered, received, note)'
-              @vertical={{true}}
-            >
-              <@fields.lines />
-            </FieldContainer>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .gr-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background: var(--background);
-        color: var(--foreground);
-        /* the procurement family's brand ink, declared ONCE — a linked
-           Theme overrides via --procurement-ink */
-        --gr-ink: var(--procurement-ink, var(--primary-ink));
-        --gr-ink-fg: var(--procurement-ink-fg, var(--card));
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect-nav {
-        position: sticky;
-        top: 0;
-        --edit-section-nav-ink: var(--gr-ink);
-        --edit-section-nav-ink-fg: var(--gr-ink-fg);
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      .sect.focused {
-        outline-color: var(--gr-ink);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--gr-ink) 12%, transparent);
-      }
-      .sect.lines {
-        border-left: 0.1875rem solid var(--gr-ink);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-family: var(--font-sans);
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
-        align-items: start;
-      }
-      @container edit (width < 640px) {
-        .row {
-          grid-template-columns: 1fr;
-        }
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
-        }
-      }
-    </style>
-  </template>
 }
 
 class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
@@ -334,69 +210,73 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
     }
   };
 
-  get matchHue(): 'green' | 'amber' | 'red' | 'slate' {
-    switch (this.args.model?.matchResult) {
-      case 'matched':
-        return 'green';
-      case 'partial':
-        return 'amber';
-      case 'over':
-        return 'red';
-      default:
-        return 'slate';
-    }
+  get f() {
+    return grFacts(this.args.model as GoodsReceipt);
   }
-  get matchLabel() {
-    switch (this.args.model?.matchResult) {
-      case 'matched':
-        return 'FULLY MATCHED';
-      case 'partial':
-        return 'PARTIAL — short lines';
-      case 'over':
-        return 'OVER-RECEIPT — check notes';
-      default:
-        return 'NO LINES';
-    }
+  get receipt(): KeyValueItem[] {
+    return [
+      { key: 'Received on', value: this.f.full },
+      { key: 'Received by', value: this.f.by || '—' },
+      { key: 'Posted', value: this.f.postedTag.label },
+    ];
   }
-  get receivedOnLabel() {
-    let d = this.args.model?.receivedOn;
-    return d
-      ? d.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })
-      : '—';
+  get details(): KeyValueItem[] {
+    return [
+      { key: 'Received on', value: this.f.full },
+      { key: 'Received by', value: this.f.by || '—' },
+      { key: 'Ordered', value: `${this.f.ordered}` },
+      { key: 'Received', value: `${this.f.received}` },
+      { key: 'Match', value: this.f.match.label },
+      { key: 'Posted', value: this.f.postedYes },
+      { key: 'Lines', value: `${this.f.lines.length}` },
+    ];
   }
   <template>
     <article class='gr'>
-      <header class='head'>
-        <div>
-          <p class='kicker'>Goods Receipt</p>
-          <h1>{{@model.title}}</h1>
-          <p class='sub'>received
-            {{this.receivedOnLabel}}
-            by
-            {{@model.receivedBy}}</p>
-        </div>
-        <div class='head-right'>
-          <StatePill
-            @label={{this.matchLabel}}
-            @hue={{this.matchHue}}
-            @emphatic={{true}}
-          />
-          {{#if @model.posted}}
-            <StatePill @label='POSTED' @hue='green' @dot={{true}} />
-          {{else}}
+      <div class='card'>
+        <header class='ih'>
+          <Avatar @name='Goods Receipt' @shape='square' @size={{24}} />
+          <div class='id'>
+            <h1>{{@model.title}}</h1>
+            <p class='meta'>{{this.f.sub}}</p>
+          </div>
+          <span class='tags'>{{#each this.f.tags as |t|}}<Chip
+                @label={{t.label}}
+                @tone={{t.tone}}
+                @appearance='plain'
+              />{{/each}}</span>
+          {{#unless @model.posted}}
             <Button
-              @variant='primary'
-              @size='s'
+              @appearance='accent'
               @disabled={{this.busy}}
               {{on 'click' this.post}}
             >Post receipt</Button>
-          {{/if}}
+          {{/unless}}
+        </header>
+        <div class='stats'>
+          <Stat
+            @label='Received'
+            @tone={{this.f.match.tone}}
+            @value='{{this.f.received}} / {{this.f.ordered}}'
+            @roll={{false}}
+            @hint={{this.f.count}}
+          />
+          <Stat
+            @label='Match'
+            @tone={{this.f.match.tone}}
+            @value={{this.f.match.label}}
+            @roll={{false}}
+            @hint={{this.f.match.hint}}
+          />
+          <Stat
+            @label='Received on'
+            @tone='neutral'
+            @value={{if this.f.day this.f.day '—'}}
+            @roll={{false}}
+            @hint={{this.f.year}}
+          />
         </div>
-      </header>
+      </div>
 
       {{#if this.error}}
         <Alert @tone='danger' style={{ALERT_STYLE.danger}}>
@@ -409,101 +289,167 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
         </Alert>
       {{/if}}
 
-      <section class='panel'>
-        <h2>Lines · received / ordered</h2>
-        <div class='lines'>
-          {{#each @fields.lines as |Line|}}
-            <Line />
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @texture={{false}}
-              @title='No lines recorded'
-            />
-          {{/each}}
+      <div class='cols'>
+        <div class='col'>
+          <section class='card'>
+            <h2>Lines</h2>
+            <div class='lines'>
+              {{#each @fields.lines as |Line|}}
+                <Line />
+              {{else}}
+                <EmptyState
+                  style={{COMPACT_EMPTY_STYLE}}
+                  @texture={{false}}
+                  @title='No lines recorded'
+                />
+              {{/each}}
+            </div>
+          </section>
         </div>
-      </section>
-
-      {{#if @model.purchaseOrder}}
-        <section class='panel'>
-          <h2>Against Purchase Order</h2>
-          <@fields.purchaseOrder @format='embedded' />
-        </section>
-      {{/if}}
+        <div class='col'>
+          <section class='card'>
+            <h2>Receipt</h2>
+            <KeyValue
+              @items={{this.receipt}}
+              @divided={{true}}
+              @labelStyle='eyebrow'
+              class='kv'
+            />
+          </section>
+          {{#if @model.purchaseOrder}}
+            <section class='card'>
+              <h2>Linked</h2>
+              <KeyValue
+                @items={{LINKED}}
+                @divided={{true}}
+                @labelStyle='eyebrow'
+                class='kv'
+              >
+                <:value><@fields.purchaseOrder
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></:value>
+              </KeyValue>
+            </section>
+          {{/if}}
+          <section class='card'>
+            <h2>Details</h2>
+            <KeyValue
+              @items={{this.details}}
+              @divided={{true}}
+              @labelStyle='eyebrow'
+              class='kv'
+            />
+          </section>
+        </div>
+      </div>
     </article>
     <style scoped>
-      /* A linked card sizes to its content. The card container's base
-         height: 100% would otherwise fill a stretched grid panel and spill
-         past the heading above it. */
-      .gr :deep(.field-component-card.embedded-format) {
-        height: auto;
-      }
       .gr {
         container-type: inline-size;
-        padding: var(--boxel-sp-lg);
-        display: grid;
-        gap: var(--boxel-sp);
-      }
-      .head {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: var(--boxel-sp);
-        border-bottom: 1px solid var(--border);
-        padding-bottom: var(--boxel-sp);
-      }
-      .kicker {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      h1 {
-        margin: var(--boxel-sp-5xs) 0;
-        font-size: 1.5rem;
-      }
-      .sub {
-        margin: 0;
-        color: var(--muted-foreground);
-      }
-      .head-right {
+        box-sizing: border-box;
+        block-size: 100%;
+        overflow-y: auto;
         display: flex;
         flex-direction: column;
-        align-items: flex-end;
-        gap: var(--boxel-sp-xxs);
+        gap: 0.5rem;
+        padding: 0.75rem;
+        font-size: 0.75rem;
+        line-height: 1.25;
+        color: var(--card-foreground);
+        --text-stat: 1.375rem;
+        --text-ui-xs: 0.6875rem;
+        --pretui-kv-label-font-size: 0.5625rem;
+        --pretui-kv-label-color: var(--muted-foreground);
+        --pretui-kv-label-font-family: var(--font-mono);
+        --pretui-kv-label-font-weight: 600;
+        --pretui-kv-label-letter-spacing: 0.13em;
       }
-      .panel {
+      /* the root scrolls; its blocks keep their own height instead of shrinking */
+      .gr > * {
+        flex: none;
+      }
+      .card {
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        padding: var(--boxel-sp);
         background: var(--card);
+        overflow: hidden;
       }
-      h2 {
-        margin: 0 0 var(--boxel-sp-xs);
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
+      .ih {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.625rem;
+      }
+      .id {
+        flex: 1;
+        min-inline-size: 10rem;
+      }
+      h1 {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .meta {
+        margin: 0;
+        font-size: 0.6875rem;
         color: var(--muted-foreground);
       }
-      .lines {
-        display: grid;
-        gap: var(--boxel-sp-5xs);
+      .tags {
+        display: flex;
+        gap: 0.5rem;
       }
-      @container (max-width: 560px) {
-        .head {
-          flex-direction: column;
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+        border-block-start: 1px solid var(--border);
+      }
+      .stats > * {
+        padding: 0.5rem 0.625rem;
+      }
+      .stats > :not(:first-child) {
+        border-inline-start: 1px solid var(--border);
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        gap: 0.5rem;
+        align-items: start;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-inline-size: 0;
+      }
+      @container (width < 40rem) {
+        .cols {
+          grid-template-columns: minmax(0, 1fr);
         }
+      }
+      h2 {
+        margin: 0;
+        padding: 0.4375rem 0.625rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-block-end: 1px solid var(--border);
+      }
+      .lines > * + * {
+        border-block-start: 1px solid var(--border);
+      }
+      .kv {
+        padding: 0 0.625rem;
+        row-gap: 0;
+        --boxel-sp-xs: 0.35rem;
+        --boxel-sp-lg: 0.75rem;
       }
     </style>
   </template>
 }
+
+const LINKED: KeyValueItem[] = [{ key: 'Purchase order', value: '' }];
 
 // A record of what physically arrived against one PO — the receiving half of
 // the two-way match. Multiple receipts can accumulate against the same PO
@@ -512,7 +458,6 @@ class GoodsReceiptIsolated extends Component<typeof GoodsReceipt> {
 // budget's `committed` to `actual`.
 export class GoodsReceipt extends CardDef {
   static displayName = 'Goods Receipt';
-  static headerColor = '#3e4e88';
 
   @field purchaseOrder = linksTo(() => PurchaseOrder);
   @field receivedOn = contains(DateField);
@@ -552,102 +497,177 @@ export class GoodsReceipt extends CardDef {
   static isolated = GoodsReceiptIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get matchHue(): 'green' | 'amber' | 'red' | 'slate' {
-      switch (this.args.model?.matchResult) {
-        case 'matched':
-          return 'green';
-        case 'partial':
-          return 'amber';
-        case 'over':
-          return 'red';
-        default:
-          return 'slate';
-      }
+    get f() {
+      return grFacts(this.args.model as GoodsReceipt);
     }
-    get lineCount() {
-      return (this.args.model?.lines ?? []).length;
+    get items(): KeyValueItem[] {
+      let rows: KeyValueItem[] = [
+        { key: 'Received on', value: this.f.full },
+        { key: 'Received by', value: this.f.by || '—' },
+        { key: 'Ordered', value: `${this.f.ordered}` },
+        { key: 'Received', value: `${this.f.received}` },
+        { key: 'Match', value: this.f.match.label },
+        { key: 'Posted', value: this.f.postedYes },
+      ];
+      if (this.args.model?.purchaseOrder) {
+        rows.push({ key: 'Purchase order', value: '' });
+      }
+      return rows;
     }
     <template>
-      <div class='row'>
-        <span class='name'>{{@model.title}}</span>
-        <span class='count'>{{this.lineCount}} lines</span>
-        <StatePill
-          @label={{@model.matchResult}}
-          @hue={{this.matchHue}}
-          @dot={{true}}
-        />
-      </div>
+      <article class='emb'>
+        <header class='eh'>
+          <div class='eh1'>
+            <Avatar @name='Goods Receipt' @shape='square' @size={{20}} />
+            <strong class='nm'>{{@model.title}}</strong>
+            <Chip
+              @label={{this.f.postedTag.label}}
+              @tone={{this.f.postedTag.tone}}
+              @appearance='plain'
+            />
+          </div>
+          <div class='eh2'>
+            <span class='meta'>{{this.f.sub}}</span>
+            <Chip
+              @label={{this.f.matchTag.label}}
+              @tone={{this.f.matchTag.tone}}
+              @appearance='plain'
+            />
+          </div>
+        </header>
+        <p class='fact'><strong>{{this.f.received}}
+            of
+            {{this.f.ordered}}</strong>
+          in ·
+          {{this.f.full}}</p>
+        <KeyValue
+          @items={{this.items}}
+          @divided={{true}}
+          @labelStyle='eyebrow'
+          class='kv'
+        >
+          <:value as |row|>
+            {{#if (eq row.key 'Purchase order')}}<@fields.purchaseOrder
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}{{row.value}}{{/if}}
+          </:value>
+        </KeyValue>
+      </article>
       <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: 1fr auto auto;
-          gap: var(--boxel-sp-sm);
+        .emb {
+          font-size: 0.75rem;
+          line-height: 1.25;
+          color: var(--card-foreground);
+          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-color: var(--muted-foreground);
+          --pretui-kv-label-font-family: var(--font-mono);
+          --pretui-kv-label-font-weight: 600;
+          --pretui-kv-label-letter-spacing: 0.13em;
+        }
+        .eh {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          padding: 0.5rem 0.625rem;
+          border-block-end: 1px solid var(--border);
+        }
+        .eh1,
+        .eh2 {
+          display: flex;
+          flex-wrap: wrap;
           align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          gap: 0.375rem;
         }
-        .name {
-          font-weight: 600;
-          font-size: 0.9375rem;
+        .nm {
+          flex: 1;
+          min-inline-size: 0;
+          font-weight: 700;
         }
-        .count {
-          font-size: 0.8125rem;
+        .meta {
+          flex: 1;
+          min-inline-size: 0;
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
+        }
+        .fact {
+          margin: 0;
+          padding: 0.4375rem 0.625rem;
+          border-block-end: 1px solid var(--border);
+        }
+        .kv {
+          padding: 0 0.625rem;
+          row-gap: 0;
+          --boxel-sp-xs: 0.35rem;
+          --boxel-sp-lg: 0.75rem;
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
+    get f() {
+      return grFacts(this.args.model as GoodsReceipt);
+    }
     <template>
-      <span class='atom'>{{@model.title}} · {{@model.matchResult}}</span>
+      <span class='atom'>
+        <Avatar @name='Goods Receipt' @shape='square' @size={{16}} />
+        <span class='name'>{{@model.title}}</span>
+        <Chip
+          @label={{this.f.matchTag.label}}
+          @tone={{this.f.matchTag.tone}}
+          @appearance='plain'
+        />
+      </span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          min-inline-size: 0;
+          max-inline-size: 100%;
+          font-size: 0.6875rem;
+          font-weight: 600;
+        }
+        .name {
+          min-inline-size: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get lineCount() {
-      return (this.args.model?.lines ?? []).length;
+    get f() {
+      return grFacts(this.args.model as GoodsReceipt);
     }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.title}}</span>
-        <span class='fit-sub'>{{this.lineCount}}
-          lines ·
-          {{@model.matchResult}}</span>
-      </div>
-      <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fit-sub {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-        }
-      </style>
+      <CompactFitted
+        @mark='Goods Receipt'
+        @title={{@model.title}}
+        @sub={{this.f.sub}}
+        @fact={{this.f.fact}}
+        @big='{{this.f.received}} / {{this.f.ordered}}'
+        @bigLabel={{this.f.match.label}}
+        @tags={{this.f.tags}}
+      >
+        <:rows>
+          <CompactRow @k='Received on' @v={{this.f.full}} />
+          <CompactRow @k='Received by' @v={{if this.f.by this.f.by '—'}} />
+          <CompactRow @k='Ordered' @v='{{this.f.ordered}}' />
+          <CompactRow @k='Received' @v='{{this.f.received}}' />
+          <CompactRow @k='Match' @v={{this.f.match.label}} />
+          <CompactRow @k='Posted' @v={{this.f.postedYes}} />
+          {{#each this.f.lines as |l|}}
+            <CompactRow
+              @k={{if l.description l.description '—'}}
+              @v='{{l.qtyReceived}} / {{l.qtyOrdered}}'
+            />
+          {{/each}}
+        </:rows>
+      </CompactFitted>
     </template>
   };
 
@@ -656,5 +676,4 @@ export class GoodsReceipt extends CardDef {
   // schema order. Three sections — no nav rail (edit-card Rule 0).
   // matchResult and title are computed (computeVia) and deliberately
   // excluded.
-  static edit = GoodsReceiptEdit;
 }

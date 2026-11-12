@@ -11,14 +11,19 @@ import DateTimeField from '@cardstack/base/datetime';
 import MarkdownField from '@cardstack/base/markdown';
 import enumField from '@cardstack/base/enum';
 import MessageCircleIcon from '@cardstack/boxel-icons/message-circle';
-
 import { Case } from './case';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { relativeStamp } from '@cardstack/catalog/fields/created-at/created-at';
-import { tracked } from '@glimmer/tracking';
+import { FitRows, TypeMark, lowercase } from './components/fit-rows';
+import { Employee } from '../hr/employee';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { Panel } from '@cardstack/pretui/components/panel';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { FitTile } from '../shared/fit-tile';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 
 export const REPLY_DIRECTIONS = ['inbound', 'outbound'] as const;
 
@@ -43,118 +48,105 @@ export const ReplyChannelField = markDefinition(
   }),
 );
 
-class CustomerReplyEdit extends Component<typeof CustomerReply> {
-  @tracked activeSection = 'message';
+const CHANNEL_LABELS: Record<string, string> = {
+  email: 'Email',
+  portal: 'Portal',
+  'phone-note': 'Phone note',
+  'chat-transcript': 'Chat transcript',
+};
 
-  sections = [
-    { id: 'message', label: 'Message' },
-    { id: 'provenance', label: 'Provenance' },
+function stamp(
+  value: Date | null | undefined,
+  opts: Intl.DateTimeFormatOptions,
+) {
+  return value
+    ? new Intl.DateTimeFormat('en-US', opts).format(new Date(value))
+    : '';
+}
+const TIME = { hour: '2-digit', minute: '2-digit', hour12: false } as const;
+const SHORT = { month: 'short', day: 'numeric', ...TIME } as const;
+const LONG = {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  ...TIME,
+} as const;
+const DAY = { month: 'short', day: 'numeric', year: 'numeric' } as const;
+
+/** First sentence of the message as a quote, for the fact line. */
+function quote(body?: string | null) {
+  let text = (body ?? '').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  let end = text.search(/[.!?](\s|$)/);
+  let first = end === -1 ? text : text.slice(0, end);
+  return `“${first}…”`;
+}
+
+// Values set in the mono face: identifiers and timestamps.
+const MONO_KEYS = new Set(['Sent', 'Case ID', 'Case']);
+const isMono = (key: string) => MONO_KEYS.has(key);
+
+/** The strings every SupportCustomerReply format shows, read once. */
+function replyView(m?: Partial<CustomerReply>) {
+  let out = m?.direction === 'outbound';
+  let channel = CHANNEL_LABELS[m?.channel ?? ''] ?? m?.channel ?? '';
+  let authorName = m?.author?.title as string | undefined;
+  let sent = m?.sentAt ?? undefined;
+  let who = out ? authorName : m?.fromAddress;
+  let subline = [
+    `${channel} ${out ? 'to' : 'from'} the customer`.trim(),
+    stamp(sent, SHORT),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  let facts: KeyValueItem[] = [
+    { key: 'Direction', value: out ? 'Outbound' : 'Inbound' },
+    { key: 'Channel', value: channel || '—' },
+    { key: 'Sent', value: stamp(sent, LONG) || '—' },
+    { key: out ? 'Author' : 'From', value: who ?? '—' },
+    { key: 'Case', value: m?.case?.caseId?.value ?? '—' },
   ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.reply-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  return {
+    title: m?.title ?? 'Customer Reply',
+    out,
+    directionLabel: out ? 'Outbound' : 'Inbound',
+    directionTone: (out ? 'info' : 'neutral') as PretuiToneArg,
+    channel,
+    subline,
+    quote: quote(m?.body),
+    facts,
+    time: stamp(sent, TIME),
+    day: stamp(sent, DAY),
+    caseId: m?.case?.caseId?.value ?? '',
+    // embedded rows: the facts, with the two links as atoms
+    rows: [
+      { key: 'Direction', value: out ? 'Outbound' : 'Inbound' },
+      { key: 'Channel', value: channel || '—' },
+      { key: 'Sent', value: stamp(sent, LONG) || '—' },
+      { key: out ? 'Author' : 'From', value: who ?? '—' },
+      { key: 'Case ID', value: m?.case?.caseId?.value ?? '—' },
+      ...(m?.case ? [{ key: 'Case', value: '' }] : []),
+    ] as KeyValueItem[],
+    linked: [
+      ...(m?.case ? [{ key: 'Case', value: '' }] : []),
+      ...(m?.author ? [{ key: 'Author', value: '' }] : []),
+    ] as KeyValueItem[],
+    // fitted rows, highest priority first; a row the tile can't hold drops
+    fitRows: [
+      ...(channel ? [{ key: 'Channel', value: channel }] : []),
+      ...(sent ? [{ key: 'Sent', value: stamp(sent, SHORT) }] : []),
+      ...(m?.author
+        ? [{ key: 'Author', value: '' }]
+        : who
+          ? [{ key: 'From', value: who }]
+          : []),
+      ...(m?.case ? [{ key: 'Case', value: '' }] : []),
+      { key: 'Direction', value: out ? 'Outbound' : 'Inbound' },
+      ...(m?.case?.caseId?.value
+        ? [{ key: 'Case ID', value: m.case.caseId.value }]
+        : []),
+    ] as KeyValueItem[],
   };
-
-  <template>
-    <div class='reply-edit'>
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "message") "focused"}}'
-            data-sect='message'
-          >
-            <h3>Message</h3>
-            <FieldContainer @label='Direction' @vertical={{true}}>
-              <@fields.direction />
-            </FieldContainer>
-            <FieldContainer @label='Channel' @vertical={{true}}>
-              <@fields.channel />
-            </FieldContainer>
-            <FieldContainer @label='Body' @vertical={{true}}>
-              <@fields.body />
-            </FieldContainer>
-          </section>
-          <section
-            class='sect {{if (eq this.activeSection "provenance") "focused"}}'
-            data-sect='provenance'
-          >
-            <h3>Provenance
-              <span class='sect-hint'>outbound replies are attributed to their
-                author</span></h3>
-            <FieldContainer @label='From address (inbound)' @vertical={{true}}>
-              <@fields.fromAddress />
-            </FieldContainer>
-            <FieldContainer @label='Sent at' @vertical={{true}}>
-              <@fields.sentAt />
-            </FieldContainer>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .reply-edit {
-        container-type: inline-size;
-        padding: var(--boxel-sp);
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 10rem 1fr;
-        gap: var(--boxel-sp);
-        align-items: start;
-      }
-      @container (width < 34rem) {
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-      }
-      .sects {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-sm);
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius);
-        background-color: var(--card);
-        color: var(--card-foreground);
-        padding: var(--boxel-sp);
-        scroll-margin-top: var(--boxel-sp);
-      }
-      .sect.focused {
-        border-color: var(--ring);
-      }
-      .sect h3 {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-5xs);
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: 0;
-        font-weight: 400;
-        font-style: italic;
-      }
-    </style>
-  </template>
 }
 
 /**
@@ -200,190 +192,356 @@ export class CustomerReply extends CardDef {
     },
   });
 
-  static isolated = class Isolated extends Component<typeof this> {
-    get sentLabel() {
-      return relativeStamp(this.args.model.sentAt ?? undefined);
+  static embedded = class Embedded extends Component<typeof this> {
+    get v() {
+      return replyView(this.args.model);
     }
     <template>
-      <article class='reply-page'>
-        <header class='reply-head'>
-          <h1><@fields.title /></h1>
-          <span class='reply-meta'>{{@model.channel}}
-            ·
-            {{this.sentLabel}}
-            · on
-            <@fields.case @format='atom' /></span>
+      <article class='emb'>
+        <header class='emb-head'>
+          <TypeMark @label='Re' />
+          <div class='emb-id'>
+            <h3 class='emb-title'>{{this.v.title}}</h3>
+            <p class='emb-sub'>{{this.v.subline}}</p>
+          </div>
         </header>
-        <div class='reply-body'><@fields.body /></div>
+        {{#if this.v.quote}}<p class='emb-quote'>{{this.v.quote}}</p>{{/if}}
+        <KeyValue
+          class='emb-kv'
+          @items={{this.v.rows}}
+          @labelStyle='eyebrow'
+          @divided={{true}}
+        >
+          <:value as |item|>
+            {{#if (eq item.key 'Case')}}
+              <span class='cell'><@fields.case
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></span>
+            {{else}}
+              <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
+            {{/if}}
+          </:value>
+        </KeyValue>
       </article>
       <style scoped>
-        .reply-page {
-          container-type: inline-size;
-          padding: var(--boxel-sp-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-        }
-        h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-lg);
-        }
-        .reply-meta {
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .reply-body {
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          padding: var(--boxel-sp);
-          background-color: var(--card);
-          color: var(--card-foreground);
-          max-width: 70ch;
-        }
-      </style>
-    </template>
-  };
-
-  static embedded = class Embedded extends Component<typeof this> {
-    get sentLabel() {
-      return relativeStamp(this.args.model.sentAt ?? undefined);
-    }
-    <template>
-      <div class='reply {{if (eqDir @model.direction) "reply-out"}}'>
-        <span class='reply-line'>
-          <span class='reply-dir'>{{if
-              (eqDir @model.direction)
-              '↑ out'
-              '↓ in'
-            }}</span>
-          <span class='reply-who'>{{if
-              (eqDir @model.direction)
-              @model.author.title
-              @model.fromAddress
-            }}</span>
-          <span class='reply-when'>{{this.sentLabel}}
-            ·
-            {{@model.channel}}</span>
-        </span>
-        <div class='reply-excerpt'><@fields.body /></div>
-      </div>
-      <style scoped>
-        .reply {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius-sm);
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          width: 100%;
-          min-width: 0;
-        }
-        .reply-out {
-          border-left: 0.1875rem solid var(--primary);
-        }
-        .reply-line {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: baseline;
-          font-size: var(--boxel-font-size-xs);
-          font-family: var(--font-mono);
-          color: var(--muted-foreground);
-        }
-        .reply-who {
-          font-weight: 600;
-          color: var(--foreground);
-        }
-        .reply-excerpt {
-          font-size: var(--boxel-font-size-sm);
-          max-height: 6.5rem;
-          overflow: hidden;
+        @layer PretComponent {
+          .emb {
+            display: grid;
+            align-content: start;
+            background: var(--card);
+            color: var(--card-foreground);
+          }
+          .emb-head {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+            border-bottom: 1px solid var(--border);
+          }
+          .emb-id {
+            min-width: 0;
+          }
+          .emb-title {
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .emb-sub,
+          .emb-quote {
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .emb-quote {
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm) 0;
+          }
+          .emb-kv {
+            padding: var(--boxel-sp-4xs) var(--boxel-sp-sm) var(--boxel-sp-xs);
+            font-size: var(--boxel-font-size-sm);
+          }
+          .cell {
+            display: flex;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+          }
+          .mono {
+            font-family: var(--font-mono);
+            font-size: var(--boxel-font-size-xs);
+          }
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
+    get v() {
+      return replyView(this.args.model);
+    }
     <template>
-      <span class='reply-atom'>{{@model.title}}</span>
+      <span class='atom'>
+        <TypeMark @label='Re' @size='sm' />
+        <span class='atom-name'>{{this.v.title}}</span>
+      </span>
       <style scoped>
-        .reply-atom {
-          font-size: var(--boxel-font-size-xs);
+        @layer PretComponent {
+          .atom {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            max-width: 100%;
+            min-width: 0;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--card-foreground);
+          }
+          .atom-name {
+            min-width: 0;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      </style>
+    </template>
+  };
+
+  static isolated = class Isolated extends Component<typeof this> {
+    get v() {
+      return replyView(this.args.model);
+    }
+    get directionHint() {
+      return this.v.out ? 'to the customer' : 'from the customer';
+    }
+    <template>
+      <article class='iso'>
+        <Panel>
+          <div class='iso-head-row'>
+            <TypeMark @label='Re' />
+            <div class='iso-id'>
+              <h1 class='iso-title'>{{this.v.title}}</h1>
+              <p class='iso-sub'>{{this.v.subline}}</p>
+            </div>
+            <span class='iso-state'>
+              <Chip
+                @tone={{this.v.directionTone}}
+                @appearance='plain'
+              >{{lowercase this.v.directionLabel}}</Chip>
+              {{#if this.v.channel}}<Chip @appearance='plain'>{{lowercase
+                    this.v.channel
+                  }}</Chip>{{/if}}
+            </span>
+          </div>
+        </Panel>
+        <Panel>
+          <div class='iso-stats'>
+            <Stat
+              @label='Direction'
+              @tone={{this.v.directionTone}}
+              @value={{if this.v.out 'Out' 'In'}}
+              @hint={{this.directionHint}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Sent'
+              @value={{if this.v.time this.v.time '—'}}
+              @hint={{this.v.day}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Channel'
+              @value={{if this.v.channel this.v.channel '—'}}
+              @hint={{this.v.caseId}}
+              @roll={{false}}
+            />
+          </div>
+        </Panel>
+        <div class='iso-grid'>
+          <div class='iso-col'>
+            <Panel @title='Message' @variant='inspector'>
+              <div class='iso-body'><@fields.body /></div>
+            </Panel>
+          </div>
+          <div class='iso-col'>
+            {{#if this.v.linked.length}}
+              <Panel @title='Linked' @variant='inspector'>
+                <KeyValue
+                  @items={{this.v.linked}}
+                  @labelStyle='eyebrow'
+                  @divided={{true}}
+                >
+                  <:value as |item|>
+                    {{#if (eq item.key 'Case')}}
+                      <span class='cell'><@fields.case @format='atom' /></span>
+                    {{else}}
+                      <span class='cell'><@fields.author
+                          @format='atom'
+                        /></span>
+                    {{/if}}
+                  </:value>
+                </KeyValue>
+              </Panel>
+            {{/if}}
+            <Panel @title='Details' @variant='inspector'>
+              <KeyValue
+                @items={{this.v.facts}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              >
+                <:value as |item|>
+                  <span
+                    class={{if (isMono item.key) 'mono'}}
+                  >{{item.value}}</span>
+                </:value>
+              </KeyValue>
+            </Panel>
+          </div>
+        </div>
+      </article>
+      <style scoped>
+        @layer PretComponent {
+          .iso {
+            container-type: inline-size;
+            display: grid;
+            align-content: start;
+            gap: var(--boxel-sp-xs);
+            min-height: 100%;
+            padding: var(--boxel-sp-xs);
+            background: var(--muted);
+            color: var(--card-foreground);
+            font-size: var(--boxel-font-size-sm);
+          }
+          .iso-head-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+          }
+          .iso-id {
+            min-width: 0;
+          }
+          .iso-title {
+            margin: 0;
+            font-family: var(--font-sans);
+            font-size: var(--boxel-font-size);
+            font-weight: 700;
+            line-height: 1.3;
+          }
+          .iso-sub {
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .iso-state {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--boxel-sp-sm);
+          }
+          .iso-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+          }
+          .iso-stats > * {
+            padding-inline: var(--boxel-sp-sm);
+          }
+          .iso-stats > * + * {
+            border-inline-start: 1px solid var(--border);
+          }
+          .iso-stats > :first-child {
+            padding-inline-start: 0;
+          }
+          .iso-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+            gap: var(--boxel-sp-xs);
+            align-items: start;
+          }
+          .iso-col {
+            display: grid;
+            gap: var(--boxel-sp-xs);
+            min-width: 0;
+          }
+          .iso-body {
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          }
+          .cell {
+            display: flex;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+          }
+          .mono {
+            font-family: var(--font-mono);
+            font-size: var(--boxel-font-size-xs);
+          }
+          @container (width < 40rem) {
+            .iso-head-row {
+              grid-template-columns: auto minmax(0, 1fr);
+            }
+            .iso-state {
+              grid-column: 1 / -1;
+            }
+            .iso-grid {
+              grid-template-columns: minmax(0, 1fr);
+            }
+          }
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get v() {
+      return replyView(this.args.model);
+    }
     <template>
-      <div class='reply-fitted'>
-        <MessageCircleIcon class='reply-icon' aria-hidden='true' />
-        <div class='reply-fitted-body'>
-          <span class='reply-fitted-title'>{{@model.title}}</span>
-          <span class='reply-fitted-meta'>{{@model.channel}}</span>
-          <div class='reply-fitted-body-excerpt'><@fields.body /></div>
-        </div>
-      </div>
+      <FitRows @items={{this.v.fitRows}}>
+        <:tile>
+          <FitTile>
+            <:avatar><TypeMark @label='Re' /></:avatar>
+            <:title><span
+                class='fit-title'
+                role='heading'
+                aria-level='3'
+              >{{this.v.title}}</span></:title>
+            <:subtitle>{{this.v.subline}}</:subtitle>
+            <:status>
+              <Chip
+                @tone={{this.v.directionTone}}
+                @appearance='plain'
+              >{{lowercase this.v.directionLabel}}</Chip>
+            </:status>
+          </FitTile>
+        </:tile>
+        <:row as |item|>
+          {{#if (eq item.key 'Author')}}
+            <@fields.author @format='atom' @displayContainer={{false}} />
+          {{else if (eq item.key 'Case')}}
+            <@fields.case @format='atom' @displayContainer={{false}} />
+          {{else}}
+            <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
+          {{/if}}
+        </:row>
+      </FitRows>
       <style scoped>
-        .reply-fitted {
-          height: 100%;
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .reply-icon {
-          flex: none;
-          width: 1.25rem;
-          height: 1.25rem;
-          color: var(--primary-ink);
-        }
-        .reply-fitted-body {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          min-width: 0;
-        }
-        .reply-fitted-title {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .reply-fitted-meta {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .reply-fitted-body-excerpt {
-          display: none;
-        }
-        @container fitted-card (height > 170px) {
-          .reply-fitted-body-excerpt {
+        @layer PretComponent {
+          .fit-title {
             display: block;
-            font-size: var(--boxel-font-size-xs);
-            color: var(--muted-foreground);
             overflow: hidden;
-            max-height: 7rem;
-            margin-top: var(--boxel-sp-4xs);
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
-        }
-        @container fitted-card (height <= 80px) {
-          .reply-fitted {
-            align-items: center;
-          }
-          .reply-fitted-meta {
-            display: none;
+          .mono {
+            font-family: var(--font-mono);
           }
         }
       </style>
     </template>
   };
-  static edit = CustomerReplyEdit;
 }
-
-function eqDir(direction?: string | null) {
-  return direction === 'outbound';
-}
-
-export default CustomerReply;

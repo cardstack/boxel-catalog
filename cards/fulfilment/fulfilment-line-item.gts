@@ -10,7 +10,6 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import { Money } from './fulfilment-ui';
 import { Token } from '@cardstack/pretui/components/token';
 import CurrencyField from 'https://cardstack.com/base/currency';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
 import ListIcon from '@cardstack/boxel-icons/list';
 
 // Invoice Line Item (IL) — one row of what was bought.
@@ -142,17 +141,13 @@ export class FulfilmentLineItemField extends FieldDef {
       <style scoped>
         .li {
           display: grid;
-          /* 14.5rem of FIXED trailing columns used to sit here. In a 330px
-             column that leaves the name about 3.5rem, so "Stoneware Mug" became
-             "Stonew…" while a 6rem money slot held "£42.00" and a visible hole.
-             Constant-width trailing columns are still right — they are what
-             makes a stack of rows read as a table — they were just budgeted for
-             a card-width container and mounted in a half-width one. */
+          /* Constant-width trailing columns make a stack of rows read as a table;
+             the name column takes the rest. */
           grid-template-columns: minmax(0, 1fr) 2.25rem 4.5rem 5rem;
           align-items: center;
           gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp-2xs) 0;
-          font-size: 0.85rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .li-id {
           display: flex;
@@ -168,13 +163,13 @@ export class FulfilmentLineItemField extends FieldDef {
         }
         .li-sku {
           min-width: 0;
-          font-size: 0.7rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         /* Pret UI Token for the SKU, on the muted ink at the old 0.7rem. */
         .li-sku .li-sku-token {
           --pretui-token-hue: var(--muted-foreground);
-          --pretui-token-font-size: 0.7rem;
+          --pretui-token-font-size: var(--boxel-font-size-2xs);
           margin-inline: 0;
           max-width: 100%;
           overflow: hidden;
@@ -191,10 +186,7 @@ export class FulfilmentLineItemField extends FieldDef {
           color: var(--foreground);
         }
         /* A narrow container drops the unit price before the total: the total
-           is what anyone reading a compressed row is looking for. The stop moved
-           from 340px to 430px because 340 was measured against the wrong thing —
-           it only fired once the name had already been crushed to an ellipsis.
-           Below 250px the quantity goes too, leaving name + total. */
+           is what anyone reading a compressed row is looking for. Below 250px the quantity goes too, leaving name + total. */
         @container (width < 430px) {
           .li {
             grid-template-columns: minmax(0, 1fr) 2.25rem 5rem;
@@ -210,33 +202,6 @@ export class FulfilmentLineItemField extends FieldDef {
           .li-qty {
             display: none;
           }
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof FulfilmentLineItemField> {
-    <template>
-      <div class='li-edit'>
-        <FieldContainer @label='Product' @vertical={{true}}>
-          <@fields.productName />
-        </FieldContainer>
-        <FieldContainer @label='SKU' @vertical={{true}}>
-          <@fields.sku />
-        </FieldContainer>
-        <FieldContainer @label='Qty' @vertical={{true}}>
-          <@fields.quantity />
-        </FieldContainer>
-        <FieldContainer @label='Unit price' @vertical={{true}}>
-          <@fields.unitPrice />
-        </FieldContainer>
-      </div>
-
-      <style scoped>
-        .li-edit {
-          display: grid;
-          gap: var(--boxel-sp-xs);
-          grid-template-columns: repeat(auto-fit, minmax(9.375rem, 1fr));
         }
       </style>
     </template>

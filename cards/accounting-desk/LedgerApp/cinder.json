@@ -23,6 +23,16 @@
           "self": "../../accounting/Reports/pnl-2026"
         }
       },
+      "pnlByMonth": {
+        "links": {
+          "self": "../../accounting/Reports/pnl-2026-by-month"
+        }
+      },
+      "pnlByCustomer": {
+        "links": {
+          "self": "../../accounting/Reports/pnl-2026-by-customer"
+        }
+      },
       "balanceSheet": {
         "links": {
           "self": "../../accounting/Reports/balance-sheet-2026-12"

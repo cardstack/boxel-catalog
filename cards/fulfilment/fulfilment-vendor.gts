@@ -12,33 +12,16 @@ import AddressField from 'https://cardstack.com/base/address';
 import EmailField from 'https://cardstack.com/base/email';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
 import FactoryIcon from '@cardstack/boxel-icons/building-factory';
-import MapPin from '@cardstack/boxel-icons/map-pin';
-import User from '@cardstack/boxel-icons/user';
-import { LoadingRows, Money, amountText } from './fulfilment-ui';
-import {
-  ALERT_STYLE,
-  COMPACT_EMPTY_STYLE,
-} from '@cardstack/catalog/components/pretui-helpers';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { Alert } from '@cardstack/pretui/components/alert';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { KeyValue } from '@cardstack/pretui/components/key-value';
-import { Stat } from '@cardstack/pretui/components/stat';
-import { Token } from '@cardstack/pretui/components/token';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { CompoundAtom } from './fulfilment-ui';
+import { money } from './fulfilment-format';
+import { FitTile } from '../shared/fit-tile';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import Package from '@cardstack/boxel-icons/package';
 // Cyclic with fulfilment-product.gts (it links to this vendor); the binding is
 // only read inside the constructor, never at module evaluation.
 import { FulfilmentProduct } from './fulfilment-product';
-
-const CONTACT_FACTS = [
-  { key: 'Email', value: 'contactEmail' },
-  { key: 'Phone', value: 'contactPhone' },
-];
 
 // Vendor (Ve) — a supplier. Two jobs, and it matters that they are separate:
 // restocking your own shelves (lead time, minimum order), and dropshipping
@@ -123,7 +106,7 @@ export class FulfilmentVendor extends CardDef {
     // Rows name real cards; opening them is the next step of the task, and a
     // <button> gets the keyboard path and focus ring for free.
     open = (card: any) => {
-      (this.args as any).viewCard?.(card, 'isolated');
+      this.args.viewCard?.(card, 'isolated');
     };
 
     get queryError(): string | undefined {
@@ -138,368 +121,321 @@ export class FulfilmentVendor extends CardDef {
       return (this.productQuery?.instances ?? []).filter(Boolean);
     }
 
-    get dropshipCount() {
-      return this.products.filter((p) => p.isDropship).length;
-    }
-
     <template>
-      <article class='vendor'>
-        <header class='hd'>
-          <div>
-            {{#if @model.code}}<Token
-                class='code'
-                @value={{@model.code}}
-              />{{/if}}
-            <h1 class='name'>{{@model.vendorName}}</h1>
+      <article class='ven'>
+        <header class='ihead'>
+          <div class='who'>
+            <span class='mark' aria-hidden='true'>{{initials
+                @model.vendorName
+              }}</span>
+            <div class='id'>
+              <h1 class='name'>{{@model.cardTitle}}</h1>
+              <p class='meta'>{{metaLine @model}}</p>
+            </div>
           </div>
-          {{#if @model.supportsDropship}}
-            <StatePill @label='Dropship enabled' @hue='teal' />
-          {{/if}}
+          <div class='bar'>
+            {{#if @model.leadTimeDays}}
+              <span class='st'><span class='dot'></span>{{@model.leadTimeDays}}
+                d lead</span>
+            {{/if}}
+            <span class='st' data-tone={{if @model.supportsDropship 'ok'}}><span
+                class='dot'
+              ></span>{{if
+                @model.supportsDropship
+                'dropship'
+                'no dropship'
+              }}</span>
+          </div>
         </header>
 
         <div class='stats'>
-          <Stat
-            class='stat'
-            @label='Lead time'
-            @value={{if @model.leadTimeDays @model.leadTimeDays ''}}
-            @hint={{if
-              (eq @model.leadTimeDays 1)
-              'day'
-              (if @model.leadTimeDays 'days')
-            }}
-          />
-          <Stat
-            class='stat'
-            @label='Minimum order'
-            @value={{amountText
-              @model.minimumOrder.amount
-              @model.minimumOrder.currency.code
-            }}
-            @roll={{false}}
-          />
-          <Stat
-            class='stat'
-            @label='Dropship fee'
-            @value={{amountText
-              @model.dropshipFee.amount
-              @model.dropshipFee.currency.code
-            }}
-            @roll={{false}}
-          />
-          <Stat
-            class='stat'
-            @label='Products supplied'
-            @value={{this.products.length}}
-            @roll={{false}}
-          />
+          <div class='stat'>
+            <span class='st cap'><span class='dot'></span>Lead time</span>
+            <span class='num'>{{daysText @model.leadTimeDays}}</span>
+            <span class='meta'>from order to dock</span>
+          </div>
+          <div class='stat'>
+            <span class='st cap'><span class='dot'></span>Minimum order</span>
+            <span class='num'>{{amountOr @model.minimumOrder 0}}</span>
+            <span class='meta'>per purchase order</span>
+          </div>
+          <div class='stat'>
+            <span class='st cap'><span class='dot'></span>Products</span>
+            <span class='num'>{{this.products.length}}</span>
+            <span class='meta'>supplied by this vendor</span>
+          </div>
         </div>
 
-        <div class='cols'>
-          <section class='sec'>
-            <h2><User class='sec-icon' aria-hidden='true' />Contact</h2>
-            <KeyValue class='kv' @items={{CONTACT_FACTS}}>
-              <:value as |item|>
-                {{#if (eq item.value 'contactEmail')}}
-                  <@fields.contactEmail @format='atom' />
-                {{else}}
-                  <span class='mono'>{{if
-                      @model.contactPhone
-                      @model.contactPhone
-                      '—'
-                    }}</span>
-                {{/if}}
-              </:value>
-            </KeyValue>
-          </section>
-          <section class='sec'>
-            <h2><MapPin class='sec-icon' aria-hidden='true' />Ships from</h2>
-            <@fields.address @format='embedded' />
-          </section>
-        </div>
-
-        <section class='sec'>
-          <h2><Package class='sec-icon' aria-hidden='true' />Products supplied</h2>
-          {{#if this.queryError}}
-            <Alert
-              @tone='danger'
-              @title="Could not read this vendor's products."
-              style={{ALERT_STYLE.danger}}
-            >{{this.queryError}}</Alert>
-            {{! Loading is not empty. Space is reserved so the section does not
-              jump when the query lands. }}
-          {{else if this.isQueryLoading}}
-            <LoadingRows />
-          {{else if this.products.length}}
-            <ul class='vp-rows'>
-              {{#each this.products as |p|}}
-                <li class='vp-row-li'>
-                  <button
-                    type='button'
-                    class='vp-row'
-                    {{on 'click' (fn this.open p)}}
-                  >
-                    {{#if p.image.resolvedUrl}}
-                      <img
-                        class='vp-thumb'
-                        src={{p.image.resolvedUrl}}
-                        alt=''
-                        loading='lazy'
-                      />
-                    {{else}}
-                      <span class='vp-thumb vp-blank'></span>
-                    {{/if}}
-                    {{#if p.sku}}<Token
-                        class='vp-sku'
-                        @value={{p.sku}}
-                      />{{else}}<span class='vp-sku'>—</span>{{/if}}
-                    <span class='vp-name'>{{if
-                        p.productName
-                        p.productName
-                        ''
-                      }}</span>
-                    <span class='vp-vsku'>{{if
-                        p.vendorSku
-                        p.vendorSku
-                        ''
-                      }}</span>
-                    <span class='vp-cost'>{{#if p.cost.amount}}<Money
-                          @amount={{p.cost.amount}}
-                          @code={{p.cost.currency.code}}
-                        />{{else}}—{{/if}}</span>
-                  </button>
-                </li>
-              {{/each}}
-            </ul>
-            {{#if this.dropshipCount}}
-              <p class='hint'>{{this.dropshipCount}}
-                of these ship direct from this vendor rather than from your own
-                shelves.</p>
+        <section class='blk'>
+          <h2>Terms</h2>
+          <dl class='kv'>
+            <dt class='cap'>Lead time</dt>
+            <dd>{{daysText @model.leadTimeDays}}</dd>
+            <dt class='cap'>Minimum order</dt>
+            <dd class='mono'>{{amountOr @model.minimumOrder 2}}</dd>
+            <dt class='cap'>Supports dropship</dt>
+            <dd>{{if @model.supportsDropship 'Yes' 'No'}}</dd>
+            {{#if @model.supportsDropship}}
+              <dt class='cap'>Dropship fee</dt>
+              <dd class='mono'>{{amountOr @model.dropshipFee 2}}</dd>
             {{/if}}
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @texture={{false}}
-              @title='No products name this vendor yet'
-              @message="Set a product's supplier to see it here."
-            />
-          {{/if}}
+          </dl>
         </section>
 
-        {{#unless @model.supportsDropship}}
-          <Alert class='note' @tone='info' style={{ALERT_STYLE.info}}>This
-            vendor restocks your warehouses only. Orders for their products are
-            picked from your own shelves, never forwarded.</Alert>
-        {{/unless}}
+        <section class='blk'>
+          <h2>Contact</h2>
+          <dl class='kv'>
+            <dt class='cap'>Email</dt>
+            <dd>{{dash @model.contactEmail}}</dd>
+            <dt class='cap'>Phone</dt>
+            <dd>{{dash @model.contactPhone}}</dd>
+            <dt class='cap'>Address</dt>
+            <dd>{{addressLine @model}}</dd>
+          </dl>
+        </section>
+
+        <section class='blk'>
+          <h2>Products</h2>
+          {{#if this.queryError}}
+            <p class='row meta'>Could not read this vendor's products:
+              {{this.queryError}}</p>
+          {{else if this.isQueryLoading}}
+            <p class='row meta'>Loading…</p>
+          {{else}}
+            <ul class='rows'>
+              {{#each this.products as |p|}}
+                <li>
+                  <button
+                    type='button'
+                    class='row'
+                    {{on 'click' (fn this.open p)}}
+                  >
+                    <span class='lead'>
+                      <span class='strong'>{{p.cardTitle}}</span>
+                      <span class='meta'>{{productMeta p}}</span>
+                    </span>
+                    <span class='mono'>{{amountOr p.price 2}}</span>
+                  </button>
+                </li>
+              {{else}}
+                <li class='row meta'>No products from this vendor yet</li>
+              {{/each}}
+            </ul>
+          {{/if}}
+        </section>
       </article>
 
       <style scoped>
-        .vendor {
-          /* Isolated gets NO container from the host — every ancestor up to the
-             panel is `container-type: normal`, so an `@container` rule here is
-             inert until this declares its own. `inline-size`, not `size`: the
-             card scrolls, and `size` needs a definite block size. */
+        .ven {
           container-type: inline-size;
-          container-name: card-iso;
-
-          /* ONE panel primitive. Every full-width tinted block on this card —
-             section, note, alert, callout — takes its ground and inset
-             from here, because a background makes spacing VISIBLE: while
-             sections were separated by whitespace alone, a note padded
-             `sp-sm` and a section padded `sp-lg` looked the same. Tint them
-             both and their text edges no longer line up down the page, and
-             every gap between them reads as a mis-registration rather than a
-             rhythm. The inset is the thing that must agree; the tint only
-             exposed it. */
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-          --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --ful-rule: color-mix(in oklch, var(--foreground) 12%, transparent);
-
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xl);
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp-lg);
-        }
-        .hd {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp);
-          justify-content: space-between;
-          align-items: flex-start;
-          padding-bottom: var(--boxel-sp);
-          border-bottom: 0.125rem solid var(--ful-rule);
-        }
-        /* Pret UI Token for the vendor code, on the muted ink at the extra-small size. */
-        .hd .code {
-          --pretui-token-hue: var(--muted-foreground);
-          --pretui-token-font-size: var(--boxel-font-size-xs);
-          margin-inline: 0;
-        }
-        .name {
-          margin: 0.1rem 0 0;
-          font-size: var(--boxel-font-size-xl);
-          line-height: 1.05;
-        }
-        .stats {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-xl);
-        }
-        /* Pret UI Stat: the knob keeps the figures at the old large size. */
-        .stat {
-          --text-stat: var(--boxel-font-size-lg);
-        }
-        .cols {
-          display: grid;
-          gap: var(--boxel-sp-lg);
-          grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
-        }
-        .sec {
-          /* A surface, not just a gap. Sections were told apart only by spacing,
-             and their headings were 12px uppercase muted — pixel-identical to
-             every table column label on the card, so "where does a section
-             start" had no answer. The ground is mixed toward --foreground so it
-             follows the theme in both modes rather than being a grey. */
-          padding: var(--panel-pad);
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
+          border: 1px solid var(--border);
           border-radius: var(--radius);
-          background-color: var(--panel-bg);
+          overflow: hidden;
         }
-        .sec h2 {
-          /* The section heading is now the loudest uppercase thing on the card:
-             --foreground against the column labels' --muted-foreground. Weight
-             alone (500 vs 400) was not a readable difference. */
+        .ihead {
           display: flex;
+          flex-wrap: wrap;
           align-items: center;
-          gap: 0.4375rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--foreground);
+          justify-content: space-between;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
-        /* Pret UI KeyValue: label and value sizes and the column gap. */
-        .kv {
-          --text-ui: var(--boxel-font-size-xs);
-          --text-ui-md: var(--boxel-font-size-sm);
-          --space-6: 1.25rem;
-        }
-        .mono {
-          font-family: var(--font-mono);
-        }
-        /* Pret UI Alert, info tone, for the restock-only note; the tone's inks
-           come from ALERT_STYLE and the size from the body knob. */
-        .note {
-          --text-ui-md: var(--boxel-font-size-sm);
-        }
-
-        /* Section icons: one size, one muted colour, everywhere. They make the
-           card scannable by shape; they must never compete with the heading. */
-        h2 .sec-icon {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          flex: 0 0 auto;
-          color: var(--muted-foreground);
-        }
-
-        /* One collapse stop. The card is rendered in a resizable stack panel, so
-           this fires when a second card opens beside it — not only on a phone. */
-        @container card-iso (width < 720px) {
-          .cols {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        .vp-rows {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-        }
-        .vp-row {
-          display: grid;
-          grid-template-columns: 2.125rem 6rem minmax(0, 1fr) 7rem 5rem;
+        .who {
+          display: flex;
           align-items: center;
           gap: var(--boxel-sp-xs);
-          padding: 0.375rem 0;
-          border-top: 1px solid var(--ful-rule);
-          font-size: var(--boxel-font-size-sm);
+          min-width: 0;
         }
-        .vp-thumb {
-          width: 2.125rem;
-          height: 2.125rem;
-          object-fit: cover;
-          border-radius: 0.25rem;
-        }
-        .vp-blank {
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 8%,
-            transparent
-          );
-        }
-        .vp-vsku,
-        .vp-cost {
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1.375rem;
+          height: 1.375rem;
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
           font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 700;
+          color: var(--foreground);
         }
-        /* Pret UI Token for the SKU, on the muted ink. */
-        .vp-row .vp-sku {
-          --pretui-token-hue: var(--muted-foreground);
-          --pretui-token-font-size: var(--boxel-font-size-sm);
-          justify-self: start;
-          margin-inline: 0;
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
+        .id {
+          min-width: 0;
         }
-        .vp-name {
+        .name {
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 600;
+          letter-spacing: normal;
+          text-transform: none;
+        }
+        .meta {
+          margin: 0;
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
+        }
+        .bar {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        }
+        .st {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-5xs);
+          font-weight: 600;
+          --tone: var(--muted-foreground);
+        }
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
+        }
+        .st[data-tone='warn'] {
+          --tone: var(--warning);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
+        }
+        .dot {
+          flex: none;
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--tone);
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          border-top: 1px solid var(--border);
+        }
+        .stat {
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-6xs);
+          min-width: 0;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        }
+        .stat + .stat {
+          border-left: 1px solid var(--border);
+        }
+        .stat .meta {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .vp-vsku {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .vp-cost {
-          text-align: right;
+        .num {
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
+          line-height: 1.1;
+          font-variant-numeric: tabular-nums;
         }
-
-        .vp-row-li {
+        @container (max-width: 30rem) {
+          .stats {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .stat + .stat {
+            border-left: 0;
+            border-top: 1px solid var(--border);
+          }
+        }
+        .blk h2 {
+          margin: 0;
+          padding: var(--boxel-sp-sm) var(--boxel-sp-sm) var(--boxel-sp-4xs);
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+          letter-spacing: normal;
+          text-transform: none;
+        }
+        .row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--boxel-sp-sm);
+          width: 100%;
+          min-height: 1.75rem;
+          margin: 0;
+          padding: 0 var(--boxel-sp-sm);
+          border: 0;
+          border-top: 1px solid var(--border);
+          background: none;
+          color: inherit;
+          font-family: inherit;
+          font-size: inherit;
+          font-weight: inherit;
+          line-height: inherit;
+          text-align: start;
+        }
+        button.row {
+          cursor: pointer;
+        }
+        @media (hover: hover) {
+          button.row:hover {
+            background-color: var(--muted);
+          }
+        }
+        button.row:focus-visible {
+          outline: 2px solid var(--ring);
+          outline-offset: -2px;
+        }
+        .rows {
+          margin: 0;
+          padding: 0;
           list-style: none;
         }
-        /* The row became a button: strip the chrome, keep the grid, and give it a
-           real affordance. 160ms sits inside the 150-300ms micro-interaction
-           window; `prefers-reduced-motion` removes it rather than shortening it. */
-        button.vp-row {
-          width: 100%;
-          border: 0;
-          border-top: 1px solid var(--ful-rule);
-          background: none;
-          font: inherit;
-          color: inherit;
-          text-align: left;
-          transition: background-color 160ms ease-out;
+        .lead {
+          display: flex;
+          align-items: baseline;
+          gap: var(--boxel-sp-xs);
+          min-width: 0;
         }
-        button.vp-row:hover {
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 5%,
-            transparent
-          );
+        .lead .meta {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
-        button.vp-row:focus-visible {
-          outline: 0.125rem solid var(--ring);
-          outline-offset: -0.125rem;
+        .strong {
+          flex: none;
+          font-weight: 600;
         }
-        @media (prefers-reduced-motion: reduce) {
-          button.vp-row {
-            transition: none;
-          }
+        .kv {
+          display: grid;
+          grid-template-columns: minmax(7rem, 9.5rem) minmax(0, 1fr);
+          margin: 0;
+        }
+        .kv dt,
+        .kv dd {
+          display: flex;
+          align-items: center;
+          min-height: 1.75rem;
+          margin: 0;
+          border-top: 1px solid var(--border);
+        }
+        .kv dt {
+          padding-left: var(--boxel-sp-sm);
+        }
+        .kv dd {
+          padding: 0 var(--boxel-sp-sm);
+          min-width: 0;
+          overflow-wrap: break-word;
+          min-width: 0;
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
         }
       </style>
     </template>
@@ -507,61 +443,135 @@ export class FulfilmentVendor extends CardDef {
 
   static embedded = class Embedded extends Component<typeof FulfilmentVendor> {
     <template>
-      <div class='v-emb'>
-        <span class='v-code'>{{#if @model.code}}<Token
-              class='v-token'
-              @value={{@model.code}}
-            />{{/if}}</span>
-        <span class='v-name'>{{@model.vendorName}}</span>
-        <span class='v-slot'>{{if
-            @model.leadTimeLabel
-            @model.leadTimeLabel
-            '—'
-          }}</span>
-        <span class='v-slot'>{{if
-            @model.supportsDropship
-            'Dropship'
-            '—'
-          }}</span>
-      </div>
-
+      <article class='emb'>
+        <header>
+          <span class='mark' aria-hidden='true'>{{initials
+              @model.vendorName
+            }}</span>
+          <div class='id'>
+            <h3>{{@model.cardTitle}}</h3>
+            <p class='meta'>{{metaLine @model}}</p>
+          </div>
+          {{#if @model.leadTimeDays}}
+            <span class='st'><span class='dot'></span>{{@model.leadTimeDays}}
+              d lead</span>
+          {{/if}}
+        </header>
+        <dl class='kv'>
+          <dt>Lead time</dt>
+          <dd>{{daysText @model.leadTimeDays}}</dd>
+          <dt>Minimum order</dt>
+          <dd class='mono'>{{amountOr @model.minimumOrder 2}}</dd>
+          <dt>Dropship</dt>
+          <dd>{{if @model.supportsDropship 'Yes' 'No'}}</dd>
+          <dt>Email</dt>
+          <dd>{{dash @model.contactEmail}}</dd>
+          <dt>Phone</dt>
+          <dd>{{dash @model.contactPhone}}</dd>
+          <dt>Address</dt>
+          <dd>{{shortAddress @model}}</dd>
+        </dl>
+      </article>
       <style scoped>
-        /* A CardDef's embedded template must supply its OWN inset. The host wraps
-           a linksTo render in a CardContainer that draws a rounded boundary and
-           deliberately adds no padding — field-component.gts:513 says so in as
-           many words, because padding there would move the container-query
-           breakpoints the card reasons about. With none on either side the text
-           sits flush against the pill, which is what "Northline Supply" looked
-           like inside Supplied by. FieldDef embeddeds get no boundary and so
-           never showed this. */
-        .v-emb {
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          display: grid;
-          grid-template-columns: 5.5rem minmax(0, 1fr) 7rem 5.5rem;
-          align-items: baseline;
-          gap: var(--boxel-sp-xs);
-          font-size: 0.9rem;
+        .emb {
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
         }
-        .v-code {
+        header {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        }
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1.375rem;
+          height: 1.375rem;
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 700;
+        }
+        .id {
+          flex: 1;
           min-width: 0;
         }
-        /* Pret UI Token for the vendor code, on the muted ink. */
-        .v-code .v-token {
-          --pretui-token-hue: var(--muted-foreground);
-          --pretui-token-font-size: 0.7rem;
-          margin-inline: 0;
-        }
-        .v-name {
-          font-weight: 600;
-          color: var(--foreground);
+        h3 {
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .v-slot {
-          text-align: right;
-          font-size: 0.78rem;
+        .meta {
+          margin: 0;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .st {
+          flex: none;
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-5xs);
+          font-weight: 600;
+          --tone: var(--muted-foreground);
+        }
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
+        }
+        .st[data-tone='warn'] {
+          --tone: var(--warning);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
+        }
+        .dot {
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--tone);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          margin: 0;
+        }
+        .kv dt,
+        .kv dd {
+          display: flex;
+          align-items: center;
+          min-height: 1.75rem;
+          margin: 0;
+          border-top: 1px solid var(--border);
+        }
+        .kv dt {
+          padding-left: var(--boxel-sp-sm);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .kv dd {
+          padding: 0 var(--boxel-sp-sm);
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
         }
       </style>
     </template>
@@ -569,168 +579,140 @@ export class FulfilmentVendor extends CardDef {
 
   static atom = class Atom extends Component<typeof FulfilmentVendor> {
     <template>
-      <span class='v-atom'>{{if
-          @model.vendorName
-          @model.vendorName
-          @model.code
-        }}</span>
-      <style scoped>
-        .v-atom {
-          font-weight: 600;
-          font-size: 0.85em;
-        }
-      </style>
+      <CompoundAtom
+        @mark={{initials @model.vendorName}}
+        @name={{if @model.vendorName @model.vendorName @model.code}}
+      />
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof FulfilmentVendor> {
     <template>
-      <article class='fit'>
-        <div class='r-head'>
-          <div class='eyebrow'>
-            <FactoryIcon class='glyph' />
-            <span class='code'>{{@model.code}}</span>
-          </div>
-          <h3 class='headline'>{{@model.vendorName}}</h3>
-        </div>
-        <div class='r-body'>
-          {{#if @model.minimumOrder.amount}}
-            <p class='min'>Minimum order
-              <@fields.minimumOrder @format='atom' /></p>
-          {{/if}}
-        </div>
-        <div class='r-meta'>
-          <span class='lead'>{{if
-              @model.leadTimeLabel
-              @model.leadTimeLabel
-              '—'
-            }}</span>
-          {{#if @model.supportsDropship}}
-            <span class='ds'>Dropship</span>
-          {{/if}}
-        </div>
-      </article>
-
+      <FitTile>
+        <:avatar><span class='mark' aria-hidden='true'>{{initials
+              @model.vendorName
+            }}</span></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><span
+            class='st'
+            data-tone={{if @model.supportsDropship 'ok'}}
+          ><span class='dot'></span><span class='st-text'>{{if
+                @model.supportsDropship
+                'dropship'
+                'no dropship'
+              }}</span></span></:status>
+        <:fact>{{daysText @model.leadTimeDays}}
+          lead · min
+          {{amountOr @model.minimumOrder 0}}</:fact>
+      </FitTile>
       <style scoped>
-        .fit {
-          --type-ratio: 1.24;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          /* The block-axis budget. `--type-base` is driven mostly by `cqi`, which
-             is huge in a wide, short cell (a 691x105 strip gave 15px, and the
-             25px number it produced needed a 30px line box in a row that only
-             had 22px — a 12px shear straight through the digits). Capping the
-             SCALE against `cqb` fixes every role at once, where capping each
-             display role individually did not: in a tall cell the cqi term still
-             governs, so tiles are unchanged. */
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            1.0625rem
-          );
-          --meta-size: max(
-            0.6875rem,
-            calc(var(--type-base) / var(--type-ratio))
-          );
-          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
-          --headline-size: max(
-            0.6875rem,
-            min(calc(var(--type-base) * pow(var(--type-ratio), 2)), 26cqb)
-          );
-          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
-
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.125rem;
-          padding: var(--pad);
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        /* The card's own icon, the same one its isolated view uses — the
-           fitted's visual anchor. It sits on the quiet eyebrow row so it can
-           never compete with the headline, and it is the first thing dropped
-           at the badge quantum. */
-        .eyebrow {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .glyph {
-          flex: none;
-          width: var(--glyph-size);
-          height: var(--glyph-size);
-          color: var(--muted-foreground);
-        }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-meta {
-          display: flex;
-          gap: 0.5rem;
-          justify-content: space-between;
-          align-items: baseline;
-          font-size: var(--meta-size);
-          color: var(--muted-foreground);
-        }
-        .code {
-          display: block;
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          width: 2rem;
+          height: 2rem;
+          margin-right: var(--boxel-sp-xs);
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: var(--meta-size);
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground);
+          color: var(--foreground);
         }
-        .headline {
-          font-size: var(--headline-size);
-          line-height: 1.2;
-          font-weight: 700;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
+        .st {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-5xs);
+          min-width: 0;
+          max-width: 100%;
+          font-weight: 600;
+          --tone: var(--muted-foreground);
+        }
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
+        }
+        .st[data-tone='warn'] {
+          --tone: var(--warning);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
+        }
+        .dot {
+          flex: none;
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--tone);
+        }
+        .st-text {
           overflow: hidden;
-        }
-        .min {
-          margin: 0.25rem 0 0;
-          font-size: var(--meta-size);
-          color: var(--muted-foreground);
-        }
-        .lead {
-          font-weight: 700;
-        }
-
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: auto;
-          }
-          .eyebrow,
-          .r-body,
-          .r-meta {
-            display: none;
-          }
-          .headline {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (50px < height <= 130px) {
-          .r-body {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 130px) {
-          .ds {
-            display: none;
-          }
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
   };
+}
+
+function dash(v: unknown) {
+  return v == null || v === '' ? '—' : String(v);
+}
+
+function initials(name: string | undefined) {
+  let words = (name ?? '').split(/\s+/).filter(Boolean);
+  return words
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+}
+
+function daysText(d: number | undefined) {
+  return d == null ? '—' : d === 1 ? '1 day' : `${d} days`;
+}
+
+// `digits` 0 for a stat headline (£250), 2 for a ruled value (£250.00).
+function amountOr(a: AmountWithCurrency | undefined, digits: number) {
+  let amount = a?.amount;
+  if (amount == null) return '—';
+  let code = (a as any)?.currency?.code ?? 'GBP';
+  if (digits) return money(amount, code);
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: code,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function metaLine(m: Partial<FulfilmentVendor>) {
+  let a = m.address;
+  let place = [a?.city, a?.postalCode].filter(Boolean).join(' ');
+  return [m.code, place].filter(Boolean).join(' · ') || '—';
+}
+
+function shortAddress(m: Partial<FulfilmentVendor>) {
+  let a = m.address;
+  return [a?.addressLine1, a?.city].filter(Boolean).join(', ') || '—';
+}
+
+function addressLine(m: Partial<FulfilmentVendor>) {
+  let a = m.address;
+  let country = (a?.country as any)?.name;
+  return (
+    [
+      a?.addressLine1,
+      a?.addressLine2,
+      [a?.city, a?.postalCode].filter(Boolean).join(' '),
+      country,
+    ]
+      .filter(Boolean)
+      .join(', ') || '—'
+  );
+}
+
+function productMeta(p: any) {
+  return [p?.sku, p?.category].filter(Boolean).join(' · ') || '—';
 }
 
 export default FulfilmentVendor;

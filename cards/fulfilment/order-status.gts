@@ -7,19 +7,23 @@ import StatusChip, { type StatusStyle } from './fulfilment-status-chip';
 // with it. The hues are exported from the same module that owns the enum so a
 // board, a pill and an app all read one source instead of three copies.
 //
-// The amber run deepens as work progresses (processing → picking → packing),
-// so a board column reads its position in the pipeline before you read a word.
+// Hues are theme tokens (status tokens for meaning, chart tokens for plain
+// lifecycle steps), so a linked theme recolours them in light and dark.
 export const ORDER_STATUSES: StatusStyle[] = [
-  { value: 'pending', label: 'Pending', hue: '#3b82f6' },
-  { value: 'processing', label: 'Processing', hue: '#f59e0b' },
-  { value: 'awaiting_stock', label: 'Awaiting Stock', hue: '#ef4444' },
-  { value: 'on_hold', label: 'On Hold', hue: '#6b7280' },
-  { value: 'picking', label: 'Picking', hue: '#d97706' },
-  { value: 'packing', label: 'Packing', hue: '#b45309' },
-  { value: 'shipped', label: 'Shipped', hue: '#22c55e' },
-  { value: 'delivered', label: 'Delivered', hue: '#15803d' },
-  { value: 'cancelled', label: 'Cancelled', hue: '#6b7280' },
-  { value: 'returned', label: 'Returned', hue: '#8b5cf6' },
+  { value: 'pending', label: 'Pending', hue: 'var(--chart-4)' },
+  { value: 'processing', label: 'Processing', hue: 'var(--warning)' },
+  {
+    value: 'awaiting_stock',
+    label: 'Awaiting Stock',
+    hue: 'var(--destructive)',
+  },
+  { value: 'on_hold', label: 'On Hold', hue: 'var(--muted-foreground)' },
+  { value: 'picking', label: 'Picking', hue: 'var(--attention)' },
+  { value: 'packing', label: 'Packing', hue: 'var(--chart-1)' },
+  { value: 'shipped', label: 'Shipped', hue: 'var(--chart-2)' },
+  { value: 'delivered', label: 'Delivered', hue: 'var(--success)' },
+  { value: 'cancelled', label: 'Cancelled', hue: 'var(--muted-foreground)' },
+  { value: 'returned', label: 'Returned', hue: 'var(--chart-5)' },
 ];
 
 // The stages an order passes through on the happy path, in order. Anything not

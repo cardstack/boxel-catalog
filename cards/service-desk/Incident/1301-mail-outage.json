@@ -58,7 +58,7 @@
           "author": "System",
           "authorRole": "System",
           "visibility": "Public",
-          "body": "First response met — 7m of a 15m target.",
+          "body": "First response met \u2014 7m of a 15m target.",
           "sentAt": "2026-08-12T05:12:00.000Z",
           "isSlaEvent": true
         },
@@ -74,7 +74,7 @@
           "author": "System",
           "authorRole": "System",
           "visibility": "Public",
-          "body": "Resolution target breached — 2h target missed.",
+          "body": "Resolution target breached \u2014 2h target missed.",
           "sentAt": "2026-08-12T07:20:00.000Z",
           "isSlaEvent": true
         },
@@ -82,14 +82,14 @@
           "author": "System",
           "authorRole": "System",
           "visibility": "Public",
-          "body": "Status changed from Open to Pending — the clock is stopped.",
+          "body": "Status changed from Open to Pending \u2014 the clock is stopped.",
           "sentAt": "2026-08-13T10:40:19.501Z",
           "isSlaEvent": true
         }
       ],
       "cardInfo": {
         "name": "#1301 Email delivery down",
-        "summary": "P1 outage. Resolution target already missed — this is what a breach looks like.",
+        "summary": "P1 outage. Resolution target already missed \u2014 this is what a breach looks like.",
         "cardThumbnailURL": null,
         "notes": null
       },
@@ -120,6 +120,11 @@
       "slaPolicy": {
         "links": {
           "self": "../SlaPolicy/standard-support"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

@@ -11,7 +11,7 @@ import TextAreaField from '@cardstack/base/text-area';
 import { htmlSafe } from '@ember/template';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 
-import { ScorecardCriterionField } from '@cardstack/catalog/cards/hr/scorecard-field';
+import { ScorecardCriterionField } from '../hr/scorecard-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { nameProgress } from '@cardstack/catalog/components/pretui-helpers';
 import {
@@ -297,10 +297,9 @@ export class RiskRatingField extends FieldDef {
         .risk-factors {
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
         }
         .risk-notes {
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           line-height: 1.5;
           color: var(--muted-foreground);

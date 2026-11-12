@@ -4,7 +4,8 @@ import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Button } from '@cardstack/pretui/components/button';
-import AiCopilotCommand from '../../../commands/ai-copilot-command';
+import SparklesIcon from '@cardstack/boxel-icons/sparkles';
+import AiCopilotCommand from '../commands/ai-copilot-command';
 import { CustomerReply } from '../../service-desk/customer-reply';
 
 interface Signature {
@@ -84,8 +85,11 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
   };
 
   <template>
-    <section class='copilot'>
-      <h3 class='copilot-title'>Copilot: drafts a reply for you to review</h3>
+    <section class='copilot' aria-labelledby='copilot-h'>
+      <div class='copilot-head'>
+        <h2 id='copilot-h'>Copilot</h2>
+        <p>drafts a reply for you to review</p>
+      </div>
       {{#if this.busy}}
         <p class='desk-loading' role='status'>Drafting…</p>
       {{else if this.draft}}
@@ -97,7 +101,7 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
           <div class='copilot-actions'>
             <Button
               @tone='primary'
-              @appearance='filled'
+              @appearance='accent'
               @size='s'
               {{on 'click' this.acceptDraft}}
             >Save as my reply</Button>
@@ -110,74 +114,119 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
           </div>
         </div>
       {{else}}
-        <div class='copilot-pick'>
+        <ul class='copilot-pick'>
           {{#each @candidates as |r|}}
-            <Button
-              @tone='neutral'
-              @appearance='outlined'
-              @size='xs'
-              {{on 'click' (fn this.draftFor r.card)}}
-            >✦ Draft for {{@titleOf r.card}}</Button>
+            <li><button
+                type='button'
+                class='copilot-row'
+                {{on 'click' (fn this.draftFor r.card)}}
+              ><SparklesIcon
+                  class='copilot-icon'
+                  width='12'
+                  height='12'
+                  aria-hidden='true'
+                /><span class='copilot-name'>Draft for
+                  {{@titleOf r.card}}</span></button></li>
           {{else}}
-            <p class='desk-empty'>No at-risk case to draft for.</p>
+            <li class='desk-empty'>No at-risk case to draft for.</li>
           {{/each}}
-        </div>
+        </ul>
       {{/if}}
     </section>
     <style scoped>
       .copilot {
-        border: 1px solid transparent;
-        box-shadow: 0 1px 0
-          color-mix(in oklab, var(--foreground) 5%, transparent);
-        border-radius: var(--radius);
-        background: var(--card);
-        padding: var(--boxel-sp-sm);
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp-xs);
       }
-      .copilot-title {
+      .copilot-head {
+        display: flex;
+        align-items: baseline;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border-block-end: 1px solid var(--border);
+      }
+      .copilot-head h2 {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
+        font-weight: 700;
+      }
+      .copilot-head p {
+        margin: 0;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .copilot-pick {
+        display: grid;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .copilot-pick > li {
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
+        border-block-end: 1px solid var(--border);
+      }
+      .copilot-row {
         display: flex;
-        flex-wrap: wrap;
+        align-items: center;
         gap: var(--boxel-sp-4xs);
+        inline-size: 100%;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
+        font-weight: 600;
+        text-align: start;
+      }
+      @media (hover: hover) {
+        .copilot-row:hover .copilot-name {
+          text-decoration: underline;
+        }
+      }
+      .copilot-row:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+      }
+      .copilot-icon {
+        flex: none;
+      }
+      .copilot-name {
+        min-inline-size: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .copilot-draft {
-        border: 1px dashed var(--primary);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp-sm);
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-4xs);
-        background: color-mix(in oklab, var(--primary) 6%, var(--card));
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .copilot-tag {
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.1em;
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
-        color: var(--primary-ink);
+        line-height: 1.3;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
       }
       .copilot-text {
-        margin: 0;
         white-space: pre-wrap;
-        font-size: var(--boxel-font-size-sm);
-        max-width: 70ch;
+        font-size: var(--boxel-font-size-xs);
       }
       .copilot-actions {
         display: flex;
         gap: var(--boxel-sp-4xs);
       }
-
       .desk-loading,
       .desk-empty {
         margin: 0;
-        font-size: var(--boxel-font-size-sm);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
     </style>

@@ -50,7 +50,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../../Theme/site-tools"
         }
       }
     }

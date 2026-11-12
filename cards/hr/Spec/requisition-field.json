@@ -14,18 +14,21 @@
         "name": "Requisition Status Field"
       },
       "containedExamples": [
-        {
-          "value": "posted"
-        },
-        {
-          "value": "draft"
-        }
+        {},
+        {}
       ]
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

@@ -17,28 +17,20 @@ import AddressField from '@cardstack/base/address';
 import enumField from '@cardstack/base/enum';
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 import { tracked } from '@glimmer/tracking';
+import { concat } from '@ember/helper';
 import { on } from '@ember/modifier';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
 import { Stat } from '@cardstack/pretui/components/stat';
+import type { Hue } from '@cardstack/catalog/components/state-pill';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { PropertyGallery } from './components/property-gallery';
-import { PhotoOrganizer } from './components/photo-organizer';
+import { Employee } from '../hr/employee';
+import { DotLabel, dotEnumField } from '../hr/dot-enum-field';
+import { daysBetween } from '../hr/utils';
+import { FitTile } from '../shared/fit-tile';
 import { PublishChecklist } from './components/publish-checklist';
 import { ChannelSelector } from './components/channel-selector';
 import { SchedulePicker } from './components/schedule-picker';
-import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
-import { daysBetween } from '@cardstack/catalog/cards/hr/utils';
-import {
-  stateColor,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
 
 export const PROPERTY_TYPES = [
   'house',
@@ -79,287 +71,133 @@ export const PROPERTY_LISTING_STATUS_LABELS: Record<string, string> = {
   expired: 'Expired',
 };
 
-export const PROPERTY_LISTING_STATUS_HUES: Record<
-  string,
-  'slate' | 'teal' | 'green' | 'amber' | 'blue' | 'red'
-> = {
+export const PROPERTY_LISTING_STATUS_HUES: Record<string, Hue> = {
   draft: 'slate',
-  prepared: 'teal',
+  prepared: 'blue',
   published: 'green',
   'under-offer': 'amber',
-  sold: 'blue',
+  sold: 'teal',
   withdrawn: 'red',
   expired: 'red',
 };
 
-export const PROPERTY_LISTING_STATUS_COLORS: Record<string, StateColor> =
-  Object.fromEntries(
-    Object.entries(PROPERTY_LISTING_STATUS_HUES).map(([k, hue]) => [
-      k,
-      stateColor(hue),
-    ]),
-  );
-
 export const PropertyListingStatusField = markDefinition(
-  enumField(StringField, {
-    options: PROPERTY_LISTING_STATUSES.map((value) => ({
-      value,
-      label: PROPERTY_LISTING_STATUS_LABELS[value],
-    })),
-    displayName: 'Property Listing Status',
-  }),
+  dotEnumField(
+    {
+      options: PROPERTY_LISTING_STATUSES.map((value) => ({
+        value,
+        label: PROPERTY_LISTING_STATUS_LABELS[value],
+      })),
+      displayName: 'Property Listing Status',
+    },
+    PROPERTY_LISTING_STATUS_HUES,
+  ),
 );
 
-class PropertyListingEdit extends Component<typeof PropertyListing> {
-  // Left section nav: clicking anchors that section to the top of the
-  // form's own scroller (the root — never a nested
-  // scroller). Scoped through the event's own root so several open edit
-  // panels never cross-scroll each other.
-  @tracked activeSection = 'identity';
+// Whole-dollar money: listings are priced in round amounts.
+export function money(amount?: number | null, code = 'USD'): string {
+  if (amount == null || !Number.isFinite(amount)) {
+    return '—';
+  }
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: code,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return amount.toLocaleString('en-US');
+  }
+}
 
-  sections = [
-    { id: 'identity', label: 'Listing' },
-    { id: 'facts', label: 'Property Facts' },
-    { id: 'location', label: 'Location' },
-    { id: 'media', label: 'Photos' },
-    { id: 'about', label: 'Description & Agent' },
-  ];
+const num = (n?: number | null, unit = '') =>
+  n == null ? '—' : `${n.toLocaleString('en-US')}${unit}`;
 
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.listing-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
+const shortDate = (at?: Date | string | null) =>
+  at
+    ? new Date(at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : '—';
 
-  <template>
-    <div class='listing-edit'>
-      {{! the container element cannot be restyled by its own query — the responsive grid lives on
-          this inner wrapper instead }}
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "identity") "focused"}}'
-            data-sect='identity'
-          >
-            <h3>Listing</h3>
-            <FieldContainer @label='Headline' @vertical={{true}}>
-              <@fields.headline />
-            </FieldContainer>
-            <div class='row'>
-              <FieldContainer @label='Property type' @vertical={{true}}>
-                <@fields.propertyType />
-              </FieldContainer>
-              <FieldContainer @label='Asking price' @vertical={{true}}>
-                <@fields.askingPrice />
-              </FieldContainer>
-              <FieldContainer @label='Status' @vertical={{true}}>
-                <@fields.status />
-              </FieldContainer>
-            </div>
-            <div class='row'>
-              <FieldContainer
-                @label='MLS number (assigned when published — edit only to correct)'
-                @vertical={{true}}
-              >
-                <@fields.mlsNumber />
-              </FieldContainer>
-              <FieldContainer
-                @label='Published at (stamped by the Publish command — edit only to correct)'
-                @vertical={{true}}
-              >
-                <@fields.publishedAt />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "facts") "focused"}}'
-            data-sect='facts'
-          >
-            <h3>Property Facts</h3>
-            <div class='row four'>
-              <FieldContainer @label='Bedrooms' @vertical={{true}}>
-                <@fields.bedrooms />
-              </FieldContainer>
-              <FieldContainer @label='Bathrooms' @vertical={{true}}>
-                <@fields.bathrooms />
-              </FieldContainer>
-              <FieldContainer @label='Area (sqft)' @vertical={{true}}>
-                <@fields.areaSqft />
-              </FieldContainer>
-              <FieldContainer @label='Year built' @vertical={{true}}>
-                <@fields.yearBuilt />
-              </FieldContainer>
-            </div>
-            <div class='row'>
-              <FieldContainer @label='Lot size (sqft)' @vertical={{true}}>
-                <@fields.lotSizeSqft />
-              </FieldContainer>
-              <FieldContainer @label='HOA fee (monthly)' @vertical={{true}}>
-                <@fields.hoaFee />
-              </FieldContainer>
-            </div>
-            <FieldContainer
-              @label='Features (one per line — shown as pills on the property page)'
-              @vertical={{true}}
-            >
-              <@fields.features />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "location") "focused"}}'
-            data-sect='location'
-          >
-            <h3>Location</h3>
-            <FieldContainer @label='Address' @vertical={{true}}>
-              <@fields.address />
-            </FieldContainer>
-            <FieldContainer @label='Neighborhood' @vertical={{true}}>
-              <@fields.neighborhood />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "media") "focused"}}'
-            data-sect='media'
-          >
-            <h3>Photos
-              <span class='sect-hint'>order, hero and captions are managed below</span></h3>
-            <FieldContainer @label='Photo gallery' @vertical={{true}}>
-              <@fields.photos />
-            </FieldContainer>
-            <FieldContainer
-              @label='Arrange (drag to reorder · set the hero · captions show in the gallery)'
-              @vertical={{true}}
-            >
-              <PhotoOrganizer @model={{@model}} />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "about") "focused"}}'
-            data-sect='about'
-          >
-            <h3>Description &amp; Agent</h3>
-            <FieldContainer @label='About this property' @vertical={{true}}>
-              <@fields.description />
-            </FieldContainer>
-            <FieldContainer @label='Listing agent' @vertical={{true}}>
-              <@fields.agent />
-            </FieldContainer>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .listing-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background-color: var(--background);
-        color: var(--foreground);
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-      }
-      /* the root is the scroller, so sticky pins the nav to its top;
-         no ink knobs handed over — the rail's default is already the
-         inverted foreground/background pair */
-      .sect-nav {
-        position: sticky;
-        top: 0;
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      /* the section the rail points at mirrors the rail's active state; this
-         family asserts no brand hue in its other formats, so the accent is
-         the theme's foreground */
-      .sect.focused {
-        outline-color: var(--foreground);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--foreground) 12%, transparent);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
-        align-items: start;
-      }
-      .row.four {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-      @container edit (width < 40rem) {
-        .row,
-        .row.four {
-          grid-template-columns: 1fr;
-        }
-        /* narrow panel: nav becomes a horizontal chip row above the form */
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        /* narrow: the rail flips horizontal (consumer's scope attribute
-           rides ...attributes onto the component root, so these apply) */
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
-        }
-      }
-    </style>
-  </template>
+// The read-only facts every format shows, derived once per render.
+class ListingFacts {
+  private m: PropertyListing | undefined;
+  constructor(m: PropertyListing | undefined) {
+    this.m = m;
+  }
+  get status() {
+    return this.m?.status ?? 'draft';
+  }
+  get statusLabel() {
+    return PROPERTY_LISTING_STATUS_LABELS[this.status] ?? 'Draft';
+  }
+  get statusHue(): Hue {
+    return PROPERTY_LISTING_STATUS_HUES[this.status] ?? 'slate';
+  }
+  get code() {
+    return this.m?.askingPrice?.currency?.code ?? 'USD';
+  }
+  get price() {
+    return money(this.m?.askingPrice?.amount, this.code);
+  }
+  get perSqft() {
+    return money(this.m?.pricePerSqft, this.code);
+  }
+  get bedBath() {
+    let m = this.m;
+    return [
+      m?.bedrooms != null ? `${m.bedrooms} bd` : null,
+      m?.bathrooms != null ? `${m.bathrooms} ba` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  }
+  get headline() {
+    return [
+      this.m?.askingPrice?.amount != null ? this.price : null,
+      this.bedBath,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  }
+  get area() {
+    return num(this.m?.areaSqft, ' sqft');
+  }
+  get lot() {
+    return num(this.m?.lotSizeSqft, ' sqft');
+  }
+  get built() {
+    return this.m?.yearBuilt ? String(this.m.yearBuilt) : '—';
+  }
+  get dom() {
+    let d = this.m?.daysOnMarket;
+    return d == null ? '—' : `${d} days`;
+  }
+  get listed() {
+    return shortDate(this.m?.publishedAt);
+  }
+  get place() {
+    let a = this.m?.address;
+    let cityLine = [
+      a?.city,
+      [a?.state, a?.postalCode].filter(Boolean).join(' '),
+    ]
+      .filter(Boolean)
+      .join(', ');
+    return [this.m?.neighborhood, cityLine].filter(Boolean).join(' · ');
+  }
+  // The chosen hero fronts every face, not only the first photo.
+  get hero() {
+    let urls = this.m?.photos?.resolvedUrls ?? [];
+    return urls[this.m?.heroIndex ?? 0] || urls[0];
+  }
+  get type() {
+    let t = this.m?.propertyType;
+    return t ? t[0].toUpperCase() + t.slice(1) : '—';
+  }
 }
 
 class PropertyListingIsolated extends Component<typeof PropertyListing> {
@@ -371,95 +209,21 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
   @tracked publishOutcome: string | undefined;
   @tracked publishScheduled = false;
 
-  get statusHue() {
-    return (
-      PROPERTY_LISTING_STATUS_HUES[this.args.model?.status ?? 'draft'] ??
-      'slate'
-    );
+  get f() {
+    return new ListingFacts(this.args.model as PropertyListing);
   }
-  get statusLabel() {
-    return (
-      PROPERTY_LISTING_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft'
-    );
-  }
-  get priceLabel() {
-    let p = this.args.model?.askingPrice;
-    return p?.amount != null
-      ? formatMoney(p.amount, p.currency?.code)
-      : 'Price on request';
-  }
-  get addressLabel() {
-    return this.args.model?.address?.fullAddress ?? '';
-  }
-  get areaLabel() {
-    let a = this.args.model?.areaSqft;
-    return a != null ? `${a.toLocaleString('en-US')} sqft` : '—';
-  }
-  get domLabel() {
-    let d = this.args.model?.daysOnMarket;
-    if (d == null) {
-      return undefined;
-    }
-    return d === 1 ? '1 day on market' : `${d} days on market`;
-  }
-  get pricePerSqftLabel() {
-    let p = this.args.model?.pricePerSqft;
-    return p != null
-      ? `${formatMoney(p, this.args.model?.askingPrice?.currency?.code)}/sqft`
-      : undefined;
-  }
-  get hoaLabel() {
-    let h = this.args.model?.hoaFee;
-    return h?.amount != null
-      ? `${formatMoney(h.amount, h.currency?.code)}/mo HOA`
-      : undefined;
-  }
-  /** The fact tiles, each a Pret UI `Stat`; optional facts appear only when set. */
-  get facts(): { label: string; value: string }[] {
+
+  get photoRows() {
     let m = this.args.model;
-    let facts = [
-      { label: 'beds', value: m?.bedrooms != null ? String(m.bedrooms) : '' },
-      {
-        label: 'baths',
-        value: m?.bathrooms != null ? String(m.bathrooms) : '',
-      },
-      { label: 'area', value: this.areaLabel },
-    ];
-    if (m?.yearBuilt) {
-      facts.push({ label: 'built', value: String(m.yearBuilt) });
-    }
-    if (m?.lotSizeSqft) {
-      facts.push({
-        label: 'lot sqft',
-        value: m.lotSizeSqft.toLocaleString('en-US'),
-      });
-    }
-    if (this.pricePerSqftLabel) {
-      facts.push({ label: 'per sqft', value: this.pricePerSqftLabel });
-    }
-    if (this.hoaLabel) {
-      facts.push({ label: 'hoa', value: this.hoaLabel });
-    }
-    return facts;
+    let count = m?.photoCount ?? 0;
+    let hero = m?.heroIndex ?? 0;
+    return Array.from({ length: count }, (_, i) => ({
+      caption: m?.photoCaptions?.[i] || `Photo ${i + 1}`,
+      position: `${i + 1} of ${count}`,
+      hero: i === hero,
+    }));
   }
-  /** A scheduled publish reads as information; a live one as a success. */
-  get outcomeTone() {
-    return this.publishScheduled ? 'info' : 'success';
-  }
-  get outcomeStyle() {
-    return this.publishScheduled ? ALERT_STYLE.info : ALERT_STYLE.success;
-  }
-  get publishedLabel() {
-    let at = this.args.model?.publishedAt;
-    if (!at) {
-      return undefined;
-    }
-    return new Date(at).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }
+
   /** The publish affordance shows only where the ladder allows it. */
   get canPublish(): boolean {
     let m = this.args.model;
@@ -469,6 +233,7 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
       (m.status === 'draft' || m.status === 'prepared' || !m.status),
     );
   }
+
   togglePanel = () => {
     this.publishPanelOpen = !this.publishPanelOpen;
     this.publishProblem = undefined;
@@ -519,269 +284,369 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
       this.publishing = false;
     }
   };
+
   <template>
-    <article class='listing'>
-      <header class='head'>
-        <div>
-          <p class='kicker'>{{@model.propertyType}}
-            ·
-            {{this.addressLabel}}</p>
-          <h1>{{@model.cardTitle}}</h1>
+    <article class='pl'>
+      <header class='pl-head'>
+        {{#if this.f.hero}}
+          <img class='pl-thumb' src={{this.f.hero}} alt='' />
+        {{/if}}
+        <div class='pl-who'>
+          <h1 class='pl-name'>{{@model.cardTitle}}</h1>
+          <p class='pl-meta'>{{this.f.place}}</p>
         </div>
-        <div class='head-right'>
-          <span class='price'>{{this.priceLabel}}</span>
-          <StatePill
-            @label={{this.statusLabel}}
-            @hue={{this.statusHue}}
-            @emphatic={{true}}
-          />
-          {{#if this.domLabel}}
-            <span class='dom'>{{this.domLabel}}</span>
+        <div class='pl-head-side'>
+          <DotLabel @label={{this.f.statusLabel}} @hue={{this.f.statusHue}} />
+          <span class='pl-meta'>{{this.f.type}}</span>
+          {{#if this.canPublish}}
+            <Button
+              @tone='primary'
+              @appearance={{if this.publishPanelOpen 'outlined' 'accent'}}
+              @size='s'
+              aria-expanded={{if this.publishPanelOpen 'true' 'false'}}
+              {{on 'click' this.togglePanel}}
+            >{{if
+                this.publishPanelOpen
+                'Close publish panel'
+                'Publish'
+              }}</Button>
           {{/if}}
         </div>
       </header>
 
-      <PropertyGallery
-        @urls={{@model.photos.resolvedUrls}}
-        @alt={{@model.cardTitle}}
-        @captions={{@model.photoCaptions}}
-        @heroIndex={{@model.heroIndex}}
-      />
-
-      <div class='facts'>
-        {{#each this.facts as |fact|}}
-          <Stat
-            class='fact'
-            @label={{fact.label}}
-            @value={{fact.value}}
-            @roll={{false}}
-          />
-        {{/each}}
-      </div>
-
-      {{#if @model.features.length}}
-        <ul class='feature-pills'>
-          {{#each @model.features as |feature|}}
-            <li><StatePill @label={{feature}} @hue='slate' /></li>
-          {{/each}}
-        </ul>
-      {{/if}}
-
-      {{#if @model.description}}
-        <section class='panel'>
-          <h2>About this property</h2>
-          <@fields.description />
-        </section>
-      {{/if}}
-
-      {{#if @model.agent}}
-        <section class='panel'>
-          <h2>Listing Agent</h2>
-          <@fields.agent @format='atom' />
-        </section>
-      {{/if}}
-
-      {{! the outcome banner outlives the panel — after a successful
-          publish canPublish flips false and the panel unmounts, but the
-          agent still needs to read what just happened }}
       {{#if this.publishOutcome}}
         <Alert
-          @tone={{this.outcomeTone}}
-          style={{this.outcomeStyle}}
+          class='pl-alert'
+          @tone={{if this.publishScheduled 'info' 'success'}}
         >{{this.publishOutcome}}</Alert>
       {{/if}}
 
-      {{#if this.canPublish}}
-        <section class='publish-panel'>
-          <div class='publish-row'>
-            <Button
-              @variant={{if this.publishPanelOpen 'secondary' 'primary'}}
-              @size='l'
-              {{on 'click' this.togglePanel}}
-            >
-              {{if this.publishPanelOpen 'Close' 'Publish Listing'}}
-            </Button>
+      {{#if this.publishPanelOpen}}
+        <section class='pl-publish' aria-label='Publish listing'>
+          <div class='pl-sect'>
+            <h2 class='pl-h'>Ready to publish to</h2>
+            <ChannelSelector
+              @selected={{this.selectedChannels}}
+              @onToggle={{this.toggleChannel}}
+            />
+            <SchedulePicker
+              @value={{this.scheduleIso}}
+              @onChange={{this.setSchedule}}
+            />
           </div>
-          {{#if this.publishPanelOpen}}
-            <div class='publish-body'>
-              <div class='publish-col'>
-                <h2>Ready to publish to</h2>
-                <ChannelSelector
-                  @selected={{this.selectedChannels}}
-                  @onToggle={{this.toggleChannel}}
-                />
-                <SchedulePicker
-                  @value={{this.scheduleIso}}
-                  @onChange={{this.setSchedule}}
-                />
-              </div>
-              <div class='publish-col'>
-                <h2>Pre-publish checklist</h2>
-                <PublishChecklist @model={{@model}} />
-                <Button
-                  class='publish-go'
-                  @size='l'
-                  @busy={{this.publishing}}
-                  {{on 'click' this.publish}}
-                >
-                  {{if this.publishing 'Publishing…' '🚀 Publish'}}
-                </Button>
-                {{#if this.publishProblem}}
-                  <Alert
-                    @tone='danger'
-                    style={{ALERT_STYLE.danger}}
-                  >{{this.publishProblem}}</Alert>
-                {{/if}}
-              </div>
-            </div>
-          {{/if}}
+          <div class='pl-sect'>
+            <h2 class='pl-h'>Pre-publish checklist</h2>
+            <PublishChecklist @model={{@model}} />
+            <Button
+              @tone='primary'
+              @appearance='accent'
+              @size='s'
+              @busy={{this.publishing}}
+              {{on 'click' this.publish}}
+            >{{if this.publishing 'Publishing…' 'Publish now'}}</Button>
+            {{#if this.publishProblem}}
+              <Alert @tone='danger'>{{this.publishProblem}}</Alert>
+            {{/if}}
+          </div>
         </section>
       {{/if}}
 
-      {{#if (or @model.mlsNumber this.publishedLabel)}}
-        <footer class='foot'>
-          {{#if @model.mlsNumber}}
-            <span>MLS# {{@model.mlsNumber}}</span>
-          {{/if}}
-          {{#if this.publishedLabel}}
-            <span>Listed: {{this.publishedLabel}}</span>
-          {{/if}}
-        </footer>
-      {{/if}}
+      <section class='pl-stats' aria-label='Key numbers'>
+        <div class='pl-stat'><Stat
+            @label='Asking'
+            @value={{this.f.price}}
+            @hint='{{this.f.code}} · {{@model.propertyType}}'
+            @tone='success'
+            @roll={{false}}
+          /></div>
+        <div class='pl-stat'><Stat
+            @label='Days on market'
+            @value={{if @model.daysOnMarket @model.daysOnMarket '—'}}
+            @hint='listed {{this.f.listed}}'
+            @tone='warning'
+            @roll={{false}}
+          /></div>
+        <div class='pl-stat'><Stat
+            @label='Price / sqft'
+            @value={{this.f.perSqft}}
+            @hint={{this.f.area}}
+            @tone='info'
+            @roll={{false}}
+          /></div>
+        <div class='pl-stat'><Stat
+            @label='Bedrooms'
+            @value={{if @model.bedrooms @model.bedrooms '—'}}
+            @hint='{{if @model.bathrooms @model.bathrooms "—"}} baths'
+            @tone='neutral'
+            @roll={{false}}
+          /></div>
+      </section>
+
+      <div class='pl-cols'>
+        <div class='pl-main'>
+          <section class='pl-sect'>
+            <h2 class='pl-h'>About this property</h2>
+            {{#if @model.description}}
+              <div class='pl-prose'><@fields.description /></div>
+            {{else}}
+              <p class='pl-meta'>—</p>
+            {{/if}}
+          </section>
+          <section class='pl-sect pl-flush'>
+            <h2 class='pl-h pl-h-row'>Features
+              <span class='pl-count'>{{@model.features.length}}</span></h2>
+            <ul class='pl-grid'>
+              {{#each @model.features as |feature|}}
+                <li>{{feature}}</li>
+              {{else}}
+                <li class='pl-meta'>—</li>
+              {{/each}}
+            </ul>
+          </section>
+          <section class='pl-sect pl-flush'>
+            <h2 class='pl-h pl-h-row'>Photos
+              <span class='pl-count'>{{this.photoRows.length}}</span></h2>
+            <ul class='pl-rows'>
+              {{#each this.photoRows as |p|}}
+                <li class='pl-row'>
+                  <strong>{{p.caption}}</strong>
+                  <span class='pl-row-side'>
+                    <span class='pl-meta'>{{if
+                        p.hero
+                        (concat 'Hero photo · ' p.position)
+                        p.position
+                      }}</span>
+                    {{#if p.hero}}<DotLabel @label='hero' @hue='blue' />{{/if}}
+                  </span>
+                </li>
+              {{else}}
+                <li class='pl-row pl-meta'>No photos yet</li>
+              {{/each}}
+            </ul>
+          </section>
+        </div>
+
+        <aside class='pl-side'>
+          <section class='pl-sect pl-flush'>
+            <h2 class='pl-h'>Linked</h2>
+            <dl class='pl-kv'>
+              <div><dt>Listing agent</dt>
+                <dd>{{#if @model.agent}}<@fields.agent
+                      @format='atom'
+                    />{{else}}—{{/if}}</dd></div>
+            </dl>
+          </section>
+          <section class='pl-sect pl-flush'>
+            <h2 class='pl-h'>Details</h2>
+            <dl class='pl-kv pl-mono'>
+              <div><dt>Price / sqft</dt><dd>{{this.f.perSqft}}</dd></div>
+              <div><dt>Area</dt><dd>{{this.f.area}}</dd></div>
+              <div><dt>Year built</dt><dd>{{this.f.built}}</dd></div>
+              <div><dt>Lot</dt><dd>{{this.f.lot}}</dd></div>
+              <div><dt>MLS#</dt><dd>{{if
+                    @model.mlsNumber
+                    @model.mlsNumber
+                    '—'
+                  }}</dd></div>
+              <div><dt>Listed</dt><dd>{{this.f.listed}}</dd></div>
+              <div><dt>Photos</dt><dd>{{this.photoRows.length}}</dd></div>
+              <div><dt>Features</dt><dd>{{@model.features.length}}</dd></div>
+            </dl>
+          </section>
+        </aside>
+      </div>
     </article>
     <style scoped>
-      .listing {
+      .pl {
         container-type: inline-size;
-        padding: var(--boxel-sp-lg);
-        background-color: var(--background);
-        color: var(--foreground);
-        display: grid;
-        gap: var(--boxel-sp);
-        max-width: 60rem;
-        margin: 0 auto;
+        min-block-size: 100%;
+        background: var(--card);
+        color: var(--card-foreground);
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-xs);
       }
-      .head {
+      .pl-head {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border-block-end: 1px solid var(--border);
+      }
+      .pl-thumb {
+        flex: none;
+        inline-size: 2.5rem;
+        block-size: 2.5rem;
+        object-fit: cover;
+        border-radius: var(--radius);
+      }
+      .pl-who {
+        flex: 1;
+        min-inline-size: 0;
+      }
+      .pl-name {
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      .pl-meta {
+        margin: 0;
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+      }
+      .pl-head-side {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .pl-alert {
+        margin: var(--boxel-sp-xs) var(--boxel-sp-sm) 0;
+      }
+      .pl-publish {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-block-end: 1px solid var(--border);
+      }
+      .pl-publish > .pl-sect + .pl-sect {
+        border-inline-start: 1px solid var(--border);
+      }
+      /* stat strip: each cell draws its right and bottom line and the frame
+         clips the overhang, so a wrapped row keeps all its dividers */
+      .pl-stats {
+        --text-stat: var(--boxel-font-size-lg);
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        overflow: hidden;
+        border-block-end: 1px solid var(--border);
+      }
+      .pl-stat {
+        min-inline-size: 0;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        box-shadow:
+          1px 0 0 var(--border),
+          0 1px 0 var(--border);
+      }
+      .pl-cols {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      }
+      .pl-side {
+        border-inline-start: 1px solid var(--border);
+      }
+      .pl-sect {
+        display: grid;
+        gap: var(--boxel-sp-xs);
+        align-content: start;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        min-inline-size: 0;
+      }
+      .pl-main > .pl-sect + .pl-sect,
+      .pl-side > .pl-sect + .pl-sect {
+        border-block-start: 1px solid var(--border);
+      }
+      /* a section of ruled rows: rows run edge to edge under the title */
+      .pl-flush {
+        padding-inline: 0;
+        padding-block-end: 0;
+        gap: 0;
+      }
+      .pl-flush > .pl-h {
+        padding: 0 var(--boxel-sp-sm) var(--boxel-sp-xs);
+        border-block-end: 1px solid var(--border);
+      }
+      .pl-h {
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
+      }
+      .pl-h-row {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-        gap: var(--boxel-sp);
       }
-      .kicker {
-        margin: 0;
-        font-size: 0.75rem;
-        letter-spacing: 0.06em;
-        text-transform: capitalize;
+      .pl-count {
+        font-family: var(--font-mono);
+        font-weight: 400;
         color: var(--muted-foreground);
       }
-      h1 {
-        margin: var(--boxel-sp-5xs) 0 0;
-        font-size: 1.75rem;
-        line-height: 1.2;
+      .pl-prose {
+        line-height: 1.5;
       }
-      .head-right {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: var(--boxel-sp-5xs);
-      }
-      .price {
-        font-size: 1.5rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-      .facts {
-        display: flex;
-        gap: var(--boxel-sp);
-        flex-wrap: wrap;
-      }
-      /* Pret UI Stat in a hairline tile; the figure keeps the tile's size */
-      .fact {
-        --text-stat: 1.125rem;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp-xs) var(--boxel-sp);
-        justify-items: center;
-        min-width: 5rem;
-      }
-      .panel {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        background-color: var(--card);
-        color: var(--card-foreground);
-      }
-      h2 {
-        margin: 0 0 var(--boxel-sp-xs);
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .dom {
-        font-size: 0.75rem;
-        color: var(--muted-foreground);
-        font-variant-numeric: tabular-nums;
-      }
-      .feature-pills {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-5xs);
+      .pl-grid,
+      .pl-rows {
         margin: 0;
         padding: 0;
         list-style: none;
       }
-      .publish-panel {
-        display: grid;
-        gap: var(--boxel-sp-sm);
-      }
-      .publish-row {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-sm);
-      }
-      .publish-body {
+      .pl-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--boxel-sp);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        background-color: var(--card);
-        color: var(--card-foreground);
       }
-      .publish-col {
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        align-content: start;
-        min-width: 0;
-      }
-      .publish-go {
-        justify-self: start;
-      }
-      @container (max-width: 35rem) {
-        .publish-body {
-          grid-template-columns: 1fr;
-        }
-      }
-      .foot {
+      .pl-grid > li,
+      .pl-row {
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        gap: var(--boxel-sp);
-        font-size: 0.75rem;
-        color: var(--muted-foreground);
-        border-top: 1px solid var(--border);
-        padding-top: var(--boxel-sp-xs);
-        font-variant-numeric: tabular-nums;
+        gap: var(--boxel-sp-xs);
+        min-block-size: 1.75rem;
+        padding-inline: var(--boxel-sp-sm);
+        border-block-end: 1px solid var(--border);
       }
-      @container (max-width: 35rem) {
-        .head {
-          flex-direction: column;
+      .pl-rows > .pl-row:last-child {
+        border-block-end: 0;
+      }
+      .pl-row-side {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .pl-kv {
+        margin: 0;
+      }
+      .pl-kv > div {
+        display: grid;
+        grid-template-columns: 7rem minmax(0, 1fr);
+        align-items: center;
+        min-block-size: 1.75rem;
+        border-block-end: 1px solid var(--border);
+      }
+      .pl-kv > div:last-child {
+        border-block-end: 0;
+      }
+      .pl-kv dt {
+        padding-inline: var(--boxel-sp-sm);
+        font-size: 0.5625rem; /* 9px ladder label: no token */
+        font-family: var(--font-mono);
+        font-weight: 600;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .pl-kv dd {
+        margin: 0;
+        padding-inline: var(--boxel-sp-xs);
+        min-inline-size: 0;
+      }
+      .pl-mono dd {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        font-size: var(--boxel-font-size-2xs);
+      }
+      @container (width < 40rem) {
+        .pl-cols,
+        .pl-publish {
+          grid-template-columns: minmax(0, 1fr);
         }
-        .head-right {
-          align-items: flex-start;
+        .pl-side {
+          border-inline-start: 0;
+          border-block-start: 1px solid var(--border);
+        }
+        .pl-publish > .pl-sect + .pl-sect {
+          border-inline-start: 0;
+          border-block-start: 1px solid var(--border);
+        }
+        .pl-stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
     </style>
@@ -796,7 +661,6 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
 // the isolated view IS the property page a buyer would read.
 export class PropertyListing extends CardDef {
   static displayName = 'Property Listing';
-  static headerColor = '#1f6f5c';
   static prefersWideFormat = true;
 
   @field headline = contains(StringField);
@@ -864,195 +728,211 @@ export class PropertyListing extends CardDef {
 
   @field cardTitle = contains(StringField, {
     computeVia: function (this: PropertyListing) {
-      if (this.headline?.trim()) {
-        return this.headline;
-      }
-      let addr = [this.address?.addressLine1, this.address?.city]
-        .filter(Boolean)
-        .join(', ');
-      return addr || 'Untitled Property';
+      // The street address names a property on every face; the headline is
+      // the fallback for a listing not yet located.
+      let addr = this.address?.addressLine1?.trim();
+      return addr || this.headline?.trim() || 'Untitled Property';
     },
   });
 
   static isolated = PropertyListingIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    // The chosen hero fronts every face, not only the first photo.
-    get heroUrl() {
-      let urls = this.args.model?.photos?.resolvedUrls ?? [];
-      let hero = this.args.model?.heroIndex ?? 0;
-      return urls[hero] || this.args.model?.photos?.primaryUrl;
-    }
-    get statusHue() {
-      return (
-        PROPERTY_LISTING_STATUS_HUES[this.args.model?.status ?? 'draft'] ??
-        'slate'
-      );
-    }
-    get statusLabel() {
-      return (
-        PROPERTY_LISTING_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Draft'
-      );
-    }
-    get priceLabel() {
-      let p = this.args.model?.askingPrice;
-      return p?.amount != null ? formatMoney(p.amount, p.currency?.code) : '—';
+    get f() {
+      return new ListingFacts(this.args.model as PropertyListing);
     }
     <template>
-      <div class='row'>
-        {{#if this.heroUrl}}
-          <img class='thumb' src={{this.heroUrl}} alt='' />
-        {{/if}}
-        <div class='who'>
-          <span class='name'>{{@model.cardTitle}}</span>
-          <span class='meta'>{{@model.bedrooms}}
-            bd ·
-            {{@model.bathrooms}}
-            ba ·
-            {{@model.address.city}}</span>
-        </div>
-        <span class='amount'>{{this.priceLabel}}</span>
-        <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
-      </div>
+      <article class='pe'>
+        <header class='pe-head'>
+          {{#if this.f.hero}}
+            <img class='pe-thumb' src={{this.f.hero}} alt='' />
+          {{/if}}
+          <span class='pe-who'>
+            <strong class='pe-name'>{{@model.cardTitle}}</strong>
+            <span class='pe-meta'>{{this.f.place}}</span>
+          </span>
+          <DotLabel @label={{this.f.statusLabel}} @hue={{this.f.statusHue}} />
+        </header>
+        <dl class='pe-kv'>
+          <div><dt>Asking</dt><dd class='pe-strong'>{{this.f.price}}</dd></div>
+          <div><dt>Bed / bath</dt><dd>{{if
+                this.f.bedBath
+                this.f.bedBath
+                '—'
+              }}</dd></div>
+          <div><dt>On market</dt><dd>{{this.f.dom}}</dd></div>
+          <div><dt>Price / sqft</dt><dd>{{this.f.perSqft}}</dd></div>
+          <div><dt>Area</dt><dd>{{this.f.area}}</dd></div>
+          <div><dt>Year built</dt><dd>{{this.f.built}}</dd></div>
+          <div><dt>Lot</dt><dd>{{this.f.lot}}</dd></div>
+          <div><dt>MLS#</dt><dd>{{if
+                @model.mlsNumber
+                @model.mlsNumber
+                '—'
+              }}</dd></div>
+          <div><dt>Listed</dt><dd>{{this.f.listed}}</dd></div>
+          <div><dt>Agent</dt><dd class='pe-sans'>{{#if
+                @model.agent
+              }}<@fields.agent
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd></div>
+        </dl>
+      </article>
       <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: auto 1fr auto auto;
-          gap: var(--boxel-sp-sm);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        .pe {
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
         }
-        .thumb {
-          width: 3.5rem;
-          height: 2.5rem;
-          object-fit: cover;
-          border-radius: calc(var(--radius) / 1.5);
-        }
-        .who {
+        .pe-head {
           display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          border-block-end: 1px solid var(--border);
         }
-        .name {
-          font-weight: 600;
-          font-size: 0.9375rem;
+        .pe-thumb {
+          flex: none;
+          inline-size: 1.5rem;
+          block-size: 1.5rem;
+          object-fit: cover;
+          border-radius: var(--radius);
+        }
+        .pe-who {
+          flex: 1;
+          display: grid;
+          min-inline-size: 0;
+        }
+        .pe-name,
+        .pe-meta {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .meta {
-          font-size: 0.8125rem;
+        .pe-name {
+          font-weight: 600;
+        }
+        .pe-meta {
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
-        .amount {
-          font-weight: 700;
+        .pe-kv {
+          margin: 0;
+        }
+        .pe-kv > div {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          align-items: center;
+          min-block-size: 1.75rem;
+          border-block-end: 1px solid var(--border);
+        }
+        .pe-kv > div:last-child {
+          border-block-end: 0;
+        }
+        .pe-kv dt {
+          padding-inline: var(--boxel-sp-sm);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
+          font-family: var(--font-mono);
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .pe-kv dd {
+          margin: 0;
+          padding-inline: var(--boxel-sp-xs);
+          min-inline-size: 0;
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
           font-variant-numeric: tabular-nums;
+        }
+        .pe-kv dd.pe-strong {
+          font-family: var(--font-sans);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+        }
+        .pe-kv dd.pe-sans {
+          font-family: var(--font-sans);
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
-    <template>
-      <span class='atom'>{{@model.cardTitle}}</span>
-      <style scoped>
-        .atom {
-          font-size: 0.8125rem;
-        }
-      </style>
-    </template>
-  };
-
-  static fitted = class Fitted extends Component<typeof this> {
-    // The chosen hero fronts every face, not only the first photo.
-    get heroUrl() {
-      let urls = this.args.model?.photos?.resolvedUrls ?? [];
-      let hero = this.args.model?.heroIndex ?? 0;
-      return urls[hero] || this.args.model?.photos?.primaryUrl;
-    }
-    get priceLabel() {
-      let p = this.args.model?.askingPrice;
-      return p?.amount != null ? formatMoney(p.amount, p.currency?.code) : '—';
+    get hero() {
+      return new ListingFacts(this.args.model as PropertyListing).hero;
     }
     <template>
-      <div class='fit'>
-        {{#if this.heroUrl}}
-          <img class='fit-img' src={{this.heroUrl}} alt='' />
-        {{/if}}
-        <div class='fit-body'>
-          <span class='fit-name'>{{@model.cardTitle}}</span>
-          <span class='fit-sub'>{{@model.bedrooms}}
-            bd ·
-            {{@model.bathrooms}}
-            ba</span>
-          <span class='fit-price'>{{this.priceLabel}}</span>
-        </div>
-      </div>
+      <span class='pa'>
+        {{#if this.hero}}<img
+            class='pa-thumb'
+            src={{this.hero}}
+            alt=''
+          />{{/if}}
+        <span class='pa-name'>{{@model.cardTitle}}</span>
+      </span>
       <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-        .fit-img {
-          width: 100%;
-          height: 55%;
-          object-fit: cover;
-          flex: 0 0 auto;
-        }
-        .fit-body {
-          display: flex;
-          flex-direction: column;
+        .pa {
+          display: inline-flex;
+          align-items: center;
           gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          min-height: 0;
+          max-inline-size: 100%;
+          min-inline-size: 0;
+          font-size: var(--boxel-font-size-xs);
         }
-        .fit-name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-          line-height: 1.2;
+        .pa-thumb {
+          flex: none;
+          inline-size: 1rem;
+          block-size: 1rem;
+          object-fit: cover;
+          border-radius: var(--boxel-border-radius-xs);
+        }
+        .pa-name {
+          min-inline-size: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .fit-sub {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-        }
-        .fit-price {
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
-        @container fitted-card (height <= 120px) {
-          .fit-img {
-            display: none;
-          }
-        }
-        @container fitted-card (height <= 65px) {
-          .fit-body {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-sub {
-            display: none;
-          }
-          .fit-price {
-            margin-left: auto;
-          }
-        }
       </style>
     </template>
   };
 
-  // The form for writing a listing, grouped the way an agent drafts one:
-  // name it and price it → state the property's facts → where it is →
-  // show it → sell it. `isPublished` and `cardTitle` are computed and never
-  // appear here; `publishedAt` is command-written (PublishListingCommand)
-  // and only exposed with a warning hint. Five sections → the
-  // EditSectionNav rail. This family asserts no brand
-  // token in its other formats, so the accent stays the theme foreground.
-  static edit = PropertyListingEdit;
+  // Fitted, by priority: who → stage → asking and size → the agent.
+  static fitted = class Fitted extends Component<typeof this> {
+    get f() {
+      return new ListingFacts(this.args.model as PropertyListing);
+    }
+    <template>
+      <FitTile>
+        <:avatar>{{#if this.f.hero}}<img
+              class='pf-thumb'
+              src={{this.f.hero}}
+              alt=''
+            />{{/if}}</:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{this.f.place}}</:subtitle>
+        <:status><DotLabel
+            @label={{this.f.statusLabel}}
+            @hue={{this.f.statusHue}}
+          /></:status>
+        <:fact>{{this.f.headline}}</:fact>
+        <:relations>
+          {{#if @model.agent}}
+            <@fields.agent @format='atom' @displayContainer={{false}} />
+          {{/if}}
+        </:relations>
+      </FitTile>
+      <style scoped>
+        .pf-thumb {
+          display: block;
+          inline-size: 2rem;
+          block-size: 2rem;
+          object-fit: cover;
+          border-radius: var(--radius);
+        }
+      </style>
+    </template>
+  };
 }

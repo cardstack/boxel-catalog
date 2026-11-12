@@ -13,7 +13,13 @@
       "numberPrefix": "ACAD",
       "lastSequence": 1
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "../certification-authority",

@@ -8,23 +8,200 @@ import {
 } from '@cardstack/base/card-api';
 import DateTimeField from '@cardstack/base/datetime';
 import UserPlusIcon from '@cardstack/boxel-icons/user-plus';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
-
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
+import { tracked } from '@glimmer/tracking';
+import { on } from '@ember/modifier';
+import { Button } from '@cardstack/pretui/components/button';
+import { Alert } from '@cardstack/pretui/components/alert';
 
 import {
   EnrollmentStatusField,
   ENROLLMENT_STATUSES,
 } from './enrollment-status-field';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Learner } from './learner';
 import { Cohort } from './cohort';
 import { Certificate } from './certificate';
 import { LearnerProgress } from './components/learner-progress';
 import { LearnerActions } from './components/learner-actions';
+import WithdrawEnrollmentCommand from './commands/withdraw-enrollment-command';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { Avatar } from '@cardstack/pretui/components/avatar';
+import {
+  AtomChip,
+  Dot,
+  Embed,
+  Kv,
+  Mark,
+  Section,
+  Sheet,
+  Stat,
+} from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
+import { KvList } from './components/desk-status';
+
+function hueOf(m: any) {
+  return statusHue(EnrollmentStatusField, m?.enrollmentStatus);
+}
+
+function metaLine(m: any): string {
+  return [
+    m?.cohortName,
+    m?.enrolledAt ? `enrolled ${fmtDate(m.enrolledAt)}` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function factLine(m: any): string {
+  return [
+    m?.enrolledAt ? `Enrolled ${fmtDate(m.enrolledAt)}` : 'Not enrolled yet',
+    m?.certificate ? 'certificate issued' : 'no certificate yet',
+  ].join(' · ');
+}
+
+function seatItems(m: any) {
+  return [
+    { key: 'Learner', value: m?.learnerName },
+    { key: 'Cohort', value: m?.cohortName },
+    { key: 'Status', value: m?.statusLabel },
+    { key: 'Enrolled', value: fmtDate(m?.enrolledAt) },
+    { key: 'Payment ref', value: m?.paymentRef },
+    { key: 'Withdrawn', value: fmtDate(m?.withdrawnAt) },
+    { key: 'Completed', value: fmtDate(m?.completedAt) },
+  ];
+}
+
+class EnrollmentIsolated extends Component<typeof Enrollment> {
+  @tracked busy = false;
+  @tracked error: string | undefined;
+  @tracked notice: string | undefined;
+
+  get stats(): {
+    label: string;
+    value?: string | null;
+    hint?: string | null;
+  }[] {
+    let m = this.args.model;
+    return [
+      {
+        label: 'Status',
+        value: m?.statusLabel,
+        hint: m?.enrolledAt ? `since ${fmtDate(m.enrolledAt)}` : '',
+      },
+      {
+        label: 'Completed',
+        value: m?.completedAt ? fmtDate(m.completedAt) : '',
+        hint: m?.certificate ? 'certificate issued' : 'not yet',
+      },
+      { label: 'Payment', value: m?.paymentRef, hint: 'invoice ref' },
+    ];
+  }
+  get details() {
+    let m = this.args.model;
+    return [
+      ...seatItems(m),
+      { key: 'Certificate', value: m?.certificate ? 'issued' : 'not issued' },
+    ];
+  }
+  get canWithdraw() {
+    let s = this.args.model?.enrollmentStatus;
+    return (
+      (s === 'active' || s === 'invited') && !!this.args.context?.commandContext
+    );
+  }
+  withdraw = async () => {
+    let ctx = this.args.context?.commandContext;
+    if (!ctx) return;
+    this.busy = true;
+    this.error = undefined;
+    this.notice = undefined;
+    try {
+      let res = (await new WithdrawEnrollmentCommand(ctx).execute({
+        enrollment: this.args.model,
+      } as any)) as any;
+      this.notice = res?.message;
+    } catch (e: any) {
+      this.error = e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
+  <template>
+    <Sheet @mark='En' @title={{@model.cardTitle}} @meta={{metaLine @model}}>
+      <:status>
+        <Dot @hue={{hueOf @model}}>{{@model.statusLabel}}</Dot>
+        {{#if @model.paymentRef}}<Dot>{{@model.paymentRef}}</Dot>{{/if}}
+      </:status>
+      <:actions>
+        {{#if this.canWithdraw}}
+          <Button
+            type='button'
+            @size='xs'
+            @tone='danger'
+            @appearance='outlined'
+            @busy={{this.busy}}
+            @disabled={{this.busy}}
+            {{on 'click' this.withdraw}}
+          >Withdraw</Button>
+        {{/if}}
+      </:actions>
+      <:stats>{{#each this.stats as |st|}}<Stat
+            @label={{st.label}}
+            @value={{st.value}}
+            @sub={{st.hint}}
+          />{{/each}}</:stats>
+      <:main>
+        {{#if this.error}}
+          <Alert @tone='danger' @title='Not withdrawn'>{{this.error}}</Alert>
+        {{/if}}
+        {{#if this.notice}}<Alert @tone='success'>{{this.notice}}</Alert>{{/if}}
+
+        <Section @title='Enrollment'><KvList
+            @items={{seatItems @model}}
+          /></Section>
+        <Section @title='Progress'>
+          <div class='pad'><LearnerProgress
+              @enrollment={{@model}}
+              @context={{@context}}
+              @compact={{true}}
+            /></div>
+        </Section>
+        {{#if @context.getCards}}
+          <Section @title='Work'>
+            <div class='pad'><LearnerActions
+                @enrollment={{@model}}
+                @context={{@context}}
+              /></div>
+          </Section>
+        {{/if}}
+      </:main>
+      <:side>
+        <Section @title='Linked'>
+          <Kv @label='Learner'>{{#if @model.learner}}<@fields.learner
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+          <Kv @label='Cohort'>{{#if @model.cohort}}<@fields.cohort
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+          {{#if @model.certificate}}
+            <Kv @label='Certificate'><@fields.certificate
+                @format='atom'
+                @displayContainer={{false}}
+              /></Kv>
+          {{/if}}
+        </Section>
+        <Section @title='Details'><KvList @items={{this.details}} /></Section>
+      </:side></Sheet>
+    <style scoped>
+      .pad {
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border-top: 1px solid var(--border);
+      }
+    </style>
+  </template>
+}
 
 /**
  * One learner's seat in one cohort — the card everything about that
@@ -82,289 +259,56 @@ export class Enrollment extends CardDef {
     },
   });
 
-  static isolated = class Isolated extends Component<typeof this> {
-    get hue() {
-      return statusHue(
-        EnrollmentStatusField,
-        this.args.model?.enrollmentStatus,
-      );
-    }
-    <template>
-      <article class='enrollment'>
-        <header class='hero'>
-          <span class='avatar'>{{@model.learnerInitials}}</span>
-          <div class='hero-text'>
-            <span class='eyebrow'>Enrollment ·
-              {{#if @model.cohort}}<@fields.cohort @format='atom' />{{else}}no
-                cohort{{/if}}</span>
-            <h1>{{if
-                @model.learnerName
-                @model.learnerName
-                'Unlinked learner'
-              }}</h1>
-            <p class='meta'>
-              <StatePill
-                @label={{@model.statusLabel}}
-                @hue={{this.hue}}
-                @dot={{true}}
-              />
-              {{#if @model.enrolledAt}}<span>enrolled
-                  {{fmtDate @model.enrolledAt}}</span>{{/if}}
-              {{#if @model.withdrawnAt}}<span>withdrew
-                  {{fmtDate @model.withdrawnAt}}</span>{{/if}}
-              {{#if @model.completedAt}}<span>completed
-                  {{fmtDate @model.completedAt}}</span>{{/if}}
-              {{#if @model.paymentRef}}<span
-                  class='mono'
-                >{{@model.paymentRef}}</span>{{/if}}
-            </p>
-          </div>
-        </header>
-
-        <section class='progress'>
-          <LearnerProgress @enrollment={{@model}} @context={{@context}} />
-        </section>
-
-        {{#if @context.getCards}}
-          <LearnerActions @enrollment={{@model}} @context={{@context}} />
-        {{/if}}
-
-        {{#if @model.certificate}}
-          <section class='panel'>
-            <h2>Certificate</h2>
-            <@fields.certificate @format='embedded' />
-          </section>
-        {{/if}}
-      </article>
-      <style scoped>
-        .enrollment {
-          max-width: 60rem;
-          margin: 0 auto;
-          container-type: inline-size;
-          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
-          display: grid;
-          gap: var(--boxel-sp-lg);
-          color: var(--foreground);
-          background: var(--background);
-        }
-        .hero {
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: var(--boxel-sp);
-          align-items: center;
-        }
-        .avatar {
-          width: 3.5rem;
-          height: 3.5rem;
-          display: grid;
-          place-items: center;
-          border-radius: 50%;
-          background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          font-size: var(--boxel-font-size-md);
-          font-weight: 700;
-        }
-        .eyebrow {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        h1 {
-          margin: var(--boxel-sp-4xs) 0 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          line-height: 1.15;
-        }
-        .meta {
-          margin: var(--boxel-sp-xs) 0 0;
-          display: flex;
-          gap: var(--boxel-sp-sm);
-          align-items: center;
-          flex-wrap: wrap;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .mono {
-          font-family: var(--font-mono);
-        }
-        .panel {
-          padding: var(--boxel-sp);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          background: var(--card);
-        }
-        h2 {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground);
-        }
-      </style>
-    </template>
-  };
+  static isolated = EnrollmentIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get hue() {
-      return statusHue(
-        EnrollmentStatusField,
-        this.args.model?.enrollmentStatus,
-      );
-    }
     <template>
-      <div class='row'>
-        <span class='avatar'>{{@model.learnerInitials}}</span>
-        <div class='text'>
-          <span class='name'>{{if
-              @model.learnerName
-              @model.learnerName
-              'Unlinked learner'
-            }}</span>
-          <span class='sub'>{{@model.cohortName}}{{#if @model.enrolledAt}}
-              · since
-              {{fmtDate @model.enrolledAt}}{{/if}}</span>
-        </div>
-        <StatePill @label={{@model.statusLabel}} @hue={{this.hue}} />
-      </div>
-      <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: auto 1fr auto;
-          gap: var(--boxel-sp-xs);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        }
-        .avatar {
-          width: 2.25rem;
-          height: 2.25rem;
-          display: grid;
-          place-items: center;
-          border-radius: 50%;
-          background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-        }
-        .text {
-          display: grid;
-          min-width: 0;
-        }
-        .name {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-      </style>
+      <Embed @mark='En' @title={{@model.cardTitle}} @meta={{metaLine @model}}>
+        <:status><Dot
+            @hue={{hueOf @model}}
+          >{{@model.statusLabel}}</Dot></:status>
+        <:fact>{{factLine @model}}</:fact>
+        <:default>
+          <KvList @items={{seatItems @model}} />
+          <Kv @label='Learner'>{{#if @model.learner}}<@fields.learner
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+          <Kv @label='Cohort'>{{#if @model.cohort}}<@fields.cohort
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Kv>
+        </:default>
+      </Embed>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom'>{{@model.cardTitle}}</span>
-      <style scoped>
-        .atom {
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-      </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    sections = [
-      { id: 'seat', label: 'Seat' },
-      { id: 'dates', label: 'Dates' },
-      { id: 'payment', label: 'Payment & certificate' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Enrollment sections'
-        as |e|
-      >
-        <e.Section
-          @id='seat'
-          @title='Seat'
-          @hint='status is set by Enroll Learner, Withdraw Enrollment and Issue Certificate'
-          @cols={{3}}
-        >
-          <FieldContainer @label='Learner' @vertical={{true}}><@fields.learner
-            /></FieldContainer>
-          <FieldContainer @label='Cohort' @vertical={{true}}><@fields.cohort
-            /></FieldContainer>
-          <FieldContainer
-            @label='Status'
-            @vertical={{true}}
-          ><@fields.enrollmentStatus @format='atom' /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='dates'
-          @title='Dates'
-          @hint='withdrawn and completed are set by their commands'
-          @cols={{3}}
-        >
-          <FieldContainer
-            @label='Enrolled'
-            @vertical={{true}}
-          ><@fields.enrolledAt /></FieldContainer>
-          <FieldContainer
-            @label='Withdrawn'
-            @vertical={{true}}
-          ><@fields.withdrawnAt @format='atom' /></FieldContainer>
-          <FieldContainer
-            @label='Completed'
-            @vertical={{true}}
-          ><@fields.completedAt @format='atom' /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='payment'
-          @title='Payment & certificate'
-          @hint='the certificate is linked by Issue Certificate'
-          @cols={{2}}
-        >
-          <FieldContainer
-            @label='Payment reference'
-            @vertical={{true}}
-          ><@fields.paymentRef /></FieldContainer>
-          <FieldContainer
-            @label='Certificate'
-            @vertical={{true}}
-          ><@fields.certificate @format='atom' /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
+      <AtomChip @mark='En' @title={{@model.cardTitle}}><Dot
+          @hue={{hueOf @model}}
+        >{{@model.statusLabel}}</Dot></AtomChip>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get hue() {
-      return statusHue(
-        EnrollmentStatusField,
-        this.args.model?.enrollmentStatus,
-      );
-    }
     <template>
-      <FittedCard @titleTag='h3'>
-        <:placeholder><Avatar
-            @name={{if @model.learnerName @model.learnerName 'Learner'}}
-            @size={{40}}
-          /></:placeholder>
-        <:eyebrow>{{@model.cohortName}}</:eyebrow>
-        <:title>{{if
-            @model.learnerName
-            @model.learnerName
-            'Unlinked learner'
-          }}</:title>
-        <:subtitle>{{#if @model.completedAt}}Completed
-            {{fmtDate @model.completedAt}}{{else if @model.enrolledAt}}Enrolled
-            {{fmtDate @model.enrolledAt}}{{/if}}</:subtitle>
-        <:badgeRight><StatePill
-            @label={{@model.statusLabel}}
-            @hue={{this.hue}}
-          /></:badgeRight>
-        <:footer>{{@model.paymentRef}}</:footer>
-      </FittedCard>
+      <FitTile>
+        <:avatar><Mark @text='En' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><Dot
+            @hue={{hueOf @model}}
+          >{{@model.statusLabel}}</Dot></:status>
+        <:fact>{{factLine @model}}</:fact>
+        <:relations>{{#if @model.learner}}<@fields.learner
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}{{#if @model.cohort}}<@fields.cohort
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
     </template>
   };
 }

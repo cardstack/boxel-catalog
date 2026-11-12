@@ -4,7 +4,8 @@
       "adoptsFrom": {
         "name": "Account",
         "module": "../account"
-      }
+      },
+      "_touched": 1793798670529
     },
     "type": "card",
     "attributes": {
@@ -46,7 +47,7 @@
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../../Theme/site-tools"
         }
       }
     }

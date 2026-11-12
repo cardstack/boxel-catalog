@@ -7,12 +7,24 @@ import StatusChip, { type StatusStyle } from './fulfilment-status-chip';
 // One order can carry two shipments at different stages, so collapsing the two
 // enums into one would make a split shipment unrepresentable.
 export const SHIPMENT_STATUSES: StatusStyle[] = [
-  { value: 'label_created', label: 'Label Created', hue: '#6b7280' },
-  { value: 'in_transit', label: 'In Transit', hue: '#3b82f6' },
-  { value: 'out_for_delivery', label: 'Out for Delivery', hue: '#f59e0b' },
-  { value: 'delivered', label: 'Delivered', hue: '#15803d' },
-  { value: 'exception', label: 'Exception', hue: '#ef4444' },
-  { value: 'returned_to_sender', label: 'Returned to Sender', hue: '#8b5cf6' },
+  {
+    value: 'label_created',
+    label: 'Label Created',
+    hue: 'var(--muted-foreground)',
+  },
+  { value: 'in_transit', label: 'In Transit', hue: 'var(--chart-4)' },
+  {
+    value: 'out_for_delivery',
+    label: 'Out for Delivery',
+    hue: 'var(--warning)',
+  },
+  { value: 'delivered', label: 'Delivered', hue: 'var(--success)' },
+  { value: 'exception', label: 'Exception', hue: 'var(--destructive)' },
+  {
+    value: 'returned_to_sender',
+    label: 'Returned to Sender',
+    hue: 'var(--chart-5)',
+  },
 ];
 
 // The scan sequence a package actually moves through. `exception` and

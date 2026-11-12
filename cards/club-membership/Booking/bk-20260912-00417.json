@@ -28,7 +28,12 @@
       },
       "holder": {
         "links": {
-          "self": "../Contact/mei-fong"
+          "self": "../../crm/Contact/mei-fong"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },
@@ -36,8 +41,7 @@
       "adoptsFrom": {
         "module": "../../events/booking",
         "name": "Booking"
-      },
-      "_touched": 1787195040924
+      }
     }
   }
 }

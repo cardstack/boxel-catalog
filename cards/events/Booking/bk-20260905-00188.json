@@ -30,6 +30,11 @@
         "links": {
           "self": "../../crm/Contact/dev-okafor"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

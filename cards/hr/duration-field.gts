@@ -6,8 +6,6 @@ import {
   StringField,
 } from 'https://cardstack.com/base/card-api';
 import NumberField from 'https://cardstack.com/base/number';
-import { BoxelInput, BoxelSelect } from '@cardstack/boxel-ui/components';
-import { not } from '@cardstack/boxel-ui/helpers';
 import ClockIcon from '@cardstack/boxel-icons/clock';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 
@@ -124,64 +122,6 @@ export class DurationField extends FieldDef {
     },
   });
 
-  static edit = class Edit extends Component<typeof this> {
-    units = DURATION_UNITS;
-
-    get selectedUnit(): DurationUnit {
-      return (this.args.model.unit as DurationUnit) ?? 'days';
-    }
-
-    setValue = (val: string) => {
-      let parsed = parseFloat(val);
-      this.args.model.value = Number.isFinite(parsed) ? parsed : undefined;
-      if (!this.args.model.unit) {
-        this.args.model.unit = 'days';
-      }
-    };
-
-    setUnit = (unit: DurationUnit | null) => {
-      if (!unit) {
-        return;
-      }
-      this.args.model.unit = unit;
-    };
-
-    <template>
-      <div class='duration-edit'>
-        <BoxelInput
-          class='duration-value'
-          @type='number'
-          @value={{@model.value}}
-          @onInput={{this.setValue}}
-          @disabled={{not @canEdit}}
-        />
-        <BoxelSelect
-          class='duration-unit'
-          @options={{this.units}}
-          @selected={{this.selectedUnit}}
-          @onChange={{this.setUnit}}
-          @disabled={{not @canEdit}}
-          as |unit|
-        >
-          {{unit}}
-        </BoxelSelect>
-      </div>
-      <style scoped>
-        .duration-edit {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-        }
-        .duration-value {
-          max-width: 8rem;
-        }
-        .duration-unit {
-          min-width: 7rem;
-        }
-      </style>
-    </template>
-  };
-
   static embedded = class Embedded extends Component<typeof this> {
     get label() {
       return durationLabel(this.args.model.value, this.args.model.unit);
@@ -204,12 +144,12 @@ export class DurationField extends FieldDef {
            raised to the small body size, so a duration reads as a value
            rather than a tag. */
         .duration-pill {
-          --text-ui-xs: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .duration-body {
           display: inline-flex;
           align-items: center;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
         }
         .duration-icon {
           flex: none;

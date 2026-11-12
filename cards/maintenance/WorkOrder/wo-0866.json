@@ -11,7 +11,7 @@
       "kind": "preventive",
       "priority": "P3",
       "status": "closed",
-      "title": "Filter change — AHU-3",
+      "title": "Filter change \u2014 AHU-3",
       "requestedByName": "Generate PM Work Orders",
       "requestedAt": "2026-07-25T01:00:00.000Z",
       "scheduledFor": "2026-08-01",
@@ -38,7 +38,7 @@
             "completedAt": "2026-06-15T02:40:00.000Z"
           },
           {
-            "label": "Replace G4 panel filters (×4)",
+            "label": "Replace G4 panel filters (\u00d74)",
             "kind": "check",
             "required": true,
             "result": "pass",
@@ -111,6 +111,11 @@
       "plan": {
         "links": {
           "self": "../MaintenancePlan/ast-0090-filter"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

@@ -4,8 +4,10 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { debounce } from 'lodash-es';
 import { guidFor } from '@ember/object/internals';
-import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { Input } from '@cardstack/pretui/components/input';
 import ChevronDownIcon from '@cardstack/boxel-icons/chevron-down';
+import PlusIcon from '@cardstack/boxel-icons/plus';
 import Popover from '@cardstack/catalog/46f065-popover/popover';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
@@ -261,11 +263,10 @@ export class LinkPicker extends GlimmerComponent<Signature> {
   /**
    * Reset the box on the way out, and survive a failing handler.
    *
-   * `pick` and `clear` used to close without clearing `search`, unlike `close`
-   * and `toggle` — so reopening the picker to change a link showed the
-   * previous term still narrowing the list, and an existing contact read as
-   * "Nothing matches. Try fewer words." An unhandled rejection from `onPick`
-   * also escaped silently, leaving the picker shut with nothing said.
+   * Every way out (`pick`, `clear`, `close`, `toggle`) clears `search`, so
+   * reopening the picker never shows a stale term narrowing the list. A
+   * rejection from `onPick` is surfaced rather than leaving the picker shut
+   * with nothing said.
    */
   private async finish(chosen: CardDef | undefined) {
     this.open = false;
@@ -334,7 +335,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
           <div class='lp-body'>
             <label class='sr-only' for='lp-q-{{this.anchorId}}'>Search
               {{@label}}</label>
-            <BoxelInput
+            <Input
               class='lp-q'
               id='lp-q-{{this.anchorId}}'
               @type='search'
@@ -371,6 +372,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
             {{else}}
               <EmptyState
                 class='lp-none'
+                @size='s'
                 @title={{if this.search 'Nothing matches' 'None yet'}}
                 @message={{if
                   this.search
@@ -395,7 +397,10 @@ export class LinkPicker extends GlimmerComponent<Signature> {
                 disabled={{this.creating}}
                 {{on 'click' this.create}}
               >
-                <span class='lp-plus' aria-hidden='true'>+</span>
+                <span class='lp-plus' aria-hidden='true'><PlusIcon
+                    width='12'
+                    height='12'
+                  /></span>
                 <span class='lp-new-text'>
                   {{#if this.creating}}
                     Adding…
@@ -416,8 +421,9 @@ export class LinkPicker extends GlimmerComponent<Signature> {
                   every choice above it commits immediately. }}
               <div class='lp-foot'>
                 <Button
-                  @kind='text-only'
-                  @size='extra-small'
+                  @tone='neutral'
+                  @appearance='plain'
+                  @size='xs'
                   {{on 'click' this.clear}}
                 >Unlink</Button>
               </div>
@@ -431,7 +437,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
       .lp {
         display: flex;
         flex-direction: column;
-        gap: 0.1875rem;
+        gap: var(--boxel-sp-5xs);
         min-width: 0;
       }
       .lp-label {
@@ -457,7 +463,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         gap: 0.0625rem;
         width: 100%;
         min-width: 0;
-        padding: 0.1875rem 0.375rem;
+        padding: var(--boxel-sp-5xs) var(--boxel-sp-2xs);
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
         background-color: var(--card);
@@ -466,8 +472,10 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         text-align: start;
         cursor: pointer;
       }
-      .lp-trigger:hover:not(:disabled) {
-        border-color: var(--primary-ink);
+      @media (hover: hover) {
+        .lp-trigger:hover:not(:disabled) {
+          border-color: var(--primary-ink);
+        }
       }
       .lp-trigger:focus-visible {
         outline: 0.125rem solid var(--ring);
@@ -547,7 +555,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
       .lp-opt {
         display: block;
         width: 100%;
-        padding: 0.25rem 0.375rem;
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
         border: none;
         border-radius: var(--boxel-border-radius-sm);
         background: none;
@@ -555,10 +563,11 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         font-family: inherit;
         font-size: var(--boxel-font-size-xs);
         text-align: start;
-        cursor: pointer;
       }
-      .lp-opt:hover {
-        background-color: var(--muted);
+      @media (hover: hover) {
+        .lp-opt:hover {
+          background-color: var(--muted);
+        }
       }
       .lp-opt:focus-visible {
         outline: 0.125rem solid var(--ring);
@@ -568,31 +577,16 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         font-weight: 700;
         background-color: var(--selected);
       }
-      /* Pret UI Alert, LoadingState and EmptyState for the list's three
-         non-result states, sized to the popover's 12px text. LoadingState's
-         dim shimmer stop (--ink-3) falls back to a 2.2:1 grey, so it is
-         pointed at the muted foreground. */
-      .lp-bad {
-        --text-ui-md: var(--boxel-font-size-xs);
-      }
       .lp-loading {
-        --ink-3: var(--muted-foreground);
-        --text-ui-md: var(--boxel-font-size-xs);
-        padding-block: 0.25rem;
-      }
-      .lp-none {
-        --space-9: 0.75rem;
-        --space-6: 0.75rem;
-        --text-heading: var(--boxel-font-size-sm);
-        --text-ui-md: var(--boxel-font-size-xs);
+        padding-block: var(--boxel-sp-4xs);
       }
       .lp-new {
         display: flex;
         align-items: center;
         gap: 0.45em;
         width: 100%;
-        margin-top: 0.125rem;
-        padding: 0.3125rem 0.375rem;
+        margin-top: var(--boxel-sp-6xs);
+        padding: var(--boxel-sp-3xs) var(--boxel-sp-2xs);
         border: none;
         border-top: 1px solid var(--border);
         border-radius: 0;
@@ -601,10 +595,11 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         font-family: inherit;
         font-size: var(--boxel-font-size-xs);
         text-align: start;
-        cursor: pointer;
       }
-      .lp-new:hover:not(:disabled) {
-        background-color: var(--muted);
+      @media (hover: hover) {
+        .lp-new:hover:not(:disabled) {
+          background-color: var(--muted);
+        }
       }
       .lp-new:focus-visible {
         outline: 0.125rem solid var(--ring);
@@ -639,8 +634,8 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         display: flex;
         justify-content: flex-end;
         gap: var(--boxel-sp-4xs);
-        margin-top: 0.125rem;
-        padding-top: 0.25rem;
+        margin-top: var(--boxel-sp-6xs);
+        padding-top: var(--boxel-sp-4xs);
         border-top: 1px solid var(--border);
       }
       .sr-only {

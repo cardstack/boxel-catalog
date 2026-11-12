@@ -3,22 +3,20 @@ import type Owner from '@ember/owner';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
+import CheckIcon from '@cardstack/boxel-icons/check';
+import PlusIcon from '@cardstack/boxel-icons/plus';
 
-import {
-  Cohort,
-  CohortStatusField,
-  buildCohortWeeks,
-  todayPosition,
-} from '../cohort';
+import { Cohort, CohortStatusField } from '../cohort';
 import { Course, CourseStatusField } from '../course';
 import { Enrollment } from '../enrollment';
 import { Submission } from '../submission';
-import { CohortTimeline } from './cohort-timeline';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Table } from '@cardstack/pretui/components/table';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import { StatStrip, dotHue, type DeskStat } from './desk-parts';
 
 interface Signature {
   Args: {
@@ -27,15 +25,15 @@ interface Signature {
     onOpenCohort?: (cohort: any) => void;
     onOpenCourse?: (course: any) => void;
     onOpenSubmission?: (submission: any) => void;
+    onNewCohort?: () => void;
   };
   Element: HTMLElement;
 }
 
 /**
- * The instructor's Monday morning: what is running this week, where the
- * grading pile is, and which live sessions are next — then one timeline row
- * per running cohort, so the whole academy reads as a set of rails rather
- * than a grid of tiles. Everything is a live realm query; nothing is stored.
+ * The instructor's Monday morning: what is running, where the grading pile
+ * is, what starts next and which courses exist. Everything is a live realm
+ * query; nothing is stored.
  */
 export class AcademyHome extends GlimmerComponent<Signature> {
   private cohorts: ReturnType<getCards> | undefined;
@@ -47,7 +45,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
     super(owner, args);
     let ctx = this.args.context;
     if (!ctx?.getCards) return;
-    // Captured once: thunks must not read tracked state (see cohort-workspace).
+    // Captured once: thunks must not read tracked state.
     let realmList = this.args.realms;
     let realms = () => realmList;
     let q = (cls: any) => () => {
@@ -75,26 +73,23 @@ export class AcademyHome extends GlimmerComponent<Signature> {
   get allCohorts(): any[] {
     return ((this.cohorts?.instances ?? []) as any[]).filter(Boolean);
   }
-  get running(): any[] {
+  private byStart(status: string): any[] {
     return this.allCohorts
-      .filter((c) => c.status === 'running')
+      .filter((c) => c.status === status)
       .sort(
         (a, b) =>
           (toDate(a.term?.start)?.getTime() ?? 0) -
           (toDate(b.term?.start)?.getTime() ?? 0),
       );
+  }
+  get running(): any[] {
+    return this.byStart('running');
   }
   get planned(): any[] {
-    return this.allCohorts
-      .filter((c) => c.status === 'planned')
-      .sort(
-        (a, b) =>
-          (toDate(a.term?.start)?.getTime() ?? 0) -
-          (toDate(b.term?.start)?.getTime() ?? 0),
-      );
+    return this.byStart('planned');
   }
-  get closed(): any[] {
-    return this.allCohorts.filter((c) => c.status === 'closed');
+  get closedCount(): number {
+    return this.allCohorts.filter((c) => c.status === 'closed').length;
   }
   get allCourses(): any[] {
     return ((this.courses?.instances ?? []) as any[]).filter(Boolean);
@@ -113,215 +108,220 @@ export class AcademyHome extends GlimmerComponent<Signature> {
           new Date(b.submittedAt ?? 0).getTime(),
       );
   }
-  get oldestAwaitingAt(): Date | string | undefined {
-    return this.awaiting[0]?.submittedAt;
-  }
-  get upcomingLive(): { lesson: any; cohort: any; at: Date }[] {
-    let now = Date.now();
-    let horizon = now + 7 * 86_400_000;
-    let out: { lesson: any; cohort: any; at: Date }[] = [];
-    for (let c of this.running) {
-      let released = new Set(
-        ((c.releases ?? []) as any[]).map((r) => r?.module?.id).filter(Boolean),
-      );
-      for (let m of (c.course?.modules ?? []) as any[]) {
-        if (!m || !released.has(m.id)) continue;
-        for (let l of (m.lessons ?? []) as any[]) {
-          if (l?.kind === 'live' && l.liveSessionAt) {
-            let at = new Date(l.liveSessionAt).getTime();
-            if (at >= now && at <= horizon)
-              out.push({ lesson: l, cohort: c, at: new Date(at) });
-          }
-        }
-      }
-    }
-    return out.sort((a, b) => a.at.getTime() - b.at.getTime()).slice(0, 6);
+
+  get stats(): DeskStat[] {
+    let oldest = this.awaiting[0]?.submittedAt;
+    let next = toDate(this.planned[0]?.term?.start);
+    return [
+      {
+        label: 'Cohorts running',
+        value: this.running.length,
+        hint: `of ${this.allCohorts.length} cohorts`,
+        hue: 'green',
+      },
+      {
+        label: 'Active learners',
+        value: this.activeSeats,
+        hint: 'active enrollments',
+      },
+      {
+        label: 'Awaiting grade',
+        value: this.awaiting.length,
+        hint: oldest ? `oldest ${ago(oldest)}` : 'nothing waiting',
+        hue: 'amber',
+      },
+      {
+        label: 'Planned',
+        value: this.planned.length,
+        hint: next ? `next starts ${shortDate(next)}` : 'none planned',
+      },
+      {
+        label: 'Closed',
+        value: this.closedCount,
+        hint: 'closed cohorts',
+        hue: 'blue',
+      },
+    ];
   }
 
-  weeks = (c: any) => buildCohortWeeks(c);
-  today = (c: any) => todayPosition(c.term?.start, c.term?.end);
-  cohortHue = (c: any) => statusHue(CohortStatusField, c.status);
-  courseHue = (c: any) => statusHue(CourseStatusField, c.status);
+  cohortHue = (c: any) => dotHue(statusHue(CohortStatusField, c.status));
+  courseHue = (c: any) => dotHue(statusHue(CourseStatusField, c.status));
+  moduleCount = (c: any) => (c.course?.modules ?? []).length;
+  cohortOf = (s: any) => s.enrollment?.cohortName ?? '';
   open = (c: any) => this.args.onOpenCohort?.(c);
   openCourse = (c: any) => this.args.onOpenCourse?.(c);
   openSub = (s: any) => this.args.onOpenSubmission?.(s);
+  gradeOldest = () => {
+    let s = this.awaiting[0];
+    if (s) this.openSub(s);
+  };
 
   <template>
     <div class='home' ...attributes>
+      <div class='actions'>
+        {{#if @onNewCohort}}
+          <Button
+            @icon={{PlusIcon}}
+            @appearance='outlined'
+            @tone='neutral'
+            @size='s'
+            {{on 'click' @onNewCohort}}
+          >New cohort</Button>
+        {{/if}}
+        <Button
+          @icon={{CheckIcon}}
+          @tone='primary'
+          @size='s'
+          @disabled={{if this.awaiting.length false true}}
+          {{on 'click' this.gradeOldest}}
+        >Grade the oldest</Button>
+      </div>
+
       {{#if this.isLoading}}
         <p class='muted'>Loading the academy…</p>
       {{else}}
-        <section class='hero'>
-          <div class='hero-main'>
-            <span class='eyebrow'>This week</span>
-            <h2 class='hero-n'>{{this.running.length}}
-              <span class='hero-l'>{{if
-                  (isOne this.running.length)
-                  'cohort'
-                  'cohorts'
-                }}
-                running</span></h2>
-            <p class='hero-sub'>{{this.activeSeats}}
-              active learners ·
-              {{this.planned.length}}
-              planned ·
-              {{this.closed.length}}
-              closed</p>
-          </div>
-          <div class='pile {{if this.awaiting.length "hot"}}'>
-            <span class='pile-n'>{{this.awaiting.length}}</span>
-            <span class='pile-l'>awaiting grade</span>
-            {{#if this.awaiting.length}}
-              <span class='pile-hint'>oldest:
-                {{ago this.oldestAwaitingAt}}</span>
-              <Button
-                @tone='primary'
-                @appearance='accent'
-                @size='xs'
-                {{on 'click' (fn this.openSub (first this.awaiting))}}
-              >Grade the oldest</Button>
-            {{/if}}
-          </div>
-          <div class='live'>
-            <span class='eyebrow'>Live in the next 7 days</span>
-            {{#if this.upcomingLive.length}}
-              <ul class='live-list'>
-                {{#each this.upcomingLive as |u|}}
-                  <li>
-                    <span class='live-when'>{{fmtShort u.at}}</span>
-                    <span class='live-what'>{{u.lesson.cardTitle}}</span>
-                    <Button
-                      @appearance='link'
-                      @size='xs'
-                      {{on 'click' (fn this.open u.cohort)}}
-                    >{{u.cohort.cardTitle}}</Button>
-                  </li>
-                {{/each}}
-              </ul>
+        <StatStrip @stats={{this.stats}} @label='Academy this week' />
+
+        <div class='pair'>
+          <section class='blk'>
+            <div class='bh'><h2>Running cohorts</h2><span
+                class='n'
+              >{{this.running.length}}</span></div>
+            {{#if this.running.length}}
+              <Table @label='Running cohorts' @framed={{false}}>
+                <:head><tr><th scope='col'>Cohort</th><th
+                      scope='col'
+                    >Status</th><th scope='col'>Course</th><th
+                      scope='col'
+                    >Week</th><th
+                      scope='col'
+                      class='end'
+                    >Released</th></tr></:head>
+                <:body>
+                  {{#each this.running as |c|}}
+                    <tr>
+                      <td><button
+                          type='button'
+                          class='name'
+                          {{on 'click' (fn this.open c)}}
+                        ><span class='mark' aria-hidden='true'>Ch</span><b
+                          >{{c.cardTitle}}</b></button></td>
+                      <td><span class='st'><span
+                            class='dot'
+                            data-hue={{this.cohortHue c}}
+                          ></span>Running</span></td>
+                      <td class='mono'>{{c.courseCode}}</td>
+                      <td><span class='wk'><ProgressBar
+                            class='bar'
+                            @value={{c.currentWeek}}
+                            @max={{c.weekCount}}
+                            aria-label='Week'
+                          /><span
+                            class='mono'
+                          >{{c.currentWeek}}/{{c.weekCount}}</span></span></td>
+                      <td
+                        class='mono end'
+                      >{{c.releasedCount}}/{{this.moduleCount c}}</td>
+                    </tr>
+                  {{/each}}
+                </:body>
+              </Table>
             {{else}}
-              <p class='muted small'>No live sessions scheduled.</p>
-            {{/if}}
-          </div>
-        </section>
-
-        <section class='rails'>
-          <h3 class='sec'>Running cohorts</h3>
-          {{#if this.running.length}}
-            <ol class='rail-list'>
-              {{#each this.running as |c|}}
-                <li class='rail-row'>
-                  <div class='rail-head'>
-                    <Button
-                      @appearance='link'
-                      {{on 'click' (fn this.open c)}}
-                    ><strong>{{c.cardTitle}}</strong></Button>
-                    <span class='rail-sub'>{{c.courseCode}}
-                      · week
-                      {{if c.currentWeek c.currentWeek '—'}}
-                      of
-                      {{c.weekCount}}{{#if c.leadInstructorName}}
-                        ·
-                        {{c.leadInstructorName}}{{/if}}</span>
-                  </div>
-                  <div class='rail-tl'>
-                    {{#let (this.today c) as |t|}}
-                      <CohortTimeline
-                        @weeks={{this.weeks c}}
-                        @todayIndex={{t.index}}
-                        @todayFraction={{t.fraction}}
-                        @onSelectWeek={{fn this.open c}}
-                      />
-                    {{/let}}
-                  </div>
-                  <span
-                    class='rail-rel'
-                  >{{c.releasedCount}}/{{c.course.moduleCount}} released</span>
-                </li>
-              {{/each}}
-            </ol>
-          {{else}}
-            <EmptyState
-              @size='s'
-              @title='Nothing is running'
-              @message='Start a planned cohort from its page when the term begins.'
-            />
-          {{/if}}
-        </section>
-
-        <section class='pile-list'>
-          <h3 class='sec'>Grading pile</h3>
-          {{#if this.awaiting.length}}
-            <ol class='plain'>
-              {{#each this.awaiting as |s|}}
-                <li>
-                  <div class='row'>
-                    <span class='sub-who'><Button
-                        @appearance='link'
-                        @size='s'
-                        {{on 'click' (fn this.openSub s)}}
-                      >{{s.learnerName}}</Button>
-                      ·
-                      {{s.assignmentTitle}}</span>
-                    <span class='muted small'>v{{if s.version s.version 1}}
-                      · handed in
-                      {{ago s.submittedAt}}{{#if s.isLate}}
-                        ·
-                        <span class='late'>{{s.daysLate}}d late</span>{{/if}}</span>
-                  </div>
-                </li>
-              {{/each}}
-            </ol>
-          {{else}}
-            <EmptyState
-              @size='s'
-              @title='Nothing waiting'
-              @message='Every submission is graded.'
-            />
-          {{/if}}
-        </section>
-
-        <div class='cols'>
-          <section>
-            <h3 class='sec'>Planned</h3>
-            {{#if this.planned.length}}
-              <ul class='plain'>
-                {{#each this.planned as |c|}}
-                  <li class='row'><Button
-                      @appearance='link'
-                      @size='s'
-                      {{on 'click' (fn this.open c)}}
-                    >{{c.cardTitle}}</Button><span
-                      class='muted small'
-                    >{{c.termLabel}}</span></li>
-                {{/each}}
-              </ul>
-            {{else}}
-              <p class='muted small'>No planned cohorts.</p>
+              <EmptyState
+                @size='s'
+                @title='Nothing running'
+                @message='No cohort is running this week.'
+              />
             {{/if}}
           </section>
-          <section>
-            <h3 class='sec'>Courses</h3>
-            {{#if this.allCourses.length}}
-              <ul class='plain'>
-                {{#each this.allCourses as |c|}}
-                  <li>
-                    <div class='row'>
-                      <span><span class='code'>{{c.code}}</span>
-                        <Button
-                          @appearance='link'
-                          @size='s'
-                          {{on 'click' (fn this.openCourse c)}}
-                        >{{c.cardTitle}}</Button></span>
-                      <StatePill
-                        @label={{c.status}}
-                        @hue={{this.courseHue c}}
-                      />
-                    </div>
+
+          <section class='blk'>
+            <div class='bh'><h2>Grading pile</h2><span
+                class='n'
+              >{{this.awaiting.length}} waiting</span></div>
+            {{#if this.awaiting.length}}
+              <ol class='rows'>
+                {{#each this.awaiting as |s|}}
+                  <li class='row'>
+                    <button
+                      type='button'
+                      class='two'
+                      {{on 'click' (fn this.openSub s)}}
+                    ><b>{{s.learnerName}} · {{s.assignmentTitle}}</b><span
+                        class='sub'
+                      >v{{if s.version s.version 1}}
+                        ·
+                        {{this.cohortOf s}}</span></button>
+                    <span class='meta'><span class='mono'>{{ago
+                          s.submittedAt
+                        }}</span>{{#if s.isLate}}<span class='st'><span
+                            class='dot'
+                            data-hue='destructive'
+                          ></span>{{s.daysLate}}d late</span>{{/if}}</span>
+                  </li>
+                {{/each}}
+              </ol>
+            {{else}}
+              <EmptyState
+                @size='s'
+                @title='Nothing waiting'
+                @message='Every submission is graded.'
+              />
+            {{/if}}
+          </section>
+        </div>
+
+        <div class='pair'>
+          <section class='blk'>
+            <div class='bh'><h2>Planned</h2><span
+                class='n'
+              >{{this.planned.length}}</span></div>
+            {{#if this.planned.length}}
+              <ul class='rows'>
+                {{#each this.planned as |c|}}
+                  <li class='row'>
+                    <button
+                      type='button'
+                      class='name'
+                      {{on 'click' (fn this.open c)}}
+                    ><span class='mark' aria-hidden='true'>Ch</span><b
+                      >{{c.cardTitle}}</b><span
+                        class='mono muted'
+                      >{{c.courseCode}}</span></button>
+                    <span class='mono'>{{c.termLabel}}</span>
                   </li>
                 {{/each}}
               </ul>
             {{else}}
-              <p class='muted small'>No courses yet.</p>
+              <p class='muted pad'>No planned cohorts.</p>
+            {{/if}}
+          </section>
+
+          <section class='blk'>
+            <div class='bh'><h2>Courses</h2><span
+                class='n'
+              >{{this.allCourses.length}}</span></div>
+            {{#if this.allCourses.length}}
+              <ul class='rows'>
+                {{#each this.allCourses as |c|}}
+                  <li class='row'>
+                    <button
+                      type='button'
+                      class='name'
+                      {{on 'click' (fn this.openCourse c)}}
+                    ><span class='mark' aria-hidden='true'>Co</span><b
+                      >{{c.cardTitle}}</b><span
+                        class='mono muted'
+                      >{{c.code}}</span></button>
+                    <span class='st'><span
+                        class='dot'
+                        data-hue={{this.courseHue c}}
+                      ></span>{{c.status}}</span>
+                  </li>
+                {{/each}}
+              </ul>
+            {{else}}
+              <p class='muted pad'>No courses yet.</p>
             {{/if}}
           </section>
         </div>
@@ -331,232 +331,184 @@ export class AcademyHome extends GlimmerComponent<Signature> {
       .home {
         container-type: inline-size;
         display: grid;
-        gap: var(--boxel-sp-lg);
-        color: var(--foreground);
+        gap: var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
       }
-      .hero {
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--boxel-sp-xs);
+        --control-height: 1.625rem;
+      }
+      /* Two blocks joined into one card: equal height, one divider. */
+      .pair {
         display: grid;
-        grid-template-columns: 1.3fr auto 1fr;
-        gap: var(--boxel-sp);
-        align-items: stretch;
-      }
-      .hero-main,
-      .live {
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         background: var(--card);
+        color: var(--card-foreground);
+        overflow: hidden;
       }
-      .eyebrow {
+      .blk {
+        min-width: 0;
+      }
+      .blk + .blk {
+        border-inline-start: 1px solid var(--border);
+      }
+      .bh {
+        display: flex;
+        align-items: baseline;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border-bottom: 1px solid var(--border);
+      }
+      h2 {
         font-size: var(--boxel-font-size-xs);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--muted-foreground);
+        font-weight: 700;
       }
-      .hero-n {
-        margin: var(--boxel-sp-4xs) 0 0;
-        font-size: var(--boxel-font-size-2xl);
-        font-weight: 800;
-        line-height: 1;
-        letter-spacing: -0.02em;
-      }
-      .hero-l {
-        font-size: var(--boxel-font-size-lg);
-        font-weight: 500;
-        color: var(--muted-foreground);
-      }
-      .hero-sub {
-        margin: var(--boxel-sp-xs) 0 0;
-        color: var(--muted-foreground);
-      }
-      .pile {
-        display: grid;
-        align-content: center;
-        justify-items: center;
-        gap: 0.125rem;
-        min-width: 9rem;
-        padding: var(--boxel-sp);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-      }
-      .pile.hot {
-        background: color-mix(in oklab, var(--warning) 14%, var(--card));
-        border-color: color-mix(in oklab, var(--warning) 40%, var(--border));
-      }
-      .pile-n {
-        font-size: var(--boxel-font-size-xl);
-        font-weight: 800;
-        line-height: 1;
-        font-variant-numeric: tabular-nums;
-      }
-      .pile-l {
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-      }
-      .pile-hint {
-        font-size: var(--boxel-font-size-2xs);
-        color: var(--muted-foreground);
-      }
-      .live-list {
-        list-style: none;
-        margin: var(--boxel-sp-xs) 0 0;
-        padding: 0;
-        display: grid;
-        gap: var(--boxel-sp-4xs);
-        font-size: var(--boxel-font-size-sm);
-      }
-      .live-list li {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 0 var(--boxel-sp-xs);
-      }
-      .live-when {
+      .n,
+      .mono {
         font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-        grid-row: span 2;
-        align-self: start;
-        padding-top: 0.125rem;
-      }
-      .live-what {
-        font-weight: 600;
-      }
-      .sec {
-        margin: 0 0 var(--boxel-sp-xs);
-        font-size: var(--boxel-font-size-sm);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--muted-foreground);
-      }
-      .rail-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: var(--boxel-sp-xs);
-      }
-      .rail-row {
-        display: grid;
-        grid-template-columns: minmax(12rem, 0.8fr) minmax(16rem, 2fr) auto;
-        gap: var(--boxel-sp);
-        align-items: center;
-        padding: var(--boxel-sp-sm) var(--boxel-sp);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-      }
-      .rail-head {
-        display: grid;
-        justify-items: start;
-        min-width: 0;
-      }
-      @media (prefers-reduced-motion: no-preference) {
-        .rail-row,
-        .pile {
-          transition:
-            transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
-            box-shadow 160ms ease,
-            background 140ms ease;
-        }
-        .rail-row:hover,
-        .pile.hot:hover {
-          transform: translateY(-0.0625rem);
-          box-shadow: 0 0.375rem 1.125rem -0.75rem
-            color-mix(in oklab, var(--foreground) 40%, transparent);
-        }
-      }
-      .rail-sub {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .rail-tl {
-        min-width: 0;
-      }
-      .rail-rel {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-        white-space: nowrap;
         font-variant-numeric: tabular-nums;
       }
-      .cols {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--boxel-sp);
+      .n,
+      .muted,
+      .sub {
+        color: var(--muted-foreground);
       }
-      .plain {
+      th {
+        text-align: start;
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
+        font-family: var(--font-mono);
+        font-weight: 600;
+        font-size: var(--boxel-font-size-2xs);
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+        border-bottom: 1px solid var(--border);
+      }
+      td {
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      .end {
+        text-align: end;
+      }
+      .wk {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .bar {
+        inline-size: 4rem;
+      }
+      .rows {
         list-style: none;
         margin: 0;
         padding: 0;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-      }
-      .plain li + li {
-        border-top: 1px solid var(--border);
       }
       .row {
-        min-height: 2.75rem;
         display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: var(--boxel-sp-4xs) var(--boxel-sp-xs);
         align-items: center;
-        padding: var(--boxel-sp-xs) var(--boxel-sp);
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
+        border-bottom: 1px solid var(--border);
       }
-      .sub-who {
+      .row:last-child {
+        border-bottom: none;
+      }
+      .name,
+      .two {
+        all: unset;
+        cursor: pointer;
         min-width: 0;
+      }
+      .name {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .two {
+        display: grid;
+      }
+      .name:focus-visible,
+      .two:focus-visible {
+        outline: 2px solid var(--ring);
+      }
+      .two b,
+      .name b {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .late {
-        color: var(--warning-ink);
-        font-weight: 600;
+      .name .mono {
+        white-space: nowrap;
       }
-      .code {
+      .mark {
+        display: grid;
+        place-items: center;
+        inline-size: 1.125rem;
+        block-size: 1.125rem;
+        border-radius: var(--radius);
+        background: var(--muted);
         font-family: var(--font-mono);
-        color: var(--primary-ink);
-        font-weight: 700;
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        flex: none;
       }
-      .muted {
-        color: var(--muted-foreground);
+      .meta {
+        display: inline-flex;
+        gap: var(--boxel-sp-xs);
+        flex: none;
       }
-      .small {
-        font-size: var(--boxel-font-size-xs);
-        margin: 0;
+      .st {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-5xs);
+        text-transform: capitalize;
       }
-      @container (width <= 47.5rem) {
-        .hero {
-          grid-template-columns: 1fr 1fr;
+      .dot {
+        inline-size: 0.375rem;
+        block-size: 0.375rem;
+        border-radius: 50%;
+        background: var(--muted-foreground);
+      }
+      .dot[data-hue='success'] {
+        background: var(--success);
+      }
+      .dot[data-hue='warning'] {
+        background: var(--warning);
+      }
+      .dot[data-hue='destructive'] {
+        background: var(--destructive);
+      }
+      .dot[data-hue='primary'] {
+        background: var(--primary);
+      }
+      .pad {
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      @container (width <= 48rem) {
+        .pair {
+          grid-template-columns: minmax(0, 1fr);
         }
-        .live {
-          grid-column: 1 / -1;
-        }
-        .rail-row {
-          grid-template-columns: 1fr;
-        }
-        .cols {
-          grid-template-columns: 1fr;
+        .blk + .blk {
+          border-inline-start: none;
+          border-block-start: 1px solid var(--border);
         }
       }
     </style>
   </template>
 }
 
-function isOne(n: number) {
-  return n === 1;
+function shortDate(d: Date) {
+  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 }
-function first<T>(arr: T[]): T | undefined {
-  return arr[0];
-}
-function fmtShort(d: Date) {
-  return d.toLocaleString(undefined, {
-    weekday: 'short',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
+
 function ago(d?: Date | string | null) {
   if (!d) return '';
   let diff = Date.now() - new Date(d).getTime();

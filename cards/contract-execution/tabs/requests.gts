@@ -1,51 +1,68 @@
 import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { contractTypeLabel } from '../../legal/contract-type';
 import {
-  ContractRequest,
-  requestStateHue,
   requestStateLabel,
+  requestStateHue,
 } from '../../legal/contract-request';
-import { CollectionPanel } from '../../../components/collection-panel';
-import { StatePill } from '../../../components/state-pill';
-import { REQUEST_COLUMNS, asAny } from '../contract-execution-data';
+import { formatDay, hueTone } from '../../shared/compact-format';
+import { Block, CeTable, type Col } from '../components';
+
 interface Signature {
   Args: { app: ContractExecutionView };
 }
 
 export class RequestsTab extends GlimmerComponent<Signature> {
-  <template>
-    <p class='cx-note'>Declined requests are kept, with the reason — so "what
-      did we turn down, and why" stays answerable.</p>
-    <CollectionPanel
-      @cardClass={{ContractRequest}}
-      @context={{@app.context}}
-      @realms={{@app.realmList}}
-      @columns={{REQUEST_COLUMNS}}
-      @label='Intake queue'
-      @searchPlaceholder='Search requests by what they are for…'
-      @newLabel='request'
-      @defaultView='table'
-      @sortBy='whatFor'
-    >
-      <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-          {{#if (eq column.key 'status')}}
-            <StatePill
-              @label={{requestStateLabel row.status}}
-              @hue={{requestStateHue row.status}}
-              @dot={{true}}
-            />
-          {{/if}}
-        {{/let}}</:cell>
-    </CollectionPanel>
+  columns: Col[] = [
+    { label: 'Request', kind: 'title', value: (r) => r.cardTitle },
+    {
+      label: 'Type',
+      value: (r) => (r.contractType ? contractTypeLabel(r.contractType) : '—'),
+    },
+    { label: 'Requested by', value: (r) => r.requestedBy?.cardTitle ?? '—' },
+    {
+      label: 'Needed by',
+      kind: 'mono',
+      align: 'end',
+      value: (r) => formatDay(r.neededBy),
+    },
+    {
+      label: 'Status',
+      kind: 'dot',
+      value: (r) => requestStateLabel(r.status),
+      tone: (r) => hueTone(requestStateHue(r.status)),
+    },
+  ];
 
+  get rows() {
+    return this.args.app.search(this.args.app.requests as any[], (r) => [
+      r.cardTitle,
+      r.whatFor,
+      r.requestedBy?.cardTitle,
+    ]);
+  }
+
+  <template>
+    <Block
+      @title='Intake queue'
+      @count={{this.rows.length}}
+      @sub='Declined requests are kept, with the reason — so “what did we turn down, and why” stays answerable.'
+    >
+      {{#if this.rows.length}}
+        <CeTable
+          @label='Intake queue'
+          @columns={{this.columns}}
+          @rows={{this.rows}}
+          @onOpen={{@app.openCard}}
+        />
+      {{else}}
+        <p class='tab-empty'>No requests match.</p>
+      {{/if}}
+    </Block>
     <style scoped>
-      .cx-note {
-        margin: 0 0 var(--boxel-sp);
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.55;
+      .tab-empty {
+        padding: var(--boxel-sp-xs);
         color: var(--muted-foreground);
-        max-width: var(--_cx-measure);
       }
     </style>
   </template>

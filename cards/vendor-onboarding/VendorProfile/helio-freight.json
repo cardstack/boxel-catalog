@@ -19,7 +19,7 @@
       "status": "intake",
       "notes": "Intake form received. Certifications not yet supplied; requested the C-TPAT certificate.",
       "cardInfo": {
-        "name": "Helio Freight — Profile"
+        "name": "Helio Freight \u2014 Profile"
       },
       "address": {
         "addressLine1": "2200 Example Boulevard",
@@ -32,12 +32,22 @@
           "name": "United States",
           "code": null
         }
+      },
+      "lifecycle": {
+        "createdAt": "2026-10-30T09:00:00.000Z"
       }
     },
     "meta": {
       "adoptsFrom": {
         "module": "../../procurement/vendor-profile",
         "name": "VendorProfile"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

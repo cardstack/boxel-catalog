@@ -94,7 +94,8 @@ export class TrackingNumberField extends FieldDef {
             class='tn-copy'
             @text={{@model.number}}
             @label='Copy tracking number'
-            @variant='ghost'
+            @tone='neutral'
+            @appearance='plain'
             @size='xs'
           />
         </div>
@@ -117,7 +118,7 @@ export class TrackingNumberField extends FieldDef {
         }
         .tn-carrier {
           font-family: var(--font-mono);
-          font-size: 0.7rem;
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 700;
           letter-spacing: 0.08em;
           text-transform: uppercase;
@@ -127,7 +128,7 @@ export class TrackingNumberField extends FieldDef {
            ink (not an action), at the old 0.85rem. */
         .tn-main .tn-token {
           --pretui-token-hue: var(--muted-foreground);
-          --pretui-token-font-size: 0.85rem;
+          --pretui-token-font-size: var(--boxel-font-size-sm);
           margin-inline: 0;
           min-width: 0;
           max-width: 100%;
@@ -148,13 +149,9 @@ export class TrackingNumberField extends FieldDef {
             transparent
           );
         }
-        /* The copied check reads the success ink, not the fill. */
-        .tn-copy :deep(.pretui-copy-check) {
-          color: var(--success-ink);
-        }
         .tn-empty {
           color: var(--muted-foreground);
-          font-size: 0.85rem;
+          font-size: var(--boxel-font-size-sm);
         }
       </style>
     </template>

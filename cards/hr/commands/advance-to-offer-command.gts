@@ -10,8 +10,8 @@ import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
 import { realmURL } from '@cardstack/base/card-api';
 
-import { Candidate } from '@cardstack/catalog/cards/hr/candidate';
-import { Offer } from '@cardstack/catalog/cards/hr/offer';
+import { Candidate } from '../candidate';
+import { Offer } from '../offer';
 
 class AdvanceToOfferInput extends CardDef {
   @field candidate = linksTo(() => Candidate, { searchable: true });

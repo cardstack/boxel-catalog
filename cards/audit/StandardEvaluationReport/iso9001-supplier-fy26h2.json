@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "title": "ISO 9001 Supplier Controls — FY26 H2",
+      "title": "ISO 9001 Supplier Controls \u2014 FY26 H2",
       "regime": {
         "regime": "ISO 9001:2015",
         "version": "2015",
@@ -13,7 +13,7 @@
         "start": "2026-07-01",
         "end": "2026-12-31"
       },
-      "scope": "Norvik Ltd, a supplier of production materials, evaluated against the four §8.4 supplier controls.",
+      "scope": "Norvik Ltd, a supplier of production materials, evaluated against the four \u00a78.4 supplier controls.",
       "subjectsEvaluated": 1,
       "rollup": {
         "status": "fail"
@@ -23,7 +23,7 @@
         "createdAt": "2026-09-07T09:00:00.000Z"
       },
       "cardInfo": {
-        "name": "ISO 9001 Supplier Controls — FY26 H2",
+        "name": "ISO 9001 Supplier Controls \u2014 FY26 H2",
         "summary": "Four results for Norvik Ltd; one critical finding open",
         "notes": null,
         "cardThumbnailURL": null
@@ -48,6 +48,11 @@
       "results.3": {
         "links": {
           "self": "../AuditResult/sup-04-norvik-ltd"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

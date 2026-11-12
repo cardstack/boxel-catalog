@@ -13,15 +13,9 @@ import DateField from '@cardstack/base/date';
 import TextAreaField from '@cardstack/base/text-area';
 import MarkdownField from '@cardstack/base/markdown';
 import enumField from '@cardstack/base/enum';
-import { tracked } from '@glimmer/tracking';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-
-import { Ticket } from '@cardstack/catalog/cards/service-desk/ticket';
-import { Account } from '@cardstack/catalog/cards/crm/account';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
+import { Ticket } from './ticket';
+import { Account } from '../crm/account';
+import { Employee } from '../hr/employee';
 import {
   stateColor,
   type StateColor,
@@ -31,13 +25,17 @@ import { RecordOwnerField } from '@cardstack/catalog/fields/record-owner/record-
 import { RelationshipSetField } from '@cardstack/catalog/fields/relationship-set/relationship-set-field';
 import { ExternalReferenceField } from '@cardstack/catalog/fields/external-reference/external-reference-field';
 import { WorkflowStateField } from '@cardstack/catalog/fields/workflow-state/workflow-state-field';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { FormatDate } from '@cardstack/pretui/components/format-date';
-import { Token } from '@cardstack/pretui/components/token';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { Panel } from '@cardstack/pretui/components/panel';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { FitTile } from '../shared/fit-tile';
+import { FitRows, TypeMark, lowercase } from './components/fit-rows';
 import {
-  COMPACT_EMPTY_STYLE,
-  tokenStyle,
-} from '@cardstack/catalog/components/pretui-helpers';
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
 
 export const CASE_STATUSES = [
   'open',
@@ -98,240 +96,201 @@ export const SEVERITY_HUES: Record<string, 'slate' | 'amber' | 'red'> = {
   critical: 'red',
 };
 
-class CaseEdit extends Component<typeof Case> {
-  // Left section nav: clicking anchors that section to the top of the
-  // form's own scroller (the root — never a nested
-  // scroller). Scoped through the event's own root so several open edit
-  // panels never cross-scroll each other.
-  @tracked activeSection = 'identity';
-
-  sections = [
-    { id: 'identity', label: 'Case' },
-    { id: 'people', label: 'Reporter & Owner' },
-    { id: 'description', label: 'Description' },
-    { id: 'resolution', label: 'Resolution' },
-    { id: 'operations', label: 'Operations' },
-  ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.case-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
-
-  <template>
-    <div class='case-edit'>
-      {{! the container element cannot be restyled by its own query
-          — the responsive grid lives on
-          this inner wrapper instead }}
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "identity") "focused"}}'
-            data-sect='identity'
-          >
-            <h3>Case</h3>
-            <FieldContainer @label='Subject' @vertical={{true}}>
-              <@fields.subject />
-            </FieldContainer>
-            <div class='row'>
-              <FieldContainer @label='Severity' @vertical={{true}}>
-                <@fields.severity />
-              </FieldContainer>
-              <FieldContainer @label='Status' @vertical={{true}}>
-                <@fields.status />
-              </FieldContainer>
-              <FieldContainer @label='Opened on' @vertical={{true}}>
-                <@fields.openedOn />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "people") "focused"}}'
-            data-sect='people'
-          >
-            <h3>Reporter &amp; Owner</h3>
-            <div class='row two'>
-              <FieldContainer @label='Account' @vertical={{true}}>
-                <@fields.account />
-              </FieldContainer>
-              <FieldContainer @label='Owner' @vertical={{true}}>
-                <@fields.owner />
-              </FieldContainer>
-            </div>
-            <FieldContainer @label='Related tickets' @vertical={{true}}>
-              <@fields.relatedTickets />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "description") "focused"}}'
-            data-sect='description'
-          >
-            <h3>Description
-              <span class='sect-hint'>findings grow as the investigation does —
-                append, don't rewrite</span></h3>
-            <FieldContainer @label='Problem statement' @vertical={{true}}>
-              <@fields.problemStatement />
-            </FieldContainer>
-            <FieldContainer @label='Findings' @vertical={{true}}>
-              <@fields.findings />
-            </FieldContainer>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "resolution") "focused"}}'
-            data-sect='resolution'
-          >
-            <h3>Resolution
-              <span class='sect-hint'>fill in when closing the case</span></h3>
-            <FieldContainer @label='Resolution' @vertical={{true}}>
-              <@fields.resolution />
-            </FieldContainer>
-            <div class='row two'>
-              <FieldContainer @label='Resolved on' @vertical={{true}}>
-                <@fields.resolvedOn />
-              </FieldContainer>
-            </div>
-          </section>
-          <section
-            class='sect {{if (eq this.activeSection "operations") "focused"}}'
-            data-sect='operations'
-          >
-            <h3>Operations
-              <span class='sect-hint'>ids and ownership are written by commands;
-                relationships and external references are edited here</span></h3>
-            <FieldContainer @label='Case ID' @vertical={{true}}>
-              <@fields.caseId />
-            </FieldContainer>
-            <FieldContainer @label='Owner' @vertical={{true}}>
-              <@fields.ownership />
-            </FieldContainer>
-            <FieldContainer @label='Workflow state' @vertical={{true}}>
-              <@fields.workflowState />
-            </FieldContainer>
-            <FieldContainer @label='Linked records' @vertical={{true}}>
-              <@fields.relationships />
-            </FieldContainer>
-            <FieldContainer @label='External references' @vertical={{true}}>
-              <@fields.externalRefs />
-            </FieldContainer>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .case-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-      }
-      /* the root is the scroller, so sticky pins the nav to its top;
-         no ink knobs handed over — the rail's default is already the
-         inverted foreground/background pair */
-      .sect-nav {
-        position: sticky;
-        top: 0;
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-      }
-      /* the section the rail points at mirrors the rail's active state */
-      .sect.focused {
-        outline-color: var(--ring);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--ring) 12%, transparent);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
-        align-items: start;
-      }
-      .row.two {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      @container edit (width < 640px) {
-        .row,
-        .row.two {
-          grid-template-columns: 1fr;
-        }
-        /* narrow panel: nav becomes a horizontal chip row above the form */
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        /* narrow: the rail flips horizontal (consumer's scope attribute
-           rides ...attributes onto the component root, so these apply) */
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
-        }
-      }
-    </style>
-  </template>
-}
-
 // A Case is the longer-running investigation a Ticket is not: one customer
 // problem that may span several tickets, days, and owners, with its own
 // severity, findings, and resolution record. Tickets stay the unit of
 // conversation; the Case is the unit of accountability — it LINKS the
 // related tickets rather than replacing them.
+const SEVERITY_TONES: Record<string, PretuiToneArg> = {
+  low: 'neutral',
+  medium: 'neutral',
+  high: 'warning',
+  critical: 'danger',
+};
+const STATUS_TONES: Record<string, PretuiToneArg> = {
+  open: 'info',
+  investigating: 'warning',
+  'waiting-on-customer': 'neutral',
+  resolved: 'success',
+  closed: 'neutral',
+};
+const DAY_MS = 86_400_000;
+
+function sentence(value?: string | null) {
+  return value ? value[0]!.toUpperCase() + value.slice(1) : '';
+}
+// openedOn is a calendar date: format it in UTC so it never shifts a day.
+function shortDate(value?: Date | null, year = false) {
+  if (!value) return undefined;
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: year ? 'numeric' : undefined,
+    timeZone: 'UTC',
+  }).format(new Date(value));
+}
+
+// lastSeenAt / since are instants: shown in the reader's own clock.
+function shortTime(value?: Date | null, year = false) {
+  if (!value) return undefined;
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: year ? 'numeric' : undefined,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(value));
+}
+
+const REF_TONES: Record<string, PretuiToneArg> = {
+  open: 'info',
+  'in progress': 'warning',
+  closed: 'neutral',
+  resolved: 'success',
+};
+const RELATION_LABELS: Record<string, string> = {
+  'duplicate-of': 'Duplicate of',
+};
+// Values set in the mono face: identifiers and dates.
+const MONO_KEYS = new Set(['Case ID', 'Opened', 'Since']);
+const isMono = (key: string) => MONO_KEYS.has(key);
+const isKey = (key: string, want: string) => key === want;
+
+type CaseView = ReturnType<typeof caseView>;
+
+/** The strings every SupportCase format shows, read once from the model. */
+function caseView(m: Partial<Case> | undefined) {
+  let severityLabel = sentence(m?.severity);
+  let statusLabel = CASE_STATUS_LABELS[m?.status ?? 'open'] ?? 'Open';
+  let wf = m?.workflowState?.label;
+  let caseId = m?.caseId?.value;
+  let team = m?.ownership?.teamName;
+  let opened = shortDate(m?.openedOn);
+  let o = m?.ownership;
+  let refs = m?.externalRefs ?? [];
+  let facts: KeyValueItem[] = [
+    { key: 'Case ID', value: caseId ?? '—' },
+    { key: 'Severity', value: severityLabel || '—' },
+    { key: 'Status', value: statusLabel },
+    { key: 'Workflow', value: wf ?? '—' },
+    { key: 'Opened', value: shortDate(m?.openedOn, true) ?? '—' },
+    { key: 'Team', value: team ?? '—' },
+  ];
+  for (let ref of refs) {
+    facts.push({
+      key: ref.system?.name ?? 'Link',
+      value: [ref.externalId, ref.state].filter(Boolean).join(' · '),
+    });
+  }
+  let endTime = m?.resolvedOn ? new Date(m.resolvedOn) : new Date();
+  let days = m?.openedOn
+    ? Math.max(
+        0,
+        Math.round(
+          (endTime.getTime() - new Date(m.openedOn).getTime()) / DAY_MS,
+        ),
+      )
+    : undefined;
+  let duplicate = m?.relationships?.relations?.find(
+    (r) => r.kind === 'duplicate-of',
+  );
+  // read from the record fields, not the links: touching a linksTo here
+  // makes Case's type reference itself
+  let hasOwner = Boolean(o?.ownerName);
+  let hasDuplicate = Boolean(duplicate);
+  let linked: KeyValueItem[] = [
+    ...(hasOwner ? [{ key: 'Owner', value: o?.ownerName ?? '' }] : []),
+    ...(hasDuplicate
+      ? [{ key: 'Duplicate of', value: duplicate?.targetTitle ?? '' }]
+      : []),
+  ];
+  return {
+    severityLabel,
+    severityTone: SEVERITY_TONES[m?.severity ?? 'low'] ?? 'neutral',
+    statusLabel,
+    statusTone: STATUS_TONES[m?.status ?? 'open'] ?? 'neutral',
+    workflowLabel: wf,
+    caseId,
+    subline: [caseId, team, opened ? `opened ${opened}` : undefined]
+      .filter(Boolean)
+      .join(' · '),
+    ownerName: o?.ownerName ?? '',
+    previousOwnerName: o?.previousOwnerName ?? '',
+    tookOver: o?.previousOwnerName
+      ? ` · took over from ${o.previousOwnerName}${o.how ? ` by ${o.how}` : ''}`
+      : '',
+    duplicate,
+    facts,
+    linked,
+    // fitted rows, highest priority first; a row the tile can't hold drops
+    fitRows: [
+      { key: 'Status', value: statusLabel },
+      ...(hasOwner ? [{ key: 'Owner', value: o?.ownerName ?? '' }] : []),
+      ...(wf ? [{ key: 'Workflow', value: wf }] : []),
+      ...(team ? [{ key: 'Team', value: team }] : []),
+      ...(m?.openedOn
+        ? [{ key: 'Opened', value: shortDate(m.openedOn, true) ?? '' }]
+        : []),
+      ...(hasDuplicate
+        ? [{ key: 'Duplicate of', value: duplicate?.targetTitle ?? '' }]
+        : []),
+      ...(refs.length
+        ? [
+            {
+              key: 'Refs',
+              value: refs
+                .map((r) => r.system?.name)
+                .filter(Boolean)
+                .join(' · '),
+            },
+          ]
+        : []),
+      ...(o?.previousOwnerName
+        ? [{ key: 'Previous owner', value: o.previousOwnerName }]
+        : []),
+      ...(o?.since ? [{ key: 'Since', value: shortTime(o.since) ?? '' }] : []),
+    ] as KeyValueItem[],
+    days,
+    daysText: days === undefined ? '—' : `${days} days`,
+    openedLong: m?.openedOn ? `since ${shortDate(m.openedOn, true)}` : '',
+    refsCount: refs.length,
+    refNames: refs
+      .map((r) => r.system?.name)
+      .filter(Boolean)
+      .join(' · '),
+    ownership: [
+      { key: 'Owner', value: o?.ownerName ?? '—' },
+      { key: 'Team', value: team ?? '—' },
+      { key: 'How', value: sentence(o?.how) || '—' },
+      { key: 'Previous owner', value: o?.previousOwnerName ?? '—' },
+      { key: 'Since', value: shortTime(o?.since, true) ?? '—' },
+    ] as KeyValueItem[],
+    refRows: refs.map((r) => ({
+      title: [r.system?.name, r.externalId].filter(Boolean).join(' '),
+      meta: [
+        r.system?.kind,
+        r.lastSeenAt ? `last seen ${shortTime(r.lastSeenAt)}` : undefined,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      state: r.state ?? '',
+      tone: REF_TONES[(r.state ?? '').toLowerCase()] ?? 'neutral',
+    })),
+    relationRows: (m?.relationships?.relations ?? []).map((r) => ({
+      title: `${RELATION_LABELS[r.kind ?? ''] ?? sentence(r.kind)} ${
+        r.targetTitle ?? ''
+      }`.trim(),
+      meta: [
+        r.createdByName ? `added by ${r.createdByName}` : undefined,
+        shortTime(r.createdAt),
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    })),
+  };
+}
+
 export class Case extends CardDef {
   static displayName = 'Case';
   static headerColor = '#8b3a3a';
@@ -339,6 +298,8 @@ export class Case extends CardDef {
   @field subject = contains(StringField);
   @field account = linksTo(() => Account);
   @field owner = linksTo(() => Employee);
+  /** The case this one duplicates. */
+  @field duplicateOf = linksTo(() => Case);
   @field status = contains(CaseStatusField);
   @field severity = contains(CaseSeverityField);
   @field openedOn = contains(DateField);
@@ -361,241 +322,102 @@ export class Case extends CardDef {
     },
   });
 
-  static isolated = class Isolated extends Component<typeof this> {
-    // The sub-line under the title shows only the parts that are set, with a
-    // separator between shown parts and none leading.
-    get hasSubline() {
-      let m = this.args.model;
-      return Boolean(m?.openedOn || m?.account || m?.owner);
+  static embedded = class Embedded extends Component<typeof this> {
+    get v(): CaseView {
+      return caseView(this.args.model);
     }
-    get accountNeedsSeparator() {
-      return Boolean(this.args.model?.openedOn);
-    }
-    get ownerNeedsSeparator() {
-      let m = this.args.model;
-      return Boolean(m?.openedOn || m?.account);
-    }
-    get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'open'] ?? 'blue';
-    }
-    get statusLabel() {
-      return CASE_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Open';
-    }
-    get severityHue() {
-      return SEVERITY_HUES[this.args.model?.severity ?? 'low'] ?? 'slate';
-    }
-    get ticketCount() {
-      try {
-        return (this.args.model?.relatedTickets ?? []).filter(Boolean).length;
-      } catch {
-        return 0;
-      }
+    get rows(): KeyValueItem[] {
+      return [...this.v.facts.slice(0, 6), ...this.v.linked];
     }
     <template>
-      <article class='case'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Support Case{{#if @model.caseId.value}}
-                <Token
-                  class='case-ref'
-                  @value={{@model.caseId.value}}
-                  style={{tokenStyle
-                    '--boxel-font-size-xs'
-                    'var(--muted-foreground)'
-                  }}
-                />{{/if}}</p>
-            <h1>{{@model.subject}}</h1>
-            {{! A missing open date drops the "opened …" fragment rather than
-                printing a placeholder. }}
-            {{#if this.hasSubline}}
-              <p class='sub'>
-                {{#if @model.openedOn}}opened
-                  <FormatDate
-                    @date={{@model.openedOn}}
-                    @locale='en-US'
-                    @month='short'
-                    @day='numeric'
-                    @year='numeric'
-                  />{{/if}}
-                {{#if @model.account}}{{#if this.accountNeedsSeparator}}·
-                  {{/if}}<@fields.account @format='atom' />{{/if}}
-                {{#if @model.owner}}{{#if this.ownerNeedsSeparator}}·
-                  {{/if}}owned by
-                  <@fields.owner @format='atom' />{{/if}}</p>
-            {{/if}}
-          </div>
-          <div class='head-right'>
-            <StatePill
-              @label={{this.statusLabel}}
-              @hue={{this.statusHue}}
-              @emphatic={{true}}
-            />
-            <StatePill
-              @label='{{@model.severity}} severity'
-              @hue={{this.severityHue}}
-              @dot={{true}}
-            />
+      <article class='emb'>
+        <header class='emb-head'>
+          <TypeMark @label='Cs' />
+          <div class='emb-id'>
+            <h3 class='emb-title'>{{@model.subject}}</h3>
+            <p class='emb-sub'>{{this.v.subline}}</p>
           </div>
         </header>
-
-        <section class='panel'>
-          <h2>Problem</h2>
-          <p class='body-text'>{{@model.problemStatement}}</p>
-        </section>
-
-        <section class='panel'>
-          <h2>Related Tickets ({{this.ticketCount}})</h2>
-          <div class='tickets'>
-            {{#each @fields.relatedTickets as |T|}}
-              <T @format='embedded' />
+        {{#if this.v.ownerName}}
+          <p class='emb-owner'>Owner
+            <strong>{{this.v.ownerName}}</strong>{{this.v.tookOver}}</p>
+        {{/if}}
+        <KeyValue
+          class='emb-kv'
+          @items={{this.rows}}
+          @labelStyle='eyebrow'
+          @divided={{true}}
+        >
+          <:value as |item|>
+            {{#if (isKey item.key 'Owner')}}
+              {{#if @model.owner}}<span class='cell'><@fields.owner
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></span>{{else}}{{item.value}}{{/if}}
+            {{else if (isKey item.key 'Duplicate of')}}
+              {{#if @model.duplicateOf}}<span class='cell'><@fields.duplicateOf
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></span>{{else}}{{item.value}}{{/if}}
             {{else}}
-              <EmptyState
-                style={{COMPACT_EMPTY_STYLE}}
-                @title='No tickets linked yet'
-                @message='A case usually starts from at least one.'
-                @texture={{false}}
-              />
-            {{/each}}
-          </div>
-        </section>
-
-        {{#if @model.findings}}
-          <section class='panel'>
-            <h2>Findings</h2>
-            <@fields.findings />
-          </section>
-        {{/if}}
-
-        {{#if @model.resolution}}
-          <section class='panel resolved-panel'>
-            <h2>Resolution</h2>
-            <p class='body-text'>{{@model.resolution}}</p>
-          </section>
-        {{/if}}
+              <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
+            {{/if}}
+          </:value>
+        </KeyValue>
       </article>
       <style scoped>
-        .case {
-          container-type: inline-size;
-          padding: var(--boxel-sp-lg);
-          display: grid;
-          gap: var(--boxel-sp);
-        }
-        .head {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border);
-          padding-bottom: var(--boxel-sp);
-        }
-        .kicker {
-          margin: 0;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        /* Pret UI Token sets the case id in the muted hue, as the ticket
-           reference is; the kicker's uppercase and tracking stay off it. */
-        .kicker .case-ref {
-          text-transform: none;
-          letter-spacing: normal;
-          margin-left: var(--boxel-sp-4xs);
-        }
-        h1 {
-          margin: var(--boxel-sp-5xs) 0;
-          font-size: 1.5rem;
-          line-height: 1.25;
-        }
-        .sub {
-          margin: 0;
-          color: var(--muted-foreground);
-        }
-        .head-right {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: var(--boxel-sp-2xs);
-        }
-        .panel {
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          padding: var(--boxel-sp);
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        .resolved-panel {
-          border-color: var(--success-ink);
-        }
-        h2 {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .body-text {
-          margin: 0;
-          white-space: pre-wrap;
-          font-size: 0.875rem;
-        }
-        .tickets {
-          display: grid;
-          gap: var(--boxel-sp-xs);
-        }
-        @container (max-width: 560px) {
-          .head {
-            flex-direction: column;
+        @layer PretComponent {
+          .emb {
+            display: grid;
+            align-content: start;
+            background: var(--card);
+            color: var(--card-foreground);
           }
-          .head-right {
-            flex-direction: row;
-            align-items: flex-start;
+          .emb-head {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+            border-bottom: 1px solid var(--border);
           }
-        }
-      </style>
-    </template>
-  };
-
-  static embedded = class Embedded extends Component<typeof this> {
-    get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'open'] ?? 'blue';
-    }
-    get statusLabel() {
-      return CASE_STATUS_LABELS[this.args.model?.status ?? ''] ?? 'Open';
-    }
-    get severityHue() {
-      return SEVERITY_HUES[this.args.model?.severity ?? 'low'] ?? 'slate';
-    }
-    <template>
-      <div class='row'>
-        <span class='name'>{{@model.subject}}</span>
-        <StatePill
-          @label={{@model.severity}}
-          @hue={{this.severityHue}}
-          @dot={{true}}
-        />
-        <StatePill @label={{this.statusLabel}} @hue={{this.statusHue}} />
-      </div>
-      <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: 1fr auto auto;
-          gap: var(--boxel-sp-sm);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        }
-        .name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+          .emb-id {
+            min-width: 0;
+          }
+          .emb-title {
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .emb-sub,
+          .emb-owner {
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .emb-owner {
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm) 0;
+          }
+          .emb-owner strong {
+            color: var(--card-foreground);
+            font-weight: 600;
+          }
+          .emb-kv {
+            padding: var(--boxel-sp-4xs) var(--boxel-sp-sm) var(--boxel-sp-xs);
+            font-size: var(--boxel-font-size-sm);
+          }
+          .cell {
+            display: flex;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+          }
+          .mono {
+            font-family: var(--font-mono);
+            font-size: var(--boxel-font-size-xs);
+          }
         }
       </style>
     </template>
@@ -603,197 +425,393 @@ export class Case extends CardDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom'>{{@model.subject}}</span>
+      <span class='atom'>
+        <TypeMark @label='Cs' @size='sm' />
+        <span class='atom-name'>{{@model.subject}}</span>
+      </span>
       <style scoped>
-        .atom {
-          font-size: 0.8125rem;
+        @layer PretComponent {
+          .atom {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            max-width: 100%;
+            min-width: 0;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--card-foreground);
+          }
+          .atom-name {
+            min-width: 0;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      </style>
+    </template>
+  };
+
+  static isolated = class Isolated extends Component<typeof this> {
+    get v(): CaseView {
+      return caseView(this.args.model);
+    }
+    <template>
+      <article class='iso'>
+        <Panel class='iso-head'>
+          <div class='iso-head-row'>
+            <TypeMark @label='Cs' />
+            <div class='iso-id'>
+              <h1 class='iso-title'>{{@model.subject}}</h1>
+              <p class='iso-sub'>{{this.v.subline}}</p>
+            </div>
+            <span class='iso-state'>
+              {{#if this.v.severityLabel}}<Chip
+                  @tone={{this.v.severityTone}}
+                  @appearance='plain'
+                >{{lowercase this.v.severityLabel}}</Chip>{{/if}}
+              <Chip @tone={{this.v.statusTone}} @appearance='plain'>{{lowercase
+                  this.v.statusLabel
+                }}</Chip>
+              {{#if this.v.workflowLabel}}<Chip
+                  @tone='info'
+                  @appearance='plain'
+                >{{lowercase this.v.workflowLabel}}</Chip>{{/if}}
+            </span>
+          </div>
+        </Panel>
+        <Panel class='iso-strip'>
+          <div class='iso-stats'>
+            <Stat
+              @label='Severity'
+              @tone={{this.v.severityTone}}
+              @value={{if this.v.severityLabel this.v.severityLabel '—'}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='Open for'
+              @tone='warning'
+              @value={{this.v.daysText}}
+              @hint={{this.v.openedLong}}
+              @roll={{false}}
+            />
+            <Stat
+              @label='External refs'
+              @tone='info'
+              @value={{this.v.refsCount}}
+              @hint={{this.v.refNames}}
+              @roll={{false}}
+            />
+          </div>
+        </Panel>
+        <div class='iso-grid'>
+          <div class='iso-col'>
+            {{#if @model.problemStatement}}
+              <Panel @title='Problem statement' @variant='inspector'>
+                <p class='iso-text'>{{@model.problemStatement}}</p>
+              </Panel>
+            {{/if}}
+            <Panel @title='Ownership' @variant='inspector'>
+              <KeyValue
+                @items={{this.v.ownership}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              >
+                <:value as |item|>
+                  {{#if (isKey item.key 'Owner')}}
+                    {{#if @model.owner}}<span class='cell'><@fields.owner
+                          @format='atom'
+                          @displayContainer={{false}}
+                        /></span>{{else}}{{item.value}}{{/if}}
+                  {{else if (isKey item.key 'Previous owner')}}
+                    {{#if this.v.previousOwnerName}}<span
+                        class='iso-person'
+                      ><Avatar
+                          @name={{this.v.previousOwnerName}}
+                          @size={{20}}
+                          aria-hidden='true'
+                        />{{item.value}}</span>{{else}}{{item.value}}{{/if}}
+                  {{else}}
+                    <span
+                      class={{if (isMono item.key) 'mono'}}
+                    >{{item.value}}</span>
+                  {{/if}}
+                </:value>
+              </KeyValue>
+            </Panel>
+            {{#if this.v.refRows.length}}
+              <Panel @title='External references' @variant='inspector'>
+                <ul class='iso-rows'>
+                  {{#each this.v.refRows as |ref|}}
+                    <li class='iso-row'>
+                      <span class='iso-row-main'>
+                        <span class='iso-row-title'>{{ref.title}}</span>
+                        <span class='iso-row-meta'>{{ref.meta}}</span>
+                      </span>
+                      {{#if ref.state}}<Chip
+                          @tone={{ref.tone}}
+                          @appearance='plain'
+                        >{{ref.state}}</Chip>{{/if}}
+                    </li>
+                  {{/each}}
+                </ul>
+              </Panel>
+            {{/if}}
+            {{#if this.v.relationRows.length}}
+              <Panel @title='Related' @variant='inspector'>
+                <ul class='iso-rows'>
+                  {{#each this.v.relationRows as |rel|}}
+                    <li class='iso-row'>
+                      <span class='iso-row-main'>
+                        <span class='iso-row-title'>{{rel.title}}</span>
+                        <span class='iso-row-meta'>{{rel.meta}}</span>
+                      </span>
+                    </li>
+                  {{/each}}
+                </ul>
+              </Panel>
+            {{/if}}
+          </div>
+          <div class='iso-col'>
+            {{#if this.v.linked.length}}
+              <Panel @title='Linked' @variant='inspector'>
+                <KeyValue
+                  @items={{this.v.linked}}
+                  @labelStyle='eyebrow'
+                  @divided={{true}}
+                >
+                  <:value as |item|>
+                    {{#if (isKey item.key 'Owner')}}
+                      {{#if @model.owner}}<span class='cell'><@fields.owner
+                            @format='atom'
+                          /></span>{{else}}{{item.value}}{{/if}}
+                    {{else}}
+                      {{#if @model.duplicateOf}}<span
+                          class='cell'
+                        ><@fields.duplicateOf
+                            @format='atom'
+                          /></span>{{else}}{{item.value}}{{/if}}
+                    {{/if}}
+                  </:value>
+                </KeyValue>
+              </Panel>
+            {{/if}}
+            <Panel @title='Details' @variant='inspector'>
+              <KeyValue
+                @items={{this.v.facts}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              >
+                <:value as |item|>
+                  <span
+                    class={{if (isMono item.key) 'mono'}}
+                  >{{item.value}}</span>
+                </:value>
+              </KeyValue>
+            </Panel>
+          </div>
+        </div>
+      </article>
+      <style scoped>
+        @layer PretComponent {
+          .iso {
+            container-type: inline-size;
+            display: grid;
+            align-content: start;
+            gap: var(--boxel-sp-xs);
+            min-height: 100%;
+            padding: var(--boxel-sp-xs);
+            background: var(--muted);
+            color: var(--card-foreground);
+            font-size: var(--boxel-font-size-sm);
+          }
+          .iso-head-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+          }
+          .iso-id {
+            min-width: 0;
+          }
+          .iso-title {
+            margin: 0;
+            font-family: var(--font-sans);
+            font-size: var(--boxel-font-size);
+            font-weight: 700;
+            line-height: 1.3;
+          }
+          .iso-sub {
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .iso-state {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--boxel-sp-sm);
+          }
+          .iso-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+          }
+          .iso-stats > * {
+            padding-inline: var(--boxel-sp-sm);
+          }
+          .iso-stats > * + * {
+            border-inline-start: 1px solid var(--border);
+          }
+          .iso-stats > :first-child {
+            padding-inline-start: 0;
+          }
+          .iso-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+            gap: var(--boxel-sp-xs);
+            align-items: start;
+          }
+          .iso-col {
+            display: grid;
+            gap: var(--boxel-sp-xs);
+            min-width: 0;
+          }
+          .iso-text {
+            margin: 0;
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+            white-space: pre-wrap;
+          }
+          .iso-person {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            font-weight: 600;
+          }
+          .iso-rows {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+          }
+          .iso-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--boxel-sp-xs);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          }
+          .iso-row + .iso-row {
+            border-top: 1px solid var(--border);
+          }
+          .iso-row-main {
+            display: grid;
+            min-width: 0;
+          }
+          .iso-row-title {
+            font-weight: 600;
+          }
+          .iso-row-meta {
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .cell {
+            display: flex;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+          }
+          .mono {
+            font-family: var(--font-mono);
+            font-size: var(--boxel-font-size-xs);
+          }
+          @container (width < 40rem) {
+            .iso-head-row {
+              grid-template-columns: auto minmax(0, 1fr);
+            }
+            .iso-state {
+              grid-column: 1 / -1;
+            }
+            .iso-grid {
+              grid-template-columns: minmax(0, 1fr);
+            }
+          }
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    /** Fitted has ~250px; the long status label ellipsised its own pill. */
-    get statusLabel() {
-      let status = this.args.model?.status ?? '';
-      if (status === 'waiting-on-customer') return 'Waiting';
-      return CASE_STATUS_LABELS[status] ?? 'Open';
-    }
-    get severityColor(): StateColor {
-      return stateColor(
-        SEVERITY_HUES[this.args.model?.severity ?? 'low'] ?? 'slate',
-      );
-    }
-    get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'open'] ?? 'blue';
-    }
-    // The stripe takes the hue itself (an indicator); the severity word takes
-    // the pill's checked ink, which clears 4.5:1 on --card where the raw hue
-    // would not.
-    get accentStyle() {
-      return `--fit-accent: ${this.severityColor.ring}; --fit-accent-ink: ${this.severityColor.fg};`;
+    get v(): CaseView {
+      return caseView(this.args.model);
     }
     <template>
-      {{! The visual anchor is the severity STRIPE — the one thing every size
-          keeps — so a grid of cases reads as a heat map before a word is read. }}
-      <div class='fit' style={{this.accentStyle}}>
-        <span class='fit-head'>
-          {{#if @model.caseId.value}}<Token
-              class='fit-ref'
-              @value={{@model.caseId.value}}
-              style={{tokenStyle
-                '--boxel-font-size-xs'
-                'var(--muted-foreground)'
-              }}
-            />{{/if}}
-          <span class='fit-sev'>{{@model.severity}}</span>
-          <StatePill
-            @label={{this.statusLabel}}
-            @hue={{this.statusHue}}
-            class='fit-status'
-          />
-        </span>
-        <span class='fit-name'>{{@model.subject}}</span>
-        <span class='fit-foot'>
-          <span
-            class='fit-owner
-              {{unless @model.ownership.ownerName "fit-unowned"}}'
-          >{{if
-              @model.ownership.ownerName
-              @model.ownership.ownerName
-              'unassigned'
-            }}</span>
-          {{#if @model.ownership.teamName}}<span
-              class='fit-team'
-            >{{@model.ownership.teamName}}</span>{{/if}}
-        </span>
-      </div>
+      <FitRows @items={{this.v.fitRows}}>
+        <:tile>
+          <FitTile>
+            <:avatar><TypeMark @label='Cs' /></:avatar>
+            <:title><span
+                class='fit-title'
+                role='heading'
+                aria-level='3'
+              >{{@model.subject}}</span></:title>
+            <:subtitle>{{this.v.subline}}</:subtitle>
+            <:status>
+              {{#if this.v.severityLabel}}<Chip
+                  @tone={{this.v.severityTone}}
+                  @appearance='plain'
+                >{{lowercase this.v.severityLabel}}</Chip>{{/if}}
+            </:status>
+          </FitTile>
+        </:tile>
+        <:row as |item|>
+          {{#if (isKey item.key 'Status')}}
+            <Chip @tone={{this.v.statusTone}} @appearance='plain'>{{lowercase
+                item.value
+              }}</Chip>
+          {{else if (isKey item.key 'Workflow')}}
+            <Chip @tone='info' @appearance='plain'>{{lowercase
+                item.value
+              }}</Chip>
+          {{else if (isKey item.key 'Owner')}}
+            {{#if @model.owner}}<@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}{{item.value}}{{/if}}
+          {{else if (isKey item.key 'Duplicate of')}}
+            {{#if @model.duplicateOf}}<@fields.duplicateOf
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}{{item.value}}{{/if}}
+          {{else if (isKey item.key 'Previous owner')}}
+            <span class='fit-person'><Avatar
+                @name={{item.value}}
+                @size={{20}}
+                aria-hidden='true'
+              />{{item.value}}</span>
+          {{else}}
+            <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
+          {{/if}}
+        </:row>
+      </FitRows>
       <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-xs)
-            calc(var(--boxel-sp-xs) + 0.25rem);
-          overflow: hidden;
-          border-left: 0.25rem solid var(--fit-accent);
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        .fit-head {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-4xs);
-          min-width: 0;
-          font-size: var(--boxel-font-size-xs);
-        }
-        .fit-head .fit-ref {
-          margin-inline: 0;
-          flex: none;
-          font-weight: 600;
-        }
-        .fit-sev {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--fit-accent-ink);
-        }
-        .fit-status {
-          margin-left: auto;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-          line-height: 1.25;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
-        }
-        .fit-foot {
-          margin-top: auto;
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp-4xs);
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          min-width: 0;
-        }
-        .fit-owner,
-        .fit-team {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fit-unowned {
-          color: var(--attention-ink);
-          font-style: italic;
-        }
-        /* strips: one row, the subject carries the width */
-        @container fitted-card (height <= 105px) {
-          .fit {
-            flex-direction: row;
+        @layer PretComponent {
+          .fit-title {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .fit-person {
+            display: inline-flex;
             align-items: center;
-            gap: var(--boxel-sp-xs);
+            gap: var(--boxel-sp-4xs);
+            font-weight: 600;
           }
-          .fit-head {
-            flex: none;
-          }
-          .fit-status {
-            margin-left: 0;
-          }
-          .fit-name {
-            flex: 1;
-            -webkit-line-clamp: 2;
-            font-size: var(--boxel-font-size-sm);
-          }
-          .fit-foot {
-            margin-top: 0;
-            flex: none;
-            max-width: 9rem;
-          }
-        }
-        @container fitted-card (height <= 65px) {
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-          .fit-foot {
-            display: none;
-          }
-        }
-        /* badges: ref + severity only — the stripe still says how bad */
-        @container fitted-card (width <= 150px) {
-          .fit {
-            flex-direction: column;
-            gap: 0;
-          }
-          .fit-status,
-          .fit-foot,
-          .fit-sev {
-            display: none;
-          }
-          .fit-name {
-            -webkit-line-clamp: 2;
-            font-size: var(--boxel-font-size-xs);
-          }
-        }
-        @container fitted-card (width <= 150px) and (height <= 40px) {
-          .fit-name {
-            display: none;
+          .mono {
+            font-family: var(--font-mono);
           }
         }
       </style>
     </template>
   };
-
-  // The form for working a case, grouped by how an investigation actually
-  // runs: what is it and how bad (identity) → who reported it and who owns
-  // it → what we know → how it ended. cardTitle is computed and never
-  // appears here. Five sections → the EditSectionNav rail; the section the rail
-  // points at takes the theme's focus ring.
-  static edit = CaseEdit;
 }

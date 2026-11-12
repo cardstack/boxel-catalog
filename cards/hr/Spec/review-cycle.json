@@ -19,11 +19,16 @@
         "links": {
           "self": "../ReviewCycle/h2-2026"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
       }
     }

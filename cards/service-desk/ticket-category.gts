@@ -5,21 +5,35 @@ import {
   contains,
   linksTo,
   StringField,
+  realmURL,
 } from 'https://cardstack.com/base/card-api';
+import { Button } from '@cardstack/pretui/components/button';
+import { rri } from '@cardstack/runtime-common';
 import FolderIcon from '@cardstack/boxel-icons/folder';
 
 import { Queue } from './queue';
 import { TicketPriorityField } from './ticket-taxonomy';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { priorityOption } from '@cardstack/catalog/fields/priority/priority';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { on } from '@ember/modifier';
+import { fn } from '@ember/helper';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
+import { FitTile } from '../shared/fit-tile';
+import { FittedExtras } from '../procurement/vendor';
+import {
+  RecCard,
+  RecHead,
+  RecStats,
+  RecBody,
+  RecBlock,
+  RecRow,
+  RecLine,
+} from './components/record';
 
 // The two routing defaults as Pret UI KeyValue rows. `value` names which
 // field the isolated view's value block renders for the row.
-const ROUTING_FACTS = [
-  { key: 'New tickets start at', value: 'priority' },
-  { key: 'and land in', value: 'queue' },
-];
 
 /**
  * What kind of problem this is, and what that implies.
@@ -71,71 +85,136 @@ export class TicketCategory extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
+    articles: any;
+    constructor(owner: unknown, args: any) {
+      super(owner as never, args as never);
+      let realm = this.args.model?.[realmURL]?.href;
+      // Built from the realm URL: knowledge-article.gts imports this module.
+      this.articles = (this.args.context as any)?.getCards?.(
+        this,
+        () =>
+          realm
+            ? {
+                filter: {
+                  on: {
+                    module: rri(
+                      new URL('./service-desk/knowledge-article', realm).href,
+                    ),
+                    name: 'KnowledgeArticle',
+                  },
+                  eq: { categoryName: this.args.model?.title ?? '—' },
+                },
+              }
+            : undefined,
+        () => (realm ? [realm] : []),
+        { isLive: true },
+      );
+    }
+    get articleList(): any[] {
+      return ((this.articles?.instances ?? []) as any[]).filter(Boolean);
+    }
+    get priorityHint() {
+      let label =
+        priorityOption(TicketPriorityField, this.args.model?.defaultPriority)
+          ?.label ?? '';
+      let word = label.split(' · ')[1];
+      return word ? `${word} · overridable` : 'overridable';
+    }
+    get queueShort() {
+      let n = this.args.model?.defaultQueueName ?? '';
+      return n.split(' ')[0] || '—';
+    }
+    get queueRest() {
+      return (this.args.model?.defaultQueueName ?? '')
+        .split(' ')
+        .slice(1)
+        .join(' ');
+    }
+    openArticle = (a: any) => (this.args as any).viewCard?.(a);
     <template>
-      <article class='iso'>
-        <header>
-          <p class='trail'>{{@model.path}}</p>
-          <h1>{{@model.title}}</h1>
-        </header>
-        {{! Pret UI KeyValue; both values are field renders, so they come
-            through its value block. }}
-        <KeyValue class='facts' @items={{ROUTING_FACTS}}>
-          <:value as |row|>
-            {{#if (eq row.value 'priority')}}
-              {{#if @model.defaultPriority}}
-                <@fields.defaultPriority @format='embedded' />
+      <RecCard @inset={{true}}>
+        <RecHead @mark='C' @title={{@model.title}} @sub={{@model.path}}>
+          <:status>{{#if @model.defaultPriority}}<Chip
+                @appearance='plain'
+              >{{@model.defaultPriority}}</Chip>{{/if}}</:status>
+        </RecHead>
+        <RecStats>
+          <Stat
+            @label='Default priority'
+            @tone='neutral'
+            @value={{if @model.defaultPriority @model.defaultPriority '—'}}
+            @hint={{this.priorityHint}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Routes to'
+            @tone='neutral'
+            @value={{this.queueShort}}
+            @hint={{this.queueRest}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Articles'
+            @tone='neutral'
+            @value={{this.articleList.length}}
+            @hint={{this.articleList.[0].title}}
+            @roll={{false}}
+          />
+        </RecStats>
+        <RecBody>
+          <:main>
+            <RecBlock @title='Routing'>
+              <RecRow @label='Default priority'>{{if
+                  @model.defaultPriority
+                  @model.defaultPriority
+                  '—'
+                }}</RecRow>
+              <RecRow @label='Routes to'>{{#if
+                  @model.defaultQueue
+                }}<@fields.defaultQueue
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</RecRow>
+            </RecBlock>
+            <RecBlock @title='Articles in this category'>
+              {{#each this.articleList as |a|}}
+                <RecLine>
+                  <:default><Button
+                      @appearance='link'
+                      {{on 'click' (fn this.openArticle a)}}
+                    ><b>{{a.title}}</b></Button><span
+                      class='dim'
+                    >{{a.visibility}} · {{a.keywordLabel}}</span></:default>
+                  <:end><Chip
+                      @appearance='plain'
+                      @tone={{if (eq a.status 'Published') 'success' 'warning'}}
+                    >{{a.status}}</Chip></:end>
+                </RecLine>
               {{else}}
-                <span class='none'>No default — the agent picks</span>
-              {{/if}}
-            {{else if @model.defaultQueue}}
-              <@fields.defaultQueue @format='atom' />
-            {{else}}
-              <span class='none'>No default queue — they stay unrouted</span>
-            {{/if}}
-          </:value>
-        </KeyValue>
-        <p class='note'>Both are suggestions. A ticket may override either, and
-          the override is deliberate: routing an agent cannot argue with is
-          routing they work around by filing things in the wrong category.</p>
-      </article>
+                <RecLine><span class='dim'>No articles yet.</span></RecLine>
+              {{/each}}
+            </RecBlock>
+          </:main>
+          <:side>
+            <RecBlock @title='Details'>
+              <RecRow @label='Path'>{{if @model.path @model.path '—'}}</RecRow>
+              <RecRow @label='Parent'>{{#if @model.parent}}<@fields.parent
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}—{{/if}}</RecRow>
+              <RecRow @label='Queue'>{{if
+                  @model.defaultQueueName
+                  @model.defaultQueueName
+                  '—'
+                }}</RecRow>
+            </RecBlock>
+          </:side>
+        </RecBody>
+      </RecCard>
       <style scoped>
-        .iso {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-          padding: var(--boxel-sp-lg);
-          min-height: 100%;
-        }
-        .trail {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
+        .dim {
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
-        }
-        h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 700;
-        }
-        /* Pret UI KeyValue at the card's 14px text. */
-        .facts {
-          --text-ui: var(--boxel-font-size-sm);
-          --text-ui-md: var(--boxel-font-size-sm);
-          --space-6: var(--boxel-sp);
-        }
-        .facts :deep(dd) {
-          min-width: 0;
-          overflow-wrap: anywhere;
-        }
-        .none {
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .note {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          max-width: 62ch;
-          line-height: 1.6;
         }
       </style>
     </template>
@@ -143,216 +222,98 @@ export class TicketCategory extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <div class='emb'>
-        <span class='emb-name'>{{@model.title}}</span>
-        <span class='emb-path'>{{@model.path}}</span>
-      </div>
+      <RecCard>
+        <RecHead @mark='C' @title={{@model.title}} @sub={{@model.path}} />
+        <RecRow @label='Default priority'>{{if
+            @model.defaultPriority
+            @model.defaultPriority
+            '—'
+          }}</RecRow>
+        <RecRow @label='Routes to'>{{if
+            @model.defaultQueueName
+            @model.defaultQueueName
+            '—'
+          }}</RecRow>
+      </RecCard>
+    </template>
+  };
+
+  static atom = class Atom extends Component<typeof this> {
+    <template>
+      <span class='atom'>
+        <span class='mark' aria-hidden='true'>C</span>
+        <span class='nm'>{{@model.title}}</span>
+        {{#if @model.defaultPriority}}<Chip
+            @appearance='plain'
+          >{{@model.defaultPriority}}</Chip>{{/if}}
+      </span>
       <style scoped>
-        .emb {
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        .emb-name {
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-        }
-        .emb-path {
+        .atom {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-3xs);
+          min-inline-size: 0;
+          max-inline-size: 100%;
           font-size: var(--boxel-font-size-xs);
+        }
+        .mark {
+          flex: none;
+          display: grid;
+          place-items: center;
+          inline-size: 1rem;
+          block-size: 1rem;
+          border: 1px solid var(--border);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1;
           color: var(--muted-foreground);
+        }
+        .nm {
+          min-inline-size: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
   };
 
-  static atom = class Atom extends Component<typeof this> {
-    <template><StatePill @label={{@model.title}} @hue='slate' /></template>
-  };
-
   static fitted = class Fitted extends Component<typeof this> {
+    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    get facts() {
+      let m = this.args.model;
+      return [
+        { key: 'Path', value: String((m as any)?.path ?? '') || '—' },
+        {
+          key: 'Default priority',
+          value: String((m as any)?.defaultPriority ?? '') || '—',
+        },
+        {
+          key: 'Default queue',
+          value: String((m as any)?.defaultQueueName ?? '') || '—',
+        },
+      ];
+    }
     <template>
-      <article class='fit'>
-        <header class='r-head'>
-          <FolderIcon class='fit-glyph' role='presentation' />
-          <h3 class='title'>{{@model.title}}</h3>
-          <span class='badge'>{{@model.defaultPriority}}</span>
-        </header>
-        {{! A TicketCategory has four facts — priority, path, what it's for, and
-            where its tickets land — but the template had five slots, so
-            defaultQueueName filled three of them and `path` filled two. Four
-            slots now, one fact each; the fifth (.tail) is gone rather than
-            padded with a repeat. }}
-        <div class='r-body'>
-          <span class='line'>{{@model.path}}</span>
-          <p class='blurb'>{{@model.cardInfo.summary}}</p>
-        </div>
-        <footer class='r-meta'>{{@model.defaultQueueName}}</footer>
-      </article>
-      <style scoped>
-        /* Same skeleton as ticket.gts: one `.fit` grid, no container declared
-           here (the host provides `fitted-card`), one continuous type scale,
-           and tiers that ADD a row rather than un-crop one. */
-        .fit {
-          width: 100%;
-          height: 100%;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          grid-template-areas: 'head' 'body' 'meta';
-          gap: 0.125rem;
-          padding: 0.4375rem 0.5625rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
-          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
-        }
-        .fit > * {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-head {
-          grid-area: head;
-          display: flex;
-          align-items: baseline;
-          gap: 0.3125rem;
-          min-width: 0;
-        }
-        /* fitted-card Rule 2: the anchor. Without it these cells were a title at
-           weight 600 plus a badge — no image, no glyph, and 600 is not the
-           "decisively loud" type the rule accepts as a substitute, so all 16
-           sizes read as bare text. This is the card's OWN icon, the same one its
-           isolated section headers use, which is what makes it identity rather
-           than decoration.
-
-           Sized in em with a px floor so it never shrinks to a dot; `align-self`
-           because the head is a baseline row and an SVG has no baseline; muted so
-           the title stays the loudest thing in the cell. */
-        .fit-glyph {
-          flex: none;
-          align-self: center;
-          width: max(0.6875rem, 1.1em);
-          height: max(0.6875rem, 1.1em);
-          color: var(--muted-foreground);
-        }
-        .title {
-          flex: 1;
-          min-width: 0;
-          margin: 0;
-          font-size: var(--type-title);
-          font-weight: 600;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .badge {
-          flex: none;
-          margin-left: auto;
-          font-family: var(--font-mono);
-          font-size: var(--type-base);
-          font-weight: 600;
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-        .r-body {
-          grid-area: body;
-          display: none;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
-        }
-        .line {
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .blurb {
-          display: none;
-          margin: 0;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .r-meta {
-          grid-area: meta;
-          display: none;
-          align-items: center;
-          gap: 0.375rem;
-          min-width: 0;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-        }
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 50px) {
-          .r-meta {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 50px) and (height <= 105px) {
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 80px) {
-          .r-body {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 160px) {
-          .blurb {
-            display: -webkit-box;
-          }
-        }
-        @container fitted-card (height > 240px) {
-          .blurb {
-            -webkit-line-clamp: 4;
-          }
-        }
-        @container fitted-card (width > 300px) and (height <= 130px) {
-          .fit {
-            grid-template-columns: minmax(12.5rem, 1fr) auto;
-            grid-template-areas: 'head meta' 'body meta';
-            align-items: center;
-          }
-          .r-meta {
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.0625rem;
-          }
-        }
-        @container fitted-card (width <= 170px) {
-          .fit-glyph {
-            display: none;
-          }
-          /* The glyph is dropped just above, so from here down the anchor is
-             type alone — and fitted-card Rule 2's typographic path wants real
-             weight. Weight only, never size: at 150px the title is one word from
-             wrapping and Rule 1 (nothing clipped) outranks Rule 2. */
-          .title {
-            font-weight: 700;
-          }
-        }
-      </style>
+      <FittedExtras @facts={{this.facts}}>
+        <:default>
+          <FitTile>
+            <:avatar><PretAvatar
+                @name='C'
+                @shape='square'
+                @size={{32}}
+              /></:avatar>
+            <:title>{{@model.title}}</:title>
+            <:subtitle>{{@model.path}}</:subtitle>
+            <:status>{{#if @model.defaultPriority}}<Chip
+                  @appearance='plain'
+                >{{@model.defaultPriority}}</Chip>{{/if}}</:status>
+            <:fact>Routes to
+              {{if @model.defaultQueueName @model.defaultQueueName '—'}}</:fact>
+          </FitTile>
+        </:default>
+      </FittedExtras>
     </template>
   };
 }

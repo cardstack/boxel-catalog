@@ -5,7 +5,7 @@
       "ptoType": "vacation",
       "startDate": "2026-08-17",
       "endDate": "2026-08-21",
-      "reason": "Family trip to the coast \u2014 booked before the H2 planning crunch starts.",
+      "reason": "Family trip to the coast — booked before the H2 planning crunch starts.",
       "requestedDate": "2026-07-28",
       "approvalChain": {
         "startedAt": "2026-07-28T09:00:00.000Z",
@@ -18,7 +18,7 @@
           {
             "decision": "approved",
             "decidedAt": "2026-07-30T15:45:00.000Z",
-            "comment": "Balance checked \u2014 5 days against a 25-day annual allowance."
+            "comment": "Balance checked — 5 days against a 25-day annual allowance."
           }
         ]
       },
@@ -43,6 +43,11 @@
       "approvalChain.steps.1.approver": {
         "links": {
           "self": "../Employee/dana-kim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

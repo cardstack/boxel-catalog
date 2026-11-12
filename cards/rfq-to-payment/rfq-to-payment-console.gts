@@ -9,18 +9,33 @@ import type Owner from '@ember/owner';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { Alert } from '@cardstack/pretui/components/alert';
+import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
-import { Tabs } from '@cardstack/pretui/components/tabs';
-import Plus from '@cardstack/boxel-icons/plus';
+import { LayoutControl } from '@cardstack/pretui/components/layout-control';
+import { SearchInput } from '@cardstack/pretui/components/search-input';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { StatusChip } from '@cardstack/pretui/components/status-chip';
+import { Table } from '@cardstack/pretui/components/table';
+import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
+import {
+  Sidebar,
+  SidebarGroup,
+  SidebarItem,
+} from '@cardstack/pretui/components/sidebar';
+import PlusIcon from '@cardstack/boxel-icons/plus';
+import LayoutDashboardIcon from '@cardstack/boxel-icons/layout-dashboard';
+import BuildingIcon from '@cardstack/boxel-icons/building-2';
+import FileTextIcon from '@cardstack/boxel-icons/file-text';
+import SendIcon from '@cardstack/boxel-icons/send';
+import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
+import PackageIcon from '@cardstack/boxel-icons/package';
+import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import { debounce } from 'lodash';
-
-import { Table } from '../../components/table';
-
-import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
+import type { TableColumn } from '@cardstack/catalog/components/table';
 
 import { PurchaseRequisition } from '../procurement/purchase-requisition';
 import { Rfq } from '../procurement/rfq';
@@ -28,12 +43,8 @@ import { PurchaseOrder } from '../procurement/purchase-order';
 import { GoodsReceipt } from '../procurement/goods-receipt';
 import { Invoice } from '../commerce/invoice';
 import { ProcurementBudget } from '../procurement/procurement-budget';
-import {
-  VendorProfile,
-  VendorProfileStatusField,
-} from '../procurement/vendor-profile';
-import { StatusBoard } from '../../components/status-board';
-import { CollectionToolbar } from '../../components/collection-toolbar';
+import { VendorProfile } from '../procurement/vendor-profile';
+import { formatMoney } from '../commerce/line-item-totals';
 
 import type { RfqToPaymentApp } from './rfq-to-payment-app';
 import {
@@ -61,6 +72,110 @@ import {
   INVOICE_COLUMNS,
   RECEIPT_COLUMNS,
 } from './rfq-to-payment-data';
+
+const NAV_ICONS: Record<string, any> = {
+  dashboard: LayoutDashboardIcon,
+  vendors: BuildingIcon,
+  requisitions: FileTextIcon,
+  rfqs: SendIcon,
+  pos: ClipboardCheckIcon,
+  receipts: PackageIcon,
+  invoices: ReceiptIcon,
+};
+
+const STATION_TONE: Record<string, 'info' | 'warning' | 'success'> = {
+  onboarding: 'info',
+  rfqs: 'info',
+  approvals: 'warning',
+  match: 'success',
+};
+
+const VENDOR_LANES = [
+  { key: 'intake', label: 'Intake' },
+  { key: 'under-review', label: 'Under Review' },
+  { key: 'approved', label: 'Approved' },
+  { key: 'onboarded', label: 'Onboarded' },
+  { key: 'rejected', label: 'Rejected' },
+];
+
+// Lane rows shown before "+N more": the rest open from the tab's table views.
+const LANE_ROWS = 3;
+
+const STATUS_KEYS = ['status', 'posted', 'match'];
+const PERSON_KEYS = ['requester', 'by'];
+
+const toneOf = (
+  value: unknown,
+): 'success' | 'danger' | 'warning' | 'info' | 'neutral' => {
+  let s = String(value ?? '').toLowerCase();
+  // Checked before the success pattern: 'partially-received' and 'matching'
+  // contain words it would otherwise claim.
+  if (/(partial)/.test(s)) {
+    return 'warning';
+  }
+  if (/(matching)/.test(s)) {
+    return 'info';
+  }
+  if (
+    /(received|closed|paid|approved|posted|matched|awarded|converted|onboarded)/.test(
+      s,
+    )
+  ) {
+    return 'success';
+  }
+  if (/(exception|rejected|lapsed|short|over|cancel)/.test(s)) {
+    return 'danger';
+  }
+  if (/(pending|sent|partial|draft|review|submitted)/.test(s)) {
+    return 'warning';
+  }
+  if (/(comparing|open|in-flight)/.test(s)) {
+    return 'info';
+  }
+  return 'neutral';
+};
+
+// whole-dollar figures, as in the mock
+const money = (n: number | undefined | null) =>
+  formatMoney(n ?? 0, 'USD').replace(/\.00$/, '');
+
+const pct = (part: number, whole: number) =>
+  whole > 0 ? Math.max(0, Math.min(100, Math.round((part / whole) * 100))) : 0;
+
+const SEARCH_FORMS = [
+  { name: 'full', minWidth: 14 },
+  { name: 'menu', minWidth: 0 },
+];
+const FILTER_FORMS = [
+  { name: 'full', minWidth: 22 },
+  { name: 'menu', minWidth: 0 },
+];
+const VIEW_FORMS = [
+  { name: 'full', minWidth: 11 },
+  { name: 'menu', minWidth: 0 },
+];
+const PRIMARY_FORMS = [{ name: 'full', minWidth: 9 }];
+
+const PAGE_SUB: Record<string, string> = {
+  dashboard:
+    'Requisition, quote, approve, receive and pay. Select a stage to open exactly the records it counts.',
+};
+
+const NOUN: Record<string, string> = {
+  requisitions: 'requisitions',
+  rfqs: 'RFQs',
+  pos: 'purchase orders',
+  receipts: 'receipts',
+  invoices: 'vendor invoices',
+};
+
+const EMPTY_MESSAGES: Record<string, string> = {
+  requisitions: 'The P2P chain starts with a requisition.',
+  rfqs: 'Convert a requisition to start comparing vendors.',
+  pos: 'No purchase orders in this view.',
+  receipts: 'Record what arrives against an approved PO.',
+  invoices: 'Record one against a received PO to run the match.',
+};
 
 // The isolated console, hoisted out of the card class so its fields can be
 // @tracked.
@@ -228,7 +343,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
   // One view state shared by every tab: grid and list render the same
   // filtered records through each card's own fitted template, and table is
   // the shared Table over those records with explicit columns.
-  @tracked view: string = 'list';
+  @tracked view: string = 'table';
   setView = (id: string) => {
     this.view = id;
   };
@@ -374,916 +489,1177 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
     this.args.viewCard?.(card, 'isolated');
   };
 
-  // ---- Vendors tab: the onboarding StatusBoard, consumed unchanged ------
-  @tracked vendorFlash: string | undefined;
-
-  vendorStatusField = VendorProfileStatusField;
-
-  vendorStatusOf = (item: any) => (item as VendorProfile).status ?? 'intake';
-
-  vendorMove = async (item: CardDef, statusValue: string) => {
-    let commandContext = this.args.context?.commandContext;
-    if (!commandContext) {
-      return false;
-    }
-    this.vendorFlash = undefined;
-    try {
-      await new PatchCardInstanceCommand(commandContext, {
-        cardType: VendorProfile,
-      }).execute({
-        cardId: item.id,
-        patch: { attributes: { status: statusValue } },
-      });
-    } catch (error: any) {
-      this.vendorFlash = error?.message ?? String(error);
-      return false;
-    }
-    return undefined;
-  };
-
-  vendorRejected = (_i: CardDef, _f: string | undefined, to: string) => {
-    this.vendorFlash =
-      to === 'onboarded'
-        ? 'Onboarding creates the active Vendor record — open the profile and use "Onboard as Vendor" instead of dragging.'
-        : 'That move is not allowed by the vetting pipeline.';
-  };
-
   addVendorProfile = () => this.addCard(VendorProfile, { status: 'intake' });
 
-  // ---- dashboard analytics (CSS glyph charts, never a chart lib) --------
-  get complianceStats() {
-    let ok = this.profiles.filter((p) => p.complianceOk).length;
-    let lapsed = this.profiles.length - ok;
-    let total = Math.max(1, this.profiles.length);
+  // ---- compact shell ---------------------------------------------------
+  SEARCH_FORMS = SEARCH_FORMS;
+  FILTER_FORMS = FILTER_FORMS;
+  VIEW_FORMS = VIEW_FORMS;
+  PRIMARY_FORMS = PRIMARY_FORMS;
+  VIEW_OPTIONS = VIEW_OPTIONS;
+
+  get navCounts(): Record<string, number> {
     return {
-      ok,
-      lapsed,
-      total: this.profiles.length,
-      okDeg: Math.round((ok / total) * 360),
+      vendors: this.profiles.length,
+      requisitions: this.requisitions.length,
+      rfqs: this.rfqs.length,
+      pos: this.pos.length,
+      receipts: this.receipts.length,
+      invoices: this.apInvoices.length,
     };
   }
 
-  get donutStyle() {
-    let deg = this.complianceStats.okDeg;
-    return `background: conic-gradient(var(--success) 0deg ${deg}deg, var(--destructive) ${deg}deg 360deg);`;
+  get navOverview() {
+    return this.navItems.slice(0, 1);
+  }
+  get navChain() {
+    return this.navItems.slice(1);
+  }
+  private get navItems() {
+    return TAB_OPTIONS.map((t) => ({
+      ...t,
+      icon: NAV_ICONS[t.value],
+      active: t.value === this.activeTab,
+      badge:
+        this.isLoading || this.navCounts[t.value] === undefined
+          ? undefined
+          : String(this.navCounts[t.value]),
+    }));
   }
 
-  // PO value by lifecycle bucket: where the money is right now.
+  get pageTitle() {
+    return TAB_OPTIONS.find((t) => t.value === this.activeTab)?.label ?? '';
+  }
+
+  get pageSub(): string {
+    if (PAGE_SUB[this.activeTab]) {
+      return PAGE_SUB[this.activeTab];
+    }
+    if (this.activeTab === 'vendors') {
+      return `${this.profiles.length} vendor profiles in the vetting pipeline`;
+    }
+    let rows = this.tableRows;
+    return `${rows.length} of ${this.navCounts[this.activeTab] ?? rows.length} shown`;
+  }
+
+  get noun() {
+    return NOUN[this.activeTab] ?? 'records';
+  }
+  get emptyMessage() {
+    return EMPTY_MESSAGES[this.activeTab];
+  }
+
+  get tableRows(): CardDef[] {
+    switch (this.activeTab) {
+      case 'requisitions':
+        return this.visibleRequisitions;
+      case 'rfqs':
+        return this.visibleRfqs;
+      case 'pos':
+        return this.visiblePos;
+      case 'receipts':
+        return this.visibleReceipts;
+      case 'invoices':
+        return this.visibleInvoices;
+      default:
+        return [];
+    }
+  }
+
+  get tableColumns(): TableColumn[] {
+    switch (this.activeTab) {
+      case 'requisitions':
+        return this.requisitionColumns;
+      case 'rfqs':
+        return this.rfqColumns;
+      case 'pos':
+        return this.poColumns;
+      case 'receipts':
+        return this.receiptColumns;
+      case 'invoices':
+        return this.invoiceColumns;
+      default:
+        return [];
+    }
+  }
+
+  // the first column is the record itself (its atom); the rest are values
+  get restColumns() {
+    return this.tableColumns.slice(1);
+  }
+
+  cellOf = (card: CardDef, col: TableColumn) => {
+    let v = col.value?.(card);
+    return v === undefined || v === null || v === '' ? '—' : v;
+  };
+  markOf = (card: CardDef) =>
+    (card.constructor as typeof CardDef).displayName ?? '';
+  isStatus = (col: TableColumn) => STATUS_KEYS.includes(col.key);
+  isPerson = (col: TableColumn) => PERSON_KEYS.includes(col.key);
+  isEnd = (col: TableColumn) => col.align === 'right';
+  isNarrowOnly = (col: TableColumn) => Boolean(col.showAbove);
+  toneOf = toneOf;
+
+  get filterOptions() {
+    return this.badges.map((b) => ({
+      value: b.id,
+      label: `${b.label} ${b.count}`,
+    }));
+  }
+  get filterMenuItems() {
+    return this.badges.map((b) => ({
+      label: `${b.label} (${b.count})`,
+      value: b.id,
+      group: 'status',
+      checked: b.id === this.activeBadge,
+      onSelect: () => this.setBadge(b.id),
+    }));
+  }
+  get viewMenuItems() {
+    return VIEW_OPTIONS.map((v) => ({
+      label: v.label,
+      value: v.value,
+      group: 'view',
+      checked: v.value === this.view,
+      onSelect: () => this.setView(v.value),
+    }));
+  }
+
+  // ---- dashboard -------------------------------------------------------
+  stationTone = (station: Station) => STATION_TONE[station.key] ?? 'neutral';
+
+  get budgetRows() {
+    return this.budgets.map((b) => {
+      let total = b.budgetAmount ?? 0;
+      let committed = b.committed ?? 0;
+      let actual = b.actual ?? 0;
+      let a = pct(actual, total);
+      let c = Math.max(0, pct(committed, total) - a);
+      return {
+        card: b,
+        budget: money(total),
+        committed: money(committed),
+        actual: money(actual),
+        remaining: money(total - committed),
+        label: `${a}% actual, ${c}% more committed`,
+        actualStyle: htmlSafe(`inline-size: ${a}%`),
+        committedStyle: htmlSafe(`inline-size: ${c}%`),
+      };
+    });
+  }
+
   get poValue(): { buckets: PoValueBucket[]; mixedCurrency: boolean } {
     return poValueBuckets(this.pos);
   }
 
-  budgetComponent = (budget: ProcurementBudget) =>
-    (budget.constructor as typeof CardDef).getComponent(budget);
+  get recentReceipts() {
+    return this.receipts.slice(0, 4);
+  }
+
+  get complianceStats() {
+    let ok = this.profiles.filter((p) => p.complianceOk).length;
+    let total = this.profiles.length;
+    let okPct = pct(ok, total);
+    return {
+      ok,
+      lapsed: total - ok,
+      total,
+      okStyle: htmlSafe(`inline-size: ${okPct}%`),
+      badStyle: htmlSafe(`inline-size: ${total ? 100 - okPct : 0}%`),
+    };
+  }
+
+  // ---- vendors ---------------------------------------------------------
+  get vendorLanes() {
+    let items = this.vendorBoardItems;
+    return VENDOR_LANES.map((lane) => {
+      let all = items.filter((p) => (p.status ?? 'intake') === lane.key);
+      return {
+        ...lane,
+        count: all.length,
+        rows: all.slice(0, LANE_ROWS),
+        more: Math.max(0, all.length - LANE_ROWS),
+      };
+    });
+  }
 
   <template>
-    <article class='app'>
-      <header class='command-band'>
-        <div class='head'>
-          <div>
-            <p class='kicker'>Procurement · Procure-to-Pay console</p>
-            <h1>RFQ to Payment</h1>
-          </div>
-          {{#if this.isInteractive}}
-            <Tabs
-              class='tabs'
-              @options={{TAB_OPTIONS}}
-              @value={{this.activeTab}}
-              @onValueChange={{this.setTab}}
-            />
-          {{/if}}
-        </div>
-
-        {{#if this.isInteractive}}
-          <div class='rail' aria-label='Procure-to-Pay pipeline'>
-            {{#each STATIONS as |station index|}}
-              {{#if index}}<span class='rail-link' aria-hidden='true'><span
-                    class='rail-dot'
-                  ></span></span>{{/if}}
-              <Button
-                @appearance='accent'
-                class='station'
-                {{on 'click' (fn this.goToStation station)}}
-              >
-                <span class='station-body'><span
-                    class='station-count'
-                  >{{this.stationLabel station.key}}</span>
-                  <span class='station-label'>{{station.label}}</span>
-                  <span
-                    class='station-sub'
-                  >{{station.filterLabel}}</span></span>
-              </Button>
-            {{/each}}
-          </div>
-        {{/if}}
-      </header>
-
-      {{#unless this.isInteractive}}
-        <p class='shell-note'>Procure-to-Pay console: requisitions, RFQs,
-          purchase orders, receipts, and budget health. Open the app to work the
-          pipeline.</p>
-      {{/unless}}
-
+    <div class='app'>
       {{#if this.isInteractive}}
-        {{#if (eq this.activeTab 'vendors')}}
-          {{#if this.vendorFlash}}
-            <Alert @tone='warning'>{{this.vendorFlash}}</Alert>
-          {{/if}}
-          <StatusBoard
-            @items={{this.vendorBoardItems}}
-            @statusField={{this.vendorStatusField}}
-            @statusOf={{this.vendorStatusOf}}
-            @onMove={{this.vendorMove}}
-            @onRejected={{this.vendorRejected}}
-            @onOpen={{this.openCard}}
-            @onAddCard={{this.addVendorProfile}}
-            @boardLabel='Vendor vetting pipeline'
-            class='vendor-board'
-          />
-        {{/if}}
-        {{#unless (eq this.activeTab 'dashboard')}}
-          {{#unless (eq this.activeTab 'vendors')}}
-            <CollectionToolbar
-              @search={{this.searchText}}
-              @onSearch={{this.setSearch}}
-              @placeholder='Search this list'
-              @badges={{this.badges}}
-              @activeBadge={{this.activeBadge}}
-              @onBadge={{this.setBadge}}
+        <Sidebar
+          class='shell'
+          @label='RFQ to Payment'
+          @collapsible='rail'
+          @railBreakpoint={{1100}}
+          @mobileBreakpoint={{720}}
+          @bordered={{true}}
+          @scroll='content'
+          @resizable={{true}}
+        >
+          <:header as |bar|>
+            <div class='brand'>
+              <span class='brand-mark' aria-hidden='true'>R2</span>
+              {{#unless bar.collapsed}}
+                <span class='brand-name'>RFQ to Payment<small>Procure-to-Pay
+                    console</small></span>
+              {{/unless}}
+            </div>
+          </:header>
+          <:nav as |bar|>
+            <SidebarGroup @label='Overview' @hideLabel={{bar.collapsed}}>
+              {{#each this.navOverview key='value' as |item|}}
+                <SidebarItem
+                  @label={{item.label}}
+                  @active={{item.active}}
+                  @collapsed={{bar.collapsed}}
+                  @onClick={{fn this.setTab item.value}}
+                >
+                  <:icon><item.icon aria-hidden='true' /></:icon>
+                </SidebarItem>
+              {{/each}}
+            </SidebarGroup>
+            <SidebarGroup @label='Procure-to-Pay' @hideLabel={{bar.collapsed}}>
+              {{#each this.navChain key='value' as |item|}}
+                <SidebarItem
+                  @label={{item.label}}
+                  @badge={{unless bar.collapsed item.badge}}
+                  @active={{item.active}}
+                  @collapsed={{bar.collapsed}}
+                  @onClick={{fn this.setTab item.value}}
+                >
+                  <:icon><item.icon aria-hidden='true' /></:icon>
+                </SidebarItem>
+              {{/each}}
+            </SidebarGroup>
+          </:nav>
+          <:default>
+            <div
+              class='split {{if (eq this.activeTab "dashboard") "has-side"}}'
             >
-              <:right>
-                <SegmentedControl
-                  @label='View as'
-                  @options={{VIEW_OPTIONS}}
-                  @value={{this.view}}
-                  @onValueChange={{this.setView}}
-                />
-                {{#if this.addAction}}
-                  <Button
-                    @tone='primary'
-                    @size='s'
-                    {{on 'click' this.addAction.run}}
-                  >
-                    <Plus width='16' height='16' role='presentation' />
-                    {{this.addAction.label}}
-                  </Button>
+              <main class='main'>
+                <header class='head'>
+                  <div>
+                    <p class='cap'>Procure-to-Pay console</p>
+                    <h1>{{this.pageTitle}}</h1>
+                  </div>
+                  <p class='meta'>{{this.pageSub}}</p>
+                </header>
+
+                {{#if (eq this.activeTab 'dashboard')}}
+                  <LayoutControl @label='Dashboard actions' as |lc|>
+                    <span class='grow'></span>
+                    <lc.Slot
+                      @id='add'
+                      @priority={{0}}
+                      @pinned={{true}}
+                      @forms={{this.PRIMARY_FORMS}}
+                      @label='Add Requisition'
+                    >
+                      <Button
+                        @icon={{PlusIcon}}
+                        {{on 'click' this.addRequisition}}
+                      >Add Requisition</Button>
+                    </lc.Slot>
+                  </LayoutControl>
+
+                  <section class='strip' aria-label='Procure-to-Pay pipeline'>
+                    {{#each STATIONS as |station|}}
+                      <Button
+                        @appearance='plain'
+                        class='stat'
+                        {{on 'click' (fn this.goToStation station)}}
+                      >
+                        <Stat
+                          @label={{station.label}}
+                          @value={{this.stationLabel station.key}}
+                          @tone={{this.stationTone station}}
+                          @hint={{station.filterLabel}}
+                          @roll={{false}}
+                        />
+                      </Button>
+                    {{/each}}
+                  </section>
+
+                  <section class='block' aria-labelledby='budgets-title'>
+                    <div class='sh'>
+                      <h2 id='budgets-title'>Budgets: committed vs actual</h2>
+                      <span class='legend'>
+                        <span><i class='dot pr'></i>Actual</span>
+                        <span><i class='dot cm'></i>Committed</span>
+                      </span>
+                    </div>
+                    {{#if this.budgetRows.length}}
+                      <div class='tw'>
+                        <Table
+                          @label='Procurement budgets'
+                          @framed={{false}}
+                          @striped={{false}}
+                        >
+                          <:head>
+                            <tr>
+                              <th scope='col'>Budget</th>
+                              <th scope='col' class='end'>Budget</th>
+                              <th scope='col' class='end lo'>Committed</th>
+                              <th scope='col' class='end lo'>Actual</th>
+                              <th scope='col' class='end'>Remaining</th>
+                              <th scope='col' class='util xlo'>Utilisation</th>
+                              <th scope='col' class='xlo'><VisuallyHidden
+                                >Open</VisuallyHidden></th>
+                            </tr>
+                          </:head>
+                          <:body>
+                            {{#each this.budgetRows as |row|}}
+                              <tr>
+                                <th scope='row' class='rh'>
+                                  {{#let
+                                    (this.fittedComponent row.card)
+                                    as |A|
+                                  }}<A
+                                      @format='atom'
+                                      @displayContainer={{false}}
+                                    />{{/let}}
+                                </th>
+                                <td class='end mono'>{{row.budget}}</td>
+                                <td class='end mono lo'>{{row.committed}}</td>
+                                <td class='end mono lo'>{{row.actual}}</td>
+                                <td class='end mono'>{{row.remaining}}</td>
+                                <td class='xlo'>
+                                  <span
+                                    class='track'
+                                    role='img'
+                                    aria-label={{row.label}}
+                                  ><span
+                                      class='fill'
+                                      style={{row.actualStyle}}
+                                    ></span><span
+                                      class='fill cm'
+                                      style={{row.committedStyle}}
+                                    ></span></span>
+                                </td>
+                                <td class='end xlo'>
+                                  <Button
+                                    @appearance='plain'
+                                    {{on 'click' (fn this.openCard row.card)}}
+                                  >Open</Button>
+                                </td>
+                              </tr>
+                            {{/each}}
+                          </:body>
+                        </Table>
+                      </div>
+                    {{else}}
+                      <EmptyState
+                        @size='s'
+                        @title={{this.emptyTitle 'budgets'}}
+                        @message='Commitment accounting starts when the first Procurement Budget exists.'
+                      />
+                    {{/if}}
+                  </section>
+
+                  <section class='block' aria-labelledby='value-title'>
+                    <div class='sh'>
+                      <h2 id='value-title'>Where the money is: PO value by stage</h2>
+                    </div>
+                    <ul class='ul'>
+                      {{#each this.poValue.buckets as |b|}}
+                        <li class='row bl'>
+                          <span>{{b.label}}
+                            <span class='meta'>({{b.count}})</span></span>
+                          <span class='mono end'>{{b.totalLabel}}</span>
+                          <span class='track'><span
+                              class='fill hue-{{b.hue}}'
+                              style={{htmlSafe b.barStyle}}
+                            ></span></span>
+                        </li>
+                      {{/each}}
+                    </ul>
+                    {{#if this.poValue.mixedCurrency}}
+                      <p class='note'>Purchase orders span several currencies,
+                        so the bars compare order counts.</p>
+                    {{/if}}
+                  </section>
                 {{/if}}
-              </:right>
-            </CollectionToolbar>
-          {{/unless}}
-        {{/unless}}
 
-        {{#if (eq this.activeTab 'dashboard')}}
-          <div class='dash'>
-            <section class='panel dash-main'>
-              <h2>Budgets · committed vs actual</h2>
-              <div class='list'>
-                {{#each this.budgets as |budget|}}
-                  <div class='budget-row'>
-                    {{#let (this.budgetComponent budget) as |C|}}
-                      <C @format='embedded' class='row-card' />
-                    {{/let}}
-                    <Button
-                      @appearance='plain'
-                      @size='s'
-                      class='row-action'
-                      {{on 'click' (fn this.openCard budget)}}
-                    >Open</Button>
-                  </div>
-                {{else}}
-                  <EmptyState
-                    @size='s'
-                    @title={{this.emptyTitle 'budgets'}}
-                    @message='Commitment accounting starts when the first Procurement Budget exists.'
-                  />
-                {{/each}}
-              </div>
-
-              <h2 class='mt'>Where the money is · PO value by stage</h2>
-              <div class='value-chart'>
-                {{#each this.poValue.buckets as |b|}}
-                  <div class='vc-row'>
-                    <span class='vc-label'>{{b.label}}
-                      <span class='vc-count'>({{b.count}})</span></span>
-                    <div class='vc-track'>
-                      <div
-                        class='vc-bar hue-{{b.hue}}'
-                        style={{b.barStyle}}
-                      ></div>
+                {{#if (eq this.activeTab 'vendors')}}
+                  <LayoutControl @label='Vendor actions' as |lc|>
+                    <span class='grow'></span>
+                    <lc.Slot
+                      @id='add'
+                      @priority={{0}}
+                      @pinned={{true}}
+                      @forms={{this.PRIMARY_FORMS}}
+                      @label='Add Vendor Profile'
+                    >
+                      <Button
+                        @icon={{PlusIcon}}
+                        {{on 'click' this.addVendorProfile}}
+                      >Add Vendor Profile</Button>
+                    </lc.Slot>
+                  </LayoutControl>
+                  <section class='block' aria-labelledby='vetting-title'>
+                    <div class='sh'>
+                      <h2 id='vetting-title'>Vetting pipeline</h2>
+                      <span class='meta'>Open a profile to move it. Onboarding
+                        happens from the profile.</span>
                     </div>
-                    <span class='vc-total'>{{b.totalLabel}}</span>
-                  </div>
-                {{/each}}
-              </div>
-              {{#if this.poValue.mixedCurrency}}
-                <p class='vc-note'>Purchase orders span several currencies, so
-                  the bars compare order counts.</p>
+                    <div
+                      class='lanes'
+                      role='group'
+                      aria-label='Vendor vetting pipeline'
+                    >
+                      {{#each this.vendorLanes as |lane|}}
+                        <section class='lane' aria-label={{lane.label}}>
+                          <header class='lh'>
+                            <h3 class='cap'>{{lane.label}}</h3>
+                            <span class='mono'>{{lane.count}}</span>
+                          </header>
+                          <ul class='ul'>
+                            {{#each lane.rows as |p|}}
+                              <li class='vrow'>
+                                <button
+                                  type='button'
+                                  class='open'
+                                  {{on 'click' (fn this.openCard p)}}
+                                >
+                                  {{#let (this.fittedComponent p) as |A|}}<A
+                                      @format='atom'
+                                      @displayContainer={{false}}
+                                    />{{/let}}
+                                </button>
+                                <span class='vs'>
+                                  <StatusChip
+                                    @value={{if
+                                      p.complianceOk
+                                      'compliant'
+                                      'lapsed / thin file'
+                                    }}
+                                    @tone={{if
+                                      p.complianceOk
+                                      'success'
+                                      'danger'
+                                    }}
+                                    @appearance='plain'
+                                  />
+                                  <span
+                                    class='meta'
+                                  >{{p.serviceCategory}}</span>
+                                </span>
+                              </li>
+                            {{else}}
+                              <li class='vrow meta'>—</li>
+                            {{/each}}
+                          </ul>
+                          {{#if lane.more}}
+                            <p class='more meta'>+{{lane.more}} more</p>
+                          {{/if}}
+                        </section>
+                      {{/each}}
+                    </div>
+                  </section>
+                {{/if}}
+
+                {{#if this.tableColumns.length}}
+                  <LayoutControl @label='{{this.pageTitle}} toolbar' as |lc|>
+                    <lc.Slot
+                      @id='search'
+                      @priority={{2}}
+                      @forms={{this.SEARCH_FORMS}}
+                      @label='Search'
+                    >
+                      <label class='search'>
+                        <VisuallyHidden>Search {{this.noun}}</VisuallyHidden>
+                        <SearchInput
+                          @placeholder='Search {{this.noun}}…'
+                          @value={{this.searchText}}
+                          @onInput={{this.setSearch}}
+                        />
+                      </label>
+                    </lc.Slot>
+                    <lc.Slot
+                      @id='status'
+                      @priority={{1}}
+                      @forms={{this.FILTER_FORMS}}
+                      @label='Status'
+                      @menuItems={{this.filterMenuItems}}
+                    >
+                      <SegmentedControl
+                        @label='Filter by status'
+                        @options={{this.filterOptions}}
+                        @value={{this.activeBadge}}
+                        @onValueChange={{this.setBadge}}
+                      />
+                    </lc.Slot>
+                    <span class='grow'></span>
+                    <lc.Slot
+                      @id='view'
+                      @priority={{3}}
+                      @forms={{this.VIEW_FORMS}}
+                      @label='View'
+                      @menuItems={{this.viewMenuItems}}
+                    >
+                      <SegmentedControl
+                        @label='View as'
+                        @options={{this.VIEW_OPTIONS}}
+                        @value={{this.view}}
+                        @onValueChange={{this.setView}}
+                      />
+                    </lc.Slot>
+                    {{#if this.addAction}}
+                      <lc.Slot
+                        @id='add'
+                        @priority={{0}}
+                        @pinned={{true}}
+                        @forms={{this.PRIMARY_FORMS}}
+                        @label={{this.addAction.label}}
+                      >
+                        <Button
+                          @icon={{PlusIcon}}
+                          {{on 'click' this.addAction.run}}
+                        >{{this.addAction.label}}</Button>
+                      </lc.Slot>
+                    {{/if}}
+                  </LayoutControl>
+
+                  <section class='block' aria-labelledby='table-title'>
+                    <div class='sh'>
+                      <h2 id='table-title'>All {{this.noun}}</h2>
+                      <span class='meta'>{{this.tableRows.length}}
+                        {{this.noun}}</span>
+                    </div>
+                    {{#if this.tableRows.length}}
+                      {{#if (eq this.view 'table')}}
+                        <div class='tw'>
+                          <Table
+                            @label={{this.pageTitle}}
+                            @framed={{false}}
+                            @striped={{false}}
+                          >
+                            <:head>
+                              <tr>
+                                {{#each this.tableColumns as |c|}}
+                                  <th
+                                    scope='col'
+                                    class='{{if (this.isEnd c) "end"}}
+                                      {{if (this.isNarrowOnly c) "lo"}}'
+                                  >{{c.label}}</th>
+                                {{/each}}
+                                <th scope='col' class='xlo'><VisuallyHidden
+                                  >Open</VisuallyHidden></th>
+                              </tr>
+                            </:head>
+                            <:body>
+                              {{#each this.tableRows key='id' as |card|}}
+                                <tr>
+                                  <th scope='row' class='rh'>
+                                    {{! mock: mark + id only; status has its own column }}
+                                    <span class='rh-id'><Avatar
+                                        @name={{this.markOf card}}
+                                        @shape='square'
+                                        @size={{16}}
+                                      /><span
+                                        class='rh-nm'
+                                      >{{card.cardTitle}}</span></span>
+                                  </th>
+                                  {{#each this.restColumns as |c|}}
+                                    <td
+                                      class='{{if (this.isEnd c) "end mono"}}
+                                        {{if (this.isNarrowOnly c) "lo"}}'
+                                    >
+                                      {{#if (this.isStatus c)}}
+                                        {{#let (this.cellOf card c) as |s|}}
+                                          <StatusChip
+                                            @value={{s}}
+                                            @tone={{this.toneOf s}}
+                                            @appearance='plain'
+                                          />
+                                        {{/let}}
+                                      {{else if (this.isPerson c)}}
+                                        {{#let (this.cellOf card c) as |p|}}
+                                          <span class='rh-id'><Avatar
+                                              @name={{p}}
+                                              @size={{16}}
+                                            /><span
+                                              class='pn'
+                                            >{{p}}</span></span>
+                                        {{/let}}
+                                      {{else}}
+                                        {{this.cellOf card c}}
+                                      {{/if}}
+                                    </td>
+                                  {{/each}}
+                                  <td class='end xlo'>
+                                    <Button
+                                      @appearance='plain'
+                                      {{on 'click' (fn this.openCard card)}}
+                                    >Open</Button>
+                                  </td>
+                                </tr>
+                              {{/each}}
+                            </:body>
+                          </Table>
+                        </div>
+                      {{else}}
+                        <div
+                          class='cards
+                            {{if
+                              (eq this.view "grid")
+                              "grid-view"
+                              "list-view"
+                            }}'
+                        >
+                          {{#each this.tableRows key='id' as |card|}}
+                            <button
+                              type='button'
+                              class='cell'
+                              {{on 'click' (fn this.openCard card)}}
+                            >
+                              {{#let (this.fittedComponent card) as |C|}}
+                                <C
+                                  @format='fitted'
+                                  @displayContainer={{false}}
+                                />
+                              {{/let}}
+                            </button>
+                          {{/each}}
+                        </div>
+                      {{/if}}
+                    {{else}}
+                      <div class='es'>
+                        <EmptyState
+                          @size='s'
+                          @title={{this.emptyTitle this.noun}}
+                          @message={{this.emptyMessage}}
+                        />
+                      </div>
+                    {{/if}}
+                  </section>
+                {{/if}}
+              </main>
+
+              {{#if (eq this.activeTab 'dashboard')}}
+                <aside class='docked' aria-label='Health at a glance'>
+                  <section class='sec' aria-labelledby='compliance-title'>
+                    <div class='sh'>
+                      <h2 id='compliance-title'>Vendor compliance</h2>
+                    </div>
+                    <div class='pad'>
+                      <p class='big'><span
+                          class='num'
+                        >{{this.complianceStats.ok}}</span>
+                        <span class='meta'>{{this.complianceStats.ok}}
+                          of
+                          {{this.complianceStats.total}}
+                          compliant</span></p>
+                      <span
+                        class='track'
+                        role='img'
+                        aria-label='{{this.complianceStats.ok}} current, {{this.complianceStats.lapsed}} lapsed or thin file'
+                      ><span
+                          class='fill hue-success'
+                          style={{this.complianceStats.okStyle}}
+                        ></span><span
+                          class='fill hue-danger'
+                          style={{this.complianceStats.badStyle}}
+                        ></span></span>
+                      <span class='legend'>
+                        <StatusChip
+                          @value='{{this.complianceStats.ok}} current'
+                          @tone='success'
+                          @appearance='plain'
+                        />
+                        <StatusChip
+                          @value='{{this.complianceStats.lapsed}} lapsed / thin file'
+                          @tone='danger'
+                          @appearance='plain'
+                        />
+                      </span>
+                    </div>
+                  </section>
+                  <section class='sec' aria-labelledby='receipts-title'>
+                    <div class='sh'>
+                      <h2 id='receipts-title'>Recent receipts</h2>
+                      <Button
+                        @appearance='plain'
+                        {{on 'click' (fn this.setTab 'receipts')}}
+                      >View all</Button>
+                    </div>
+                    <ul class='ul'>
+                      {{#each this.recentReceipts as |gr|}}
+                        <li class='row g2'>
+                          <Button
+                            @appearance='link'
+                            class='two'
+                            {{on 'click' (fn this.openCard gr)}}
+                          >
+                            <span class='strong'>{{gr.title}}</span>
+                            <span class='meta'>{{gr.matchResult}}</span>
+                          </Button>
+                          <StatusChip
+                            @value={{if gr.posted 'posted' 'draft'}}
+                            @tone={{if gr.posted 'success' 'warning'}}
+                            @appearance='plain'
+                          />
+                        </li>
+                      {{else}}
+                        <li class='row meta'>{{this.emptyTitle 'receipts'}}</li>
+                      {{/each}}
+                    </ul>
+                  </section>
+                </aside>
               {{/if}}
-            </section>
-
-            <aside class='dash-side'>
-              <section class='panel'>
-                <h2>Vendor compliance</h2>
-                <div class='donut-wrap'>
-                  <div class='donut' style={{this.donutStyle}}>
-                    <div class='donut-hole'>
-                      <span class='donut-num'>{{this.complianceStats.ok}}<span
-                          class='donut-of'
-                        >/{{this.complianceStats.total}}</span></span>
-                      <span class='donut-label'>compliant</span>
-                    </div>
-                  </div>
-                  <div class='donut-legend'>
-                    <span><i class='swatch ok'></i>{{this.complianceStats.ok}}
-                      current</span>
-                    <span><i
-                        class='swatch bad'
-                      ></i>{{this.complianceStats.lapsed}}
-                      lapsed / thin file</span>
-                  </div>
-                </div>
-              </section>
-
-              <section class='panel'>
-                <h2>Recent receipts</h2>
-                <div class='list'>
-                  {{#each this.receipts as |gr|}}
-                    <Button
-                      @appearance='plain'
-                      class='row-open'
-                      {{on 'click' (fn this.openCard gr)}}
-                    ><span class='row-title'>{{gr.title}}</span>
-                      <span class='row-meta'>{{if gr.posted 'posted' 'draft'}}
-                        ·
-                        {{gr.matchResult}}</span></Button>
-                  {{else}}
-                    <EmptyState
-                      @size='s'
-                      @title={{this.emptyTitle 'receipts'}}
-                    />
-                  {{/each}}
-                </div>
-              </section>
-            </aside>
-          </div>
-        {{/if}}
-
-        {{#if (eq this.activeTab 'requisitions')}}
-          {{#if (eq this.view 'table')}}
-            <Table
-              @items={{this.visibleRequisitions}}
-              @columns={{this.requisitionColumns}}
-              @onRowClick={{this.openCard}}
-              @emptyMessage='Nothing here — the P2P chain starts with a requisition.'
-              @caption='Purchase requisitions'
-            />
-          {{else}}
-            <div
-              class='cards
-                {{if (eq this.view "grid") "grid-view" "strip-view"}}'
-            >
-              {{#each this.visibleRequisitions as |pr|}}
-                <div class='cell'>
-                  {{#let (this.fittedComponent pr) as |C|}}
-                    <C
-                      @format='fitted'
-                      @displayContainer={{false}}
-                      class='cell-card'
-                    />
-                  {{/let}}
-                  <Button
-                    @appearance='plain'
-                    @size='s'
-                    class='row-action'
-                    {{on 'click' (fn this.openCard pr)}}
-                  >Open</Button>
-                </div>
-              {{else}}
-                <EmptyState
-                  @size='s'
-                  @title={{this.emptyTitle 'requisitions'}}
-                  @message='The P2P chain starts with a requisition.'
-                />
-              {{/each}}
             </div>
-          {{/if}}
-        {{/if}}
-
-        {{#if (eq this.activeTab 'rfqs')}}
-          {{#if (eq this.view 'table')}}
-            <Table
-              @items={{this.visibleRfqs}}
-              @columns={{this.rfqColumns}}
-              @onRowClick={{this.openCard}}
-              @emptyMessage='No RFQs in this view — convert a requisition to start comparing vendors.'
-              @caption='Requests for quote'
-            />
-          {{else}}
-            <div
-              class='cards
-                {{if (eq this.view "grid") "grid-view" "strip-view"}}'
-            >
-              {{#each this.visibleRfqs as |rfq|}}
-                <div class='cell'>
-                  {{#let (this.fittedComponent rfq) as |C|}}
-                    <C
-                      @format='fitted'
-                      @displayContainer={{false}}
-                      class='cell-card'
-                    />
-                  {{/let}}
-                  <Button
-                    @appearance='plain'
-                    @size='s'
-                    class='row-action'
-                    {{on 'click' (fn this.openCard rfq)}}
-                  >Open</Button>
-                </div>
-              {{else}}
-                <EmptyState
-                  @size='s'
-                  @title={{this.emptyTitle 'RFQs'}}
-                  @message='Convert a requisition to start comparing vendors.'
-                />
-              {{/each}}
+          </:default>
+        </Sidebar>
+      {{else}}
+        <main class='main'>
+          <header class='head'>
+            <div>
+              <p class='cap'>Procure-to-Pay console</p>
+              <h1>RFQ to Payment</h1>
             </div>
-          {{/if}}
-        {{/if}}
-
-        {{#if (eq this.activeTab 'pos')}}
-          {{#if (eq this.view 'table')}}
-            <Table
-              @items={{this.visiblePos}}
-              @columns={{this.poColumns}}
-              @onRowClick={{this.openCard}}
-              @emptyMessage='No purchase orders in this view.'
-              @caption='Purchase orders'
-            />
-          {{else}}
-            <div
-              class='cards
-                {{if (eq this.view "grid") "grid-view" "strip-view"}}'
-            >
-              {{#each this.visiblePos as |po|}}
-                <div class='cell'>
-                  {{#let (this.fittedComponent po) as |C|}}
-                    <C
-                      @format='fitted'
-                      @displayContainer={{false}}
-                      class='cell-card'
-                    />
-                  {{/let}}
-                  <Button
-                    @appearance='plain'
-                    @size='s'
-                    class='row-action'
-                    {{on 'click' (fn this.openCard po)}}
-                  >Open</Button>
-                </div>
-              {{else}}
-                <EmptyState
-                  @size='s'
-                  @title={{this.emptyTitle 'purchase orders'}}
-                />
-              {{/each}}
-            </div>
-          {{/if}}
-        {{/if}}
-
-        {{#if (eq this.activeTab 'invoices')}}
-          {{#if (eq this.view 'table')}}
-            <Table
-              @items={{this.visibleInvoices}}
-              @columns={{this.invoiceColumns}}
-              @onRowClick={{this.openCard}}
-              @emptyMessage='No vendor invoices yet — record one against a received PO to run the match.'
-              @caption='Vendor invoices'
-            />
-          {{else}}
-            <div
-              class='cards
-                {{if (eq this.view "grid") "grid-view" "strip-view"}}'
-            >
-              {{#each this.visibleInvoices as |inv|}}
-                <div class='cell'>
-                  {{#let (this.fittedComponent inv) as |C|}}
-                    <C
-                      @format='fitted'
-                      @displayContainer={{false}}
-                      class='cell-card'
-                    />
-                  {{/let}}
-                  <Button
-                    @appearance='plain'
-                    @size='s'
-                    class='row-action'
-                    {{on 'click' (fn this.openCard inv)}}
-                  >Open</Button>
-                </div>
-              {{else}}
-                <EmptyState
-                  @size='s'
-                  @title={{this.emptyTitle 'vendor invoices'}}
-                  @message='Record one against a received PO to run the match.'
-                />
-              {{/each}}
-            </div>
-          {{/if}}
-        {{/if}}
-
-        {{#if (eq this.activeTab 'receipts')}}
-          {{#if (eq this.view 'table')}}
-            <Table
-              @items={{this.visibleReceipts}}
-              @columns={{this.receiptColumns}}
-              @onRowClick={{this.openCard}}
-              @emptyMessage='No goods receipts yet — record what arrives against an approved PO.'
-              @caption='Goods receipts'
-            />
-          {{else}}
-            <div
-              class='cards
-                {{if (eq this.view "grid") "grid-view" "strip-view"}}'
-            >
-              {{#each this.visibleReceipts as |gr|}}
-                <div class='cell'>
-                  {{#let (this.fittedComponent gr) as |C|}}
-                    <C
-                      @format='fitted'
-                      @displayContainer={{false}}
-                      class='cell-card'
-                    />
-                  {{/let}}
-                  <Button
-                    @appearance='plain'
-                    @size='s'
-                    class='row-action'
-                    {{on 'click' (fn this.openCard gr)}}
-                  >Open</Button>
-                </div>
-              {{else}}
-                <EmptyState
-                  @size='s'
-                  @title={{this.emptyTitle 'goods receipts'}}
-                  @message='Record what arrives against an approved PO.'
-                />
-              {{/each}}
-            </div>
-          {{/if}}
-        {{/if}}
+          </header>
+          <p class='meta'>Requisitions, RFQs, purchase orders, receipts and
+            budget health. Open the app to work the pipeline.</p>
+        </main>
       {{/if}}
-    </article>
+    </div>
     <style scoped>
       .app {
         container-type: inline-size;
-        padding: 0 var(--boxel-sp-lg) var(--boxel-sp-lg);
-        background:
-          radial-gradient(
-            75rem 23.75rem at 20% -10%,
-            color-mix(in oklch, var(--primary) 7%, transparent),
-            transparent 65%
-          ),
-          var(--background);
+        display: flex;
+        block-size: 100%;
+        min-block-size: 0;
+        overflow: hidden;
+        background: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
-        min-height: 100%;
+        font-size: var(--boxel-font-size-xs);
+        line-height: 1.35;
+        --control-height: 1.625rem;
+        /* shortcut: Pret UI parts ignore --control-height until CS-14733 merges, then drop the two lines below. */
+        --pretui-button-h: 1.625rem;
+        --pretui-seg-h: 1.625rem;
+      }
+      .shell {
+        block-size: 100%;
+        min-block-size: 0;
+        flex: 1;
+      }
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        min-block-size: 100%;
+      }
+      .split.has-side {
+        grid-template-columns: minmax(0, 1fr) 18rem;
+      }
+      @container (max-width: 75rem) {
+        .split.has-side {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .docked {
+          margin: 0 var(--boxel-sp-lg) var(--boxel-sp-lg);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+        }
+      }
+      .main {
+        box-sizing: border-box;
+        min-inline-size: 0;
+        padding: var(--boxel-sp-lg) var(--boxel-sp-lg) var(--boxel-sp-xl);
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp);
-      }
-      .command-band {
-        background: linear-gradient(
-          120deg,
-          color-mix(in oklch, var(--primary) 96%, var(--foreground)),
-          var(--primary) 55%,
-          color-mix(in oklch, var(--primary) 82%, var(--foreground))
-        );
-        color: var(--primary-foreground);
-        margin: 0 calc(-1 * var(--boxel-sp-lg));
-        padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp);
-        position: relative;
-        overflow: hidden;
-      }
-      .command-band::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image:
-          linear-gradient(
-            color-mix(in oklch, var(--primary-foreground) 7%, transparent) 1px,
-            transparent 1px
-          ),
-          linear-gradient(
-            90deg,
-            color-mix(in oklch, var(--primary-foreground) 7%, transparent) 1px,
-            transparent 1px
-          );
-        background-size: 1.75rem 1.75rem;
-        mask-image: linear-gradient(to bottom, black, transparent 92%);
-        pointer-events: none;
+        gap: var(--boxel-sp-xs);
       }
       .head {
         display: flex;
-        justify-content: space-between;
+        flex-wrap: wrap;
         align-items: flex-end;
-        gap: var(--boxel-sp);
-        flex-wrap: wrap;
-        position: relative;
-        z-index: 1;
+        justify-content: space-between;
+        gap: var(--boxel-sp-4xs) var(--boxel-sp-sm);
       }
-      .kicker {
+      .cap,
+      th,
+      .lh h3 {
         margin: 0;
-        font-size: 0.6875rem;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: color-mix(in oklch, var(--primary-foreground) 65%, transparent);
-      }
-      h1 {
-        margin: var(--boxel-sp-5xs) 0 0;
-        font-family: var(--font-sans);
-        font-size: 1.75rem;
-        letter-spacing: -0.015em;
-      }
-      .tabs {
-        display: flex;
-        gap: var(--boxel-sp-5xs);
-        flex-wrap: wrap;
-      }
-
-      /* ── the P2P rail: the signature element ─────────────────────── */
-      .rail {
-        position: relative;
-        z-index: 1;
-        margin-top: var(--boxel-sp);
-        display: flex;
-        align-items: stretch;
-        gap: 0;
-      }
-
-      .station {
-        flex: 1;
-        --pretui-button-h: auto;
-        --pretui-button-px: var(--boxel-sp-sm);
-        --pretui-button-fg: var(--primary-foreground);
-        --pretui-button-bg: color-mix(
-          in oklch,
-          var(--primary-foreground) 7%,
-          transparent
-        );
-      }
-      .station-body {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--boxel-sp-5xs);
-        padding-block: var(--boxel-sp-xs);
-        text-align: left;
-      }
-      .station-count {
-        font-size: 1.625rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        line-height: 1.1;
-      }
-      .station-label {
-        font-size: 0.8125rem;
+        font-family: var(--font-mono);
         font-weight: 600;
-      }
-      .station-sub {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-xs);
+        line-height: 1.3;
+        letter-spacing: 0.13em;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: color-mix(in oklch, var(--primary-foreground) 60%, transparent);
-      }
-      .rail-link {
-        width: 2.125rem;
-        align-self: center;
-        height: 0.125rem;
-        background: color-mix(
-          in oklch,
-          var(--primary-foreground) 30%,
-          transparent
-        );
-        position: relative;
-        flex: 0 0 auto;
-      }
-      .rail-dot {
-        position: absolute;
-        top: -0.125rem;
-        left: 0;
-        width: 0.375rem;
-        height: 0.375rem;
-        border-radius: 50%;
-        background: var(--primary-foreground);
-      }
-      .panel {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        background: var(--card);
-      }
-      /* dashboard: asymmetric two-column — the money story left (wide),
-         the health-at-a-glance rail right */
-      .dash {
-        display: grid;
-        grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
-        gap: var(--boxel-sp);
-        align-items: start;
-      }
-      .dash-side {
-        display: grid;
-        gap: var(--boxel-sp);
-      }
-      h2.mt {
-        margin-top: var(--boxel-sp);
-      }
-      .value-chart {
-        display: grid;
-        gap: var(--boxel-sp-xs);
-      }
-      .vc-row {
-        display: grid;
-        grid-template-columns: 12rem minmax(0, 1fr) auto;
-        gap: var(--boxel-sp-sm);
-        align-items: center;
-      }
-      .vc-label {
-        font-size: 0.8125rem;
         color: var(--muted-foreground);
       }
-      .vc-count {
-        opacity: 0.7;
-        font-variant-numeric: tabular-nums;
+      .head .cap {
+        margin-block-end: var(--boxel-sp-xxxs);
       }
-      .vc-track {
-        height: 0.875rem;
-        border-radius: 0.4375rem;
-        background: var(--muted);
-        overflow: hidden;
+      h1 {
+        font-family: var(--boxel-heading-font-family, var(--font-sans));
+        font-weight: 400;
+        font-size: 2.5rem;
+        line-height: 1;
+        text-transform: uppercase;
       }
-      .vc-bar {
-        height: 100%;
-        border-radius: 0.4375rem;
-        min-width: 0.1875rem;
+      h2 {
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
       }
-      .vc-bar.hue-warning {
-        background: var(--warning);
-      }
-      .vc-bar.hue-primary {
-        background: repeating-linear-gradient(
-          45deg,
-          var(--primary),
-          var(--primary) 0.25rem,
-          color-mix(in oklch, var(--primary) 55%, transparent) 0.25rem,
-          color-mix(in oklch, var(--primary) 55%, transparent) 0.5rem
-        );
-      }
-      .vc-bar.hue-success {
-        background: var(--success);
-      }
-      .vc-note {
-        margin-top: var(--boxel-sp-xs);
+      .meta {
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
-      .vc-total {
-        font-weight: 700;
+      .mono {
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-xs);
         font-variant-numeric: tabular-nums;
-        min-width: 6rem;
-        text-align: right;
       }
-      .donut-wrap {
+      .grow {
+        flex: 1;
+      }
+      .brand {
         display: flex;
         align-items: center;
-        gap: var(--boxel-sp);
+        gap: var(--boxel-sp-xxs);
       }
-      .donut {
-        width: 6.75rem;
-        height: 6.75rem;
-        border-radius: 50%;
-        flex: 0 0 auto;
-        display: grid;
+      .brand-mark {
+        display: inline-grid;
         place-items: center;
+        inline-size: 1.5rem;
+        block-size: 1.5rem;
+        border-radius: var(--radius);
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
       }
-      .donut-hole {
-        width: 4.625rem;
-        height: 4.625rem;
-        border-radius: 50%;
-        background: var(--card);
+      .brand-name {
         display: grid;
-        place-content: center;
-        text-align: center;
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
       }
-      .donut-num {
-        font-size: 1.25rem;
+      .brand-name small {
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 600;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+
+      /* blocks: radius only on the outer card, flat inside */
+      .block,
+      .strip,
+      .docked {
+        background: var(--card);
+      }
+      .block,
+      .strip {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .sh {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xxs);
+        min-block-size: 1.75rem;
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+        border-block-end: 1px solid var(--border);
+      }
+      .sh .meta,
+      .sh .legend {
+        margin-inline-start: auto;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+      }
+      .legend > span {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-xxxs);
+      }
+      .dot {
+        inline-size: 0.4375rem;
+        block-size: 0.4375rem;
+        border-radius: 50%;
+        background: var(--foreground);
+      }
+      .dot.cm {
+        background: var(--muted-foreground);
+        opacity: 0.6;
+      }
+
+      /* stat strip: joined tiles, every tile draws its own dividers */
+      .strip {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+      @container (max-width: 60rem) {
+        .strip {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+      @container (max-width: 30rem) {
+        .strip {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      /* Pret UI Button hosts the Stat tile: full cell, square, hairline grid */
+      .stat {
+        --pretui-button-h: auto;
+        --pretui-button-px: var(--boxel-sp-xs);
+        --pretui-button-radius: 0;
+        justify-content: stretch;
+        min-inline-size: 0;
+        padding-block: var(--boxel-sp-xxxs);
+        box-shadow:
+          1px 0 0 var(--border),
+          0 1px 0 var(--border);
+      }
+      .stat:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: -2px;
+      }
+
+      /* tables: 28px rows, mono caps head, hairlines */
+      .tw {
+        overflow-x: auto;
+        padding-inline: var(--boxel-sp-xs);
+        --pretui-table-head-height: 1.5rem;
+        /* the mock has a plain head and no zebra rows */
+        --inset: var(--card);
+      }
+      th,
+      td {
+        padding-block: 0;
+        text-align: start;
+        white-space: nowrap;
+        vertical-align: middle;
+      }
+      td {
+        block-size: 1.75rem;
+      }
+      .rh-id {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-xxxs);
+        max-inline-size: 100%;
+        min-inline-size: 0;
+      }
+      .rh-nm {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 600;
+      }
+      th.rh {
+        block-size: 1.75rem;
+      }
+      th.rh {
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--foreground);
+      }
+      .end {
+        text-align: end;
+      }
+      th.util {
+        inline-size: 20%;
+      }
+      @container (max-width: 40rem) {
+        .lo {
+          display: none;
+        }
+      }
+      @container (max-width: 30rem) {
+        .xlo {
+          display: none;
+        }
+      }
+
+      .track {
+        display: flex;
+        block-size: 0.25rem;
+        min-inline-size: 4rem;
+        border-radius: 1rem;
+        overflow: hidden;
+        background: var(--muted);
+      }
+      .fill {
+        display: block;
+        background: var(--foreground);
+      }
+      .fill.cm {
+        background: var(--muted-foreground);
+        opacity: 0.6;
+      }
+      .fill.hue-warning {
+        background: var(--warning);
+      }
+      .fill.hue-primary {
+        background: var(--primary);
+      }
+      .fill.hue-success {
+        background: var(--success);
+      }
+      .fill.hue-danger {
+        background: var(--destructive);
+      }
+
+      .ul {
+        list-style: none;
+        margin: 0;
+        padding: 0 var(--boxel-sp-xs);
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        min-block-size: 1.75rem;
+      }
+      .row + .row {
+        border-block-start: 1px solid var(--border);
+      }
+      .row.bl {
+        display: grid;
+        grid-template-columns: minmax(8rem, 1fr) 6rem minmax(4rem, 1.4fr);
+      }
+      .row.g2 {
+        justify-content: space-between;
+        padding-block: var(--boxel-sp-4xs);
+      }
+      .note {
+        padding: var(--boxel-sp-xxxs) var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+      }
+      .open {
+        all: unset;
+        cursor: pointer;
+        display: inline-flex;
+        min-inline-size: 0;
+        max-inline-size: 100%;
+      }
+      .open:focus-visible {
+        outline: 2px solid var(--ring);
+      }
+      .two {
+        --pretui-button-h: auto;
+        --pretui-button-px: 0;
+        flex-direction: column;
+        align-items: start;
+        min-inline-size: 0;
+      }
+      .strong {
+        font-weight: 600;
+      }
+
+      /* docked side panel */
+      .docked {
+        border-inline-start: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .sec + .sec {
+        border-block-start: 1px solid var(--border);
+      }
+      .pad {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xxs);
+        padding: var(--boxel-sp-xxs) var(--boxel-sp-xs) var(--boxel-sp-xs);
+      }
+      .big {
+        display: flex;
+        align-items: baseline;
+        gap: var(--boxel-sp-xxs);
+      }
+      .num {
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
         line-height: 1;
       }
-      .donut-of {
-        font-size: 0.8125rem;
-        font-weight: 400;
-        color: var(--muted-foreground);
+
+      /* vendor lanes */
+      .lanes {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(11rem, 1fr));
+        overflow-x: auto;
       }
-      .donut-label {
-        font-size: 0.625rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground);
+      .lane {
+        min-inline-size: 0;
       }
-      .donut-legend {
+      .lane + .lane {
+        border-inline-start: 1px solid var(--border);
+      }
+      .lh {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-block-size: 1.75rem;
+        padding-inline: var(--boxel-sp-xs);
+        border-block-end: 1px solid var(--border);
+      }
+      .vrow {
         display: grid;
         gap: var(--boxel-sp-5xs);
-        font-size: 0.8125rem;
-        font-variant-numeric: tabular-nums;
+        padding-block: var(--boxel-sp-xxxs);
       }
-      .swatch {
-        display: inline-block;
-        width: 0.625rem;
-        height: 0.625rem;
-        border-radius: 0.1875rem;
-        margin-right: 0.375rem;
+      .vrow + .vrow {
+        border-block-start: 1px solid var(--border);
       }
-      .swatch.ok {
-        background: var(--success);
+      .vs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
+        align-items: center;
       }
-      .swatch.bad {
-        background: var(--destructive);
-      }
-      @container (width < 47.5rem) {
-        .dash {
-          grid-template-columns: 1fr;
-        }
-        .vc-row {
-          grid-template-columns: 1fr;
-          gap: var(--boxel-sp-5xs);
-        }
-        .vc-total {
-          text-align: left;
-        }
-      }
-      h2 {
-        margin: 0 0 var(--boxel-sp-xs);
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .list {
-        display: grid;
-        gap: var(--boxel-sp-xs);
-      }
-      /* grid & list are the same renderer — the card's own fitted — in two
-         cell shapes; table is the shared Table over the same array. The
-         fitted-card container itself comes from field-component's wrapper. */
-      .cards {
-        display: grid;
-        gap: var(--boxel-sp-xs);
-      }
-      .cards.grid-view {
-        grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-      }
-      .cards.grid-view .cell {
-        height: 10.625rem;
-      }
-      .cards.strip-view {
-        grid-template-columns: 1fr;
-      }
-      .cards.strip-view .cell {
-        height: 4.0625rem;
+      .more {
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs) var(--boxel-sp-xxxs);
       }
 
+      /* grid / list views of fitted cards */
+      .cards {
+        display: grid;
+        gap: var(--boxel-sp-xxs);
+        padding: var(--boxel-sp-xs);
+      }
+      .grid-view {
+        grid-template-columns: repeat(auto-fill, minmax(15.625rem, 1fr));
+        grid-auto-rows: 10.625rem;
+      }
+      .list-view {
+        grid-auto-rows: 4.0625rem;
+      }
       .cell {
-        position: relative;
+        all: unset;
+        cursor: pointer;
+        box-sizing: border-box;
+        min-inline-size: 0;
+        overflow: hidden;
         border: 1px solid var(--border);
         border-radius: var(--radius);
         background: var(--card);
-        overflow: hidden;
-        transition: border-color 140ms ease;
       }
-      .cell:hover,
-      .cell:focus-within {
-        border-color: var(--primary);
+      .cell:focus-visible {
+        outline: 2px solid var(--ring);
       }
-      .cell-card {
-        width: 100%;
-        height: 100%;
+      .es {
+        padding: var(--boxel-sp-xs);
       }
-      .row-action {
-        position: absolute;
-        inset-block-end: var(--boxel-sp-4xs);
-        inset-inline-end: var(--boxel-sp-4xs);
-      }
-
-      .row-open {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: var(--boxel-sp-sm);
-        width: 100%;
-      }
-
-      .budget-row {
-        position: relative;
-      }
-      .row-title {
-        font-weight: 600;
-        font-size: 0.9375rem;
-      }
-      .row-meta {
-        font-size: 0.8125rem;
-        color: var(--muted-foreground);
-      }
-
-      .shell-note {
-        margin: 0;
-        padding: var(--boxel-sp-lg);
-        border: 1px dashed var(--border);
-        border-radius: var(--radius);
-        color: var(--muted-foreground);
-        font-size: 0.875rem;
-      }
-
-      .vendor-board {
-        flex: 1;
-        min-height: 0;
-      }
-      @media (prefers-reduced-motion: no-preference) {
-        .command-band {
-          animation: p2p-band-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .station {
-          animation: p2p-rise 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .rail .station:nth-of-type(1) {
-          animation-delay: 120ms;
-        }
-        .rail .station:nth-of-type(2) {
-          animation-delay: 190ms;
-        }
-        .rail .station:nth-of-type(3) {
-          animation-delay: 260ms;
-        }
-        .rail .station:nth-of-type(4) {
-          animation-delay: 330ms;
-        }
-        .rail-dot {
-          animation: rail-flow 2.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-          animation-delay: 900ms;
-        }
-        .panel,
-        .list > .row-open {
-          animation: p2p-rise 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
-          animation-delay: 200ms;
-        }
-      }
-      @keyframes p2p-band-in {
-        from {
-          opacity: 0;
-          transform: translateY(-0.5rem);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      @keyframes p2p-rise {
-        from {
-          opacity: 0;
-          transform: translateY(0.625rem);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      @keyframes rail-flow {
-        0% {
-          left: 0;
-          opacity: 0;
-        }
-        15% {
-          opacity: 1;
-        }
-        85% {
-          opacity: 1;
-        }
-        100% {
-          left: calc(100% - 0.375rem);
-          opacity: 0;
-        }
-      }
-      @container (max-width: 40rem) {
-        .rail {
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-xs);
-        }
-        .rail-link {
-          display: none;
-        }
-        .station {
-          flex: 1 1 40%;
-        }
+      .search {
+        display: block;
+        min-inline-size: 14rem;
       }
     </style>
   </template>

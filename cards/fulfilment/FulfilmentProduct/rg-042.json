@@ -41,6 +41,11 @@
         "links": {
           "self": "../FulfilmentVendor/northline"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

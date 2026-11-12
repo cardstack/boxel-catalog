@@ -25,7 +25,7 @@
           }
         ]
       },
-      "description": "Season awards dinner in the Meridian Park hospitality suite — player of the season, golden boot, and the supporters' awards. Dress code: smart. Doors 6pm, dinner 7:30pm.",
+      "description": "Season awards dinner in the Meridian Park hospitality suite \u2014 player of the season, golden boot, and the supporters' awards. Dress code: smart. Doors 6pm, dinner 7:30pm.",
       "cardInfo": {
         "name": null,
         "summary": null,
@@ -37,6 +37,11 @@
       "venue": {
         "links": {
           "self": "../Location/meridian-park-stadium"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

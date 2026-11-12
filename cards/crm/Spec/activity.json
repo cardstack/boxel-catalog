@@ -21,7 +21,7 @@
     "relationships": {
       "linkedExamples.0": {
         "links": {
-          "self": "../Activity/acme-renewal-call"
+          "self": "../Activity/renewal-pricing-call"
         }
       },
       "linkedExamples.1": {
@@ -42,6 +42,11 @@
       "linkedExamples.4": {
         "links": {
           "self": "../Activity/brightleaf-quarterly-review"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

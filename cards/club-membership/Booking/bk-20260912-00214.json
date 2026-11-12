@@ -28,7 +28,12 @@
       },
       "holder": {
         "links": {
-          "self": "../Contact/priya-shah"
+          "self": "../../crm/Contact/priya-shah"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },
@@ -36,8 +41,7 @@
       "adoptsFrom": {
         "module": "../../events/booking",
         "name": "Booking"
-      },
-      "_touched": 1787195035457
+      }
     }
   }
 }

@@ -1,3 +1,5 @@
+import { Button } from '@cardstack/pretui/components/button';
+import { on } from '@ember/modifier';
 import {
   CardDef,
   Component,
@@ -12,15 +14,24 @@ import EmailField from 'https://cardstack.com/base/email';
 import PhoneNumberField from 'https://cardstack.com/base/phone-number';
 import AddressField from 'https://cardstack.com/base/address';
 import UsersIcon from '@cardstack/boxel-icons/users';
+import { array, hash } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
+import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
+import { CompactFitted, CompactRow } from '../commerce/compact-parts';
 import {
-  KeyValue,
-  type KeyValueItem,
-} from '@cardstack/pretui/components/key-value';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+  RecordEmbedded,
+  RecordPage,
+  RelatedList,
+  relatedSearch,
+  shortDate,
+  usd,
+} from './record-views';
+import { createLinked } from './record-views';
 import { User } from './user';
-import { avatarHue } from './utils';
+
+// @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
+const moduleURL: string = import.meta.url;
 
 export class Account extends CardDef {
   static displayName = 'Account';
@@ -50,65 +61,64 @@ export class Account extends CardDef {
   });
 
   static embedded = class Embedded extends Component<typeof Account> {
+    get items(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.industry) rows.push({ key: 'Industry', value: m.industry });
+      if (m?.firstPaidAt)
+        rows.push({ key: 'First paid', value: shortDate(m.firstPaidAt, true) });
+      if (m?.phone) rows.push({ key: 'Phone', value: m.phone });
+      if (m?.owner) rows.push({ key: 'Owner', value: '@owner' });
+      return rows;
+    }
+    get subtitle() {
+      let m = this.args.model;
+      return [m?.industry, m?.domain].filter(Boolean).join(' · ');
+    }
+    get chips() {
+      return [
+        this.args.model?.isCustomer
+          ? { label: 'customer', hue: 'green' }
+          : { label: 'prospect', hue: 'slate' },
+      ];
+    }
     <template>
-      <div class='account'>
-        <UsersIcon class='icon' />
-        <div>
-          <div class='name'>{{@model.cardTitle}}</div>
-          <div class='meta'><@fields.email /></div>
-        </div>
-      </div>
-      <style scoped>
-        .account {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
-        }
-        .icon {
-          width: 1.375rem;
-          height: 1.375rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-        }
-        .meta {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-        }
-      </style>
+      <RecordEmbedded
+        @mark={{if @model.cardTitle @model.cardTitle ''}}
+        @title={{@model.cardTitle}}
+        @subtitle={{this.subtitle}}
+        @chips={{this.chips}}
+        @items={{this.items}}
+      >
+        <:value as |row|>
+          {{#if (eq row.value '@owner')}}
+            <@fields.owner @format='atom' @displayContainer={{false}} />
+          {{else}}{{row.value}}{{/if}}
+        </:value>
+      </RecordEmbedded>
     </template>
   };
 
   static atom = class Atom extends Component<typeof Account> {
     <template>
-      <span class='account-atom'>
-        <UsersIcon class='ca-icon' />
-        <span class='ca-name'>{{if
-            @model.name
-            @model.name
-            'Unnamed Account'
-          }}</span>
+      <span class='atom'>
+        <Avatar
+          @name={{if @model.cardTitle @model.cardTitle ''}}
+          @shape='rounded'
+          @size={{16}}
+        />
+        <span class='name'>{{@model.cardTitle}}</span>
       </span>
       <style scoped>
-        .account-atom {
+        .atom {
+          font-size: 0.6875rem;
+          font-weight: 600;
           display: inline-flex;
           align-items: center;
           gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
+          min-inline-size: 0;
         }
-        .ca-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .ca-name {
+        .name {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -118,300 +128,230 @@ export class Account extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof Account> {
-    get name() {
-      return this.args.model?.name?.trim() || 'Unnamed Account';
-    }
-    get location() {
-      let a = this.args.model?.billingAddress;
-      return [a?.city, a?.country?.name].filter(Boolean).join(', ');
+    get subtitle() {
+      let m = this.args.model;
+      return [m?.industry, m?.domain].filter(Boolean).join(' · ');
     }
     <template>
-      <div class='fitted'>
-        <div class='fmt badge'>
-          <Avatar
-            @name={{this.name}}
-            @hue={{avatarHue this.name}}
-            @size={{28}}
-          />
-          <span class='name'>{{this.name}}</span>
-        </div>
-        <div class='fmt strip'>
-          <Avatar
-            @name={{this.name}}
-            @hue={{avatarHue this.name}}
-            @size={{28}}
-          />
-          <div class='info'>
-            <span class='name'>{{this.name}}</span>
-            {{#if @model.email}}
-              <span class='meta'>{{@model.email}}</span>
-            {{/if}}
-          </div>
-        </div>
-        <div class='fmt tile'>
-          <Avatar
-            class='avatar-lg'
-            @name={{this.name}}
-            @hue={{avatarHue this.name}}
-            @size={{40}}
-          />
-          <span class='name'>{{this.name}}</span>
-          {{#if @model.industry}}
-            <span class='meta'>{{@model.industry}}</span>
-          {{/if}}
-          {{#if @model.email}}
-            <span class='meta'>{{@model.email}}</span>
-          {{/if}}
-          {{#if this.location}}
-            <span class='meta'>{{this.location}}</span>
-          {{/if}}
-        </div>
-        <div class='fmt card'>
-          <Avatar
-            class='avatar-lg'
-            @name={{this.name}}
-            @hue={{avatarHue this.name}}
-            @size={{40}}
-          />
-          <div class='info'>
-            <span class='name name-lg'>{{this.name}}</span>
-            {{#if @model.industry}}
-              <span class='meta'>{{@model.industry}}</span>
-            {{/if}}
-            {{#if @model.email}}
-              <span class='meta'>{{@model.email}}</span>
-            {{/if}}
-            {{#if @model.phone}}
-              <span class='meta'>{{@model.phone}}</span>
-            {{/if}}
-            {{#if this.location}}
-              <span class='meta'>{{this.location}}</span>
-            {{/if}}
-          </div>
-          {{#if @model.isCustomer}}
-            <StatePill class='badge-pill' @label='Customer' @hue='green' />
-          {{/if}}
-        </div>
-      </div>
-      <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          color: var(--foreground);
-        }
-        .fmt {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-        .name {
-          font-weight: 600;
-          font-size: 0.8125rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .name-lg {
-          font-size: 1rem;
-        }
-        .meta {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
-          flex: 1;
-        }
-        .badge-pill {
-          align-self: flex-start;
-          flex-shrink: 0;
-        }
-        @container fitted-card (max-width: 150px) and (max-height: 169px) {
-          .badge {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.375rem;
-            padding: 0.5rem;
-            text-align: center;
-          }
-        }
-        @container fitted-card (min-width: 151px) and (max-height: 169px) {
-          .strip {
-            display: flex;
-            align-items: center;
-            gap: 0.625rem;
-            padding: 0.625rem 0.75rem;
-          }
-        }
-        @container fitted-card (max-width: 399px) and (min-height: 170px) {
-          .tile {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 0.25rem;
-            padding: 0.875rem;
-          }
-          .tile .avatar-lg {
-            margin-bottom: 0.25rem;
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .card {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1.25rem;
-          }
-        }
-      </style>
+      <CompactFitted
+        @mark={{if @model.cardTitle @model.cardTitle ''}}
+        @title={{@model.cardTitle}}
+        @sub={{this.subtitle}}
+        @fact={{@model.email}}
+        @tags={{if
+          @model.isCustomer
+          (array (hash label='customer' tone='success'))
+          (array (hash label='prospect'))
+        }}
+      >
+        <:rows>
+          {{#if @model.industry}}<CompactRow
+              @k='Industry'
+              @v={{@model.industry}}
+            />{{/if}}
+          {{#if @model.domain}}<CompactRow
+              @k='Domain'
+              @v={{@model.domain}}
+            />{{/if}}
+          {{#if @model.phone}}<CompactRow
+              @k='Phone'
+              @v={{@model.phone}}
+            />{{/if}}
+          {{#if @model.owner}}<CompactRow @k='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></CompactRow>{{/if}}
+        </:rows>
+      </CompactFitted>
     </template>
   };
 
   static isolated = class Isolated extends Component<typeof Account> {
-    get name() {
-      return this.args.model?.name?.trim() || 'Unnamed Account';
+    logActivity = () =>
+      createLinked(
+        this.args,
+        new URL('./activity', moduleURL).href,
+        'Activity',
+        'about',
+        { activityType: 'note', occurredAt: new Date().toISOString() },
+      );
+    newDeal = () =>
+      createLinked(
+        this.args,
+        new URL('./opportunity', moduleURL).href,
+        'Opportunity',
+        'account',
+        { stage: 'new lead' },
+      );
+    private here = (path: string) => new URL(path, moduleURL).href;
+    private rel = (path: string, name: string) =>
+      relatedSearch(
+        this,
+        this.args.context,
+        () => this.args.model,
+        this.here(path),
+        name,
+        'account.id',
+      );
+    deals = this.rel('./opportunity', 'Opportunity');
+    invoices = this.rel('../commerce/invoice', 'Invoice');
+    subs = this.rel('../commerce/subscription', 'Subscription');
+    contacts = this.rel('./contact', 'Contact');
+    private list(r: any): any[] {
+      return ((r?.instances ?? []) as any[]).filter(Boolean);
     }
-    get company(): KeyValueItem[] {
+    dealMeta = (d: any) =>
+      d.closeDate ? `closes ${shortDate(d.closeDate)}` : undefined;
+    dealStage = (d: any) => d.stage;
+    dealAmount = (d: any) => usd(d.value?.amount);
+    subMeta = (x: any) =>
+      [
+        x.billingCycle,
+        x.startDate ? `since ${shortDate(x.startDate, true)}` : '',
+      ]
+        .filter(Boolean)
+        .join(' · ');
+    subStatus = (x: any) => x.status;
+    subAmount = (x: any) =>
+      `${usd(x.price?.amount)}${x.billingCycle === 'yearly' ? '/yr' : '/mo'}`;
+    get dealCards() {
+      return this.list(this.deals);
+    }
+    get subCards() {
+      return this.list(this.subs);
+    }
+    get contactCards() {
+      return this.list(this.contacts);
+    }
+    get money() {
+      let mrr = 0;
+      for (let s of this.subCards) {
+        if (!['active', 'trial'].includes(s.status ?? '')) continue;
+        let p = s.price?.amount ?? 0;
+        mrr += s.billingCycle === 'yearly' ? p / 12 : p;
+      }
+      let outstanding = 0;
+      for (let inv of this.list(this.invoices)) {
+        if (!['sent', 'viewed', 'partial'].includes(inv.status ?? '')) continue;
+        // Invoice.balanceDue: tax, payments and variance resolutions included.
+        outstanding += inv.balanceDue ?? 0;
+      }
+      let open = this.dealCards.filter(
+        (d) => !['closed won', 'closed lost'].includes(d.stage ?? ''),
+      );
+      let pipeline = open.reduce((a, d) => a + (d.value?.amount ?? 0), 0);
+      return { mrr, outstanding, pipeline, openCount: open.length };
+    }
+    get subtitle() {
+      let m = this.args.model;
+      return [m?.industry, m?.domain].filter(Boolean).join(' · ');
+    }
+    get stats() {
+      let m = this.args.model;
+      let x = this.money;
+      return [
+        {
+          label: 'MRR',
+          value: usd(x.mrr),
+          hint: `${usd(x.mrr * 12)} ARR`,
+          tone: 'info',
+        },
+        {
+          label: 'Outstanding',
+          value: usd(x.outstanding),
+          hint: 'unpaid invoices',
+          tone: x.outstanding ? 'danger' : 'neutral',
+        },
+        {
+          label: 'Open pipeline',
+          value: usd(x.pipeline),
+          hint: `${x.openCount} open deals`,
+          tone: 'neutral',
+        },
+        {
+          label: 'Customer since',
+          value: m?.firstPaidAt ? shortDate(m.firstPaidAt, true) : '—',
+          hint: m?.firstPaidAt ? 'first paid' : 'no payment yet',
+          tone: 'success',
+        },
+      ];
+    }
+    get details(): KeyValueItem[] {
       let m = this.args.model;
       let rows: KeyValueItem[] = [];
-      if (m?.industry) rows.push({ key: 'Industry', value: 'industry' });
-      if (m?.domain) rows.push({ key: 'Domain', value: 'domain' });
-      if (m?.owner) rows.push({ key: 'Owner', value: 'owner' });
-      return rows;
-    }
-    get contact(): KeyValueItem[] {
-      let m = this.args.model;
-      let rows: KeyValueItem[] = [];
-      if (m?.email) rows.push({ key: 'Email', value: 'email' });
-      if (m?.phone) rows.push({ key: 'Phone', value: 'phone' });
+      if (m?.industry) rows.push({ key: 'Industry', value: m.industry });
+      if (m?.domain) rows.push({ key: 'Domain', value: m.domain });
+      if (m?.firstPaidAt)
+        rows.push({ key: 'First paid', value: shortDate(m.firstPaidAt, true) });
+      if (m?.phone) rows.push({ key: 'Phone', value: m.phone });
+      if (m?.email) rows.push({ key: 'Email', value: m.email });
       return rows;
     }
     <template>
-      <article class='account-page'>
-        <header class='ch'>
-          <Avatar
-            @name={{this.name}}
-            @hue={{avatarHue this.name}}
-            @size={{56}}
+      <RecordPage
+        @mark={{if @model.cardTitle @model.cardTitle ''}}
+        @title={{@model.cardTitle}}
+        @subtitle={{this.subtitle}}
+        @chips={{array
+          (hash
+            label=(if @model.isCustomer 'customer' 'prospect')
+            hue=(if @model.isCustomer 'green' 'slate')
+          )
+        }}
+        @stats={{this.stats}}
+        @linked={{if @model.owner (array (hash key='Owner' value='@owner'))}}
+        @details={{this.details}}
+      >
+        <:actions>
+          <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
+            activity</Button>
+          <Button @appearance='accent' {{on 'click' this.newDeal}}>New deal</Button>
+        </:actions>
+        <:main>
+          <RelatedList
+            @title='Deals'
+            @cards={{this.dealCards}}
+            @empty='No deals yet'
+            @meta={{this.dealMeta}}
+            @status={{this.dealStage}}
+            @amount={{this.dealAmount}}
           />
-          <div class='ch-id'>
-            <p class='doc-kind'>Account</p>
-            <h1>{{this.name}}</h1>
-            {{#if @model.isCustomer}}
-              <p class='status-line customer'>Customer since
-                <@fields.firstPaidAt /></p>
-            {{else}}
-              <p class='status-line'>Prospect</p>
-            {{/if}}
-          </div>
-        </header>
-        <section class='panel'>
-          <h2>Company</h2>
-          <KeyValue class='details' @items={{this.company}}>
-            <:value as |row|>
-              {{#if (eq row.value 'industry')}}
-                <@fields.industry />
-              {{else if (eq row.value 'domain')}}
-                <@fields.domain />
-              {{else}}
-                <@fields.owner @format='atom' />
-              {{/if}}
-            </:value>
-          </KeyValue>
-        </section>
-        <section class='panel'>
-          <h2>Contact</h2>
-          <KeyValue class='details' @items={{this.contact}}>
-            <:value as |row|>
-              {{#if (eq row.value 'email')}}
-                <@fields.email />
-              {{else}}
-                <@fields.phone />
-              {{/if}}
-            </:value>
-          </KeyValue>
-        </section>
-        <section class='panel'>
-          <h2>Billing Address</h2>
-          <@fields.billingAddress />
-        </section>
-      </article>
+          <RelatedList
+            @title='Subscriptions'
+            @cards={{this.subCards}}
+            @empty='No subscriptions'
+            @meta={{this.subMeta}}
+            @status={{this.subStatus}}
+            @amount={{this.subAmount}}
+          />
+          <RelatedList
+            @title='Contacts'
+            @cards={{this.contactCards}}
+            @empty='No contacts'
+          />
+          <h2 class='h'>Billing address</h2>
+          <div class='addr'><@fields.billingAddress /></div>
+        </:main>
+        <:value as |row|>
+          {{#if (eq row.value '@owner')}}
+            <@fields.owner @format='atom' @displayContainer={{false}} />
+          {{else}}{{row.value}}{{/if}}
+        </:value>
+      </RecordPage>
       <style scoped>
-        .account-page {
-          max-width: 40rem;
-          margin: 0 auto;
-          padding: 2rem 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.25rem;
-        }
-        .ch {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: 1.25rem;
-        }
-        .doc-kind {
-          margin: 0 0 0.125rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        h1 {
-          font-size: 1.625rem;
-          line-height: 1.1;
-        }
-        .status-line {
-          margin: 0.25rem 0 0;
+        .h {
+          margin: 0;
+          padding: 0.4375rem 0.625rem;
           font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--muted-foreground);
+          font-weight: 700;
+          border-block-end: 1px solid var(--border);
         }
-        .status-line.customer {
-          color: var(--success-ink);
-        }
-        .panel {
-          border: 1px solid var(--border);
-          border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        h2 {
-          margin: 0 0 0.75rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        /* Pret UI KeyValue at the panel's text size and column gap */
-        .details {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1.25rem;
+        .addr {
+          padding: 0.5rem 0.625rem;
         }
       </style>
     </template>
   };
 }
+
+// style tags live at the template root

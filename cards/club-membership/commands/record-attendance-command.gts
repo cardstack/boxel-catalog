@@ -12,7 +12,7 @@ import { PointsTransaction } from '../../loyalty/loyalty-account';
 import { tierMultiplier } from '../../loyalty/loyalty-tier-field';
 import { Member, MemberTierField } from '../member';
 import { Match } from '../match';
-import { isCardOfType } from '../../../utils/card-type';
+import { isCardOfType } from '@cardstack/catalog/utils/card-type';
 
 export class RecordAttendanceInput extends CardDef {
   @field booking = linksTo(Booking, { searchable: true });

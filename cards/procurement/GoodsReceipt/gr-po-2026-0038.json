@@ -13,13 +13,18 @@
         }
       ],
       "cardInfo": {
-        "name": "Goods Receipt · PO-2026-0038"
+        "name": "Goods Receipt \u00b7 PO-2026-0038"
       }
     },
     "relationships": {
       "purchaseOrder": {
         "links": {
           "self": "../PurchaseOrder/po-2026-0038"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

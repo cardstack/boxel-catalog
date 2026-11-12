@@ -16,7 +16,7 @@ To change a file the manifest lists, or to add one:
 3. **Only import what boxel's test stack can serve.** Each import must be one of:
    - another file in the list, which then goes in the manifest too;
    - a base module (`https://cardstack.com/base/…`);
-   - `@cardstack/boxel-ui/*` or `@cardstack/boxel-icons/*`;
+   - `@cardstack/pretui/*`, `@cardstack/boxel-ui/*` or `@cardstack/boxel-icons/*`;
    - a module the boxel host shims.
 4. **Re-pin boxel after this repo merges.** In the boxel PR, run `pnpm --dir packages/catalog catalog:test-subset --bump`. If no boxel PR is paired with the change, open one that only bumps the pin. Until boxel bumps, its tests keep running against the old definition, and its next PR that touches the manifest fails its pin check.
 

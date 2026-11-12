@@ -1,4 +1,6 @@
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
+import { htmlSafe } from '@ember/template';
+import { Avatar } from '@cardstack/pretui/components/avatar';
 import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
 import type { StepItem } from '@cardstack/pretui/components/step-list';
@@ -84,16 +86,99 @@ export const LoadingRows: TemplateOnlyComponent<LoadingRowsSignature> =
     <style scoped>
       .loading-rows {
         display: grid;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
-      .loading-rows :deep(.pretui-skeleton) {
-        border-radius: 0.1875rem;
-        background-image: linear-gradient(
-          90deg,
-          color-mix(in oklch, var(--foreground) 7%, transparent) 40%,
-          color-mix(in oklch, var(--foreground) 12%, transparent) 50%,
-          color-mix(in oklch, var(--foreground) 7%, transparent) 60%
-        );
+    </style>
+  </template>;
+
+interface CompoundAtomSignature {
+  Args: {
+    /** two-letter type mark, used when there is no image */
+    mark?: string;
+    /** image shown in place of the mark */
+    src?: string | null;
+    name?: string | null;
+    /** short state after the dot ("shipped", "92% full") */
+    meta?: string | null;
+    /** dot colour, a theme token such as `var(--success)` */
+    hue?: string | null;
+  };
+  Element: HTMLSpanElement;
+}
+
+function hueStyle(hue?: string | null) {
+  return htmlSafe(`--ca-hue: ${hue || 'var(--muted-foreground)'}`);
+}
+
+/**
+ * The atom the fulfilment cards share: a type mark (or image), the name, and
+ * a dot with a short state, on one line. The name ellipsizes first.
+ */
+export const CompoundAtom: TemplateOnlyComponent<CompoundAtomSignature> =
+  <template>
+    <span class='ca' ...attributes>
+      {{#if @src}}
+        <Avatar
+          @name={{if @name @name ''}}
+          @src={{@src}}
+          @shape='square'
+          @size={{16}}
+        />
+      {{else}}
+        <span class='ca-mark' aria-hidden='true'>{{@mark}}</span>
+      {{/if}}
+      <span class='ca-name'>{{if @name @name '—'}}</span>
+      {{#if @meta}}
+        <span class='ca-meta' style={{hueStyle @hue}}><span
+            class='ca-dot'
+          ></span>{{@meta}}</span>
+      {{/if}}
+    </span>
+    <style scoped>
+      .ca {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-2xs);
+        max-width: 100%;
+        min-width: 0;
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-xs);
+        line-height: 1.4;
+        vertical-align: middle;
+      }
+      .ca-mark {
+        display: inline-grid;
+        flex-shrink: 0;
+        place-items: center;
+        width: 1rem;
+        height: 1rem;
+        border-radius: calc(var(--radius) * 0.5);
+        background-color: var(--muted);
+        color: var(--foreground);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+        font-weight: 700;
+      }
+      .ca-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 600;
+      }
+      .ca-meta {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: var(--boxel-sp-3xs);
+        color: var(--foreground);
+        white-space: nowrap;
+      }
+      .ca-dot {
+        width: 0.4375rem;
+        height: 0.4375rem;
+        border-radius: 50%;
+        background-color: var(--ca-hue);
       }
     </style>
   </template>;

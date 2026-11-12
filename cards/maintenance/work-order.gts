@@ -1,3 +1,4 @@
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
   Component,
@@ -6,22 +7,17 @@ import {
   field,
   linksTo,
   StringField,
-  realmURL,
 } from '@cardstack/base/card-api';
-import { identifyCard, type getCards } from '@cardstack/runtime-common';
+import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
-import type Owner from '@ember/owner';
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import DateField from '@cardstack/base/date';
 import DateTimeField from '@cardstack/base/datetime';
 import MarkdownField from '@cardstack/base/markdown';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import WrenchIcon from '@cardstack/boxel-icons/wrench';
-import ZapOffIcon from '@cardstack/boxel-icons/zap-off';
-import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
-import FlagIcon from '@cardstack/boxel-icons/flag';
+import { Button } from '@cardstack/pretui/components/button';
+import { FitTile } from '../shared/fit-tile';
 
 import { Asset } from './asset';
 import { Location } from '../events/location';
@@ -40,25 +36,147 @@ import {
   WorkOrderPriorityField,
   WorkOrderKindField,
   HoldReasonField,
-  WO_KIND_LABEL,
-  WO_STATUS_HUE,
+  HOLD_REASONS,
   WO_TERMINAL,
 } from './maintenance-vocabulary';
-import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
-import { WorkOrderWorkbench } from './components/work-order-workbench';
-import { SparePart } from './spare-part';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import CompleteWorkOrderCommand from './commands/complete-work-order-command';
-import { sumCost, formatHours } from './utils/maintenance';
+import { sumCost } from './utils/maintenance';
 import { toDay, daysBetweenDays } from './utils/recurrence';
-import { formatMoneyDisplay } from '@cardstack/catalog/components/money-display';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
+import {
+  Chip,
+  Dot,
+  Head,
+  Mark,
+  Row,
+  Kv,
+  KvRow,
+  Section,
+  Stats,
+  fmtDay,
+  fmtStamp,
+  initials,
+  money,
+  type Tone,
+} from './card-ui';
+
+const STATUS_TONE: Record<string, Tone> = {
+  requested: 'muted',
+  approved: 'info',
+  scheduled: 'info',
+  'in-progress': 'info',
+  'on-hold': 'warn',
+  completed: 'ok',
+  closed: 'ok',
+  cancelled: 'muted',
+};
+const PRIORITY_TONE: Record<string, Tone> = { P1: 'bad', P2: 'warn' };
+const RESULT_TONE: Record<string, Tone> = { pass: 'ok', fail: 'bad' };
+
+export function woStatusTone(status?: string | null): Tone {
+  return STATUS_TONE[status ?? ''] ?? 'muted';
+}
+export function woStatusLabel(status?: string | null): string {
+  return (status ?? 'requested').replace(/-/g, ' ');
+}
+function priorityTone(p?: string | null): Tone {
+  return PRIORITY_TONE[p ?? ''] ?? 'muted';
+}
+
+function currency(m: Partial<WorkOrder>): string {
+  return (
+    m.labour?.[0]?.rate?.currency?.code ??
+    m.parts?.[0]?.unitCost?.currency?.code ??
+    'USD'
+  );
+}
+
+// WO-0870 · corrective · Loading Dock
+function metaLine(m: Partial<WorkOrder>): string {
+  let place =
+    (m.subjectAsset as any)?.locationName ?? (m.subjectLocation as any)?.name;
+  return [m.identifier?.value, m.kind, place].filter(Boolean).join(' · ');
+}
+
+// Due Sep 8, 2026 · asset down since Sep 8
+function factLine(m: Partial<WorkOrder>): string {
+  let parts: string[] = [];
+  if (m.dueBy) parts.push(`Due ${fmtDay(m.dueBy, true)}`);
+  if (m.downtime?.startedAt && !m.downtime?.endedAt) {
+    parts.push(`asset down since ${fmtDay(m.downtime.startedAt)}`);
+  } else if (m.completedAt) {
+    parts.push(`completed ${fmtDay(m.completedAt)}`);
+  }
+  return parts.join(' · ');
+}
+
+function checklistCount(m: Partial<WorkOrder>): string {
+  let c = m.checklist;
+  return c?.total ? `${c.done ?? 0} / ${c.total}` : '—';
+}
+function checklistDone(m: Partial<WorkOrder>): string {
+  let c = m.checklist;
+  return c?.total ? `${c.done ?? 0} of ${c.total} done` : '';
+}
+function labourRate(m: Partial<WorkOrder>): string {
+  let r = m.labour?.[0]?.rate;
+  return r?.amount != null ? `${money(r.amount, r.currency?.code)} / h` : '';
+}
+function requestedLine(m: Partial<WorkOrder>): string {
+  return [fmtDay(m.requestedAt), m.requestedByName].filter(Boolean).join(' · ');
+}
+function downtimeKind(m: Partial<WorkOrder>): string {
+  let d = m.downtime;
+  if (!d?.startedAt) return '';
+  return d.planned ? 'planned' : 'unplanned';
+}
+
+function itemSub(i: any): string {
+  if (i?.kind === 'measure' && i?.expectedValue != null) {
+    let tol = i.tolerance != null ? ` ± ${i.tolerance}` : '';
+    return `measure · ${i.expectedValue} ${i.unit ?? ''}${tol}`.trim();
+  }
+  if (i?.completedByName) return i.completedByName;
+  return i?.required ? 'required' : 'optional';
+}
+function itemTone(i: any): Tone {
+  return RESULT_TONE[i?.result ?? ''] ?? 'muted';
+}
+
+function labourLine(l: any): string {
+  let rate =
+    l?.rate?.amount != null ? money(l.rate.amount, l.rate.currency?.code) : '';
+  return [
+    l?.startedAt ? `from ${fmtDay(l.startedAt)}` : '',
+    rate ? `${rate} / h` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+function partLabel(p: any): string {
+  return `${p?.partNumber ?? 'part'} × ${p?.quantity ?? 1}`;
+}
+function partLine(p: any): string {
+  return [
+    money(p?.cost ?? 0, p?.unitCost?.currency?.code),
+    p?.fromStock ? 'from stock' : 'bought in',
+  ].join(' · ');
+}
+
+const StatusDots: TemplateOnlyComponent<{
+  Args: { model: Partial<WorkOrder> };
+}> = <template>
+  <Dot
+    @tone={{woStatusTone @model.status}}
+    @label={{woStatusLabel @model.status}}
+  />
+  {{#if @model.priority}}
+    <Dot @tone={{priorityTone @model.priority}} @label={{@model.priority}} />
+  {{/if}}
+  {{#if @model.isOverdue}}<Dot @tone='bad' @label='late' />{{/if}}
+</template>;
 
 class WorkOrderIsolated extends Component<typeof WorkOrder> {
-  get workOrder() {
-    return this.args.model as WorkOrder;
-  }
-
   // Commands need the host; a card rendered without one cannot act.
   private get commandContext() {
     let context = this.args.context?.commandContext;
@@ -68,316 +186,283 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
     return context;
   }
 
-  @tracked workbenchError: string | undefined;
+  @tracked error: string | undefined;
 
-  partQuery: ReturnType<getCards> | undefined;
-
-  constructor(owner: Owner, args: any) {
-    super(owner, args);
-    let realmHref = (this.args.model as any)?.[realmURL]?.href;
-    this.partQuery = this.args.context?.getCards(
-      this,
-      () => {
-        let ref = identifyCard(SparePart);
-        return ref ? { filter: { type: ref } } : undefined;
-      },
-      () => (realmHref ? [realmHref] : undefined),
-      { isLive: true },
-    );
-  }
-
-  get parts(): SparePart[] {
-    return ((this.partQuery?.instances ?? []) as SparePart[]).filter(Boolean);
-  }
-
-  // Same non-terminal moves the board's own drag allows (a direct, legal
-  // write per WorkOrderStatusField's transition graph); Complete is gated
-  // business logic and goes through the single-writer command instead.
-  // These live on the card itself (not an app shell) so opening the Work
-  // Order on its own — via viewCard from anywhere — is the full technician
-  // workbench, not a read-only summary.
-  startWorkOrder = async () => {
-    let wo = this.args.model;
-    this.workbenchError = undefined;
-    wo.status = 'in-progress' as any;
-    if (!wo.startedAt) {
-      wo.startedAt = new Date();
-    }
-    await new SaveCardCommand(this.commandContext).execute({
-      card: wo,
-    } as any);
-  };
-
-  holdWorkOrder = async (reason: string) => {
-    let wo = this.args.model;
-    this.workbenchError = undefined;
-    wo.status = 'on-hold' as any;
-    wo.holdReason = reason as any;
-    await new SaveCardCommand(this.commandContext).execute({
-      card: wo,
-    } as any);
-  };
-
-  resumeWorkOrder = async () => {
-    let wo = this.args.model;
-    this.workbenchError = undefined;
-    wo.status = 'in-progress' as any;
-    await new SaveCardCommand(this.commandContext).execute({
-      card: wo,
-    } as any);
-  };
-
-  completeWorkOrder = async () => {
-    let wo = this.args.model;
-    this.workbenchError = undefined;
-    try {
-      await new CompleteWorkOrderCommand(this.commandContext).execute({
-        workOrder: wo,
-      } as any);
-    } catch (e: any) {
-      this.workbenchError = e?.message ?? 'Could not complete this work order.';
-    }
-  };
-
-  saveWorkOrder = async () => {
+  private save = async () => {
     await new SaveCardCommand(this.commandContext).execute({
       card: this.args.model,
     } as any);
   };
 
-  get cost() {
+  // Non-terminal moves are direct, legal writes per WorkOrderStatusField's
+  // transition graph; Complete is gated and goes through the command.
+  start = async () => {
+    let wo = this.args.model;
+    this.error = undefined;
+    wo.status = 'in-progress' as any;
+    if (!wo.startedAt) wo.startedAt = new Date();
+    await this.save();
+  };
+
+  hold = async () => {
+    let wo = this.args.model;
+    this.error = undefined;
+    wo.status = 'on-hold' as any;
+    wo.holdReason = HOLD_REASONS[0] as any;
+    await this.save();
+  };
+
+  complete = async () => {
+    this.error = undefined;
+    try {
+      await new CompleteWorkOrderCommand(this.commandContext).execute({
+        workOrder: this.args.model,
+      } as any);
+    } catch (e: any) {
+      this.error = e?.message ?? 'Could not complete this work order.';
+    }
+  };
+
+  get canStart() {
+    return ['approved', 'scheduled', 'on-hold'].includes(
+      this.args.model.status ?? '',
+    );
+  }
+  get inProgress() {
+    return this.args.model.status === 'in-progress';
+  }
+
+  get stats() {
     let m = this.args.model;
-    let code =
-      m.labour?.[0]?.rate?.currency?.code ??
-      m.parts?.[0]?.unitCost?.currency?.code ??
-      'USD';
-    return {
-      labour: formatMoneyDisplay(m.labourCost ?? 0, code),
-      parts: formatMoneyDisplay(m.partsCost ?? 0, code),
-      total: formatMoneyDisplay(m.totalCost ?? 0, code),
-      hours: formatHours(m.labourHours ?? 0),
-    };
+    let c = m.checklist;
+    let next = c?.items?.find((i) => (i?.result ?? 'pending') === 'pending');
+    let parts = m.parts ?? [];
+    let d = m.downtime;
+    return [
+      {
+        label: 'Checklist',
+        value: checklistCount(m),
+        meta: next ? `${next.label?.toLowerCase()} still to do` : 'all done',
+      },
+      {
+        label: 'Parts cost',
+        value: money(m.partsCost ?? 0, currency(m)),
+        meta: parts.length
+          ? `${parts.length} part${parts.length === 1 ? '' : 's'}${
+              parts.every((p) => p?.fromStock) ? ' from stock' : ''
+            }`
+          : 'no parts',
+      },
+      {
+        label: 'Priority',
+        value: m.priority ?? '—',
+        meta: m.dueBy ? `due ${fmtDay(m.dueBy, true)}` : '',
+      },
+      {
+        label: 'Downtime',
+        value: !d?.startedAt
+          ? '—'
+          : d.isOpen
+            ? 'Open'
+            : `${Math.round((d.hours ?? 0) * 10) / 10} h`,
+        meta: d?.startedAt ? `since ${fmtStamp(d.startedAt)}` : 'asset running',
+      },
+    ];
   }
-  get hasFindings() {
-    return (this.args.model.findings?.length ?? 0) > 0;
-  }
-  get hasApproval() {
-    return (this.args.model.approval?.steps?.length ?? 0) > 0;
-  }
+
   <template>
     <article class='wo'>
-      <div class='wo-meta'>
-        <div class='meta-block'>
-          <span class='meta-l'>Owner</span>
-          <@fields.ownership @format='embedded' />
-        </div>
-        <div class='meta-block'>
-          <span class='meta-l'>Cost so far</span>
-          <span class='meta-big'>{{this.cost.total}}</span>
-          <span class='meta-s'>{{this.cost.hours}}
-            labour ·
-            {{this.cost.labour}}
-            · parts
-            {{this.cost.parts}}</span>
-        </div>
-        {{#if @model.warrantyCovered}}
-          <div class='banner'><ShieldCheckIcon class='ic' />
-            Asset under warranty — claim, don't pay for parts.</div>
+      <Head @mark='WO' @title={{@model.title}} @meta={{metaLine @model}}>
+        <StatusDots @model={{@model}} />
+        {{#if this.inProgress}}
+          <Button
+            @tone='primary'
+            @appearance='accent'
+            @size='s'
+            {{on 'click' this.complete}}
+          >Complete</Button>
+          <Button
+            @tone='neutral'
+            @appearance='outlined'
+            @size='s'
+            {{on 'click' this.hold}}
+          >Put on hold</Button>
+        {{else if this.canStart}}
+          <Button
+            @tone='primary'
+            @appearance='accent'
+            @size='s'
+            {{on 'click' this.start}}
+          >{{if (isHeld @model.status) 'Resume' 'Start'}}</Button>
         {{/if}}
+      </Head>
+      {{#if this.error}}<p class='err' role='alert'>{{this.error}}</p>{{/if}}
+
+      <Stats @items={{this.stats}} />
+
+      <div class='cols'>
+        <div class='col'>
+          {{#if @model.description}}
+            <Section @title='Description'><div
+                class='prose'
+              ><@fields.description /></div></Section>
+          {{/if}}
+          {{#if @model.failure.symptom}}
+            <Section @title='Failure'>
+              <Kv>
+                <KvRow @label='Symptom' @value={{@model.failure.symptom}} />
+                <KvRow @label='Cause' @value={{@model.failure.cause}} />
+                <KvRow @label='Code' @value={{cap @model.failure.codeText}} />
+                <KvRow
+                  @label='Detected'
+                  @value={{fmtStamp @model.failure.detectedAt}}
+                />
+                <KvRow
+                  @label='Asset down'
+                  @value={{if @model.failure.assetDown 'Yes' 'No'}}
+                />
+              </Kv>
+            </Section>
+          {{/if}}
+          {{#if @model.checklist.items.length}}
+            <Section @title='Checklist'>
+              {{#each @model.checklist.items as |i|}}
+                <Row
+                  @title={{i.label}}
+                  @meta={{itemSub i}}
+                  @tone={{itemTone i}}
+                  @state={{if i.result i.result 'pending'}}
+                />
+              {{/each}}
+            </Section>
+          {{/if}}
+          <Section @title='Labor & parts'>
+            <Kv>
+              {{#each @model.labour as |l|}}
+                <KvRow @label={{l.workerName}} @value={{labourLine l}} />
+              {{/each}}
+              {{#each @model.parts as |p|}}
+                <KvRow @label={{partLabel p}} @value={{partLine p}} />
+              {{/each}}
+            </Kv>
+            {{#unless (hasWork @model)}}<p class='empty'>No labor or parts
+                logged yet</p>{{/unless}}
+          </Section>
+        </div>
+
+        <aside class='col side'>
+          <Section @title='Linked'>
+            <Kv>
+              <KvRow @label='Asset'>{{#if
+                  @model.subjectAsset
+                }}<@fields.subjectAsset
+                    @format='atom'
+                  />{{else}}—{{/if}}</KvRow>
+              {{#if @model.subjectLocation}}
+                <KvRow @label='Location'><@fields.subjectLocation
+                    @format='atom'
+                  /></KvRow>
+              {{/if}}
+              <KvRow @label='Owner'>{{#if @model.ownership.ownerName}}<Chip
+                    @mark={{initials @model.ownership.ownerName}}
+                    @name={{@model.ownership.ownerName}}
+                  />{{else}}—{{/if}}</KvRow>
+              {{#each @model.parts as |p|}}
+                <KvRow @label='Part'><Chip
+                    @mark='Pt'
+                    @name={{p.partName}}
+                  /></KvRow>
+              {{/each}}
+              {{#if @model.plan}}
+                <KvRow @label='Plan'><@fields.plan @format='atom' /></KvRow>
+              {{/if}}
+            </Kv>
+          </Section>
+          <Section @title='Details'>
+            <Kv>
+              <KvRow @label='Requested' @value={{requestedLine @model}} />
+              <KvRow @label='Started' @value={{fmtDay @model.startedAt true}} />
+              {{#if @model.completedAt}}
+                <KvRow
+                  @label='Completed'
+                  @value={{fmtDay @model.completedAt true}}
+                />
+              {{/if}}
+              <KvRow @label='Checklist' @value={{checklistDone @model}} />
+              <KvRow
+                @label='Parts'
+                @value={{money @model.partsCost (currency @model)}}
+              />
+              <KvRow @label='Labor rate' @value={{labourRate @model}} />
+              <KvRow @label='Failure' @value={{@model.failure.codeText}} />
+              <KvRow @label='Team' @value={{@model.ownership.teamName}} />
+              <KvRow @label='Downtime' @value={{downtimeKind @model}} />
+              {{#if @model.holdReason}}
+                <KvRow
+                  @label='Hold reason'
+                  @value={{woStatusLabel @model.holdReason}}
+                />
+              {{/if}}
+            </Kv>
+          </Section>
+        </aside>
       </div>
-
-      {{#if @model.description}}
-        <section class='sec'><@fields.description /></section>
-      {{/if}}
-
-      <WorkOrderWorkbench
-        @workOrder={{this.workOrder}}
-        @asset={{@model.subjectAsset}}
-        @parts={{this.parts}}
-        @onStart={{this.startWorkOrder}}
-        @onHold={{this.holdWorkOrder}}
-        @onResume={{this.resumeWorkOrder}}
-        @onComplete={{this.completeWorkOrder}}
-        @onChange={{this.saveWorkOrder}}
-        @errorMessage={{this.workbenchError}}
-      />
-
-      {{#if @model.failure.symptom}}
-        <section class='sec'>
-          <h2><ZapOffIcon class='ic' /> Failure</h2>
-          <@fields.failure @format='embedded' />
-        </section>
-      {{/if}}
-
-      {{#if this.hasFindings}}
-        <section class='sec'>
-          <h2><FlagIcon class='ic' /> Inspection findings</h2>
-          <ul class='list'>{{#each @fields.findings as |F|}}<li><F
-                  @format='embedded'
-                /></li>{{/each}}</ul>
-        </section>
-      {{/if}}
-
-      {{#if this.hasApproval}}
-        <section class='sec'>
-          <h2><ShieldCheckIcon class='ic' /> Approval</h2>
-          <@fields.approval @format='embedded' />
-        </section>
-      {{/if}}
     </article>
     <style scoped>
       .wo {
         container-type: inline-size;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: var(--boxel-sp-lg);
-        padding: var(--boxel-sp-lg);
-        color: var(--foreground);
-        background: var(--background);
-      }
-      .head {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 16rem;
-        gap: var(--boxel-sp-lg);
-        align-items: start;
-      }
-      .head-main {
-        display: grid;
-        gap: var(--boxel-sp-xs);
-        min-width: 0;
-      }
-      .chips {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .tag {
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
-        padding: 2px 0.375rem;
-        border: 1px solid var(--border);
-        border-radius: 0.25rem;
-        background: var(--card);
-      }
-      .kind {
+        min-block-size: 100%;
+        box-sizing: border-box;
+        font-family: var(--font-sans);
         font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground);
+        line-height: 1.4;
+        color: var(--card-foreground);
+        background-color: var(--card);
+        --pretui-button-h: 1.625rem;
       }
-      .title {
-        margin: 0;
-        font-size: 1.75rem;
-        line-height: 1.15;
-        font-weight: 700;
-        text-wrap: balance;
-      }
-      .subject,
-      .dates {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .dates span {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        color: var(--muted-foreground);
-        font-variant-numeric: tabular-nums;
-      }
-      .alarm,
-      .dates .alarm {
+      .err {
+        padding: 0 var(--boxel-sp-sm) var(--boxel-sp-xs);
         color: var(--destructive-ink);
-        font-weight: 600;
       }
-      .muted {
-        color: var(--muted-foreground);
-      }
-      .banner {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-radius: var(--radius);
-        background: color-mix(in oklab, var(--primary) 12%, transparent);
-        color: var(--foreground);
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 500;
-      }
-      .wo-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-sm);
-        align-items: flex-start;
-      }
-      .meta-block {
+      .cols {
         display: grid;
-        gap: var(--boxel-sp-4xs);
-        padding: var(--boxel-sp-sm);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       }
-      .meta-l {
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+      .side {
+        border-inline-start: 1px solid var(--border);
+      }
+      .col {
+        min-inline-size: 0;
+      }
+      .prose {
+        padding-block-start: var(--boxel-sp-5xs);
+      }
+      .empty {
+        padding-block: var(--boxel-sp-5xs);
         color: var(--muted-foreground);
-      }
-      .meta-big {
-        font-size: 1.5rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-      .meta-s {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .sec {
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        min-width: 0;
-      }
-      .sec h2 {
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        font-size: var(--boxel-font-size-sm);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .two {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
-        gap: var(--boxel-sp-lg);
-      }
-      .list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: var(--boxel-sp-xs);
-      }
-      .ic {
-        width: 1rem;
-        height: 1rem;
-        flex: none;
       }
       @container (width < 40rem) {
-        .head {
-          grid-template-columns: 1fr;
+        .cols {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .side {
+          border-inline-start: 0;
+          border-block-start: 1px solid var(--border);
         }
       }
     </style>
   </template>
 }
 
+function isHeld(status?: string | null) {
+  return status === 'on-hold';
+}
+function hasWork(m: Partial<WorkOrder>) {
+  return (m.labour?.length ?? 0) + (m.parts?.length ?? 0) > 0;
+}
+function cap(s?: string | null) {
+  return s ? s[0]!.toUpperCase() + s.slice(1) : '';
+}
 /**
  * One job on one asset (or place): the unit of maintenance work, cost and
  * history. Kind decides the flavour — preventive / corrective / inspection /
@@ -435,7 +520,7 @@ export class WorkOrder extends CardDef {
   @field holdReason = contains(HoldReasonField);
   @field cancelReason = contains(StringField);
   @field noLabourReason = contains(StringField, {
-    description: 'Complete Work Order accepts no labour only with this reason.',
+    description: 'Complete Work Order accepts no labor only with this reason.',
   });
 
   @field labourCost = contains(NumberField, {
@@ -530,138 +615,92 @@ export class WorkOrder extends CardDef {
   static isolated = WorkOrderIsolated;
 
   static embedded = class Embedded extends Component<typeof WorkOrder> {
-    get kindLabel() {
-      return WO_KIND_LABEL[this.args.model.kind ?? ''] ?? 'WO';
-    }
-    get statusHue(): Hue {
-      return WO_STATUS_HUE[this.args.model.status ?? ''] ?? 'slate';
-    }
-    get due() {
-      let m = this.args.model;
-      let d = toDay(m.dueBy);
-      return d ? fmtDay(d) : undefined;
-    }
     <template>
-      <div class='wo-emb'>
-        <code class='tag'>{{@model.identifier.value}}</code>
+      <article class='emb'>
+        <Head @mark='WO' @title={{@model.title}} @meta={{metaLine @model}} />
         <div class='body'>
-          <div class='row'>
-            <span class='kind'>{{this.kindLabel}}</span>
-            <span class='title'>{{@model.title}}</span>
-          </div>
-          <div class='meta'>
-            {{#if @model.assetTag}}{{@model.assetTag}}
-              ·
-            {{/if}}{{@model.assetName}}
-            {{#if @model.ownership.ownerName}}·
-              {{@model.ownership.ownerName}}{{/if}}
-            {{#if this.due}}· due {{this.due}}{{/if}}
-          </div>
+          <div class='dots'><StatusDots @model={{@model}} /></div>
+          {{#if (factLine @model)}}<p class='fact'>{{factLine
+                @model
+              }}</p>{{/if}}
+          <Kv>
+            <KvRow @label='Requested' @value={{requestedLine @model}} />
+            <KvRow @label='Started' @value={{fmtDay @model.startedAt true}} />
+            <KvRow @label='Checklist' @value={{checklistDone @model}} />
+            <KvRow
+              @label='Parts'
+              @value={{money @model.partsCost (currency @model)}}
+            />
+            <KvRow @label='Labor rate' @value={{labourRate @model}} />
+            <KvRow @label='Failure' @value={{@model.failure.codeText}} />
+            <KvRow @label='Asset'>{{#if
+                @model.subjectAsset
+              }}<@fields.subjectAsset @format='atom' />{{else}}—{{/if}}</KvRow>
+            <KvRow @label='Owner'>{{#if @model.ownership.ownerName}}<Chip
+                  @mark={{initials @model.ownership.ownerName}}
+                  @name={{@model.ownership.ownerName}}
+                />{{else}}—{{/if}}</KvRow>
+            {{#each @model.parts as |p|}}
+              <KvRow @label='Part'><Chip
+                  @mark='Pt'
+                  @name={{p.partName}}
+                /></KvRow>
+            {{/each}}
+          </Kv>
         </div>
-        <@fields.priority @format='atom' />
-        <StatePill
-          @label={{if @model.isOverdue 'overdue' @model.status}}
-          @hue={{if @model.isOverdue 'orange' this.statusHue}}
-          @dot={{true}}
-        />
-      </div>
+      </article>
       <style scoped>
-        .wo-emb {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          min-width: 0;
-        }
-        .tag {
-          flex: none;
-          font-family: var(--font-mono);
+        .emb {
+          font-family: var(--font-sans);
           font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
         }
         .body {
-          flex: 1;
-          min-width: 0;
           display: grid;
-          gap: 2px;
-        }
-        .row {
-          display: flex;
-          align-items: baseline;
           gap: var(--boxel-sp-xs);
-          min-width: 0;
+          padding: 0 var(--boxel-sp-sm) var(--boxel-sp-xs);
         }
-        .kind {
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          color: var(--muted-foreground);
-        }
-        .title {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .meta {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        .dots {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof WorkOrder> {
-    get kindLabel() {
-      return WO_KIND_LABEL[this.args.model.kind ?? ''] ?? 'WO';
-    }
-    get statusHue(): Hue {
-      return WO_STATUS_HUE[this.args.model.status ?? ''] ?? 'slate';
-    }
-    get due() {
-      let m = this.args.model;
-      let d = toDay(m.dueBy);
-      if (!d) return undefined;
-      let n = daysBetweenDays(toDay(new Date())!, d);
-      if (m.isTerminal) return fmtDay(d);
-      return n < 0
-        ? `${Math.abs(n)} d overdue`
-        : n === 0
-          ? 'due today'
-          : `due in ${n} d`;
-    }
     <template>
-      <FittedCard class='fit' @titleTag='h3'>
-        <:eyebrow><span class='mono'>{{@model.identifier.value}}</span>
-          ·
-          {{this.kindLabel}}</:eyebrow>
+      <FitTile class='fit'>
+        <:avatar><Mark @text='WO' @size='lg' /></:avatar>
         <:title>{{@model.title}}</:title>
-        <:subtitle>{{@model.assetTag}} {{@model.assetName}}</:subtitle>
-        <:meta><span
-            class={{if @model.isOverdue 'alarm'}}
-          >{{this.due}}</span>{{#if @model.ownership.ownerName}}
-            ·
-            {{@model.ownership.ownerName}}{{/if}}</:meta>
-        <:badge><StatePill
-            @label={{@model.status}}
-            @hue={{if @model.isOverdue 'orange' this.statusHue}}
-            @dot={{true}}
-          /></:badge>
-      </FittedCard>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><span class='dots'><StatusDots
+              @model={{@model}}
+            /></span></:status>
+        <:fact>{{factLine @model}}</:fact>
+        <:relations>
+          {{#if @model.subjectAsset}}<@fields.subjectAsset
+              @format='atom'
+            />{{/if}}
+          {{#if @model.ownership.ownerName}}<Chip
+              @mark={{initials @model.ownership.ownerName}}
+              @name={{@model.ownership.ownerName}}
+            />{{/if}}
+        </:relations>
+      </FitTile>
       <style scoped>
         .fit {
-          --fc-title-font-size: var(--boxel-font-size-sm);
-          --fc-subtitle-font-size: var(--boxel-font-size-xs);
+          color: var(--card-foreground);
+          background-color: var(--card);
         }
-        .mono {
-          font-family: var(--font-mono);
-        }
-        .alarm {
-          color: var(--destructive-ink);
-          font-weight: 600;
+        .dots {
+          display: inline-flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>
@@ -669,148 +708,15 @@ export class WorkOrder extends CardDef {
 
   static atom = class Atom extends Component<typeof WorkOrder> {
     <template>
-      <span class='wo-atom'><code>{{@model.identifier.value}}</code>
-        {{@model.title}}</span>
-      <style scoped>
-        .wo-atom {
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 500;
-        }
-        .wo-atom code {
-          font-family: var(--font-mono);
-          font-weight: 600;
-        }
-      </style>
+      <Chip
+        @bare={{true}}
+        @mark='WO'
+        @name={{@model.cardTitle}}
+        @tone={{woStatusTone @model.status}}
+        @meta={{woStatusLabel @model.status}}
+      />
     </template>
   };
-
-  static edit = class Edit extends Component<typeof WorkOrder> {
-    sections = [
-      { id: 'job', label: 'Job' },
-      { id: 'subject', label: 'Subject & schedule' },
-      { id: 'work', label: 'Work done' },
-      { id: 'costs', label: 'Costs' },
-      { id: 'failure', label: 'Failure & findings' },
-    ];
-    <template>
-      <SectionedEdit
-        @sections={{this.sections}}
-        @ariaLabel='Work order sections'
-        as |e|
-      >
-        <e.Section @id='job' @title='Job' @cols={{2}}>
-          <FieldContainer @label='Title' @vertical={{true}}><@fields.title
-            /></FieldContainer>
-          <FieldContainer
-            @label='Identifier'
-            @vertical={{true}}
-          ><@fields.identifier /></FieldContainer>
-          <FieldContainer @label='Kind' @vertical={{true}}><@fields.kind
-            /></FieldContainer>
-          <FieldContainer @label='Priority' @vertical={{true}}><@fields.priority
-            /></FieldContainer>
-          <FieldContainer @label='Status' @vertical={{true}}><@fields.status
-              @format='atom'
-            /></FieldContainer>
-          <FieldContainer
-            @label='Hold reason'
-            @vertical={{true}}
-          ><@fields.holdReason /></FieldContainer>
-          <FieldContainer
-            @label='Description'
-            @vertical={{true}}
-          ><@fields.description /></FieldContainer>
-          <FieldContainer @label='Owner' @vertical={{true}}><@fields.ownership
-            /></FieldContainer>
-        </e.Section>
-        <e.Section @id='subject' @title='Subject & schedule' @cols={{2}}>
-          <FieldContainer
-            @label='Asset'
-            @vertical={{true}}
-          ><@fields.subjectAsset /></FieldContainer>
-          <FieldContainer
-            @label='Location'
-            @vertical={{true}}
-          ><@fields.subjectLocation /></FieldContainer>
-          <FieldContainer @label='Plan' @vertical={{true}}><@fields.plan
-            /></FieldContainer>
-          <FieldContainer
-            @label='Requested by'
-            @vertical={{true}}
-          ><@fields.requestedByName /></FieldContainer>
-          <FieldContainer
-            @label='Requested at'
-            @vertical={{true}}
-          ><@fields.requestedAt /></FieldContainer>
-          <FieldContainer
-            @label='Scheduled for'
-            @vertical={{true}}
-          ><@fields.scheduledFor /></FieldContainer>
-          <FieldContainer @label='Due by' @vertical={{true}}><@fields.dueBy
-            /></FieldContainer>
-          <FieldContainer @label='Started' @vertical={{true}}><@fields.startedAt
-              @format='atom'
-            /></FieldContainer>
-          <FieldContainer
-            @label='Completed'
-            @vertical={{true}}
-          ><@fields.completedAt @format='atom' /></FieldContainer>
-          <FieldContainer @label='Closed' @vertical={{true}}><@fields.closedAt
-              @format='atom'
-            /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='work'
-          @title='Work done'
-          @hint='The checklist defines done; the timer writes labour'
-        >
-          <@fields.checklist />
-          <FieldContainer @label='Downtime' @vertical={{true}}><@fields.downtime
-            /></FieldContainer>
-          <FieldContainer
-            @label='No-labour reason'
-            @vertical={{true}}
-          ><@fields.noLabourReason /></FieldContainer>
-        </e.Section>
-        <e.Section @id='costs' @title='Costs' @cols={{2}}>
-          <FieldContainer @label='Labour' @vertical={{true}}><@fields.labour
-            /></FieldContainer>
-          <FieldContainer @label='Parts' @vertical={{true}}><@fields.parts
-            /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='failure'
-          @title='Failure & findings'
-          @hint='Corrective work needs a remedy; inspections produce findings'
-        >
-          <FieldContainer
-            @label='Failure report'
-            @vertical={{true}}
-          ><@fields.failure /></FieldContainer>
-          <FieldContainer @label='Findings' @vertical={{true}}><@fields.findings
-            /></FieldContainer>
-          <FieldContainer
-            @label='Cancel reason'
-            @vertical={{true}}
-          ><@fields.cancelReason /></FieldContainer>
-        </e.Section>
-        <e.Section
-          @id='approval'
-          @title='Approval'
-          @hint='Required when estimated cost is over the App Configuration threshold'
-        >
-          <FieldContainer
-            @label='Approval chain'
-            @vertical={{true}}
-          ><@fields.approval /></FieldContainer>
-        </e.Section>
-      </SectionedEdit>
-    </template>
-  };
-}
-
-function fmtDay(d: Date): string {
-  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 }
 
 export default WorkOrder;

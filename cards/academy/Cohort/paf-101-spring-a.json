@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "PAF-101 · Autumn 2026 · Cohort A",
+      "name": "PAF-101 \u00b7 Autumn 2026 \u00b7 Cohort A",
       "term": {
         "start": "2026-08-24",
         "end": "2026-10-04"
@@ -85,6 +85,11 @@
       "releases.2.releasedBy": {
         "links": {
           "self": "../../hr/Employee/sofia-reyes"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

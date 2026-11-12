@@ -7,11 +7,9 @@ import {
   StringField,
   realmURL,
 } from 'https://cardstack.com/base/card-api';
-import { type Query, rri } from '@cardstack/runtime-common';
-import CardList from 'https://cardstack.com/base/components/card-list';
+import { Button } from '@cardstack/pretui/components/button';
 import enumField from 'https://cardstack.com/base/enum';
 import HeadsetIcon from '@cardstack/boxel-icons/headset';
-import TicketIcon from '@cardstack/boxel-icons/ticket';
 
 import { PersonBase } from '../people/person-base';
 
@@ -24,26 +22,32 @@ import { PersonBase } from '../people/person-base';
 // EXACT display-name match and silently drops Incident and ServiceRequest, the
 // two subclasses this mostly holds.
 //
-// It was `import.meta.url` until `import.meta` turned out to be unavailable
-// under the checker's CommonJS inference (TS1470). The realm URL is already on
+// The ref comes from the model, not `import.meta.url`, which the checker
+// rejects under CommonJS inference (TS1470). The realm URL is already on
 // the model, it is what `service-desk.gts` uses to create a ticket, and it
 // makes the ref a per-instance value instead of a module-level constant — so
 // the same module is correct in whichever realm it is copied into.
-function ticketRefIn(realm: string | undefined) {
-  return realm
-    ? { module: rri(new URL('./ticket', realm).href), name: 'Ticket' }
-    : undefined;
-}
+import { ticketRefIn } from './utils/ticket-ref';
+import { on } from '@ember/modifier';
+import { fn } from '@ember/helper';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { FitTile } from '../shared/fit-tile';
+import { FittedExtras } from '../procurement/vendor';
+import { initials } from './utils/initials';
+import {
+  RecCard,
+  RecHead,
+  RecStats,
+  RecBody,
+  RecBlock,
+  RecRow,
+  RecLine,
+  RecText,
+} from './components/record';
 
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { KeyValue } from '@cardstack/pretui/components/key-value';
-import {
-  COMPACT_EMPTY_STYLE,
-  AVATAR_HUE,
-} from '@cardstack/catalog/components/pretui-helpers';
 
 export const AGENT_TIERS = ['L1', 'L2', 'L3'] as const;
 
@@ -119,233 +123,202 @@ export class SupportAgent extends PersonBase {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get assignedQuery(): Query | undefined {
-      let ticketRef = ticketRefIn(this.realms[0]);
-      if (!ticketRef) {
-        return undefined;
-      }
-      return {
-        // ONE anchored node. A bare type node beside an unanchored `eq`
-        // translates to a wire filter whose predicate names no type, and the
-        // result is always empty. `on` anchors the field path AND constrains
-        // the type, adoption-aware, so Incident and ServiceRequest count.
-        filter: {
-          on: ticketRef,
-          eq: { assigneeName: this.args.model?.title ?? '\u2014' },
+    tickets: any;
+    constructor(owner: unknown, args: any) {
+      super(owner as never, args as never);
+      let realm = this.args.model?.[realmURL]?.href;
+      this.tickets = (this.args.context as any)?.getCards?.(
+        this,
+        () => {
+          let ref = ticketRefIn(realm);
+          return ref
+            ? {
+                filter: {
+                  on: ref,
+                  eq: { assigneeName: this.args.model?.title ?? '—' },
+                },
+              }
+            : undefined;
         },
-      };
+        () => (realm ? [realm] : []),
+        { isLive: true },
+      );
     }
-
-    get realms(): string[] {
-      let url = this.args.model?.[realmURL];
-      return url ? [url.href] : [];
+    get assigned(): any[] {
+      return ((this.tickets?.instances ?? []) as any[]).filter(
+        (t) => t && !['Resolved', 'Closed'].includes(t.status),
+      );
     }
-
-    get facts() {
-      let model = this.args.model;
-      return [
-        ...(model?.email ? [{ key: 'Email', value: model.email }] : []),
-        { key: 'Skills', value: model?.skillSummary ?? '' },
-      ];
+    get paused() {
+      return this.assigned.filter((t) => t.slaState === 'paused').length;
     }
-
+    get skills(): string[] {
+      return (this.args.model?.skills ?? []).filter(Boolean) as string[];
+    }
+    openTicket = (t: any) => (this.args as any).viewCard?.(t);
     <template>
-      <article class='iso'>
-        <header class='iso-head'>
-          <Avatar
-            @name={{if @model.name @model.name '?'}}
-            @src={{@model.photo.resolvedUrl}}
-            @hue={{AVATAR_HUE}}
-            @size={{48}}
-            aria-hidden='true'
+      <RecCard @inset={{true}}>
+        <RecHead
+          @mark={{initials @model.title}}
+          @title={{@model.title}}
+          @sub={{@model.tierLabel}}
+        >
+          <:status>
+            {{#if @model.tier}}<Chip
+                @appearance='plain'
+              >{{@model.tier}}</Chip>{{/if}}
+            <Chip @appearance='plain'>{{this.assigned.length}} assigned</Chip>
+          </:status>
+        </RecHead>
+        <RecStats>
+          <Stat
+            @label='Tier'
+            @tone='neutral'
+            @value={{if @model.tier @model.tier '—'}}
+            @hint={{@model.tierDescriptor}}
+            @roll={{false}}
           />
-          <div class='who'>
-            <h1>{{@model.title}}</h1>
-            <p class='org'>{{@model.tierLabel}}</p>
-          </div>
-        </header>
-
-        <KeyValue class='facts' @items={{this.facts}}>
-          <:value as |row|>
-            {{#if (eq row.key 'Email')}}
-              <@fields.email />
-            {{else}}
-              {{row.value}}
-            {{/if}}
-          </:value>
-        </KeyValue>
-
-        {{#if @model.skills.length}}
-          <ul class='skills'>
-            {{#each @model.skills as |skill|}}
-              <li><StatePill @label={{skill}} @hue='teal' /></li>
-            {{/each}}
-          </ul>
-        {{/if}}
-
-        <section class='work'>
-          <h2><TicketIcon class='sec-icon' role='presentation' />Assigned to
-            them</h2>
-          {{#if this.realms.length}}
-            <CardList
-              @context={{@context}}
-              @query={{this.assignedQuery}}
-              @realms={{this.realms}}
-              @isLive={{true}}
-              @format='fitted'
-            />
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @title='Nothing assigned right now'
-              @texture={{false}}
-            />
-          {{/if}}
-        </section>
-      </article>
-
+          <Stat
+            @label='Assigned'
+            @tone='neutral'
+            @value={{this.assigned.length}}
+            @hint='{{this.paused}} paused on customer'
+            @roll={{false}}
+          />
+          <Stat
+            @label='Skills'
+            @tone='neutral'
+            @value={{this.skills.length}}
+            @hint={{@model.skillSummary}}
+            @roll={{false}}
+          />
+        </RecStats>
+        <RecBody>
+          <:main>
+            <RecBlock @title='Skills'>
+              <RecText><span class='mono'>{{if
+                    @model.skillSummary
+                    @model.skillSummary
+                    '—'
+                  }}</span></RecText>
+            </RecBlock>
+            <RecBlock @title='Assigned tickets'>
+              {{#each this.assigned as |t|}}
+                <RecLine>
+                  <:default><Button
+                      @appearance='link'
+                      {{on 'click' (fn this.openTicket t)}}
+                    ><b>{{t.subject}}</b></Button>
+                    <span class='dim'>{{t.reference}}
+                      ·
+                      {{t.customerName}}
+                      ·
+                      {{t.priority}}</span></:default>
+                  <:end><Chip
+                      @appearance='plain'
+                      @tone={{if (eq t.status 'Open') 'info' 'warning'}}
+                    >{{t.status}}</Chip></:end>
+                </RecLine>
+              {{else}}
+                <RecLine><span class='dim'>Nothing assigned.</span></RecLine>
+              {{/each}}
+            </RecBlock>
+            <RecBlock @title='Contact'>
+              <RecRow @label='Email'>{{if
+                  @model.email
+                  @model.email
+                  '—'
+                }}</RecRow>
+              <RecRow @label='Phone' @mono={{true}}>{{if
+                  @model.phone
+                  @model.phone
+                  '—'
+                }}</RecRow>
+            </RecBlock>
+          </:main>
+          <:side>
+            <RecBlock @title='Details'>
+              <RecRow @label='Tier'>{{if
+                  @model.tierLabel
+                  @model.tierLabel
+                  '—'
+                }}</RecRow>
+              <RecRow @label='Skills'>{{if
+                  @model.skillSummary
+                  @model.skillSummary
+                  '—'
+                }}</RecRow>
+              <RecRow @label='Email'>{{if
+                  @model.email
+                  @model.email
+                  '—'
+                }}</RecRow>
+              <RecRow @label='Phone' @mono={{true}}>{{if
+                  @model.phone
+                  @model.phone
+                  '—'
+                }}</RecRow>
+              <RecRow
+                @label='Assigned'
+                @mono={{true}}
+              >{{this.assigned.length}}</RecRow>
+              <RecRow @label='Paused' @mono={{true}}>{{this.paused}}</RecRow>
+            </RecBlock>
+          </:side>
+        </RecBody>
+      </RecCard>
       <style scoped>
-        .iso {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-lg);
-          padding: var(--boxel-sp-lg);
-          min-height: 100%;
-        }
-        .iso-head {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp);
-          padding-bottom: var(--boxel-sp);
-          border-bottom: 1px solid var(--border);
-        }
-        .who h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 700;
-        }
-        .org {
-          margin: 0;
-          color: var(--muted-foreground);
-          font-size: var(--boxel-font-size-sm);
-        }
-        /* Pret UI KeyValue at the card's 14px text, values in bold. A long
-           corporate email wraps inside its column instead of widening it. */
-        .facts {
-          --text-ui: var(--boxel-font-size-xs);
-          --text-ui-md: var(--boxel-font-size-sm);
-          --space-6: var(--boxel-sp);
-        }
-        .facts :deep(dd) {
-          min-width: 0;
-          font-weight: 600;
-          overflow-wrap: anywhere;
-        }
-        .skills {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-4xs);
-        }
-        .work h2 {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
+        .dim {
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
-        /* Rule 5: one icon per section header, quiet by design — muted colour and
-           ~1em with a px floor, so it identifies the section without competing
-           with it. Same size in every header, which is what makes the card
-           scannable by shape on a second visit. */
-        .sec-icon {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          flex: 0 0 auto;
-          color: var(--muted-foreground);
+        .mono {
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
         }
       </style>
     </template>
   };
 
-  /**
-   * The row a ticket shows when it embeds its owner.
-   *
-   * For an agent looking at somebody else's ticket the question is not "who
-   * is this person" but "can they take it" — so the tier and the skills are
-   * the content, and the name is the label on them.
-   */
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <article class='sa-row'>
-        <Avatar
-          @name={{if @model.name @model.name '?'}}
-          @src={{@model.photo.resolvedUrl}}
-          @hue='var(--muted-foreground)'
-          @size={{30}}
-          aria-hidden='true'
-        />
-        <span class='sa-main'>
-          <span class='sa-line'>
-            <span class='sa-name'>{{if
-                @model.name
-                @model.name
-                'Unnamed agent'
-              }}</span>
-            {{#if @model.tierLabel}}
-              <StatePill @label={{@model.tierLabel}} @chrome={{true}} />
-            {{/if}}
-          </span>
-          <span class='sa-dim'>{{if
-              @model.skillSummary
-              @model.skillSummary
-              'No skills recorded'
-            }}</span>
-        </span>
-      </article>
-
+      <RecCard>
+        <RecHead
+          @mark={{initials @model.title}}
+          @title={{@model.title}}
+          @sub={{@model.tierLabel}}
+        >
+          <:status>{{#if @model.tier}}<Chip
+                @appearance='plain'
+              >{{@model.tier}}</Chip>{{/if}}</:status>
+        </RecHead>
+        <p class='fact'>Skills
+          <b>{{if @model.skillSummary @model.skillSummary '—'}}</b></p>
+        <RecRow @label='Tier'>{{if
+            @model.tierLabel
+            @model.tierLabel
+            '—'
+          }}</RecRow>
+        <RecRow @label='Skills'>{{if
+            @model.skillSummary
+            @model.skillSummary
+            '—'
+          }}</RecRow>
+        <RecRow @label='Email'>{{if @model.email @model.email '—'}}</RecRow>
+        <RecRow @label='Phone' @mono={{true}}>{{if
+            @model.phone
+            @model.phone
+            '—'
+          }}</RecRow>
+      </RecCard>
       <style scoped>
-        .sa-row {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-          padding: var(--boxel-sp-4xs) 0;
-          color: var(--foreground);
-        }
-        .sa-main {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-        }
-        .sa-line {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-4xs);
-          min-width: 0;
-        }
-        .sa-name {
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sa-dim {
-          font-size: var(--boxel-font-size-xs);
+        .fact {
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        }
+        .fact b {
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -354,219 +327,74 @@ export class SupportAgent extends PersonBase {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='atom'>
-        <Avatar
-          @name={{if @model.name @model.name '?'}}
-          @src={{@model.photo.resolvedUrl}}
-          @hue={{AVATAR_HUE}}
-          @size={{18}}
-          aria-hidden='true'
-        />
-        <span class='atom-name'>{{@model.title}}</span>
-        {{#if @model.tier}}<span class='atom-tier'>{{@model.tier}}</span>{{/if}}
+        <span class='mark' aria-hidden='true'>{{initials @model.title}}</span>
+        <span class='nm'>{{@model.title}}</span>
+        {{#if @model.tier}}<Chip
+            @appearance='plain'
+          >{{@model.tier}}</Chip>{{/if}}
       </span>
       <style scoped>
         .atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.3rem;
-          font-size: 0.8125rem;
+          gap: var(--boxel-sp-3xs);
+          min-inline-size: 0;
+          max-inline-size: 100%;
+          font-size: var(--boxel-font-size-xs);
         }
-        .atom-name {
-          font-weight: 500;
+        .mark {
+          flex: none;
+          display: grid;
+          place-items: center;
+          inline-size: 1rem;
+          block-size: 1rem;
+          border: 1px solid var(--border);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
+          font-weight: 600;
+          line-height: 1;
+          color: var(--muted-foreground);
+        }
+        .nm {
+          min-inline-size: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-        }
-        .atom-tier {
-          font-size: 0.5625rem;
-          font-weight: 700;
-          letter-spacing: 0.06em;
-          color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    get facts() {
+      let m = this.args.model;
+      return [
+        { key: 'Tier', value: String(m?.tierLabel ?? '') || '—' },
+        { key: 'Skills', value: String(m?.skillSummary ?? '') || '—' },
+        { key: 'Email', value: String((m as any)?.email ?? '') || '—' },
+        { key: 'Phone', value: String((m as any)?.phone ?? '') || '—' },
+      ];
+    }
     <template>
-      <article class='fit'>
-        <header class='r-head'>
-          {{#if @model.photo.resolvedUrl}}
-            <img class='av' src={{@model.photo.resolvedUrl}} alt='' />
-          {{else}}
-            <span class='av'>{{@model.initials}}</span>
-          {{/if}}
-          <h3 class='title'>{{@model.title}}</h3>
-          <span class='badge'>{{@model.tier}}</span>
-        </header>
-        {{! Was: tierLabel in .line AND .r-meta, skillSummary in .line-2 AND
-            .blurb — so most sizes printed two of their four values twice, and
-            .line restated the badge. One fact per slot. }}
-        <div class='r-body'>
-          <span class='line'>{{@model.tierDescriptor}}</span>
-          <p class='blurb'>{{@model.skillSummary}}</p>
-          <span class='tail'>{{@model.email}}</span>
-        </div>
-        <footer class='r-meta'>{{@model.phone}}</footer>
-      </article>
-      <style scoped>
-        /* Same skeleton as ticket.gts: one `.fit` grid, no container declared
-           here (the host provides `fitted-card`), one continuous type scale,
-           and tiers that ADD a row rather than un-crop one. */
-        .fit {
-          width: 100%;
-          height: 100%;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          grid-template-areas: 'head' 'body' 'meta';
-          gap: 0.125rem;
-          padding: 0.4375rem 0.5625rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
-          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
-        }
-        .fit > * {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-head {
-          grid-area: head;
-          display: flex;
-          align-items: center;
-          gap: 0.3125rem;
-          min-width: 0;
-        }
-        .av {
-          flex: none;
-          width: 1.35rem;
-          height: 1.35rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          object-fit: cover;
-          font-size: var(--type-base);
-          font-weight: 700;
-          background-color: var(--primary);
-          color: var(--primary-foreground);
-        }
-        .title {
-          flex: 1;
-          min-width: 0;
-          margin: 0;
-          font-size: var(--type-title);
-          font-weight: 600;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .badge {
-          flex: none;
-          margin-left: auto;
-          font-family: var(--font-mono);
-          font-size: var(--type-base);
-          font-weight: 600;
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-        .r-body {
-          grid-area: body;
-          display: none;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
-        }
-        .line {
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .blurb {
-          display: none;
-          margin: 0;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .tail {
-          display: none;
-          margin-top: auto;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .r-meta {
-          grid-area: meta;
-          display: none;
-          align-items: center;
-          gap: 0.375rem;
-          min-width: 0;
-          font-size: var(--type-base);
-          color: var(--muted-foreground);
-        }
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 50px) {
-          .r-meta {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 50px) and (height <= 105px) {
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 80px) {
-          .r-body {
-            display: flex;
-          }
-        }
-        @container fitted-card (height > 160px) {
-          .blurb {
-            display: -webkit-box;
-          }
-        }
-        @container fitted-card (height > 240px) {
-          .blurb {
-            -webkit-line-clamp: 4;
-          }
-          .tail {
-            display: block;
-          }
-        }
-        @container fitted-card (width > 300px) and (height <= 130px) {
-          .fit {
-            grid-template-columns: minmax(12.5rem, 1fr) auto;
-            grid-template-areas: 'head meta' 'body meta';
-            align-items: center;
-          }
-          .r-meta {
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.0625rem;
-          }
-        }
-        @container fitted-card (width <= 170px) {
-        }
-      </style>
+      <FittedExtras @facts={{this.facts}}>
+        <:default>
+          <FitTile>
+            <:avatar><Avatar
+                @name={{if @model.title @model.title ''}}
+                @shape='square'
+                @size={{32}}
+              /></:avatar>
+            <:title>{{@model.title}}</:title>
+            <:subtitle>{{@model.tierLabel}}</:subtitle>
+            <:status>{{#if @model.tier}}<Chip
+                  @appearance='plain'
+                >{{@model.tier}}</Chip>{{/if}}</:status>
+            <:fact>Skills
+              {{if @model.skillSummary @model.skillSummary '—'}}</:fact>
+          </FitTile>
+        </:default>
+      </FittedExtras>
     </template>
   };
 }

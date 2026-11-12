@@ -8,7 +8,7 @@
         "regime": {
           "regime": "Contract Policy",
           "version": "2026",
-          "clause": "§4.1",
+          "clause": "\u00a74.1",
           "clauseTitle": "Signing limits"
         },
         "kind": "threshold",
@@ -30,7 +30,7 @@
         "sourceVersion": "contract-controls v1"
       },
       "cardInfo": {
-        "name": "CON-03 · msa-northwind",
+        "name": "CON-03 \u00b7 msa-northwind",
         "summary": "240000 is within bounds. No evidence attached.",
         "notes": null,
         "cardThumbnailURL": null
@@ -50,6 +50,11 @@
       "evaluatedBy": {
         "links": {
           "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     },

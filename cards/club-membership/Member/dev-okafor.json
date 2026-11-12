@@ -19,12 +19,12 @@
     "relationships": {
       "holder": {
         "links": {
-          "self": "../Contact/dev-okafor"
+          "self": "../../crm/Contact/dev-okafor"
         }
       },
       "cardInfo.theme": {
         "links": {
-          "self": null
+          "self": "../../Theme/site-tools"
         }
       }
     },

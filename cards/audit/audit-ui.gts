@@ -23,7 +23,10 @@ interface AuditFactsSignature {
 export const AuditFacts: TemplateOnlyComponent<AuditFactsSignature> = <template>
   {{#if (has-block 'value')}}
     <KeyValue class='audit-facts' @items={{@items}} ...attributes>
-      <:value as |item|>{{yield item to='value'}}</:value>
+      <:value as |item|><span class='audit-value'>{{yield
+            item
+            to='value'
+          }}</span></:value>
     </KeyValue>
   {{else}}
     <KeyValue class='audit-facts' @items={{@items}} ...attributes />
@@ -35,15 +38,20 @@ export const AuditFacts: TemplateOnlyComponent<AuditFactsSignature> = <template>
     .audit-facts.audit-facts {
       align-items: baseline;
     }
+    /* Our rule beats KeyValue's layered one; the values inherit size and wrapping. */
     .audit-facts {
-      --text-ui: var(--boxel-font-size-sm);
-      --text-ui-md: var(--boxel-font-size-sm);
-      --space-6: var(--boxel-sp-sm);
-    }
-    .audit-facts :deep(dd) {
-      flex-wrap: wrap;
+      --pretui-kv-label-font-size: var(--boxel-font-size-sm);
+      font-size: var(--boxel-font-size-sm);
+      column-gap: var(--boxel-sp-sm);
+      overflow-wrap: break-word;
       min-width: 0;
-      overflow-wrap: anywhere;
+    }
+    .audit-value {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--boxel-sp-2xs);
+      min-width: 0;
     }
   </style>
 </template>;

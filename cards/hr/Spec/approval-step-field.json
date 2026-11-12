@@ -19,7 +19,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "https://cardstack.com/base/spec",
+        "module": "@cardstack/base/spec",
         "name": "Spec"
       }
     },
@@ -27,6 +27,11 @@
       "linkedExamples.0": {
         "links": {
           "self": "../Offer/df5b8208-9ecc-4132-b595-700dd0a73d77"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     }

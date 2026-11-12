@@ -203,6 +203,14 @@ import {
   ExpensesByVendor,
   GeneralLedger,
 } from '../accounting/ledger-report-library';
+import { ReportActions } from '../accounting/ledger-report-custom';
+import {
+  LibraryReport,
+  MyReports,
+  isLibraryKind,
+} from '../accounting/ledger-report-desk';
+import { AuditLog } from '../accounting/ledger-audit';
+import { UsersPage } from '../accounting/ledger-users';
 import {
   KIND_LABEL,
   seqText,
@@ -1163,6 +1171,129 @@ const PAGES: PageDef[] = [
   },
   // Reports
   {
+    id: 'r-mine',
+    area: 'Reports',
+    label: 'My reports',
+    blurb:
+      'Reports saved with their settings and customization, yours and the ones shared with you.',
+    report: 'mine',
+  },
+  {
+    id: 'r-custom',
+    area: 'Reports',
+    label: 'Custom report',
+    blurb:
+      'Posting lines with the columns you choose, filtered, grouped with subtotals and sorted.',
+    report: 'custom',
+  },
+  {
+    id: 'r-audit',
+    area: 'Reports',
+    label: 'Audit log',
+    blurb:
+      'Every posting, reversal, void, close and sign-off, newest first, with who did it and when.',
+    report: 'audit',
+  },
+  {
+    id: 'r-txn-detail',
+    area: 'Reports',
+    label: 'Transaction detail by account',
+    blurb:
+      'Every posting line in a period, account by account, with subtotals.',
+    report: 'transaction-detail',
+  },
+  {
+    id: 'r-journal',
+    area: 'Reports',
+    label: 'Journal',
+    blurb: 'Every entry in a period in date order, with its lines.',
+    report: 'journal',
+  },
+  {
+    id: 'r-pnl-detail',
+    area: 'Reports',
+    label: 'Profit and loss detail',
+    blurb: 'The income, cost and expense postings behind the profit and loss.',
+    report: 'pnl-detail',
+  },
+  {
+    id: 'r-pnl-customer',
+    area: 'Reports',
+    label: 'Profit and loss by customer',
+    blurb: 'The profit and loss with a column for each customer or vendor.',
+    report: 'pnlByCustomer',
+  },
+  {
+    id: 'r-pnl-month',
+    area: 'Reports',
+    label: 'Profit and loss by month',
+    blurb: 'The profit and loss with a column for each month.',
+    report: 'pnlByMonth',
+  },
+  {
+    id: 'r-bs-detail',
+    area: 'Reports',
+    label: 'Balance sheet detail',
+    blurb: 'The asset, liability and equity postings behind the balance sheet.',
+    report: 'bs-detail',
+  },
+  {
+    id: 'r-open-invoices',
+    area: 'Reports',
+    label: 'Open invoices',
+    blurb: 'Every invoice with a balance, by customer.',
+    report: 'open-invoices',
+  },
+  {
+    id: 'r-collections',
+    area: 'Reports',
+    label: 'Collections',
+    blurb: 'Invoices past due, by customer, oldest first.',
+    report: 'collections',
+  },
+  {
+    id: 'r-customer-balance',
+    area: 'Reports',
+    label: 'Customer balance detail',
+    blurb: 'Every posting to receivables, by customer, with what each owes.',
+    report: 'customer-balance-detail',
+  },
+  {
+    id: 'r-unpaid-bills',
+    area: 'Reports',
+    label: 'Unpaid bills',
+    blurb: 'Every bill with a balance, by vendor.',
+    report: 'unpaid-bills',
+  },
+  {
+    id: 'r-vendor-balance',
+    area: 'Reports',
+    label: 'Vendor balance detail',
+    blurb: 'Every posting to payables, by vendor, with what is owed to each.',
+    report: 'vendor-balance-detail',
+  },
+  {
+    id: 'r-inv-detail',
+    area: 'Reports',
+    label: 'Inventory valuation detail',
+    blurb: 'Every lot with stock left, at its remaining FIFO cost.',
+    report: 'inventory-detail',
+  },
+  {
+    id: 'r-time',
+    area: 'Reports',
+    label: 'Time by customer',
+    blurb: 'Hours worked by customer, and billable time still to bill.',
+    report: 'time-by-customer',
+  },
+  {
+    id: 'r-projects',
+    area: 'Reports',
+    label: 'Profit by project',
+    blurb: 'Income, costs and labor by project.',
+    report: 'profit-by-project',
+  },
+  {
     id: 'r-sales-customer',
     area: 'Reports',
     label: 'Sales by customer',
@@ -1278,8 +1409,8 @@ const PAGES: PageDef[] = [
   {
     id: 'r-inv',
     area: 'Reports',
-    label: 'Inventory valuation',
-    blurb: 'What is on hand at FIFO cost.',
+    label: 'Inventory valuation summary',
+    blurb: 'What is on hand at FIFO cost, by product.',
     report: 'inventory',
   },
   {
@@ -1337,6 +1468,13 @@ const PAGES: PageDef[] = [
       by: c.closedBy ?? '',
       amount: c.debitMinor,
     }),
+  },
+  {
+    id: 'users',
+    area: 'Accounting',
+    label: 'Users',
+    blurb:
+      'Who has access to the books and their role. Only an Admin changes a role.',
   },
   {
     id: 'r-year',
@@ -1500,6 +1638,7 @@ const WORKSPACES: Workspace[] = [
       'drafts',
       'recurring',
       'currencies',
+      'users',
       'inbox',
       'journalmonths',
       'pads',
@@ -1510,6 +1649,7 @@ const WORKSPACES: Workspace[] = [
       'depreciation',
       'closes',
       'r-year',
+      'r-audit',
     ],
     subject: 'months',
     subjectLabel: 'Months',
@@ -3503,6 +3643,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // operating account. In another currency the payment takes today's rate, and the difference from
   // the document's rate posts as realized gain or loss.
   get canSettle() {
+    return this.canSettleShape && !this.canSettleRefused;
+  }
+  get canSettleShape() {
     let c = this.sel as any;
     return (
       !this.selPosting &&
@@ -3891,7 +4034,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       );
       await (operations(customer as never as CardDef) as any).atomic(
         (b: any) => [
-          this.enterOnTerms(b, 'enterInvoice', customer, {
+          this.enterOnTerms(b, 'enterTimeInvoice', customer, {
             docNo,
             date,
             kind: 'sale',
@@ -5721,6 +5864,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
 
   // Launchers: open a view here, or (») beside this one in its own stack, so the books stay in sight.
   launch = (page: string) => this.go(page);
+  get reportPages() {
+    return PAGES.filter((p) => p.report).map((p) => ({
+      id: p.id,
+      label: p.label,
+      report: p.report ?? '',
+    }));
+  }
+  get reportCard() {
+    return (this.args.model as any)?.[this.def.report ?? ''];
+  }
   launchBeside = (page: string) => {
     let card = (this.args.model as any)?.[pageById.get(page)?.report ?? ''];
     if (card)
@@ -5966,6 +6119,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     return !this.selPosting && this.sel?.status === 'draft';
   }
   get canReverse() {
+    return this.canReverseShape && !this.canReverseRefused;
+  }
+  get canReverseShape() {
     let p = this.selPosting,
       m = this.selected?.month as any;
     return (
@@ -6276,6 +6432,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   @tracked voiding = false;
   @tracked voidReason = '';
   get canVoid() {
+    return this.canVoidShape && !this.canVoidRefused;
+  }
+  get canVoidShape() {
     let c = this.sel;
     return (
       !this.selPosting &&
@@ -6427,6 +6586,43 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.busy = false;
     }
   };
+  // The realm's answer for this viewer's role: only a refusal hides an action.
+  refused = (operation: string, target: unknown) =>
+    !!target &&
+    this.args.context?.canInvoke?.(operation, target as CardDef) === false;
+  get canSettleRefused() {
+    return this.refused('applyPayment', this.sel);
+  }
+  get canVoidRefused() {
+    return this.refused('void', this.sel);
+  }
+  get canReverseRefused() {
+    return this.refused('reverse', this.selected?.month);
+  }
+  get roleNote() {
+    let held = [
+      this.canSettleShape && this.canSettleRefused && 'settle',
+      this.canVoidShape && this.canVoidRefused && 'void',
+      this.canReverseShape && this.canReverseRefused && 'reverse',
+    ].filter(Boolean);
+    return held.length
+      ? `Your role can't ${held.join(' or ')} this; a writer of the realm does.`
+      : '';
+  }
+  // The realm's answer for this viewer's role; only a refusal hides the button.
+  get postRefused() {
+    let c = this.sel as CardDef | undefined,
+      ask = this.args.context?.canInvoke;
+    if (!c || !ask) return false;
+    if (!this.selJournalable) return ask('post', c) === false;
+    // Posting into a journal also appends to the month, which the role may not be granted.
+    let month = this.journalMonths.find(
+      (m: any) => m?.month === this.selMonth && m?.status === 'open',
+    );
+    return (
+      ask('journal', c) === false || (!!month && ask('post', month) === false)
+    );
+  }
   get canPost() {
     return (
       this.selIsDraft &&
@@ -7692,6 +7888,28 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 />
               {{/if}}
 
+            {{else if (eq this.page 'r-mine')}}
+              <MyReports
+                @context={{@context}}
+                @realms={{this.realms}}
+                @refRealms={{this.refRealms}}
+                @ledger={{@model.ledger}}
+                @app={{@model}}
+                @pages={{this.reportPages}}
+                @onOpenPage={{this.go}}
+              />
+            {{else if (eq this.page 'users')}}
+              <UsersPage @context={{@context}} @realms={{this.realms}} />
+            {{else if (eq this.page 'r-audit')}}
+              <AuditLog @context={{@context}} @realms={{this.realms}} />
+            {{else if (isLibraryKind this.def.report)}}
+              <LibraryReport
+                @context={{@context}}
+                @realms={{this.realms}}
+                @refRealms={{this.refRealms}}
+                @ledger={{@model.ledger}}
+                @kind={{this.def.report}}
+              />
             {{else if (eq this.page 'payrun')}}
               <PayrollPage
                 @ledger={{@model.ledger}}
@@ -7701,10 +7919,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @notify={{this.notify}}
               />
             {{else if this.def.report}}
-              <section class='report'>
+              <section class='report' data-report-body>
+                <ReportActions
+                  @context={{@context}}
+                  @ledger={{@model.ledger}}
+                  @kind={{this.page}}
+                  @kindLabel={{this.def.label}}
+                  @card={{this.reportCard}}
+                />
                 {{#if
                   (eq this.def.report 'profitAndLoss')
                 }}<@fields.profitAndLoss @format='isolated' />
+                {{else if (eq this.def.report 'pnlByMonth')}}<@fields.pnlByMonth
+                    @format='isolated'
+                  />
+                {{else if
+                  (eq this.def.report 'pnlByCustomer')
+                }}<@fields.pnlByCustomer @format='isolated' />
                 {{else if
                   (eq this.def.report 'balanceSheet')
                 }}<@fields.balanceSheet @format='isolated' />
@@ -8117,12 +8348,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.calculateTax}}
               >Calculate tax</Button>{{/if}}
-            {{#if this.canPost}}<Button
-                @tone='primary'
-                @appearance='accent'
-                @busy={{this.busy}}
-                {{on 'click' this.post}}
-              >Post</Button>{{/if}}
+            {{#if this.canPost}}{{#if this.postRefused}}<span
+                  class='muted'
+                  data-post-refused
+                >Your role can't post this; a writer of the realm does.</span>{{else}}<Button
+                  @tone='primary'
+                  @appearance='accent'
+                  @busy={{this.busy}}
+                  {{on 'click' this.post}}
+                >Post</Button>{{/if}}{{/if}}
             {{#if this.selTemplate}}<Button
                 @tone='neutral'
                 @appearance='outlined'
@@ -8148,6 +8382,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @disabled={{if this.bundleSku false true}}
                 {{on 'click' this.addBundle}}
               >Add bundle</Button>{{/if}}
+            {{#if this.roleNote}}<span
+                class='muted'
+                data-role-note
+              >{{this.roleNote}}</span>{{/if}}
             {{#if this.canSettle}}<Button
                 @tone='primary'
                 @appearance='outlined'
@@ -8978,6 +9216,8 @@ export class LedgerApp extends CardDef {
   @field startPage = contains(StringField); // the page it opens on: 'home', or 'journal' in a journal-only realm
   @field ledger = linksTo(() => Ledger);
   @field profitAndLoss = linksTo(() => ProfitAndLoss);
+  @field pnlByMonth = linksTo(() => ProfitAndLoss);
+  @field pnlByCustomer = linksTo(() => ProfitAndLoss);
   @field balanceSheet = linksTo(() => BalanceSheet);
   @field cashFlows = linksTo(() => CashFlowStatement);
   @field trialBalance = linksTo(() => TrialBalance);

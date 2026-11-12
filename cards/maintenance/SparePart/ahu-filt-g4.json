@@ -4,7 +4,7 @@
     "attributes": {
       "partNumber": "AHU-FILT-G4",
       "name": "AHU G4 panel filter",
-      "description": "592 × 592 × 48 mm G4 pleated panel.",
+      "description": "592 \u00d7 592 \u00d7 48 mm G4 pleated panel.",
       "quantityOnHand": 0,
       "reorderPoint": 6,
       "reorderQuantity": 12,
@@ -36,6 +36,11 @@
       "compatibleAssets.0": {
         "links": {
           "self": "../Asset/ast-2026-0090"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
         }
       }
     }

@@ -1,10 +1,11 @@
 import GlimmerComponent from '@glimmer/component';
+import { LoadingState } from '@cardstack/pretui/components/loading-state';
+import { TrackerSection, TrackerEmpty, TrackerPage } from '../shared';
 import { OrgTree, type OrgTreeItem } from '../org-tree';
 import {
   buildTree as buildOrgTree,
   type TreeNode as OrgNode,
-} from '../../../utils/build-tree';
-import { initialsOf } from '../../people/person-base';
+} from '@cardstack/catalog/utils/build-tree';
 import type { TrackerView } from '../talent-resource-tracker';
 
 interface Signature {
@@ -17,9 +18,9 @@ export class OrgChartTab extends GlimmerComponent<Signature> {
   get orgRoots(): OrgNode<OrgTreeItem>[] {
     let items = this.args.tracker.employees.map((e) => ({
       id: e.id,
+      card: e,
       name: e.title,
       role: e.role,
-      initials: initialsOf(e.name),
       photoUrl: e.photo?.resolvedUrl,
       status: e.status,
       managerId: e.manager?.id,
@@ -30,69 +31,33 @@ export class OrgChartTab extends GlimmerComponent<Signature> {
     return buildOrgTree(items, (item) => item.managerId);
   }
 
+  get panelMeta(): string {
+    let n = this.args.tracker.employees.length;
+    return this.args.tracker.isLoading
+      ? '—'
+      : `${n} ${n === 1 ? 'person' : 'people'}`;
+  }
+
   <template>
-    <section class='tab-section'>
-      <div class='sec-head'>
-        <div class='htext'>
-          <h2>Org Chart</h2>
-          <p class='byline'>Reporting lines, current headcount</p>
-        </div>
-      </div>
-      <OrgTree @roots={{this.orgRoots}} @onSelect={{@tracker.openCard}} />
-    </section>
-    <style scoped>
-      .sec-head {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp);
-        padding-bottom: var(--boxel-sp);
-        border-bottom: 0.125rem solid var(--card-foreground);
-        margin: 0 0 var(--boxel-sp-lg);
-      }
-      .sec-head .htext {
-        margin-right: auto;
-      }
-      .sec-head .htext h2 {
-        font-family: var(--font-sans);
-        font-weight: 700;
-        font-size: 1.25rem;
-        margin: 0 0 0.1875rem;
-      }
-      .sec-head .htext .byline {
-        font-family: var(--font-mono);
-        font-size: 0.7188rem;
-        letter-spacing: 0.02em;
-        color: var(--muted-foreground);
-        margin: 0;
-      }
-      .tab-section {
-        animation: tracker-tab-fade-in 0.2s ease-out;
-      }
-      @keyframes tracker-tab-fade-in {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tab-section {
-          animation: none;
-        }
-      }
-      .sec-head {
-        flex: none;
-      }
-      @keyframes action-busy-pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.55;
-        }
-      }
-    </style>
+    <TrackerPage
+      @group='People'
+      @title='Org Chart'
+      @subtitle='Reporting lines, current headcount'
+    >
+      <TrackerSection
+        @title='Reporting lines'
+        @meta={{this.panelMeta}}
+        @padded={{true}}
+      >
+        {{#if this.orgRoots.length}}
+          <OrgTree @roots={{this.orgRoots}} @onSelect={{@tracker.openCard}} />
+        {{else if @tracker.isLoading}}
+          <LoadingState @label='Loading' />
+        {{else}}
+          <TrackerEmpty>No reporting lines yet. Set a manager on employees in
+            the Directory to build the chart.</TrackerEmpty>
+        {{/if}}
+      </TrackerSection>
+    </TrackerPage>
   </template>
 }
