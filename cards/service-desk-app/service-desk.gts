@@ -15,7 +15,7 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { array, fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import InboxIcon from '@cardstack/boxel-icons/inbox';
 import UsersIcon from '@cardstack/boxel-icons/users';
 import BookOpenIcon from '@cardstack/boxel-icons/book-open';
@@ -931,12 +931,12 @@ export class ServiceDesk extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:title>{{@model.title}}</:title>
         <:subtitle>Support console</:subtitle>
         <:fact>Queue, teams, articles, commitments, hours, categories, customers
           and agents, each a live query.</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
