@@ -734,6 +734,10 @@ export const IsoFrame: TemplateOnlyComponent<IsoFrameSignature> = <template>
         flex-direction: column;
         gap: var(--boxel-sp-xs);
         box-sizing: border-box;
+        /* full width even when the card's host lays it out as a flex item,
+           where an auto width would shrink to the content and a child with
+           inline-size containment would collapse to its padding */
+        inline-size: 100%;
         min-height: 100%;
         padding: var(--boxel-sp-sm);
         background: var(--background);
