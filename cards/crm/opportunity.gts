@@ -1,4 +1,6 @@
 import { Button } from '@cardstack/pretui/components/button';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
+import { Chip } from '@cardstack/pretui/components/chip';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
 import { array, hash } from '@ember/helper';
@@ -27,7 +29,7 @@ import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { Account } from './account';
 import { User } from './user';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
+
 import {
   RecordEmbedded,
   RecordPage,
@@ -440,35 +442,47 @@ export class Opportunity extends CardDef {
         .join(' · ');
     }
     <template>
-      <CompactFitted
-        @mark='Opportunity'
-        @title={{@model.cardTitle}}
-        @sub={{this.subtitle}}
-        @fact={{this.fact}}
-        @big={{usd @model.value.amount @model.value.currency.code}}
-        @bigLabel='Value'
-        @tags={{if @model.stage (array (hash label=@model.stage tone='info'))}}
-      >
-        <:rows>
-          <CompactRow @k='Weighted' @v={{this.weightedText}} />
-          {{#if @model.closeDate}}<CompactRow
-              @k='Close date'
-              @v={{shortDate @model.closeDate true}}
+      <RichFittedCard>
+        <:avatar><Avatar
+            @name='Opportunity'
+            @shape='square'
+            @size={{20}}
+          /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#each
+            if @model.stage (array (hash label=@model.stage tone='info'))
+            as |t|
+          }}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{this.fact}}</:fact>
+        <:metric><Metric
+            @value={{usd @model.value.amount @model.value.currency.code}}
+            @label='Value'
+          /></:metric>
+        <:details>
+          <Detail @label='Weighted' @value={{this.weightedText}} />
+          {{#if @model.closeDate}}<Detail
+              @label='Close date'
+              @value={{shortDate @model.closeDate true}}
             />{{/if}}
-          {{#if @model.account}}<CompactRow @k='Account'><@fields.account
+          {{#if @model.account}}<Detail @label='Account'><@fields.account
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if @model.lastStageChangedAt}}<CompactRow
-              @k='In stage since'
-              @v={{shortDate @model.lastStageChangedAt true}}
+              /></Detail>{{/if}}
+          {{#if @model.lastStageChangedAt}}<Detail
+              @label='In stage since'
+              @value={{shortDate @model.lastStageChangedAt true}}
             />{{/if}}
-          {{#if @model.owner}}<CompactRow @k='Owner'><@fields.owner
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-        </:rows>
-      </CompactFitted>
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

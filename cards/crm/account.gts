@@ -1,4 +1,6 @@
 import { Button } from '@cardstack/pretui/components/button';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
+import { Chip } from '@cardstack/pretui/components/chip';
 import { on } from '@ember/modifier';
 import {
   CardDef,
@@ -18,7 +20,7 @@ import { array, hash } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
+
 import {
   RecordEmbedded,
   RecordPage,
@@ -134,36 +136,45 @@ export class Account extends CardDef {
       return [m?.industry, m?.domain].filter(Boolean).join(' · ');
     }
     <template>
-      <CompactFitted
-        @mark={{if @model.cardTitle @model.cardTitle ''}}
-        @title={{@model.cardTitle}}
-        @sub={{this.subtitle}}
-        @fact={{@model.email}}
-        @tags={{if
-          @model.isCustomer
-          (array (hash label='customer' tone='success'))
-          (array (hash label='prospect'))
-        }}
-      >
-        <:rows>
-          {{#if @model.industry}}<CompactRow
-              @k='Industry'
-              @v={{@model.industry}}
+      <RichFittedCard>
+        <:avatar><Avatar
+            @name={{if @model.cardTitle @model.cardTitle ''}}
+            @shape='square'
+            @size={{20}}
+          /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#each
+            if
+            @model.isCustomer
+            (array (hash label='customer' tone='success'))
+            (array (hash label='prospect'))
+            as |t|
+          }}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{@model.email}}</:fact>
+        <:details>
+          {{#if @model.industry}}<Detail
+              @label='Industry'
+              @value={{@model.industry}}
             />{{/if}}
-          {{#if @model.domain}}<CompactRow
-              @k='Domain'
-              @v={{@model.domain}}
+          {{#if @model.domain}}<Detail
+              @label='Domain'
+              @value={{@model.domain}}
             />{{/if}}
-          {{#if @model.phone}}<CompactRow
-              @k='Phone'
-              @v={{@model.phone}}
+          {{#if @model.phone}}<Detail
+              @label='Phone'
+              @value={{@model.phone}}
             />{{/if}}
-          {{#if @model.owner}}<CompactRow @k='Owner'><@fields.owner
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-        </:rows>
-      </CompactFitted>
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 
