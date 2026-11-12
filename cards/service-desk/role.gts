@@ -16,7 +16,7 @@ import { on } from '@ember/modifier';
 import { Button } from '@cardstack/pretui/components/button';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Chip } from '@cardstack/pretui/components/chip';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import { IsoFrame } from '../shared/compact-sheet';
 
 function plural(n: number, word: string) {
@@ -577,32 +577,27 @@ export class Role extends CardDef {
               @tone='neutral'
               @appearance='plain'
             />{{/if}}</:status>
-        <:fact>
-          {{! rows ranked by priority; container queries drop whole rows }}
-          <dl class='fr'>
-            {{#if this.v.onDuty}}
-              <div class='fr-r'><dt class='cap'>On duty</dt><dd><@fields.onDuty
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></dd></div>
-            {{/if}}
-            <div class='fr-r'><dt class='cap'>Members</dt><dd
-              >{{this.v.memberCount}}</dd></div>
-            <div class='fr-r'><dt class='cap'>Permissions</dt><dd
-              >{{this.v.permissions.length}}</dd></div>
-            {{#each @fields.members as |Member i|}}
-              {{#unless (get this.v.dutyFlags i)}}
-                <div class='fr-r'><dt class='cap'>Member</dt><dd><Member
-                      @format='atom'
-                      @displayContainer={{false}}
-                    /></dd></div>
-              {{/unless}}
-            {{/each}}
-            {{#each this.v.permissions as |p|}}
-              <div class='fr-r'><dt class='cap'>Can</dt><dd>{{p}}</dd></div>
-            {{/each}}
-          </dl>
-        </:fact>
+        <:details>
+          {{#if this.v.onDuty}}
+            <Detail @label='On duty'><@fields.onDuty
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>
+          {{/if}}
+          <Detail @label='Members'>{{this.v.memberCount}}</Detail>
+          <Detail @label='Permissions'>{{this.v.permissions.length}}</Detail>
+          {{#each @fields.members as |Member i|}}
+            {{#unless (get this.v.dutyFlags i)}}
+              <Detail @label='Member'><Member
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></Detail>
+            {{/unless}}
+          {{/each}}
+          {{#each this.v.permissions as |p|}}
+            <Detail @label='Can'>{{p}}</Detail>
+          {{/each}}
+        </:details>
       </RichFittedCard>
       <style scoped>
         .ell {
@@ -622,89 +617,6 @@ export class Role extends CardDef {
           font-family: var(--font-mono);
           font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
-        }
-        .cap {
-          font-family: var(--font-mono);
-          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
-          font-weight: 600;
-          line-height: 1.2;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
-          white-space: normal;
-          color: var(--muted-foreground);
-        }
-        .fr {
-          display: grid;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--card-foreground);
-        }
-        .fr-r {
-          display: grid;
-          grid-template-columns: 5rem minmax(0, 1fr);
-          column-gap: var(--boxel-sp-2xs);
-          align-items: center;
-          block-size: 1.75rem;
-          border-top: 1px solid var(--border);
-          overflow: hidden;
-        }
-        .fr-r dd {
-          margin: 0;
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fr-r:nth-child(n + 13) {
-          display: none;
-        }
-        @container fitted-card (width < 250px) {
-          .fr-r {
-            grid-template-columns: minmax(0, 1fr);
-          }
-          .fr-r dt {
-            display: none;
-          }
-        }
-        @container fitted-card (width >= 400px) {
-          .fr-r {
-            grid-template-columns: 6.75rem minmax(0, 1fr);
-          }
-        }
-        @container fitted-card (height < 445px) and (width < 400px) {
-          .fr-r:nth-child(n + 7) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 445px) and (width >= 400px) {
-          .fr-r:nth-child(n + 8) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 275px) {
-          .fr-r:nth-child(n + 6) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 250px) and (width < 400px) {
-          .fr-r:nth-child(n + 3) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 250px) and (width >= 400px) {
-          .fr-r:nth-child(n + 4) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 170px) and (width < 400px) {
-          .fr {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 170px) and (width >= 400px) {
-          .fr-r:nth-child(n + 2) {
-            display: none;
-          }
         }
       </style>
     </template>

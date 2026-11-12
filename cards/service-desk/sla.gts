@@ -17,7 +17,7 @@ import { SlaWindowField } from '@cardstack/catalog/fields/sla-window/sla-window-
 import { timerSnapshot, sortByUrgency } from './utils/sla';
 import { relativeStamp } from '@cardstack/catalog/fields/created-at/created-at';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Chip } from '@cardstack/pretui/components/chip';
@@ -837,31 +837,26 @@ export class Sla extends CardDef {
             @tone={{this.v.stateTone}}
             @appearance='plain'
           /></:status>
-        <:fact>
-          {{! rows ranked by priority; container queries drop whole rows }}
-          <dl class='fr'>
-            {{#each this.v.fitTop as |f|}}
-              <div class='fr-r'><dt class='cap'>{{f.key}}</dt><dd
-                >{{f.value}}</dd></div>
-            {{/each}}
-            {{#if @model.subject}}
-              <div class='fr-r'><dt class='cap'>Subject</dt><dd><@fields.subject
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></dd></div>
-            {{/if}}
-            {{#each this.v.fitRest as |f|}}
-              <div class='fr-r'><dt class='cap'>{{f.key}}</dt><dd
-                >{{f.value}}</dd></div>
-            {{/each}}
-            {{#if @model.policy}}
-              <div class='fr-r'><dt class='cap'>Policy</dt><dd><@fields.policy
-                    @format='atom'
-                    @displayContainer={{false}}
-                  /></dd></div>
-            {{/if}}
-          </dl>
-        </:fact>
+        <:details>
+          {{#each this.v.fitTop as |f|}}
+            <Detail @label={{f.key}}>{{f.value}}</Detail>
+          {{/each}}
+          {{#if @model.subject}}
+            <Detail @label='Subject'><@fields.subject
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>
+          {{/if}}
+          {{#each this.v.fitRest as |f|}}
+            <Detail @label={{f.key}}>{{f.value}}</Detail>
+          {{/each}}
+          {{#if @model.policy}}
+            <Detail @label='Policy'><@fields.policy
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>
+          {{/if}}
+        </:details>
       </RichFittedCard>
       <style scoped>
         .ell {
@@ -881,89 +876,6 @@ export class Sla extends CardDef {
           font-family: var(--font-mono);
           font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
-        }
-        .cap {
-          font-family: var(--font-mono);
-          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
-          font-weight: 600;
-          line-height: 1.2;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
-          white-space: normal;
-          color: var(--muted-foreground);
-        }
-        .fr {
-          display: grid;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--card-foreground);
-        }
-        .fr-r {
-          display: grid;
-          grid-template-columns: 5rem minmax(0, 1fr);
-          column-gap: var(--boxel-sp-2xs);
-          align-items: center;
-          block-size: 1.75rem;
-          border-top: 1px solid var(--border);
-          overflow: hidden;
-        }
-        .fr-r dd {
-          margin: 0;
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fr-r:nth-child(n + 13) {
-          display: none;
-        }
-        @container fitted-card (width < 250px) {
-          .fr-r {
-            grid-template-columns: minmax(0, 1fr);
-          }
-          .fr-r dt {
-            display: none;
-          }
-        }
-        @container fitted-card (width >= 400px) {
-          .fr-r {
-            grid-template-columns: 6.75rem minmax(0, 1fr);
-          }
-        }
-        @container fitted-card (height < 445px) and (width < 400px) {
-          .fr-r:nth-child(n + 7) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 445px) and (width >= 400px) {
-          .fr-r:nth-child(n + 8) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 275px) {
-          .fr-r:nth-child(n + 6) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 250px) and (width < 400px) {
-          .fr-r:nth-child(n + 3) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 250px) and (width >= 400px) {
-          .fr-r:nth-child(n + 4) {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 170px) and (width < 400px) {
-          .fr {
-            display: none;
-          }
-        }
-        @container fitted-card (height < 170px) and (width >= 400px) {
-          .fr-r:nth-child(n + 2) {
-            display: none;
-          }
         }
       </style>
     </template>
