@@ -653,11 +653,7 @@ export class GoodsReceipt extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar
-            @name='Goods Receipt'
-            @shape='square'
-            @size={{20}}
-          /></:avatar>
+        <:avatar><Avatar @name='Goods Receipt' @shape='square' /></:avatar>
         <:title>{{@model.title}}</:title>
         <:status>{{#each this.f.tags as |t|}}<Chip
               @label={{t.label}}

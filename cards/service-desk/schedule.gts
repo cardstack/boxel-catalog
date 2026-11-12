@@ -16,8 +16,7 @@ import { Stat } from '@cardstack/pretui/components/stat';
 import type { BusinessSchedule, DayWindow } from './utils/sla';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
-import { RichFittedCard } from '../shared/rich-fitted-card';
-import { FittedExtras } from '../procurement/vendor';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   RecCard,
   RecHead,
@@ -485,7 +484,7 @@ export class Schedule extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the RichFittedCard.
+    // the details tier's key-value rows
     get facts() {
       let m = this.args.model;
       return [
@@ -502,24 +501,20 @@ export class Schedule extends CardDef {
       ];
     }
     <template>
-      <FittedExtras @facts={{this.facts}}>
-        <:default>
-          <RichFittedCard>
-            <:avatar><PretAvatar
-                @name='BH'
-                @shape='square'
-                @size={{32}}
-              /></:avatar>
-            <:title>{{@model.title}}</:title>
-            <:subtitle>{{@model.timeZone}}</:subtitle>
-            <:status>{{#if @model.isDefault}}<Chip
-                  @appearance='plain'
-                  @tone='info'
-                >default</Chip>{{/if}}</:status>
-            <:fact>{{@model.summary}}</:fact>
-          </RichFittedCard>
-        </:default>
-      </FittedExtras>
+      <RichFittedCard>
+        <:avatar><PretAvatar @name='BH' @shape='square' /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{@model.timeZone}}</:subtitle>
+        <:status>{{#if @model.isDefault}}<Chip
+              @appearance='plain'
+              @tone='info'
+            >default</Chip>{{/if}}</:status>
+        <:fact>{{@model.summary}}</:fact>
+        <:details>{{#each this.facts as |item|}}<Detail
+              @label={{item.key}}
+              @value={{item.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 }

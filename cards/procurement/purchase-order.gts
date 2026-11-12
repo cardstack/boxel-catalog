@@ -849,7 +849,7 @@ export class PurchaseOrder extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar @name='Po' @shape='square' @size={{20}} /></:avatar>
+        <:avatar><Avatar @name='Po' @shape='square' /></:avatar>
         <:title>{{this.f.number}}</:title>
         <:status>{{#each this.f.tags as |t|}}<Chip
               @label={{t.label}}

@@ -597,7 +597,7 @@ export class PurchaseRequisition extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar @name='Pr' @shape='square' @size={{20}} /></:avatar>
+        <:avatar><Avatar @name='Pr' @shape='square' /></:avatar>
         <:title>{{this.f.name}}</:title>
         <:status>{{#each this.tags as |t|}}<Chip
               @label={{t.label}}

@@ -537,11 +537,7 @@ export class ProcurementBudget extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar
-            @name='Budget'
-            @shape='square'
-            @size={{20}}
-          /></:avatar>
+        <:avatar><Avatar @name='Budget' @shape='square' /></:avatar>
         <:title>{{this.f.title}}</:title>
         <:status>{{#each this.f.tags as |t|}}<Chip
               @label={{t.label}}

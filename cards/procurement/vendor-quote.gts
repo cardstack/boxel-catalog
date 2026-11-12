@@ -534,11 +534,7 @@ export class VendorQuote extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar
-            @name={{MARK}}
-            @shape='square'
-            @size={{32}}
-          /></:avatar>
+        <:avatar><Avatar @name={{MARK}} @shape='square' /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>{{this.f.sub}}</:subtitle>
         <:status><Chip

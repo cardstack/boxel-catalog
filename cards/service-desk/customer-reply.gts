@@ -12,13 +12,13 @@ import MarkdownField from '@cardstack/base/markdown';
 import enumField from '@cardstack/base/enum';
 import MessageCircleIcon from '@cardstack/boxel-icons/message-circle';
 import { Case } from './case';
-import { FitRows, TypeMark, lowercase } from './components/fit-rows';
+import { TypeMark, lowercase } from './components/fit-rows';
 import { Employee } from '../hr/employee';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Panel } from '@cardstack/pretui/components/panel';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { RichFittedCard } from '../shared/rich-fitted-card';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   KeyValue,
   type KeyValueItem,
@@ -511,42 +511,36 @@ export class CustomerReply extends CardDef {
       return replyView(this.args.model);
     }
     <template>
-      <FitRows @items={{this.v.fitRows}}>
-        <:tile>
-          <RichFittedCard>
-            <:avatar><TypeMark @label='Re' /></:avatar>
-            <:title><span
-                class='fit-title'
-                role='heading'
-                aria-level='3'
-              >{{this.v.title}}</span></:title>
-            <:subtitle>{{this.v.subline}}</:subtitle>
-            <:status>
-              <Chip
-                @tone={{this.v.directionTone}}
-                @appearance='plain'
-              >{{lowercase this.v.directionLabel}}</Chip>
-            </:status>
-          </RichFittedCard>
-        </:tile>
-        <:row as |item|>
-          {{#if (eq item.key 'Author')}}
-            <@fields.author @format='atom' @displayContainer={{false}} />
-          {{else if (eq item.key 'Case')}}
-            <@fields.case @format='atom' @displayContainer={{false}} />
-          {{else}}
-            <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
-          {{/if}}
-        </:row>
-      </FitRows>
+      <RichFittedCard>
+        <:avatar><TypeMark @label='Re' /></:avatar>
+        <:title><span
+            role='heading'
+            aria-level='3'
+          >{{this.v.title}}</span></:title>
+        <:subtitle>{{this.v.subline}}</:subtitle>
+        <:status>
+          <Chip @tone={{this.v.directionTone}} @appearance='plain'>{{lowercase
+              this.v.directionLabel
+            }}</Chip>
+        </:status>
+        <:details>
+          {{#each this.v.fitRows as |item|}}
+            <Detail @label={{item.key}}>
+              {{#if (eq item.key 'Author')}}
+                <@fields.author @format='atom' @displayContainer={{false}} />
+              {{else if (eq item.key 'Case')}}
+                <@fields.case @format='atom' @displayContainer={{false}} />
+              {{else}}
+                <span
+                  class={{if (isMono item.key) 'mono'}}
+                >{{item.value}}</span>
+              {{/if}}
+            </Detail>
+          {{/each}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
         @layer PretComponent {
-          .fit-title {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
           .mono {
             font-family: var(--font-mono);
           }

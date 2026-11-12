@@ -769,7 +769,7 @@ export class Rfq extends CardDef {
     }
     <template>
       <RichFittedCard>
-        <:avatar><Avatar @name='R Q' @shape='square' @size={{20}} /></:avatar>
+        <:avatar><Avatar @name='R Q' @shape='square' /></:avatar>
         <:title>{{this.f.title}}</:title>
         <:status>{{#each this.tags as |t|}}<Chip
               @label={{t.label}}

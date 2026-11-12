@@ -26,6 +26,9 @@ import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import enumField from '@cardstack/base/enum';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
+import { Chip } from '@cardstack/pretui/components/chip';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 
 export const CallDirectionField = markDefinition(
   enumField(StringField, {
@@ -35,6 +38,13 @@ export const CallDirectionField = markDefinition(
     ],
   }),
 );
+
+// a call that never reached anyone reads as a failure; the rest are neutral
+function callOutcomeTone(outcome?: string | null): PretuiToneArg {
+  return outcome === 'wrong-number' || outcome === 'failed'
+    ? 'danger'
+    : 'neutral';
+}
 
 /**
  * How the call ended. `connected` is one of six, and that is the point: a
@@ -453,199 +463,50 @@ export class Call extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <article class='fit {{@model.outcome}}'>
-        <div class='r-head'>
-          <span class='glyph' aria-hidden='true'>{{if
-              (eq @model.direction 'inbound')
-              '↓'
-              '↑'
-            }}</span>
-          <h3 class='title'>{{if
-              @model.subject
-              @model.subject
-              @model.phoneNumber
-            }}</h3>
-        </div>
-        <div class='r-body'>
-          {{#if @model.notes}}
-            <p class='note'>{{@model.notes}}</p>
-          {{/if}}
-        </div>
-        <div class='r-meta'>
-          {{! Connected calls show their length; the rest show what came of
-            them. One slot, one fact — never both, and never a duration on a
-            call nobody answered. }}
-          {{#if @model.wasConnected}}
-            <span class='fact'>{{@model.durationLabel}}</span>
-          {{else}}
-            <span class='fact out'>{{@model.outcome}}</span>
-          {{/if}}
-          {{#if @model.needsFollowUp}}
-            <span class='flag'>follow up</span>
-          {{/if}}
-        </div>
-      </article>
-
-      <style scoped>
-        .fit {
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb), 10cqb),
-            1rem
-          );
-          --type-ratio: 1.25;
-          width: 100%;
-          height: 100%;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          grid-template-areas: 'head' 'body' 'meta';
-          gap: var(--boxel-sp-6xs);
-          padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
-          box-sizing: border-box;
-          overflow: hidden;
-          background: var(--card);
-          color: var(--foreground);
-          font-family: var(--font-sans);
-        }
-        .r-head {
-          grid-area: head;
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-3xs);
-          min-height: 0;
-          overflow: hidden;
-          flex-shrink: 0;
-        }
-        .r-body {
-          grid-area: body;
-          min-height: 0;
-          overflow: hidden;
-        }
-        .r-meta {
-          grid-area: meta;
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: var(--boxel-sp-3xs);
-          min-height: 0;
-          overflow: hidden;
-          flex-shrink: 0;
-        }
-
-        /* The anchor: no image field on a call, so the title carries it —
-           decisively bold and 1.56x the body, per the typographic-anchor
-           rule. The arrow is a quiet directional mark, never a competitor. */
-        .title {
-          flex: 1;
-          min-width: 0;
-          margin: 0;
-          font-size: calc(var(--type-base) * pow(var(--type-ratio), 1));
-          font-weight: 700;
-          line-height: 1.2;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-          overflow: hidden;
-          overflow-wrap: break-word;
-          min-width: 0;
-        }
-        .glyph {
-          flex: none;
-          font-size: var(--type-base);
-          line-height: 1.2;
-          color: var(--muted-foreground);
-        }
-        .note {
-          font-size: var(--type-base);
-          line-height: 1.25;
-          color: var(--muted-foreground);
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 3;
-          overflow: hidden;
-          overflow-wrap: break-word;
-          min-width: 0;
-        }
-        /* Data is all-or-nothing: the duration and the outcome are never
-           ellipsised, they are hidden whole at quanta with no room. */
-        .fact {
-          flex: none;
-          font-size: var(--type-base);
-          line-height: 1.25;
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-        }
-        .fit.wrong-number .fact.out,
-        .fit.failed .fact.out {
-          color: var(--destructive-ink);
-          font-weight: 600;
-        }
-        .flag {
-          flex: none;
-          font-size: var(--type-base);
-          line-height: 1.25;
-          white-space: nowrap;
-          color: color-mix(in oklch, var(--primary) 45%, var(--foreground));
-        }
-
-        /* ── height quanta ──────────────────────────────────────────────
-           Rows are hidden whole; nothing is ever shrunk into a clip. */
-
-        /* Badge (~2.5rem): the title is the only survivor. */
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: 1fr;
-            grid-template-areas: 'head';
-            padding: 0 var(--boxel-sp-xxs);
-            align-items: center;
-          }
-          .r-body,
-          .r-meta {
-            display: none;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        /* Strip: title + the one fact, no notes. */
-        @container fitted-card (50px < height <= 80px) {
-          .fit {
-            grid-template-rows: auto auto;
-            grid-template-areas: 'head' 'meta';
-          }
-          .r-body {
-            display: none;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        /* Tile: notes get one line. */
-        @container fitted-card (80px < height <= 130px) {
-          .note {
-            -webkit-line-clamp: 1;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-
-        /* Narrow: the follow-up flag goes before the fact does — the fact is
-           data, the flag is a hint. */
-        @container fitted-card (width <= 180px) {
-          .flag {
-            display: none;
-          }
-        }
-        /* Very narrow badge: even the arrow competes for the title's row. */
-        @container fitted-card (width <= 120px) {
-          .glyph {
-            display: none;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:avatar>{{#if (eq @model.direction 'inbound')}}<PhoneIncomingIcon
+              width='16'
+              height='16'
+              aria-hidden='true'
+            />{{else}}<PhoneOutgoingIcon
+              width='16'
+              height='16'
+              aria-hidden='true'
+            />{{/if}}</:avatar>
+        <:title>{{if @model.subject @model.subject @model.phoneNumber}}</:title>
+        <:status>
+          {{#if @model.outcome}}<Chip
+              @appearance='plain'
+              @tone={{callOutcomeTone @model.outcome}}
+            >{{@model.outcome}}</Chip>{{/if}}
+          {{#if @model.needsFollowUp}}<Chip
+              @appearance='plain'
+              @tone='primary'
+            >follow up</Chip>{{/if}}
+        </:status>
+        <:subtitle>{{@model.notes}}</:subtitle>
+        <:fact
+        >{{! A connected call states its length; a call nobody answered
+            has none, its outcome chip says what came of it. }}{{#if
+            @model.wasConnected
+          }}{{@model.durationLabel}}{{/if}}</:fact>
+        <:details>
+          {{#if @model.startedAt}}<Detail @label='When'><@fields.startedAt
+                @format='atom'
+              /></Detail>{{/if}}
+          {{#if @model.phoneNumber}}<Detail
+              @label='Number'
+              @value={{@model.phoneNumber}}
+            />{{/if}}
+          {{#if @model.needsFollowUp}}<Detail
+              @label='Follow-up'
+            ><@fields.followUpAt @format='atom' /></Detail>{{/if}}
+          {{#if @model.regarding}}<Detail @label='Regarding'><@fields.regarding
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

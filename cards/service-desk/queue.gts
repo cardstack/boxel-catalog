@@ -36,8 +36,7 @@ import { SlaPolicy } from './sla-policy';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { RichFittedCard } from '../shared/rich-fitted-card';
-import { FittedExtras } from '../procurement/vendor';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   RecCard,
   RecHead,
@@ -376,7 +375,7 @@ export class Queue extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the RichFittedCard.
+    // the details tier's key-value rows
     get facts() {
       let m = this.args.model;
       return [
@@ -389,27 +388,26 @@ export class Queue extends CardDef {
       ];
     }
     <template>
-      <FittedExtras @facts={{this.facts}}>
-        <:default>
-          <RichFittedCard>
-            <:avatar><Avatar
-                @name={{queueMark @model.title}}
-                @shape='square'
-                @size={{32}}
-              /></:avatar>
-            <:title>{{@model.title}}</:title>
-            <:subtitle>{{@model.description}}</:subtitle>
-            <:status>
-              {{#if @model.tierLabel}}<Chip
-                  @appearance='plain'
-                >{{@model.tierLabel}}</Chip>{{/if}}
-              <Chip @appearance='plain'>{{@model.agentCount}}</Chip>
-            </:status>
-            <:fact>Default commitment
-              {{if @model.policyName @model.policyName '—'}}</:fact>
-          </RichFittedCard>
-        </:default>
-      </FittedExtras>
+      <RichFittedCard>
+        <:avatar><Avatar
+            @name={{queueMark @model.title}}
+            @shape='square'
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{@model.description}}</:subtitle>
+        <:status>
+          {{#if @model.tierLabel}}<Chip
+              @appearance='plain'
+            >{{@model.tierLabel}}</Chip>{{/if}}
+          <Chip @appearance='plain'>{{@model.agentCount}}</Chip>
+        </:status>
+        <:fact>Default commitment
+          {{if @model.policyName @model.policyName '—'}}</:fact>
+        <:details>{{#each this.facts as |item|}}<Detail
+              @label={{item.key}}
+              @value={{item.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 }
