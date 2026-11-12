@@ -2021,17 +2021,24 @@ export function runTests() {
       });
     });
 
-    // The card context My reports reads through: the host store, and its searches.
+    // The card context My reports reads through, built as the host provides it to a card: the
+    // card-facing store and card-initiated searches defaulting to the books' realm.
     const deskContext = (get?: (id: string) => Promise<unknown>) => {
       let store = getService('store');
+      let currentRealm = () => realmURL;
       return {
-        store: get ? { get } : store,
+        store: get ? { get } : store.cardFacingStore(currentRealm),
         getCards: (
           parent: object,
           getQuery: () => any,
           getRealms?: () => string[] | undefined,
           opts?: { isLive?: true },
-        ) => store.getSearchResource(parent, getQuery, getRealms, opts),
+        ) =>
+          store.getSearchResource(parent, getQuery, getRealms, {
+            ...opts,
+            cardInitiated: true,
+            getDefaultRealm: currentRealm,
+          }),
       } as any;
     };
     const savedButton = (name: string) =>
