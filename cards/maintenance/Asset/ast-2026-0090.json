@@ -48,7 +48,13 @@
       "nextDueLabel": "overdue 9 days \u00b7 Filter change (waiting parts)",
       "notes": null,
       "primaryMeterValue": 15.8,
-      "primaryMeterUnit": "\u00b0C"
+      "primaryMeterUnit": "\u00b0C",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

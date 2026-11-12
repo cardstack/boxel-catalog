@@ -10,7 +10,13 @@
         "level": "high"
       },
       "defaultTeamName": "Facilities",
-      "icon": "forklift"
+      "icon": "forklift",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

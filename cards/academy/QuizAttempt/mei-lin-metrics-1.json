@@ -33,7 +33,13 @@
           "selectedKeys": [],
           "text": "bar chart"
         }
-      ]
+      ],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "enrollment": {

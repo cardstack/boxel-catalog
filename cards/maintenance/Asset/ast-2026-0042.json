@@ -55,7 +55,13 @@
       "photoUrls": [],
       "lastServicedAt": "2026-06-15",
       "nextDueLabel": "12 days \u00b7 Quarterly service (with compressor)",
-      "notes": null
+      "notes": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

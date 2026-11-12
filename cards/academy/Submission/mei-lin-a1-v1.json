@@ -5,7 +5,13 @@
       "version": 1,
       "submittedAt": "2026-08-31T22:10:00.000Z",
       "submissionStatus": "submitted",
-      "text": "North star: orders per active shop. Inputs: listing quality score, search-to-view, checkout completion."
+      "text": "North star: orders per active shop. Inputs: listing quality score, search-to-view, checkout completion.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "enrollment": {

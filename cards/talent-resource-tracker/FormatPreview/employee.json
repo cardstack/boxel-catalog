@@ -1,7 +1,14 @@
 {
   "data": {
     "type": "card",
-    "attributes": {},
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
     "relationships": {
       "card": {
         "links": {

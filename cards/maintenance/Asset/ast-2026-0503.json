@@ -45,7 +45,13 @@
       "photoUrls": [],
       "lastServicedAt": null,
       "nextDueLabel": null,
-      "notes": null
+      "notes": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

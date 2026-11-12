@@ -4,7 +4,13 @@
     "attributes": {
       "clauseType": "auto_renewal",
       "deviationSeverity": "none",
-      "actualText": "This Agreement renews automatically for successive twelve (12) month terms unless either party gives not less than sixty (60) days' written notice before the end of the then-current term."
+      "actualText": "This Agreement renews automatically for successive twelve (12) month terms unless either party gives not less than sixty (60) days' written notice before the end of the then-current term.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

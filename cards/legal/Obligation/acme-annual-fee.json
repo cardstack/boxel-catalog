@@ -29,7 +29,13 @@
           "evidenceUrl": "https://example.com/payments/acme-2026.pdf",
           "note": "Paid in advance, cleared 14 Aug."
         }
-      ]
+      ],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "contract": {

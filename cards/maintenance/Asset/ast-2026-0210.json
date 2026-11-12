@@ -55,7 +55,13 @@
       "nextDueLabel": "meter \u00b7 500-hour service at 4,810 h",
       "notes": null,
       "primaryMeterValue": 4702,
-      "primaryMeterUnit": "h"
+      "primaryMeterUnit": "h",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

@@ -12,7 +12,13 @@
       "summary": "Why cohort curves beat averages.",
       "content": null,
       "liveSessionAt": null,
-      "meetingUrl": null
+      "meetingUrl": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "cardInfo.theme": {

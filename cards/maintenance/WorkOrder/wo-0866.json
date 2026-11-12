@@ -100,6 +100,12 @@
         "endedAt": "2026-08-01T03:00:00.000Z",
         "planned": true,
         "reason": "Filter change"
+      },
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
       }
     },
     "relationships": {

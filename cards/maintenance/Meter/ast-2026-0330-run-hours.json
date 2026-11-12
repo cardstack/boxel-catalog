@@ -22,7 +22,13 @@
         }
       ],
       "warnAbove": null,
-      "warnBelow": null
+      "warnBelow": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

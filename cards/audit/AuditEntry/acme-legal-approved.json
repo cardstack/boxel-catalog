@@ -6,7 +6,13 @@
       "occurredAt": "2026-07-09T11:40:00.000Z",
       "subjectTitle": "Acme Industries \u2014 Master Services Agreement 2026",
       "note": "Cleared subject to the liability cap being restored.",
-      "conditions": "Liability cap must return to 1x fees over 12 months before signature."
+      "conditions": "Liability cap must return to 1x fees over 12 months before signature.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "subject": {

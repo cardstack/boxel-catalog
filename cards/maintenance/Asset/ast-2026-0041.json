@@ -90,7 +90,13 @@
       "nextDueLabel": "12 days \u00b7 Quarterly service",
       "notes": "Primary plant air for Building B. Oil-injected rotary screw, 37 kW. Runs 24/5.",
       "primaryMeterValue": 12418,
-      "primaryMeterUnit": "h"
+      "primaryMeterUnit": "h",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

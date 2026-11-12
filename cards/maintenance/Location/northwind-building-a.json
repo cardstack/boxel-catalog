@@ -4,7 +4,13 @@
     "attributes": {
       "name": "Building A",
       "kind": "Building",
-      "description": null
+      "description": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

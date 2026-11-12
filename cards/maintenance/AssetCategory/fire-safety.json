@@ -10,7 +10,13 @@
         "level": "critical"
       },
       "defaultTeamName": "Facilities",
-      "icon": "flame"
+      "icon": "flame",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

@@ -16,7 +16,13 @@
         }
       ],
       "releases": [],
-      "notes": null
+      "notes": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "course": {

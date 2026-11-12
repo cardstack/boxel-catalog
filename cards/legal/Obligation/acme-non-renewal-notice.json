@@ -15,6 +15,12 @@
       "recurrence": {
         "pattern": "none",
         "startDate": "2027-05-15"
+      },
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
       }
     },
     "relationships": {

@@ -4,7 +4,13 @@
     "attributes": {
       "name": "Loading Dock",
       "kind": "Area",
-      "description": null
+      "description": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

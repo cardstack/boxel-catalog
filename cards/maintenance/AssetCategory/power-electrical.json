@@ -10,7 +10,13 @@
         "level": "critical"
       },
       "defaultTeamName": "Facilities",
-      "icon": "plug"
+      "icon": "plug",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

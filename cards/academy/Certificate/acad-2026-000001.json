@@ -11,7 +11,13 @@
       "courseTitle": "Product Analytics Foundations",
       "cohortName": "PAF-101 \u00b7 Spring 2026 \u00b7 Cohort A",
       "creditHours": 3,
-      "finalLetter": "B"
+      "finalLetter": "B",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "authority": {

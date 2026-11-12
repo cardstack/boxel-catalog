@@ -55,7 +55,13 @@
       "nextDueLabel": "overdue \u00b7 Monthly load test due 10 Sep",
       "notes": null,
       "primaryMeterValue": 819,
-      "primaryMeterUnit": "h"
+      "primaryMeterUnit": "h",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "meta": {
       "adoptsFrom": {

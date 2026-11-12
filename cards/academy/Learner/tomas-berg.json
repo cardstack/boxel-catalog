@@ -9,6 +9,12 @@
       "photo": {
         "url": null,
         "sourceMode": "url"
+      },
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
       }
     },
     "relationships": {

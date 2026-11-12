@@ -5,7 +5,13 @@
       "version": 1,
       "submittedAt": "2026-09-02T07:40:00.000Z",
       "submissionStatus": "graded",
-      "text": "North star: monthly paying teams. Inputs: trials started, trial-to-paid, seat expansion."
+      "text": "North star: monthly paying teams. Inputs: trials started, trial-to-paid, seat expansion.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "enrollment": {

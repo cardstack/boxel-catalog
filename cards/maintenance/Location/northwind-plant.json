@@ -18,6 +18,12 @@
       "geo": {
         "lat": 3.139,
         "lon": 101.687
+      },
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
       }
     },
     "meta": {

@@ -6,7 +6,13 @@
       "occurredAt": "2026-07-03T14:05:00.000Z",
       "subjectTitle": "Acme Industries \u2014 Master Services Agreement 2026",
       "note": "Sent for approval at $420,000 total contract value.",
-      "conditions": null
+      "conditions": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
     },
     "relationships": {
       "subject": {
