@@ -4,6 +4,8 @@ import { getService } from '@universal-ember/test-support';
 import {
   setupIntegrationTestRealm,
   setupLocalIndexing,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupBaseRealm } from '@cardstack/host/tests/helpers/base-realm';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
@@ -172,6 +174,7 @@ export function runTests() {
     function (hooks) {
       setupRenderingTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
         loggedInAs: TEST_USER,
@@ -189,21 +192,23 @@ export function runTests() {
 
       async function setup() {
         // Permissions are enforced so a request carries the signed-in user, which `post` stamps.
-        let { adapter } = await setupIntegrationTestRealm({
-          mockMatrixUtils,
-          realmURL,
-          enforcePermissions: true,
-          permissions: { [TEST_USER]: ['read', 'write', 'realm-owner'] },
-          contents: {
-            'Invoice/draft.json': draft('Invoice', 'INV-TEST-1', {
-              due: '2026-05-10',
-              kind: 'sale',
-            }),
-            'SalesReceipt/draft.json': draft('SalesReceipt', 'SR-TEST-1', {
-              depositTo: '1010',
-            }),
-          },
-        });
+        let { adapter } = await withCachedRealmSetup(() =>
+          setupIntegrationTestRealm({
+            mockMatrixUtils,
+            realmURL,
+            enforcePermissions: true,
+            permissions: { [TEST_USER]: ['read', 'write', 'realm-owner'] },
+            contents: {
+              'Invoice/draft.json': draft('Invoice', 'INV-TEST-1', {
+                due: '2026-05-10',
+                kind: 'sale',
+              }),
+              'SalesReceipt/draft.json': draft('SalesReceipt', 'SR-TEST-1', {
+                depositTo: '1010',
+              }),
+            },
+          }),
+        );
         let loader = getService('loader-service').loader;
         let { operations } = await loader.import<typeof OperationsModule>(
           '@cardstack/base/operations',

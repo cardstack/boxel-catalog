@@ -7,6 +7,8 @@ import {
   setupCardLogs,
   setupIntegrationTestRealm,
   setupLocalIndexing,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
@@ -81,6 +83,7 @@ export function runTests() {
   module('Catalog | accounting - bank feed operations', function (hooks) {
     setupRenderingTest(hooks);
     setupLocalIndexing(hooks);
+    setupRealmCacheTeardown(hooks);
 
     let mockMatrixUtils = setupMockMatrix(hooks, {
       loggedInAs: USER,
@@ -100,44 +103,46 @@ export function runTests() {
 
     hooks.beforeEach(async function () {
       hostTransport = (globalThis as any)._CARDSTACK_OPERATIONS_TRANSPORT;
-      ({ adapter } = await setupIntegrationTestRealm({
-        mockMatrixUtils,
-        realmURL,
-        enforcePermissions: true,
-        permissions: { [USER]: ['read', 'write', 'realm-owner'] },
-        contents: {
-          'realm.json': realmConfigCardJSON({
-            name: 'Bank feed',
-            config: { closedThrough: '2026-12-31' },
-          }),
-          'Journal/2027-01.json': instance('ledger-journal', 'JournalMonth', {
-            month: '2027-01',
-            firstDay: '2027-01-01',
-            lastDay: '2027-01-31',
-            status: 'open',
-            nextSeq: 1,
-            postings: [],
-          }),
-          'Ledger/books.json': instance('ledger-cards', 'Ledger', {
-            company: 'Test Books',
-          }),
-          'BankTransaction/rent.json': bankLine(
-            'FCB-270105-01',
-            '2027-01-05',
-            -450000,
-          ),
-          'BankTransaction/payout.json': bankLine(
-            'FCB-270106-01',
-            '2027-01-06',
-            231045,
-          ),
-          'BankTransaction/fee.json': bankLine(
-            'FCB-270108-01',
-            '2027-01-08',
-            -1500,
-          ),
-        },
-      }));
+      ({ adapter } = await withCachedRealmSetup(() =>
+        setupIntegrationTestRealm({
+          mockMatrixUtils,
+          realmURL,
+          enforcePermissions: true,
+          permissions: { [USER]: ['read', 'write', 'realm-owner'] },
+          contents: {
+            'realm.json': realmConfigCardJSON({
+              name: 'Bank feed',
+              config: { closedThrough: '2026-12-31' },
+            }),
+            'Journal/2027-01.json': instance('ledger-journal', 'JournalMonth', {
+              month: '2027-01',
+              firstDay: '2027-01-01',
+              lastDay: '2027-01-31',
+              status: 'open',
+              nextSeq: 1,
+              postings: [],
+            }),
+            'Ledger/books.json': instance('ledger-cards', 'Ledger', {
+              company: 'Test Books',
+            }),
+            'BankTransaction/rent.json': bankLine(
+              'FCB-270105-01',
+              '2027-01-05',
+              -450000,
+            ),
+            'BankTransaction/payout.json': bankLine(
+              'FCB-270106-01',
+              '2027-01-06',
+              231045,
+            ),
+            'BankTransaction/fee.json': bankLine(
+              'FCB-270108-01',
+              '2027-01-08',
+              -1500,
+            ),
+          },
+        }),
+      ));
       loader = getService('loader-service').loader;
       ({ operations } = await loader.import('@cardstack/base/operations'));
       ({ BankTransaction } = await loader.import(`${accounting}ledger-bank`));

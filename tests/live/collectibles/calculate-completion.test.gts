@@ -9,6 +9,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -71,6 +73,7 @@ export function runTests() {
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
       setupOnSave(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -85,47 +88,49 @@ export function runTests() {
         });
         setupUserSubscription();
         setupAuthEndpoints();
-        await setupAcceptanceTestRealm({
-          realmURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            'ana.json': instance('marketplace-member', 'MarketplaceMember', {
-              name: 'Ana',
-            }),
-            'ben.json': instance('marketplace-member', 'MarketplaceMember', {
-              name: 'Ben',
-            }),
-            'p1.json': product('P1'),
-            'p2.json': product('P2'),
-            'p3.json': product('P3'),
-            'p4.json': product('P4'),
-            'set.json': instance(
-              'completion-set',
-              'CompletionSet',
-              { cardInfo: { name: 'Four pairs' } },
-              {
-                'products.0': link('p1'),
-                'products.1': link('p2'),
-                'products.2': link('p3'),
-                'products.3': link('p4'),
-              },
-            ),
-            'ana-p1.json': item('ana', 'p1'),
-            'ben-p2.json': item('ben', 'p2'),
-            'ben-p3.json': item('ben', 'p3'),
-            // p5 comes in two sizes and Cleo owns one; p6 lists no sizes.
-            'p5.json': product('P5', ['9', '10']),
-            'p6.json': product('P6'),
-            'own-any.json': set('Any size', 'own-any', ['p5', 'p6']),
-            'own-all.json': set('Every size', 'own-all', ['p5', 'p6']),
-            'cleo.json': instance('marketplace-member', 'MarketplaceMember', {
-              name: 'Cleo',
-            }),
-            'cleo-p5-9.json': item('cleo', 'p5', '9'),
-            'cleo-p6.json': item('cleo', 'p6'),
-          },
-        });
+        await withCachedRealmSetup(() =>
+          setupAcceptanceTestRealm({
+            realmURL,
+            mockMatrixUtils,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              'ana.json': instance('marketplace-member', 'MarketplaceMember', {
+                name: 'Ana',
+              }),
+              'ben.json': instance('marketplace-member', 'MarketplaceMember', {
+                name: 'Ben',
+              }),
+              'p1.json': product('P1'),
+              'p2.json': product('P2'),
+              'p3.json': product('P3'),
+              'p4.json': product('P4'),
+              'set.json': instance(
+                'completion-set',
+                'CompletionSet',
+                { cardInfo: { name: 'Four pairs' } },
+                {
+                  'products.0': link('p1'),
+                  'products.1': link('p2'),
+                  'products.2': link('p3'),
+                  'products.3': link('p4'),
+                },
+              ),
+              'ana-p1.json': item('ana', 'p1'),
+              'ben-p2.json': item('ben', 'p2'),
+              'ben-p3.json': item('ben', 'p3'),
+              // p5 comes in two sizes and Cleo owns one; p6 lists no sizes.
+              'p5.json': product('P5', ['9', '10']),
+              'p6.json': product('P6'),
+              'own-any.json': set('Any size', 'own-any', ['p5', 'p6']),
+              'own-all.json': set('Every size', 'own-all', ['p5', 'p6']),
+              'cleo.json': instance('marketplace-member', 'MarketplaceMember', {
+                name: 'Cleo',
+              }),
+              'cleo-p5-9.json': item('cleo', 'p5', '9'),
+              'cleo-p6.json': item('cleo', 'p6'),
+            },
+          }),
+        );
         await visitOperatorMode({ stacks: [[]] });
       });
 

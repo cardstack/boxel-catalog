@@ -9,6 +9,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   visitOperatorMode,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -65,6 +67,7 @@ export function runTests() {
   module('Acceptance | Catalog | academy - publish course', function (hooks) {
     setupApplicationTest(hooks);
     setupLocalIndexing(hooks);
+    setupRealmCacheTeardown(hooks);
     setupOnSave(hooks);
 
     let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -79,27 +82,29 @@ export function runTests() {
       });
       setupUserSubscription();
       setupAuthEndpoints();
-      await setupAcceptanceTestRealm({
-        realmURL,
-        mockMatrixUtils,
-        contents: {
-          ...SYSTEM_CARD_FIXTURE_CONTENTS,
-          'lesson.json': instance('lesson', 'Lesson', { title: 'Welcome' }),
-          'full-module.json': instance(
-            'course-module',
-            'Module',
-            { title: 'Foundations' },
-            links('lessons', ['lesson']),
-          ),
-          'empty-module.json': instance('course-module', 'Module', {
-            title: 'Hollow',
-          }),
-          'no-modules.json': course('No modules', []),
-          'no-lessons.json': course('No lessons', ['empty-module']),
-          'no-rule.json': course('No rule', ['full-module'], null),
-          'ready.json': course('Ready', ['full-module']),
-        },
-      });
+      await withCachedRealmSetup(() =>
+        setupAcceptanceTestRealm({
+          realmURL,
+          mockMatrixUtils,
+          contents: {
+            ...SYSTEM_CARD_FIXTURE_CONTENTS,
+            'lesson.json': instance('lesson', 'Lesson', { title: 'Welcome' }),
+            'full-module.json': instance(
+              'course-module',
+              'Module',
+              { title: 'Foundations' },
+              links('lessons', ['lesson']),
+            ),
+            'empty-module.json': instance('course-module', 'Module', {
+              title: 'Hollow',
+            }),
+            'no-modules.json': course('No modules', []),
+            'no-lessons.json': course('No lessons', ['empty-module']),
+            'no-rule.json': course('No rule', ['full-module'], null),
+            'ready.json': course('Ready', ['full-module']),
+          },
+        }),
+      );
       await visitOperatorMode({ stacks: [[]] });
     });
 

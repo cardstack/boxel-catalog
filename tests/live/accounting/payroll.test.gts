@@ -12,6 +12,8 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   realmConfigCardJSON,
+  setupRealmCacheTeardown,
+  withCachedRealmSetup,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -890,6 +892,7 @@ export function runTests() {
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
       setupOnSave(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -916,130 +919,132 @@ export function runTests() {
         setupAuthEndpoints();
         let good = runAttrs(),
           checks = runChecks();
-        await setupAcceptanceTestRealm({
-          realmURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            'realm.json': realmConfigCardJSON({
-              name: 'Payroll books',
-              config: { chart: CHART },
-            }),
-            'run-probe.gts': RUN_PROBE,
-            'CheckedLedger/books.json': {
-              data: {
-                type: 'card',
-                attributes: { company: 'Payroll books' },
-                meta: {
-                  adoptsFrom: {
-                    module: `${realmURL}run-probe`,
-                    name: 'CheckedLedger',
+        await withCachedRealmSetup(() =>
+          setupAcceptanceTestRealm({
+            realmURL,
+            mockMatrixUtils,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              'realm.json': realmConfigCardJSON({
+                name: 'Payroll books',
+                config: { chart: CHART },
+              }),
+              'run-probe.gts': RUN_PROBE,
+              'CheckedLedger/books.json': {
+                data: {
+                  type: 'card',
+                  attributes: { company: 'Payroll books' },
+                  meta: {
+                    adoptsFrom: {
+                      module: `${realmURL}run-probe`,
+                      name: 'CheckedLedger',
+                    },
                   },
                 },
               },
-            },
-            'CheckedRun/good.json': probe(good),
-            'CheckedRun/fraction.json': probe({
-              ...good,
-              paychecks: [
-                {
-                  ...checks[0],
-                  fitMinor: checks[0].fitMinor + 0.5,
-                  netMinor: checks[0].netMinor - 0.5,
-                },
-                checks[1],
-              ],
-            }),
-            'CheckedRun/section125.json': probe({
-              ...good,
-              paychecks: [
-                {
-                  ...checks[0],
-                  section125Minor: checks[0].section125Minor + 1,
-                },
-                checks[1],
-              ],
-              section125Minor: good.section125Minor + 1,
-            }),
-            // Still balanced, so only the paycheck check can refuse it.
-            'CheckedRun/wages.json': probe({
-              ...good,
-              wages: good.wages.map((w, i) =>
-                i ? w : { ...w, amountMinor: w.amountMinor + 1 },
-              ),
-              netMinor: good.netMinor + 1,
-            }),
-            'CheckedRun/chart.json': probe({
-              ...good,
-              paychecks: [
-                {
-                  ...checks[0],
-                  deductions: checks[0].deductions.map((d) => ({
-                    ...d,
-                    account: d.account === '2350' ? '2399' : d.account,
-                  })),
-                },
-                checks[1],
-              ],
-            }),
-            'CheckedRun/short.json': probe({
-              ...good,
-              paychecks: [
-                { ...checks[0], netMinor: checks[0].netMinor + 1 },
-                checks[1],
-              ],
-            }),
-            'CheckedRun/totals.json': probe({
-              ...good,
-              fitMinor: (good.fitMinor ?? 0) - 1,
-            }),
-            'CheckedRun/deductions.json': probe({
-              ...good,
-              paychecks: [
-                {
-                  ...checks[0],
-                  deductionsMinor: checks[0].deductionsMinor + 1,
-                  netMinor: checks[0].netMinor - 1,
-                },
-                checks[1],
-              ],
-              deductionsMinor: good.deductionsMinor + 1,
-              netMinor: good.netMinor - 1,
-            }),
-            'PayrollRun/draft.json': {
-              data: {
-                type: 'card',
-                attributes: { ...good },
-                meta: {
-                  adoptsFrom: {
-                    module: `${accounting}ledger-cash`,
-                    name: 'PayrollRun',
+              'CheckedRun/good.json': probe(good),
+              'CheckedRun/fraction.json': probe({
+                ...good,
+                paychecks: [
+                  {
+                    ...checks[0],
+                    fitMinor: checks[0].fitMinor + 0.5,
+                    netMinor: checks[0].netMinor - 0.5,
+                  },
+                  checks[1],
+                ],
+              }),
+              'CheckedRun/section125.json': probe({
+                ...good,
+                paychecks: [
+                  {
+                    ...checks[0],
+                    section125Minor: checks[0].section125Minor + 1,
+                  },
+                  checks[1],
+                ],
+                section125Minor: good.section125Minor + 1,
+              }),
+              // Still balanced, so only the paycheck check can refuse it.
+              'CheckedRun/wages.json': probe({
+                ...good,
+                wages: good.wages.map((w, i) =>
+                  i ? w : { ...w, amountMinor: w.amountMinor + 1 },
+                ),
+                netMinor: good.netMinor + 1,
+              }),
+              'CheckedRun/chart.json': probe({
+                ...good,
+                paychecks: [
+                  {
+                    ...checks[0],
+                    deductions: checks[0].deductions.map((d) => ({
+                      ...d,
+                      account: d.account === '2350' ? '2399' : d.account,
+                    })),
+                  },
+                  checks[1],
+                ],
+              }),
+              'CheckedRun/short.json': probe({
+                ...good,
+                paychecks: [
+                  { ...checks[0], netMinor: checks[0].netMinor + 1 },
+                  checks[1],
+                ],
+              }),
+              'CheckedRun/totals.json': probe({
+                ...good,
+                fitMinor: (good.fitMinor ?? 0) - 1,
+              }),
+              'CheckedRun/deductions.json': probe({
+                ...good,
+                paychecks: [
+                  {
+                    ...checks[0],
+                    deductionsMinor: checks[0].deductionsMinor + 1,
+                    netMinor: checks[0].netMinor - 1,
+                  },
+                  checks[1],
+                ],
+                deductionsMinor: good.deductionsMinor + 1,
+                netMinor: good.netMinor - 1,
+              }),
+              'PayrollRun/draft.json': {
+                data: {
+                  type: 'card',
+                  attributes: { ...good },
+                  meta: {
+                    adoptsFrom: {
+                      module: `${accounting}ledger-cash`,
+                      name: 'PayrollRun',
+                    },
                   },
                 },
               },
-            },
-            'PayrollRun/posted.json': {
-              data: {
-                type: 'card',
-                attributes: {
-                  ...good,
-                  docNo: 'PR-POSTED',
-                  status: 'journaled',
-                },
-                meta: {
-                  adoptsFrom: {
-                    module: `${accounting}ledger-cash`,
-                    name: 'PayrollRun',
+              'PayrollRun/posted.json': {
+                data: {
+                  type: 'card',
+                  attributes: {
+                    ...good,
+                    docNo: 'PR-POSTED',
+                    status: 'journaled',
+                  },
+                  meta: {
+                    adoptsFrom: {
+                      module: `${accounting}ledger-cash`,
+                      name: 'PayrollRun',
+                    },
                   },
                 },
               },
+              'CheckedRun/negative.json': probe({
+                ...good,
+                paychecks: [{ ...checks[0], stateMinor: -5 }, checks[1]],
+              }),
             },
-            'CheckedRun/negative.json': probe({
-              ...good,
-              paychecks: [{ ...checks[0], stateMinor: -5 }, checks[1]],
-            }),
-          },
-        });
+          }),
+        );
       });
 
       const card = async (path: string) =>
@@ -1406,6 +1411,7 @@ export function runTests() {
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
+      setupRealmCacheTeardown(hooks);
       setupOnSave(hooks);
 
       let mockMatrixUtils = setupMockMatrix(hooks, {
@@ -1449,39 +1455,41 @@ export function runTests() {
         });
         setupUserSubscription();
         setupAuthEndpoints();
-        await setupAcceptanceTestRealm({
-          realmURL,
-          mockMatrixUtils,
-          contents: {
-            ...SYSTEM_CARD_FIXTURE_CONTENTS,
-            'PayrollAgency/irs-941.json': doc(
-              'ledger-payroll',
-              'PayrollAgency',
-              {
-                agencyId: 'irs-941',
-                form: '941',
-                frequency: 'quarterly',
-                liabilityAccount: '2310',
-                filedThrough: '2025-12-31',
-              },
-            ),
-            'PayrollFiling/open.json': filing('open', NEXT_QUARTER),
-            'filing-probe.gts': FILING_PROBE,
-            'CheckedFiling/open.json': {
-              data: {
-                type: 'card',
-                attributes: filing('open', NEXT_QUARTER).data.attributes,
-                meta: {
-                  adoptsFrom: {
-                    module: `${realmURL}filing-probe`,
-                    name: 'CheckedFiling',
+        await withCachedRealmSetup(() =>
+          setupAcceptanceTestRealm({
+            realmURL,
+            mockMatrixUtils,
+            contents: {
+              ...SYSTEM_CARD_FIXTURE_CONTENTS,
+              'PayrollAgency/irs-941.json': doc(
+                'ledger-payroll',
+                'PayrollAgency',
+                {
+                  agencyId: 'irs-941',
+                  form: '941',
+                  frequency: 'quarterly',
+                  liabilityAccount: '2310',
+                  filedThrough: '2025-12-31',
+                },
+              ),
+              'PayrollFiling/open.json': filing('open', NEXT_QUARTER),
+              'filing-probe.gts': FILING_PROBE,
+              'CheckedFiling/open.json': {
+                data: {
+                  type: 'card',
+                  attributes: filing('open', NEXT_QUARTER).data.attributes,
+                  meta: {
+                    adoptsFrom: {
+                      module: `${realmURL}filing-probe`,
+                      name: 'CheckedFiling',
+                    },
                   },
                 },
               },
+              'PayrollFiling/filed.json': filing('filed'),
             },
-            'PayrollFiling/filed.json': filing('filed'),
-          },
-        });
+          }),
+        );
       });
 
       const card = async (path: string) =>
