@@ -88,7 +88,7 @@ import {
   riskTone,
   type Tone,
 } from '../shared/compact-format';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { Note, StatStrip, type Stat } from './components';
 import { ObligationStats } from './tabs/obligations';
 import { ComplianceStats } from './tabs/compliance';
@@ -1308,11 +1308,11 @@ export class ContractExecutionApp extends CardDef {
 
   static fitted = class Fitted extends Component<typeof ContractExecutionApp> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Contract lifecycle desk</:subtitle>
         <:fact>Repository · approvals · obligations · renewals</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 
