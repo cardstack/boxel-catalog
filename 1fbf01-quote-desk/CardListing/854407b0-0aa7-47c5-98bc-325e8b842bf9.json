@@ -1,0 +1,123 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Quote Desk",
+      "summary": "Turns messy WhatsApp client briefs into ready-to-send quotes for small digital agencies, with prices always taken from the rate card.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "examples.0": {
+        "links": {
+          "self": "../PipelineHome/3902c76f-479f-4150-89b9-b00d5de1a82f"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "@cardstack/catalog/Category/analytics-reporting"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/app"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/pipeline-home-50977bb4.png"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/758082c5-1b30-47c3-8242-13d30e0be5ad"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/82c51b30-a7c3-4242-93d3-0e0be5adccd3"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/c51b30a7-c302-4213-930e-0be5adccd309"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/8082c51b-30a7-4302-8213-d30e0be5adcc"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/eb643f75-8082-451b-b0a7-c3024213d30e"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/ce04101a-eb64-4f75-8082-c51b30a7c302"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/1aeb643f-7580-42c5-9b30-a7c3024213d3"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/04101aeb-643f-4580-82c5-1b30a7c30242"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/101aeb64-3f75-4082-851b-30a7c3024213"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/85d8ce04-101a-4b64-bf75-8082c51b30a7"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/d8ce0410-1aeb-443f-b580-82c51b30a7c3"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/30a7c302-4213-430e-8be5-adccd309d9e0"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/1b30a7c3-0242-43d3-8e0b-e5adccd309d9"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/3f758082-c51b-40a7-8302-4213d30e0be5"
+        }
+      },
+      "skills.0": {
+        "links": {
+          "self": "../Skill/quote-desk"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "CardListing"
+      }
+    }
+  }
+}

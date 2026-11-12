@@ -1,0 +1,16 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Company profile website",
+      "unit": "package",
+      "price": 6000000
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../service-item",
+        "name": "ServiceItem"
+      }
+    }
+  }
+}

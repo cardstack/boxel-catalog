@@ -1,0 +1,16 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Consultation",
+      "unit": "hour",
+      "price": 250000
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../service-item",
+        "name": "ServiceItem"
+      }
+    }
+  }
+}

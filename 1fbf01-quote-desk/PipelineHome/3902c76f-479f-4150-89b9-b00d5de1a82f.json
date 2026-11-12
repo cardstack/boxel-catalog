@@ -1,0 +1,73 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": null,
+      "cardInfo": {
+        "name": "Quote Desk Pipeline",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "dataRealm": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../pipeline-home",
+        "name": "PipelineHome"
+      }
+    },
+    "relationships": {
+      "quotes.0": {
+        "links": {
+          "self": "../Quote/quote-batik"
+        }
+      },
+      "quotes.1": {
+        "links": {
+          "self": "../Quote/quote-kopi-senja"
+        }
+      },
+      "quotes.2": {
+        "links": {
+          "self": "../Quote/quote-premium"
+        }
+      },
+      "clients.0": {
+        "links": {
+          "self": "../Client/studio-kopi-senja"
+        }
+      },
+      "clients.1": {
+        "links": {
+          "self": "../Client/toko-batik-nusantara"
+        }
+      },
+      "serviceItems.0": {
+        "links": {
+          "self": "../ServiceItem/desain-logo"
+        }
+      },
+      "serviceItems.1": {
+        "links": {
+          "self": "../ServiceItem/konsultasi"
+        }
+      },
+      "serviceItems.2": {
+        "links": {
+          "self": "../ServiceItem/pembuatan-website"
+        }
+      },
+      "serviceItems.3": {
+        "links": {
+          "self": "../ServiceItem/revisi-desain"
+        }
+      },
+      "serviceItems.4": {
+        "links": {
+          "self": "../ServiceItem/5fc0344f-c265-483c-8e21-0e3955dbf3d3"
+        }
+      }
+    }
+  }
+}
