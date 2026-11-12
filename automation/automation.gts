@@ -1921,19 +1921,9 @@ function itemAt(items: StatusItem[], index: number): StatusItem | undefined {
   return items[index];
 }
 
-// How a time reads in the status facts, with its zone named, since the
-// status reads in the viewer's zone and each trigger in the trigger's own.
-const DATE_TIME_OPTIONS: Record<string, unknown> = {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-  timeZoneName: 'short',
-};
-
-// A grid of status facts: plain values, times with their zone named, and the
-// state as a chip.
+// A grid of status facts: plain values, times with their zone named (the
+// status reads in the viewer's zone and each trigger in the trigger's own),
+// and the state as a chip.
 class StatusFacts extends GlimmerComponent<{
   Args: { items: StatusItem[]; columns?: number; size?: 's' | 'm' };
 }> {
@@ -1955,7 +1945,12 @@ class StatusFacts extends GlimmerComponent<{
           {{else if fact.date}}
             <FormatDate
               @date={{fact.date}}
-              @options={{DATE_TIME_OPTIONS}}
+              @month='short'
+              @day='numeric'
+              @year='numeric'
+              @hour='numeric'
+              @minute='2-digit'
+              @timeZoneName='short'
               @timeZone={{fact.timeZone}}
             />
           {{else}}
