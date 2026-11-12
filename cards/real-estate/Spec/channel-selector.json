@@ -16,6 +16,13 @@
       "cardTitle": "Channel Selector",
       "cardDescription": "The publish-channel picker for a listing: MLS pinned as required, portals auto-synced from it, the rest optional."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

@@ -30,6 +30,11 @@
         "links": {
           "self": "../Incident/1301-mail-outage"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

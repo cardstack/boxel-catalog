@@ -16,6 +16,13 @@
       "cardTitle": "Publish Checklist",
       "cardDescription": "The pre-publish gate for a listing, rendered: photos, price, description and address, each pass, fail or warn with the fact beside it."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

@@ -22,6 +22,11 @@
         "links": {
           "self": "../Thread/checkout-502s"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

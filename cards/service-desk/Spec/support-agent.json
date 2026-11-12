@@ -25,6 +25,11 @@
         "links": {
           "self": "../SupportAgent/priya-raman"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

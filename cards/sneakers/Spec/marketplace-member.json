@@ -23,6 +23,11 @@
         "links": {
           "self": "../MarketplaceMember/vaultkeeper"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

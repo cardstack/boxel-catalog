@@ -30,6 +30,11 @@
         "links": {
           "self": "../SlaPolicy/standard-support"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

@@ -28,6 +28,11 @@
         "links": {
           "self": "../WorkOrder/wo-0871"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

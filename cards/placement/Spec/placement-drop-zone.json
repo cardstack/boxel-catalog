@@ -27,6 +27,11 @@
         "links": {
           "self": "../PlacementBoard/depot-crew-week-38"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

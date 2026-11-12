@@ -23,6 +23,11 @@
         "links": {
           "self": "../example/SeverityBadgeExample/showcase"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

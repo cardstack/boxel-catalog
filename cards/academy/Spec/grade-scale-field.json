@@ -43,7 +43,13 @@
       ],
       "cardDescription": "Letter bands by minimum percentage, defaulting to A–F at 90/80/70/60, with helpers to map a score to a letter."
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

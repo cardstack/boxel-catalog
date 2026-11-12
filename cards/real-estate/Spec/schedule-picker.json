@@ -16,6 +16,13 @@
       "cardTitle": "Schedule Picker",
       "cardDescription": "Publish now or later: a radio pair with native date and time inputs that hands the consumer an ISO moment or nothing."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

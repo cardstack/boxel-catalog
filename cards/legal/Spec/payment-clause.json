@@ -24,6 +24,11 @@
         "links": {
           "self": "../PaymentClause/net-30-standard"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

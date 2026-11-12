@@ -18,6 +18,13 @@
       },
       "cardDescription": "Checks a club booking in and credits the member's attendance points at the club's rates."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

@@ -25,7 +25,13 @@
       ],
       "cardDescription": "Per-day late deduction with a cap, grace hours and a hard close, plus a pure function that prices a late submission."
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

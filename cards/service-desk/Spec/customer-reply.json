@@ -32,6 +32,11 @@
         "links": {
           "self": "../CustomerReply/reply-0142-in-1"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

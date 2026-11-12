@@ -24,6 +24,11 @@
         "links": {
           "self": "../LegalEntity/cardstack-inc"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

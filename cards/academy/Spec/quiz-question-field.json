@@ -38,7 +38,13 @@
       ],
       "cardDescription": "One quiz question: prompt, kind, answer options, points and explanation, with the single function that marks an answer."
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

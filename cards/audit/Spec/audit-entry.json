@@ -38,6 +38,11 @@
         "links": {
           "self": "../AuditEntry/acme-submitted"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

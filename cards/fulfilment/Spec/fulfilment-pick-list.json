@@ -21,6 +21,11 @@
         "links": {
           "self": "../PickList/pk-0031"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

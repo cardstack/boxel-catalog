@@ -21,6 +21,11 @@
         "links": {
           "self": "../ProductReturn/rma-0089"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

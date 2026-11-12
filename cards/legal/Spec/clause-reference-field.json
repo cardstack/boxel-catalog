@@ -26,6 +26,11 @@
         "links": {
           "self": "../Amendment/msa-northwind-amendment-1"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

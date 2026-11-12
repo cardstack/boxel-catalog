@@ -27,6 +27,11 @@
         "links": {
           "self": "../Notification/platform-over-capacity"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

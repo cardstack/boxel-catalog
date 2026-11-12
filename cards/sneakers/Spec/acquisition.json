@@ -41,6 +41,13 @@
       "cardTitle": "Acquisition Field",
       "cardDescription": "What was paid for an item, when, from where and against which reference."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

@@ -22,6 +22,11 @@
         "links": {
           "self": "../Assignment/a2-cohort-analysis"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

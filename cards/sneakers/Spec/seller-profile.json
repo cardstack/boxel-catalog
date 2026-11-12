@@ -23,6 +23,11 @@
         "links": {
           "self": "../SellerProfile/sneakerking"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -23,6 +23,11 @@
         "links": {
           "self": "../Document/risk-score-export-fy26h2"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

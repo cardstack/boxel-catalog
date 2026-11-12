@@ -22,6 +22,11 @@
         "links": {
           "self": "../Quiz/metrics-fundamentals"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

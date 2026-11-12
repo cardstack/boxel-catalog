@@ -20,6 +20,11 @@
         "links": {
           "self": "../Order/sv-2026-1041"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

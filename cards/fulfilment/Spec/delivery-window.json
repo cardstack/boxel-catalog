@@ -15,6 +15,13 @@
         "summary": "The promise made to the customer, as a range rather than a date — with calendar-day handling that does not shift a day west of UTC."
       }
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

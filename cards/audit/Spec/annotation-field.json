@@ -25,6 +25,13 @@
       },
       "cardDescription": "A remark pinned to a location — note, concern or question — anchored by a plain string."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

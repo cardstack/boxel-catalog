@@ -32,6 +32,13 @@
       },
       "cardDescription": "Evidence with provenance and a two-hash tamper check: a document, a link or a statement."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

@@ -38,6 +38,11 @@
         "links": {
           "self": "../ApprovalRule/unlimited-liability"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

@@ -23,6 +23,11 @@
         "links": {
           "self": "../StandardEvaluationReport/iso9001-supplier-fy26h2"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

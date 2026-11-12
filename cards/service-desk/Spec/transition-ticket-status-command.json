@@ -19,6 +19,11 @@
         "links": {
           "self": "../Ticket/1240-report-encoding"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

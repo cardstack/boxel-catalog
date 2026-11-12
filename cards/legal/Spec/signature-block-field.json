@@ -45,6 +45,11 @@
         "links": {
           "self": "../Contract/acme-co-marketing"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

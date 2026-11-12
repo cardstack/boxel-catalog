@@ -22,6 +22,11 @@
         "links": {
           "self": "../LoyaltyAccount/jason-lim"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

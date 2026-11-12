@@ -20,6 +20,11 @@
         "links": {
           "self": "../FulfilmentOrder/ord-1001"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

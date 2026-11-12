@@ -22,6 +22,11 @@
         "links": {
           "self": "../Module/m2-cohort-analysis"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

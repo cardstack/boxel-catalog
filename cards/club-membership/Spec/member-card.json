@@ -29,6 +29,11 @@
         "links": {
           "self": "../Member/priya-shah"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

@@ -22,6 +22,11 @@
         "links": {
           "self": "../Booking/bk-20260912-00417"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

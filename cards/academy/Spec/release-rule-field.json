@@ -24,7 +24,13 @@
       ],
       "cardDescription": "When a module opens to a cohort: at start, a number of days after start, on a fixed date, or by hand."
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

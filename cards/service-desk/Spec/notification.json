@@ -37,6 +37,11 @@
         "links": {
           "self": "../Notification/desk-assignment-committed"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

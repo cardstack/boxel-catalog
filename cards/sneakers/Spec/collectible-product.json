@@ -25,6 +25,11 @@
         "links": {
           "self": "../CollectibleProduct/yeezy-350-zebra"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

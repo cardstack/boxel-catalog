@@ -22,6 +22,11 @@
         "links": {
           "self": "../PointsTransaction/jason-attend-away"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

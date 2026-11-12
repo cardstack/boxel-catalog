@@ -22,6 +22,13 @@
       },
       "cardDescription": "Minor, major or critical as one value with its rank and whether a certificate is at risk, rendered through the Severity Badge."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

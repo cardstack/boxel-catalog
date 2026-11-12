@@ -38,6 +38,11 @@
         "links": {
           "self": "../Obligation/acme-sub-processor-review"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

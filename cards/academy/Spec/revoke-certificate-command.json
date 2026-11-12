@@ -22,6 +22,11 @@
         "links": {
           "self": "../Certificate/acad-2026-000001"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

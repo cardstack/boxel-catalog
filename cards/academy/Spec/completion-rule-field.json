@@ -26,7 +26,13 @@
       ],
       "cardDescription": "What a learner must do to complete a cohort: minimum attendance, required assignments graded, quizzes passed and a minimum letter."
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

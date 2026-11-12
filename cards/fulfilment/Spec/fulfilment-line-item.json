@@ -15,6 +15,13 @@
         "summary": "One row of what was bought — a snapshot, attribute-only, so it renders in fitted and never rewrites history."
       }
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

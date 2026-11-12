@@ -23,6 +23,13 @@
       },
       "cardDescription": "Who produced an artefact and where it came from: provenance, kept separate from how far it can be trusted."
     },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

@@ -29,6 +29,11 @@
         "links": {
           "self": "../Match/riverton-home"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

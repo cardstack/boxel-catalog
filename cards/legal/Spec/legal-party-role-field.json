@@ -26,6 +26,11 @@
         "links": {
           "self": "../Contract/acme-msa-2026"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {
