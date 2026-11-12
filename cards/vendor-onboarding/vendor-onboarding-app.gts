@@ -7,7 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import BuildingIcon from '@cardstack/boxel-icons/building-2';
 
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { VendorOnboardingConsole } from './vendor-onboarding-console';
 
 // The buyer's intake console: every Vendor Profile on a vetting pipeline,
@@ -28,11 +28,11 @@ export class VendorOnboardingApp extends CardDef {
 
   static fitted = class Fitted extends Component<typeof VendorOnboardingApp> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:title>Vendor Onboarding</:title>
         <:subtitle>Procurement</:subtitle>
         <:fact>Intake, review, approve and onboard vendors</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }
