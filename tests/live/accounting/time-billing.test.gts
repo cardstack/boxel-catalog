@@ -190,13 +190,18 @@ export function runTests() {
     const ids = (n: number) =>
       Array.from({ length: n }, (_, i) => ({ id: `c-${i}` }));
     const query = () => ({ filter: {} });
+    // Pages past the first are created after the read that finds them missing.
+    const afterRender = () => new Promise((r) => setTimeout(r, 0));
 
-    test('a read is complete only once every page it needs has answered', function (assert) {
+    test('a read is complete only once every page it needs has answered', async function (assert) {
       let f = fakeContext(ids(250));
       let all = new AllCards(f.context, {}, query);
       assert.true(all.isLoading, 'loading before the first page answers');
       f.answer(0);
       assert.strictEqual(all.total, 250);
+      assert.false(all.isComplete, 'pages 1 and 2 have not been created');
+      await afterRender();
+      assert.strictEqual(f.pages.length, 3, 'the count calls for three pages');
       assert.false(all.isComplete, 'pages 1 and 2 have not answered');
       f.answer(1);
       assert.false(all.isComplete, 'page 2 has not answered');
@@ -215,10 +220,12 @@ export function runTests() {
       assert.false(all.isLoading);
     });
 
-    test('a later page failing fails the read', function (assert) {
+    test('a later page failing fails the read', async function (assert) {
       let f = fakeContext(ids(250));
       let all = new AllCards(f.context, {}, query);
       f.answer(0);
+      assert.true(all.isLoading);
+      await afterRender();
       f.fail(1);
       f.answer(2);
       assert.true(all.failed);
@@ -233,21 +240,27 @@ export function runTests() {
       assert.false(all.isComplete);
     });
 
-    test('a limited read reads whole pages up to its limit, and says more matched', function (assert) {
+    test('a limited read reads whole pages up to its limit, and says more matched', async function (assert) {
       let f = fakeContext(ids(500));
       let all = new AllCards(f.context, {}, query, undefined, { limit: 240 });
+      f.answer(0);
+      assert.true(all.isLoading);
+      await afterRender();
+      assert.strictEqual(f.pages.length, 3, 'three pages hold the limit');
       for (let n = 0; n < f.pages.length; n++) f.answer(n);
       assert.true(all.truncated);
       assert.false(all.isComplete, 'a truncated read is not every record');
       assert.strictEqual(all.instances.length, 300);
     });
 
-    test('a card on two pages is counted once', function (assert) {
+    test('a card on two pages is counted once', async function (assert) {
       let rows = ids(150);
       rows[120] = rows[50];
       let f = fakeContext(rows);
       let all = new AllCards(f.context, {}, query);
       f.answer(0);
+      assert.true(all.isLoading);
+      await afterRender();
       f.answer(1);
       assert.strictEqual(all.instances.length, 149);
     });
