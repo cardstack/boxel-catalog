@@ -119,17 +119,48 @@ type SavedRow = {
   period: string;
   savedBy: string;
   visibility: string;
-  card: SavedLike;
+  card: SavedLike | undefined;
 };
-/** A search row's saved report, as its stored values. */
-export const savedOfEntry = (e: {
-  id: string;
-  item?: { attributes?: Record<string, unknown> } | unknown;
-}): SavedLike => ({
-  ...(((e.item as { attributes?: Record<string, unknown> })?.attributes ??
-    {}) as SavedLike),
-  id: e.id,
+// A saved report card's values, copied out of the card: a report reopened from them reads plain
+// values, not card fields that may still be settling while it renders.
+const plainSaved = (card: any): SavedLike => ({
+  id: card.id,
+  name: card.name ?? null,
+  kind: card.kind ?? null,
+  kindLabel: card.kindLabel ?? null,
+  fromMonth: card.fromMonth ?? null,
+  toMonth: card.toMonth ?? null,
+  asOfMonth: card.asOfMonth ?? null,
+  basis: card.basis ?? null,
+  columns: card.columns ?? null,
+  compare: card.compare ?? null,
+  account: card.account ?? null,
+  statement: card.statement ?? null,
+  columnKeys: card.columnKeys ?? null,
+  filters: ((card.filters ?? []) as any[]).filter(Boolean).map((f) => ({
+    dimension: f.dimension ?? null,
+    value: f.value ?? null,
+  })),
+  groupBy: card.groupBy ?? null,
+  sortBy: card.sortBy ?? null,
+  sortDir: card.sortDir ?? null,
+  visibility: card.visibility ?? null,
+  savedBy: card.savedBy ?? null,
 });
+/** A search row's saved report, as its stored values: from the row's serialization when it carries
+ *  one, else from the card itself, which a row answered as prerendered HTML doesn't. */
+export const savedOfEntry = (
+  e: {
+    id: string;
+    item?: { attributes?: Record<string, unknown> } | unknown;
+  },
+  card?: SavedLike,
+): SavedLike | undefined => {
+  let attributes = (e.item as { attributes?: Record<string, unknown> })
+    ?.attributes;
+  if (attributes) return { ...(attributes as SavedLike), id: e.id };
+  return card;
+};
 const SAVED_COLUMNS = [
   { key: 'name', label: 'Name' },
   { key: 'kindLabel', label: 'Report' },
@@ -151,6 +182,34 @@ export class MyReports extends GlimmerComponent<MineSignature> {
     { realms: this.args.refRealms ?? this.args.realms, owner: this },
   );
   @tracked returnTo = '';
+  // The saved reports read from the store, by id, for the rows the search answered as HTML only.
+  @tracked cards: Record<string, SavedLike> = {};
+  // The saved reports that couldn't be read, by id, with why.
+  @tracked unreadable: Record<string, string> = {};
+  #asked = new Set<string>();
+  private readCard(id: string) {
+    if (this.#asked.has(id)) return;
+    this.#asked.add(id);
+    Promise.resolve().then(async () => {
+      let failure: string;
+      try {
+        // The store answers a card it couldn't load with an error document rather than throwing.
+        let card = (await this.args.context?.store?.get(id)) as any;
+        if (card && typeof card === 'object' && 'kind' in card) {
+          this.cards = { ...this.cards, [id]: plainSaved(card) };
+          return;
+        }
+        failure =
+          card?.errors?.[0]?.detail ??
+          card?.detail ??
+          card?.message ??
+          'the report could not be read';
+      } catch (e: any) {
+        failure = e?.detail ?? e?.message ?? String(e);
+      }
+      this.unreadable = { ...this.unreadable, [id]: failure };
+    });
+  }
   get loading() {
     return this.visible.isLoading && !this.visible.entries.length;
   }
@@ -163,7 +222,21 @@ export class MyReports extends GlimmerComponent<MineSignature> {
   }
   get rows(): SavedRow[] {
     return this.visible.entries.map((e) => {
-      let c = savedOfEntry(e);
+      let c = savedOfEntry(e, this.cards[e.id]);
+      if (!c) {
+        this.readCard(e.id);
+        return {
+          id: e.id,
+          name: this.unreadable[e.id]
+            ? "Couldn't read this report"
+            : 'Loading…',
+          kindLabel: '',
+          period: '',
+          savedBy: '',
+          visibility: '',
+          card: undefined,
+        };
+      }
       return {
         id: e.id,
         name: c.name ?? '',
@@ -184,6 +257,13 @@ export class MyReports extends GlimmerComponent<MineSignature> {
   openReport = (r: SavedRow) => {
     let c = r.card;
     this.openError = '';
+    if (!c) {
+      let failure = this.unreadable[r.id];
+      this.openError = failure
+        ? failureText({ message: failure })
+        : 'This report is still loading. Open it again in a moment.';
+      return;
+    }
     if (this.isRunner(c.kind)) {
       this.returnTo = r.id;
       this.open = c;

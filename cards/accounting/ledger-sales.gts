@@ -1110,10 +1110,13 @@ export class Customer extends Account {
    *  kind only by a writer, so this one, which roles may hold, takes neither. */
   @operation static enterInvoice = {
     base: 'create',
+    // An input program is one expression with no assert or error, so a refusal is a string that fails tonumber.
     input: bxl`
-      assert(if .lines == null then true else ([.lines[] | .timeId] | all(. == null)) end; "Bill time from the time page, which marks it billed with the invoice.");
-      assert(if .kind == null then true else .kind == "sale" end; "Only a sale can be entered here.");
-      .
+      if if .lines == null then false else [.lines[] | .timeId] | any(. != null) end
+      then "Bill time from the time page, which marks it billed with the invoice." | tonumber
+      elif if .kind == null then false else .kind != "sale" end
+      then "Only a sale can be entered here." | tonumber
+      else . end
     `,
     of: Invoice,
     params: {

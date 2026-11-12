@@ -27,12 +27,12 @@ import { StockLot } from './ledger-stock';
 import { TimeActivity } from './ledger-time';
 import { JournalMonth, journalPostings } from './ledger-journal';
 import { profitByProject } from './ledger-dimensions';
+import { AllCards } from './all-cards';
 import {
   SaveReportAs,
   reportBody,
   instancesOf,
   loadingOf,
-  isCapped,
   isMonth,
   focusOnInsert,
   thisMonth,
@@ -459,9 +459,7 @@ export const LIST_REPORTS: Record<
     note: 'Income and costs posted to each project in the period, less its labor at cost.',
   },
 };
-const DOC_PAGE = 1000;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
-const MONTH_PAGE = 240;
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
@@ -493,21 +491,14 @@ export class ListReport extends GlimmerComponent<ListSignature> {
   get kind() {
     return this.args.kind;
   }
-  query = (
-    type: typeof CardDef,
-    extra: object[] = [],
-    size = DOC_PAGE,
-    sortBy?: string,
-  ) =>
+  query = (type: typeof CardDef, extra: object[] = [], sortBy?: string) =>
     ({
       filter: {
         every: [{ type: identifyCard(type) }, ...extra],
       },
-      // Newest first, so a full page drops the oldest and the report says so.
       ...(sortBy
         ? { sort: [{ by: sortBy, on: identifyCard(type), direction: 'desc' }] }
         : {}),
-      page: { size },
     }) as never;
   posted = (type: typeof CardDef) => [
     { on: identifyCard(type), eq: { status: 'posted' } },
@@ -529,13 +520,11 @@ export class ListReport extends GlimmerComponent<ListSignature> {
       ? this.query(
           type,
           [...this.posted(type), this.dated(type, this.periodRange)],
-          DOC_PAGE,
           'date',
         )
       : this.query(
           type,
           [...this.posted(type), this.dated(type, { lte: this.asOf })],
-          DOC_PAGE,
           'date',
         );
   // What was settled after the report's date, to add back to what is open now.
@@ -543,7 +532,6 @@ export class ListReport extends GlimmerComponent<ListSignature> {
     this.query(
       type,
       [...this.posted(type), this.dated(type, { gt: this.asOf })],
-      DOC_PAGE,
       'date',
     );
   // Nothing loads until the date or period is whole.
@@ -558,7 +546,8 @@ export class ListReport extends GlimmerComponent<ListSignature> {
     return '';
   }
   load = (fn: () => unknown, when: string[]) =>
-    this.args.context?.getCards(
+    new AllCards(
+      this.args.context,
       this,
       () =>
         (this.wants(...when) && !this.periodError ? fn() : undefined) as never,
@@ -590,16 +579,12 @@ export class ListReport extends GlimmerComponent<ListSignature> {
   vendorCreditData = this.load(this.laterQuery(VendorCredit), ['unpaid-bills']);
   laterJournalData = this.load(
     () =>
-      this.query(
-        JournalMonth,
-        [
-          {
-            on: identifyCard(JournalMonth),
-            range: { month: { gte: this.asOfMonth } },
-          },
-        ],
-        MONTH_PAGE,
-      ),
+      this.query(JournalMonth, [
+        {
+          on: identifyCard(JournalMonth),
+          range: { month: { gte: this.asOfMonth } },
+        },
+      ]),
     ['open-invoices', 'collections', 'unpaid-bills'],
   );
   lotData = this.load(() => this.query(StockLot), ['inventory-detail']);
@@ -608,73 +593,75 @@ export class ListReport extends GlimmerComponent<ListSignature> {
       this.query(
         TimeActivity,
         [this.dated(TimeActivity, this.periodRange)],
-        DOC_PAGE,
         'date',
       ),
     ['time-by-customer', 'profit-by-project'],
   );
   journalData = this.load(
     () =>
-      this.query(
-        JournalMonth,
-        [
-          {
-            on: identifyCard(JournalMonth),
-            range: { month: { gte: this.fromMonth, lte: this.toMonth } },
-          },
-        ],
-        MONTH_PAGE,
-      ),
+      this.query(JournalMonth, [
+        {
+          on: identifyCard(JournalMonth),
+          range: { month: { gte: this.fromMonth, lte: this.toMonth } },
+        },
+      ]),
     ['profit-by-project'],
   );
-  accountData = this.args.context?.getCards(
+  accountData = new AllCards(
+    this.args.context,
     this,
     () =>
       (this.wants('profit-by-project') && !this.periodError
-        ? this.query(LedgerAccount, [], 500)
+        ? this.query(LedgerAccount)
         : undefined) as never,
     () => this.args.refRealms ?? this.args.realms,
     { isLive: true },
   );
-  // The sources this report reads, each with its page and what it holds.
-  get sources(): [unknown, number, string][] {
+  // The sources this report reads, each with what it holds.
+  get sources(): [AllCards, string][] {
     let k = this.kind;
     if (k === 'unpaid-bills')
       return [
-        [this.billData, DOC_PAGE, 'bills'],
-        [this.billPaymentData, DOC_PAGE, 'later bill payments'],
-        [this.vendorCreditData, DOC_PAGE, 'later vendor credits'],
-        [this.laterJournalData, MONTH_PAGE, 'journal months'],
+        [this.billData, 'bills'],
+        [this.billPaymentData, 'later bill payments'],
+        [this.vendorCreditData, 'later vendor credits'],
+        [this.laterJournalData, 'journal months'],
       ];
-    if (k === 'inventory-detail') return [[this.lotData, DOC_PAGE, 'lots']];
-    if (k === 'time-by-customer')
-      return [[this.timeData, DOC_PAGE, 'time entries']];
+    if (k === 'inventory-detail') return [[this.lotData, 'lots']];
+    if (k === 'time-by-customer') return [[this.timeData, 'time entries']];
     if (k === 'profit-by-project')
       return [
-        [this.invoiceData, DOC_PAGE, 'invoices'],
-        [this.billData, DOC_PAGE, 'bills'],
-        [this.journalData, MONTH_PAGE, 'journal months'],
-        [this.timeData, DOC_PAGE, 'time entries'],
-        [this.accountData, 500, 'accounts'],
+        [this.invoiceData, 'invoices'],
+        [this.billData, 'bills'],
+        [this.journalData, 'journal months'],
+        [this.timeData, 'time entries'],
+        [this.accountData, 'accounts'],
       ];
     return [
-      [this.invoiceData, DOC_PAGE, 'invoices'],
-      [this.customerPaymentData, DOC_PAGE, 'later customer payments'],
-      [this.creditMemoData, DOC_PAGE, 'later credit memos'],
-      [this.writeOffData, DOC_PAGE, 'later write-offs'],
-      [this.laterJournalData, MONTH_PAGE, 'journal months'],
+      [this.invoiceData, 'invoices'],
+      [this.customerPaymentData, 'later customer payments'],
+      [this.creditMemoData, 'later credit memos'],
+      [this.writeOffData, 'later write-offs'],
+      [this.laterJournalData, 'journal months'],
     ];
   }
   get loading() {
     return !this.periodError && this.sources.some(([r]) => loadingOf(r));
   }
   get canExport() {
-    return !this.loading && !this.periodError && this.table.count > 0;
+    return (
+      !this.loading &&
+      !this.periodError &&
+      !this.capNote &&
+      this.table.count > 0
+    );
   }
+  // A source that couldn't be read whole would leave records out, so the report shows no total.
   get capNote() {
-    let full = this.sources.filter(([r, size]) => isCapped(r, size));
-    return full.length
-      ? `This report read only the first page of ${full.map(([, size, noun]) => `${size} ${noun}`).join(' and ')}, so it is incomplete. Narrow the date or period.`
+    if (this.periodError || this.loading) return '';
+    let failed = this.sources.filter(([r]) => !r.isComplete);
+    return failed.length
+      ? `This report couldn't read all of its ${failed.map(([, noun]) => noun).join(', ')}, so it shows no lines or totals. ${failed.some(([r]) => r.tooMany) ? 'Narrow the date or period.' : 'Reload to try again.'}`
       : '';
   }
   get table(): ListTable {
@@ -833,7 +820,7 @@ export class ListReport extends GlimmerComponent<ListSignature> {
         {{/if}}
       </div>
       {{#if this.capNote}}<Callout
-          @tone='warning'
+          @tone='danger'
           @title='Incomplete'
           data-report-capped
         >{{this.capNote}}</Callout>{{/if}}
@@ -844,7 +831,7 @@ export class ListReport extends GlimmerComponent<ListSignature> {
         />
       {{else if this.loading}}
         <Skeleton @height='6rem' />
-      {{else if this.table.count}}
+      {{else if this.capNote}}{{else if this.table.count}}
         <StatementTable
           @label={{this.title}}
           @columns={{this.table.cols}}
