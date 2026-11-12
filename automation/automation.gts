@@ -217,11 +217,14 @@ function waitLength(minutes: number): string {
 }
 const DEFAULT_BATCH_DEADLINE_MINUTES = 60;
 
-// Whether the AI requests limit lets a run make any AI request at all.
+// Whether the limits let a run make any AI request at all: it needs at least
+// one AI request and some credits to spend on them.
 function allowsAIRequests(model: {
-  caps?: { resolveCalls?: number | null } | null;
+  caps?: { resolveCalls?: number | null; aiCredits?: number | null } | null;
 }) {
-  return (model.caps?.resolveCalls ?? 0) > 0;
+  return (
+    (model.caps?.resolveCalls ?? 0) > 0 && (model.caps?.aiCredits ?? 0) > 0
+  );
 }
 
 function count(value: number | null | undefined): string {
@@ -234,6 +237,7 @@ const CAP_DEFAULTS: Record<string, number> = {
   callApiCalls: 10,
   responseBytes: 5_000_000,
   resolveCalls: 5,
+  aiCredits: 300,
   writes: 50,
   seconds: 300,
   dailyCredits: 500,
@@ -1171,16 +1175,25 @@ const RUN_LIMITS = [
     noneHint: 'Nothing may come back from outside services',
   },
   {
+    key: 'writes',
+    label: 'Saves',
+    hint: 'Files and cards a run may create or change',
+    noneHint: 'A run may not create or change any file or card',
+  },
+  {
     key: 'resolveCalls',
     label: 'AI requests',
     hint: 'Requests to an AI model',
     noneHint: 'No AI requests',
   },
   {
-    key: 'writes',
-    label: 'Saves',
-    hint: 'Files and cards a run may create or change',
-    noneHint: 'No files or cards may be created or changed',
+    key: 'aiCredits',
+    label: 'AI spending',
+    hint: 'Credits a run’s AI requests may cost',
+    editLabel: 'AI spending, in credits',
+    editHint:
+      'Boxel counts each AI request at the request’s highest possible cost',
+    noneHint: 'No credits for AI requests',
   },
   {
     key: 'seconds',
@@ -1219,6 +1232,9 @@ export class AutomationCaps extends FieldDef {
   @field callApiCalls = contains(NumberField);
   @field responseBytes = contains(NumberField);
   @field resolveCalls = contains(NumberField);
+  // Credits a run's AI requests may cost in all. Boxel refuses an AI request
+  // whose most possible cost would take the run past it.
+  @field aiCredits = contains(NumberField);
   @field writes = contains(NumberField);
   // At most 1200 (20 minutes).
   @field seconds = contains(NumberField);
@@ -1240,7 +1256,9 @@ export class AutomationCaps extends FieldDef {
             ? 'Not set'
             : limit.key === 'seconds'
               ? duration(caps.seconds)
-              : capValue(caps[limit.key]),
+              : limit.key === 'aiCredits' && caps.aiCredits !== 0
+                ? `${count(caps.aiCredits)} credits`
+                : capValue(caps[limit.key]),
       }));
     }
     // The line under each limit's value: what it covers, or what 0 forbids.
@@ -1256,7 +1274,18 @@ export class AutomationCaps extends FieldDef {
       if (caps[key] == null) {
         return NOT_SET_HINT;
       }
-      return caps[key] === 0 ? limit.noneHint : limit.hint;
+      if (caps[key] === 0) {
+        return limit.noneHint;
+      }
+      // Either AI limit at 0 forbids AI requests, so the other AI limit
+      // names the one that stops it.
+      if (key === 'resolveCalls' && caps.aiCredits === 0) {
+        return 'Unused while AI spending is 0';
+      }
+      if (key === 'aiCredits' && caps.resolveCalls === 0) {
+        return 'Unused while AI requests is 0';
+      }
+      return limit.hint;
     };
     get dayCredits() {
       return count(this.args.model.dailyCredits);
@@ -1407,6 +1436,10 @@ export class AutomationCaps extends FieldDef {
       <div class='automation-caps-edit'>
         {{#each this.runLimits as |limit|}}
           <Field
+            class={{if
+              (eq limit.key 'aiCredits')
+              'automation-caps-edit__footnoted'
+            }}
             @label={{this.editLabel limit}}
             @hint={{this.editHint limit}}
             @error={{this.runProblem limit.key}}
@@ -1445,11 +1478,37 @@ export class AutomationCaps extends FieldDef {
           </Field>
         {{/each}}
       </div>
+      <p class='automation-caps-edit__footnote'><sup
+          class='automation-caps-edit__mark'
+        >†</sup>
+        Boxel charges the actual amount once the AI provider reports the amount.</p>
       <style scoped>
         .automation-caps-edit {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
           gap: var(--boxel-sp-xs) var(--boxel-sp);
+        }
+        /* The AI spending hint points at the footnote below. Field's hint
+           is plain text, so the mark goes on after it here, on the hint
+           only: an error in its place gets none. */
+        .automation-caps-edit__footnoted
+          :deep(.pretui-cue[data-kind='description'] .pretui-cue-text::after) {
+          content: '†';
+          margin-left: 0.1em;
+          font-size: 0.9em;
+          font-weight: 600;
+          line-height: 0;
+          vertical-align: super;
+        }
+        .automation-caps-edit__mark {
+          font-size: 0.9em;
+          font-weight: 600;
+          line-height: 0;
+        }
+        .automation-caps-edit__footnote {
+          margin: var(--boxel-sp) 0 0;
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground);
         }
         /* Spending gets a row of its own: a day and a month side by side. */
         .automation-caps-edit--credits {
@@ -2724,7 +2783,7 @@ class Edit extends Component<typeof Automation> {
     });
   }
   // Batched AI only changes how AI requests are sent, so it means nothing
-  // while the AI requests limit allows none.
+  // while the limits allow no AI request or no AI spending.
   get allowsAI() {
     return allowsAIRequests(this.args.model);
   }
@@ -2949,7 +3008,8 @@ class Edit extends Component<typeof Automation> {
       >
         {{#unless this.allowsAI}}
           <p class='automation-edit__note'>This automation may not make AI
-            requests. To use batched AI, set AI requests under Limits above 0.</p>
+            requests. To use batched AI, set AI requests and AI spending under
+            Limits above 0.</p>
         {{/unless}}
         <div class='automation-edit__batch-row'>
           <Field
