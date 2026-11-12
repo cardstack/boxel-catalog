@@ -27,7 +27,7 @@ import { Vendor } from './vendor';
 import { VendorProfile } from './vendor-profile';
 import { Rfq } from './rfq';
 import { formatMoney, sumLineItems } from '../commerce/line-item-totals';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 
 function isPastDay(d?: Date | null): boolean {
   if (!d) {
@@ -533,7 +533,7 @@ export class VendorQuote extends CardDef {
       return quoteFacts(this.args.model as VendorQuote);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Avatar
             @name={{MARK}}
             @shape='square'
@@ -561,7 +561,7 @@ export class VendorQuote extends CardDef {
               @displayContainer={{false}}
             />{{/if}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

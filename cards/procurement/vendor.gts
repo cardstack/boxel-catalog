@@ -7,6 +7,7 @@ import {
   containsMany,
   StringField,
 } from '@cardstack/base/card-api';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import TextAreaField from '@cardstack/base/text-area';
@@ -35,8 +36,6 @@ import {
 } from '@cardstack/catalog/components/state-pill';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -225,16 +224,16 @@ interface FittedExtrasSignature {
     relations?: string[];
   };
   Blocks: {
-    /** the card's FitTile */
+    /** the card's RichFittedCard */
     default: [];
     /** the linked card for one label, as its own atom */
     relation: [label: string, index: number];
   };
 }
 
-// shortcut: FitTile budgets only who / state / fact / relations, so the rows
+// shortcut: RichFittedCard budgets only who / state / fact / relations, so the rows
 // tall fitted sizes add (key facts, one relation per line, a progress bar, a
-// stat strip) are budgeted here around it; move this into FitTile when the kit
+// stat strip) are budgeted here around it; move this into RichFittedCard when the kit
 // grows an extras region. Every list wraps whole items out of sight in a
 // column that starts past the right edge, so nothing is ever half-cut.
 export class FittedExtras extends GlimmerComponent<FittedExtrasSignature> {
@@ -1026,38 +1025,38 @@ export class Vendor extends CardDef {
       ];
     }
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name={{orEmpty @model.title}}
             @hue='var(--muted)'
             @shape='rounded'
             @size={{20}}
             aria-hidden='true'
-          /></:mark>
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
         <:status>{{#if this.v.rating}}<DotLabel
               @label={{this.v.rating}}
               @hue={{toneHue this.v.ratingTone}}
             />{{/if}}</:status>
-        <:default>
-          {{#if this.v.subtitle}}<FitRow @left={{true}}><span
-                class='meta'
-              >{{this.v.subtitle}}</span></FitRow>{{/if}}
-          <FitRow @label='Spend YTD'><span class='mono'>{{orDash
+        <:subtitle><span class='meta'>{{this.v.subtitle}}</span></:subtitle>
+        <:metric>{{#let (get this.strip 0) as |s|}}{{#if s}}<Metric
+                @value={{s.value}}
+                @label={{s.label}}
+              />{{/if}}{{/let}}</:metric>
+        <:details>
+          {{#if this.v.subtitle}}{{/if}}
+          <Detail @label='Spend YTD'><span class='mono'>{{orDash
                 this.v.spend
-              }}</span></FitRow>
-          <FitRow @label='Contract'><span class='mono'>{{orDash
+              }}</span></Detail>
+          <Detail @label='Contract'><span class='mono'>{{orDash
                 this.v.contract
-              }}</span></FitRow>
-          <StatStrip
-            class='fit-strip'
-            @compact={{true}}
-            @items={{this.strip}}
-          />
+              }}</span></Detail>
+
           {{#each this.moreFacts as |f|}}
-            <FitRow @label={{f.key}}>{{f.value}}</FitRow>
+            <Detail @label={{f.key}}>{{f.value}}</Detail>
           {{/each}}
-        </:default>
-      </FitCard>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;
