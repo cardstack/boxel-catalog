@@ -12,7 +12,7 @@ import { Employee } from '../hr/employee';
 import { Workflow } from '../service-desk/workflow';
 import { SupportDesk } from './components/support-desk';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 
 /**
@@ -139,7 +139,7 @@ export class SupportCaseApp extends CardDef {
       return parts.length ? parts.join(' · ') : undefined;
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Avatar
             @name={{if @model.title @model.title ''}}
             @hue='var(--primary)'
@@ -161,7 +161,7 @@ export class SupportCaseApp extends CardDef {
             />
           {{/if}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }
