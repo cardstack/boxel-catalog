@@ -17,7 +17,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/pretui/components/button';
 import TicketIcon from '@cardstack/boxel-icons/ticket';
 import { Alert } from '@cardstack/pretui/components/alert';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 
 import { Contact } from '../crm/contact';
 import { Event } from './event';
@@ -761,7 +761,7 @@ export class Booking extends CardDef {
       return price ? `${tickets} · ${price}` : tickets;
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Bk</span></:avatar>
         <:title><span class='ref'>{{@model.cardTitle}}</span></:title>
         <:subtitle>{{if
@@ -786,7 +786,7 @@ export class Booking extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

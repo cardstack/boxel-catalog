@@ -13,7 +13,7 @@ import MarkdownField from 'https://cardstack.com/base/markdown';
 import GeoPointField from '@cardstack/catalog/fields/geo-point/geo-point';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
 import { concat } from '@ember/helper';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { IsoFrame } from '../shared/compact-sheet';
 
 // Walks `parent` from the root down to `loc`; capped so a cycle can't hang.
@@ -314,7 +314,7 @@ export class Location extends CardDef {
       return placeLabel(this.args.model as Location);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'><MapPinIcon
               width='0.875rem'
               height='0.875rem'
@@ -329,7 +329,7 @@ export class Location extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;
