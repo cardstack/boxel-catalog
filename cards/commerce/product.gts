@@ -10,6 +10,7 @@ import {
 import enumField from '@cardstack/base/enum';
 import PackageIcon from '@cardstack/boxel-icons/package';
 import { IsoHead, IsoMark, IsoPage, Kv, Panel } from '../shared/compact-sheet';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 
 // Product — the one thing a business buys, sells or stocks, identified by its
 // SKU. Domain cards extend it with what their domain needs (fulfilment adds
@@ -121,50 +122,16 @@ export class Product extends CardDef {
     typeof Product
   > {
     <template>
-      <div class='fitted'>
-        <PackageIcon class='icon' width='20' height='20' />
-        <div class='info'>
-          <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.sku}}<span class='sku'>{{@model.sku}}</span>{{/if}}
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><PackageIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{@model.sku}}</:subtitle>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          container-type: size;
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          overflow: hidden;
-        }
-        .icon {
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .info {
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-6xs);
-        }
-        .name {
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sku {
-          font-size: var(--boxel-font-size-xs);
-          font-family: var(--font-mono);
-          color: var(--muted-foreground);
-        }
-        @container (max-height: 3rem) {
-          .sku {
-            display: none;
-          }
         }
       </style>
     </template>

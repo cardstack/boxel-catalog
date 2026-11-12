@@ -346,8 +346,8 @@ export const SheetEmpty: TemplateOnlyComponent<EmptySignature> = <template>
 
 // ── The kit's card layout (matrix-compact-kit cards/*.html) ──────────────
 // Isolated: IsoHead (mark, name, meta, status; optional StatStrip) above an
-// IsoGrid of Panels with a docked aside. Embedded: EmbCard. Fitted: RichFittedCard
-// with FitRows. Rows are 28px with one hairline; labels are 9px mono caps.
+// IsoGrid of Panels with a docked aside. Embedded: EmbCard. Fitted: RichFittedCard.
+// Rows are 28px with one hairline; labels are 9px mono caps.
 
 interface HeadActionSignature {
   Args: {
