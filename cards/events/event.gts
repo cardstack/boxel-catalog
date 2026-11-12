@@ -423,7 +423,7 @@ export class Event extends CardDef {
         }
         .panel {
           border: 1px solid var(--border);
-          border-radius: 0.75rem;
+          border-radius: var(--radius);
           padding: var(--boxel-sp) var(--boxel-sp-lg);
           background-color: var(--card);
           color: var(--card-foreground);
@@ -440,7 +440,7 @@ export class Event extends CardDef {
         }
         .venue {
           border: 1px solid var(--border);
-          border-radius: 0.5rem;
+          border-radius: var(--radius);
         }
         .about {
           font-size: var(--boxel-font-size-sm);

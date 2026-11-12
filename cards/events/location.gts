@@ -515,20 +515,20 @@ export class Location extends CardDef {
       </IsoFrame>
       <style scoped>
         .loc-page {
-          margin: 0.75rem;
+          margin: var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           background-color: var(--card);
           color: var(--card-foreground);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
         }
         .head {
           display: flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.75rem 0.625rem;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm) var(--boxel-sp-xs);
           border-bottom: 1px solid var(--border);
         }
         .mark {
@@ -537,7 +537,7 @@ export class Location extends CardDef {
           flex-shrink: 0;
           width: 2rem;
           height: 2rem;
-          border-radius: 0.375rem;
+          border-radius: var(--radius);
           background-color: var(--muted);
         }
         .id {
@@ -547,18 +547,18 @@ export class Location extends CardDef {
         .name {
           margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .dot-text {
           display: inline-flex;
           align-items: center;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
           flex-shrink: 0;
           font-weight: 600;
         }
@@ -585,8 +585,8 @@ export class Location extends CardDef {
         .stat {
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
-          padding: 0.5rem 0.625rem;
+          gap: var(--boxel-sp-6xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
           margin: 0 -1px -1px 0;
           border-right: 1px solid var(--border);
           border-bottom: 1px solid var(--border);
@@ -603,13 +603,13 @@ export class Location extends CardDef {
           color: var(--muted-foreground);
         }
         .value {
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           line-height: 1.2;
         }
         .sub {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -636,9 +636,9 @@ export class Location extends CardDef {
         }
         h2 {
           margin: 0;
-          padding: 0.5rem 0.625rem 0.375rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-2xs);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           letter-spacing: 0;
           text-transform: none;
@@ -652,9 +652,9 @@ export class Location extends CardDef {
         .row {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           min-height: 1.75rem;
-          padding: 0.3125rem 0.625rem;
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
           border-top: 1px solid var(--border);
         }
         .row-id {
@@ -667,7 +667,7 @@ export class Location extends CardDef {
           font-weight: 700;
         }
         .body {
-          padding: 0.375rem 0.625rem 0.625rem;
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs) var(--boxel-sp-xs);
           border-top: 1px solid var(--border);
           line-height: 1.5;
         }
@@ -678,12 +678,12 @@ export class Location extends CardDef {
           display: grid;
           grid-template-columns: 8rem minmax(0, 1fr);
           margin: 0;
-          padding: 0 0.625rem 0.375rem;
+          padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
         }
         .kv dt,
         .kv dd {
           margin: 0;
-          padding: 0.375rem 0;
+          padding: var(--boxel-sp-2xs) 0;
           border-top: 1px solid var(--border);
           min-width: 0;
           align-self: stretch;
@@ -693,7 +693,7 @@ export class Location extends CardDef {
         }
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-variant-numeric: tabular-nums;
         }
       </style>

@@ -367,7 +367,7 @@ class BookingIsolated extends Component<typeof Booking> {
         flex-shrink: 0;
         width: 2rem;
         height: 2rem;
-        border-radius: 0.375rem;
+        border-radius: var(--radius);
         background-color: var(--muted);
         font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
