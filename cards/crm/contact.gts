@@ -132,7 +132,7 @@ export class Contact extends PersonBase {
           /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:status>{{#each
-            if @model.role (array (hash label=@model.role tone='info'))
+            (if @model.role (array (hash label=@model.role tone='info')))
             as |t|
           }}<Chip
               @label={{t.label}}

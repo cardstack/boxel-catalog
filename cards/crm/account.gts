@@ -143,10 +143,11 @@ export class Account extends CardDef {
           /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:status>{{#each
-            if
-            @model.isCustomer
-            (array (hash label='customer' tone='success'))
-            (array (hash label='prospect'))
+            (if
+              @model.isCustomer
+              (array (hash label='customer' tone='success'))
+              (array (hash label='prospect'))
+            )
             as |t|
           }}<Chip
               @label={{t.label}}

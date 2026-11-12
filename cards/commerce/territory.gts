@@ -175,7 +175,7 @@ export class Territory extends CardDef {
         <:avatar><Avatar @name='Territory' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:status>{{#each
-            if @model.region (array (hash label=@model.region))
+            (if @model.region (array (hash label=@model.region)))
             as |t|
           }}<Chip
               @label={{t.label}}

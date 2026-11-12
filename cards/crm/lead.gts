@@ -296,7 +296,7 @@ export class Lead extends CardDef {
           /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:status>{{#each
-            if @model.status (array (hash label=@model.status tone='info'))
+            (if @model.status (array (hash label=@model.status tone='info')))
             as |t|
           }}<Chip
               @label={{t.label}}

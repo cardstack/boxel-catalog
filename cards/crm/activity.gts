@@ -114,7 +114,7 @@ export class Activity extends CardDef {
         <:avatar><Avatar @name='Activity' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:status>{{#each
-            if @model.activityType (array (hash label=@model.activityType))
+            (if @model.activityType (array (hash label=@model.activityType)))
             as |t|
           }}<Chip
               @label={{t.label}}
