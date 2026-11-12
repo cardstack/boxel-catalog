@@ -543,12 +543,12 @@ class ContractIsolated extends Component<typeof Contract> {
         container-type: inline-size;
         container-name: contract-page;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--foreground);
-        padding: 1rem;
+        padding: var(--boxel-sp);
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       .ch,
       .stats,
@@ -560,8 +560,8 @@ class ContractIsolated extends Component<typeof Contract> {
       .ch {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        padding: 0.625rem 0.625rem;
+        gap: var(--boxel-sp-sm);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         flex-wrap: wrap;
       }
       .ch {
@@ -583,10 +583,10 @@ class ContractIsolated extends Component<typeof Contract> {
         inline-size: 2rem;
         block-size: 2rem;
         border: 1px solid var(--border);
-        border-radius: 0.25rem;
+        border-radius: var(--boxel-border-radius-xs);
         background-color: var(--muted);
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
       }
       .ch-id {
@@ -596,19 +596,19 @@ class ContractIsolated extends Component<typeof Contract> {
       h1 {
         margin: 0;
         font-family: var(--font-sans);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-sm);
         font-weight: 700;
       }
       .meta,
       .muted,
       .sub {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .ch-state {
         display: flex;
-        gap: 0.75rem;
+        gap: var(--boxel-sp-sm);
         margin: 0;
         padding: 0;
         list-style: none;
@@ -616,7 +616,7 @@ class ContractIsolated extends Component<typeof Contract> {
       .dot {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
         white-space: nowrap;
         text-transform: lowercase;
       }
@@ -642,14 +642,14 @@ class ContractIsolated extends Component<typeof Contract> {
       .stat {
         display: flex;
         flex-direction: column;
-        gap: 0.125rem;
-        padding: 0.5rem 0.625rem;
+        gap: var(--boxel-sp-6xs);
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
         border-right: 1px solid var(--border);
         border-bottom: 1px solid var(--border);
         margin: 0 -1px -1px 0;
       }
       .stat strong {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
         line-height: 1.2;
@@ -666,28 +666,28 @@ class ContractIsolated extends Component<typeof Contract> {
       .cols {
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         align-items: start;
       }
       .col {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
         min-width: 0;
       }
       .blk {
-        padding: 0.4375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       }
       h2 {
-        margin: 0 0 0.25rem;
-        padding-bottom: 0.25rem;
+        margin: 0 0 var(--boxel-sp-4xs);
+        padding-bottom: var(--boxel-sp-4xs);
         border-bottom: 1px solid var(--border);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .terms {
-        margin: 0.25rem 0;
-        font-size: 0.75rem;
+        margin: var(--boxel-sp-4xs) 0;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.5;
       }
       .rows {
@@ -698,7 +698,7 @@ class ContractIsolated extends Component<typeof Contract> {
       .row {
         display: flex;
         align-items: center;
-        gap: 0.625rem;
+        gap: var(--boxel-sp-xs);
         min-block-size: 1.75rem;
         border-top: 1px solid var(--border);
       }
@@ -711,7 +711,7 @@ class ContractIsolated extends Component<typeof Contract> {
       }
       .row.sig {
         justify-content: space-between;
-        padding-block: 0.25rem;
+        padding-block: var(--boxel-sp-4xs);
       }
       .row.sig div {
         display: flex;
@@ -720,12 +720,12 @@ class ContractIsolated extends Component<typeof Contract> {
       .num,
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .bar {
         block-size: 0.1875rem;
-        border-radius: 0.125rem;
+        border-radius: var(--boxel-border-radius-xs);
         background:
           linear-gradient(var(--foreground), var(--foreground)) 0 0 /
             var(--fill) 100% no-repeat,
