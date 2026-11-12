@@ -58,6 +58,7 @@ import {
 import { RealmPolicy } from '../../../realm-policy/realm-policy';
 import { RealmConfig } from '@cardstack/base/realm-config';
 import { Ledger, Bill } from '../../../cards/accounting/ledger-cards';
+import { MyReports } from '../../../cards/accounting/ledger-report-desk';
 import {
   Customer,
   Invoice,
@@ -1647,7 +1648,6 @@ export function runTests() {
           } catch (e: any) {
             return (
               String(e?.detail ?? e?.message).includes(text) ||
-              e?.status === 400 ||
               (lockRefusal && e?.status === 403)
             );
           }
@@ -2019,6 +2019,111 @@ export function runTests() {
         credit: 0,
         amount: 5000,
       });
+    });
+
+    // The card context My reports reads through: the host store, and its searches.
+    const deskContext = (get?: (id: string) => Promise<unknown>) => {
+      let store = getService('store');
+      return {
+        store: get ? { get } : store,
+        getCards: (
+          parent: object,
+          getQuery: () => any,
+          getRealms?: () => string[] | undefined,
+          opts?: { isLive?: true },
+        ) => store.getSearchResource(parent, getQuery, getRealms, opts),
+      } as any;
+    };
+    const savedButton = (name: string) =>
+      Array.from(
+        document.querySelectorAll<HTMLElement>('[data-saved-report]'),
+      ).find((b) => b.textContent?.trim() === name);
+
+    test('My reports lists a saved report by name and reopens it with its settings', async function (assert) {
+      let store = getService('store');
+      const ledger = (await store.get(`${realmURL}Ledger/books`)) as CardDef;
+      await (operations(ledger) as any).saveReport(
+        saveParams({
+          name: 'First quarter',
+          kind: 'custom',
+          kindLabel: 'Custom report',
+          settings: {
+            fromMonth: '2027-01',
+            toMonth: '2027-03',
+            asOfMonth: '',
+            basis: '',
+            columns: '',
+            compare: '',
+            account: '',
+            statement: '',
+          },
+          custom: custom({}),
+          visibility: 'shared',
+        }),
+      );
+      const context = deskContext();
+      const realms = [realmURL];
+      const pages: any[] = [];
+      const noop = () => {};
+      await renderComponent(
+        <template>
+          <MyReports
+            @context={{context}}
+            @realms={{realms}}
+            @ledger={{ledger}}
+            @app={{undefined}}
+            @pages={{pages}}
+            @onOpenPage={{noop}}
+          />
+        </template>,
+      );
+      await waitUntil(() => savedButton('First quarter'), { timeout: 20000 });
+      assert.ok(savedButton('First quarter'), 'it is listed by its name');
+      await click(savedButton('First quarter')!);
+      await waitUntil(() => document.querySelector('[data-custom-report] h2'), {
+        timeout: 20000,
+      });
+      assert.strictEqual(
+        document.querySelector('[data-custom-report] h2')?.textContent?.trim(),
+        'First quarter',
+      );
+      assert.deepEqual(
+        Array.from(
+          document.querySelectorAll<HTMLInputElement>(
+            '[data-custom-report] input[type=month]',
+          ),
+        ).map((i) => i.value),
+        ['2027-01', '2027-03'],
+        'it reopens on the period it was saved with',
+      );
+    });
+
+    test("a saved report whose card can't be read says so, and opening it says why", async function (assert) {
+      const context = deskContext(async () => ({
+        errors: [{ status: 404, detail: 'This report is gone.' }],
+      }));
+      const realms = [realmURL];
+      const pages: any[] = [];
+      const noop = () => {};
+      await renderComponent(
+        <template>
+          <MyReports
+            @context={{context}}
+            @realms={{realms}}
+            @app={{undefined}}
+            @pages={{pages}}
+            @onOpenPage={{noop}}
+          />
+        </template>,
+      );
+      await waitUntil(() => savedButton("Couldn't read this report"), {
+        timeout: 20000,
+      });
+      await click(savedButton("Couldn't read this report")!);
+      assert.true(
+        document.body.textContent?.includes('This report is gone.'),
+        'opening it shows what the store answered',
+      );
     });
   });
 }

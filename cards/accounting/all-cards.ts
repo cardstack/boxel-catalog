@@ -122,7 +122,8 @@ export class AllCards {
       this.total !== undefined &&
       !this.isLoading &&
       !this.failed &&
-      !this.tooMany
+      !this.tooMany &&
+      !this.truncated
     );
   }
 

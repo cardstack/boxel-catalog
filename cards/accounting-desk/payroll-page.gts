@@ -362,8 +362,8 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       .filter(([r]) => !r.isComplete)
       .map(([r, noun]) =>
         r.tooMany
-          ? `There are too many ${noun} to read.`
-          : `The ${noun} couldn't be read.`,
+          ? `There are too many ${noun} to read at once. Ask support to raise the limit.`
+          : `The ${noun} couldn't be read. Reload to try again.`,
       )
       .join(' ');
   }

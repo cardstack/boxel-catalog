@@ -10,6 +10,7 @@ import {
   type ViewCardFn,
 } from '@cardstack/base/card-api';
 import { codeRef, realmURL } from '@cardstack/runtime-common';
+import { AllCards } from './all-cards';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import {
   Descriptions,
@@ -479,7 +480,8 @@ export class Lines extends Component<LinesSig> {
   }
   // One lookup for the accounts on screen, made only for someone looking at the card: the indexer's
   // render of a document doesn't search for them.
-  accountData = this.args.context?.getCards(
+  accountData = new AllCards(
+    this.args.context,
     this,
     () => {
       if (!this.codes.length || !mayBeLiveRender()) return undefined;
@@ -491,7 +493,6 @@ export class Lines extends Component<LinesSig> {
             { on: type, any: this.codes.map((code) => ({ eq: { code } })) },
           ],
         },
-        page: { size: Math.min(Math.max(this.codes.length, 1), 100) },
       } as never;
     },
     () => {

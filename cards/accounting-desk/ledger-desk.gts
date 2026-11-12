@@ -2246,16 +2246,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
   postToBooks = async (row: StatementRow) => {
     if (this.busy || this.isPending(row.key)) return;
-    if (
-      [
-        this.bookedInvoices,
-        this.bookedBills,
-        this.bookedCustomerPayments,
-        this.bookedBillPayments,
-      ].some((r) => !r.isComplete)
-    ) {
-      this.error =
-        "The desk hasn't read everything already in the books yet, so it can't tell whether this is. Try again in a moment.";
+    let booked = [
+      this.bookedInvoices,
+      this.bookedBills,
+      this.bookedCustomerPayments,
+      this.bookedBillPayments,
+    ];
+    if (booked.some((r) => !r.isComplete)) {
+      this.error = booked.some((r) => r.tooMany)
+        ? "More documents are already in the books than the desk reads at once, so it can't tell whether this one is. Draft it from its own card instead."
+        : booked.some((r) => r.failed)
+          ? "The desk couldn't read what's already in the books, so it can't tell whether this is. Reload to try again."
+          : "The desk hasn't read everything already in the books yet, so it can't tell whether this is. Try again in a moment.";
       return;
     }
     let card = [
@@ -3179,7 +3181,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     );
   }
   get recFeedFull() {
-    return this.bankLineData.isLoading || this.bankLineData.incomplete;
+    return !this.bankLineData.isLoading && this.bankLineData.incomplete;
   }
   get recItems(): {
     key: string;
@@ -3748,7 +3750,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     return by;
   }
   get timeCapped() {
-    return this.timeData.incomplete;
+    return this.timeData.truncated;
+  }
+  get timeFailed() {
+    return this.timeData.failed;
   }
   // A customer's unbilled time, read fresh from the realm, so the invoice bills all of it.
   searchUnbilled = async (customerId: string): Promise<any[]> => {
@@ -4623,7 +4628,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             if ((this.lotData as any)?.isLoading === false) {
               let onHand = onHandBySku.get(c.sku) ?? 0;
               r.onHand = onHand;
-              r.status = lowStockStatus(c, onHand, this.lotsCapped);
+              r.status = lowStockStatus(c, onHand, this.lotData.incomplete);
             }
             r.warehouse = warehouseBySku?.get(c.sku);
           }
@@ -7148,7 +7153,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     return this.newKind === 'fulfillment' || this.newKind === 'count';
   }
   get lotsCapped() {
-    return this.lotData.incomplete;
+    return this.lotData.truncated;
+  }
+  get lotsFailed() {
+    return this.lotData.failed;
   }
   get liveLots(): any[] {
     return instancesOf(this.lotData)
@@ -8504,7 +8512,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 /></Field>{{/if}}{{#if this.lotsCapped}}<Callout
                 @tone='info'
               >More than 500 lots have stock left; the product list reads the
-                newest 500, so a product held only in older lots is missing.</Callout>{{/if}}{{/if}}
+                newest 500, so a product held only in older lots is missing.</Callout>{{/if}}{{#if
+              this.lotsFailed
+            }}<Callout @tone='danger'>The stock lots couldn't be read, so the
+                products and their quantities may be missing. Reload to try
+                again.</Callout>{{/if}}{{/if}}
         </:default>
         <:footer><div class='drawer-actions'><Button
               @tone='neutral'
@@ -8729,7 +8741,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               /></Field>{{#if this.timeCapped}}<Callout @tone='info'>More than
                 500 activities are unbilled; the list reads 500, so a customer
                 or its total may be missing. The invoice bills all of the
-                customer's unbilled time.</Callout>{{/if}}
+                customer's unbilled time.</Callout>{{/if}}{{#if
+              this.timeFailed
+            }}<Callout @tone='danger'>The unbilled time couldn't be read, so a
+                customer or its total may be missing. Reload to try again.</Callout>{{/if}}
           {{/if}}
           {{#if this.error}}<Callout
               @tone='danger'

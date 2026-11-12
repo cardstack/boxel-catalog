@@ -643,12 +643,6 @@ export class ReportActions extends GlimmerComponent<ActionsSignature> {
 export const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
 export const loadingOf = (r: unknown) => (r as any)?.isLoading !== false;
-/** Whether a search answered a full page, or says more matched than it holds. */
-export const isCapped = (r: unknown, size: number) => {
-  let n = instancesOf(r).length,
-    total = (r as any)?.meta?.page?.total;
-  return n >= size || (typeof total === 'number' && total > n);
-};
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 /** Whether a value is a whole month, yyyy-mm. */
 export const isMonth = (ym: string | undefined) => MONTH.test(ym ?? '');

@@ -414,22 +414,22 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
       {{#if this.failNote}}<Callout
           @tone='danger'
           @title="Couldn't read the log"
-        >{{this.failNote}}</Callout>{{/if}}
-      <DataTable
-        @columns={{this.columns}}
-        @rows={{this.rows}}
-        @key={{this.rowKey}}
-        @rowLabel={{this.rowLabel}}
-        @label='Audit log'
-        @itemNoun='event'
-        @size='s'
-        @pageSize={{100}}
-        @sortable={{false}}
-        @emptyTitle='Nothing recorded in this period'
-        @emptyMessage='Postings, voids, closes and sign-offs in the period list here, newest first.'
-        @loading={{this.loading}}
-        @loadingLabel='Loading the audit log…'
-      />
+        >{{this.failNote}}</Callout>{{else}}
+        <DataTable
+          @columns={{this.columns}}
+          @rows={{this.rows}}
+          @key={{this.rowKey}}
+          @rowLabel={{this.rowLabel}}
+          @label='Audit log'
+          @itemNoun='event'
+          @size='s'
+          @pageSize={{100}}
+          @sortable={{false}}
+          @emptyTitle='Nothing recorded in this period'
+          @emptyMessage='Postings, voids, closes and sign-offs in the period list here, newest first.'
+          @loading={{this.loading}}
+          @loadingLabel='Loading the audit log…'
+        />{{/if}}
       {{#if this.capNote}}<Callout
           @tone='warning'
           @title='Incomplete'
