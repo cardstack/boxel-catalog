@@ -28,7 +28,7 @@ import { CertificationAuthority } from '../audit/certification-authority';
 import { Enrollment } from './enrollment';
 import { Employee } from '../hr/employee';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   AtomChip,
   Dot,
@@ -394,7 +394,7 @@ export class Certificate extends CardDef {
       return statusHue(CertificateStatusField, this.args.model?.certStatus);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Ce' /></:avatar>
         <:title>{{if @model.number @model.number 'Certificate'}}</:title>
         <:subtitle>{{headline @model}}</:subtitle>
@@ -412,7 +412,7 @@ export class Certificate extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

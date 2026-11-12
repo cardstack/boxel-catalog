@@ -42,7 +42,7 @@ import {
   Sheet,
   Stat,
 } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { DeskRow, KvList, cardsLinkedTo } from './components/desk-status';
 import { ENROLLMENT_STATUSES } from './enrollment-status-field';
 import { tracked } from '@glimmer/tracking';
@@ -452,7 +452,7 @@ export class Cohort extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Ch' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -462,7 +462,7 @@ export class Cohort extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

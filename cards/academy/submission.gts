@@ -25,7 +25,7 @@ import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { Enrollment } from './enrollment';
 import { Assignment } from './assignment';
 import { Grade } from './grade';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   AtomChip,
   Dot,
@@ -355,7 +355,7 @@ export class Submission extends CardDef {
       );
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Sb' /></:avatar>
         <:title>{{headline @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -370,7 +370,7 @@ export class Submission extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

@@ -17,7 +17,7 @@ import {
   round1,
 } from './rubric-criterion-field';
 import { Mark } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { IsoFrame } from '../shared/compact-sheet';
 
 /**
@@ -185,12 +185,12 @@ export class Rubric extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Rb' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Rubric · {{@model.totalPoints}} pts</:subtitle>
         <:fact>{{@model.criterionCount}} criteria</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

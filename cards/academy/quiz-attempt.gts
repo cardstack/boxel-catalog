@@ -18,7 +18,7 @@ import { Enrollment } from './enrollment';
 import { Quiz } from './quiz';
 import { scoreAnswer } from './quiz-question-field';
 import { concat } from '@ember/helper';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import {
   AtomChip,
   Dot,
@@ -281,7 +281,7 @@ export class QuizAttempt extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Qz' /></:avatar>
         <:title>{{headline @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -302,7 +302,7 @@ export class QuizAttempt extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

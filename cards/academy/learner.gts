@@ -25,7 +25,7 @@ import {
   Sheet,
   Stat,
 } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { ENROLLMENT_STATUSES } from './enrollment-status-field';
 import { SUBMISSION_STATUSES } from './submission-status-field';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
@@ -388,7 +388,7 @@ export class Learner extends PersonBase {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Avatar
             @name={{learnerName @model.title}}
             @src={{@model.photo.resolvedUrl}}
@@ -401,7 +401,7 @@ export class Learner extends PersonBase {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

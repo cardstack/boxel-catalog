@@ -15,7 +15,7 @@ import enumField from '@cardstack/base/enum';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import BookOpenIcon from '@cardstack/boxel-icons/book-open';
 import { AtomChip, Dot, Mark } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
@@ -304,7 +304,7 @@ export class Lesson extends CardDef {
       return LESSON_KIND_HUES[this.args.model?.kind ?? ''] ?? 'slate';
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Ls' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{@model.kindLabel}}{{#if @model.durationLabel}}
@@ -320,7 +320,7 @@ export class Lesson extends CardDef {
               @hour='numeric'
               @minute='2-digit'
             />{{/if}}</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

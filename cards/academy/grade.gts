@@ -19,7 +19,7 @@ import { Employee } from '../hr/employee';
 import { round1 } from './rubric-criterion-field';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { Dot, Mark } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { IsoFrame } from '../shared/compact-sheet';
 
 /** The grader's pick for one rubric criterion. */
@@ -364,7 +364,7 @@ export class Grade extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Gr' /></:avatar>
         <:title>{{if @model.learnerName @model.learnerName 'Learner'}}</:title>
         <:subtitle>{{@model.assignmentTitle}}</:subtitle>
@@ -375,7 +375,7 @@ export class Grade extends CardDef {
           ·
           {{@model.pct}}%{{#if @model.penaltyPct}}
             · −{{@model.penaltyPct}}% late{{/if}}</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }
