@@ -1190,7 +1190,7 @@ const RUN_LIMITS = [
     hint: 'Credits a run’s AI requests may cost',
     editLabel: 'AI spending, in credits',
     editHint:
-      'Boxel counts each AI request at the request’s highest possible cost¹',
+      'Boxel counts each AI request at the request’s highest possible cost',
     noneHint: 'No credits for AI requests',
   },
   {
@@ -1434,6 +1434,10 @@ export class AutomationCaps extends FieldDef {
       <div class='automation-caps-edit'>
         {{#each this.runLimits as |limit|}}
           <Field
+            class={{if
+              (eq limit.key 'aiCredits')
+              'automation-caps-edit__footnoted'
+            }}
             @label={{this.editLabel limit}}
             @hint={{this.editHint limit}}
             @error={{this.runProblem limit.key}}
@@ -1472,13 +1476,32 @@ export class AutomationCaps extends FieldDef {
           </Field>
         {{/each}}
       </div>
-      <p class='automation-caps-edit__footnote'>¹ Boxel charges the actual
-        amount once the AI provider reports the amount.</p>
+      <p class='automation-caps-edit__footnote'><sup
+          class='automation-caps-edit__mark'
+        >†</sup>
+        Boxel charges the actual amount once the AI provider reports the amount.</p>
       <style scoped>
         .automation-caps-edit {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
           gap: var(--boxel-sp-xs) var(--boxel-sp);
+        }
+        /* The AI spending hint points at the footnote below. Field's hint
+           is plain text, so the mark goes on after it here, on the hint
+           only: an error in its place gets none. */
+        .automation-caps-edit__footnoted
+          :deep(.pretui-cue[data-kind='description'] .pretui-cue-text::after) {
+          content: '†';
+          margin-left: 0.1em;
+          font-size: 0.9em;
+          font-weight: 600;
+          line-height: 0;
+          vertical-align: super;
+        }
+        .automation-caps-edit__mark {
+          font-size: 0.9em;
+          font-weight: 600;
+          line-height: 0;
         }
         .automation-caps-edit__footnote {
           margin: var(--boxel-sp) 0 0;
