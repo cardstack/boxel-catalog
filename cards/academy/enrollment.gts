@@ -35,7 +35,7 @@ import {
   Sheet,
   Stat,
 } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import { KvList } from './components/desk-status';
 import { IsoFrame } from '../shared/compact-sheet';
 
@@ -298,7 +298,7 @@ export class Enrollment extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='En' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -306,6 +306,26 @@ export class Enrollment extends CardDef {
             @hue={{hueOf @model}}
           >{{@model.statusLabel}}</Dot></:status>
         <:fact>{{factLine @model}}</:fact>
+        <:details>
+          {{#if @model.completedAt}}<Detail
+              @label='Completed'
+              @value={{fmtDate @model.completedAt}}
+            />{{/if}}
+          {{#if @model.withdrawnAt}}<Detail
+              @label='Withdrawn'
+              @value={{fmtDate @model.withdrawnAt}}
+            />{{/if}}
+          {{#if @model.certificate}}<Detail
+              @label='Certificate'
+            ><@fields.certificate
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.paymentRef}}<Detail
+              @label='Payment ref'
+              @value={{@model.paymentRef}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.learner}}<@fields.learner
               @format='atom'
               @displayContainer={{false}}
@@ -313,7 +333,7 @@ export class Enrollment extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

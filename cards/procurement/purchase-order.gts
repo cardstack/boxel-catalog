@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   CardDef,
   Component,
@@ -21,7 +22,6 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
 
 import { LineItem } from '../commerce/line-item';
 import { Vendor } from './vendor';
@@ -848,31 +848,42 @@ export class PurchaseOrder extends CardDef {
       return poFacts(this.args.model as PurchaseOrder);
     }
     <template>
-      <CompactFitted
-        @mark='Po'
-        @title={{this.f.number}}
-        @sub={{this.f.sub}}
-        @fact={{if
-          this.f.next
-          (concat 'Waiting on ' this.f.next ' · ' this.f.waiting)
-          this.f.routeLong
-        }}
-        @big={{this.f.total}}
-        @tags={{this.f.tags}}
-      >
-        <:rows>
-          <CompactRow @k='Total' @v={{this.f.total}} class='mono' />
-          <CompactRow @k='Expected' @v={{this.f.expected}} class='mono' />
-          <CompactRow @k='Route' @v={{this.f.routeShort}} />
-          <CompactRow @k='Approval' @v={{this.f.approvalText}} class='mono' />
-          <CompactRow @k='Received' @v={{this.f.receivedText}} class='mono' />
-          <CompactRow @k='Lines' @v={{this.f.lineCount}} />
-          <CompactRow @k='Line items' @v=' ' />
+      <RichFittedCard>
+        <:avatar><Avatar @name='Po' @shape='square' /></:avatar>
+        <:title>{{this.f.number}}</:title>
+        <:status>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{if
+            this.f.next
+            (concat 'Waiting on ' this.f.next ' · ' this.f.waiting)
+            this.f.routeLong
+          }}</:fact>
+        <:metric><Metric @value={{this.f.total}} /></:metric>
+        <:details>
+          <Detail @label='Total' @value={{this.f.total}} class='mono' />
+          <Detail @label='Expected' @value={{this.f.expected}} class='mono' />
+          <Detail @label='Route' @value={{this.f.routeShort}} />
+          <Detail
+            @label='Approval'
+            @value={{this.f.approvalText}}
+            class='mono'
+          />
+          <Detail
+            @label='Received'
+            @value={{this.f.receivedText}}
+            class='mono'
+          />
+          <Detail @label='Lines' @value={{this.f.lineCount}} />
+          <Detail @label='Line items' @value=' ' />
           {{#each this.f.lines as |l|}}
-            <CompactRow @k={{l.name}} @v={{l.amount}} class='mono' />
+            <Detail @label={{l.name}} @value={{l.amount}} class='mono' />
           {{/each}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .mono {
           font-family: var(--font-mono);

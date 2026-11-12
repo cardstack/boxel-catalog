@@ -29,7 +29,7 @@ import { Asset } from './asset';
 // Cyclic (a plan links to Asset); read only in the constructor.
 import { MaintenancePlan } from './maintenance-plan';
 import RecordMeterReadingCommand from './commands/record-meter-reading-command';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   Chip,
   Brief,
@@ -455,7 +455,7 @@ export class Meter extends CardDef {
 
   static fitted = class Fitted extends MeterView {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Me' @size='lg' /></:avatar>
         <:title>{{@model.name}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -465,10 +465,32 @@ export class Meter extends CardDef {
             @strong={{shortDate this.last.readAt}}
             @rest={{this.last.readByName}}
           /></:fact>
+        <:metric><Metric
+            @value={{num @model.current @model.unit}}
+            @label='Current'
+          /></:metric>
+        <:details>
+          {{#if this.toService}}<Detail
+              @label='To service'
+              @value={{num this.toService @model.unit}}
+            />{{/if}}
+          {{#if @model.averagePerWeek}}<Detail
+              @label='Per week'
+              @value={{num @model.averagePerWeek @model.unit}}
+            />{{/if}}
+          {{#if @model.lastDelta}}<Detail
+              @label='Last change'
+              @value={{num @model.lastDelta @model.unit}}
+            />{{/if}}
+          {{#if @model.readings.length}}<Detail
+              @label='Readings'
+              @value='{{@model.readings.length}}'
+            />{{/if}}
+        </:details>
         <:relations>
           {{#if @model.asset}}<@fields.asset @format='atom' />{{/if}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

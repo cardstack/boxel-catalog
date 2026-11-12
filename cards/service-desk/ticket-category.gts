@@ -19,7 +19,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   DotLabel,
   IsoHead,
@@ -32,7 +32,6 @@ import {
   StatStrip,
   type StripItem,
 } from '../shared/compact-sheet';
-import { FittedExtras } from '../procurement/vendor';
 import { RecCard, RecHead, RecRow } from './components/record';
 
 // The two routing defaults as Pret UI KeyValue rows. `value` names which
@@ -296,7 +295,7 @@ export class TicketCategory extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    // the details tier's key-value rows
     get facts() {
       let m = this.args.model;
       return [
@@ -312,24 +311,20 @@ export class TicketCategory extends CardDef {
       ];
     }
     <template>
-      <FittedExtras @facts={{this.facts}}>
-        <:default>
-          <FitTile>
-            <:avatar><PretAvatar
-                @name='C'
-                @shape='square'
-                @size={{32}}
-              /></:avatar>
-            <:title>{{@model.title}}</:title>
-            <:subtitle>{{@model.path}}</:subtitle>
-            <:status>{{#if @model.defaultPriority}}<Chip
-                  @appearance='plain'
-                >{{@model.defaultPriority}}</Chip>{{/if}}</:status>
-            <:fact>Routes to
-              {{if @model.defaultQueueName @model.defaultQueueName '—'}}</:fact>
-          </FitTile>
-        </:default>
-      </FittedExtras>
+      <RichFittedCard>
+        <:avatar><PretAvatar @name='C' @shape='square' /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{@model.path}}</:subtitle>
+        <:status>{{#if @model.defaultPriority}}<Chip
+              @appearance='plain'
+            >{{@model.defaultPriority}}</Chip>{{/if}}</:status>
+        <:fact>Routes to
+          {{if @model.defaultQueueName @model.defaultQueueName '—'}}</:fact>
+        <:details>{{#each this.facts as |item|}}<Detail
+              @label={{item.key}}
+              @value={{item.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 }

@@ -62,7 +62,7 @@ import RocketIcon from '@cardstack/boxel-icons/rocket';
 import SignatureIcon from '@cardstack/boxel-icons/signature';
 import StarIcon from '@cardstack/boxel-icons/star';
 import UsersIcon from '@cardstack/boxel-icons/users';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { Position } from '../hr/position';
 import { Application } from '../hr/application';
 import { Offer } from '../hr/offer';
@@ -1505,18 +1505,17 @@ export class TalentResourceTracker extends CardDef {
 
   static fitted = class Fitted extends Component<typeof TalentResourceTracker> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Avatar
             @name={{if @model.cardTitle @model.cardTitle ''}}
             @hue='var(--primary)'
-            @size={{32}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Recruiting pipeline, directory &amp; analytics</:subtitle>
         <:fact>13 views · Dashboard, Pipeline, Directory, Org chart, PTO,
           Reviews…</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

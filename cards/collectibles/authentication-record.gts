@@ -22,7 +22,8 @@ import FileTextIcon from '@cardstack/boxel-icons/file-text';
 import NotebookPenIcon from '@cardstack/boxel-icons/notebook-pen';
 import ArchiveIcon from '@cardstack/boxel-icons/archive';
 import { tracked } from '@glimmer/tracking';
-import { FittedCard, FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { RichFittedCard, Detail, Media } from '../shared/rich-fitted-card';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
@@ -855,190 +856,35 @@ export class AuthenticationRecord extends CardDef {
     </template>
   };
 
-  // FITTED — Step 0 fork: FittedCard, not hand-rolled. This is a standard
-  // composition (image/placeholder + eyebrow + title + badge + footer) and the
-  // three fitted templates already shipped in this family use it, so forking a
-  // fourth idiom here would break the family for no gain.
-  //
-  // SLOT DISCIPLINE — four distinct facts, four slots, zero repeats.
-  // `<:subtitle>` and `<:meta>` are deliberately NOT rendered: the only values
-  // left to put in them are the service (already the eyebrow) and the outcome
-  // (already the badge), and a slot filled with a value shown elsewhere is the
-  // documented failure that survives source review because the repeat only
-  // appears at the quanta where both slots happen to be visible.
   static fitted = class Fitted extends Component<typeof AuthenticationRecord> {
     <template>
-      <FittedCard
-        class='a-fit'
-        @imageUrl={{@model.submittedPhotos.primaryUrl}}
-        @imageAlt={{@model.itemTitle}}
-        @titleTag='h3'
-      >
-        {{! Rule 2 anchor: tier 1 is the submitted photo; this is the tier-2
-            fallback and it is the card's OWN static icon — the same one its
-            isolated view and its breadcrumb use, which is what makes it identity
-            rather than filler. Never an empty grey square. }}
-        <:placeholder>
-          <ShieldCheckIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
-        </:placeholder>
-
-        <:eyebrow><span class='fit-eyebrow'>{{@model.service}}</span></:eyebrow>
-
-        <:title><span class='fit-title'>{{if
-              @model.itemTitle
-              @model.itemTitle
-              'Unlinked item'
-            }}</span></:title>
-
-        <:badgeRight>
-          {{! Delegated to the status field, whose StatePill derives its colour
-              from the option's hue. A hand-rolled per-outcome class list here
-              would be a second, drifting definition of the same three colours. }}
-          {{#if @model.outcome}}
-            <@fields.outcome @format='atom' />
-          {{/if}}
-        </:badgeRight>
-
-        <:footer>
-          {{! Rule 1, data is all-or-nothing: an identifier is never ellipsised,
-              so the certificate gets `nowrap` and is hidden WHOLE at the narrow
-              quanta below rather than truncated to an unreadable stub. }}
-          {{#if @model.certificateId}}
-            <span class='a-cert'>{{@model.certificateId}}</span>
-          {{/if}}
-          {{#if @model.turnaroundDays}}
-            <span class='a-turn'>{{@model.turnaroundDays}}</span>
-          {{/if}}
-        </:footer>
-      </FittedCard>
-
-      <style scoped>
-        /* NO container-type / container-name here — FittedCard queries the
-           HOST's `fitted-card` container, and declaring one would capture those
-           queries. Everything below is a --fc-* knob or a visibility change. */
-        .a-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-          --font-display: var(--font-serif);
-
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          /* The miniature vault plaque: a 2px gold edge as an INSET SHADOW, not
-             a border — the host draws the chrome and a border would fight it. */
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          --fc-image-width: 42cqh;
-          --fc-image-min-width: 3.5rem;
-          --fc-image-max-width: 11rem;
-          --fc-image-object-fit: cover;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-
-          --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          --fc-header-gap: 0.15em;
-          --fc-content-gap: var(--boxel-sp-2xs);
-
-          /* Rule 1: line-height >= 1.15 on every text role, so a descender is
-             never sheared even when the clamp math "fits". */
-          --fc-eyebrow-font-size: max(9px, 0.62em);
-          --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(13px, 1.05em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 2;
-          --fc-footer-font-size: max(11px, 0.78em);
-          --fc-footer-gap: var(--boxel-sp-xs);
-          --fc-footer-justify: space-between;
-          --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-2xs);
-        }
-
-        /* Rule 2: the eyebrow stays quiet so the title wins by CONTRAST, not
-           only by size. Two loud things would mean no anchor. */
-        .fit-eyebrow {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--smoke);
-          font-weight: 600;
-        }
-        .fit-title {
-          font-family: var(--font-display);
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-        /* Set here, NOT via a `--fc-footer-line-height` knob — that name does
-           not exist, and an invented --fc-* name is valid CSS that silently
-           does nothing. */
-
-        /* A certificate id is read aloud and typed into other systems: mono,
-           tabular, and never wrapped or ellipsised. */
-        .a-cert {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-weight: 600;
-          white-space: nowrap;
-        }
-        /* Turnaround is the plaque value on this card — serif gold, matching the
-           money figures on its siblings. */
-        .a-turn {
-          font-family: var(--font-display);
-          color: var(--primary-ink);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-
-        /* ---- quanta: visibility only, never a shrink-into-a-clip ----
-           The type scale itself does not step; these rules hide whole rows. */
-
-        /* Badge tier (h <= 50): the title is usually the only survivor, and it
-           must still be the loudest thing. Everything else goes. */
-        @container fitted-card (height <= 50px) {
-          .a-fit {
-            --fc-footer-display: none;
-            --fc-badge-right-display: none;
-            --fc-title-line-clamp: 1;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-
-        /* Very narrow strips: the certificate is dropped WHOLE rather than
-           truncated, leaving the turnaround — a half-visible id is worse than
-           an absent one, and the id is the longer of the two. */
-        @container fitted-card (width <= 200px) and (height <= 80px) {
-          .a-fit .a-cert {
-            display: none;
-          }
-        }
-
-        /* Narrow tiles: the image would starve the text column below the ~200px
-           content-column rule, so it yields width rather than the title
-           clipping. */
-        @container fitted-card (width <= 150px) {
-          .a-fit {
-            --fc-image-max-width: 100%;
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:media><Media
+            @src={{@model.submittedPhotos.primaryUrl}}
+            @alt={{if @model.itemTitle @model.itemTitle ''}}
+          ><ShieldCheckIcon width='40%' height='40%' /></Media></:media>
+        <:title>{{if
+            @model.itemTitle
+            @model.itemTitle
+            'Unlinked item'
+          }}</:title>
+        <:status>{{#if @model.outcome}}<@fields.outcome
+              @format='atom'
+            />{{/if}}</:status>
+        <:subtitle>{{@model.service}}</:subtitle>
+        <:fact>{{#if @model.turnaroundDays}}Turnaround
+            {{@model.turnaroundDays}}{{/if}}</:fact>
+        <:details>
+          {{#if @model.certificateId}}<Detail
+              @label='Certificate'
+              @value={{@model.certificateId}}
+            />{{/if}}
+          {{#if @model.authenticator}}<Detail
+              @label='Authenticator'
+              @value={{@model.authenticator}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

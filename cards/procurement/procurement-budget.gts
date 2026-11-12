@@ -5,6 +5,7 @@ import {
   contains,
   StringField,
 } from '@cardstack/base/card-api';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import NumberField from '@cardstack/base/number';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
@@ -16,7 +17,7 @@ import {
   utilizationBandOf,
 } from './budget-utilization-field';
 import { formatMoney } from '../commerce/line-item-totals';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
+
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Button } from '@cardstack/pretui/components/button';
 import { Chip } from '@cardstack/pretui/components/chip';
@@ -535,24 +536,27 @@ export class ProcurementBudget extends CardDef {
       return budgetFacts(this.args.model as ProcurementBudget);
     }
     <template>
-      <CompactFitted
-        @mark='Budget'
-        @title={{this.f.title}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.factText}}
-        @tags={{this.f.tags}}
-      >
-        <:rows>
+      <RichFittedCard>
+        <:avatar><Avatar @name='Budget' @shape='square' /></:avatar>
+        <:title>{{this.f.title}}</:title>
+        <:status>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.factText}}</:fact>
+        <:details>
           <div class='bar'><ProgressBar
               @value={{this.f.pct}}
               @hue={{this.f.hue}}
               aria-label='Budget used'
             /></div>
           {{#each this.f.fittedRows as |r|}}
-            <CompactRow @k={{r.key}} @v={{r.value}} />
+            <Detail @label={{r.key}} @value={{r.value}} />
           {{/each}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .bar {
           display: flex;

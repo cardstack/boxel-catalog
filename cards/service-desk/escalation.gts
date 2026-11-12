@@ -19,14 +19,14 @@ import {
 } from '@cardstack/catalog/components/state-pill';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { Chip } from '@cardstack/pretui/components/chip';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   KeyValue,
   type KeyValueItem,
 } from '@cardstack/pretui/components/key-value';
 import { Panel } from '@cardstack/pretui/components/panel';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { FitRows, TypeMark, lowercase } from './components/fit-rows';
+import { TypeMark, lowercase } from './components/fit-rows';
 import { eq } from '@cardstack/boxel-ui/helpers';
 
 export const ESCALATION_REASONS = [
@@ -731,39 +731,34 @@ export class Escalation extends CardDef {
       return escView(this.args.model);
     }
     <template>
-      <FitRows @items={{this.v.fitRows}}>
-        <:tile>
-          <FitTile>
-            <:avatar><TypeMark @label='Es' /></:avatar>
-            <:title><span
-                class='fit-title'
-                role='heading'
-                aria-level='3'
-              >{{this.v.title}}</span></:title>
-            <:subtitle>{{this.v.subline}}</:subtitle>
-            <:status>
-              <Chip @tone={{this.v.statusTone}} @appearance='plain'>{{lowercase
-                  this.v.statusLabel
-                }}</Chip>
-            </:status>
-          </FitTile>
-        </:tile>
-        <:row as |item|>
-          {{#if (eq item.key 'Subject')}}
-            <@fields.subject @format='atom' @displayContainer={{false}} />
-          {{else}}
-            <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
-          {{/if}}
-        </:row>
-      </FitRows>
+      <RichFittedCard>
+        <:avatar><TypeMark @label='Es' /></:avatar>
+        <:title><span
+            role='heading'
+            aria-level='3'
+          >{{this.v.title}}</span></:title>
+        <:subtitle>{{this.v.subline}}</:subtitle>
+        <:status>
+          <Chip @tone={{this.v.statusTone}} @appearance='plain'>{{lowercase
+              this.v.statusLabel
+            }}</Chip>
+        </:status>
+        <:details>
+          {{#each this.v.fitRows as |item|}}
+            <Detail @label={{item.key}}>
+              {{#if (eq item.key 'Subject')}}
+                <@fields.subject @format='atom' @displayContainer={{false}} />
+              {{else}}
+                <span
+                  class={{if (isMono item.key) 'mono'}}
+                >{{item.value}}</span>
+              {{/if}}
+            </Detail>
+          {{/each}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
         @layer PretComponent {
-          .fit-title {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
           .mono {
             font-family: var(--font-mono);
           }

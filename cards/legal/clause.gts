@@ -8,6 +8,8 @@ import {
   type BaseDefComponent,
 } from '@cardstack/base/card-api';
 import type { Hue } from './compact-card';
+import { Dot as DotChip } from '../shared/compact-parts';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import DateField from '@cardstack/base/date';
 import MarkdownField from '@cardstack/base/markdown';
 import TextAreaField from '@cardstack/base/text-area';
@@ -21,13 +23,13 @@ import {
   AtomLayout,
   EmbLayout,
   Facts,
-  FitLayout,
   IsoLayout,
   Mark,
   Rows,
   Section,
   Text,
   riskTone,
+  fitParts,
   stats,
   type Dot,
   type Fact,
@@ -331,16 +333,26 @@ export class Clause extends CardDef {
   static fitted = class Fitted extends Component<typeof Clause> {
     <template>
       {{#let (clauseView @model) as |v|}}
-        <FitLayout
-          @title={{v.title}}
-          @subtitle={{v.subtitle}}
-          @status={{v.state}}
-          @fact={{v.fact}}
-          @facts={{v.facts}}
-          @stats={{v.fitStats}}
-        >
-          <:mark><Mark @text='Cl' /></:mark>
-        </FitLayout>
+        {{#let (fitParts v.facts v.fitStats) as |fit|}}
+          <RichFittedCard>
+            <:avatar><Mark @text='Cl' /></:avatar>
+            <:title>{{v.title}}</:title>
+            <:status>{{#if v.state}}<DotChip
+                  @label={{v.state.label}}
+                  @tone={{v.state.tone}}
+                />{{/if}}</:status>
+            <:subtitle>{{v.subtitle}}</:subtitle>
+            <:fact>{{v.fact}}</:fact>
+            <:metric>{{#if fit.metric}}<Metric
+                  @value={{fit.metric.value}}
+                  @label={{fit.metric.key}}
+                />{{/if}}</:metric>
+            <:details>{{#each fit.details as |d|}}<Detail
+                  @label={{d.key}}
+                  @value={{d.value}}
+                />{{/each}}</:details>
+          </RichFittedCard>
+        {{/let}}
       {{/let}}
     </template>
   };

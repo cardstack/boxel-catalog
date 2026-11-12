@@ -28,7 +28,7 @@ import { CertificationAuthority } from '../audit/certification-authority';
 import { Enrollment } from './enrollment';
 import { Employee } from '../hr/employee';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   AtomChip,
   Dot,
@@ -394,7 +394,7 @@ export class Certificate extends CardDef {
       return statusHue(CertificateStatusField, this.args.model?.certStatus);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Ce' /></:avatar>
         <:title>{{if @model.number @model.number 'Certificate'}}</:title>
         <:subtitle>{{headline @model}}</:subtitle>
@@ -405,6 +405,28 @@ export class Certificate extends CardDef {
           {{fmtDate @model.issuedAt}}
           ·
           {{creditLine @model.creditHours}}</:fact>
+        <:metric><Metric
+            @value={{@model.finalLetter}}
+            @label='Final grade'
+          /></:metric>
+        <:details>
+          {{#if @model.cohortName}}<Detail
+              @label='Cohort'
+              @value={{@model.cohortName}}
+            />{{/if}}
+          {{#if @model.verificationCode}}<Detail
+              @label='Code'
+              @value={{@model.verificationCode}}
+            />{{/if}}
+          {{#if @model.revokedAt}}<Detail
+              @label='Revoked'
+              @value={{fmtDate @model.revokedAt}}
+            />{{/if}}
+          {{#if @model.revokedReason}}<Detail
+              @label='Reason'
+              @value={{@model.revokedReason}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.authority}}<@fields.authority
               @format='atom'
               @displayContainer={{false}}
@@ -412,7 +434,7 @@ export class Certificate extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

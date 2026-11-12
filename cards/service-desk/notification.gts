@@ -24,6 +24,9 @@ import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
 import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
 import enumField from '@cardstack/base/enum';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
+import { Chip } from '@cardstack/pretui/components/chip';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 
 export const NotificationSeverityField = markDefinition(
   enumField(StringField, {
@@ -35,6 +38,16 @@ export const NotificationSeverityField = markDefinition(
     ],
   }),
 );
+
+const SEVERITY_TONE: Record<string, PretuiToneArg> = {
+  info: 'info',
+  success: 'success',
+  warning: 'warning',
+  critical: 'danger',
+};
+function severityTone(severity?: string | null): PretuiToneArg {
+  return (severity && SEVERITY_TONE[severity]) || 'neutral';
+}
 
 /**
  * One thing a person needs to be told.
@@ -416,194 +429,41 @@ export class Notification extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <article
-        class='fit {{@model.severity}} {{unless @model.isRead "unread"}}'
-      >
-        <div class='r-head'>
-          <BellIcon class='glyph' width='14' height='14' aria-hidden='true' />
-          <h3 class='title'>{{@model.subject}}</h3>
-        </div>
-        <div class='r-body'>
-          {{#if @model.body}}<p class='body'>{{@model.body}}</p>{{/if}}
-        </div>
-        <div class='r-meta'>
-          {{#if @model.isActionable}}
-            <span class='cta'>{{if
-                @model.actionLabel
-                @model.actionLabel
-                'Open'
-              }}</span>
-          {{/if}}
-          {{! Age reads as a whole number of hours or days, never a
-            truncated timestamp — data is all-or-nothing. }}
-          {{#if (gt @model.ageHours 0)}}
-            <span class='age'>{{@model.ageHours}}h</span>
-          {{/if}}
-        </div>
-      </article>
-
-      <style scoped>
-        .fit {
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb), 10cqb),
-            1rem
-          );
-          --type-ratio: 1.25;
-          width: 100%;
-          height: 100%;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          grid-template-areas: 'head' 'body' 'meta';
-          gap: var(--boxel-sp-6xs);
-          padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
-          box-sizing: border-box;
-          overflow: hidden;
-          background: var(--card);
-          color: var(--foreground);
-          font-family: var(--font-sans);
-          /* Severity is a data hue consumed as a rail, so it marks the cell
-             without competing with the title for attention. */
-          border-left: 3px solid var(--sev, var(--border));
-        }
-        .fit.success {
-          --sev: var(--success);
-        }
-        .fit.warning {
-          --sev: var(--warning);
-        }
-        .fit.critical {
-          --sev: var(--destructive);
-        }
-        .r-head {
-          grid-area: head;
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-3xs);
-          min-height: 0;
-          overflow: hidden;
-          flex-shrink: 0;
-        }
-        .r-body {
-          grid-area: body;
-          min-height: 0;
-          overflow: hidden;
-        }
-        .r-meta {
-          grid-area: meta;
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: var(--boxel-sp-3xs);
-          min-height: 0;
-          overflow: hidden;
-          flex-shrink: 0;
-        }
-
-        /* The anchor: the bell is the card's identity glyph (same icon the
-           card declares), and the subject is the loudest thing at every
-           quantum. Unread adds weight on top — colour is already carrying
-           severity and one channel cannot hold two variables. */
-        .glyph {
-          flex: none;
-          align-self: center;
-          color: var(--sev, var(--muted-foreground));
-        }
-        .title {
-          flex: 1;
-          min-width: 0;
-          font-size: calc(var(--type-base) * pow(var(--type-ratio), 1));
-          font-weight: 600;
-          line-height: 1.2;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-          overflow: hidden;
-          overflow-wrap: break-word;
-          min-width: 0;
-        }
-        .fit.unread .title {
-          font-weight: 700;
-        }
-        .body {
-          font-size: var(--type-base);
-          line-height: 1.25;
-          color: var(--muted-foreground);
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 3;
-          overflow: hidden;
-          overflow-wrap: break-word;
-          min-width: 0;
-        }
-        .cta {
-          flex: none;
-          font-size: var(--type-base);
-          line-height: 1.25;
-          white-space: nowrap;
-          font-weight: 600;
-          color: color-mix(in oklch, var(--primary) 45%, var(--foreground));
-        }
-        .age {
-          flex: none;
-          font-size: var(--type-base);
-          line-height: 1.25;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-          color: var(--muted-foreground);
-        }
-
-        /* ── height quanta: rows drop whole, never shrink ─────────────── */
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: 1fr;
-            grid-template-areas: 'head';
-            padding: 0 var(--boxel-sp-xxs);
-            align-items: center;
-          }
-          .r-body,
-          .r-meta {
-            display: none;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (50px < height <= 80px) {
-          .fit {
-            grid-template-rows: auto auto;
-            grid-template-areas: 'head' 'meta';
-          }
-          .r-body {
-            display: none;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (80px < height <= 130px) {
-          .body {
-            -webkit-line-clamp: 1;
-          }
-          .title {
-            -webkit-line-clamp: 1;
-          }
-        }
-
-        /* Narrow: the age goes before the action does — one is context, the
-           other is the thing the reader came to do. */
-        @container fitted-card (width <= 180px) {
-          .age {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 120px) {
-          .glyph {
-            display: none;
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:avatar><BellIcon
+            width='16'
+            height='16'
+            aria-hidden='true'
+          /></:avatar>
+        <:title>{{@model.subject}}</:title>
+        <:status>
+          {{#if @model.severity}}<Chip
+              @appearance='plain'
+              @tone={{severityTone @model.severity}}
+            >{{@model.severity}}</Chip>{{/if}}
+          {{#unless @model.isRead}}<Chip
+              @appearance='plain'
+              @tone='primary'
+            >unread</Chip>{{/unless}}
+        </:status>
+        <:subtitle>{{@model.body}}</:subtitle>
+        <:details>
+          {{! Age reads as a whole number of hours, never a truncated
+            timestamp. }}
+          {{#if (gt @model.ageHours 0)}}<Detail
+              @label='Age'
+              @value='{{@model.ageHours}}h'
+            />{{/if}}
+          {{#if @model.isActionable}}<Detail
+              @label='Action'
+              @value={{if @model.actionLabel @model.actionLabel 'Open'}}
+            />{{/if}}
+          {{#if @model.subjectCard}}<Detail @label='About'><@fields.subjectCard
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

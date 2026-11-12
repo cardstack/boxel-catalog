@@ -15,14 +15,18 @@ import Tag from '@cardstack/base/tag';
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 import PackageIcon from '@cardstack/boxel-icons/package';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
-import { moneyText } from './money-format';
+import { formatMoney, moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
   SnKv,
-  SnMark,
   SnRow,
   SnSection,
   SnSheet,
@@ -218,8 +222,11 @@ export class CollectibleProduct extends CardDef {
 
   static fitted = class Fitted extends Component<typeof CollectibleProduct> {
     <template>
-      <FitTile>
-        <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
+      <RichFittedCard>
+        <:media><Media @src={{photoOf @model}} @alt=''><PackageIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><DotLabel @label={{sizeRange @model}} /></:status>
@@ -227,7 +234,31 @@ export class CollectibleProduct extends CardDef {
           {{moneyText @model.retailPrice}}
           ·
           {{if @model.releaseDate (day @model.releaseDate) '—'}}</:fact>
-      </FitTile>
+        <:metric>{{#if (formatMoney @model.retailPrice)}}<Metric
+              @value={{formatMoney @model.retailPrice}}
+              @label='Retail'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.brand}}<Detail @label='Brand'><@fields.brand
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.silhouette}}<Detail
+              @label='Silhouette'
+            ><@fields.silhouette
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.collabPartner}}<Detail
+              @label='Collab'
+              @value={{@model.collabPartner}}
+            />{{/if}}
+          {{#if @model.availableVariants.length}}<Detail
+              @label='Variants'
+              @value={{sizeCount @model}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

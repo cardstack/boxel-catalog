@@ -21,9 +21,14 @@ import TagIcon from '@cardstack/boxel-icons/tag';
 import { CollectionItem } from './collection-item';
 import { CollectibleProduct } from './collectible-product';
 import { SellerProfile } from './seller-profile';
-import { moneyText } from './money-format';
+import { formatMoney, moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -266,12 +271,11 @@ export class Listing extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Listing> {
     <template>
-      <FitTile>
-        <:avatar><SnMark
-            @src={{@model.photos.primaryUrl}}
-            @text='Li'
-            @size='lg'
-          /></:avatar>
+      <RichFittedCard>
+        <:media><Media @src={{@model.photos.primaryUrl}} @alt=''><TagIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><DotLabel
@@ -279,11 +283,33 @@ export class Listing extends CardDef {
             @label={{statusLabel @model.listingStatus}}
           /></:status>
         <:fact>{{moneyText @model.price}} · {{shippingLine @model}}</:fact>
+        <:metric>{{#if (formatMoney @model.price)}}<Metric
+              @value={{formatMoney @model.price}}
+              @label='Asking'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.variantLabel}}<Detail
+              @label='Size'
+              @value={{@model.variantLabel}}
+            />{{/if}}
+          {{#if @model.listedAt}}<Detail
+              @label='Listed'
+              @value={{day @model.listedAt}}
+            />{{/if}}
+          {{#if @model.expiresAt}}<Detail
+              @label='Expires'
+              @value={{expiry @model}}
+            />{{/if}}
+          {{#if @model.shipsFrom}}<Detail
+              @label='Ships from'
+              @value={{@model.shipsFrom}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.seller}}<@fields.seller
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

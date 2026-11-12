@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { realmURL } from 'https://cardstack.com/base/card-api';
 import { codeRef } from '@cardstack/runtime-common';
 import type { Meeting } from './meeting';
@@ -65,8 +66,6 @@ import { GenerateInterviewQuestionsCommand } from './commands/generate-interview
 import FileDownloadLink from './components/file-download-link';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -968,6 +967,10 @@ export class Candidate extends PersonBase {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let m = this.args.model;
       let pct = m?.skillMatchPct;
@@ -981,65 +984,68 @@ export class Candidate extends PersonBase {
       ];
     }
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name={{if @model.title @model.title '?'}}
             @src={{@model.photo.resolvedUrl}}
             @hue={{AVATAR_HUE}}
-            @size={{20}}
             aria-hidden='true'
-          /></:mark>
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
         <:status>{{#if @model.status}}<@fields.status
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:status>
-        <:default>
-          <FitRow @left={{true}}><span class='meta'>{{subLine
-                @model
-              }}</span></FitRow>
-          <FitRow @label='Score'><span class='mono'>{{if
+        <:subtitle><span class='meta'>{{subLine @model}}</span></:subtitle>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
+        <:details>
+
+          <Detail @label='Score'><span class='mono'>{{if
                 (scoreLabel @model)
                 (scoreLabel @model)
                 '—'
-              }}</span></FitRow>
-          <FitRow @label='Applied'><span class='mono'>{{if
+              }}</span></Detail>
+          <Detail @label='Applied'><span class='mono'>{{if
                 @model.appliedDate
                 (formatDay @model.appliedDate)
                 '—'
-              }}</span></FitRow>
+              }}</span></Detail>
           {{#if @model.position}}
-            <FitRow @label='Position' @left={{true}}><@fields.position
+            <Detail @label='Position'><@fields.position
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <StatStrip @compact={{true}} @items={{this.strip}} />
-          <FitRow @label='Notice'><span class='mono'>{{if
+
+          <Detail @label='Notice'><span class='mono'>{{if
                 (noticeLabel @model)
                 (noticeLabel @model)
                 '—'
-              }}</span></FitRow>
-          <FitRow @label='Skill match'>{{if
+              }}</span></Detail>
+          <Detail @label='Skill match'>{{if
               (skillMatchLabel @model)
               (skillMatchLabel @model)
               '—'
-            }}</FitRow>
-          <FitRow @label='Background'>{{if
+            }}</Detail>
+          <Detail @label='Background'>{{if
               (backgroundLabel @model)
               (backgroundLabel @model)
               '—'
-            }}</FitRow>
+            }}</Detail>
           {{#if @model.referredBy}}
-            <FitRow @label='Referred by' @left={{true}}><@fields.referredBy
+            <Detail @label='Referred by'><@fields.referredBy
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <FitRow @label='Email'><span
+          <Detail @label='Email'><span
               class='mono'
-            >{{@model.email}}</span></FitRow>
-        </:default>
-      </FitCard>
+            >{{@model.email}}</span></Detail>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

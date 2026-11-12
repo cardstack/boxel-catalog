@@ -16,7 +16,7 @@ import {
 import { PersonBase } from '../people/person-base';
 import { OrderStatusField } from './order-status';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
@@ -355,11 +355,10 @@ export class MarketplaceMember extends PersonBase {
     typeof MarketplaceMember
   > {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Avatar
             @name={{if @model.name @model.name '?'}}
             @src={{@model.photo.resolvedUrl}}
-            @size={{32}}
             aria-hidden='true'
           /></:avatar>
         <:title>{{@model.title}}</:title>
@@ -369,7 +368,17 @@ export class MarketplaceMember extends PersonBase {
             @label={{if (isSeller @model) 'seller' 'buyer'}}
           /></:status>
         <:fact>{{if (isSeller @model) (ratingText @model) @model.phone}}</:fact>
-      </FitTile>
+        <:metric>{{#if (ratingText @model)}}<Metric
+              @value={{ratingText @model}}
+              @label='Rating'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if (isSeller @model)}}{{#if @model.phone}}<Detail
+                @label='Phone'
+                @value={{@model.phone}}
+              />{{/if}}{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

@@ -15,8 +15,7 @@ import { TicketCategory } from './ticket-category';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Avatar as PretAvatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
-import { FittedExtras } from '../procurement/vendor';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   RecCard,
   RecHead,
@@ -361,7 +360,7 @@ export class KnowledgeArticle extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    // Whole ruled rows the tall fitted sizes add under the FitTile.
+    // the details tier's key-value rows
     get facts() {
       let m = this.args.model;
       return [
@@ -381,28 +380,20 @@ export class KnowledgeArticle extends CardDef {
       ];
     }
     <template>
-      <FittedExtras @facts={{this.facts}}>
-        <:default>
-          <FitTile>
-            <:avatar><PretAvatar
-                @name='KB'
-                @shape='square'
-                @size={{32}}
-              /></:avatar>
-            <:title>{{@model.title}}</:title>
-            <:subtitle>{{@model.categoryName}}</:subtitle>
-            <:status>{{#if @model.status}}<Chip
-                  @appearance='plain'
-                  @tone={{if
-                    (eq @model.status 'Published')
-                    'success'
-                    'warning'
-                  }}
-                >{{@model.status}}</Chip>{{/if}}</:status>
-            <:fact>{{@model.excerpt}}</:fact>
-          </FitTile>
-        </:default>
-      </FittedExtras>
+      <RichFittedCard>
+        <:avatar><PretAvatar @name='KB' @shape='square' /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{@model.categoryName}}</:subtitle>
+        <:status>{{#if @model.status}}<Chip
+              @appearance='plain'
+              @tone={{if (eq @model.status 'Published') 'success' 'warning'}}
+            >{{@model.status}}</Chip>{{/if}}</:status>
+        <:fact>{{@model.excerpt}}</:fact>
+        <:details>{{#each this.facts as |item|}}<Detail
+              @label={{item.key}}
+              @value={{item.value}}
+            />{{/each}}</:details>
+      </RichFittedCard>
     </template>
   };
 }

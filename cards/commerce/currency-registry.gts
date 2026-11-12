@@ -18,6 +18,7 @@ import { Table } from '@cardstack/pretui/components/table';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 /**
  * Whole calendar days from `asOf` to `now`, counted on local calendar dates
@@ -296,41 +297,20 @@ export class CurrencyRegistry extends CardDef {
       return (this.args.model?.rates ?? []).length;
     }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.cardTitle}}</span>
-        <span class='fit-sub'>{{this.count}}
-          rates ·
-          {{@model.staleAfterDays}}d staleness</span>
-      </div>
-      <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 700;
-          font-size: var(--boxel-font-size);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fit-sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-        }
-      </style>
+      <RichFittedCard>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{this.count}}
+          rates{{#if @model.staleAfterDays}}
+            ·
+            {{@model.staleAfterDays}}d staleness{{/if}}</:subtitle>
+        <:metric><Metric @value='{{this.count}}' @label='Rates' /></:metric>
+        <:details>
+          {{#each @model.rates as |r|}}{{#if r.currency}}<Detail
+                @label={{r.currency}}
+                @value='{{r.rate}}'
+              />{{/if}}{{/each}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

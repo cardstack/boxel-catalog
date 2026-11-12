@@ -30,8 +30,8 @@ import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Panel } from '@cardstack/pretui/components/panel';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { FitTile } from '../shared/fit-tile';
-import { FitRows, TypeMark, lowercase } from './components/fit-rows';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
+import { TypeMark, lowercase } from './components/fit-rows';
 import {
   KeyValue,
   type KeyValueItem,
@@ -756,62 +756,58 @@ export class Case extends CardDef {
       return caseView(this.args.model);
     }
     <template>
-      <FitRows @items={{this.v.fitRows}}>
-        <:tile>
-          <FitTile>
-            <:avatar><TypeMark @label='Cs' /></:avatar>
-            <:title><span
-                class='fit-title'
-                role='heading'
-                aria-level='3'
-              >{{@model.subject}}</span></:title>
-            <:subtitle>{{this.v.subline}}</:subtitle>
-            <:status>
-              {{#if this.v.severityLabel}}<Chip
-                  @tone={{this.v.severityTone}}
+      <RichFittedCard>
+        <:avatar><TypeMark @label='Cs' /></:avatar>
+        <:title><span
+            role='heading'
+            aria-level='3'
+          >{{@model.subject}}</span></:title>
+        <:subtitle>{{this.v.subline}}</:subtitle>
+        <:status>
+          {{#if this.v.severityLabel}}<Chip
+              @tone={{this.v.severityTone}}
+              @appearance='plain'
+            >{{lowercase this.v.severityLabel}}</Chip>{{/if}}
+        </:status>
+        <:details>
+          {{#each this.v.fitRows as |item|}}
+            <Detail @label={{item.key}}>
+              {{#if (isKey item.key 'Status')}}
+                <Chip
+                  @tone={{this.v.statusTone}}
                   @appearance='plain'
-                >{{lowercase this.v.severityLabel}}</Chip>{{/if}}
-            </:status>
-          </FitTile>
-        </:tile>
-        <:row as |item|>
-          {{#if (isKey item.key 'Status')}}
-            <Chip @tone={{this.v.statusTone}} @appearance='plain'>{{lowercase
-                item.value
-              }}</Chip>
-          {{else if (isKey item.key 'Workflow')}}
-            <Chip @tone='info' @appearance='plain'>{{lowercase
-                item.value
-              }}</Chip>
-          {{else if (isKey item.key 'Owner')}}
-            {{#if @model.owner}}<@fields.owner
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}{{item.value}}{{/if}}
-          {{else if (isKey item.key 'Duplicate of')}}
-            {{#if @model.duplicateOf}}<@fields.duplicateOf
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}{{item.value}}{{/if}}
-          {{else if (isKey item.key 'Previous owner')}}
-            <span class='fit-person'><Avatar
-                @name={{item.value}}
-                @size={{20}}
-                aria-hidden='true'
-              />{{item.value}}</span>
-          {{else}}
-            <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
-          {{/if}}
-        </:row>
-      </FitRows>
+                >{{lowercase item.value}}</Chip>
+              {{else if (isKey item.key 'Workflow')}}
+                <Chip @tone='info' @appearance='plain'>{{lowercase
+                    item.value
+                  }}</Chip>
+              {{else if (isKey item.key 'Owner')}}
+                {{#if @model.owner}}<@fields.owner
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}{{item.value}}{{/if}}
+              {{else if (isKey item.key 'Duplicate of')}}
+                {{#if @model.duplicateOf}}<@fields.duplicateOf
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{else}}{{item.value}}{{/if}}
+              {{else if (isKey item.key 'Previous owner')}}
+                <span class='fit-person'><Avatar
+                    @name={{item.value}}
+                    @size={{20}}
+                    aria-hidden='true'
+                  />{{item.value}}</span>
+              {{else}}
+                <span
+                  class={{if (isMono item.key) 'mono'}}
+                >{{item.value}}</span>
+              {{/if}}
+            </Detail>
+          {{/each}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
         @layer PretComponent {
-          .fit-title {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
           .fit-person {
             display: inline-flex;
             align-items: center;

@@ -12,6 +12,8 @@ import TagIcon from '@cardstack/boxel-icons/tag';
 import { Plan } from './plan';
 import { Service } from './service';
 import { formatMoney } from './line-item-totals';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { IsoFrame } from '../shared/compact-sheet';
 
 // Price — a specific amount + currency + billing interval for a Plan or a
@@ -132,70 +134,33 @@ export class Price extends CardDef {
       );
     }
     <template>
-      <div class='fitted'>
-        <div class='fmt badge'>
-          <TagIcon class='doc-icon' />
-          <span class='figure'>{{this.amountDisplay}}</span>
-        </div>
-        <div class='fmt strip'>
-          <TagIcon class='doc-icon' />
-          <span class='figure'>{{this.amountDisplay}}</span>
-          {{#if @model.billingInterval}}
-            <span class='chip'>{{@model.billingInterval}}</span>
-          {{/if}}
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><TagIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#if @model.billingInterval}}<StatePill
+              @label={{@model.billingInterval}}
+            />{{/if}}</:status>
+        <:subtitle>{{this.amountDisplay}}</:subtitle>
+        <:metric><Metric
+            @value={{this.amountDisplay}}
+            @label={{@model.billingInterval}}
+          /></:metric>
+        <:details>
+          {{#if @model.plan}}<Detail @label='Plan'><@fields.plan
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.service}}<Detail @label='Service'><@fields.service
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          color: var(--foreground);
-        }
-        .fmt {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-        }
-        .doc-icon {
-          width: 18px;
-          height: 18px;
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .figure {
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-        .chip {
-          font-size: 0.5625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          padding: var(--boxel-sp-6xs) var(--boxel-sp-2xs);
-          border-radius: 999px;
-          background: var(--muted);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-        }
-        @container fitted-card (max-width: 150px) and (max-height: 169px) {
-          .badge {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: var(--boxel-sp-xs);
-            text-align: center;
-          }
-        }
-        @container fitted-card (min-width: 151px) {
-          .strip {
-            display: flex;
-            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          }
         }
       </style>
     </template>

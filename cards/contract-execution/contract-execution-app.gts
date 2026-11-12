@@ -88,7 +88,7 @@ import {
   riskTone,
   type Tone,
 } from '../shared/compact-format';
-import { FitTile } from '../shared/fit-tile';
+import { Detail, Metric, RichFittedCard } from '../shared/rich-fitted-card';
 import { Note, StatStrip, type Stat } from './components';
 import { ObligationStats } from './tabs/obligations';
 import { ComplianceStats } from './tabs/compliance';
@@ -160,6 +160,30 @@ const ACTION_FORMS: LayoutControlForm[] = [
   { name: 'label', minWidth: 8 },
   { name: 'icon', minWidth: 1.75 },
 ];
+
+// Value in force, summed per currency; the largest currency leads and the
+// rest are counted in the subline.
+function valueInForce(contracts: Contract[]): { lead: string; sub: string } {
+  let inForce = contracts.filter(
+    (c: any) => isInForce(c.status) && typeof c.value?.amount === 'number',
+  );
+  let byCode = new Map<string, number>();
+  for (let c of inForce as any[]) {
+    let code = c.value.currency?.code ?? '';
+    byCode.set(code, (byCode.get(code) ?? 0) + c.value.amount);
+  }
+  let sorted = [...byCode].sort((a, b) => b[1] - a[1]);
+  let lead = sorted[0];
+  let others = sorted.length - 1;
+  return {
+    lead: lead ? compactMoney(lead[1], lead[0]) : '—',
+    sub: `${inForce.length} agreements${
+      others > 0
+        ? ` · ${others} other currenc${others === 1 ? 'y' : 'ies'}`
+        : ''
+    }`,
+  };
+}
 
 export class ContractExecutionView extends Component<
   typeof ContractExecutionApp
@@ -837,25 +861,7 @@ export class ContractExecutionView extends Component<
 
   /** Value in force, per currency: the largest currency leads. */
   get valueInForce(): { lead: string; sub: string } {
-    let inForce = this.contracts.filter(
-      (c: any) => isInForce(c.status) && typeof c.value?.amount === 'number',
-    );
-    let byCode = new Map<string, number>();
-    for (let c of inForce as any[]) {
-      let code = c.value.currency?.code ?? '';
-      byCode.set(code, (byCode.get(code) ?? 0) + c.value.amount);
-    }
-    let sorted = [...byCode].sort((a, b) => b[1] - a[1]);
-    let lead = sorted[0];
-    let others = sorted.length - 1;
-    return {
-      lead: lead ? compactMoney(lead[1], lead[0]) : '—',
-      sub: `${inForce.length} agreements${
-        others > 0
-          ? ` · ${others} other currenc${others === 1 ? 'y' : 'ies'}`
-          : ''
-      }`,
-    };
+    return valueInForce(this.contracts);
   }
 
   get longestWait(): number {
@@ -1307,12 +1313,90 @@ export class ContractExecutionApp extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof ContractExecutionApp> {
+    // The desk's masthead counts over every contract (no saved view), from
+    // the contract and obligation queries, not live: the tile shows the
+    // numbers as of its last render. Open deviations need the clause query,
+    // so the tile leaves them to the desk.
+    private query = (cls: typeof CardDef) => {
+      let ref = identifyCard(cls);
+      let query = ref ? { filter: { type: ref } } : undefined;
+      let url = (this.args.model as any)?.[realmURL];
+      let realms = url ? [url.href] : undefined;
+      return this.args.context?.getCards(
+        this,
+        () => query,
+        () => realms,
+      );
+    };
+    private contracts = this.query(Contract);
+    private obligations = this.query(Obligation);
+    private rows<T>(q: ReturnType<getCards> | undefined): T[] {
+      return ((q?.instances ?? []) as T[]).filter(Boolean);
+    }
+
+    // Undefined while loading, so the metric and details render nothing.
+    get s() {
+      if ([this.contracts, this.obligations].some((q) => !q || q.isLoading)) {
+        return undefined;
+      }
+      let contracts = this.rows<Contract>(this.contracts);
+      let obligations = this.rows<Obligation>(this.obligations);
+      let value = valueInForce(contracts);
+      let overdue = obligations.filter((o) => o.status === 'overdue').length;
+      // Open obligations met, as a percentage; nothing tracked shows no row.
+      let open = obligations.filter((o) => o.status !== 'closed');
+      let compliance = !obligations.length
+        ? undefined
+        : `${open.length ? Math.round(((open.length - overdue) / open.length) * 100) : 100}%`;
+      return {
+        value: value.lead,
+        agreements: value.sub,
+        overdue: String(overdue),
+        approval: String(
+          contracts.filter((c) => c.approvalChain?.status === 'in-progress')
+            .length,
+        ),
+        notice: String(
+          contracts.filter((c) => {
+            let d = c.daysToNotice;
+            return typeof d === 'number' && d >= 0 && d <= NOTICE_WINDOW_DAYS;
+          }).length,
+        ),
+        compliance,
+      };
+    }
+
     <template>
-      <FitTile>
+      <RichFittedCard>
+        <:avatar><ScaleIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Contract lifecycle desk</:subtitle>
-        <:fact>Repository · approvals · obligations · renewals</:fact>
-      </FitTile>
+        <:metric>{{#if this.s}}<Metric
+              @value={{this.s.value}}
+              @label='Value in force'
+            />{{/if}}</:metric>
+        <:fact>{{if
+            this.s
+            this.s.agreements
+            'Repository · approvals · obligations · renewals'
+          }}</:fact>
+        <:details>{{#if this.s}}
+            <Detail @label='Overdue obligations' @value={{this.s.overdue}} />
+            <Detail @label='In approval' @value={{this.s.approval}} />
+            <Detail @label='Notice inside 90 days' @value={{this.s.notice}} />
+            {{#if this.s.compliance}}<Detail
+                @label='Compliance'
+                @value={{this.s.compliance}}
+              />{{/if}}
+          {{/if}}</:details>
+      </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 

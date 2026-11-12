@@ -19,7 +19,7 @@ import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 
 import { Employee } from '../hr/employee';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { DocumentPreview } from './components/document-preview';
 import { shortHash } from './utils/evidence-hash';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
@@ -644,7 +644,7 @@ export class Document extends CardDef {
       return this.args.model as Document;
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Dc</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine this.doc}}</:subtitle>
@@ -656,11 +656,30 @@ export class Document extends CardDef {
             @tone={{if (hashed this.doc) 'success' 'warning'}}
           /></:status>
         <:fact><span class='mono'>{{hashLine this.doc}}</span></:fact>
+        <:metric><Metric @value={{@model.version}} @label='Version' /></:metric>
+        <:details>
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.info.author}}<Detail
+              @label='Author'
+              @value={{@model.info.author}}
+            />{{/if}}
+          <Detail
+            @label='Artefact'
+            @value={{if @model.file 'attached' 'none attached'}}
+          />
+          {{#if @model.tags.length}}<Detail
+              @label='Tags'
+              @value='{{@model.tags.length}}'
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.supersedes}}<@fields.supersedes
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

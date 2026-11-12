@@ -11,7 +11,7 @@ import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
 
 import { Document } from '../audit/document';
 import { CertificationAuthority } from '../audit/certification-authority';
-import { FitTile } from '../shared/fit-tile';
+import { Detail, Metric, RichFittedCard } from '../shared/rich-fitted-card';
 import { AuditComplianceDeskIsolated } from './desk';
 
 function initials(name?: string | null) {
@@ -232,22 +232,27 @@ export class AuditComplianceDesk extends CardDef {
       return counts(this.args.model.documents);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>{{initials
               @model.organisation
             }}</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Evidence register and audit vocabulary</:subtitle>
-        <:fact>{{this.c.total}}
-          documents ·
-          {{this.c.unhashed}}
-          unhashed ·
-          {{this.c.usable}}% usable</:fact>
+        <:metric><Metric
+            @value='{{this.c.usable}}%'
+            @label='Usable as evidence'
+          /></:metric>
+        <:details>
+          <Detail @label='Documents' @value='{{this.c.total}}' />
+          <Detail @label='Hashed' @value='{{this.c.hashed}}' />
+          <Detail @label='Not yet hashed' @value='{{this.c.unhashed}}' />
+          <Detail @label='Superseding' @value='{{this.c.superseding}}' />
+        </:details>
         <:relations>{{#if @model.authority}}<@fields.authority
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

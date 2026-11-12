@@ -1,4 +1,6 @@
 import { Button } from '@cardstack/pretui/components/button';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
+import { Chip } from '@cardstack/pretui/components/chip';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
 import {
@@ -23,7 +25,7 @@ import {
   type StepItem,
   type StepState,
 } from '@cardstack/pretui/components/step-list';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
+
 import { RecordEmbedded, RecordPage } from './record-views';
 import { relatedRealm } from './record-views';
 import { type Hue } from '@cardstack/catalog/components/state-pill';
@@ -287,40 +289,48 @@ export class Lead extends CardDef {
       return [m?.company, m?.source].filter(Boolean).join(' · ');
     }
     <template>
-      <CompactFitted
-        @mark={{if @model.cardTitle @model.cardTitle ''}}
-        @title={{@model.cardTitle}}
-        @sub={{this.subtitle}}
-        @fact={{if
-          (hasNumber @model.score)
-          (concat 'Score ' @model.score ' of 100')
-        }}
-        @big={{if (hasNumber @model.score) (concat '' @model.score)}}
-        @bigLabel='Score of 100'
-        @tags={{if
-          @model.status
-          (array (hash label=@model.status tone='info'))
-        }}
-      >
-        <:rows>
-          {{#if @model.company}}<CompactRow
-              @k='Company'
-              @v={{@model.company}}
+      <RichFittedCard>
+        <:avatar><Avatar
+            @name={{if @model.cardTitle @model.cardTitle ''}}
+            @shape='square'
+          /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#each
+            (if @model.status (array (hash label=@model.status tone='info')))
+            as |t|
+          }}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{if
+            (hasNumber @model.score)
+            (concat 'Score ' @model.score ' of 100')
+          }}</:fact>
+        <:metric><Metric
+            @value={{if (hasNumber @model.score) (concat '' @model.score)}}
+            @label='Score of 100'
+          /></:metric>
+        <:details>
+          {{#if @model.company}}<Detail
+              @label='Company'
+              @value={{@model.company}}
             />{{/if}}
-          {{#if @model.source}}<CompactRow
-              @k='Source'
-              @v={{@model.source}}
+          {{#if @model.source}}<Detail
+              @label='Source'
+              @value={{@model.source}}
             />{{/if}}
-          {{#if @model.email}}<CompactRow
-              @k='Email'
-              @v={{@model.email}}
+          {{#if @model.email}}<Detail
+              @label='Email'
+              @value={{@model.email}}
             />{{/if}}
-          {{#if @model.campaign}}<CompactRow @k='Campaign'><@fields.campaign
+          {{#if @model.campaign}}<Detail @label='Campaign'><@fields.campaign
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-        </:rows>
-      </CompactFitted>
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

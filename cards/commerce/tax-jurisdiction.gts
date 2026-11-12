@@ -11,6 +11,7 @@ import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import { hasNumber } from '../crm/utils';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 // Tax Jurisdiction — a region with its own tax rate. A lookup table, reused
 // across every invoice for that region, not duplicated per invoice.
@@ -115,68 +116,41 @@ export class TaxJurisdiction extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof TaxJurisdiction> {
+    get rateText() {
+      let rate = this.args.model?.rate;
+      return hasNumber(rate)
+        ? new Intl.NumberFormat('en-US', {
+            style: 'percent',
+            maximumFractionDigits: 4,
+          }).format(rateFraction(rate))
+        : '';
+    }
     <template>
-      <div class='fitted'>
-        <div class='fmt badge'>
-          <LandmarkIcon class='doc-icon' />
-          <span class='name'>{{@model.cardTitle}}</span>
-          <RatePercent class='rate' @rate={{@model.rate}} />
-        </div>
-        <div class='fmt strip'>
-          <LandmarkIcon class='doc-icon' />
-          <span class='name'>{{@model.cardTitle}}</span>
-          <RatePercent class='rate' @rate={{@model.rate}} />
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><LandmarkIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{#if this.rateText}}{{this.rateText}}
+            rate{{/if}}</:subtitle>
+        <:metric>{{#if this.rateText}}<Metric
+              @value={{this.rateText}}
+              @label='Rate'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.region}}<Detail
+              @label='Region'
+              @value={{@model.region}}
+            />{{/if}}
+          {{#if @model.country}}<Detail
+              @label='Country'
+              @value={{@model.country}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          color: var(--foreground);
-        }
-        .fmt {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-        }
-        .doc-icon {
-          width: 1.125rem;
-          height: 1.125rem;
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-xs);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          flex: 1;
-        }
-        .rate {
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          font-size: var(--boxel-font-size-xs);
-          white-space: nowrap;
-        }
-        @container fitted-card (max-width: 150px) and (max-height: 169px) {
-          .badge {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: var(--boxel-sp-xs);
-            text-align: center;
-          }
-        }
-        @container fitted-card (min-width: 151px) {
-          .strip {
-            display: flex;
-            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          }
         }
       </style>
     </template>

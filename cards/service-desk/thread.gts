@@ -22,8 +22,7 @@ import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import { PersonBase } from '../people/person-base';
-import { FitTile } from '../shared/fit-tile';
-import { FittedExtras } from '../procurement/vendor';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   RecBlock,
   RecBody,
@@ -295,23 +294,25 @@ export class Thread extends CardDef {
         { key: 'Closed', value: m?.closed ? 'yes' : 'no' },
       ];
     }
-    relations = ['About'];
     <template>
-      <FittedExtras @facts={{this.facts}} @relations={{this.relations}}>
-        <:default>
-          <FitTile>
-            <:avatar><span class='mark' aria-hidden='true'>Th</span></:avatar>
-            <:title>{{@model.cardTitle}}</:title>
-            <:subtitle>{{threadSub @model}}</:subtitle>
-            <:status><ThreadStatus @model={{@model}} /></:status>
-            <:fact>Last activity
-              <strong>{{shortDate @model.lastActivityAt}}</strong></:fact>
-          </FitTile>
-        </:default>
-        <:relation>{{#if @model.about}}<@fields.about
-              @format='atom'
-            />{{else}}—{{/if}}</:relation>
-      </FittedExtras>
+      <RichFittedCard>
+        <:avatar><span class='mark' aria-hidden='true'>Th</span></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{threadSub @model}}</:subtitle>
+        <:status><ThreadStatus @model={{@model}} /></:status>
+        <:fact>Last activity
+          <strong>{{shortDate @model.lastActivityAt}}</strong></:fact>
+        <:details>
+          {{#each this.facts as |item|}}<Detail
+              @label={{item.key}}
+              @value={{item.value}}
+            />{{/each}}
+          <Detail @label='About'>{{#if @model.about}}<@fields.about
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</Detail>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: grid;

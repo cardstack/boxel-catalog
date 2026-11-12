@@ -1,4 +1,5 @@
 import { RelatedList, relatedSearch } from '../crm/record-views';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   resolveRRIReference,
   type RealmResourceIdentifier,
@@ -21,7 +22,7 @@ import {
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { CompactFitted, CompactRow, fmtDate, orEmpty } from './compact-parts';
+import { fmtDate, orEmpty } from './compact-parts';
 import { Opportunity } from '../crm/opportunity';
 import { Contact } from '../crm/contact';
 import { formatMoney, hasNumber } from '../crm/utils';
@@ -112,46 +113,48 @@ export class Deal extends Opportunity {
       return facts(this.args.model as Deal);
     }
     <template>
-      <CompactFitted
-        @mark='Deal'
-        @title={{@model.cardTitle}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.fact}}
-        @big={{this.f.money}}
-        @bigLabel='Value'
-        @tags={{this.f.tags}}
-      >
-        <:rows>
-          {{#if this.f.weightedText}}<CompactRow
-              @k='Weighted'
-              @v={{this.f.weightedText}}
+      <RichFittedCard>
+        <:avatar><Avatar @name='Deal' @shape='square' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.fact}}</:fact>
+        <:metric><Metric @value={{this.f.money}} @label='Value' /></:metric>
+        <:details>
+          {{#if this.f.weightedText}}<Detail
+              @label='Weighted'
+              @value={{this.f.weightedText}}
             />{{/if}}
-          {{#if this.f.closeText}}<CompactRow
-              @k='Close date'
-              @v={{this.f.closeText}}
+          {{#if this.f.closeText}}<Detail
+              @label='Close date'
+              @value={{this.f.closeText}}
             />{{/if}}
-          {{#if @model.account}}<CompactRow @k='Account'><@fields.account
+          {{#if @model.account}}<Detail @label='Account'><@fields.account
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if @model.daysInStage}}<CompactRow
-              @k='Days in stage'
-              @v='{{@model.daysInStage}}'
+              /></Detail>{{/if}}
+          {{#if @model.daysInStage}}<Detail
+              @label='Days in stage'
+              @value='{{@model.daysInStage}}'
             />{{/if}}
-          {{#if this.f.competitors}}<CompactRow
-              @k='Competitors'
-              @v={{this.f.competitors}}
+          {{#if this.f.competitors}}<Detail
+              @label='Competitors'
+              @value={{this.f.competitors}}
             />{{/if}}
-          {{#if @model.owner}}<CompactRow @k='Owner'><@fields.owner
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if @model.decisionMakers.length}}<CompactRow
-              @k='Decision makers'
-              @v='{{@model.decisionMakers.length}}'
+              /></Detail>{{/if}}
+          {{#if @model.decisionMakers.length}}<Detail
+              @label='Decision makers'
+              @value='{{@model.decisionMakers.length}}'
             />{{/if}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

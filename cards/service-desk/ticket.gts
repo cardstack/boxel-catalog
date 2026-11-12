@@ -35,8 +35,7 @@ import { Chip } from '@cardstack/pretui/components/chip';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { FitTile } from '../shared/fit-tile';
-import { FittedExtras } from '../procurement/vendor';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { IsoFrame } from '../shared/compact-sheet';
 
 function daysBetween(
@@ -846,45 +845,39 @@ export class Ticket extends CardDef {
         { key: 'Resolution due', value: m?.slaDueLabel || '—' },
       ];
     }
-    get stats() {
-      let m = this.args.model;
-      let msgs = (m?.messages ?? []).filter(Boolean).length;
-      return [
-        { key: 'Priority', value: m?.priority || '—' },
-        { key: 'Status', value: m?.status || '—' },
-        { key: 'Messages', value: String(msgs) },
-      ];
+    get messageCount() {
+      return String((this.args.model?.messages ?? []).filter(Boolean).length);
     }
     <template>
-      <FittedExtras @facts={{this.facts}} @stats={{this.stats}}>
-        <:default>
-          <FitTile>
-            <:avatar><Avatar
-                @name='Ticket'
-                @shape='square'
-                @size={{32}}
-              /></:avatar>
-            <:title>{{@model.subject}}</:title>
-            <:subtitle>{{@model.reference}}
-              ·
-              {{@model.customerName}}{{@model.customerSuffix}}</:subtitle>
-            <:status>
-              <Chip
-                @appearance='plain'
-                @tone={{ticketStatusTone @model.status}}
-              >{{@model.status}}</Chip>
-              <Chip
-                @appearance='plain'
-                @tone={{ticketPriorityTone @model.priority}}
-              >{{@model.priority}}</Chip>
-            </:status>
-            <:fact>{{@model.slaDueLabel}}</:fact>
-            <:relations>{{@model.assigneeName}}{{#if @model.queueName}}
-                ·
-                {{@model.queueName}}{{/if}}</:relations>
-          </FitTile>
-        </:default>
-      </FittedExtras>
+      <RichFittedCard>
+        <:avatar><Avatar @name='Ticket' @shape='square' /></:avatar>
+        <:title>{{@model.subject}}</:title>
+        <:subtitle>{{@model.reference}}
+          ·
+          {{@model.customerName}}{{@model.customerSuffix}}</:subtitle>
+        <:status>
+          <Chip
+            @appearance='plain'
+            @tone={{ticketStatusTone @model.status}}
+          >{{@model.status}}</Chip>
+          <Chip
+            @appearance='plain'
+            @tone={{ticketPriorityTone @model.priority}}
+          >{{@model.priority}}</Chip>
+        </:status>
+        <:fact>{{@model.slaDueLabel}}</:fact>
+        <:metric><Metric
+            @value={{this.messageCount}}
+            @label='Messages'
+          /></:metric>
+        <:details>{{#each this.facts as |item|}}<Detail
+              @label={{item.key}}
+              @value={{item.value}}
+            />{{/each}}</:details>
+        <:relations>{{@model.assigneeName}}{{#if @model.queueName}}
+            ·
+            {{@model.queueName}}{{/if}}</:relations>
+      </RichFittedCard>
     </template>
   };
 }

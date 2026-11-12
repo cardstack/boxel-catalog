@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   CardDef,
   Component,
@@ -23,11 +24,7 @@ import { concat } from '@ember/helper';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
-import {
-  CompactFitted,
-  CompactRow,
-  type CompactTag,
-} from '../commerce/compact-parts';
+import { type CompactTag } from '../commerce/compact-parts';
 import { lineTotal, sumLineItems } from '../commerce/line-item-totals';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
@@ -771,25 +768,28 @@ export class Rfq extends CardDef {
       return [{ label: this.f.statusLabel, tone: this.f.tone }];
     }
     <template>
-      <CompactFitted
-        @mark='R Q'
-        @title={{this.f.title}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.lowestFact}}
-        @tags={{this.tags}}
-      >
-        <:rows>
-          <CompactRow @k='Deadline' @v={{this.f.deadline}} />
-          <CompactRow @k='Quotes in' @v={{this.f.quotesOf}} />
-          <CompactRow @k='Highest' @v={{this.f.highest}} />
-          <CompactRow @k='Fastest lead' @v={{this.f.fastest}} />
-          <CompactRow @k='Lines' @v={{this.f.lineCount}} />
-          <CompactRow @k='Awarded' @v={{this.f.awardedText}} />
+      <RichFittedCard>
+        <:avatar><Avatar @name='R Q' @shape='square' /></:avatar>
+        <:title>{{this.f.title}}</:title>
+        <:status>{{#each this.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.lowestFact}}</:fact>
+        <:details>
+          <Detail @label='Deadline' @value={{this.f.deadline}} />
+          <Detail @label='Quotes in' @value={{this.f.quotesOf}} />
+          <Detail @label='Highest' @value={{this.f.highest}} />
+          <Detail @label='Fastest lead' @value={{this.f.fastest}} />
+          <Detail @label='Lines' @value={{this.f.lineCount}} />
+          <Detail @label='Awarded' @value={{this.f.awardedText}} />
           {{#each this.f.lines as |l|}}
-            <CompactRow @k={{l.description}} @v={{l.total}} />
+            <Detail @label={{l.description}} @value={{l.total}} />
           {{/each}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

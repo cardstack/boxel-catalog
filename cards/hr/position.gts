@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
@@ -34,8 +35,6 @@ import { formatMoney } from './utils';
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -621,6 +620,10 @@ export class Position extends CardDef {
   };
 
   static fitted = class Fitted extends PositionView {
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let m = this.args.model;
       return [
@@ -633,46 +636,50 @@ export class Position extends CardDef {
       ];
     }
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><PositionMark /></:mark>
+      <RichFittedCard>
+        <:avatar><PositionMark /></:avatar>
+        <:title>{{@model.title}}</:title>
         <:status>{{#if @model.status}}<@fields.status
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:status>
-        <:default>
-          <FitRow @left={{true}}><span
-              class='meta'
-            >{{this.subline}}</span></FitRow>
-          <FitRow @label='Level'>{{this.facts.level}}</FitRow>
-          <FitRow @label='Start by'><span
+        <:subtitle><span class='meta'>{{this.subline}}</span></:subtitle>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
+        <:details>
+
+          <Detail @label='Level'>{{this.facts.level}}</Detail>
+          <Detail @label='Start by'><span
               class='mono'
-            >{{this.facts.start}}</span></FitRow>
+            >{{this.facts.start}}</span></Detail>
           {{#if @model.hiringManager}}
-            <FitRow @label='Hiring mgr' @left={{true}}><@fields.hiringManager
+            <Detail @label='Hiring mgr'><@fields.hiringManager
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <FitRow @label='Salary'><span
+          <Detail @label='Salary'><span
               class='mono'
-            >{{this.facts.salary}}</span></FitRow>
-          <StatStrip @compact={{true}} @items={{this.strip}} />
+            >{{this.facts.salary}}</span></Detail>
+
           {{#if @model.interviewPlan}}
-            <FitRow @label='Plan' @left={{true}}><@fields.interviewPlan
+            <Detail @label='Plan'><@fields.interviewPlan
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{/if}}
-          <FitRow @label='Type'>{{this.facts.type}}</FitRow>
-          <FitRow @label='Location'>{{this.facts.location}}</FitRow>
-          <FitRow @label='Posted'><span
+          <Detail @label='Type'>{{this.facts.type}}</Detail>
+          <Detail @label='Location'>{{this.facts.location}}</Detail>
+          <Detail @label='Posted'><span
               class='mono'
-            >{{this.facts.posted}}</span></FitRow>
-          <FitRow @label='Requisition'><span
+            >{{this.facts.posted}}</span></Detail>
+          <Detail @label='Requisition'><span
               class='mono'
-            >{{this.facts.requisition}}</span></FitRow>
-        </:default>
-      </FitCard>
+            >{{this.facts.requisition}}</span></Detail>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

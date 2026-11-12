@@ -9,7 +9,7 @@ import {
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { Survey } from './survey';
 import { IsoFrame } from '../shared/compact-sheet';
 
@@ -220,7 +220,7 @@ export class SurveyResponse extends CardDef {
       return responseFacts(this.args.model as SurveyResponse);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Rs</span></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>{{this.facts.count}}</:subtitle>
@@ -232,11 +232,21 @@ export class SurveyResponse extends CardDef {
               this.facts.count
             }}</span></:status>
         <:fact>{{this.facts.summary}}</:fact>
+        <:metric>{{#if this.facts.score}}<Metric
+              @value={{this.facts.score}}
+              @label='Rating'
+            />{{/if}}</:metric>
+        <:details>
+          {{#each this.facts.answers as |a|}}<Detail
+              @label={{if a.prompt a.prompt 'Question'}}
+              @value={{a.response}}
+            />{{/each}}
+        </:details>
         <:relations>{{#if @model.survey}}<@fields.survey
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

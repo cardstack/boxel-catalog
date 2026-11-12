@@ -26,6 +26,7 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 
 import { Vendor } from './vendor';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   statusField,
   statusHue,
@@ -1058,229 +1059,48 @@ export class VendorProfile extends CardDef {
     get certs() {
       return (this.args.model?.certifications ?? []).filter(Boolean);
     }
-    // Under 250 wide the mock shows short values and skips Certifications.
+    // insurance is the metric and certifications have their own count row
     get rows() {
-      let m = this.args.model as VendorProfile;
-      let short: Record<string, string> = {
-        Insurance: fmtDate(m?.insuranceExpiry, true),
-        Terms: netLabel(m),
-      };
-      return detailRows(m).map((r) => ({
-        ...r,
-        short: short[r.key] ?? r.value,
-        wideOnly: r.key === 'Certifications',
-      }));
+      return detailRows(this.args.model as VendorProfile).filter(
+        (r) => r.key !== 'Insurance' && r.key !== 'Certifications',
+      );
     }
     <template>
-      <div class='fit'>
-        <div class='fx'>
-          <div class='fr fh'>
-            <Avatar
-              @name={{if @model.companyName @model.companyName 'Vendor'}}
-              @shape='rounded'
-              @size={{20}}
-            />
-            <span class='nm'>{{@model.title}}</span>
-            <span class='wide'><StatusChip
-                @value={{statusText @model}}
-                @hue={{profileHue @model}}
+      <RichFittedCard>
+        <:avatar><Avatar
+            @name={{if @model.companyName @model.companyName 'Vendor'}}
+            @shape='rounded'
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:status><StatusChip
+            @value={{statusText @model}}
+            @hue={{profileHue @model}}
+            @appearance='plain'
+          /></:status>
+        <:subtitle>{{profileSub @model}}</:subtitle>
+        <:fact>{{insuredFact @model}} · {{netLabel @model}}</:fact>
+        <:metric><Metric
+            @value={{fmtDate @model.insuranceExpiry true}}
+            @label='Insured to'
+          /></:metric>
+        <:details>
+          <Detail
+            @label='Certs'
+            @value='{{validCertCount @model}} / {{certCount @model}}'
+          />
+          {{#each this.rows as |row|}}<Detail
+              @label={{row.key}}
+              @value={{row.value}}
+            />{{/each}}
+          {{#each this.certs as |c|}}<Detail
+              @label={{if c.name c.name 'Certification'}}
+            ><StatusChip
+                @value={{if c.isExpired 'expired' 'valid'}}
+                @hue={{if c.isExpired 'red' 'green'}}
                 @appearance='plain'
-              /></span>
-            <span class='narrow dot' title={{statusText @model}}><StatusChip
-                @value={{statusText @model}}
-                @hue={{profileHue @model}}
-                @appearance='plain'
-              /></span>
-          </div>
-          <div class='fr'>
-            <span class='meta wide'>{{profileSub @model}}</span>
-            <span class='meta narrow'>{{if
-                @model.contactName
-                @model.contactName
-                @model.serviceCategory
-              }}</span>
-          </div>
-          <div class='fr'>
-            <span class='mono wide'>{{insuredFact @model}}
-              ·
-              {{netLabel @model}}</span>
-            <span class='mono narrow'>{{insuredFact @model true}}</span>
-          </div>
-          <div class='fr narrow-row'>
-            <StatusChip
-              @value={{statusText @model}}
-              @hue={{profileHue @model}}
-              @appearance='plain'
-            />
-          </div>
-          <div class='frs'>
-            <div class='stat'><span class='cap'>Insured to</span><span
-                class='num'
-              >{{fmtDate @model.insuranceExpiry true}}</span></div>
-            <div class='stat'><span class='cap'>Certs</span><span
-                class='num'
-              >{{validCertCount @model}} / {{certCount @model}}</span></div>
-            <div class='stat'><span class='cap'>Terms</span><span
-                class='num'
-              >{{netLabel @model}}</span></div>
-          </div>
-          {{#each this.rows as |row|}}
-            <div class='fr fk {{if row.wideOnly "wide-row"}}'>
-              <span class='cap'>{{row.key}}</span>
-              <span class='mono v wide'>{{row.value}}</span>
-              <span class='mono v narrow'>{{row.short}}</span>
-            </div>
-          {{/each}}
-          {{#if this.certs.length}}
-            <div class='fr'><span class='cap'>Certifications</span></div>
-            {{#each this.certs as |c|}}
-              <div class='fr'>
-                <span class='ln'>{{c.name}}</span>
-                <StatusChip
-                  @value={{if c.isExpired 'expired' 'valid'}}
-                  @hue={{if c.isExpired 'red' 'green'}}
-                  @appearance='plain'
-                />
-              </div>
-            {{/each}}
-          {{/if}}
-        </div>
-      </div>
-      <style scoped>
-        .fit {
-          container-type: size;
-          block-size: 100%;
-          inline-size: 100%;
-          overflow: hidden;
-          font-size: 0.75rem;
-          line-height: 1.3;
-          color: var(--foreground);
-        }
-        .fx {
-          display: flex;
-          flex-direction: column;
-          flex-wrap: wrap;
-          align-content: flex-start;
-          block-size: 100%;
-        }
-        .fr,
-        .frs {
-          flex: none;
-          inline-size: 100%;
-          box-sizing: border-box;
-        }
-        .fr {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          block-size: 1.75rem;
-          padding-inline: 0.625rem;
-          overflow: hidden;
-          white-space: nowrap;
-          min-inline-size: 0;
-        }
-        .fr + .fr,
-        .fr + .frs,
-        .frs + .fr {
-          border-top: 1px solid var(--border);
-        }
-        .nm {
-          flex: 1;
-          min-inline-size: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-weight: 700;
-        }
-        .fk {
-          justify-content: space-between;
-          gap: 0.5rem;
-        }
-        .meta,
-        .mono,
-        .ln,
-        .v {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          min-inline-size: 0;
-        }
-        .ln {
-          flex: 1;
-        }
-        .meta {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-        }
-        .mono {
-          font-family: var(--font-mono);
-          font-size: 0.6875rem;
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
-        }
-        .cap {
-          flex: none;
-          font-family: var(--font-mono);
-          font-size: 0.5625rem;
-          font-weight: 600;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .frs {
-          display: none;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          block-size: 3.5rem;
-          overflow: hidden;
-        }
-        .stat {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: 0.25rem;
-          padding-inline: 0.625rem;
-          min-inline-size: 0;
-          white-space: nowrap;
-        }
-        .stat + .stat {
-          border-inline-start: 1px solid var(--border);
-        }
-        .num {
-          font-size: 1.375rem;
-          font-weight: 700;
-          line-height: 1;
-          font-variant-numeric: tabular-nums;
-        }
-        .wide,
-        .wide-row {
-          display: none;
-        }
-        .dot {
-          flex: none;
-          inline-size: 0.5rem;
-          overflow: hidden;
-        }
-        @container (min-width: 250px) {
-          .wide {
-            display: inline;
-          }
-          .narrow,
-          .narrow-row {
-            display: none;
-          }
-          .wide-row {
-            display: flex;
-          }
-        }
-        @container (min-width: 400px) and (min-height: 250px) {
-          .frs {
-            display: grid;
-          }
-        }
-        @container (max-height: 45px) {
-          .fh {
-            block-size: 100cqh;
-          }
-        }
-      </style>
+              /></Detail>{{/each}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

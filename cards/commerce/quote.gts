@@ -17,14 +17,14 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { Table } from '@cardstack/pretui/components/table';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { Money } from '../crm/money';
 import { Deal } from './deal';
 import { LineItem } from './line-item';
 import { Proposal } from './proposal';
-import { lineTotal, sumLineItems } from './line-item-totals';
+import { formatMoney, lineTotal, sumLineItems } from './line-item-totals';
 import { hasNumber } from '../crm/utils';
 import { orEmpty } from './compact-parts';
 import { IsoFrame } from '../shared/compact-sheet';
@@ -190,8 +190,8 @@ export class Quote extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Quote> {
     <template>
-      <FitTile>
-        <:avatar><Avatar @name='Quote' @shape='square' @size={{32}} /></:avatar>
+      <RichFittedCard>
+        <:avatar><Avatar @name='Quote' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{quoteSub @model}}</:subtitle>
         <:status>{{#if @model.status}}<StatusChip
@@ -202,11 +202,31 @@ export class Quote extends CardDef {
           ·
           {{@model.lineItems.length}}
           items</:fact>
+        <:metric>{{#if @model.lineItems.length}}<Metric
+              @value={{formatMoney @model.total (quoteCurrency @model)}}
+              @label='Total'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.version}}<Detail
+              @label='Version'
+              @value='v{{@model.version}}'
+            />{{/if}}
+          {{#if @model.supersedes}}<Detail
+              @label='Supersedes'
+            ><@fields.supersedes
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.proposal}}<Detail @label='Proposal'><@fields.proposal
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
         <:relations>{{#if @model.deal}}<@fields.deal
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

@@ -5,6 +5,7 @@ import {
   contains,
   field,
 } from '@cardstack/base/card-api';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import NumberField from '@cardstack/base/number';
 import UrlField from '@cardstack/base/url';
 import BuildingIcon from '@cardstack/boxel-icons/building';
@@ -16,8 +17,6 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -202,32 +201,31 @@ export class CertificationAuthority extends CardDef {
       return facts(this.args.model);
     }
     <template>
-      <FitCard @title={{@model.cardTitle}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name={{sealName @model.name}}
             @src={{@model.seal.resolvedUrl}}
             @hue={{AVATAR_HUE}}
-            @size={{20}}
             aria-hidden='true'
-          /></:mark>
+          /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
         <:status><DotLabel @label='{{this.f.prefix}} prefix' /></:status>
-        <:default>
-          <FitRow @left={{true}}><span
-              class='meta'
-            >{{this.f.meta}}</span></FitRow>
-          <FitRow @label='Last number'><span
+        <:subtitle><span class='meta'>{{this.f.meta}}</span></:subtitle>
+        <:details>
+
+          <Detail @label='Last number'><span
               class='mono'
-            >{{this.f.latest}}</span></FitRow>
-          <FitRow @label='Issued'><span
+            >{{this.f.latest}}</span></Detail>
+          <Detail @label='Issued'><span
               class='mono'
-            >{{this.f.issued}}</span></FitRow>
-          <FitRow @label='Title'>{{this.f.title}}</FitRow>
-          <FitRow @label='Last sequence'><span
+            >{{this.f.issued}}</span></Detail>
+          <Detail @label='Title'>{{this.f.title}}</Detail>
+          <Detail @label='Last sequence'><span
               class='mono'
-            >{{this.f.last}}</span></FitRow>
-          <FitRow @label='Verify base'>{{this.f.verify}}</FitRow>
-        </:default>
-      </FitCard>
+            >{{this.f.last}}</span></Detail>
+          <Detail @label='Verify base'>{{this.f.verify}}</Detail>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           color: var(--muted-foreground);

@@ -35,7 +35,7 @@ import {
 import { Stat } from '@cardstack/pretui/components/stat';
 
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import { Detail, Metric, RichFittedCard } from '../shared/rich-fitted-card';
 import {
   PropertyListing,
   PROPERTY_LISTING_STATUSES,
@@ -70,6 +70,40 @@ function isLive(listing: PropertyListing) {
   let status = statusOf(listing);
   return status === 'published' || status === 'under-offer';
 }
+
+// Asking prices are summed only within one currency; a book priced in
+// several has no single value on the market.
+function valueOnMarket(onMarket: PropertyListing[]): string {
+  let codes = new Set(
+    onMarket.map((l) => l.askingPrice?.currency?.code ?? 'USD'),
+  );
+  if (codes.size > 1) {
+    return '—';
+  }
+  let total = onMarket.reduce(
+    (sum, l) => sum + (l.askingPrice?.amount ?? 0),
+    0,
+  );
+  return money(total, [...codes][0] ?? 'USD');
+}
+
+function avgDaysOnMarket(onMarket: PropertyListing[]): number | string {
+  let doms = onMarket
+    .map((l) => l.daysOnMarket)
+    .filter((d): d is number => d != null);
+  if (!doms.length) {
+    return '—';
+  }
+  return Math.round(doms.reduce((a, b) => a + b, 0) / doms.length);
+}
+
+// Needs attention: live listings stale on the market, and drafts missing
+// photos or a price.
+const isStale = (l: PropertyListing) =>
+  isLive(l) && (l.daysOnMarket ?? 0) >= STALE_DAYS;
+const isUnprepared = (l: PropertyListing) =>
+  statusOf(l) === 'draft' &&
+  (!(l.photoCount ?? 0) || l.askingPrice?.amount == null);
 
 function publishedTime(listing: PropertyListing): number {
   let at = listing.publishedAt;
@@ -179,21 +213,9 @@ class PropertyMarketplaceIsolated extends Component<
     return this.listings.filter(isLive);
   }
 
-  // Asking prices are summed only within one currency; a book priced in
-  // several has no single value on the market.
   @cached
   get valueOnMarket(): string {
-    let codes = new Set(
-      this.onMarket.map((l) => l.askingPrice?.currency?.code ?? 'USD'),
-    );
-    if (codes.size > 1) {
-      return '—';
-    }
-    let total = this.onMarket.reduce(
-      (sum, l) => sum + (l.askingPrice?.amount ?? 0),
-      0,
-    );
-    return money(total, [...codes][0] ?? 'USD');
+    return valueOnMarket(this.onMarket);
   }
 
   get valueHint() {
@@ -214,13 +236,7 @@ class PropertyMarketplaceIsolated extends Component<
 
   @cached
   get avgDom(): number | string {
-    let doms = this.onMarket
-      .map((l) => l.daysOnMarket)
-      .filter((d): d is number => d != null);
-    if (!doms.length) {
-      return '—';
-    }
-    return Math.round(doms.reduce((a, b) => a + b, 0) / doms.length);
+    return avgDaysOnMarket(this.onMarket);
   }
 
   @cached
@@ -239,17 +255,13 @@ class PropertyMarketplaceIsolated extends Component<
   @cached
   get stale(): PropertyListing[] {
     return this.onMarket
-      .filter((l) => (l.daysOnMarket ?? 0) >= STALE_DAYS)
+      .filter(isStale)
       .sort((a, b) => (b.daysOnMarket ?? 0) - (a.daysOnMarket ?? 0));
   }
 
   @cached
   get unprepared(): PropertyListing[] {
-    return this.listings.filter(
-      (l) =>
-        statusOf(l) === 'draft' &&
-        (!(l.photoCount ?? 0) || l.askingPrice?.amount == null),
-    );
+    return this.listings.filter(isUnprepared);
   }
 
   get attentionCount() {
@@ -879,11 +891,64 @@ export class PropertyMarketplaceApp extends CardDef {
   static fitted = class Fitted extends Component<
     typeof PropertyMarketplaceApp
   > {
+    // The book's market summary, from one query that is not live: the tile
+    // shows the numbers as of its last render.
+    private listings = (() => {
+      let ref = identifyCard(PropertyListing);
+      let query = ref ? { filter: { type: ref } } : undefined;
+      let url = this.args.model?.[realmURL];
+      let realms = url ? [url.href] : undefined;
+      return this.args.context?.getCards(
+        this,
+        () => query,
+        () => realms,
+      );
+    })();
+
+    // Undefined while loading, so the metric and details render nothing.
+    get s() {
+      let q = this.listings;
+      if (!q || q.isLoading) return undefined;
+      let all = (q.instances as PropertyListing[]).filter(Boolean);
+      let onMarket = all.filter(isLive);
+      let count = (status: string) =>
+        String(all.filter((l) => statusOf(l) === status).length);
+      let attention =
+        all.filter(isStale).length + all.filter(isUnprepared).length;
+      return {
+        active: count('published'),
+        underOffer: count('under-offer'),
+        value: valueOnMarket(onMarket),
+        avgDom: String(avgDaysOnMarket(onMarket)),
+        fact: attention
+          ? `${attention} ${attention === 1 ? 'listing needs' : 'listings need'} attention`
+          : undefined,
+      };
+    }
+
     <template>
-      <FitTile>
+      <RichFittedCard>
+        <:avatar><HouseIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>Property Marketplace</:title>
         <:subtitle>Value on the market, the book and what needs attention</:subtitle>
-      </FitTile>
+        <:metric>{{#if this.s}}<Metric
+              @value={{this.s.active}}
+              @label='Active listings'
+            />{{/if}}</:metric>
+        <:fact>{{this.s.fact}}</:fact>
+        <:details>{{#if this.s}}
+            <Detail @label='Value on the market' @value={{this.s.value}} />
+            <Detail @label='Under offer' @value={{this.s.underOffer}} />
+            <Detail @label='Avg days on market' @value={{this.s.avgDom}} />
+          {{/if}}</:details>
+      </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 }

@@ -4,6 +4,8 @@ import {
   field,
   linksTo,
 } from 'https://cardstack.com/base/card-api';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
+import { Chip } from '@cardstack/pretui/components/chip';
 import { array, hash } from '@ember/helper';
 import StringField from 'https://cardstack.com/base/string';
 import PhoneNumberField from 'https://cardstack.com/base/phone-number';
@@ -12,7 +14,7 @@ import ContactIcon from '@cardstack/boxel-icons/address-book';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
+
 import { RecordEmbedded, RecordPage } from './record-views';
 import { RelatedList, relatedSearch, shortDate, usd } from './record-views';
 import { Account } from './account';
@@ -123,29 +125,41 @@ export class Contact extends PersonBase {
       return [m?.jobTitle, m?.account?.name].filter(Boolean).join(' · ');
     }
     <template>
-      <CompactFitted
-        @mark={{if @model.cardTitle @model.cardTitle ''}}
-        @title={{@model.cardTitle}}
-        @sub={{this.subtitle}}
-        @fact={{@model.role}}
-        @tags={{if @model.role (array (hash label=@model.role tone='info'))}}
-      >
-        <:rows>
-          {{#if @model.role}}<CompactRow @k='Role' @v={{@model.role}} />{{/if}}
-          {{#if @model.email}}<CompactRow
-              @k='Email'
-              @v={{@model.email}}
+      <RichFittedCard>
+        <:avatar><Avatar
+            @name={{if @model.cardTitle @model.cardTitle ''}}
+            @shape='square'
+          /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#each
+            (if @model.role (array (hash label=@model.role tone='info')))
+            as |t|
+          }}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{@model.role}}</:fact>
+        <:details>
+          {{#if @model.role}}<Detail
+              @label='Role'
+              @value={{@model.role}}
             />{{/if}}
-          {{#if @model.account}}<CompactRow @k='Account'><@fields.account
+          {{#if @model.email}}<Detail
+              @label='Email'
+              @value={{@model.email}}
+            />{{/if}}
+          {{#if @model.account}}<Detail @label='Account'><@fields.account
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if @model.phone}}<CompactRow
-              @k='Phone'
-              @v={{@model.phone}}
+              /></Detail>{{/if}}
+          {{#if @model.phone}}<Detail
+              @label='Phone'
+              @value={{@model.phone}}
             />{{/if}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

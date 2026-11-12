@@ -16,6 +16,8 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Subscription } from './subscription';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
+import { fmtDate } from './compact-parts';
 
 /**
  * The party on the receiving end of subscriptions — who holds them, since
@@ -149,60 +151,39 @@ export class Subscriber extends CardDef {
       return n === 1 ? '1 plan' : `${n} plans`;
     }
     <template>
-      <div class='fitted'>
-        <span class='name'>{{if
+      <RichFittedCard>
+        <:avatar><RepeatIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{if
             @model.holder.name
             @model.holder.name
             'Unassigned subscriber'
-          }}</span>
-        <span class='meta line-plans'>{{this.planCount}}</span>
-        {{#if @model.since}}
-          <span class='meta line-since'>Since <@fields.since /></span>
-        {{/if}}
-      </div>
+          }}</:title>
+        <:status><StatePill
+            @label='{{if @model.activeCount @model.activeCount 0}} active'
+            @hue={{if @model.activeCount 'green' 'slate'}}
+          /></:status>
+        <:subtitle>{{this.planCount}}</:subtitle>
+        <:fact>{{#if @model.since}}Since {{fmtDate @model.since}}{{/if}}</:fact>
+        <:metric>{{#if @model.subscriptions.length}}<Metric
+              @value='{{if @model.activeCount @model.activeCount 0}}'
+              @label='Active plans'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.holder.jobTitle}}<Detail
+              @label='Role'
+              @value={{@model.holder.jobTitle}}
+            />{{/if}}
+        </:details>
+        <:relations>{{#if @model.subscriptions.length}}<@fields.subscriptions
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: var(--boxel-sp-4xs);
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-        .name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-xs);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .meta {
-          font-size: var(--boxel-font-size-2xs);
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-        }
-        .line-plans,
-        .line-since {
-          display: none;
-        }
-        /* Badge degradation: strip height keeps only the first line. */
-        @container fitted-card (max-height: 50px) {
-          .fitted {
-            padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-            gap: var(--boxel-sp-6xs);
-          }
-        }
-        @container fitted-card (min-height: 65px) {
-          .line-plans {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .line-since {
-            display: block;
-          }
         }
       </style>
     </template>

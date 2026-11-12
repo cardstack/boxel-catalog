@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   CardDef,
   FieldDef,
@@ -27,8 +28,6 @@ import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { hueOf, stateColorsOf } from './hr-ui';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -582,6 +581,10 @@ export class OnboardingChecklist extends CardDef {
     get moreFacts() {
       return this.keyFacts.slice(2);
     }
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       return [
         { label: 'Progress', value: this.summary.progress },
@@ -590,34 +593,37 @@ export class OnboardingChecklist extends CardDef {
       ];
     }
     <template>
-      <FitCard @title={{this.personName}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name='On'
             @hue='var(--muted)'
             @shape='rounded'
-            @size={{20}}
             aria-hidden='true'
-          /></:mark>
+          /></:avatar>
+        <:title>{{this.personName}}</:title>
         <:status><DotLabel
             @label={{statusLabel @model.status}}
             @hue={{hueOf ONBOARDING_CHECKLIST_STATUS_HUES @model.status}}
           /></:status>
-        <:default>
-          <FitRow @left={{true}}><span
-              class='meta'
-            >{{this.subline}}</span></FitRow>
-          <FitRow @label='Progress'>{{this.summary.progress}} done</FitRow>
-          <FitRow @label='Next'>{{if
+        <:subtitle><span class='meta'>{{this.subline}}</span></:subtitle>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
+        <:details>
+
+          <Detail @label='Progress'>{{this.summary.progress}} done</Detail>
+          <Detail @label='Next'>{{if
               this.summary.next
               this.summary.next.title
               '—'
-            }}</FitRow>
-          <StatStrip @compact={{true}} @items={{this.strip}} />
+            }}</Detail>
+
           {{#each this.moreFacts as |f|}}
-            <FitRow @label={{f.key}}>{{f.value}}</FitRow>
+            <Detail @label={{f.key}}>{{f.value}}</Detail>
           {{/each}}
-        </:default>
-      </FitCard>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

@@ -7,7 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import ShieldIcon from '@cardstack/boxel-icons/shield-half';
 
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { ClubConsole } from './club-console';
 
 // A club's front office in one card: a season dashboard, each member's
@@ -33,7 +33,7 @@ export class ClubMembership extends CardDef {
 
   static fitted = class Fitted extends Component<typeof ClubMembership> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:title>{{if
             @model.clubName
             @model.clubName
@@ -41,7 +41,7 @@ export class ClubMembership extends CardDef {
           }}</:title>
         <:subtitle>Membership &amp; Ticketing</:subtitle>
         <:fact>Members, fixtures and match-day bookings</:fact>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 }

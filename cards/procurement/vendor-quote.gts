@@ -27,7 +27,7 @@ import { Vendor } from './vendor';
 import { VendorProfile } from './vendor-profile';
 import { Rfq } from './rfq';
 import { formatMoney, sumLineItems } from '../commerce/line-item-totals';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 
 function isPastDay(d?: Date | null): boolean {
   if (!d) {
@@ -533,12 +533,8 @@ export class VendorQuote extends CardDef {
       return quoteFacts(this.args.model as VendorQuote);
     }
     <template>
-      <FitTile>
-        <:avatar><Avatar
-            @name={{MARK}}
-            @shape='square'
-            @size={{32}}
-          /></:avatar>
+      <RichFittedCard>
+        <:avatar><Avatar @name={{MARK}} @shape='square' /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>{{this.f.sub}}</:subtitle>
         <:status><Chip
@@ -551,6 +547,22 @@ export class VendorQuote extends CardDef {
           {{this.f.lead}}
           · valid until
           {{this.f.validFull}}</:fact>
+        <:metric>{{#if @model.lineItems.length}}<Metric
+              @value={{this.f.total}}
+              @label='Total'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.lineItems.length}}<Detail
+              @label='Lines'
+              @value={{this.f.lineWord}}
+            />{{/if}}
+          {{#if @model.vendorProfile}}<Detail
+              @label='Profile'
+            ><@fields.vendorProfile
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
         <:relations>
           {{#if @model.vendor}}<@fields.vendor
               @format='atom'
@@ -561,7 +573,7 @@ export class VendorQuote extends CardDef {
               @displayContainer={{false}}
             />{{/if}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

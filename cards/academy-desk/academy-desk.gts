@@ -32,12 +32,14 @@ import {
   SidebarItem,
   SidebarTrigger,
 } from '@cardstack/pretui/components/sidebar';
-import { FitTile } from '../shared/fit-tile';
+import { Detail, Metric, RichFittedCard } from '../shared/rich-fitted-card';
 import { CertificationAuthority } from '../audit/certification-authority';
 import { Employee } from '../hr/employee';
 import { Course, CourseStatusField, COURSE_STATUSES } from '../academy/course';
 import { Cohort, CohortStatusField, COHORT_STATUSES } from '../academy/cohort';
 import { Learner } from '../academy/learner';
+import { Enrollment } from '../academy/enrollment';
+import { Submission } from '../academy/submission';
 import {
   Certificate,
   CertificateStatusField,
@@ -794,17 +796,80 @@ export class AcademyDesk extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    // The home tab's week at a glance, from the cohort, enrollment and
+    // submission queries, not live: the tile shows the numbers as of its last
+    // render.
+    private query = (cls: typeof CardDef) => {
+      let ref = identifyCard(cls);
+      let query = ref ? { filter: { type: ref } } : undefined;
+      let url = (this.args.model as any)?.[realmURL];
+      let realms = url ? [url.href] : undefined;
+      return this.args.context?.getCards(
+        this,
+        () => query,
+        () => realms,
+      );
+    };
+    private cohorts = this.query(Cohort);
+    private enrollments = this.query(Enrollment);
+    private submissions = this.query(Submission);
+    private rows(q: ReturnType<getCards> | undefined): any[] {
+      return (q?.instances ?? []).filter(Boolean);
+    }
+
+    // Undefined while loading, so the metric and details render nothing.
+    get s() {
+      let lists = [this.cohorts, this.enrollments, this.submissions];
+      if (lists.some((q) => !q || q.isLoading)) return undefined;
+      let cohorts = this.rows(this.cohorts);
+      let inStatus = (status: string) =>
+        String(cohorts.filter((c) => c.status === status).length);
+      return {
+        running: inStatus('running'),
+        planned: inStatus('planned'),
+        closed: inStatus('closed'),
+        learners: String(
+          this.rows(this.enrollments).filter(
+            (e) => e.enrollmentStatus === 'active',
+          ).length,
+        ),
+        awaiting: String(
+          this.rows(this.submissions).filter(
+            (s) => s.submissionStatus === 'submitted',
+          ).length,
+        ),
+      };
+    }
+
     <template>
-      <FitTile>
+      <RichFittedCard>
+        <:avatar><SchoolIcon class='app-mark' aria-hidden='true' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{if
             @model.tagline
             @model.tagline
             'Course & cohort learning'
           }}</:subtitle>
+        <:metric>{{#if this.s}}<Metric
+              @value={{this.s.running}}
+              @label='Cohorts running'
+            />{{/if}}</:metric>
+        <:details>{{#if this.s}}
+            <Detail @label='Active learners' @value={{this.s.learners}} />
+            <Detail @label='Awaiting grade' @value={{this.s.awaiting}} />
+            <Detail @label='Planned' @value={{this.s.planned}} />
+            <Detail @label='Closed' @value={{this.s.closed}} />
+          {{/if}}</:details>
         <:fact>{{#if @model.actor}}Acting as
             {{@model.actor.name}}{{/if}}</:fact>
-      </FitTile>
+      </RichFittedCard>
+      <style scoped>
+        .app-mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 }

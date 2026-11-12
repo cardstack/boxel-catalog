@@ -16,7 +16,13 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import { statusField } from '@cardstack/catalog/fields/status/status';
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 import { tracked } from '@glimmer/tracking';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import {
+  RichFittedCard,
+  Detail,
+  Media,
+  Metric,
+} from '../shared/rich-fitted-card';
 import { identifyCard } from '@cardstack/runtime-common';
 import { CollectionItem } from './collection-item';
 import { CollectibleProduct } from './collectible-product';
@@ -999,141 +1005,48 @@ export class Listing extends CardDef {
     get price() {
       return formatMoney(this.args.model?.price);
     }
+    get shipping() {
+      return formatMoney(this.args.model?.shippingPrice);
+    }
+    // the price rides on the subtitle too, so strips under 170 tall show it
+    get subtitle() {
+      let m = this.args.model;
+      return [m?.variantLabel, m?.conditionCode, this.price]
+        .filter(Boolean)
+        .join(' · ');
+    }
 
     <template>
-      <FittedCard
-        class='l-fit'
-        @imageUrl={{@model.photos.primaryUrl}}
-        @imageAlt={{@model.productTitle}}
-        @titleTag='h3'
-      >
-        <:placeholder>
-          <TagIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
-        </:placeholder>
-        <:eyebrow><span
-            class='fit-eyebrow'
-          >{{@model.variantLabel}}</span></:eyebrow>
-        <:title><span class='fit-title'>{{@model.productTitle}}</span></:title>
-        <:badgeRight>
-          {{#if @model.verified}}
-            <StatePill
-              class='l-verified'
+      <RichFittedCard>
+        <:media><Media
+            @src={{@model.photos.primaryUrl}}
+            @alt={{if @model.productTitle @model.productTitle ''}}
+          ><TagIcon width='40%' height='40%' /></Media></:media>
+        <:title>{{@model.productTitle}}</:title>
+        <:status>{{#if @model.listingStatus}}<@fields.listingStatus
+              @format='atom'
+            />{{/if}}{{#if @model.verified}}<StatePill
               @label='Verified'
               @hue='green'
-              @dot={{true}}
-            />
-          {{/if}}
-        </:badgeRight>
-        <:footer>
-          {{#if this.price}}<span class='l-fprice'>{{moneyText
-                @model.price
-              }}</span>{{/if}}
-          {{#if @model.conditionCode}}<span
-              class='l-fcond'
-            >{{@model.conditionCode}}</span>{{/if}}
-        </:footer>
-      </FittedCard>
-
-      <style scoped>
-        /* NO container-type / container-name here — the host wrapper already
-           declares `container-type: size; container-name: fitted-card`. */
-        .l-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          /* Miniature vault plaque: 2px gold edge as an inset shadow, never a
-             border — the host draws the chrome. */
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          --fc-image-width: 42cqh;
-          --fc-image-min-width: 3.5rem;
-          --fc-image-max-width: 11rem;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-          --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          --fc-header-gap: 0.15em;
-          --fc-eyebrow-font-size: max(9px, 0.62em);
-          --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(13px, 1.05em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 2;
-          --fc-footer-font-size: max(11px, 0.78em);
-          --fc-footer-gap: var(--boxel-sp-xs);
-          --fc-footer-justify: space-between;
-          --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-2xs);
-        }
-        .fit-eyebrow {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--smoke);
-          font-weight: 600;
-        }
-        .fit-title {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-        .l-verified {
-          font-weight: 700;
-        }
-        /* The price is the reason a listing tile exists — it is the loudest thing
-           in the footer and it is never truncated. Plaque value: serif + gold. */
-        .l-fprice {
-          font-family: 'Playfair Display', Georgia, serif;
-          color: var(--primary-ink);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-        .l-fcond {
-          color: var(--smoke);
-          white-space: nowrap;
-        }
-        @container fitted-card (height <= 50px) {
-          .l-fit {
-            --fc-footer-display: none;
-            --fc-badge-right-display: none;
-            --fc-title-line-clamp: 1;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-        /* Condition goes before price does — the price is the anchor fact. */
-        @container fitted-card (width <= 200px) and (height <= 80px) {
-          .l-fit .l-fcond {
-            display: none;
-          }
-        }
-        /* FittedCard's own Tile quantum (250-400 wide, 105-170 tall) hides
-           the footer and badges by default — which deletes the PRICE and the
-           Verified badge from a marketplace tile at exactly the size the
-           market grid renders (measured 316x166 live). Reassert them; the
-           doubled class (0,2,0) outranks the library's plain class rule. */
-        @container fitted-card (1 < aspect-ratio) and (250px <= width < 400px) and (105px <= height < 170px) {
-          .l-fit.l-fit {
-            --fc-footer-display: flex;
-            --fc-badge-right-display: flex;
-          }
-        }
-      </style>
+            />{{/if}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{#if @model.shipsFrom}}Ships from
+            {{@model.shipsFrom}}{{/if}}</:fact>
+        <:metric>{{#if this.price}}<Metric
+              @value={{this.price}}
+              @label='Asking'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if this.shipping}}<Detail
+              @label='Shipping'
+              @value={{this.shipping}}
+            />{{/if}}
+          {{#if @model.seller}}<Detail @label='Seller'><@fields.seller
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

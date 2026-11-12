@@ -17,7 +17,7 @@ import { Assignment } from './assignment';
 import { Quiz } from './quiz';
 import { Course } from './course';
 import { Mark } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { IsoFrame } from '../shared/compact-sheet';
 
 /**
@@ -319,7 +319,7 @@ export class Module extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Md' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{if @model.code @model.code (orderLabel @model.order)}}
@@ -328,7 +328,29 @@ export class Module extends CardDef {
           lessons ·
           {{minutesLabel @model.totalMinutes}}</:subtitle>
         <:fact>{{@model.releaseLabel}}</:fact>
-      </FitTile>
+        <:metric><Metric
+            @value={{minutesLabel @model.totalMinutes}}
+            @label='Duration'
+          /></:metric>
+        <:details>
+          {{#if @model.course}}<Detail @label='Course'><@fields.course
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.liveLessonCount}}<Detail
+              @label='Live lessons'
+              @value='{{@model.liveLessonCount}}'
+            />{{/if}}
+          {{#if @model.assignments.length}}<Detail
+              @label='Assignments'
+              @value='{{@model.assignments.length}}'
+            />{{/if}}
+          {{#if @model.quizzes.length}}<Detail
+              @label='Quizzes'
+              @value='{{@model.quizzes.length}}'
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

@@ -19,7 +19,7 @@ import BooleanField from '@cardstack/base/boolean';
 import DateField from '@cardstack/base/date';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 import { Asset } from './asset';
 import { AssetCategory } from './asset-category';
@@ -472,7 +472,7 @@ export class MaintenancePlan extends CardDef {
 
   static fitted = class Fitted extends Component<typeof MaintenancePlan> {
     <template>
-      <FitTile class='fit'>
+      <RichFittedCard class='fit'>
         <:avatar><Mark @text='Pl' @size='lg' /></:avatar>
         <:title>{{@model.name}}</:title>
         <:subtitle>{{subjectLine @model}}</:subtitle>
@@ -480,10 +480,32 @@ export class MaintenancePlan extends CardDef {
               @model={{@model}}
             /></span></:status>
         <:fact>{{dueFact @model}}</:fact>
+        <:metric><Metric
+            @value={{hours @model.estimatedHours}}
+            @label='Estimate'
+          /></:metric>
+        <:details>
+          {{#if @model.trigger.summary}}<Detail
+              @label='Trigger'
+              @value={{@model.trigger.summary}}
+            />{{/if}}
+          {{#if @model.assignTeamName}}<Detail
+              @label='Team'
+              @value={{@model.assignTeamName}}
+            />{{/if}}
+          {{#if @model.lastCompletedAt}}<Detail
+              @label='Last done'
+              @value={{fmtDay @model.lastCompletedAt true}}
+            />{{/if}}
+          {{#if @model.checklist.items.length}}<Detail
+              @label='Checklist'
+              @value='{{@model.checklist.items.length}} items'
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.asset}}<@fields.asset
               @format='atom'
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .fit {
           color: var(--card-foreground);

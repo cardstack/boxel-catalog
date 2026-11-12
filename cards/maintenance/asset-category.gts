@@ -25,7 +25,7 @@ import BoxesIcon from '@cardstack/boxel-icons/boxes';
 import CriticalityField from './criticality-field';
 import { Asset } from './asset';
 import { MaintenancePlan } from './maintenance-plan';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   Chip,
   Brief,
@@ -190,7 +190,7 @@ export class AssetCategory extends CardDef {
 
   static fitted = class Fitted extends CategoryView {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Ca' @size='lg' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -200,6 +200,20 @@ export class AssetCategory extends CardDef {
             @strong={{lifeYears @model.expectedLifeMonths true}}
             @rest={{if @model.defaultTeamName (teamText @model)}}
           /></:fact>
+        <:metric><Metric
+            @value='{{this.assets.length}}'
+            @label='Assets'
+          /></:metric>
+        <:details>
+          {{#if this.assets.length}}<Detail
+              @label='In service'
+              @value='{{this.inService}}'
+            />{{/if}}
+          {{#if @model.defaultPlans.length}}<Detail
+              @label='Default plans'
+              @value='{{@model.defaultPlans.length}}'
+            />{{/if}}
+        </:details>
         <:relations>
           {{#each this.assets as |a|}}
             <Chip
@@ -210,7 +224,7 @@ export class AssetCategory extends CardDef {
             />
           {{/each}}
         </:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

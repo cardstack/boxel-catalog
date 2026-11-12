@@ -9,6 +9,7 @@ import {
   realmURL,
   StringField,
 } from '@cardstack/base/card-api';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import type { ComponentLike } from '@glint/template';
 import UsersIcon from '@cardstack/boxel-icons/users';
 import { eq } from '@cardstack/boxel-ui/helpers';
@@ -25,8 +26,6 @@ import { liveCount } from './utils';
 import { RecordAtom, orEmpty } from '../procurement/vendor';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -360,6 +359,10 @@ export class Team extends CardDef {
       return teamView(this.args.model, this.projects);
     }
 
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       return [
         { label: 'Members', value: String(this.v.size) },
@@ -368,51 +371,54 @@ export class Team extends CardDef {
     }
 
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name={{orEmpty @model.title}}
             @hue='var(--muted)'
             @shape='rounded'
-            @size={{20}}
             aria-hidden='true'
-          /></:mark>
-        <:default>
-          <FitRow @label='Headcount'><span
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle><span class='meta'>{{@model.mission}}</span></:subtitle>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
+        <:details>
+          <Detail @label='Headcount'><span
               class='mono'
-            >{{this.v.headcount}}</span></FitRow>
-          {{#if @model.mission}}<FitRow @left={{true}}><span
-                class='meta'
-              >{{@model.mission}}</span></FitRow>{{/if}}
+            >{{this.v.headcount}}</span></Detail>
+          {{#if @model.mission}}{{/if}}
           {{#if @model.lead}}
-            <FitRow @label='Lead' @left={{true}}><@fields.lead
+            <Detail @label='Lead'><@fields.lead
                 @format='atom'
                 @displayContainer={{false}}
-              /></FitRow>
+              /></Detail>
           {{else if this.v.leadName}}
-            <FitRow @label='Lead'>{{this.v.leadName}}</FitRow>
+            <Detail @label='Lead'>{{this.v.leadName}}</Detail>
           {{/if}}
-          <FitRow @label='Projects'><span
+          <Detail @label='Projects'><span
               class='mono'
-            >{{this.projects.length}}</span></FitRow>
-          <StatStrip @compact={{true}} @items={{this.strip}} />
+            >{{this.projects.length}}</span></Detail>
+
           {{#each @fields.members as |Member memberIndex|}}
             {{#unless (this.isLeadAt memberIndex)}}
-              <FitRow @label='Member' @left={{true}}><Member
+              <Detail @label='Member'><Member
                   @format='atom'
                   @displayContainer={{false}}
-                /></FitRow>
+                /></Detail>
             {{/unless}}
           {{/each}}
           {{#each this.projects as |project|}}
             {{#let (getComponent project) as |ProjectCard|}}
-              <FitRow @label='Project' @left={{true}}><ProjectCard
+              <Detail @label='Project'><ProjectCard
                   @format='atom'
                   @displayContainer={{false}}
-                /></FitRow>
+                /></Detail>
             {{/let}}
           {{/each}}
-        </:default>
-      </FitCard>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

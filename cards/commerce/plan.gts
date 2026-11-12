@@ -8,6 +8,7 @@ import {
 } from '@cardstack/base/card-api';
 import LayersIcon from '@cardstack/boxel-icons/layers';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 
 // Plan — a named, recurring tier of the product (e.g. "Pro", "Enterprise").
 // Deliberately has no price field of its own: a consumer's price records link
@@ -111,127 +112,24 @@ export class Plan extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Plan> {
     <template>
-      <div class='fitted'>
-        <div class='fmt badge'>
-          <LayersIcon class='doc-icon' />
-          <span class='name'>{{@model.cardTitle}}</span>
-        </div>
-        <div class='fmt strip'>
-          <LayersIcon class='doc-icon' />
-          <div class='info'>
-            <span class='name'>{{@model.cardTitle}}</span>
-          </div>
-        </div>
-        <div class='fmt tile'>
-          <LayersIcon class='doc-icon' />
-          <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.description}}
-            <span class='meta'>{{@model.description}}</span>
-          {{/if}}
-        </div>
-        <div class='fmt card'>
-          <div class='col'>
-            <div class='row'>
-              <LayersIcon class='doc-icon' />
-              <span class='name name-lg'>{{@model.cardTitle}}</span>
-            </div>
-            {{#if @model.description}}
-              <span class='meta'>{{@model.description}}</span>
-            {{/if}}
-            {{#if @model.features.length}}
-              <span class='meta'>{{@model.features.length}} features</span>
-            {{/if}}
-          </div>
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><LayersIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{@model.description}}</:subtitle>
+        <:fact>{{#if @model.features.length}}{{@model.features.length}}
+            features{{/if}}</:fact>
+        <:details>
+          {{#each @model.features as |feature|}}{{#if feature}}<Detail
+                @label='Feature'
+                @value={{feature}}
+              />{{/if}}{{/each}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          width: 100%;
-          height: 100%;
-          color: var(--foreground);
-        }
-        .fmt {
-          display: none;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-        .doc-icon {
-          width: 1.25rem;
-          height: 1.25rem;
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-xs);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .name-lg {
-          font-size: var(--boxel-font-size-sm);
-        }
-        .meta {
-          font-size: var(--boxel-font-size-2xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .row {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-        }
-        .col,
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          min-width: 0;
-          flex: 1;
-        }
-        @container fitted-card (max-width: 150px) and (max-height: 169px) {
-          .badge {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: var(--boxel-sp-2xs);
-            padding: var(--boxel-sp-xs);
-            text-align: center;
-          }
-        }
-        @container fitted-card (min-width: 151px) and (max-height: 169px) {
-          .strip {
-            display: flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          }
-        }
-        @container fitted-card (max-width: 399px) and (min-height: 170px) {
-          .tile {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            gap: var(--boxel-sp-2xs);
-            padding: var(--boxel-sp-sm);
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .card {
-            display: flex;
-            align-items: center;
-            gap: var(--boxel-sp);
-            padding: var(--boxel-sp-lg);
-          }
         }
       </style>
     </template>

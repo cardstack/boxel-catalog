@@ -27,7 +27,13 @@ import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { Employee } from '../hr/employee';
 import { DotLabel, dotEnumField } from '../hr/dot-enum-field';
 import { daysBetween } from '../hr/utils';
-import { FitTile } from '../shared/fit-tile';
+import HomeIcon from '@cardstack/boxel-icons/home';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import { PublishChecklist } from './components/publish-checklist';
 import { ChannelSelector } from './components/channel-selector';
 import { SchedulePicker } from './components/schedule-picker';
@@ -911,12 +917,11 @@ export class PropertyListing extends CardDef {
       return new ListingFacts(this.args.model as PropertyListing);
     }
     <template>
-      <FitTile>
-        <:avatar>{{#if this.f.hero}}<img
-              class='pf-thumb'
-              src={{this.f.hero}}
-              alt=''
-            />{{/if}}</:avatar>
+      <RichFittedCard>
+        <:media><Media @src={{this.f.hero}} @alt=''><HomeIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{this.f.place}}</:subtitle>
         <:status><DotLabel
@@ -924,21 +929,38 @@ export class PropertyListing extends CardDef {
             @hue={{this.f.statusHue}}
           /></:status>
         <:fact>{{this.f.headline}}</:fact>
+        <:metric>{{#if @model.askingPrice.amount}}<Metric
+              @value={{this.f.price}}
+              @label='Asking'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.areaSqft}}<Detail
+              @label='Area'
+              @value={{this.f.area}}
+            />{{/if}}
+          {{#if @model.propertyType}}<Detail
+              @label='Type'
+              @value={{this.f.type}}
+            />{{/if}}
+          {{#if @model.pricePerSqft}}<Detail
+              @label='Per sqft'
+              @value={{this.f.perSqft}}
+            />{{/if}}
+          {{#if @model.daysOnMarket}}<Detail
+              @label='On market'
+              @value={{this.f.dom}}
+            />{{/if}}
+          {{#if @model.yearBuilt}}<Detail
+              @label='Built'
+              @value={{this.f.built}}
+            />{{/if}}
+        </:details>
         <:relations>
           {{#if @model.agent}}
             <@fields.agent @format='atom' @displayContainer={{false}} />
           {{/if}}
         </:relations>
-      </FitTile>
-      <style scoped>
-        .pf-thumb {
-          display: block;
-          inline-size: 2rem;
-          block-size: 2rem;
-          object-fit: cover;
-          border-radius: var(--radius);
-        }
-      </style>
+      </RichFittedCard>
     </template>
   };
 }

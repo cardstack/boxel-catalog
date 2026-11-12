@@ -15,6 +15,7 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 function krProgress(kr: KeyResultField | undefined): number {
   // A key result with no target hasn't been defined yet, so it has made no
@@ -371,43 +372,34 @@ export class Okr extends CardDef {
     get pct() {
       return this.args.model?.overallProgress ?? 0;
     }
-    get hue() {
-      return bandHue(this.pct);
+    // the percentage rides on the subtitle too, so strips under 170 tall show it
+    get subtitle() {
+      return [this.args.model?.period, `${this.pct}%`]
+        .filter(Boolean)
+        .join(' · ');
+    }
+    get krLine() {
+      let n = (this.args.model?.keyResults ?? []).length;
+      return n === 1 ? '1 key result' : `${n} key results`;
     }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.objective}}</span>
-        <span class='fit-sub'>{{@model.period}}</span>
-        <span class='fit-pct pct-{{this.hue}}'>{{this.pct}}%</span>
-      </div>
+      <RichFittedCard>
+        <:title>{{@model.objective}}</:title>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{this.krLine}}</:fact>
+        <:metric><Metric
+            class='pct-{{bandHue this.pct}}'
+            @value='{{this.pct}}%'
+            @label='Overall'
+          /></:metric>
+        <:details>
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .fit-sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .fit-pct {
-          margin-top: auto;
-          font-size: var(--boxel-font-size-md);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
         .pct-red {
           color: var(--destructive-ink);
         }
@@ -416,24 +408,6 @@ export class Okr extends CardDef {
         }
         .pct-green {
           color: var(--success-ink);
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-sub {
-            display: none;
-          }
-          .fit-pct {
-            margin-top: 0;
-            margin-left: auto;
-            font-size: var(--boxel-font-size-sm);
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
         }
       </style>
     </template>

@@ -1,4 +1,5 @@
 import { RelatedList, relatedSearch } from '../crm/record-views';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   resolveRRIReference,
   type RealmResourceIdentifier,
@@ -22,7 +23,7 @@ import {
   type KeyValueItem,
 } from '@cardstack/pretui/components/key-value';
 import { formatMoney, hasNumber } from '../crm/utils';
-import { CompactFitted, CompactRow, fmtDate, orEmpty } from './compact-parts';
+import { fmtDate, orEmpty } from './compact-parts';
 import { Deal } from './deal';
 import { IsoFrame } from '../shared/compact-sheet';
 
@@ -124,34 +125,39 @@ export class Proposal extends CardDef {
       return facts(this.args.model as Proposal);
     }
     <template>
-      <CompactFitted
-        @mark='Proposal'
-        @title={{@model.cardTitle}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.fact}}
-        @big={{this.f.money}}
-        @bigLabel='Deal value'
-        @tags={{this.f.tags}}
-      >
-        <:rows>
-          {{#if this.f.stage}}<CompactRow
-              @k='Stage'
-              @v={{this.f.stage}}
+      <RichFittedCard>
+        <:avatar><Avatar @name='Proposal' @shape='square' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.fact}}</:fact>
+        <:metric><Metric
+            @value={{this.f.money}}
+            @label='Deal value'
+          /></:metric>
+        <:details>
+          {{#if this.f.stage}}<Detail
+              @label='Stage'
+              @value={{this.f.stage}}
             />{{/if}}
-          {{#if this.f.quoteText}}<CompactRow
-              @k='Quotes'
-              @v={{this.f.quoteText}}
+          {{#if this.f.quoteText}}<Detail
+              @label='Quotes'
+              @value={{this.f.quoteText}}
             />{{/if}}
-          {{#if @model.deal}}<CompactRow @k='Deal'><@fields.deal
+          {{#if @model.deal}}<Detail @label='Deal'><@fields.deal
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-          {{#if this.f.close}}<CompactRow
-              @k='Close date'
-              @v={{this.f.close}}
+              /></Detail>{{/if}}
+          {{#if this.f.close}}<Detail
+              @label='Close date'
+              @value={{this.f.close}}
             />{{/if}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

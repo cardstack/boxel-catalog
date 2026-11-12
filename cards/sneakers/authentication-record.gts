@@ -15,12 +15,16 @@ import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { CollectionItem } from './collection-item';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
   SnKv,
-  SnMark,
   SnRow,
   SnSection,
   SnSheet,
@@ -217,15 +221,36 @@ export class AuthenticationRecord extends CardDef {
 
   static fitted = class Fitted extends Component<typeof AuthenticationRecord> {
     <template>
-      <FitTile>
-        <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
+      <RichFittedCard>
+        <:media><Media @src={{photoOf @model}} @alt=''><ShieldCheckIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{titleOf @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><Outcome @model={{@model}} /></:status>
         <:fact>{{spanText @model}}
           ·
           {{or @model.turnaroundDays}}</:fact>
-      </FitTile>
+        <:metric>{{#if @model.turnaroundDays}}<Metric
+              @value={{@model.turnaroundDays}}
+              @label='Turnaround'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.item}}<Detail @label='Item'><@fields.item
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.authenticator}}<Detail
+              @label='Authenticator'
+              @value={{@model.authenticator}}
+            />{{/if}}
+          {{#if @model.order}}<Detail @label='Order'><@fields.order
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

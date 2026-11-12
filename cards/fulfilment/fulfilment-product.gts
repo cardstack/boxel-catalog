@@ -19,7 +19,12 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
 import { money } from './fulfilment-format';
-import { FitTile } from '../shared/fit-tile';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import { Product } from '../commerce/product';
 import { realmURL } from 'https://cardstack.com/base/card-api';
@@ -604,15 +609,11 @@ export class FulfilmentProduct extends Product {
 
   static fitted = class Fitted extends Component<typeof FulfilmentProduct> {
     <template>
-      <FitTile>
-        <:avatar>{{#if @model.image.resolvedUrl}}<img
-              class='mark'
-              src={{@model.image.resolvedUrl}}
-              alt=''
-            />{{else}}<span
-              class='mark'
-              aria-hidden='true'
-            >Pr</span>{{/if}}</:avatar>
+      <RichFittedCard>
+        <:media><Media @src={{@model.image.resolvedUrl}} @alt=''><PackageIcon
+              width='40%'
+              height='40%'
+            /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><span class='st' data-tone={{if @model.isActive 'ok'}}><span
@@ -626,26 +627,34 @@ export class FulfilmentProduct extends Product {
           ·
           {{marginText @model}}
           margin</:fact>
+        <:metric>{{#if @model.price.amount}}<Metric
+              @value={{money @model.price.amount @model.price.currency.code}}
+              @label='Price'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.cost.amount}}<Detail
+              @label='Cost'
+              @value={{money @model.cost.amount @model.cost.currency.code}}
+            />{{/if}}
+          {{#if @model.shippingProfile.billableWeight}}<Detail
+              @label='Billable'
+              @value={{kg @model.shippingProfile.billableWeight}}
+            />{{/if}}
+          {{#if @model.shippingProfile.sizeLabel}}<Detail
+              @label='Dimensions'
+              @value={{@model.shippingProfile.sizeLabel}}
+            />{{/if}}
+          {{#if @model.barcode}}<Detail
+              @label='Barcode'
+              @value={{@model.barcode}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.vendor}}<@fields.vendor
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
-        .mark {
-          display: inline-grid;
-          place-items: center;
-          width: 2rem;
-          height: 2rem;
-          margin-right: var(--boxel-sp-xs);
-          border-radius: calc(var(--radius) * 0.6);
-          background-color: var(--muted);
-          object-fit: cover;
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
-          font-weight: 700;
-          color: var(--card-foreground);
-        }
         .st {
           display: inline-flex;
           align-items: center;

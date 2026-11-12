@@ -23,12 +23,16 @@ import { CollectibleProduct } from './collectible-product';
 // level "for clarity".
 import { CollectionItem } from './collection-item';
 import { DotLabel } from '../hr/dot-enum-field';
-import { FitTile } from '../shared/fit-tile';
+import {
+  RichFittedCard,
+  Media,
+  Metric,
+  Detail,
+} from '../shared/rich-fitted-card';
 import {
   SnAtom,
   SnEmbedded,
   SnKv,
-  SnMark,
   SnRow,
   SnSection,
   SnSheet,
@@ -356,16 +360,28 @@ export class CompletionSet extends CardDef {
 
   static fitted = class Fitted extends Component<typeof CompletionSet> {
     <template>
-      <FitTile>
-        <:avatar><SnMark
+      <RichFittedCard>
+        <:media><Media
             @src={{@model.coverImage.resolvedUrl}}
-            @size='lg'
-          /></:avatar>
+            @alt=''
+          ><TargetArrowIcon width='40%' height='40%' /></Media></:media>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><Visibility @model={{@model}} /></:status>
         <:fact>{{productCount @model}} products</:fact>
-      </FitTile>
+        <:metric>{{#if @model.targetCount}}<Metric
+              @value='{{@model.targetCount}}'
+              @label='Products'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.products.length}}<Detail
+              @label='Products'
+            ><@fields.products
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

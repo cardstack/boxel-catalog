@@ -8,6 +8,7 @@ import {
   linksTo,
   StringField,
 } from '@cardstack/base/card-api';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
@@ -28,11 +29,7 @@ import {
   COMPACT_EMPTY_STYLE,
 } from '@cardstack/catalog/components/pretui-helpers';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import {
-  CompactFitted,
-  CompactRow,
-  type CompactTag,
-} from '../commerce/compact-parts';
+import { type CompactTag } from '../commerce/compact-parts';
 
 // DateField hands back local midnight, so format in local time (a UTC
 // formatter shows the previous day west of Greenwich).
@@ -655,30 +652,35 @@ export class GoodsReceipt extends CardDef {
       return grFacts(this.args.model as GoodsReceipt);
     }
     <template>
-      <CompactFitted
-        @mark='Goods Receipt'
-        @title={{@model.title}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.fact}}
-        @big='{{this.f.received}} / {{this.f.ordered}}'
-        @bigLabel={{this.f.match.label}}
-        @tags={{this.f.tags}}
-      >
-        <:rows>
-          <CompactRow @k='Received on' @v={{this.f.full}} />
-          <CompactRow @k='Received by' @v={{if this.f.by this.f.by '—'}} />
-          <CompactRow @k='Ordered' @v='{{this.f.ordered}}' />
-          <CompactRow @k='Received' @v='{{this.f.received}}' />
-          <CompactRow @k='Match' @v={{this.f.match.label}} />
-          <CompactRow @k='Posted' @v={{this.f.postedYes}} />
+      <RichFittedCard>
+        <:avatar><Avatar @name='Goods Receipt' @shape='square' /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:status>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.fact}}</:fact>
+        <:metric><Metric
+            @value='{{this.f.received}} / {{this.f.ordered}}'
+            @label={{this.f.match.label}}
+          /></:metric>
+        <:details>
+          <Detail @label='Received on' @value={{this.f.full}} />
+          <Detail @label='Received by' @value={{if this.f.by this.f.by '—'}} />
+          <Detail @label='Ordered' @value='{{this.f.ordered}}' />
+          <Detail @label='Received' @value='{{this.f.received}}' />
+          <Detail @label='Match' @value={{this.f.match.label}} />
+          <Detail @label='Posted' @value={{this.f.postedYes}} />
           {{#each this.f.lines as |l|}}
-            <CompactRow
-              @k={{if l.description l.description '—'}}
-              @v='{{l.qtyReceived}} / {{l.qtyOrdered}}'
+            <Detail
+              @label={{if l.description l.description '—'}}
+              @value='{{l.qtyReceived}} / {{l.qtyOrdered}}'
             />
           {{/each}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

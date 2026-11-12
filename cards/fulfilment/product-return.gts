@@ -23,7 +23,7 @@ import { Shipment } from './shipment';
 import { type StatusStyle } from './fulfilment-status-chip';
 import { money } from './fulfilment-format';
 import { CompoundAtom } from './fulfilment-ui';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import {
   DotLabel,
@@ -703,7 +703,7 @@ export class ProductReturn extends CardDef {
 
   static fitted = class Fitted extends Component<typeof ProductReturn> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>Rt</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -717,11 +717,33 @@ export class ProductReturn extends CardDef {
           refund ·
           {{if @model.itemCount @model.itemCount 0}}
           items</:fact>
+        <:metric>{{#if @model.lineItems.length}}<Metric
+              @value={{amt @model.refundAmount}}
+              @label='Refund'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.lineItems.length}}<Detail
+              @label='Items'
+              @value={{itemNames @model}}
+            />{{/if}}
+          {{#if @model.restockingFee.amount}}<Detail
+              @label='Restocking fee'
+              @value={{amt @model.restockingFee}}
+            />{{/if}}
+          {{#if @model.receivedAt}}<Detail
+              @label='Received'
+              @value={{day @model.receivedAt}}
+            />{{/if}}
+          {{#if @model.returnTrackingNumber}}<Detail
+              @label='Return tracking'
+              @value={{@model.returnTrackingNumber}}
+            />{{/if}}
+        </:details>
         <:relations>{{#if @model.order}}<@fields.order
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .st[style] {
           --tone: var(--st-hue);

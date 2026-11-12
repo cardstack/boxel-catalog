@@ -15,11 +15,11 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { Account } from '../crm/account';
 import { Contract } from '../legal/contract';
 import { Money } from '../crm/money';
-import { hasNumber } from '../crm/utils';
+import { formatMoney, hasNumber } from '../crm/utils';
 import { orEmpty } from './compact-parts';
 import { IsoFrame } from '../shared/compact-sheet';
 
@@ -202,12 +202,8 @@ export class Subscription extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Subscription> {
     <template>
-      <FitTile>
-        <:avatar><Avatar
-            @name='Subscription'
-            @shape='square'
-            @size={{32}}
-          /></:avatar>
+      <RichFittedCard>
+        <:avatar><Avatar @name='Subscription' @shape='square' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{@model.account.cardTitle}}
           ·
@@ -222,11 +218,36 @@ export class Subscription extends CardDef {
           />
           /
           {{@model.billingCycle}}</:fact>
+        <:metric>{{#if (hasNumber @model.price.amount)}}<Metric
+              @value={{formatMoney
+                @model.price.amount
+                @model.price.currency.code
+              }}
+              @label='Price'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.renewalDate}}<Detail
+              @label='Renews'
+              @value={{fmtDate @model.renewalDate}}
+            />{{/if}}
+          {{#if @model.startDate}}<Detail
+              @label='Started'
+              @value={{fmtDate @model.startDate}}
+            />{{/if}}
+          {{#if @model.canceledAt}}<Detail
+              @label='Canceled'
+              @value={{fmtDate @model.canceledAt}}
+            />{{/if}}
+          {{#if @model.contract}}<Detail @label='Contract'><@fields.contract
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
         <:relations>{{#if @model.account}}<@fields.account
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
     </template>
   };
 

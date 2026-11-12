@@ -1,6 +1,6 @@
 // Compact record parts: the isolated / embedded / atom layouts a Matrix child
 // module shares (header row, stat strip, two ruled columns, key-value rows).
-// Fitted views use FitTile (cards/shared/fit-tile) with Mark and Dot from here.
+// Fitted views use RichFittedCard (cards/shared/rich-fitted-card) with Mark and Dot from here.
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 
 /** A two-letter type mark ("Ce", "Qz"). */

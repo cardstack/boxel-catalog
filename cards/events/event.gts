@@ -17,6 +17,7 @@ import { Location } from './location';
 import CapacityField from './capacity-field';
 import { statusField } from '@cardstack/catalog/fields/status/status';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 
 /**
  * Event lifecycle. Draft is unannounced planning; Scheduled is public;
@@ -207,125 +208,24 @@ export class Event extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Event> {
     <template>
-      <div class='fitted'>
-        <div class='ev-date'>
-          <FormatDate
-            class='ev-day'
-            @date={{@model.startsAt}}
-            @locale='en-US'
-            @day='numeric'
-            @placeholder='?'
-          />
-          <FormatDate
-            class='ev-month'
-            @date={{@model.startsAt}}
-            @locale='en-US'
-            @month='short'
-            @placeholder='TBD'
-          />
-        </div>
-        <div class='info'>
-          <span class='title'>{{@model.cardTitle}}</span>
-          {{#if @model.kind}}
-            <span class='meta line-kind'>{{@model.kind}}</span>
-          {{/if}}
-          {{#if @model.startsAt}}
-            <span class='meta line-when'><@fields.startsAt /></span>
-          {{/if}}
-          {{#if @model.status}}
-            <span class='line-status'><@fields.status @format='atom' /></span>
-          {{/if}}
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><CalendarEventIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#if @model.status}}<@fields.status
+              @format='atom'
+            />{{/if}}</:status>
+        <:subtitle>{{@model.kind}}</:subtitle>
+        <:fact>{{#if @model.startsAt}}<@fields.startsAt />{{/if}}</:fact>
+        <:details>{{#if @model.venue}}<Detail @label='Venue'><@fields.venue
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}</:details>
+      </RichFittedCard>
       <style scoped>
-        .fitted {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-        .ev-date {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          width: 2.5rem;
-          height: 2.5rem;
-          border: 1px solid var(--border);
-          border-radius: 0.5rem;
-          background-color: var(--muted);
-          color: var(--foreground);
-          flex-shrink: 0;
-        }
-        .ev-day {
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          line-height: 1.1;
-          font-variant-numeric: tabular-nums;
-        }
-        .ev-month {
-          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-        }
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-6xs);
-          min-width: 0;
-        }
-        .title {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-xs);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .meta {
-          font-size: var(--boxel-font-size-2xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .line-kind,
-        .line-when,
-        .line-status {
-          display: none;
-        }
-        /* Badge degradation: strip height keeps only the first line. */
-        @container fitted-card (max-height: 50px) {
-          .fitted {
-            padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-            gap: var(--boxel-sp-6xs);
-          }
-        }
-        @container fitted-card (min-height: 65px) {
-          .line-when {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .fitted {
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            padding: var(--boxel-sp-sm);
-          }
-          .line-kind {
-            display: block;
-          }
-        }
-        @container fitted-card (min-width: 400px) and (min-height: 170px) {
-          .line-status {
-            display: inline-flex;
-          }
         }
       </style>
     </template>

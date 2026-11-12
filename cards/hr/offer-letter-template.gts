@@ -13,6 +13,7 @@ import { Token } from '@cardstack/pretui/components/token';
 
 import { tokenStyle } from '@cardstack/catalog/components/pretui-helpers';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Metric } from '../shared/rich-fitted-card';
 
 // A merge field this template's body uses reads in the primary ink; one it
 // does not use stays muted.
@@ -365,155 +366,30 @@ export class OfferLetterTemplate extends CardDef {
       return plain.length > 160 ? `${plain.slice(0, 160)}…` : plain;
     }
 
+    // the merge-field count rides on the subtitle, so strips under 170 tall show it
+    get subtitle() {
+      let n = this.args.model?.placeholderTally;
+      return n
+        ? `Offer letter template · ${n} merge fields`
+        : 'Offer letter template';
+    }
+
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='avatar' aria-hidden='true'><FileTextIcon
-              class='avatar-icon'
-            /></span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
-            <span class='fit-eb'>Offer letter template</span>
-          </div>
-        </div>
-
-        <div class='fit-mid'>
-          {{#if @model.placeholderTally}}
-            <span class='money'>{{@model.placeholderTally}} merge fields</span>
-          {{/if}}
-        </div>
-
-        {{#if this.bodyPreview}}
-          <p class='fit-preview'>{{this.bodyPreview}}</p>
-        {{/if}}
-      </article>
+      <RichFittedCard>
+        <:avatar><FileTextIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{this.bodyPreview}}</:fact>
+        <:metric>{{#if @model.placeholderTally}}<Metric
+              @value={{@model.placeholderTally}}
+              @label='Merge fields'
+            />{{/if}}</:metric>
+      </RichFittedCard>
       <style scoped>
-        /* Tiers ADD content: name → field count → body preview. 11px floor. */
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-3xs);
-          padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --tpl-strong: color-mix(
-            in oklch,
-            var(--primary) 45%,
-            var(--foreground)
-          );
-          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
-          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-2xs);
-          flex-wrap: wrap;
-        }
-        .avatar {
-          flex: none;
-          width: 1.6rem;
-          height: 1.6rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          background-color: var(--tpl-strong);
-          color: var(--background);
-        }
-        .avatar-icon {
-          width: 0.85rem;
-          height: 0.85rem;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          display: none;
-          font-size: var(--fit-small);
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .fit-mid {
-          flex: none;
-          display: none;
-        }
-        .money {
-          font-size: calc(var(--fit-name) * 1.05);
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-preview {
-          display: none;
-          margin: 0;
-          margin-top: auto;
-          padding-top: var(--boxel-sp-3xs);
-          border-top: 1px dashed var(--border);
-          font-size: var(--fit-small);
-          line-height: 1.4;
-          color: var(--muted-foreground);
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 3;
-          overflow: hidden;
-        }
-
-        /* TIER 2 — add the kind line. Two rules: no `or` in CQ. */
-        @container fitted-card (height > 80px) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        @container fitted-card (width > 240px) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        /* TIER 3 — add the merge-field count. */
-        @container fitted-card (height > 130px) and (width > 180px) {
-          .fit-mid {
-            display: block;
-          }
-        }
-        /* TIER 4 — add the body preview. */
-        @container fitted-card (height > 150px) and (width > 180px) {
-          .fit-preview {
-            display: -webkit-box;
-          }
-        }
-        @container fitted-card (height <= 90px) {
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height <= 50px) {
-          .fit-eb {
-            display: none;
-          }
         }
       </style>
     </template>

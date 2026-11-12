@@ -19,7 +19,7 @@ import { Employee } from '../hr/employee';
 import { round1 } from './rubric-criterion-field';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { Dot, Mark } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { IsoFrame } from '../shared/compact-sheet';
 
 /** The grader's pick for one rubric criterion. */
@@ -364,7 +364,7 @@ export class Grade extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='Gr' /></:avatar>
         <:title>{{if @model.learnerName @model.learnerName 'Learner'}}</:title>
         <:subtitle>{{@model.assignmentTitle}}</:subtitle>
@@ -375,7 +375,26 @@ export class Grade extends CardDef {
           ·
           {{@model.pct}}%{{#if @model.penaltyPct}}
             · −{{@model.penaltyPct}}% late{{/if}}</:fact>
-      </FitTile>
+        <:metric><Metric @value='{{@model.pct}}%' @label='Score' /></:metric>
+        <:details>
+          {{#if @model.gradedBy}}<Detail @label='Graded by'><@fields.gradedBy
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.gradedAt}}<Detail
+              @label='Graded'
+              @value={{fmtDate @model.gradedAt}}
+            />{{/if}}
+          {{#if @model.daysLate}}<Detail
+              @label='Days late'
+              @value='{{@model.daysLate}}'
+            />{{/if}}
+          {{#if @model.overridePoints}}<Detail
+              @label='Override'
+              @value='{{@model.overridePoints}} pts'
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

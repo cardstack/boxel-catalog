@@ -20,6 +20,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { AuditFacts } from './audit-ui';
 import { IsoFrame } from '../shared/compact-sheet';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 
 // Each value renders in the `value` block, which picks the row by key.
 const FACTS = [
@@ -275,62 +276,30 @@ export class AuditorBot extends CardDef {
       return d ? d.toISOString().slice(0, 10) : 'never run';
     }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.name}}</span>
-        <span class='fit-sub'>{{@model.ruleCount}} rule(s)</span>
-        <div class='tier-tile'>
-          <span class='row'>{{this.regimeLabel}}</span>
-          <span class='row'>Last run {{this.lastRun}}</span>
-        </div>
-      </div>
+      <RichFittedCard>
+        <:avatar><BotIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{@model.name}}</:title>
+        <:status>{{#if @model.brokenRuleCount}}<StatePill
+              @label='needs fixing'
+              @hue='red'
+              @dot={{true}}
+            />{{/if}}</:status>
+        <:subtitle>{{this.regimeLabel}}</:subtitle>
+        <:fact>Last run {{this.lastRun}}</:fact>
+        <:metric><Metric
+            @value='{{@model.ruleCount}}'
+            @label='Rules'
+          /></:metric>
+        <:details>{{#if @model.runsAs}}<Detail @label='Runs as'><@fields.runsAs
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}</:details>
+      </RichFittedCard>
       <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .fit-sub,
-        .row {
-          font-size: var(--boxel-font-size-xs);
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
           color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .tier-tile {
-          display: none;
-          flex-direction: column;
-          gap: var(--boxel-sp-6xs);
-          margin-top: auto;
-          padding-top: var(--boxel-sp-5xs);
-          border-top: 1px solid var(--border);
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 120px) {
-          .tier-tile {
-            display: flex;
-          }
         }
       </style>
     </template>

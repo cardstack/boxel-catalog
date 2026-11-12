@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   CardDef,
   Component,
@@ -16,8 +17,6 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import {
   EmbCard,
-  FitCard,
-  FitRow,
   IsoHead,
   IsoPage,
   Kv,
@@ -453,6 +452,10 @@ export class Project extends CardDef {
       return projectView(this.args.model);
     }
 
+    get leadStat(): StripItem | undefined {
+      return this.strip[0];
+    }
+
     get strip(): StripItem[] {
       let v = this.v;
       return [
@@ -461,36 +464,35 @@ export class Project extends CardDef {
       ];
     }
     <template>
-      <FitCard @title={{@model.title}}>
-        <:mark><Avatar
+      <RichFittedCard>
+        <:avatar><Avatar
             @name={{if @model.title @model.title ''}}
             @hue='var(--muted)'
             @shape='rounded'
-            @size={{20}}
             aria-hidden='true'
-          /></:mark>
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
         <:status>{{#if @model.status}}<@fields.status
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:status>
-        <:default>
-          {{#if @model.description}}<FitRow @left={{true}}><span
-                class='meta'
-              >{{@model.description}}</span></FitRow>{{/if}}
-          <FitRow @label='Effort'>{{orDash this.v.effort}}</FitRow>
-          <FitRow @label='Starts'><span class='mono'>{{orDash
+        <:subtitle><span class='meta'>{{@model.description}}</span></:subtitle>
+        <:metric>{{#if this.leadStat}}<Metric
+              @value={{this.leadStat.value}}
+              @label={{this.leadStat.label}}
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.description}}{{/if}}
+          <Detail @label='Effort'>{{orDash this.v.effort}}</Detail>
+          <Detail @label='Starts'><span class='mono'>{{orDash
                 this.v.startLabel
-              }}</span></FitRow>
-          <FitRow @label='Lead'>{{orDash this.v.lead}}</FitRow>
-          <FitRow @label='Team'>{{orDash this.v.team}}</FitRow>
-          <StatStrip
-            class='fit-strip'
-            @compact={{true}}
-            @items={{this.strip}}
-          />
-          <FitRow @label='Vendor'>{{orDash this.v.vendor}}</FitRow>
-        </:default>
-      </FitCard>
+              }}</span></Detail>
+          <Detail @label='Lead'>{{orDash this.v.lead}}</Detail>
+          <Detail @label='Team'>{{orDash this.v.team}}</Detail>
+
+          <Detail @label='Vendor'>{{orDash this.v.vendor}}</Detail>
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .meta {
           overflow: hidden;

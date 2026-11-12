@@ -11,7 +11,7 @@ import NumberField from '@cardstack/base/number';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import ClipboardListIcon from '@cardstack/boxel-icons/clipboard-list';
 import { AtomChip, Dot, Mark } from './components/record-sheet';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
 
@@ -276,7 +276,7 @@ export class Assignment extends CardDef {
       return dueWindowState(this.args.model?.dueWindow);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><Mark @text='As' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{if @model.code @model.code 'Assignment'}}
@@ -287,7 +287,29 @@ export class Assignment extends CardDef {
               this.state
             }}</Dot></:status>
         <:fact>{{@model.dueLabel}}</:fact>
-      </FitTile>
+        <:metric><Metric
+            @value='{{orZero @model.effectiveMaxPoints}}'
+            @label='Points'
+          /></:metric>
+        <:details>
+          {{#if @model.module}}<Detail @label='Module'><@fields.module
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.rubric}}<Detail @label='Rubric'><@fields.rubric
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+          {{#if @model.required}}<Detail
+              @label='Required'
+              @value='Yes'
+            />{{/if}}
+          {{#if @model.allowResubmission}}<Detail
+              @label='Resubmission'
+              @value='Allowed'
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 }

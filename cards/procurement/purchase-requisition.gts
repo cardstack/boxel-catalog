@@ -1,4 +1,5 @@
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import {
   CardDef,
   Component,
@@ -22,7 +23,7 @@ import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { List } from '@cardstack/pretui/components/list';
 import { Item } from '@cardstack/pretui/components/item';
-import { CompactFitted, CompactRow } from '../commerce/compact-parts';
+
 import {
   KeyValue,
   type KeyValueItem,
@@ -595,39 +596,44 @@ export class PurchaseRequisition extends CardDef {
       return [{ label: this.f.status, tone: this.f.tone }];
     }
     <template>
-      <CompactFitted
-        @mark='Pr'
-        @title={{this.f.name}}
-        @sub={{this.f.sub}}
-        @fact={{this.f.fact}}
-        @big={{this.f.total}}
-        @bigLabel='Est. total'
-        @tags={{this.tags}}
-      >
-        <:rows>
-          {{#if this.f.neededBy}}<CompactRow
-              @k='Needed by'
-              @v={{this.f.neededBy}}
+      <RichFittedCard>
+        <:avatar><Avatar @name='Pr' @shape='square' /></:avatar>
+        <:title>{{this.f.name}}</:title>
+        <:status>{{#each this.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:fact>{{this.f.fact}}</:fact>
+        <:metric><Metric
+            @value={{this.f.total}}
+            @label='Est. total'
+          /></:metric>
+        <:details>
+          {{#if this.f.neededBy}}<Detail
+              @label='Needed by'
+              @value={{this.f.neededBy}}
             />{{/if}}
-          {{#if this.f.requester}}<CompactRow
-              @k='Requester'
-              @v={{this.f.requester}}
+          {{#if this.f.requester}}<Detail
+              @label='Requester'
+              @value={{this.f.requester}}
             />{{/if}}
-          {{#if this.f.department}}<CompactRow
-              @k='Department'
-              @v={{this.f.department}}
+          {{#if this.f.department}}<Detail
+              @label='Department'
+              @value={{this.f.department}}
             />{{/if}}
-          {{#each this.f.lineKv as |row|}}<CompactRow
-              @k={{row.key}}
-              @v={{row.value}}
+          {{#each this.f.lineKv as |row|}}<Detail
+              @label={{row.key}}
+              @value={{row.value}}
             />{{/each}}
-          <CompactRow @k='Lines' @v={{this.f.linesCountText}} />
-          {{#each this.f.lines as |line|}}<CompactRow
-              @k={{line.description}}
-              @v={{line.total}}
+          <Detail @label='Lines' @value={{this.f.linesCountText}} />
+          {{#each this.f.lines as |line|}}<Detail
+              @label={{line.description}}
+              @value={{line.total}}
             />{{/each}}
-        </:rows>
-      </CompactFitted>
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

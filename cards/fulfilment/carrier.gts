@@ -22,7 +22,7 @@ import { Shipment } from './shipment';
 import { isShipmentException } from './shipment-status';
 import { CompoundAtom } from './fulfilment-ui';
 import { money } from './fulfilment-format';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard, Metric, Detail } from '../shared/rich-fitted-card';
 import { IsoFrame } from '../shared/compact-sheet';
 
 // A carrier's service level: the promise, and what it costs.
@@ -779,7 +779,7 @@ export class Carrier extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Carrier> {
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>{{carrierMark
               @model.code
             }}</span></:avatar>
@@ -796,7 +796,25 @@ export class Carrier extends CardDef {
         <:fact>{{count @model.services}}
           services ·
           {{dash (join @model.supportedCountries)}}</:fact>
-      </FitTile>
+        <:metric>{{#if @model.onTimePercent}}<Metric
+              @value={{concat @model.onTimePercent '%'}}
+              @label='On time'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if @model.totalDeliveries}}<Detail
+              @label='Deliveries'
+              @value={{deliveriesLine @model}}
+            />{{/if}}
+          {{#if (serviceNames @model.services)}}<Detail
+              @label='Services'
+              @value={{serviceNames @model.services}}
+            />{{/if}}
+          {{#if @model.trackingUrlPattern}}<Detail
+              @label='Tracking'
+              @value={{trackingHost @model.trackingUrlPattern}}
+            />{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;

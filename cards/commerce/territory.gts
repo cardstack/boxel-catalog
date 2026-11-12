@@ -1,4 +1,5 @@
 import { array, hash } from '@ember/helper';
+import { RichFittedCard, Detail } from '../shared/rich-fitted-card';
 import {
   CardDef,
   Component,
@@ -12,7 +13,7 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { CompactFitted, CompactRow, orEmpty } from './compact-parts';
+import { orEmpty } from './compact-parts';
 import { User } from '../crm/user';
 import { IsoFrame } from '../shared/compact-sheet';
 
@@ -170,28 +171,34 @@ export class Territory extends CardDef {
 
   static fitted = class Fitted extends Component<typeof Territory> {
     <template>
-      <CompactFitted
-        @mark='Territory'
-        @title={{@model.cardTitle}}
-        @sub='{{@model.region}} · {{@model.owner.name}}'
-        @fact='{{@model.region}} · owner {{@model.owner.name}}'
-        @tags={{if @model.region (array (hash label=@model.region))}}
-      >
-        <:rows>
-          {{#if @model.region}}<CompactRow
-              @k='Region'
-              @v={{@model.region}}
+      <RichFittedCard>
+        <:avatar><Avatar @name='Territory' @shape='square' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:status>{{#each
+            (if @model.region (array (hash label=@model.region)))
+            as |t|
+          }}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</:status>
+        <:subtitle>{{@model.region}} · {{@model.owner.name}}</:subtitle>
+        <:fact>{{@model.region}} · owner {{@model.owner.name}}</:fact>
+        <:details>
+          {{#if @model.region}}<Detail
+              @label='Region'
+              @value={{@model.region}}
             />{{/if}}
-          {{#if @model.owner}}<CompactRow
-              @k='Owner'
-              @v={{@model.owner.name}}
+          {{#if @model.owner}}<Detail
+              @label='Owner'
+              @value={{@model.owner.name}}
             />{{/if}}
-          {{#if @model.owner}}<CompactRow @k='Owner'><@fields.owner
+          {{#if @model.owner}}<Detail @label='Owner'><@fields.owner
                 @format='atom'
                 @displayContainer={{false}}
-              /></CompactRow>{{/if}}
-        </:rows>
-      </CompactFitted>
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
     </template>
   };
 

@@ -25,7 +25,8 @@ import CalendarIcon from '@cardstack/boxel-icons/calendar';
 import MessageCircleIcon from '@cardstack/boxel-icons/message-circle';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import { tracked } from '@glimmer/tracking';
-import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { RichFittedCard, Detail, Metric } from '../shared/rich-fitted-card';
 import { identifyCard } from '@cardstack/runtime-common';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import {
@@ -992,21 +993,21 @@ export class MarketplaceOffer extends CardDef {
   // orphan a counter or accidentally chain an opening offer to an unrelated one.
   static edit = MarketplaceOfferEdit;
 
-  // FITTED — FittedCard, same fork and knobs as the family's other supporting
-  // tiles.
-  //
-  // SLOT DISCIPLINE — four distinct facts, four slots:
-  //   productTitle (eyebrow) · amount (title, the anchor) · status (badge) ·
-  //   the offer-vs-asking gap (footer)
-  //
-  // NOTE ON THE GAP: it is computed here from `listingPrice`, which is
-  // denormalized onto the card precisely so a PRERENDERED tile can show it —
-  // prerendered fitted cannot resolve `linksTo`, so reading the listing
-  // directly would render blank. The comparison itself is still derived at
-  // render time, never stored, so it cannot go stale when the seller re-prices.
+  // The offer-vs-asking gap reads `listingPrice`, denormalized so a
+  // prerendered fitted view can show it; the comparison is derived here, never
+  // stored, so it cannot go stale when the seller re-prices.
   static fitted = class Fitted extends Component<typeof MarketplaceOffer> {
     get amount() {
       return formatMoney(this.args.model?.amount);
+    }
+    get asking() {
+      return formatMoney(this.args.model?.listingPrice);
+    }
+    // the amount rides on the subtitle too, so strips under 170 tall show it
+    get subtitle() {
+      return [this.args.model?.offeredByName, this.amount]
+        .filter(Boolean)
+        .join(' · ');
     }
 
     get gap() {
@@ -1025,158 +1026,41 @@ export class MarketplaceOffer extends CardDef {
     }
 
     <template>
-      <FittedCard class='of-fit' @titleTag='h3'>
-        {{! Rule 2 anchor: no image field on an offer, so the tier-2 icon — the
-            card's OWN static icon, shared with its isolated and atom formats. }}
-        <:placeholder>
-          <HandshakeIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
-        </:placeholder>
-
-        <:eyebrow><span class='fit-eyebrow'>{{if
-              @model.productTitle
-              @model.productTitle
-              'Unlinked listing'
-            }}</span></:eyebrow>
-
-        {{! The amount is the main field of an offer, so it takes the title slot
-            and FittedCard's own "title is loudest" behaviour points at the right
-            value rather than being fought. }}
-        <:title><span class='fit-title'>{{moneyText
-              @model.amount
-            }}</span></:title>
-
-        <:badgeRight>
-          {{#if @model.offerStatus}}
-            <@fields.offerStatus @format='atom' />
-          {{/if}}
-        </:badgeRight>
-
-        <:footer>
-          {{#if this.gap}}
-            <span class='of-gap'>{{this.gap}}</span>
-          {{/if}}
-          {{#if @model.isCounter}}
-            <span class='of-counter'>Counter</span>
-          {{/if}}
-        </:footer>
-      </FittedCard>
-
+      <RichFittedCard>
+        <:avatar><HandshakeIcon class='mark' aria-hidden='true' /></:avatar>
+        <:title>{{if
+            @model.productTitle
+            @model.productTitle
+            'Unlinked listing'
+          }}</:title>
+        <:status>{{#if @model.offerStatus}}<@fields.offerStatus
+              @format='atom'
+            />{{/if}}{{#if @model.isCounter}}<StatePill
+              @label='Counter'
+              @hue='slate'
+            />{{/if}}</:status>
+        <:subtitle>{{this.subtitle}}</:subtitle>
+        <:fact>{{this.gap}}</:fact>
+        <:metric>{{#if this.amount}}<Metric
+              @value={{this.amount}}
+              @label='Offer'
+            />{{/if}}</:metric>
+        <:details>
+          {{#if this.asking}}<Detail
+              @label='Asking'
+              @value={{this.asking}}
+            />{{/if}}
+          {{#if @model.offeredBy}}<Detail @label='Offered by'><@fields.offeredBy
+                @format='atom'
+                @displayContainer={{false}}
+              /></Detail>{{/if}}
+        </:details>
+      </RichFittedCard>
       <style scoped>
-        /* No container-type / container-name — FittedCard queries the HOST's
-           `fitted-card` container. */
-        .of-fit {
-          --ink-800: var(--card);
-          --ink-700: color-mix(
-            in oklch,
-            var(--card) 80%,
-            var(--foreground) 20%
-          );
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold: var(--primary);
-          --gold-ink: var(--primary-ink);
-          --gold-bright: var(--accent);
-
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans);
-          box-shadow: inset 2px 0 0 0 var(--gold);
-
-          --fc-image-width: 34cqh;
-          --fc-image-min-width: 2.5rem;
-          --fc-image-max-width: 5rem;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
-
-          --fc-content-padding: 0.5rem 0.75rem;
-          --fc-header-gap: 0.15em;
-          --fc-content-gap: 0.25rem;
-
-          --fc-eyebrow-font-size: max(9px, 0.62em);
-          --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(15px, 1.3em);
-          --fc-title-line-height: 1.2;
-          --fc-title-line-clamp: 1;
-          --fc-footer-font-size: max(11px, 0.72em);
-          --fc-footer-gap: 0.5rem;
-          --fc-footer-justify: space-between;
-          --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: 0.2rem;
-        }
-
-        /* The product name is the QUIET row here — clamped to one line so a long
-           colourway cannot push the amount off the tile. */
-        .fit-eyebrow {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--smoke);
-          font-weight: 600;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 1;
-          overflow: hidden;
-        }
-        /* The anchor — gold display serif, same as every money figure in the
-           family's hero moments. */
-        .fit-title {
-          font-family: 'Playfair Display', Georgia, serif;
-          color: var(--primary-ink);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          letter-spacing: -0.01em;
-          white-space: nowrap;
-        }
-
-        /* A ratio is not an amount: muted mono and a step down, so it
-           annotates the figure rather than reading as a second money value. */
-        .of-gap {
-          font-family:
-            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-          color: var(--smoke);
-          white-space: nowrap;
-        }
-        /* A different KIND of mark from the gap beside it — uppercase and
-           tracked, so the two footer values do not read as one wrapped field. */
-        .of-counter {
-          font-size: 0.85em;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.07em;
-          color: var(--smoke);
-          white-space: nowrap;
-        }
-
-        /* ---- quanta: visibility only ---- */
-        @container fitted-card (height <= 50px) {
-          .of-fit {
-            --fc-footer-display: none;
-            --fc-badge-right-display: none;
-            --fc-content-padding: 0.15rem 0.35rem;
-          }
-          .fit-eyebrow {
-            display: none;
-          }
-        }
-
-        /* The counter mark goes before the gap does: the gap is the number the
-           reader is deciding on, the mark is context. */
-        @container fitted-card (width <= 220px) and (height <= 80px) {
-          .of-fit .of-counter {
-            display: none;
-          }
-        }
-
-        @container fitted-card (width <= 150px) {
-          .of-fit {
-            --fc-image-max-width: 100%;
-          }
-          .fit-eyebrow {
-            display: none;
-          }
+        .mark {
+          inline-size: var(--pretui-avatar-size);
+          block-size: var(--pretui-avatar-size);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
