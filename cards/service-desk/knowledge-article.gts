@@ -283,7 +283,7 @@ export class KnowledgeArticle extends CardDef {
       <style scoped>
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
         }
       </style>
     </template>
