@@ -11,7 +11,7 @@ import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
 
 import { Document } from '../audit/document';
 import { CertificationAuthority } from '../audit/certification-authority';
-import { FitTile } from '../shared/fit-tile';
+import { RichFittedCard } from '../shared/rich-fitted-card';
 import { AuditComplianceDeskIsolated } from './desk';
 
 function initials(name?: string | null) {
@@ -232,7 +232,7 @@ export class AuditComplianceDesk extends CardDef {
       return counts(this.args.model.documents);
     }
     <template>
-      <FitTile>
+      <RichFittedCard>
         <:avatar><span class='mark' aria-hidden='true'>{{initials
               @model.organisation
             }}</span></:avatar>
@@ -247,7 +247,7 @@ export class AuditComplianceDesk extends CardDef {
               @format='atom'
               @displayContainer={{false}}
             />{{/if}}</:relations>
-      </FitTile>
+      </RichFittedCard>
       <style scoped>
         .mark {
           display: inline-grid;
