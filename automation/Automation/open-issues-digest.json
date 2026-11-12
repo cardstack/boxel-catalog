@@ -57,6 +57,7 @@
         "callApiCalls": 5,
         "responseBytes": 2000000,
         "resolveCalls": 0,
+        "aiCredits": 0,
         "writes": 1,
         "seconds": 300,
         "dailyCredits": 40,
