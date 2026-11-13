@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Trip\n\nType where you are going, the dates and what you will do, right on the card, then press **Research the place**. It looks up the weather for each day and town, writes short sourced notes (plugs, money, local customs), picks colours for the page from the place in that month, and drafts a packing list sized to the trip.\n\nOpen the trip on your phone (the QR code on the card) and **scan your things**: the camera reads what is laid out, ticks off what is on the list, adds what is new, and the computer view updates live, glowing each row that arrives. Tap ✕ on anything you are not bringing.\n\n**Bags:** photograph each bag in \"The bag\" mode and it becomes a tab (Bag 1, Bag 2, ...), drawn as a suitcase, backpack or duffel that fills as you pack, with a weight dial against that bag’s limit. Pack by scanning in Packing mode, by dragging rows onto a bag, or from each row’s dropdown.\n\nThings you own carry over to the next trip (**Start from…**), and **Put away** mode remembers where each thing lives at home. Two examples are included: a winter trip to Hokkaido part-way through packing, and a freshly researched beach trip to Bali.",
+      "ref": {
+        "module": "../trip",
+        "name": "Trip"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Trip",
+      "cardDescription": "A trip and its packing: where and when, researched weather and notes, the list by category, the bags, and the phone camera that fills it in.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

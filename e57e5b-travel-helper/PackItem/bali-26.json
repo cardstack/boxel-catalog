@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Sunglasses",
+      "category": "other",
+      "status": "needed",
+      "need": 1,
+      "why": "sun protection (keep in bag at Monkey Forest)",
+      "litres": 0.2,
+      "kg": 0.05,
+      "kind": null,
+      "leaveWhy": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/bali"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

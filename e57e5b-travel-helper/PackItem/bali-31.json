@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Lightweight tops",
+      "category": "wardrobe",
+      "status": "needed",
+      "need": 4,
+      "why": "warm, humid weather, re-wearing + laundry",
+      "litres": 1,
+      "kg": 0.2,
+      "kind": null,
+      "leaveWhy": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/bali"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}
