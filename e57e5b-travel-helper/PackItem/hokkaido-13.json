@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Scarf",
+      "category": "wardrobe",
+      "status": "needed",
+      "need": 1,
+      "why": "protect from cold",
+      "litres": 0.5,
+      "kg": 0.1,
+      "kind": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/hokkaido"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

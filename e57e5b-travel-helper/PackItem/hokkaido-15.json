@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Mobile connectivity arrangement",
+      "category": "electronics",
+      "status": "needed",
+      "need": null,
+      "why": "Choose and arrange roaming, overseas SIM/eSIM or a data dongle.",
+      "litres": null,
+      "kg": null,
+      "kind": "task"
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/hokkaido"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

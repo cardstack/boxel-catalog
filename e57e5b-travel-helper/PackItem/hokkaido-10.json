@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Check charger compatibility",
+      "category": "electronics",
+      "status": "needed",
+      "need": null,
+      "why": "Confirm your chargers and adapter are suitable for the destination's power system.",
+      "litres": null,
+      "kg": null,
+      "kind": "task"
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/hokkaido"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}
