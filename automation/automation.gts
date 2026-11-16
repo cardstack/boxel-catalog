@@ -72,6 +72,10 @@ import { PanelSection } from '@cardstack/pretui/components/panel-section';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Switch } from '@cardstack/pretui/components/switch';
 import { Stack } from '@cardstack/pretui/components/stack';
+import {
+  StepList,
+  type StepItem,
+} from '@cardstack/pretui/components/step-list';
 import { Table } from '@cardstack/pretui/components/table';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
 import { Token } from '@cardstack/pretui/components/token';
@@ -1653,10 +1657,36 @@ interface TriggerStatus {
   nextRun?: string;
   spent?: boolean;
 }
+// The automation's last run that started and has ended, with the milestones
+// its script reported: the script declares them with
+// `realm.progress.plan([...])` and marks each with
+// `realm.progress.milestone(name)`, so they come from the run, never from a
+// field on the card.
+interface RunMilestone {
+  name: string;
+  planned: boolean;
+  startedAt: string;
+  endedAt: string | null;
+  ms: number;
+  done?: number;
+  total?: number;
+}
+interface LastRun {
+  runId: string;
+  state: 'pending' | 'running' | 'complete' | 'error' | 'canceled';
+  startedAt: string | null;
+  finishedAt: string | null;
+  plan: string[];
+  milestones: RunMilestone[];
+  ahead: string[];
+  failedIn: string | null;
+  dropped: number;
+}
 type ServerStatus =
-  | { switchedOn: false }
+  | { switchedOn: false; lastRun?: LastRun | null }
   | {
       switchedOn: true;
+      lastRun?: LastRun | null;
       state: AutomationState;
       pauseReason: PauseReason | null;
       payer: string | null;
@@ -1888,6 +1918,70 @@ function statusItems(status: ServerStatus): StatusItem[] {
     );
   }
   return items;
+}
+
+// "under a second", "4 s", "2 min 5 s", "1 h 3 min".
+function durationText(ms: number): string {
+  let seconds = Math.round(ms / 1000);
+  if (seconds < 1) {
+    return 'under a second';
+  }
+  if (seconds < 60) {
+    return `${seconds} s`;
+  }
+  let minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    let rest = seconds % 60;
+    return rest ? `${minutes} min ${rest} s` : `${minutes} min`;
+  }
+  let hours = Math.floor(minutes / 60);
+  let rest = minutes % 60;
+  return rest ? `${hours} h ${rest} min` : `${hours} h`;
+}
+
+// One step per milestone the last run reached, in the order reached, then
+// one per milestone of the plan the run never reached.
+function milestoneSteps(run: LastRun): StepItem[] {
+  let reached: StepItem[] = run.milestones.map((milestone) => {
+    let failed =
+      run.failedIn !== null &&
+      milestone === run.milestones[run.milestones.length - 1];
+    let parts = [`Took ${durationText(milestone.ms)}`];
+    if (milestone.done !== undefined) {
+      parts.push(
+        milestone.total !== undefined
+          ? `${tally(milestone.done)} of ${tally(milestone.total)}`
+          : tally(milestone.done),
+      );
+    }
+    if (!milestone.planned && run.plan.length > 0) {
+      parts.push('Not in the plan');
+    }
+    if (failed) {
+      parts.push('The run ended with an error here');
+    }
+    return {
+      label: milestone.name,
+      state: failed ? 'error' : 'complete',
+      detail: parts.join(' · '),
+    };
+  });
+  let ahead: StepItem[] = run.ahead.map((name) => ({
+    label: name,
+    state: 'upcoming',
+    detail: 'The run ended before reaching this milestone',
+  }));
+  return [...reached, ...ahead];
+}
+
+function lastRunLead(run: LastRun): string {
+  let ended =
+    run.state === 'complete'
+      ? 'completed'
+      : run.state === 'error'
+        ? 'ended with an error'
+        : 'was stopped';
+  return `The milestones the script reported on the last run, which ${ended}.`;
 }
 
 // A trigger's times read in the trigger's own zone, as the trigger's
@@ -2219,6 +2313,18 @@ class Isolated extends Component<typeof Automation> {
   get statusItems() {
     return this.status ? statusItems(this.status) : [];
   }
+  get lastRun() {
+    let run = this.status?.lastRun;
+    return run && (run.milestones.length > 0 || run.plan.length > 0)
+      ? run
+      : undefined;
+  }
+  get lastRunSteps() {
+    return this.lastRun ? milestoneSteps(this.lastRun) : [];
+  }
+  get lastRunLead() {
+    return this.lastRun ? lastRunLead(this.lastRun) : undefined;
+  }
   timeZoneAt = (index: number) => this.args.model.triggers?.[index]?.timeZone;
   triggerStatusAt = (index: number) =>
     statusOfTrigger(this.status, this.args.model.triggers?.[index]?.label);
@@ -2372,15 +2478,30 @@ class Isolated extends Component<typeof Automation> {
         {{/if}}
       </PanelSection>
 
-      {{! The script declares its milestones and reports each one as a run
-          reaches it; they come from the runs, not from a field here. }}
-      <PanelSection @title='Run milestones' @collapsible={{false}}>
-        <EmptyState
-          @size='s'
-          @texture={{false}}
-          @title='Shown from runs'
-          @message='The steps the script reports as it runs will show here.'
-        />
+      {{! The script declares its milestones and marks each one as a run
+          reaches it; they come from the last run, not from a field here. }}
+      <PanelSection
+        @title='Run milestones'
+        @collapsible={{false}}
+        data-test-automation-milestones
+      >
+        {{#if this.lastRun}}
+          <p class='automation__lead' data-test-automation-milestones-lead>
+            {{this.lastRunLead}}
+          </p>
+          <StepList
+            @steps={{this.lastRunSteps}}
+            @label='Milestones of the last run'
+            @announce={{false}}
+          />
+        {{else}}
+          <EmptyState
+            @size='s'
+            @texture={{false}}
+            @title='Shown from runs'
+            @message='The milestones the script reports as the script runs show here after a run ends.'
+          />
+        {{/if}}
       </PanelSection>
     </article>
     <style scoped>
