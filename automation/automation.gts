@@ -1957,19 +1957,23 @@ function milestoneSteps(run: LastRun): StepItem[] {
     if (!milestone.planned && run.plan.length > 0) {
       parts.push('Not in the plan');
     }
+    let last = milestone === run.milestones[run.milestones.length - 1];
+    let stopped = run.state === 'canceled' && last;
     if (failed) {
       parts.push('The run ended with an error here');
+    } else if (stopped) {
+      parts.push('Boxel stopped the run here');
     }
     return {
       label: milestone.name,
-      state: failed ? 'error' : 'complete',
+      state: failed ? 'error' : stopped ? 'blocked' : 'complete',
       detail: parts.join(' · '),
     };
   });
   let ahead: StepItem[] = run.ahead.map((name) => ({
     label: name,
     state: 'upcoming',
-    detail: 'The run ended before reaching this milestone',
+    detail: 'The run ended before reaching the milestone',
   }));
   return [...reached, ...ahead];
 }
@@ -1981,8 +1985,17 @@ function lastRunLead(run: LastRun): string {
       : run.state === 'error'
         ? 'ended with an error'
         : 'was stopped';
-  return `The milestones the script reported on the last run, which ${ended}.`;
+  let lead = `The milestones the script reported on the last run, which ${ended}.`;
+  if (run.dropped > 0) {
+    lead += ` The script marked ${tally(run.dropped)} more ${
+      run.dropped === 1 ? 'milestone' : 'milestones'
+    } past the ${tally(MAX_RUN_MILESTONES)} a run records, so the last milestone shown also holds the time of the unrecorded milestones.`;
+  }
+  return lead;
 }
+
+// The most milestones the server records for one run.
+const MAX_RUN_MILESTONES = 200;
 
 // A trigger's times read in the trigger's own zone, as the trigger's
 // sentences do.
@@ -2319,6 +2332,17 @@ class Isolated extends Component<typeof Automation> {
       ? run
       : undefined;
   }
+  // What the section says when there is no last run to list: a viewer the
+  // status route refuses never sees runs; an editor sees them once a run
+  // ends and the script reports milestones.
+  get milestonesEmptyMessage() {
+    if (!this.status) {
+      return 'Someone who can edit this workspace sees the milestones of the last run here.';
+    }
+    return this.status.lastRun
+      ? 'The last run reported no milestones. A script reports milestones with realm.progress.plan and realm.progress.milestone.'
+      : 'The milestones the script reports show here after a run ends.';
+  }
   get lastRunSteps() {
     return this.lastRun ? milestoneSteps(this.lastRun) : [];
   }
@@ -2499,7 +2523,7 @@ class Isolated extends Component<typeof Automation> {
             @size='s'
             @texture={{false}}
             @title='Shown from runs'
-            @message='The milestones the script reports as the script runs show here after a run ends.'
+            @message={{this.milestonesEmptyMessage}}
           />
         {{/if}}
       </PanelSection>
@@ -2575,10 +2599,13 @@ class Isolated extends Component<typeof Automation> {
 // reported step, so it runs as soon as it's created.
 const STARTER_SCRIPT = `/* global realm */
 // A Realm Runner script: the body of an async function, run with the
-// automation's \`realm\` object. Find cards with realm.cards.search, write
-// files with realm.fs.writeText, and report each step with realm.activity.
+// automation's \`realm\` object. Find cards with realm.cards.search and
+// write files with realm.fs.writeText. Name the run's milestones up front
+// with realm.progress.plan, mark each as the script reaches it with
+// realm.progress.milestone, and count inside one with realm.progress.count.
 
-await realm.activity({ message: 'Starting', current: 1, total: 1 });
+realm.progress.plan(['Start']);
+realm.progress.milestone('Start');
 `;
 
 // A file path inside the workspace, without its extension: letters, digits,
