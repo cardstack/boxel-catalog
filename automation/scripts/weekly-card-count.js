@@ -15,10 +15,31 @@ realm.progress.plan(['Count cards by type', 'Write the report']);
 realm.progress.milestone('Count cards by type');
 const counts = new Map();
 let counted = 0;
-for (let number = 0; ; number++) {
-  const { cards, total, truncated } = await realm.cards.search({
-    page: { number, size: PAGE_SIZE },
-  });
+// Where the next page starts. A page starts at `number * size`, so `size`
+// always divides it.
+let start = 0;
+let size = PAGE_SIZE;
+for (;;) {
+  let page;
+  try {
+    page = await realm.cards.search({
+      page: { number: start / size, size },
+    });
+  } catch (error) {
+    // A search refuses a page whose cards together are too large to return,
+    // and names the page size that fits. Ask again from the same card with
+    // that size, or the next smaller one that divides `start`.
+    const fits = Number(/page\.size (\d+) or less/.exec(error.message)?.[1]);
+    if (!fits) {
+      throw error;
+    }
+    size = fits;
+    while (start % size !== 0) {
+      size--;
+    }
+    continue;
+  }
+  const { cards, total, truncated } = page;
   for (const card of cards) {
     const key = `${card.type.module}#${card.type.name}`;
     counts.set(key, (counts.get(key) ?? 0) + 1);
@@ -28,9 +49,10 @@ for (let number = 0; ; number++) {
   // progress calls. Cards saved while the script reads can move the total,
   // and a count may never pass its total.
   realm.progress.count(counted, Math.max(total, counted));
+  start += size;
   // The total bounds the pages too, so a search that keeps answering empty
   // pages still ends.
-  if (!truncated || (number + 1) * PAGE_SIZE >= total) {
+  if (!truncated || start >= total) {
     break;
   }
 }
