@@ -1984,7 +1984,7 @@ function lastRunLead(run: LastRun): string {
       ? 'completed'
       : run.state === 'error'
         ? 'ended with an error'
-        : 'was stopped';
+        : 'Boxel stopped';
   let lead = `The milestones the script reported on the last run, which ${ended}.`;
   if (run.dropped > 0) {
     lead += ` The script marked ${tally(run.dropped)} more ${
