@@ -2513,11 +2513,15 @@ class Isolated extends Component<typeof Automation> {
           <p class='automation__lead' data-test-automation-milestones-lead>
             {{this.lastRunLead}}
           </p>
-          <StepList
-            @steps={{this.lastRunSteps}}
-            @label='Milestones of the last run'
-            @announce={{false}}
-          />
+          {{! Held below StepList's stacking width, so each milestone gets a
+              row of its own and its full name and detail. }}
+          <div class='automation__milestones'>
+            <StepList
+              @steps={{this.lastRunSteps}}
+              @label='Milestones of the last run'
+              @announce={{false}}
+            />
+          </div>
         {{else}}
           <EmptyState
             @size='s'
@@ -2537,6 +2541,9 @@ class Isolated extends Component<typeof Automation> {
         overflow-y: auto;
         padding: var(--boxel-sp-xl);
         container-type: inline-size;
+      }
+      .automation__milestones {
+        max-inline-size: 26rem;
       }
       .automation__header {
         display: grid;
