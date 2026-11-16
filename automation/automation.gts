@@ -1920,6 +1920,32 @@ function statusItems(status: ServerStatus): StatusItem[] {
   return items;
 }
 
+// The milestones a script declares with `realm.progress.plan([...])`: the
+// names of the first such call whose array holds only string literals.
+// Undefined when the script declares none that way, such as a plan built at
+// run time; then the milestones show once a run reports them.
+const PLAN_CALL = /realm\s*\.\s*progress\s*\.\s*plan\s*\(\s*\[([^\]]*)\]\s*\)/;
+const STRING_LITERAL =
+  /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\$]|\\.)*)`/g;
+
+function declaredMilestones(script: string): string[] | undefined {
+  let call = PLAN_CALL.exec(script);
+  if (!call) {
+    return undefined;
+  }
+  let body = call[1];
+  let names: string[] = [];
+  for (let match of body.matchAll(STRING_LITERAL)) {
+    let raw = match[1] ?? match[2] ?? match[3] ?? '';
+    names.push(raw.replace(/\\(.)/g, '$1').trim());
+  }
+  let rest = body.replace(STRING_LITERAL, '').replace(/[\s,]/g, '');
+  if (rest !== '' || names.length === 0 || names.some((name) => !name)) {
+    return undefined;
+  }
+  return names;
+}
+
 // "under a second", "4 s", "2 min 5 s", "1 h 3 min".
 function durationText(ms: number): string {
   let seconds = Math.round(ms / 1000);
@@ -2084,23 +2110,15 @@ function statusOfTrigger(
     : trigger;
 }
 
-// The linked script, read-only.
+// The linked script, read-only, from the text the isolated view read.
 class ScriptView extends GlimmerComponent<{
   Args: {
     url: string | undefined;
-    realm: string | undefined;
-    realmId: string | undefined;
-    context: CardContext | undefined;
+    state: ScriptState;
   };
 }> {
-  private script = scriptText(this, () => ({
-    url: this.args.url,
-    realm: this.args.realm,
-    realmId: this.args.realmId,
-    tools: toolsOf(this.args.context),
-  }));
   get state() {
-    return this.script.current;
+    return this.args.state;
   }
   get empty() {
     return this.state.text === '';
@@ -2326,6 +2344,29 @@ class Isolated extends Component<typeof Automation> {
   get statusItems() {
     return this.status ? statusItems(this.status) : [];
   }
+  // The script, read once for the Script section and for the milestones the
+  // script declares.
+  private script = scriptText(this, () => ({
+    url: this.scriptURL,
+    realm: this.realmHref,
+    realmId: this.realmId,
+    tools: toolsOf(this.args.context),
+  }));
+  get scriptState() {
+    return this.script.current;
+  }
+  // The milestones the script declares with realm.progress.plan, read from
+  // its text, shown before any run has reported its own.
+  get declaredPlan() {
+    let text = this.scriptState.text;
+    return text ? declaredMilestones(text) : undefined;
+  }
+  get declaredSteps(): StepItem[] {
+    return (this.declaredPlan ?? []).map((name) => ({
+      label: name,
+      state: 'upcoming',
+    }));
+  }
   get lastRun() {
     let run = this.status?.lastRun;
     return run && (run.milestones.length > 0 || run.plan.length > 0)
@@ -2411,12 +2452,7 @@ class Isolated extends Component<typeof Automation> {
           The script is what actually runs each time this automation runs.
         </p>
         {{#if this.scriptURL}}
-          <ScriptView
-            @url={{this.scriptURL}}
-            @realm={{this.realmHref}}
-            @realmId={{this.realmId}}
-            @context={{@context}}
-          />
+          <ScriptView @url={{this.scriptURL}} @state={{this.scriptState}} />
         {{else}}
           <EmptyState
             @size='s'
@@ -2519,6 +2555,18 @@ class Isolated extends Component<typeof Automation> {
             <StepList
               @steps={{this.lastRunSteps}}
               @label='Milestones of the last run'
+              @announce={{false}}
+            />
+          </div>
+        {{else if this.declaredPlan}}
+          <p class='automation__lead' data-test-automation-milestones-lead>
+            The milestones the script plans to reach, in order. Each run reports
+            how far the script got.
+          </p>
+          <div class='automation__milestones'>
+            <StepList
+              @steps={{this.declaredSteps}}
+              @label='Milestones the script declares'
               @announce={{false}}
             />
           </div>
