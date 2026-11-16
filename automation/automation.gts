@@ -73,15 +73,20 @@ import { SegmentedControl } from '@cardstack/pretui/components/segmented-control
 import { Switch } from '@cardstack/pretui/components/switch';
 import { Stack } from '@cardstack/pretui/components/stack';
 import {
-  StepList,
-  type StepItem,
-} from '@cardstack/pretui/components/step-list';
+  Timeline,
+  type TimelineEvent,
+} from '@cardstack/pretui/components/timeline';
 import { Table } from '@cardstack/pretui/components/table';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
 import { Token } from '@cardstack/pretui/components/token';
 import { eq } from '@cardstack/pretui/helpers';
 import CalendarCheckIcon from '@cardstack/boxel-icons/calendar-check';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
+import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
+import CircleDashedIcon from '@cardstack/boxel-icons/circle-dashed';
+import CirclePauseIcon from '@cardstack/boxel-icons/circle-pause';
+import CircleXIcon from '@cardstack/boxel-icons/circle-x';
+import HourglassIcon from '@cardstack/boxel-icons/hourglass';
 import PlugIcon from '@cardstack/boxel-icons/plug';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
@@ -1673,6 +1678,8 @@ interface RunMilestone {
 }
 interface LastRun {
   runId: string;
+  // A running run names the milestone it is in.
+  current?: string | null;
   state: 'pending' | 'running' | 'complete' | 'error' | 'canceled';
   startedAt: string | null;
   finishedAt: string | null;
@@ -1683,10 +1690,15 @@ interface LastRun {
   dropped: number;
 }
 type ServerStatus =
-  | { switchedOn: false; lastRun?: LastRun | null }
+  | {
+      switchedOn: false;
+      lastRun?: LastRun | null;
+      currentRun?: LastRun | null;
+    }
   | {
       switchedOn: true;
       lastRun?: LastRun | null;
+      currentRun?: LastRun | null;
       state: AutomationState;
       pauseReason: PauseReason | null;
       payer: string | null;
@@ -1965,46 +1977,106 @@ function durationText(ms: number): string {
   return rest ? `${hours} h ${rest} min` : `${hours} h`;
 }
 
-// One step per milestone the last run reached, in the order reached, then
-// one per milestone of the plan the run never reached.
-function milestoneSteps(run: LastRun): StepItem[] {
-  let reached: StepItem[] = run.milestones.map((milestone) => {
-    let failed =
-      run.failedIn !== null &&
-      milestone === run.milestones[run.milestones.length - 1];
-    let parts = [`Took ${durationText(milestone.ms)}`];
-    if (milestone.done !== undefined) {
-      parts.push(
-        milestone.total !== undefined
-          ? `${tally(milestone.done)} of ${tally(milestone.total)}`
-          : tally(milestone.done),
-      );
-    }
-    if (!milestone.planned && run.plan.length > 0) {
-      parts.push('Not in the plan');
-    }
-    let last = milestone === run.milestones[run.milestones.length - 1];
-    let stopped = run.state === 'canceled' && last;
-    if (failed) {
-      parts.push('The run ended with an error here');
-    } else if (stopped) {
-      parts.push('Boxel stopped the run here');
-    }
+// Where a run stands at one milestone: reached and done, running now, where
+// the run ended with an error, where Boxel stopped the run, or not reached.
+type MilestoneState =
+  | 'reached'
+  | 'running'
+  | 'failed'
+  | 'stopped'
+  | 'not-reached';
+
+interface MilestoneRow {
+  id: string;
+  name: string;
+  state: MilestoneState;
+  badge: string;
+  tone: 'neutral' | 'success' | 'warning' | 'danger';
+  detail?: string;
+}
+
+function countText(done?: number, total?: number): string | undefined {
+  if (done === undefined) {
+    return undefined;
+  }
+  return total !== undefined
+    ? `${tally(done)} of ${tally(total)}`
+    : tally(done);
+}
+
+// One row per milestone the run reached, in the order reached, then one per
+// milestone of the plan the run hasn't reached.
+function runMilestoneRows(run: LastRun): MilestoneRow[] {
+  let lastIndex = run.milestones.length - 1;
+  let rows: MilestoneRow[] = run.milestones.map((milestone, index) => {
+    let last = index === lastIndex;
+    let state: MilestoneState =
+      last && run.state === 'running'
+        ? 'running'
+        : last && run.failedIn !== null
+          ? 'failed'
+          : last && run.state === 'canceled'
+            ? 'stopped'
+            : 'reached';
+    let time = durationText(milestone.ms);
+    let parts = [
+      state === 'running'
+        ? `Running for ${time}`
+        : state === 'reached'
+          ? `Took ${time}`
+          : `Ran for ${time}`,
+      countText(milestone.done, milestone.total),
+      !milestone.planned && run.plan.length > 0 ? 'Not in the plan' : undefined,
+    ].filter((part): part is string => Boolean(part));
+    let look = MILESTONE_LOOKS[state];
     return {
-      label: milestone.name,
-      state: failed ? 'error' : stopped ? 'blocked' : 'complete',
+      id: `${index}`,
+      name: milestone.name,
+      state,
+      badge: look.badge,
+      tone: look.tone,
       detail: parts.join(' · '),
     };
   });
-  let ahead: StepItem[] = run.ahead.map((name) => ({
-    label: name,
-    state: 'upcoming',
-    detail: 'The run ended before reaching the milestone',
-  }));
-  return [...reached, ...ahead];
+  let ended = run.state !== 'running';
+  return [
+    ...rows,
+    ...run.ahead.map((name, index) => ({
+      id: `ahead-${index}`,
+      name,
+      state: 'not-reached' as const,
+      badge: ended ? 'Not reached' : 'Not reached yet',
+      tone: 'neutral' as const,
+    })),
+  ];
 }
 
-function lastRunLead(run: LastRun): string {
+// The milestones a script declares, before a run has reached any of them.
+function declaredMilestoneRows(names: string[]): MilestoneRow[] {
+  return names.map((name, index) => ({
+    id: `${index}`,
+    name,
+    state: 'not-reached',
+    badge: 'Not reached yet',
+    tone: 'neutral',
+  }));
+}
+
+const MILESTONE_LOOKS: Record<
+  MilestoneState,
+  { badge: string; tone: MilestoneRow['tone'] }
+> = {
+  reached: { badge: 'Done', tone: 'success' },
+  running: { badge: 'Running', tone: 'warning' },
+  failed: { badge: 'Failed here', tone: 'danger' },
+  stopped: { badge: 'Stopped here', tone: 'neutral' },
+  'not-reached': { badge: 'Not reached yet', tone: 'neutral' },
+};
+
+function runLead(run: LastRun): string {
+  if (run.state === 'running') {
+    return 'The milestones the script has reported on the run in progress.';
+  }
   let ended =
     run.state === 'complete'
       ? 'completed'
@@ -2018,6 +2090,103 @@ function lastRunLead(run: LastRun): string {
     } past the ${tally(MAX_RUN_MILESTONES)} a run records, so the last milestone shown also holds the time of the unrecorded milestones.`;
   }
   return lead;
+}
+
+// The milestones as a timeline, one row each, joined by the timeline's rail
+// so they read as a progression. Each marker is shaded in its state's color:
+// gray before the milestone runs, yellow while it runs, green once it is
+// done, red where the run ended with an error.
+class MilestoneTimeline extends GlimmerComponent<{
+  Args: { rows: MilestoneRow[]; label: string };
+}> {
+  get events(): TimelineEvent[] {
+    return this.args.rows.map((row) => ({ id: row.id, title: row.name }));
+  }
+  rowOf = (event: TimelineEvent): MilestoneRow =>
+    this.args.rows.find((row) => row.id === event.id)!;
+  <template>
+    <Timeline
+      @events={{this.events}}
+      @label={{@label}}
+      class='milestones'
+      data-test-automation-milestone-list
+    >
+      <:marker as |event|>
+        {{#let (this.rowOf event) as |row|}}
+          <span
+            class='milestones__mark'
+            data-milestone-state={{row.state}}
+            data-test-milestone-state={{row.state}}
+          >
+            {{#if (eq row.state 'reached')}}
+              <CircleCheckIcon width='14' height='14' />
+            {{else if (eq row.state 'running')}}
+              <HourglassIcon width='13' height='13' />
+            {{else if (eq row.state 'failed')}}
+              <CircleXIcon width='14' height='14' />
+            {{else if (eq row.state 'stopped')}}
+              <CirclePauseIcon width='14' height='14' />
+            {{else}}
+              <CircleDashedIcon width='14' height='14' />
+            {{/if}}
+          </span>
+        {{/let}}
+      </:marker>
+      <:default as |event|>
+        {{#let (this.rowOf event) as |row|}}
+          <span class='milestones__detail'>
+            <Chip @label={{row.badge}} @tone={{row.tone}} />
+            {{#if row.detail}}
+              <span class='milestones__text'>{{row.detail}}</span>
+            {{/if}}
+          </span>
+        {{/let}}
+      </:default>
+    </Timeline>
+    <style scoped>
+      .milestones {
+        max-inline-size: 34rem;
+      }
+      /* Fills the timeline's marker with a light tint of the state's color,
+         the glyph in the color itself. */
+      .milestones__mark {
+        --milestone-color: var(--muted-foreground);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        inline-size: 100%;
+        block-size: 100%;
+        border-radius: 50%;
+        color: var(--milestone-color);
+        background: color-mix(
+          in oklab,
+          var(--milestone-color) 14%,
+          var(--card, #fff)
+        );
+      }
+      .milestones__mark[data-milestone-state='reached'] {
+        --milestone-color: var(--success);
+      }
+      .milestones__mark[data-milestone-state='running'] {
+        --milestone-color: var(--warning);
+      }
+      .milestones__mark[data-milestone-state='failed'] {
+        --milestone-color: var(--destructive);
+      }
+      .milestones__mark[data-milestone-state='not-reached'] {
+        background: var(--card, #fff);
+      }
+      .milestones__detail {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .milestones__text {
+        color: var(--muted-foreground);
+      }
+    </style>
+  </template>
 }
 
 // The most milestones the server records for one run.
@@ -2361,18 +2530,24 @@ class Isolated extends Component<typeof Automation> {
     let text = this.scriptState.text;
     return text ? declaredMilestones(text) : undefined;
   }
-  get declaredSteps(): StepItem[] {
-    return (this.declaredPlan ?? []).map((name) => ({
-      label: name,
-      state: 'upcoming',
-    }));
+  get declaredRows() {
+    return declaredMilestoneRows(this.declaredPlan ?? []);
   }
-  get lastRun() {
-    let run = this.status?.lastRun;
+  // The run in progress when there is one, otherwise the last run that
+  // ended, when it reported milestones or a plan.
+  get shownRun() {
+    let run = this.status?.currentRun ?? this.status?.lastRun;
     return run && (run.milestones.length > 0 || run.plan.length > 0)
       ? run
       : undefined;
   }
+  get shownRunRows() {
+    return this.shownRun ? runMilestoneRows(this.shownRun) : [];
+  }
+  get shownRunLead() {
+    return this.shownRun ? runLead(this.shownRun) : undefined;
+  }
+
   // What the section says when there is no last run to list: a viewer the
   // status route refuses never sees runs; an editor sees them once a run
   // ends and the script reports milestones.
@@ -2384,12 +2559,7 @@ class Isolated extends Component<typeof Automation> {
       ? 'The last run reported no milestones. A script reports milestones with realm.progress.plan and realm.progress.milestone.'
       : 'The milestones the script reports show here after a run ends.';
   }
-  get lastRunSteps() {
-    return this.lastRun ? milestoneSteps(this.lastRun) : [];
-  }
-  get lastRunLead() {
-    return this.lastRun ? lastRunLead(this.lastRun) : undefined;
-  }
+
   timeZoneAt = (index: number) => this.args.model.triggers?.[index]?.timeZone;
   triggerStatusAt = (index: number) =>
     statusOfTrigger(this.status, this.args.model.triggers?.[index]?.label);
@@ -2545,31 +2715,23 @@ class Isolated extends Component<typeof Automation> {
         @collapsible={{false}}
         data-test-automation-milestones
       >
-        {{#if this.lastRun}}
+        {{#if this.shownRun}}
           <p class='automation__lead' data-test-automation-milestones-lead>
-            {{this.lastRunLead}}
+            {{this.shownRunLead}}
           </p>
-          {{! Held below StepList's stacking width, so each milestone gets a
-              row of its own and its full name and detail. }}
-          <div class='automation__milestones'>
-            <StepList
-              @steps={{this.lastRunSteps}}
-              @label='Milestones of the last run'
-              @announce={{false}}
-            />
-          </div>
+          <MilestoneTimeline
+            @rows={{this.shownRunRows}}
+            @label='Milestones of the run'
+          />
         {{else if this.declaredPlan}}
           <p class='automation__lead' data-test-automation-milestones-lead>
             The milestones the script plans to reach, in order. Each run reports
             how far the script got.
           </p>
-          <div class='automation__milestones'>
-            <StepList
-              @steps={{this.declaredSteps}}
-              @label='Milestones the script declares'
-              @announce={{false}}
-            />
-          </div>
+          <MilestoneTimeline
+            @rows={{this.declaredRows}}
+            @label='Milestones the script declares'
+          />
         {{else}}
           <EmptyState
             @size='s'
@@ -2589,9 +2751,6 @@ class Isolated extends Component<typeof Automation> {
         overflow-y: auto;
         padding: var(--boxel-sp-xl);
         container-type: inline-size;
-      }
-      .automation__milestones {
-        max-inline-size: 26rem;
       }
       .automation__header {
         display: grid;
