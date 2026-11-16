@@ -1984,7 +1984,7 @@ type MilestoneState =
   | 'running'
   | 'failed'
   | 'stopped'
-  | 'not-reached';
+  | 'not-started';
 
 interface MilestoneRow {
   id: string;
@@ -2038,14 +2038,13 @@ function runMilestoneRows(run: LastRun): MilestoneRow[] {
       detail: parts.join(' · '),
     };
   });
-  let ended = run.state !== 'running';
   return [
     ...rows,
     ...run.ahead.map((name, index) => ({
       id: `ahead-${index}`,
       name,
-      state: 'not-reached' as const,
-      badge: ended ? 'Not reached' : 'Not reached yet',
+      state: 'not-started' as const,
+      badge: 'Not started',
       tone: 'neutral' as const,
     })),
   ];
@@ -2056,8 +2055,8 @@ function declaredMilestoneRows(names: string[]): MilestoneRow[] {
   return names.map((name, index) => ({
     id: `${index}`,
     name,
-    state: 'not-reached',
-    badge: 'Not reached yet',
+    state: 'not-started',
+    badge: 'Not started',
     tone: 'neutral',
   }));
 }
@@ -2070,7 +2069,7 @@ const MILESTONE_LOOKS: Record<
   running: { badge: 'Running', tone: 'warning' },
   failed: { badge: 'Failed here', tone: 'danger' },
   stopped: { badge: 'Stopped here', tone: 'neutral' },
-  'not-reached': { badge: 'Not reached yet', tone: 'neutral' },
+  'not-started': { badge: 'Not started', tone: 'neutral' },
 };
 
 function runLead(run: LastRun): string {
@@ -2173,7 +2172,7 @@ class MilestoneTimeline extends GlimmerComponent<{
       .milestones__mark[data-milestone-state='failed'] {
         --milestone-color: var(--destructive);
       }
-      .milestones__mark[data-milestone-state='not-reached'] {
+      .milestones__mark[data-milestone-state='not-started'] {
         background: var(--card, #fff);
       }
       .milestones__detail {
