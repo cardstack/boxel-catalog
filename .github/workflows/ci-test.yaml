@@ -255,9 +255,13 @@ jobs:
             echo "imported=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Runner images do not all name the NIC eth0, so offloading is turned off
-      # on whichever interface carries the default route. The mitigation is
-      # best-effort: an interface ethtool cannot reach is logged, not failed.
+      # Offloading is off to steady the network traffic these tests depend on.
+      # The same runner image comes up on Azure hosts, where the NIC is eth0,
+      # and on AWS hosts, where it has another name, so the step targets
+      # whichever interface carries the default route and applies the
+      # mitigation on every host. Boxel's init action, run earlier in this job,
+      # targets eth0 only. The step is best-effort: an interface ethtool cannot
+      # reach is logged, not failed.
       - name: Disable TCP/UDP network offloading
         run: |
           iface=$(ip route show default | awk '{for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit }}')
