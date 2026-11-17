@@ -2,7 +2,7 @@ import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import GlimmerComponent from '@glimmer/component';
 import type Owner from '@ember/owner';
-import { tracked } from '@glimmer/tracking';
+import { cached, tracked } from '@glimmer/tracking';
 import { resource, use } from 'ember-resources';
 import { TrackedObject } from 'tracked-built-ins';
 import { markDefinition } from '@cardstack/base/mark-definition';
@@ -3739,15 +3739,25 @@ function milestoneGlance(
   if (!run) {
     kind = 'planned';
     headline = `${tally(total)} ${milestoneWord(total)} planned`;
-  } else if (focusRow?.state === 'running') {
+  } else if (run.state === 'running' || run.state === 'pending') {
+    // A run that has reached no milestone yet has no running row.
     kind = 'running';
-    headline = `Running ${focusRow.name}`;
-  } else if (focusRow?.state === 'failed') {
+    headline =
+      focusRow?.state === 'running'
+        ? `Running ${focusRow.name}`
+        : 'Running, before the first milestone';
+  } else if (run.state === 'error') {
     kind = 'failed';
-    headline = `Failed in ${focusRow.name}`;
-  } else if (focusRow?.state === 'stopped') {
+    headline =
+      focusRow?.state === 'failed'
+        ? `Failed in ${focusRow.name}`
+        : 'Failed before the first milestone';
+  } else if (run.state === 'canceled') {
     kind = 'stopped';
-    headline = `Stopped in ${focusRow.name}`;
+    headline =
+      focusRow?.state === 'stopped'
+        ? `Stopped in ${focusRow.name}`
+        : 'Stopped before the first milestone';
   } else if (done === total) {
     kind = 'complete';
     headline =
@@ -3755,9 +3765,9 @@ function milestoneGlance(
         ? 'The 1 milestone done'
         : `All ${tally(total)} milestones done`;
   } else {
-    // A run that ended with milestones of its plan still ahead.
-    kind = 'stopped';
-    headline = `${tally(done)} of ${tally(total)} milestones done`;
+    // A complete run that left milestones of its plan unreached.
+    kind = 'complete';
+    headline = `Completed without ${tally(total - done)} planned ${milestoneWord(total - done)}`;
   }
   return {
     kind,
@@ -3771,8 +3781,9 @@ function milestoneGlance(
       state: STEP_STATES[row.state],
       detail: row.detail,
     })),
-    // Before a run, the first milestone; after a complete run, the last;
-    // otherwise the first one the run didn't reach.
+    // The milestone a run is in, failed in or stopped in. Otherwise the
+    // first milestone the run didn't reach, or the last one when the run
+    // reached them all, and the first one before any run.
     focus:
       focusIndex >= 0
         ? focusIndex
@@ -3782,28 +3793,40 @@ function milestoneGlance(
   };
 }
 
+interface StepWindow {
+  steps: StepItem[];
+  // "2 earlier milestones" and "3 more milestones", for the milestones the
+  // window leaves out before and after it.
+  earlier: string | undefined;
+  later: string | undefined;
+}
+
 // At most `size` milestones around the one the run is in, so a short list
 // still shows where the run stands.
-function stepWindow(
-  glance: MilestoneGlance,
-  size: number,
-): { steps: StepItem[]; more: string | undefined } {
+function stepWindow(glance: MilestoneGlance, size: number): StepWindow {
   let { steps, focus } = glance;
   if (steps.length <= size) {
-    return { steps, more: undefined };
+    return { steps, earlier: undefined, later: undefined };
   }
   let start = Math.min(Math.max(focus - (size - 2), 0), steps.length - size);
-  let hidden = steps.length - size;
+  let before = start;
+  let after = steps.length - start - size;
   return {
     steps: steps.slice(start, start + size),
-    more: `${tally(hidden)} more ${milestoneWord(hidden)}`,
+    earlier:
+      before > 0
+        ? `${tally(before)} earlier ${milestoneWord(before)}`
+        : undefined,
+    later:
+      after > 0 ? `${tally(after)} more ${milestoneWord(after)}` : undefined,
   };
 }
 
 // What the fitted and embedded views show at a glance: the automation's
 // state, when it runs, how its last run ended and where its milestones stand.
-// A viewer the status route refuses, and a prerender, see the card's own
-// fields and the milestones the script declares.
+// A viewer the status route refuses sees the card's own fields and the
+// milestones the script declares. A prerender reads neither the status nor
+// the script, so it shows the card's own fields alone.
 class AtAGlance extends Component<typeof Automation> {
   private server = automationStatus(this, () => ({
     id: this.args.model.id,
@@ -3811,8 +3834,8 @@ class AtAGlance extends Component<typeof Automation> {
     realmId: instanceRealmId(this.args.model as Automation),
     tools: toolsOf(this.args.context),
   }));
-  // Read only when no run reports milestones, for the plan the script
-  // declares.
+  // Read, for the plan the script declares, only once the status has
+  // answered with no run that reports milestones.
   private script = scriptText(this, () => ({
     url: this.args.model.script?.id,
     realm: this.args.model[realmURL]?.href,
@@ -3882,7 +3905,11 @@ class AtAGlance extends Component<typeof Automation> {
       ? run
       : undefined;
   }
+  @cached
   get milestones(): MilestoneGlance | undefined {
+    if (!this.server.current.known) {
+      return undefined;
+    }
     let run = this.shownRun;
     if (run) {
       return milestoneGlance(runMilestoneRows(run), run);
@@ -3895,7 +3922,7 @@ class AtAGlance extends Component<typeof Automation> {
   }
   get milestoneValueText() {
     let m = this.milestones;
-    return m ? `${m.count} ${milestoneWord(m.total)} done. ${m.headline}.` : '';
+    return m ? `${m.headline}. ${m.count} ${milestoneWord(m.total)} done.` : '';
   }
   get stepped() {
     return (this.milestones?.total ?? 0) <= 12;
@@ -3905,9 +3932,11 @@ class AtAGlance extends Component<typeof Automation> {
 // Sixteen sizes, one layout: each step up in height adds the next most useful
 // fact. A single line holds the title and, in a strip, the state. Then the
 // first trigger, or where a running or failed run stands. Then the milestones
-// as a bar. From a tile up, the next and last run, the warnings and the
-// milestones as a list. The root is the size container, so every rule queries
-// its content box; the padding sits on the body inside it.
+// as a bar. A tile adds the last run and the warnings; a card, or a tile from
+// 240px tall, also the other triggers and the next run; a tile from 240px
+// wide and 270px tall lists the milestones in place of the bar. The root is
+// the size container, so every rule queries its content box; the padding
+// sits on the body inside it.
 class Fitted extends AtAGlance {
   get focusLine() {
     let m = this.milestones;
@@ -3919,12 +3948,13 @@ class Fitted extends AtAGlance {
   // embedded and isolated views have room for.
   private list(size: number) {
     if (!this.milestones) {
-      return { steps: [], more: undefined };
+      return { steps: [], earlier: undefined, later: undefined };
     }
-    let { steps, more } = stepWindow(this.milestones, size);
+    let { steps, earlier, later } = stepWindow(this.milestones, size);
     return {
       steps: steps.map(({ label, state }) => ({ label, state })),
-      more,
+      earlier,
+      later,
     };
   }
   get shortList() {
@@ -4019,25 +4049,31 @@ class Fitted extends AtAGlance {
               aria-label='Milestones'
             />
             <div class='af__list af__list--short'>
+              {{#if this.shortList.earlier}}
+                <p class='af__list-more'>{{this.shortList.earlier}}</p>
+              {{/if}}
               <StepList
                 @steps={{this.shortList.steps}}
                 @variant='track'
                 @announce={{false}}
                 @label='Milestones'
               />
-              {{#if this.shortList.more}}
-                <p class='af__list-more'>{{this.shortList.more}}</p>
+              {{#if this.shortList.later}}
+                <p class='af__list-more'>{{this.shortList.later}}</p>
               {{/if}}
             </div>
             <div class='af__list af__list--long'>
+              {{#if this.longList.earlier}}
+                <p class='af__list-more'>{{this.longList.earlier}}</p>
+              {{/if}}
               <StepList
                 @steps={{this.longList.steps}}
                 @variant='track'
                 @announce={{false}}
                 @label='Milestones'
               />
-              {{#if this.longList.more}}
-                <p class='af__list-more'>{{this.longList.more}}</p>
+              {{#if this.longList.later}}
+                <p class='af__list-more'>{{this.longList.later}}</p>
               {{/if}}
             </div>
           </div>
@@ -4099,10 +4135,6 @@ class Fitted extends AtAGlance {
         font-size: var(--boxel-font-size-xs);
         line-height: var(--boxel-line-height-xs);
       }
-      .af p,
-      .af h3 {
-        margin: 0;
-      }
       /* A line that doesn't fit is cut at the bottom of the card rather than
          squeezed into the lines above it. */
       .af__body > * {
@@ -4132,9 +4164,11 @@ class Fitted extends AtAGlance {
       .af__eyebrow {
         display: none;
         color: var(--muted-foreground);
-        font-size: var(--boxel-font-size-2xs);
-        line-height: var(--boxel-line-height-2xs);
-        letter-spacing: 0.5px;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
       }
       .af__title {
@@ -4180,7 +4214,7 @@ class Fitted extends AtAGlance {
         text-overflow: ellipsis;
       }
       .af__fact[data-result='error'] {
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .af__milestones {
         flex-direction: column;
@@ -4201,7 +4235,7 @@ class Fitted extends AtAGlance {
         white-space: nowrap;
       }
       .af__milestones[data-kind='failed'] .af__headline-text {
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .af__count {
         flex-shrink: 0;
@@ -4212,12 +4246,20 @@ class Fitted extends AtAGlance {
         color: var(--muted-foreground);
       }
       /* The milestones in the colors the isolated view gives them: green
-         once done, yellow while running, red where the run failed. */
+         once done, yellow while running, red where the run failed and gray
+         where Boxel stopped the run. A short list can start partway through
+         the run, so it leaves out the step numbers, which would count from
+         its own first row. */
       .af__list {
+        --pretui-step-upcoming-marker-fg: transparent;
         --pretui-step-complete-bar: var(--success);
         --pretui-step-in-progress-bar: var(--warning);
         --pretui-step-in-progress-ring: var(--warning);
-        --pretui-step-in-progress-marker-fg: var(--warning-ink, var(--warning));
+        --pretui-step-in-progress-marker-fg: var(--warning-ink);
+        --pretui-step-blocked-tone: var(--foreground);
+        --pretui-step-blocked-marker-fg: var(--muted-foreground);
+        --pretui-step-blocked-ring: var(--muted-foreground);
+        --pretui-step-blocked-bar: var(--muted-foreground);
       }
       .af__summary {
         display: none;
@@ -4264,8 +4306,8 @@ class Fitted extends AtAGlance {
           display: flex;
         }
       }
-      /* A tile: the eyebrow, a two-line title, the other triggers, the next
-         and last run, and the warnings. */
+      /* A tile: the eyebrow, a two-line title, the last run and the
+         warnings. */
       @container (min-height: 165px) {
         .af__body {
           gap: var(--boxel-sp-4xs);
@@ -4513,9 +4555,6 @@ class Embedded extends AtAGlance {
         font-size: var(--boxel-font-size-xs);
         line-height: var(--boxel-line-height-xs);
       }
-      .ae p {
-        margin: 0;
-      }
       .ae__icon {
         display: grid;
         place-items: center;
@@ -4546,7 +4585,7 @@ class Embedded extends AtAGlance {
         color: var(--muted-foreground);
       }
       .ae__fact[data-result='error'] .ae__label {
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .ae__milestones {
         display: grid;
@@ -4564,7 +4603,7 @@ class Embedded extends AtAGlance {
         font-weight: 600;
       }
       .ae__milestones[data-kind='failed'] .ae__headline-text {
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .ae__count {
         flex-shrink: 0;
@@ -4576,7 +4615,11 @@ class Embedded extends AtAGlance {
         --pretui-step-complete-bar: var(--success);
         --pretui-step-in-progress-bar: var(--warning);
         --pretui-step-in-progress-ring: var(--warning);
-        --pretui-step-in-progress-marker-fg: var(--warning-ink, var(--warning));
+        --pretui-step-in-progress-marker-fg: var(--warning-ink);
+        --pretui-step-blocked-tone: var(--foreground);
+        --pretui-step-blocked-marker-fg: var(--muted-foreground);
+        --pretui-step-blocked-ring: var(--muted-foreground);
+        --pretui-step-blocked-bar: var(--muted-foreground);
       }
       .ae__chips {
         display: flex;
