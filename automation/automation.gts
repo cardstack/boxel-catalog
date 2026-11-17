@@ -72,12 +72,21 @@ import { PanelSection } from '@cardstack/pretui/components/panel-section';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Switch } from '@cardstack/pretui/components/switch';
 import { Stack } from '@cardstack/pretui/components/stack';
+import {
+  Timeline,
+  type TimelineEvent,
+} from '@cardstack/pretui/components/timeline';
 import { Table } from '@cardstack/pretui/components/table';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
 import { Token } from '@cardstack/pretui/components/token';
 import { eq } from '@cardstack/pretui/helpers';
 import CalendarCheckIcon from '@cardstack/boxel-icons/calendar-check';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
+import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
+import CircleDashedIcon from '@cardstack/boxel-icons/circle-dashed';
+import CirclePauseIcon from '@cardstack/boxel-icons/circle-pause';
+import CircleXIcon from '@cardstack/boxel-icons/circle-x';
+import HourglassIcon from '@cardstack/boxel-icons/hourglass';
 import PlugIcon from '@cardstack/boxel-icons/plug';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
@@ -1653,10 +1662,43 @@ interface TriggerStatus {
   nextRun?: string;
   spent?: boolean;
 }
+// The automation's last run that started and has ended, with the milestones
+// its script reported: the script declares them with
+// `realm.progress.plan([...])` and marks each with
+// `realm.progress.milestone(name)`, so they come from the run, never from a
+// field on the card.
+interface RunMilestone {
+  name: string;
+  planned: boolean;
+  startedAt: string;
+  endedAt: string | null;
+  ms: number;
+  done?: number;
+  total?: number;
+}
+interface LastRun {
+  runId: string;
+  // A running run names the milestone it is in.
+  current?: string | null;
+  state: 'pending' | 'running' | 'complete' | 'error' | 'canceled';
+  startedAt: string | null;
+  finishedAt: string | null;
+  plan: string[];
+  milestones: RunMilestone[];
+  ahead: string[];
+  failedIn: string | null;
+  dropped: number;
+}
 type ServerStatus =
-  | { switchedOn: false }
+  | {
+      switchedOn: false;
+      lastRun?: LastRun | null;
+      currentRun?: LastRun | null;
+    }
   | {
       switchedOn: true;
+      lastRun?: LastRun | null;
+      currentRun?: LastRun | null;
       state: AutomationState;
       pauseReason: PauseReason | null;
       payer: string | null;
@@ -1890,6 +1932,265 @@ function statusItems(status: ServerStatus): StatusItem[] {
   return items;
 }
 
+// The milestones a script declares with `realm.progress.plan([...])`: the
+// names of the first such call whose array holds only string literals.
+// Undefined when the script declares none that way, such as a plan built at
+// run time; then the milestones show once a run reports them.
+const PLAN_CALL = /realm\s*\.\s*progress\s*\.\s*plan\s*\(\s*\[([^\]]*)\]\s*\)/;
+const STRING_LITERAL =
+  /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\$]|\\.)*)`/g;
+
+function declaredMilestones(script: string): string[] | undefined {
+  let call = PLAN_CALL.exec(script);
+  if (!call) {
+    return undefined;
+  }
+  let body = call[1];
+  let names: string[] = [];
+  for (let match of body.matchAll(STRING_LITERAL)) {
+    let raw = match[1] ?? match[2] ?? match[3] ?? '';
+    names.push(raw.replace(/\\(.)/g, '$1').trim());
+  }
+  let rest = body.replace(STRING_LITERAL, '').replace(/[\s,]/g, '');
+  if (rest !== '' || names.length === 0 || names.some((name) => !name)) {
+    return undefined;
+  }
+  return names;
+}
+
+// "under a second", "4 s", "2 min 5 s", "1 h 3 min".
+function durationText(ms: number): string {
+  let seconds = Math.round(ms / 1000);
+  if (seconds < 1) {
+    return 'under a second';
+  }
+  if (seconds < 60) {
+    return `${seconds} s`;
+  }
+  let minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    let rest = seconds % 60;
+    return rest ? `${minutes} min ${rest} s` : `${minutes} min`;
+  }
+  let hours = Math.floor(minutes / 60);
+  let rest = minutes % 60;
+  return rest ? `${hours} h ${rest} min` : `${hours} h`;
+}
+
+// Where a run stands at one milestone: reached and done, running now, where
+// the run ended with an error, where Boxel stopped the run, or not reached.
+type MilestoneState =
+  | 'reached'
+  | 'running'
+  | 'failed'
+  | 'stopped'
+  | 'not-started';
+
+interface MilestoneRow {
+  id: string;
+  name: string;
+  state: MilestoneState;
+  badge: string;
+  tone: 'neutral' | 'success' | 'warning' | 'danger';
+  detail?: string;
+}
+
+function countText(done?: number, total?: number): string | undefined {
+  if (done === undefined) {
+    return undefined;
+  }
+  return total !== undefined
+    ? `${tally(done)} of ${tally(total)}`
+    : tally(done);
+}
+
+// One row per milestone the run reached, in the order reached, then one per
+// milestone of the plan the run hasn't reached.
+function runMilestoneRows(run: LastRun): MilestoneRow[] {
+  let lastIndex = run.milestones.length - 1;
+  let rows: MilestoneRow[] = run.milestones.map((milestone, index) => {
+    let last = index === lastIndex;
+    let state: MilestoneState =
+      last && run.state === 'running'
+        ? 'running'
+        : last && run.failedIn !== null
+          ? 'failed'
+          : last && run.state === 'canceled'
+            ? 'stopped'
+            : 'reached';
+    let time = durationText(milestone.ms);
+    let parts = [
+      state === 'running'
+        ? `Running for ${time}`
+        : state === 'reached'
+          ? `Took ${time}`
+          : `Ran for ${time}`,
+      countText(milestone.done, milestone.total),
+      !milestone.planned && run.plan.length > 0 ? 'Not in the plan' : undefined,
+    ].filter((part): part is string => Boolean(part));
+    let look = MILESTONE_LOOKS[state];
+    return {
+      id: `${index}`,
+      name: milestone.name,
+      state,
+      badge: look.badge,
+      tone: look.tone,
+      detail: parts.join(' · '),
+    };
+  });
+  return [
+    ...rows,
+    ...run.ahead.map((name, index) => ({
+      id: `ahead-${index}`,
+      name,
+      state: 'not-started' as const,
+      badge: 'Not started',
+      tone: 'neutral' as const,
+    })),
+  ];
+}
+
+// The milestones a script declares, before a run has reached any of them.
+function declaredMilestoneRows(names: string[]): MilestoneRow[] {
+  return names.map((name, index) => ({
+    id: `${index}`,
+    name,
+    state: 'not-started',
+    badge: 'Not started',
+    tone: 'neutral',
+  }));
+}
+
+const MILESTONE_LOOKS: Record<
+  MilestoneState,
+  { badge: string; tone: MilestoneRow['tone'] }
+> = {
+  reached: { badge: 'Done', tone: 'success' },
+  running: { badge: 'Running', tone: 'warning' },
+  failed: { badge: 'Failed here', tone: 'danger' },
+  stopped: { badge: 'Stopped here', tone: 'neutral' },
+  'not-started': { badge: 'Not started', tone: 'neutral' },
+};
+
+function runLead(run: LastRun): string {
+  if (run.state === 'running') {
+    return 'The milestones the script has reported on the run in progress.';
+  }
+  let ended =
+    run.state === 'complete'
+      ? 'completed'
+      : run.state === 'error'
+        ? 'ended with an error'
+        : 'Boxel stopped';
+  let lead = `The milestones the script reported on the last run, which ${ended}.`;
+  if (run.dropped > 0) {
+    lead += ` The script marked ${tally(run.dropped)} more ${
+      run.dropped === 1 ? 'milestone' : 'milestones'
+    } past the ${tally(MAX_RUN_MILESTONES)} a run records, so the last milestone shown also holds the time of the unrecorded milestones.`;
+  }
+  return lead;
+}
+
+// The milestones as a timeline, one row each, joined by the timeline's rail
+// so they read as a progression. Each marker is shaded in its state's color:
+// gray before the milestone runs, yellow while it runs, green once it is
+// done, red where the run ended with an error.
+class MilestoneTimeline extends GlimmerComponent<{
+  Args: { rows: MilestoneRow[]; label: string };
+}> {
+  get events(): TimelineEvent[] {
+    return this.args.rows.map((row) => ({ id: row.id, title: row.name }));
+  }
+  rowOf = (event: TimelineEvent): MilestoneRow =>
+    this.args.rows.find((row) => row.id === event.id)!;
+  <template>
+    <Timeline
+      @events={{this.events}}
+      @label={{@label}}
+      class='milestones'
+      data-test-automation-milestone-list
+    >
+      <:marker as |event|>
+        {{#let (this.rowOf event) as |row|}}
+          <span
+            class='milestones__mark'
+            data-milestone-state={{row.state}}
+            data-test-milestone-state={{row.state}}
+          >
+            {{#if (eq row.state 'reached')}}
+              <CircleCheckIcon width='14' height='14' />
+            {{else if (eq row.state 'running')}}
+              <HourglassIcon width='13' height='13' />
+            {{else if (eq row.state 'failed')}}
+              <CircleXIcon width='14' height='14' />
+            {{else if (eq row.state 'stopped')}}
+              <CirclePauseIcon width='14' height='14' />
+            {{else}}
+              <CircleDashedIcon width='14' height='14' />
+            {{/if}}
+          </span>
+        {{/let}}
+      </:marker>
+      <:default as |event|>
+        {{#let (this.rowOf event) as |row|}}
+          <span class='milestones__detail'>
+            <Chip @label={{row.badge}} @tone={{row.tone}} />
+            {{#if row.detail}}
+              <span class='milestones__text'>{{row.detail}}</span>
+            {{/if}}
+          </span>
+        {{/let}}
+      </:default>
+    </Timeline>
+    <style scoped>
+      .milestones {
+        max-inline-size: 34rem;
+      }
+      /* Fills the timeline's marker with a light tint of the state's color,
+         the glyph in the color itself. */
+      .milestones__mark {
+        --milestone-color: var(--muted-foreground);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        inline-size: 100%;
+        block-size: 100%;
+        border-radius: 50%;
+        color: var(--milestone-color);
+        background: color-mix(
+          in oklab,
+          var(--milestone-color) 14%,
+          var(--card, #fff)
+        );
+      }
+      .milestones__mark[data-milestone-state='reached'] {
+        --milestone-color: var(--success);
+      }
+      .milestones__mark[data-milestone-state='running'] {
+        --milestone-color: var(--warning);
+      }
+      .milestones__mark[data-milestone-state='failed'] {
+        --milestone-color: var(--destructive);
+      }
+      .milestones__mark[data-milestone-state='not-started'] {
+        background: var(--card, #fff);
+      }
+      .milestones__detail {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .milestones__text {
+        color: var(--muted-foreground);
+      }
+    </style>
+  </template>
+}
+
+// The most milestones the server records for one run.
+const MAX_RUN_MILESTONES = 200;
+
 // A trigger's times read in the trigger's own zone, as the trigger's
 // sentences do.
 function triggerItems(
@@ -1977,23 +2278,15 @@ function statusOfTrigger(
     : trigger;
 }
 
-// The linked script, read-only.
+// The linked script, read-only, from the text the isolated view read.
 class ScriptView extends GlimmerComponent<{
   Args: {
     url: string | undefined;
-    realm: string | undefined;
-    realmId: string | undefined;
-    context: CardContext | undefined;
+    state: ScriptState;
   };
 }> {
-  private script = scriptText(this, () => ({
-    url: this.args.url,
-    realm: this.args.realm,
-    realmId: this.args.realmId,
-    tools: toolsOf(this.args.context),
-  }));
   get state() {
-    return this.script.current;
+    return this.args.state;
   }
   get empty() {
     return this.state.text === '';
@@ -2219,6 +2512,53 @@ class Isolated extends Component<typeof Automation> {
   get statusItems() {
     return this.status ? statusItems(this.status) : [];
   }
+  // The script, read once for the Script section and for the milestones the
+  // script declares.
+  private script = scriptText(this, () => ({
+    url: this.scriptURL,
+    realm: this.realmHref,
+    realmId: this.realmId,
+    tools: toolsOf(this.args.context),
+  }));
+  get scriptState() {
+    return this.script.current;
+  }
+  // The milestones the script declares with realm.progress.plan, read from
+  // its text, shown before any run has reported its own.
+  get declaredPlan() {
+    let text = this.scriptState.text;
+    return text ? declaredMilestones(text) : undefined;
+  }
+  get declaredRows() {
+    return declaredMilestoneRows(this.declaredPlan ?? []);
+  }
+  // The run in progress when there is one, otherwise the last run that
+  // ended, when it reported milestones or a plan.
+  get shownRun() {
+    let run = this.status?.currentRun ?? this.status?.lastRun;
+    return run && (run.milestones.length > 0 || run.plan.length > 0)
+      ? run
+      : undefined;
+  }
+  get shownRunRows() {
+    return this.shownRun ? runMilestoneRows(this.shownRun) : [];
+  }
+  get shownRunLead() {
+    return this.shownRun ? runLead(this.shownRun) : undefined;
+  }
+
+  // What the section says when there is no last run to list: a viewer the
+  // status route refuses never sees runs; an editor sees them once a run
+  // ends and the script reports milestones.
+  get milestonesEmptyMessage() {
+    if (!this.status) {
+      return 'Someone who can edit this workspace sees the milestones of the last run here.';
+    }
+    return this.status.lastRun
+      ? 'The last run reported no milestones. A script reports milestones with realm.progress.plan and realm.progress.milestone.'
+      : 'The milestones the script reports show here after a run ends.';
+  }
+
   timeZoneAt = (index: number) => this.args.model.triggers?.[index]?.timeZone;
   triggerStatusAt = (index: number) =>
     statusOfTrigger(this.status, this.args.model.triggers?.[index]?.label);
@@ -2281,12 +2621,7 @@ class Isolated extends Component<typeof Automation> {
           The script is what actually runs each time this automation runs.
         </p>
         {{#if this.scriptURL}}
-          <ScriptView
-            @url={{this.scriptURL}}
-            @realm={{this.realmHref}}
-            @realmId={{this.realmId}}
-            @context={{@context}}
-          />
+          <ScriptView @url={{this.scriptURL}} @state={{this.scriptState}} />
         {{else}}
           <EmptyState
             @size='s'
@@ -2372,15 +2707,38 @@ class Isolated extends Component<typeof Automation> {
         {{/if}}
       </PanelSection>
 
-      {{! The script declares its milestones and reports each one as a run
-          reaches it; they come from the runs, not from a field here. }}
-      <PanelSection @title='Run milestones' @collapsible={{false}}>
-        <EmptyState
-          @size='s'
-          @texture={{false}}
-          @title='Shown from runs'
-          @message='The steps the script reports as it runs will show here.'
-        />
+      {{! The script declares its milestones and marks each one as a run
+          reaches it; they come from the last run, not from a field here. }}
+      <PanelSection
+        @title='Run milestones'
+        @collapsible={{false}}
+        data-test-automation-milestones
+      >
+        {{#if this.shownRun}}
+          <p class='automation__lead' data-test-automation-milestones-lead>
+            {{this.shownRunLead}}
+          </p>
+          <MilestoneTimeline
+            @rows={{this.shownRunRows}}
+            @label='Milestones of the run'
+          />
+        {{else if this.declaredPlan}}
+          <p class='automation__lead' data-test-automation-milestones-lead>
+            The milestones the script plans to reach, in order. Each run reports
+            how far the script got.
+          </p>
+          <MilestoneTimeline
+            @rows={{this.declaredRows}}
+            @label='Milestones the script declares'
+          />
+        {{else}}
+          <EmptyState
+            @size='s'
+            @texture={{false}}
+            @title='Shown from runs'
+            @message={{this.milestonesEmptyMessage}}
+          />
+        {{/if}}
       </PanelSection>
     </article>
     <style scoped>
@@ -2454,10 +2812,13 @@ class Isolated extends Component<typeof Automation> {
 // reported step, so it runs as soon as it's created.
 const STARTER_SCRIPT = `/* global realm */
 // A Realm Runner script: the body of an async function, run with the
-// automation's \`realm\` object. Find cards with realm.cards.search, write
-// files with realm.fs.writeText, and report each step with realm.activity.
+// automation's \`realm\` object. Find cards with realm.cards.search and
+// write files with realm.fs.writeText. Name the run's milestones up front
+// with realm.progress.plan, mark each as the script reaches it with
+// realm.progress.milestone, and count inside one with realm.progress.count.
 
-await realm.activity({ message: 'Starting', current: 1, total: 1 });
+realm.progress.plan(['Start']);
+realm.progress.milestone('Start');
 `;
 
 // A file path inside the workspace, without its extension: letters, digits,
