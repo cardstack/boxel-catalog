@@ -48,7 +48,6 @@ import { Button } from '@cardstack/pretui/components/button';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
 import { LoadingState } from '@cardstack/pretui/components/loading-state';
 import { Callout } from '@cardstack/pretui/components/callout';
-import { List } from '@cardstack/pretui/components/list';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { RelativeTime } from '@cardstack/pretui/components/relative-time';
 import {
@@ -1901,7 +1900,7 @@ function stateSentence(status: ServerStatus): string {
         case 'repeated-failures':
           return repeatedFailuresSentence(status);
         case 'invalid-declaration':
-          return 'Boxel can’t read the automation’s settings, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace fixes each problem below and resumes the automation.';
+          return 'A run came due while Boxel couldn’t read the automation’s settings, so Boxel paused the automation. Once someone who can edit this workspace fixes each problem below, Boxel resumes the automation.';
         default:
           return 'Someone who can edit this workspace paused the automation, so Boxel runs nothing until someone resumes the automation.';
       }
@@ -2618,7 +2617,6 @@ class Isolated extends Component<typeof Automation> {
       (this.args.model.triggers ?? []).map((trigger) => trigger?.label),
     );
   }
-  problemRowLabel = (row: PauseProblemRow) => `${row.place}: ${row.message}`;
   // The script, read once for the Script section and for the milestones the
   // script declares.
   private script = scriptText(this, () => ({
@@ -2717,21 +2715,19 @@ class Isolated extends Component<typeof Automation> {
               @title='What Boxel can’t read'
               data-test-automation-pause-problems
             >
-              <List
-                @items={{this.pauseProblems}}
-                @label='Problems Boxel found in the automation'
-                @rowLabel={{this.problemRowLabel}}
-              >
-                <:item as |problem|>
-                  <Item
-                    @size='s'
-                    @wrap={{true}}
-                    @title={{problem.place}}
-                    @description={{problem.message}}
-                    data-test-automation-pause-problem={{problem.place}}
-                  />
-                </:item>
-              </List>
+              <ul class='automation__problems'>
+                {{#each this.pauseProblems as |problem|}}
+                  <li>
+                    <Item
+                      @size='s'
+                      @wrap={{true}}
+                      @title={{problem.place}}
+                      @description={{problem.message}}
+                      data-test-automation-pause-problem={{problem.place}}
+                    />
+                  </li>
+                {{/each}}
+              </ul>
             </Callout>
           {{/if}}
         </PanelSection>
@@ -2913,6 +2909,13 @@ class Isolated extends Component<typeof Automation> {
       .automation__lead {
         margin: 0 0 var(--boxel-sp-sm);
         color: var(--foreground);
+      }
+      .automation__problems {
+        display: grid;
+        gap: var(--boxel-sp-xs);
+        margin: 0;
+        padding: 0;
+        list-style: none;
       }
       .automation__rows {
         display: grid;
