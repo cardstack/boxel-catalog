@@ -2,7 +2,7 @@ import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import GlimmerComponent from '@glimmer/component';
 import type Owner from '@ember/owner';
-import { tracked } from '@glimmer/tracking';
+import { cached, tracked } from '@glimmer/tracking';
 import { resource, use } from 'ember-resources';
 import { TrackedObject } from 'tracked-built-ins';
 import { markDefinition } from '@cardstack/base/mark-definition';
@@ -44,11 +44,17 @@ import {
 import AuthedFetchTool from '@cardstack/boxel-host/tools/authed-fetch';
 import ReadSourceTool from '@cardstack/boxel-host/tools/read-source';
 import WriteTextFileTool from '@cardstack/boxel-host/tools/write-text-file';
-import { FittedCard } from '@cardstack/boxel-ui/components';
 import { Button } from '@cardstack/pretui/components/button';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
 import { LoadingState } from '@cardstack/pretui/components/loading-state';
 import { Callout } from '@cardstack/pretui/components/callout';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { RelativeTime } from '@cardstack/pretui/components/relative-time';
+import {
+  StepList,
+  type StepItem,
+  type StepState,
+} from '@cardstack/pretui/components/step-list';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Dialog } from '@cardstack/pretui/components/dialog';
 import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
@@ -79,7 +85,7 @@ import {
 import { Table } from '@cardstack/pretui/components/table';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
 import { Token } from '@cardstack/pretui/components/token';
-import { eq } from '@cardstack/pretui/helpers';
+import { bool, eq, or } from '@cardstack/pretui/helpers';
 import CalendarCheckIcon from '@cardstack/boxel-icons/calendar-check';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
 import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
@@ -3670,22 +3676,183 @@ function triggerPhrase(trigger: AutomationTrigger): string {
     : 'When a delivery arrives';
 }
 
-// The server's view of an automation, for a view that shows only its state.
-class WithStatus extends Component<typeof Automation> {
+// What the fitted and embedded views show of the automation's milestones:
+// the run in progress, otherwise the last run that ended, otherwise the plan
+// the script declares. A run's milestones come from the run, never from a
+// field on the card.
+type GlanceKind = 'running' | 'failed' | 'stopped' | 'complete' | 'planned';
+
+interface MilestoneGlance {
+  kind: GlanceKind;
+  // One sentence on where the run stands, such as "Failed in Group by label".
+  headline: string;
+  // "2 of 5"
+  count: string;
+  done: number;
+  total: number;
+  // The fill color of the progress bar, in the run's state color.
+  hue: string;
+  steps: StepItem[];
+  // The index of the milestone the run is in, failed in or stopped in; the
+  // last milestone otherwise.
+  focus: number;
+}
+
+const STEP_STATES: Record<MilestoneState, StepState> = {
+  reached: 'complete',
+  running: 'in-progress',
+  failed: 'error',
+  stopped: 'blocked',
+  'not-started': 'upcoming',
+};
+
+const GLANCE_HUES: Record<GlanceKind, string> = {
+  running: 'var(--warning)',
+  failed: 'var(--destructive)',
+  stopped: 'var(--muted-foreground)',
+  complete: 'var(--success)',
+  planned: 'var(--muted-foreground)',
+};
+
+function milestoneWord(n: number): string {
+  return n === 1 ? 'milestone' : 'milestones';
+}
+
+function milestoneGlance(
+  rows: MilestoneRow[],
+  run: LastRun | undefined,
+): MilestoneGlance | undefined {
+  if (rows.length === 0) {
+    return undefined;
+  }
+  let total = rows.length;
+  let done = rows.filter((row) => row.state === 'reached').length;
+  let focusIndex = rows.findIndex(
+    (row) =>
+      row.state === 'running' ||
+      row.state === 'failed' ||
+      row.state === 'stopped',
+  );
+  let focusRow = focusIndex >= 0 ? rows[focusIndex] : undefined;
+  let kind: GlanceKind;
+  let headline: string;
+  if (!run) {
+    kind = 'planned';
+    headline = `${tally(total)} ${milestoneWord(total)} planned`;
+  } else if (run.state === 'running' || run.state === 'pending') {
+    // A run that has reached no milestone yet has no running row.
+    kind = 'running';
+    headline =
+      focusRow?.state === 'running'
+        ? `Running ${focusRow.name}`
+        : 'Running, before the first milestone';
+  } else if (run.state === 'error') {
+    kind = 'failed';
+    headline =
+      focusRow?.state === 'failed'
+        ? `Failed in ${focusRow.name}`
+        : 'Failed before the first milestone';
+  } else if (run.state === 'canceled') {
+    kind = 'stopped';
+    headline =
+      focusRow?.state === 'stopped'
+        ? `Stopped in ${focusRow.name}`
+        : 'Stopped before the first milestone';
+  } else if (done === total) {
+    kind = 'complete';
+    headline =
+      total === 1
+        ? 'The 1 milestone done'
+        : `All ${tally(total)} milestones done`;
+  } else {
+    // A complete run that left milestones of its plan unreached.
+    kind = 'complete';
+    headline = `Completed without ${tally(total - done)} planned ${milestoneWord(total - done)}`;
+  }
+  return {
+    kind,
+    headline,
+    count: `${tally(done)} of ${tally(total)}`,
+    done,
+    total,
+    hue: GLANCE_HUES[kind],
+    // StepList has no state for a stopped step; it reads as blocked, so
+    // the detail says where Boxel stopped the run.
+    steps: rows.map((row) => ({
+      label: row.name,
+      state: STEP_STATES[row.state],
+      detail:
+        row.state === 'stopped'
+          ? ['Stopped here', row.detail].filter(Boolean).join(' · ')
+          : row.detail,
+    })),
+    // The milestone a run is in, failed in or stopped in. Otherwise the
+    // first milestone the run didn't reach, or the last one when the run
+    // reached them all, and the first one before any run.
+    focus:
+      focusIndex >= 0
+        ? focusIndex
+        : kind === 'planned'
+          ? 0
+          : Math.min(done, total - 1),
+  };
+}
+
+interface StepWindow {
+  steps: StepItem[];
+  // "2 earlier milestones" and "3 more milestones", for the milestones the
+  // window leaves out before and after it.
+  earlier: string | undefined;
+  later: string | undefined;
+}
+
+// At most `size` milestones around the one the run is in, so a short list
+// still shows where the run stands.
+function stepWindow(glance: MilestoneGlance, size: number): StepWindow {
+  let { steps, focus } = glance;
+  if (steps.length <= size) {
+    return { steps, earlier: undefined, later: undefined };
+  }
+  let start = Math.min(Math.max(focus - (size - 2), 0), steps.length - size);
+  let before = start;
+  let after = steps.length - start - size;
+  return {
+    steps: steps.slice(start, start + size),
+    earlier:
+      before > 0
+        ? `${tally(before)} earlier ${milestoneWord(before)}`
+        : undefined,
+    later:
+      after > 0 ? `${tally(after)} more ${milestoneWord(after)}` : undefined,
+  };
+}
+
+// What the fitted and embedded views show at a glance: the automation's
+// state, when it runs, how its last run ended and where its milestones stand.
+// A viewer the status route refuses sees the card's own fields and the
+// milestones the script declares. A prerender reads neither the status nor
+// the script, so it shows the card's own fields alone.
+class AtAGlance extends Component<typeof Automation> {
   private server = automationStatus(this, () => ({
     id: this.args.model.id,
     realm: this.args.model[realmURL]?.href,
     realmId: instanceRealmId(this.args.model as Automation),
     tools: toolsOf(this.args.context),
   }));
-  get look() {
-    return this.server.current.visible
-      ? stateLook(this.server.current.status)
-      : undefined;
+  // Read, for the plan the script declares, only once the status has
+  // answered with no run that reports milestones.
+  private script = scriptText(this, () => ({
+    url: this.args.model.script?.id,
+    realm: this.args.model[realmURL]?.href,
+    realmId: instanceRealmId(this.args.model as Automation),
+    tools: toolsOf(this.args.context),
+  }));
+  get status() {
+    return this.server.current.visible ? this.server.current.status : undefined;
   }
-}
-
-class Fitted extends WithStatus {
+  get look() {
+    return stateLook(this.status);
+  }
   get triggers() {
     return this.args.model.triggers ?? [];
   }
@@ -3693,14 +3860,14 @@ class Fitted extends WithStatus {
     let first = this.triggers[0];
     return first ? triggerPhrase(first) : 'No triggers yet';
   }
+  get firstKind() {
+    return this.triggers[0]?.kind;
+  }
   get moreTriggers() {
     let more = this.triggers.length - 1;
     return more > 0
-      ? `Plus ${more} more trigger${more === 1 ? '' : 's'}`
+      ? `Plus ${tally(more)} more ${more === 1 ? 'trigger' : 'triggers'}`
       : undefined;
-  }
-  get firstKind() {
-    return this.triggers[0]?.kind;
   }
   get hasScript() {
     return Boolean(this.args.model.script);
@@ -3710,196 +3877,690 @@ class Fitted extends WithStatus {
       Boolean(this.args.model.batchedAI) && allowsAIRequests(this.args.model)
     );
   }
+  get hasWarnings() {
+    return !this.hasScript || this.showsBatchedAI;
+  }
+  get hasRunFacts() {
+    return Boolean(this.nextRun || this.lastRun);
+  }
+  // The next run, only while Boxel runs the automation.
+  get nextRun() {
+    let status = this.status;
+    return status?.switchedOn && status.state === 'active'
+      ? (status.nextRun ?? undefined)
+      : undefined;
+  }
+  get lastRun() {
+    let status = this.status;
+    if (!status?.switchedOn || !status.lastFinishedAt) {
+      return undefined;
+    }
+    let result = lastRunText(status);
+    return result
+      ? {
+          label: `Last run ${result.toLowerCase()}`,
+          at: status.lastFinishedAt,
+          result: status.lastResult,
+        }
+      : undefined;
+  }
+  get shownRun() {
+    let run = this.status?.currentRun ?? this.status?.lastRun;
+    return run && (run.milestones.length > 0 || run.plan.length > 0)
+      ? run
+      : undefined;
+  }
+  @cached
+  get milestones(): MilestoneGlance | undefined {
+    if (!this.server.current.known) {
+      return undefined;
+    }
+    let run = this.shownRun;
+    if (run) {
+      return milestoneGlance(runMilestoneRows(run), run);
+    }
+    let text = this.script.current.text;
+    let plan = text ? declaredMilestones(text) : undefined;
+    return plan
+      ? milestoneGlance(declaredMilestoneRows(plan), undefined)
+      : undefined;
+  }
+  get milestoneValueText() {
+    let m = this.milestones;
+    return m ? `${m.headline}. ${m.count} ${milestoneWord(m.total)} done.` : '';
+  }
+  get stepped() {
+    return (this.milestones?.total ?? 0) <= 12;
+  }
+}
+
+// Sixteen sizes, one layout: each step up in height adds the next most useful
+// fact. A single line holds the title and, in a strip, the state. Then the
+// first trigger, or where a running or failed run stands. Then the milestones
+// as a bar. A tile adds the last run and the warnings; a card, or a tile from
+// 240px tall, also the other triggers and the next run; a tile from 240px
+// wide and 270px tall lists the milestones in place of the bar. The root is
+// the size container, so every rule queries its content box; the padding
+// sits on the body inside it.
+class Fitted extends AtAGlance {
+  get focusLine() {
+    let m = this.milestones;
+    return m && (m.kind === 'running' || m.kind === 'failed')
+      ? m.headline
+      : this.when;
+  }
+  // The fitted lists name each milestone without its times, which only the
+  // embedded and isolated views have room for.
+  private list(size: number) {
+    if (!this.milestones) {
+      return { steps: [], earlier: undefined, later: undefined };
+    }
+    let { steps, earlier, later } = stepWindow(this.milestones, size);
+    return {
+      steps: steps.map(({ label, state }) => ({ label, state })),
+      earlier,
+      later,
+    };
+  }
+  get shortList() {
+    return this.list(3);
+  }
+  get longList() {
+    return this.list(7);
+  }
   <template>
-    <FittedCard
-      class='automation-fitted'
-      @titleTag='h3'
-      data-test-automation-fitted
-    >
-      <:placeholder>
-        <span class='automation-fitted__icon' aria-hidden='true'>
-          <CalendarClockIcon width='24' height='24' />
-        </span>
-      </:placeholder>
-      <:eyebrow>Automation</:eyebrow>
-      <:title>{{@model.cardTitle}}</:title>
-      <:subtitle>
-        <span class='automation-fitted__when' data-test-automation-fitted-when>
-          {{#if (eq this.firstKind 'cron')}}
-            <RepeatIcon width='14' height='14' aria-hidden='true' />
-          {{else if (eq this.firstKind 'once')}}
-            <CalendarCheckIcon width='14' height='14' aria-hidden='true' />
-          {{else if this.firstKind}}
-            <ZapIcon width='14' height='14' aria-hidden='true' />
-          {{/if}}
-          <span>{{this.when}}</span>
-        </span>
-      </:subtitle>
-      <:meta>
-        <div class='automation-fitted__meta'>
-          {{#if this.moreTriggers}}
-            <p
-              class='automation-fitted__more'
-              data-test-automation-fitted-more
-            >{{this.moreTriggers}}</p>
-          {{/if}}
-          {{#if @model.cardDescription}}
-            <p class='automation-fitted__summary'>{{@model.cardDescription}}</p>
-          {{/if}}
-        </div>
-      </:meta>
-      <:footer>
-        <Stack @orientation='horizontal' @wrap={{true}} @gap='xs'>
+    <div class='af' data-test-automation-fitted>
+      <div class='af__body'>
+        <div class='af__head'>
+          <span class='af__icon' aria-hidden='true'>
+            <CalendarClockIcon width='16' height='16' />
+          </span>
+          <div class='af__heading'>
+            <p class='af__eyebrow'>Automation</p>
+            <h3 class='af__title'>{{@model.cardTitle}}</h3>
+          </div>
           {{#if this.look}}
             <Chip
+              class='af__state'
               @label={{this.look.label}}
               @tone={{this.look.tone}}
               data-test-automation-fitted-state={{this.look.label}}
             />
           {{/if}}
-          {{#unless this.hasScript}}
-            <Chip
-              @label='No script yet'
-              @tone='warning'
-              data-test-automation-fitted-no-script
-            />
-          {{/unless}}
-          {{#if this.showsBatchedAI}}
-            <Chip
-              @label='Batched AI'
-              @tone='info'
-              class='automation-fitted__batched'
-              data-test-automation-fitted-batched-ai
-            />
+        </div>
+
+        <p class='af__focus' data-test-automation-fitted-focus>
+          {{this.focusLine}}
+        </p>
+
+        <p class='af__when' data-test-automation-fitted-when>
+          {{#if (eq this.firstKind 'cron')}}
+            <RepeatIcon width='13' height='13' aria-hidden='true' />
+          {{else if (eq this.firstKind 'once')}}
+            <CalendarCheckIcon width='13' height='13' aria-hidden='true' />
+          {{else if this.firstKind}}
+            <ZapIcon width='13' height='13' aria-hidden='true' />
           {{/if}}
-        </Stack>
-      </:footer>
-    </FittedCard>
+          <span>{{this.when}}</span>
+        </p>
+        {{#if this.moreTriggers}}
+          <p class='af__more' data-test-automation-fitted-more>
+            {{this.moreTriggers}}
+          </p>
+        {{/if}}
+
+        {{#if this.nextRun}}
+          <p class='af__fact' data-test-automation-fitted-next>
+            Next run
+            <FormatDate
+              @date={{this.nextRun}}
+              @month='short'
+              @day='numeric'
+              @hour='numeric'
+              @minute='2-digit'
+            />
+          </p>
+        {{/if}}
+        {{#if this.lastRun}}
+          <p
+            class='af__fact af__fact--last'
+            data-result={{this.lastRun.result}}
+            data-test-automation-fitted-last={{this.lastRun.result}}
+          >
+            {{this.lastRun.label}}
+            <RelativeTime @date={{this.lastRun.at}} />
+          </p>
+        {{/if}}
+
+        {{#if this.milestones}}
+          <div
+            class='af__milestones'
+            data-kind={{this.milestones.kind}}
+            data-test-automation-fitted-milestones={{this.milestones.kind}}
+          >
+            <p class='af__headline'>
+              <span
+                class='af__headline-text'
+              >{{this.milestones.headline}}</span>
+              <span class='af__count'>{{this.milestones.count}}</span>
+            </p>
+            <ProgressBar
+              class='af__bar'
+              @value={{this.milestones.done}}
+              @max={{this.milestones.total}}
+              @steps={{this.stepped}}
+              @hue={{this.milestones.hue}}
+              @valueText={{this.milestoneValueText}}
+              aria-label='Milestones'
+            />
+            <div class='af__list af__list--short'>
+              {{#if this.shortList.earlier}}
+                <p class='af__list-more'>{{this.shortList.earlier}}</p>
+              {{/if}}
+              <StepList
+                @steps={{this.shortList.steps}}
+                @variant='track'
+                @announce={{false}}
+                @label='Milestones'
+              />
+              {{#if this.shortList.later}}
+                <p class='af__list-more'>{{this.shortList.later}}</p>
+              {{/if}}
+            </div>
+            <div class='af__list af__list--long'>
+              {{#if this.longList.earlier}}
+                <p class='af__list-more'>{{this.longList.earlier}}</p>
+              {{/if}}
+              <StepList
+                @steps={{this.longList.steps}}
+                @variant='track'
+                @announce={{false}}
+                @label='Milestones'
+              />
+              {{#if this.longList.later}}
+                <p class='af__list-more'>{{this.longList.later}}</p>
+              {{/if}}
+            </div>
+          </div>
+        {{/if}}
+
+        {{#unless this.hasScript}}
+          <p class='af__hint' data-test-automation-fitted-hint>
+            Add a script in the edit view to run this automation.
+          </p>
+        {{/unless}}
+
+        {{#if @model.cardDescription}}
+          <p class='af__summary'>{{@model.cardDescription}}</p>
+        {{/if}}
+
+        {{#if (or this.hasWarnings (bool this.look))}}
+          <div class='af__chips'>
+            {{#if this.look}}
+              <Chip
+                class='af__state-foot'
+                @label={{this.look.label}}
+                @tone={{this.look.tone}}
+              />
+            {{/if}}
+            {{#unless this.hasScript}}
+              <Chip
+                @label='No script yet'
+                @tone='warning'
+                data-test-automation-fitted-no-script
+              />
+            {{/unless}}
+            {{#if this.showsBatchedAI}}
+              <Chip
+                @label='Batched AI'
+                @tone='info'
+                data-test-automation-fitted-batched-ai
+              />
+            {{/if}}
+          </div>
+        {{/if}}
+      </div>
+    </div>
     <style scoped>
-      .automation-fitted {
-        --fc-title-font-size: var(--boxel-font-size-sm);
-        --fc-subtitle-font-size: var(--boxel-font-size-xs);
-        --fc-subtitle-line-clamp: 2;
-        --fc-footer-justify: flex-start;
+      .af {
+        container-type: size;
+        inline-size: 100%;
+        block-size: 100%;
+        overflow: hidden;
       }
-      .automation-fitted__icon {
+      .af__body {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-5xs);
+        box-sizing: border-box;
+        block-size: 100%;
+        padding: var(--boxel-sp-xs);
+        overflow: hidden;
+        color: var(--foreground);
+        font-size: var(--boxel-font-size-xs);
+        line-height: var(--boxel-line-height-xs);
+      }
+      /* A line that doesn't fit is cut at the bottom of the card rather than
+         squeezed into the lines above it. */
+      .af__body > * {
+        flex-shrink: 0;
+      }
+      .af__head {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        min-inline-size: 0;
+        flex-shrink: 0;
+      }
+      .af__icon {
         display: grid;
         place-items: center;
-        width: 2.5rem;
-        height: 2.5rem;
+        flex-shrink: 0;
+        inline-size: 1.5rem;
+        block-size: 1.5rem;
         border-radius: var(--radius);
         background-color: var(--primary);
         color: var(--primary-foreground);
       }
-      .automation-fitted__when {
-        display: inline-flex;
-        align-items: flex-start;
-        gap: var(--boxel-sp-5xs);
+      .af__heading {
+        flex: 1;
+        min-inline-size: 0;
       }
-      .automation-fitted__meta {
-        display: grid;
-        gap: var(--boxel-sp-5xs);
-        min-width: 0;
+      .af__eyebrow {
+        display: none;
+        color: var(--muted-foreground);
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
       }
-      /* Too narrow for two chips: the missing script matters more. */
-      @container fitted-card (max-width: 180px) or ((max-width: 260px) and (max-height: 180px)) {
-        .automation-fitted__batched {
-          display: none;
-        }
+      .af__title {
+        overflow: hidden;
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
+        line-height: var(--boxel-line-height-sm);
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
-      .automation-fitted__summary {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 3;
+      .af__state {
+        display: none;
+        flex-shrink: 0;
+      }
+      .af__focus,
+      .af__when,
+      .af__more,
+      .af__fact,
+      .af__milestones,
+      .af__summary,
+      .af__chips,
+      .af__list {
+        display: none;
+      }
+      .af__focus,
+      .af__when,
+      .af__fact,
+      .af__more {
         overflow: hidden;
         color: var(--muted-foreground);
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
-      @container fitted-card (max-height: 199px) {
-        .automation-fitted__summary {
-          display: none;
+      .af__when {
+        align-items: center;
+        gap: var(--boxel-sp-5xs);
+      }
+      .af__when > svg {
+        flex-shrink: 0;
+      }
+      .af__when > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .af__fact[data-result='error'] {
+        color: var(--destructive-ink);
+      }
+      .af__milestones {
+        flex-direction: column;
+        gap: var(--boxel-sp-5xs);
+        min-inline-size: 0;
+      }
+      .af__headline {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+        min-inline-size: 0;
+      }
+      .af__headline-text {
+        overflow: hidden;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .af__milestones[data-kind='failed'] .af__headline-text {
+        color: var(--destructive-ink);
+      }
+      .af__count {
+        flex-shrink: 0;
+        color: var(--muted-foreground);
+        font-variant-numeric: tabular-nums;
+      }
+      .af__list-more {
+        color: var(--muted-foreground);
+      }
+      /* The milestones in the colors the isolated view gives them: green
+         once done, yellow while running, red where the run failed and gray
+         where Boxel stopped the run. A short list can start partway through
+         the run, so it leaves out the step numbers, which would count from
+         its own first row. */
+      .af__list {
+        --pretui-step-upcoming-marker-fg: transparent;
+        --pretui-step-complete-bar: var(--success);
+        --pretui-step-in-progress-bar: var(--warning);
+        --pretui-step-in-progress-ring: var(--warning);
+        --pretui-step-in-progress-marker-fg: var(--warning-ink);
+        --pretui-step-blocked-tone: var(--foreground);
+        --pretui-step-blocked-marker-fg: var(--muted-foreground);
+        --pretui-step-blocked-ring: var(--muted-foreground);
+        --pretui-step-blocked-bar: var(--muted-foreground);
+      }
+      .af__summary {
+        display: none;
+        overflow: hidden;
+        color: var(--muted-foreground);
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+      }
+      .af__chips {
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-4xs);
+        margin-block-start: auto;
+      }
+      .af__state-foot,
+      .af__hint {
+        display: none;
+      }
+      .af__hint {
+        color: var(--muted-foreground);
+      }
+
+      /* A strip has room for the state beside the title. */
+      @container (min-width: 240px) {
+        .af__state {
+          display: inline-flex;
         }
       }
-      .automation-fitted__when > svg {
-        flex-shrink: 0;
-        margin-top: 0.1em;
+      /* Two lines: the first trigger, or where a running or failed run
+         stands. */
+      @container (min-height: 60px) {
+        .af__focus {
+          display: block;
+        }
+      }
+      /* Three lines: the first trigger, and the milestones as a bar. */
+      @container (min-height: 100px) {
+        .af__focus {
+          display: none;
+        }
+        .af__when {
+          display: flex;
+        }
+        .af__milestones {
+          display: flex;
+        }
+      }
+      /* A tile: the eyebrow, a two-line title, the last run and the
+         warnings. */
+      @container (min-height: 165px) {
+        .af__body {
+          gap: var(--boxel-sp-4xs);
+          padding: var(--boxel-sp-sm);
+        }
+        .af__head {
+          align-items: flex-start;
+        }
+        .af__icon {
+          inline-size: 2rem;
+          block-size: 2rem;
+        }
+        .af__eyebrow {
+          display: block;
+        }
+        .af__title {
+          display: -webkit-box;
+          white-space: normal;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+        }
+        .af__fact--last,
+        .af__hint {
+          display: block;
+        }
+        .af__chips {
+          display: flex;
+        }
+        .af__milestones {
+          margin-block-start: var(--boxel-sp-4xs);
+        }
+      }
+      /* A card, or a tall tile: the other triggers and the next run too. */
+      @container (min-height: 165px) and (min-width: 390px),
+        (min-height: 240px) {
+        .af__more,
+        .af__fact {
+          display: block;
+        }
+      }
+      /* A narrow tile gives the title the whole width, and the state moves
+         to the footer. */
+      @container (min-height: 165px) and (max-width: 239px) {
+        .af__icon,
+        .af__state {
+          display: none;
+        }
+        .af__state-foot {
+          display: inline-flex;
+        }
+      }
+      /* A wide enough tile or card that is tall enough: the milestones as a
+         short list in place of the bar. */
+      @container (min-height: 270px) and (min-width: 240px) {
+        .af__bar {
+          display: none;
+        }
+        .af__list--short {
+          display: block;
+        }
+      }
+      /* The tallest card: a longer list and the description. */
+      @container (min-height: 440px) and (min-width: 240px) {
+        .af__list--short {
+          display: none;
+        }
+        .af__list--long {
+          display: block;
+        }
+        .af__summary {
+          display: -webkit-box;
+        }
       }
     </style>
   </template>
 }
 
-// One line per trigger, in words, with the automation's state for a direct
-// writer.
-class Embedded extends WithStatus {
-  get triggers() {
-    return (this.args.model.triggers ?? []).map((trigger) => ({
+// The automation as a row in a list: the title and state, each trigger in
+// words, the next and last run, and the milestones, as a bar with where the
+// run stands when narrow and as a track of every milestone when wide. The
+// root is the inline-size container, so the padding sits on the body inside
+// it.
+class Embedded extends AtAGlance {
+  get triggerLines() {
+    return this.triggers.map((trigger) => ({
       kind: trigger.kind,
       phrase: triggerPhrase(trigger),
     }));
   }
+  // A track of more than eight milestones is too dense to read, so a longer
+  // run keeps the bar at every width.
+  get showsTrack() {
+    return (this.milestones?.total ?? 0) <= 8;
+  }
   <template>
-    <div class='automation-embedded' data-test-automation-embedded>
-      <Item
-        @size='s'
-        @alignStart={{true}}
-        @title={{@model.cardTitle}}
-        @description={{@model.cardDescription}}
-      >
-        <:leading>
-          <span class='automation-embedded__icon' aria-hidden='true'>
-            <CalendarClockIcon width='20' height='20' />
-          </span>
-        </:leading>
-        <:trailing>
-          {{#if this.look}}
-            <Chip
-              @label={{this.look.label}}
-              @tone={{this.look.tone}}
-              data-test-automation-embedded-state={{this.look.label}}
-            />
-          {{/if}}
-        </:trailing>
-      </Item>
-      {{#if this.triggers.length}}
-        <Stack @gap='none' class='automation-embedded__triggers'>
-          {{#each this.triggers as |trigger|}}
-            <Item
-              @size='xs'
-              @title={{trigger.phrase}}
-              data-test-automation-embedded-trigger
-            >
-              <:leading>
-                {{#if (eq trigger.kind 'cron')}}
-                  <RepeatIcon width='14' height='14' aria-hidden='true' />
-                {{else if (eq trigger.kind 'once')}}
-                  <CalendarCheckIcon
-                    width='14'
-                    height='14'
-                    aria-hidden='true'
-                  />
-                {{else}}
-                  <ZapIcon width='14' height='14' aria-hidden='true' />
-                {{/if}}
-              </:leading>
-            </Item>
-          {{/each}}
-        </Stack>
-      {{else}}
-        <EmptyState
+    <div class='ae' data-test-automation-embedded>
+      <div class='ae__body'>
+        <Item
           @size='s'
-          @texture={{false}}
-          @title='No triggers'
-          @message='Add a schedule, a one-time run or a webhook in the edit view.'
-        />
-      {{/if}}
+          @alignStart={{true}}
+          @title={{@model.cardTitle}}
+          @description={{@model.cardDescription}}
+        >
+          <:leading>
+            <span class='ae__icon' aria-hidden='true'>
+              <CalendarClockIcon width='20' height='20' />
+            </span>
+          </:leading>
+          <:trailing>
+            {{#if this.look}}
+              <Chip
+                @label={{this.look.label}}
+                @tone={{this.look.tone}}
+                data-test-automation-embedded-state={{this.look.label}}
+              />
+            {{/if}}
+          </:trailing>
+        </Item>
+
+        {{#if this.triggerLines.length}}
+          <div class='ae__grid'>
+            <Stack @gap='none' class='ae__triggers'>
+              {{#each this.triggerLines as |trigger|}}
+                <Item
+                  @size='xs'
+                  @title={{trigger.phrase}}
+                  data-test-automation-embedded-trigger
+                >
+                  <:leading>
+                    {{#if (eq trigger.kind 'cron')}}
+                      <RepeatIcon width='14' height='14' aria-hidden='true' />
+                    {{else if (eq trigger.kind 'once')}}
+                      <CalendarCheckIcon
+                        width='14'
+                        height='14'
+                        aria-hidden='true'
+                      />
+                    {{else}}
+                      <ZapIcon width='14' height='14' aria-hidden='true' />
+                    {{/if}}
+                  </:leading>
+                </Item>
+              {{/each}}
+            </Stack>
+            {{#if this.hasRunFacts}}
+              <div class='ae__runs'>
+                {{#if this.nextRun}}
+                  <p class='ae__fact' data-test-automation-embedded-next>
+                    <span class='ae__label'>Next run</span>
+                    <FormatDate
+                      @date={{this.nextRun}}
+                      @month='short'
+                      @day='numeric'
+                      @hour='numeric'
+                      @minute='2-digit'
+                      @timeZoneName='short'
+                    />
+                  </p>
+                {{/if}}
+                {{#if this.lastRun}}
+                  <p
+                    class='ae__fact'
+                    data-result={{this.lastRun.result}}
+                    data-test-automation-embedded-last={{this.lastRun.result}}
+                  >
+                    <span class='ae__label'>{{this.lastRun.label}}</span>
+                    <RelativeTime @date={{this.lastRun.at}} />
+                  </p>
+                {{/if}}
+              </div>
+            {{/if}}
+          </div>
+        {{else}}
+          <EmptyState
+            @size='s'
+            @texture={{false}}
+            @title='No triggers'
+            @message='Add a schedule, a one-time run or a webhook in the edit view.'
+          />
+        {{/if}}
+
+        {{#if this.milestones}}
+          <div
+            class='ae__milestones'
+            data-kind={{this.milestones.kind}}
+            data-track={{if this.showsTrack 'true' 'false'}}
+            data-test-automation-embedded-milestones={{this.milestones.kind}}
+          >
+            <p class='ae__headline'>
+              <span
+                class='ae__headline-text'
+              >{{this.milestones.headline}}</span>
+              <span class='ae__count'>{{this.milestones.count}}</span>
+            </p>
+            <ProgressBar
+              class='ae__bar'
+              @value={{this.milestones.done}}
+              @max={{this.milestones.total}}
+              @steps={{this.stepped}}
+              @hue={{this.milestones.hue}}
+              @valueText={{this.milestoneValueText}}
+              aria-label='Milestones'
+            />
+            {{#if this.showsTrack}}
+              <div class='ae__track'>
+                <StepList
+                  @steps={{this.milestones.steps}}
+                  @variant='track'
+                  @announce={{false}}
+                  @label='Milestones'
+                />
+              </div>
+            {{/if}}
+          </div>
+        {{/if}}
+
+        {{#if this.hasWarnings}}
+          <div class='ae__chips'>
+            {{#unless this.hasScript}}
+              <Chip
+                @label='No script yet'
+                @tone='warning'
+                data-test-automation-embedded-no-script
+              />
+            {{/unless}}
+            {{#if this.showsBatchedAI}}
+              <Chip
+                @label='Batched AI'
+                @tone='info'
+                data-test-automation-embedded-batched-ai
+              />
+            {{/if}}
+          </div>
+        {{/if}}
+      </div>
     </div>
     <style scoped>
-      .automation-embedded {
+      .ae {
         container-type: inline-size;
-        display: grid;
-        gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp-sm);
       }
-      .automation-embedded__icon {
+      .ae__body {
+        display: grid;
+        gap: var(--boxel-sp-sm);
+        padding: var(--boxel-sp-sm);
+        font-size: var(--boxel-font-size-xs);
+        line-height: var(--boxel-line-height-xs);
+      }
+      .ae__icon {
         display: grid;
         place-items: center;
         width: 2.25rem;
@@ -3908,8 +4569,86 @@ class Embedded extends WithStatus {
         background-color: var(--primary);
         color: var(--primary-foreground);
       }
-      .automation-embedded__triggers {
+      .ae__grid {
+        display: grid;
+        gap: var(--boxel-sp-xs);
+      }
+      .ae__triggers {
         color: var(--muted-foreground);
+      }
+      .ae__runs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-4xs) var(--boxel-sp-lg);
+      }
+      .ae__fact {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-5xs);
+      }
+      .ae__label {
+        color: var(--muted-foreground);
+      }
+      .ae__fact[data-result='error'] .ae__label {
+        color: var(--destructive-ink);
+      }
+      .ae__milestones {
+        display: grid;
+        gap: var(--boxel-sp-4xs);
+        padding-block-start: var(--boxel-sp-xs);
+        border-block-start: 1px solid var(--border);
+      }
+      .ae__headline {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+      }
+      .ae__headline-text {
+        font-weight: 600;
+      }
+      .ae__milestones[data-kind='failed'] .ae__headline-text {
+        color: var(--destructive-ink);
+      }
+      .ae__count {
+        flex-shrink: 0;
+        color: var(--muted-foreground);
+        font-variant-numeric: tabular-nums;
+      }
+      .ae__track {
+        display: none;
+        --pretui-step-complete-bar: var(--success);
+        --pretui-step-in-progress-bar: var(--warning);
+        --pretui-step-in-progress-ring: var(--warning);
+        --pretui-step-in-progress-marker-fg: var(--warning-ink);
+        --pretui-step-blocked-tone: var(--foreground);
+        --pretui-step-blocked-marker-fg: var(--muted-foreground);
+        --pretui-step-blocked-ring: var(--muted-foreground);
+        --pretui-step-blocked-bar: var(--muted-foreground);
+      }
+      .ae__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-4xs);
+      }
+      /* Wide enough for the triggers and the runs side by side. */
+      @container (min-width: 36rem) {
+        .ae__grid {
+          grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+          align-items: start;
+        }
+        .ae__runs {
+          flex-direction: column;
+        }
+      }
+      /* Wide enough for a track of every milestone in place of the bar. */
+      @container (min-width: 36rem) {
+        .ae__milestones[data-track='true'] .ae__bar {
+          display: none;
+        }
+        .ae__milestones[data-track='true'] .ae__track {
+          display: block;
+        }
       }
     </style>
   </template>
