@@ -858,6 +858,11 @@ export class AutomationTrigger extends FieldDef {
     get webhooks(): WebhooksState {
       return this.webhookList.current;
     }
+    // Whether the route answered, so the editor picks from its list. An
+    // empty list counts: the editor then says the workspace has no webhook.
+    get hasWebhookList() {
+      return this.webhooks.list !== undefined;
+    }
     // Each webhook as a choice. A path the card already holds that the list
     // lacks stays a choice too, so the picker shows the current value and
     // the problem under the field says why it can't stay.
@@ -1066,7 +1071,7 @@ export class AutomationTrigger extends FieldDef {
               />
             </Field>
           </div>
-        {{else if this.webhooks.list}}
+        {{else if this.hasWebhookList}}
           <Field
             @label='Webhook'
             @hint='The list holds every incoming webhook that someone the workspace names as an editor made.'
@@ -1183,7 +1188,7 @@ export class AutomationTrigger extends FieldDef {
           width: 100%;
         }
         .automation-trigger-edit__notice {
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         /* Pret UI's Input inherits its font, so a wrapper sets it. */
