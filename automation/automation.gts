@@ -1790,10 +1790,12 @@ function automationStatus(
       read();
       // An edit to the card changes its triggers, so their runs left change
       // too. A run of the automation that moves (it starts, reaches a
-      // milestone, commits or ends, or a pause cancels it) changes its row
-      // and not the card, and the realm tells its direct writers, the
-      // viewers this route answers, with a `job` event naming the automation
-      // by its identifier, spelled as the card's id is.
+      // milestone, commits or ends, or a pause cancels it), and a change to
+      // the automation itself (switched on, paused, resumed, removed, waiting
+      // for credits, done), change its row and not the card. The realm tells
+      // its direct writers, the viewers this route answers, with a `job`
+      // event for a run and an `automation` event for the automation, each
+      // naming the automation by its identifier, spelled as the card's id is.
       let unsubscribe = subscribeToRealm(realm, (event) => {
         if (
           (event.eventName === 'index' &&
@@ -1801,7 +1803,8 @@ function automationStatus(
             event.invalidations.some(
               (u) => u === realm + path || u === `${realm}${path}.json`,
             )) ||
-          (event.eventName === 'job' && event.automation === id)
+          ((event.eventName === 'job' || event.eventName === 'automation') &&
+            event.automation === id)
         ) {
           read();
         }
