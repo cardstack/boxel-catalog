@@ -3,11 +3,15 @@ name: PR Preview Realm
 # Each PR gets its own staging realm holding the folders it touches and what
 # they reach by relative path (scripts/preview-paths.mjs). boxel's reusable
 # workflow creates, pushes, publishes and unpublishes it, and keeps a sticky
-# comment with the link. A failed deploy is reported there and leaves the
-# check green: the preview is for reviewers, not a gate.
+# comment with the link. A failed deploy is reported there and turns the
+# check red.
+#
+# It runs on pull_request_target, so this file and the scripts it runs
+# always come from main, whatever the pull request changes. The pull
+# request's files are content: they are read and pushed, never run here.
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened, closed]
 
 concurrency:
@@ -35,7 +39,15 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         if: github.event.action != 'closed'
         with:
-          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Check out the pull request's files as content
+        if: github.event.action != 'closed'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: content
+          persist-credentials: false
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         if: github.event.action != 'closed'
@@ -46,17 +58,29 @@ jobs:
         if: github.event.action != 'closed'
         run: node --test scripts/preview-paths.test.mjs
 
+      # main's script reads the pull request's files from content/.
       - name: List the preview's files
         id: paths
         if: github.event.action != 'closed'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
         run: |
-          git -c core.quotePath=false diff --name-only HEAD^1 HEAD > "${RUNNER_TEMP}/changed.txt"
-          paths=$(node scripts/preview-paths.mjs < "${RUNNER_TEMP}/changed.txt")
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR}/files" \
+            --jq '.[].filename' > "${RUNNER_TEMP}/changed.txt"
+          # GitHub lists at most 3000 files, without saying it stopped.
+          if [ "$(wc -l < "${RUNNER_TEMP}/changed.txt")" -ge 3000 ]; then
+            echo "::error::This pull request changes 3000 files or more, so GitHub can't list them all for a preview."
+            exit 1
+          fi
+          paths=$(cd content && node "${GITHUB_WORKSPACE}/scripts/preview-paths.mjs" < "${RUNNER_TEMP}/changed.txt")
+          [ -n "${paths//[[:space:]]/}" ] || paths=""
           echo "$(printf '%s' "$paths" | grep -c .) file(s) for the preview"
+          eof="PREVIEW_PATHS_$(openssl rand -hex 16)"
           {
-            echo "paths<<PREVIEW_PATHS_EOF"
+            echo "paths<<${eof}"
             printf '%s\n' "$paths"
-            echo "PREVIEW_PATHS_EOF"
+            echo "${eof}"
           } >> "$GITHUB_OUTPUT"
 
       # The sticky comment says whether a preview is up: one that was never
@@ -86,7 +110,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: cardstack/boxel/.github/workflows/preview-realm.yml@1370ccd00c605d45beee306176864fc3a76c4c50 # main
+    uses: cardstack/boxel/.github/workflows/preview-realm.yml@9248391fdcb2cbcd47a5eaaf0e594ac69d5850c4 # main
     with:
       realm-server-url: https://realms-staging.stack.cards/
       matrix-url: https://matrix-staging.stack.cards
@@ -96,7 +120,8 @@ jobs:
       sticky-header: catalog-preview-realm
       paths: ${{ needs.paths.outputs.paths }}
       unpublish: ${{ needs.paths.outputs.paths == '' }}
-      fail-on-deploy-error: false
+      content-ref: ${{ github.event.pull_request.head.sha }}
+      fail-on-deploy-error: true
     secrets:
       matrix-username: ${{ vars.STAGING_SUBMISSIONBOT_MATRIX_USERNAME }}
       matrix-password: ${{ secrets.STAGING_SUBMISSIONBOT_MATRIX_PASSWORD }}
