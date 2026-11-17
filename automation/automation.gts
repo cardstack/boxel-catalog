@@ -3776,10 +3776,15 @@ function milestoneGlance(
     done,
     total,
     hue: GLANCE_HUES[kind],
+    // StepList has no state for a stopped step; it reads as blocked, so
+    // the detail says where Boxel stopped the run.
     steps: rows.map((row) => ({
       label: row.name,
       state: STEP_STATES[row.state],
-      detail: row.detail,
+      detail:
+        row.state === 'stopped'
+          ? ['Stopped here', row.detail].filter(Boolean).join(' · ')
+          : row.detail,
     })),
     // The milestone a run is in, failed in or stopped in. Otherwise the
     // first milestone the run didn't reach, or the last one when the run
