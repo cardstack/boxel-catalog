@@ -1884,8 +1884,11 @@ function repeatedFailuresSentence(
   status: Extract<ServerStatus, { switchedOn: true }>,
 ): string {
   let count = status.failuresInARow;
-  let runs = count && count > 1 ? tally(count) : 'several';
-  return `Boxel paused the automation after ${runs} runs in a row failed. Boxel runs nothing until someone who can edit this workspace fixes what the runs fail on and resumes the automation.`;
+  let runs =
+    count === 1
+      ? 'a run'
+      : `${count && count > 1 ? tally(count) : 'several'} runs in a row`;
+  return `Boxel paused the automation after ${runs} failed. Boxel runs nothing until someone who can edit this workspace fixes what the runs fail on and resumes the automation.`;
 }
 
 function payerText(status: ServerStatus): string {
@@ -1953,7 +1956,7 @@ function statusItems(status: ServerStatus): StatusItem[] {
         ? { label: `Last run: ${last}`, date: status.lastFinishedAt }
         : { label: 'Last run', value: 'No runs yet' },
     );
-    let error = status.lastFailure?.message ?? status.lastFailure?.reason;
+    let error = status.lastFailure?.message || status.lastFailure?.reason;
     if (error && status.failuresInARow) {
       items.push({ label: 'Last error', value: error });
     }
