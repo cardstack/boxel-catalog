@@ -1900,7 +1900,7 @@ function stateSentence(status: ServerStatus): string {
         case 'repeated-failures':
           return repeatedFailuresSentence(status);
         case 'invalid-declaration':
-          return 'A run came due while Boxel couldn’t read the automation’s settings, so Boxel paused the automation. Once someone who can edit this workspace fixes each problem below, Boxel resumes the automation.';
+          return 'Boxel paused the automation because the automation’s settings have problems. Boxel resumes the automation by itself once someone who can edit this workspace fixes each problem below.';
         default:
           return 'Someone who can edit this workspace paused the automation, so Boxel runs nothing until someone resumes the automation.';
       }
@@ -2712,7 +2712,7 @@ class Isolated extends Component<typeof Automation> {
           {{#if this.pauseProblems.length}}
             <Callout
               @tone='danger'
-              @title='What Boxel can’t read'
+              @title='Problems to fix'
               data-test-automation-pause-problems
             >
               <ul class='automation__problems'>
