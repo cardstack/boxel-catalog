@@ -1658,7 +1658,8 @@ type PauseReason =
   | 'realm-archived'
   | 'payer-lost-access'
   | 'caps-raised'
-  | 'batched-ai-enabled';
+  | 'batched-ai-enabled'
+  | 'repeated-failures';
 interface TriggerStatus {
   label: string;
   runs: number;
@@ -1695,6 +1696,12 @@ interface LastRun {
   failedIn: string | null;
   dropped: number;
 }
+interface RunFailure {
+  runId: string;
+  reason: string | null;
+  message: string | null;
+  finishedAt: string;
+}
 type ServerStatus =
   | {
       switchedOn: false;
@@ -1712,6 +1719,12 @@ type ServerStatus =
       nextRun: string | null;
       lastResult: 'complete' | 'error' | 'canceled' | null;
       lastFinishedAt: string | null;
+      // The automation's failure streak: how many of its scheduled runs
+      // failed in a row since its last complete one, counting from its
+      // switch-on or latest resume, and the latest of them. Either may be
+      // absent.
+      failuresInARow?: number;
+      lastFailure?: RunFailure | null;
       triggers: TriggerStatus[];
     };
 type StatusState = {
@@ -1863,10 +1876,25 @@ function stateSentence(status: ServerStatus): string {
           return 'Someone raised a limit above what the payer agreed to pay for, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to the new limits.';
         case 'batched-ai-enabled':
           return 'Someone turned on batched AI after the payer agreed to the limits, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to batched AI.';
+        case 'repeated-failures':
+          return repeatedFailuresSentence(status);
         default:
           return 'Someone who can edit this workspace paused the automation, so Boxel runs nothing until someone resumes the automation.';
       }
   }
+}
+
+// Why the automation paused itself after its runs kept failing. The last
+// run's error shows on its own, under _Last error_ (see `statusItems`).
+function repeatedFailuresSentence(
+  status: Extract<ServerStatus, { switchedOn: true }>,
+): string {
+  let count = status.failuresInARow;
+  let runs =
+    count === 1
+      ? 'a run'
+      : `${count && count > 1 ? tally(count) : 'several'} runs in a row`;
+  return `Boxel paused the automation after ${runs} failed. Boxel runs nothing until someone who can edit this workspace fixes what the runs fail on and resumes the automation.`;
 }
 
 function payerText(status: ServerStatus): string {
@@ -1934,6 +1962,10 @@ function statusItems(status: ServerStatus): StatusItem[] {
         ? { label: `Last run: ${last}`, date: status.lastFinishedAt }
         : { label: 'Last run', value: 'No runs yet' },
     );
+    let error = status.lastFailure?.message || status.lastFailure?.reason;
+    if (error && status.failuresInARow) {
+      items.push({ label: 'Last error', value: error });
+    }
   }
   return items;
 }
