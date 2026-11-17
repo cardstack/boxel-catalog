@@ -679,10 +679,6 @@ export class AutomationTrigger extends FieldDef {
         <:default>
           {{#if (eq @model.kind 'webhook')}}
             {{! A delivery carries no time of its own. }}
-            <p
-              class='automation-trigger__sentence automation-trigger__notice'
-              data-test-automation-webhook-notice
-            >{{WEBHOOK_TRIGGERS_START_NO_RUNS}}</p>
           {{else}}
             <div class='automation-trigger__detail'>
               {{#if (eq @model.kind 'cron')}}
@@ -749,11 +745,6 @@ export class AutomationTrigger extends FieldDef {
         .automation-trigger__list {
           margin: 0 0 var(--boxel-sp-4xs);
           padding-inline-start: var(--boxel-sp-lg);
-        }
-        .automation-trigger__notice {
-          margin: var(--boxel-sp-2xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
         }
         .automation-trigger__cron {
           display: flex;
@@ -829,7 +820,7 @@ export class AutomationTrigger extends FieldDef {
               !this.webhooks.list.some(
                 (webhook) => webhook.webhookPath === m.webhookPath,
               )
-            ? 'Pick one of this workspace’s incoming webhooks: Boxel turns the automation on only with a webhook that someone the workspace names as an editor made'
+            ? 'Pick one of this workspace’s incoming webhooks: Boxel turns the automation on only with a webhook that a workspace administrator made'
             : undefined,
         time: blank(m.time) ? 'Required: enter a time' : undefined,
         untilDate:
@@ -862,6 +853,10 @@ export class AutomationTrigger extends FieldDef {
     // empty list counts: the editor then says the workspace has no webhook.
     get hasWebhookList() {
       return this.webhooks.list !== undefined;
+    }
+    // The server reports that it starts no runs from webhook deliveries.
+    get warnNoWebhookRuns() {
+      return this.webhooks.deliveriesStartRuns === false;
     }
     // Each webhook as a choice. A path the card already holds that the list
     // lacks stays a choice too, so the picker shows the current value and
@@ -1074,7 +1069,7 @@ export class AutomationTrigger extends FieldDef {
         {{else if this.hasWebhookList}}
           <Field
             @label='Webhook'
-            @hint='The list holds every incoming webhook that someone the workspace names as an editor made.'
+            @hint='Each delivery to this webhook starts a run. The list shows every webhook that a workspace administrator made.'
             @error={{this.problems.webhookPath}}
             @required={{true}}
             as |id|
@@ -1094,15 +1089,17 @@ export class AutomationTrigger extends FieldDef {
                 @size='s'
                 @texture={{false}}
                 @title='No incoming webhooks'
-                @message='Nobody the workspace names as an editor has made an incoming webhook yet, so the list has no webhook to pick. Reopen the editor after someone makes one.'
+                @message='No workspace administrator has made an incoming webhook. Once a workspace administrator makes a webhook, reopen the editor to pick the webhook.'
                 data-test-automation-webhook-picker-empty
               />
             {{/if}}
           </Field>
-          <p
-            class='automation-trigger-edit__notice'
-            data-test-automation-webhook-notice
-          >{{WEBHOOK_TRIGGERS_START_NO_RUNS}}</p>
+          {{#if this.warnNoWebhookRuns}}
+            <p
+              class='automation-trigger-edit__notice'
+              data-test-automation-webhook-notice
+            >{{WEBHOOK_TRIGGER_CANT_FIRE}}</p>
+          {{/if}}
         {{else if this.webhooks.loading}}
           <LoadingState
             @label='Reading this workspace’s incoming webhooks'
@@ -1129,10 +1126,6 @@ export class AutomationTrigger extends FieldDef {
               />
             </div>
           </Field>
-          <p
-            class='automation-trigger-edit__notice'
-            data-test-automation-webhook-notice
-          >{{WEBHOOK_TRIGGERS_START_NO_RUNS}}</p>
         {{/if}}
       </div>
       <style scoped>
@@ -1819,11 +1812,13 @@ interface RunFailure {
 type ServerStatus =
   | {
       switchedOn: false;
+      webhookDeliveriesStartRuns?: boolean;
       lastRun?: LastRun | null;
       currentRun?: LastRun | null;
     }
   | {
       switchedOn: true;
+      webhookDeliveriesStartRuns?: boolean;
       lastRun?: LastRun | null;
       currentRun?: LastRun | null;
       state: AutomationState;
@@ -1854,11 +1849,11 @@ type StatusState = {
 
 const STATUS_PATH = '_automation-status';
 
-// What the trigger notes say while webhook deliveries start no automation
-// runs: the server's webhook receiver doesn't start automations yet, so a
-// webhook trigger never fires.
-const WEBHOOK_TRIGGERS_START_NO_RUNS =
-  'Boxel doesn’t start runs from webhook deliveries yet, so this trigger never fires. A schedule or a one-time trigger still runs the automation.';
+// The warning under a webhook trigger while the server reports that it
+// starts no runs from webhook deliveries (`webhookDeliveriesStartRuns`, in
+// the status route's attributes and the webhook list's meta).
+const WEBHOOK_TRIGGER_CANT_FIRE =
+  'This trigger can’t fire, Boxel doesn’t run automations from webhooks.';
 
 // An incoming webhook an automation may name, as the realm's
 // `_automation-webhooks` route lists it: one that a direct writer of the
@@ -1873,6 +1868,9 @@ type WebhooksState = {
   // Undefined until the route answers, and when the route can't be asked or
   // refuses: the editor then takes a typed path.
   list: AutomationWebhook[] | undefined;
+  // What the route's meta says: whether the server starts runs from webhook
+  // deliveries. Undefined until the route answers.
+  deliveriesStartRuns: boolean | undefined;
 };
 const WEBHOOKS_PATH = '_automation-webhooks';
 
@@ -1903,6 +1901,7 @@ function automationWebhooks(
           state: new TrackedObject<WebhooksState>({
             loading: false,
             list: undefined,
+            deliveriesStartRuns: undefined,
           }),
         };
       }
@@ -1932,6 +1931,9 @@ function automationWebhooks(
             state.list = (
               (result.body?.data ?? []) as { attributes: AutomationWebhook }[]
             ).map(({ attributes }) => attributes);
+            let startsRuns = result.body?.meta?.webhookDeliveriesStartRuns;
+            state.deliveriesStartRuns =
+              typeof startsRuns === 'boolean' ? startsRuns : undefined;
           }
         } catch {
           // The editor takes a typed path while there is no list.
@@ -2097,7 +2099,7 @@ function stateSentence(status: ServerStatus): string {
         case 'batched-ai-enabled':
           return 'Someone turned on batched AI after the payer agreed to the limits, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to batched AI.';
         case 'webhook-changed':
-          return 'Someone pointed a trigger at an incoming webhook the payer didn’t agree to, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to the new webhook.';
+          return 'A workspace administrator pointed a trigger at an incoming webhook the payer didn’t agree to, so Boxel paused the automation. Boxel runs nothing until a workspace administrator resumes the automation and agrees to the new webhook.';
         case 'repeated-failures':
           return repeatedFailuresSentence(status);
         case 'invalid-declaration':
@@ -2868,6 +2870,11 @@ class Isolated extends Component<typeof Automation> {
   timeZoneAt = (index: number) => this.args.model.triggers?.[index]?.timeZone;
   triggerStatusAt = (index: number) =>
     statusOfTrigger(this.status, this.args.model.triggers?.[index]?.label);
+  // Whether the trigger at `index` is a webhook trigger on a server that
+  // reports it starts no runs from webhook deliveries.
+  cantFireAt = (index: number) =>
+    this.args.model.triggers?.[index]?.kind === 'webhook' &&
+    this.status?.webhookDeliveriesStartRuns === false;
   <template>
     <article class='automation' data-test-automation>
       <header class='automation__header'>
@@ -2966,6 +2973,12 @@ class Isolated extends Component<typeof Automation> {
             {{#each @fields.triggers as |Trigger index|}}
               <div class='automation__row'>
                 <Trigger />
+                {{#if (this.cantFireAt index)}}
+                  <p
+                    class='automation__trigger-warning'
+                    data-test-automation-webhook-notice
+                  >{{WEBHOOK_TRIGGER_CANT_FIRE}}</p>
+                {{/if}}
                 {{#let (this.triggerStatusAt index) as |progress|}}
                   {{#if progress}}
                     <div
@@ -3128,6 +3141,11 @@ class Isolated extends Component<typeof Automation> {
       }
       .automation__row {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      .automation__trigger-warning {
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
       }
       .automation__progress {
         margin-top: var(--boxel-sp-xs);
