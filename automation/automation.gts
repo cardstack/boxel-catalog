@@ -1713,9 +1713,10 @@ type ServerStatus =
       nextRun: string | null;
       lastResult: 'complete' | 'error' | 'canceled' | null;
       lastFinishedAt: string | null;
-      // How many of the automation's own runs failed since its last
-      // complete one, and the latest of them. A server that predates them
-      // sends neither.
+      // The automation's failure streak: how many of its scheduled runs
+      // failed in a row since its last complete one, counting from its
+      // switch-on or latest resume, and the latest of them. Either may be
+      // absent.
       failuresInARow?: number;
       lastFailure?: RunFailure | null;
       triggers: TriggerStatus[];
@@ -1877,18 +1878,14 @@ function stateSentence(status: ServerStatus): string {
   }
 }
 
-// Why the automation paused itself after its runs kept failing, with the
-// last run's error, which says what to fix before resuming.
+// Why the automation paused itself after its runs kept failing. The last
+// run's error shows on its own, under _Last error_ (see `statusItems`).
 function repeatedFailuresSentence(
   status: Extract<ServerStatus, { switchedOn: true }>,
 ): string {
   let count = status.failuresInARow;
-  let runs = count && count > 1 ? `${tally(count)} runs` : 'Several runs';
-  let error = status.lastFailure?.message ?? status.lastFailure?.reason;
-  let lastRun = error
-    ? ` The last run failed with: ${error.trim().replace(/[.\s]*$/, '')}.`
-    : '';
-  return `${runs} of this automation failed in a row, so Boxel paused the automation.${lastRun} Boxel runs nothing until someone who can edit this workspace fixes what the runs fail on and resumes the automation.`;
+  let runs = count && count > 1 ? tally(count) : 'several';
+  return `Boxel paused the automation after ${runs} runs in a row failed. Boxel runs nothing until someone who can edit this workspace fixes what the runs fail on and resumes the automation.`;
 }
 
 function payerText(status: ServerStatus): string {
@@ -1956,6 +1953,10 @@ function statusItems(status: ServerStatus): StatusItem[] {
         ? { label: `Last run: ${last}`, date: status.lastFinishedAt }
         : { label: 'Last run', value: 'No runs yet' },
     );
+    let error = status.lastFailure?.message ?? status.lastFailure?.reason;
+    if (error && status.failuresInARow) {
+      items.push({ label: 'Last error', value: error });
+    }
   }
   return items;
 }
