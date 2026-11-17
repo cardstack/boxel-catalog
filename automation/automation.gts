@@ -76,6 +76,7 @@ import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { NumberInput } from '@cardstack/pretui/components/number-input';
 import { PanelSection } from '@cardstack/pretui/components/panel-section';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import { Select } from '@cardstack/pretui/components/select';
 import { Switch } from '@cardstack/pretui/components/switch';
 import { Stack } from '@cardstack/pretui/components/stack';
 import {
@@ -575,7 +576,10 @@ class CronReading extends GlimmerComponent<{
 //   runs, or after `untilDate` (at `untilTime`, else the end of that day, in
 //   `timeZone`), whichever comes first.
 // - `once`: `date` at `time` in `timeZone`.
-// - `webhook`: a delivery to the realm's incoming webhook at `webhookPath`.
+// - `webhook`: a delivery to the incoming webhook at `webhookPath`, one the
+//   realm can use: a webhook a direct writer of the realm made. The editor
+//   picks it from the realm's `_automation-webhooks` list, and the server
+//   refuses any other webhook when someone turns the automation on.
 //
 // Times are wall-clock `HH:MM`. `label` names the trigger within its
 // automation. The server counts a trigger's runs by its label, so editing the
@@ -675,6 +679,10 @@ export class AutomationTrigger extends FieldDef {
         <:default>
           {{#if (eq @model.kind 'webhook')}}
             {{! A delivery carries no time of its own. }}
+            <p
+              class='automation-trigger__sentence automation-trigger__notice'
+              data-test-automation-webhook-notice
+            >{{WEBHOOK_TRIGGERS_START_NO_RUNS}}</p>
           {{else}}
             <div class='automation-trigger__detail'>
               {{#if (eq @model.kind 'cron')}}
@@ -742,6 +750,11 @@ export class AutomationTrigger extends FieldDef {
           margin: 0 0 var(--boxel-sp-4xs);
           padding-inline-start: var(--boxel-sp-lg);
         }
+        .automation-trigger__notice {
+          margin: var(--boxel-sp-2xs) 0 0;
+          font-size: var(--boxel-font-size-sm);
+          color: var(--muted-foreground);
+        }
         .automation-trigger__cron {
           display: flex;
           align-items: center;
@@ -807,8 +820,15 @@ export class AutomationTrigger extends FieldDef {
             ? undefined
             : 'Not a time zone; pick one from the list',
         webhookPath: blank(m.webhookPath)
-          ? 'Required: enter one of this workspace’s incoming webhooks'
-          : undefined,
+          ? this.webhooks.list
+            ? 'Required: pick one of this workspace’s incoming webhooks'
+            : 'Required: enter one of this workspace’s incoming webhooks'
+          : this.webhooks.list &&
+              !this.webhooks.list.some(
+                (webhook) => webhook.webhookPath === m.webhookPath,
+              )
+            ? 'Pick one of this workspace’s incoming webhooks: Boxel turns the automation on only with a webhook that someone who can edit this workspace made'
+            : undefined,
         time: blank(m.time) ? 'Required: enter a time' : undefined,
         untilDate:
           untilDate && untilDate < today
@@ -825,6 +845,38 @@ export class AutomationTrigger extends FieldDef {
     }
     get kind() {
       return this.args.model.kind ?? 'cron';
+    }
+    // The incoming webhooks the trigger may name, read only while the trigger
+    // is a webhook trigger.
+    private webhookList = automationWebhooks(this, () => ({
+      realm:
+        this.kind === 'webhook'
+          ? (this.args.model as AutomationTrigger)[realmURL]?.href
+          : undefined,
+      tools: toolsOf(this.args.context),
+    }));
+    get webhooks(): WebhooksState {
+      return this.webhookList.current;
+    }
+    // Each webhook as a choice. A path the card already holds that the list
+    // lacks stays a choice too, so the picker shows the current value and
+    // the problem under the field says why it can't stay.
+    get webhookOptions() {
+      let list = this.webhooks.list ?? [];
+      let options = list.map((webhook) => ({
+        value: webhook.webhookPath,
+        label: webhook.webhookPath,
+        meta: `Made by ${webhook.owner}`,
+      }));
+      let current = this.args.model.webhookPath;
+      if (current && !list.some((webhook) => webhook.webhookPath === current)) {
+        options.unshift({
+          value: current,
+          label: current,
+          meta: 'Not one of this workspace’s webhooks',
+        });
+      }
+      return options;
     }
     get untilDate() {
       return isoDate(this.args.model.untilDate);
@@ -1014,7 +1066,46 @@ export class AutomationTrigger extends FieldDef {
               />
             </Field>
           </div>
+        {{else if this.webhooks.list}}
+          <Field
+            @label='Webhook'
+            @hint='The list holds every incoming webhook that someone who can edit this workspace made.'
+            @error={{this.problems.webhookPath}}
+            @required={{true}}
+            as |id|
+          >
+            {{#if this.webhookOptions.length}}
+              <Select
+                @controlId={{id}}
+                @options={{this.webhookOptions}}
+                @value={{@model.webhookPath}}
+                @placeholder='Pick a webhook'
+                @searchEnabled={{true}}
+                @onValueChange={{fn this.setText 'webhookPath'}}
+                data-test-automation-webhook-picker
+              />
+            {{else}}
+              <EmptyState
+                @size='s'
+                @texture={{false}}
+                @title='No incoming webhooks'
+                @message='Nobody who can edit this workspace has made an incoming webhook yet. A webhook that someone who can edit this workspace makes shows up here.'
+                data-test-automation-webhook-picker-empty
+              />
+            {{/if}}
+          </Field>
+          <p
+            class='automation-trigger-edit__notice'
+            data-test-automation-webhook-notice
+          >{{WEBHOOK_TRIGGERS_START_NO_RUNS}}</p>
+        {{else if this.webhooks.loading}}
+          <LoadingState
+            @label='Reading this workspace’s incoming webhooks'
+            data-test-automation-webhook-picker-loading
+          />
         {{else}}
+          {{! Without the list (no way to ask, or the route refused), the
+              path is typed; the server still checks the path on switch-on. }}
           <Field
             @label='Webhook path'
             @hint='One of this workspace’s incoming webhooks'
@@ -1033,6 +1124,10 @@ export class AutomationTrigger extends FieldDef {
               />
             </div>
           </Field>
+          <p
+            class='automation-trigger-edit__notice'
+            data-test-automation-webhook-notice
+          >{{WEBHOOK_TRIGGERS_START_NO_RUNS}}</p>
         {{/if}}
       </div>
       <style scoped>
@@ -1086,6 +1181,11 @@ export class AutomationTrigger extends FieldDef {
         }
         .automation-trigger-edit__stops :deep(.pretui-time) {
           width: 100%;
+        }
+        .automation-trigger-edit__notice {
+          margin: 0;
+          font-size: var(--boxel-font-size-sm);
+          color: var(--muted-foreground);
         }
         /* Pret UI's Input inherits its font, so a wrapper sets it. */
         .automation-trigger-edit__mono {
@@ -1659,6 +1759,7 @@ type PauseReason =
   | 'payer-lost-access'
   | 'caps-raised'
   | 'batched-ai-enabled'
+  | 'webhook-changed'
   | 'repeated-failures'
   | 'invalid-declaration';
 // One thing the server found wrong when the server read the card as an
@@ -1748,6 +1849,92 @@ type StatusState = {
 };
 
 const STATUS_PATH = '_automation-status';
+
+// What the trigger notes say while webhook deliveries start no automation
+// runs: the server's webhook receiver doesn't start automations yet, so a
+// webhook trigger never fires.
+const WEBHOOK_TRIGGERS_START_NO_RUNS =
+  'Boxel doesn’t start runs from webhook deliveries yet, so this trigger never fires. A schedule or a one-time trigger still runs the automation.';
+
+// An incoming webhook an automation may name, as the realm's
+// `_automation-webhooks` route lists it: one that a direct writer of the
+// realm made. The route answers only the realm's direct writers, the people
+// who edit an automation.
+interface AutomationWebhook {
+  webhookPath: string;
+  owner: string;
+}
+type WebhooksState = {
+  loading: boolean;
+  // Undefined until the route answers, and when the route can't be asked or
+  // refuses: the editor then takes a typed path.
+  list: AutomationWebhook[] | undefined;
+};
+const WEBHOOKS_PATH = '_automation-webhooks';
+
+function automationWebhooks(
+  owner: object,
+  args: () => { realm: string | undefined; tools: Tools | undefined },
+) {
+  let kept: { realm: string | undefined; state: WebhooksState } | undefined;
+  return use(
+    owner,
+    resource(({ on }) => {
+      let { realm, tools } = args();
+      if (!kept || kept.realm !== realm) {
+        kept = {
+          realm,
+          state: new TrackedObject<WebhooksState>({
+            loading: false,
+            list: undefined,
+          }),
+        };
+      }
+      let state = kept.state;
+      if (!realm || !tools) {
+        return state;
+      }
+      let ended = false;
+      on.cleanup(() => {
+        ended = true;
+      });
+      (async () => {
+        // Not while the resource runs: the page may have read `loading`
+        // already in this render.
+        await Promise.resolve();
+        if (ended) {
+          return;
+        }
+        state.loading = true;
+        try {
+          let result = await new AuthedFetchTool(tools).execute({
+            url: `${realm}${WEBHOOKS_PATH}`,
+            acceptHeader: 'application/json',
+          });
+          if (ended) {
+            return;
+          }
+          state.list = result.ok
+            ? (
+                (result.body?.data ?? []) as {
+                  attributes: AutomationWebhook;
+                }[]
+              ).map(({ attributes }) => attributes)
+            : undefined;
+        } catch {
+          if (!ended) {
+            state.list = undefined;
+          }
+        } finally {
+          if (!ended) {
+            state.loading = false;
+          }
+        }
+      })();
+      return state;
+    }),
+  );
+}
 
 function automationStatus(
   owner: object,
@@ -1897,6 +2084,8 @@ function stateSentence(status: ServerStatus): string {
           return 'Someone raised a limit above what the payer agreed to pay for, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to the new limits.';
         case 'batched-ai-enabled':
           return 'Someone turned on batched AI after the payer agreed to the limits, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to batched AI.';
+        case 'webhook-changed':
+          return 'Someone pointed a trigger at an incoming webhook the payer didn’t agree to, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to the new webhook.';
         case 'repeated-failures':
           return repeatedFailuresSentence(status);
         case 'invalid-declaration':
