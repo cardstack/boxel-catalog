@@ -5,7 +5,7 @@
 // Usage: node scripts/preview-paths.mjs < changed-paths.txt (one per line),
 // from the realm's root.
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -22,8 +22,14 @@ const SKIPPED_FILES = new Set([
   'index.json',
 ]);
 
+// A name a preview never takes: the paths are written one per line, and a
+// name with a line break, or with space at either end, would not come back
+// as itself.
+const UNSAFE_NAME = /[\r\n]|^\s|\s$/;
+
 export function unitOf(path) {
   let parts = path.split('/');
+  if (parts.some((p) => UNSAFE_NAME.test(p))) return null;
   if (parts.some((p) => p.startsWith('.'))) return null;
   if (parts.length === 1) return SKIPPED_FILES.has(path) ? null : path;
   let [root] = parts;
@@ -37,7 +43,22 @@ export function unitOf(path) {
   return root;
 }
 
-const stat = (p) => statSync(p, { throwIfNoEntry: false });
+// A link, here or in a folder above, is never followed: it would reach
+// outside the repository.
+const stat = (p) => {
+  let parts = normalize(p).split('/');
+  for (let i = 1; i < parts.length; i++) {
+    if (
+      lstatSync(parts.slice(0, i).join('/'), {
+        throwIfNoEntry: false,
+      })?.isSymbolicLink()
+    ) {
+      return undefined;
+    }
+  }
+  let s = lstatSync(p, { throwIfNoEntry: false });
+  return s?.isSymbolicLink() ? undefined : s;
+};
 const isFile = (p) => stat(p)?.isFile() ?? false;
 
 // Relative references in code: imports, and `new URL('./…', import.meta.url)`.
@@ -68,7 +89,13 @@ export function previewPaths(changed) {
   let queue = [];
   let add = (path) => {
     path = normalize(path);
-    if (path.startsWith('..') || out.has(path) || !isFile(path)) return;
+    if (
+      path.startsWith('..') ||
+      path.split('/').some((p) => UNSAFE_NAME.test(p)) ||
+      out.has(path) ||
+      !isFile(path)
+    )
+      return;
     out.add(path);
     queue.push(path);
   };
@@ -77,9 +104,10 @@ export function previewPaths(changed) {
     if (!s) return;
     if (s.isFile()) return add(path);
     for (let entry of readdirSync(path, { withFileTypes: true })) {
-      if (entry.name.startsWith('.')) continue;
+      if (entry.name.startsWith('.') || UNSAFE_NAME.test(entry.name)) continue;
       let child = join(path, entry.name);
-      entry.isDirectory() ? addTree(child) : add(child);
+      if (entry.isDirectory()) addTree(child);
+      else if (entry.isFile()) add(child);
     }
   };
   for (let unit of new Set(changed.map(unitOf))) {

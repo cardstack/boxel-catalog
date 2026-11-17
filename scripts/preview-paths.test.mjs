@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -82,4 +82,43 @@ test('units', () => {
   assert.equal(unitOf('catalog-app/x/y.gts'), 'catalog-app');
   assert.equal(unitOf('realm.json'), null);
   assert.equal(unitOf('scripts/a.mjs'), null);
+});
+
+test('a name with a line break or edge space is never listed', () => {
+  inFixture(() => {
+    let injected = 'a\nPREVIEW_PATHS_EOF\npaths<<PREVIEW_PATHS_EOF\nrealm.json';
+    writeFileSync(join('cards/shop', injected), '');
+    writeFileSync(join('cards/shop', 'b\r'), '');
+    writeFileSync(join('cards/shop', ' c.gts'), '');
+    mkdirSync(' ');
+    writeFileSync(' /d.gts', '');
+    let paths = previewPaths(['cards/shop/cart.gts', ' ', ' /d.gts']);
+    assert.ok(paths.includes('cards/shop/cart.gts'), 'the cluster is listed');
+    assert.ok(
+      paths.every((p) => !/[\r\n]|^\s|\s$/.test(p) && !p.includes('/ ')),
+      `no unsafe name is listed: ${JSON.stringify(paths)}`,
+    );
+    assert.equal(unitOf(' '), null);
+  });
+});
+
+test('a symbolic link is never followed or listed', () => {
+  inFixture(() => {
+    let outside = mkdtempSync(join(tmpdir(), 'preview-outside-'));
+    writeFileSync(join(outside, 'secret.json'), '{}');
+    symlinkSync(outside, 'cards/linked');
+    symlinkSync(join(outside, 'secret.json'), 'cards/shop/secret.json');
+    symlinkSync(outside, 'cards/shop/dir');
+    let paths = previewPaths([
+      'cards/linked/secret.json',
+      'cards/shop/cart.gts',
+    ]);
+    assert.ok(paths.includes('cards/shop/cart.gts'), 'the cluster is listed');
+    assert.ok(
+      paths.every(
+        (p) => !p.includes('secret') && !p.startsWith('cards/shop/dir'),
+      ),
+      `no linked path is listed: ${JSON.stringify(paths)}`,
+    );
+  });
 });
