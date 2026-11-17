@@ -820,14 +820,16 @@ export class AutomationTrigger extends FieldDef {
             ? undefined
             : 'Not a time zone; pick one from the list',
         webhookPath: blank(m.webhookPath)
-          ? this.webhooks.list
-            ? 'Required: pick one of this workspace’s incoming webhooks'
-            : 'Required: enter one of this workspace’s incoming webhooks'
+          ? !this.webhooks.list
+            ? 'Required: enter one of this workspace’s incoming webhooks'
+            : this.webhooks.list.length
+              ? 'Required: pick one of this workspace’s incoming webhooks'
+              : undefined
           : this.webhooks.list &&
               !this.webhooks.list.some(
                 (webhook) => webhook.webhookPath === m.webhookPath,
               )
-            ? 'Pick one of this workspace’s incoming webhooks: Boxel turns the automation on only with a webhook that someone who can edit this workspace made'
+            ? 'Pick one of this workspace’s incoming webhooks: Boxel turns the automation on only with a webhook that someone the workspace names as an editor made'
             : undefined,
         time: blank(m.time) ? 'Required: enter a time' : undefined,
         untilDate:
@@ -849,10 +851,8 @@ export class AutomationTrigger extends FieldDef {
     // The incoming webhooks the trigger may name, read only while the trigger
     // is a webhook trigger.
     private webhookList = automationWebhooks(this, () => ({
-      realm:
-        this.kind === 'webhook'
-          ? (this.args.model as AutomationTrigger)[realmURL]?.href
-          : undefined,
+      wanted: this.kind === 'webhook',
+      realmId: instanceRealmId(this.args.model as unknown as CardDef),
       tools: toolsOf(this.args.context),
     }));
     get webhooks(): WebhooksState {
@@ -866,7 +866,7 @@ export class AutomationTrigger extends FieldDef {
       let options = list.map((webhook) => ({
         value: webhook.webhookPath,
         label: webhook.webhookPath,
-        meta: `Made by ${webhook.owner}`,
+        meta: `${webhook.owner} made this webhook`,
       }));
       let current = this.args.model.webhookPath;
       if (current && !list.some((webhook) => webhook.webhookPath === current)) {
@@ -1069,7 +1069,7 @@ export class AutomationTrigger extends FieldDef {
         {{else if this.webhooks.list}}
           <Field
             @label='Webhook'
-            @hint='The list holds every incoming webhook that someone who can edit this workspace made.'
+            @hint='The list holds every incoming webhook that someone the workspace names as an editor made.'
             @error={{this.problems.webhookPath}}
             @required={{true}}
             as |id|
@@ -1089,7 +1089,7 @@ export class AutomationTrigger extends FieldDef {
                 @size='s'
                 @texture={{false}}
                 @title='No incoming webhooks'
-                @message='Nobody who can edit this workspace has made an incoming webhook yet. A webhook that someone who can edit this workspace makes shows up here.'
+                @message='Nobody the workspace names as an editor has made an incoming webhook yet, so the list has no webhook to pick. Reopen the editor after someone makes one.'
                 data-test-automation-webhook-picker-empty
               />
             {{/if}}
@@ -1183,7 +1183,6 @@ export class AutomationTrigger extends FieldDef {
           width: 100%;
         }
         .automation-trigger-edit__notice {
-          margin: 0;
           font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }
@@ -1874,26 +1873,40 @@ const WEBHOOKS_PATH = '_automation-webhooks';
 
 function automationWebhooks(
   owner: object,
-  args: () => { realm: string | undefined; tools: Tools | undefined },
+  args: () => {
+    // Whether the trigger is a webhook trigger: the list is read only then.
+    wanted: boolean;
+    realmId: string | undefined;
+    tools: Tools | undefined;
+  },
 ) {
-  let kept: { realm: string | undefined; state: WebhooksState } | undefined;
+  // The resource runs again on every edit to the trigger, since the trigger
+  // is one tracked field of its card. The list is read once per realm and
+  // kept across those runs, so an edit never asks the route again, and a
+  // list already read stays while the author edits.
+  let kept:
+    | { realmId: string | undefined; state: WebhooksState; asked: boolean }
+    | undefined;
   return use(
     owner,
     resource(({ on }) => {
-      let { realm, tools } = args();
-      if (!kept || kept.realm !== realm) {
+      let { wanted, realmId, tools } = args();
+      if (!kept || kept.realmId !== realmId) {
         kept = {
-          realm,
+          realmId,
+          asked: false,
           state: new TrackedObject<WebhooksState>({
             loading: false,
             list: undefined,
           }),
         };
       }
-      let state = kept.state;
-      if (!realm || !tools) {
+      let current = kept;
+      let state = current.state;
+      if (!wanted || !realmId || !tools || current.asked) {
         return state;
       }
+      current.asked = true;
       let ended = false;
       on.cleanup(() => {
         ended = true;
@@ -1902,32 +1915,26 @@ function automationWebhooks(
         // Not while the resource runs: the page may have read `loading`
         // already in this render.
         await Promise.resolve();
-        if (ended) {
-          return;
-        }
         state.loading = true;
         try {
+          // The realm identifier may be in prefix form; the tool resolves it
+          // to the realm's URL.
           let result = await new AuthedFetchTool(tools).execute({
-            url: `${realm}${WEBHOOKS_PATH}`,
+            url: `${realmId}${WEBHOOKS_PATH}`,
             acceptHeader: 'application/json',
           });
-          if (ended) {
-            return;
+          if (result.ok) {
+            state.list = (
+              (result.body?.data ?? []) as { attributes: AutomationWebhook }[]
+            ).map(({ attributes }) => attributes);
           }
-          state.list = result.ok
-            ? (
-                (result.body?.data ?? []) as {
-                  attributes: AutomationWebhook;
-                }[]
-              ).map(({ attributes }) => attributes)
-            : undefined;
         } catch {
-          if (!ended) {
-            state.list = undefined;
-          }
+          // The editor takes a typed path while there is no list.
         } finally {
-          if (!ended) {
-            state.loading = false;
+          state.loading = false;
+          if (ended && !state.list) {
+            // Torn down before the answer: a later run may ask again.
+            current.asked = false;
           }
         }
       })();
