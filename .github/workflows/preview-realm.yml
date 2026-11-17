@@ -66,7 +66,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR}/files" \
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR}/files?per_page=100" \
             --jq '.[].filename' > "${RUNNER_TEMP}/changed.txt"
           # GitHub lists at most 3000 files, without saying it stopped.
           if [ "$(wc -l < "${RUNNER_TEMP}/changed.txt")" -ge 3000 ]; then
