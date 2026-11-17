@@ -1900,7 +1900,7 @@ function stateSentence(status: ServerStatus): string {
         case 'repeated-failures':
           return repeatedFailuresSentence(status);
         case 'invalid-declaration':
-          return 'Boxel paused the automation because the automation’s settings have problems. Boxel resumes the automation by itself once someone who can edit this workspace fixes each problem below.';
+          return 'Boxel paused the automation because the automation’s settings have problems. Boxel will resume the automation once someone who can edit this workspace fixes each problem below.';
         default:
           return 'Someone who can edit this workspace paused the automation, so Boxel runs nothing until someone resumes the automation.';
       }
