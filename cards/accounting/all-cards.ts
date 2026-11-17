@@ -1,10 +1,12 @@
 import { tracked } from '@glimmer/tracking';
+import { associateDestroyableChild } from '@ember/destroyable';
+import { task, timeout } from 'ember-concurrency';
 
 // A card's own search is capped at 100 rows a page, so a read that must see every record walks
-// the pages: page 0 reports the match count, and once it has, the further pages that count calls
-// for are created, each asking for its own fixed page. No page's search reads another page's
-// state, and pages are only ever created after a render, never during one. Nothing reads as
-// complete until every page it needs has answered.
+// the pages: page 0, created with the read, reports the match count, and once it has, the further
+// pages that count calls for are created after the render that finds them missing, each asking for
+// its own fixed page. No page's search reads another page's state. Nothing reads as complete until
+// every page it needs has answered.
 export const SEARCH_PAGE = 100;
 export const MAX_SEARCH_PAGES = 20;
 
@@ -40,7 +42,6 @@ export class AllCards {
   private limit: number | undefined;
   private maxPages: number;
   private makePage: (number: number) => PageResource | undefined;
-  private growing = false;
 
   constructor(
     context: CardsContext | undefined,
@@ -49,6 +50,8 @@ export class AllCards {
     getRealms?: () => string[] | undefined,
     opts?: { isLive?: true; limit?: number },
   ) {
+    // Destroying the component that holds the read destroys it too, which cancels `grow`.
+    associateDestroyableChild(parent, this);
     this.limit = opts?.limit;
     this.maxPages = Math.min(
       MAX_SEARCH_PAGES,
@@ -71,18 +74,14 @@ export class AllCards {
   }
 
   // Creates the pages the count calls for, after the render that found them missing.
-  private grow(wanted: number) {
-    if (this.growing || wanted <= this.pages.length) return;
-    this.growing = true;
-    Promise.resolve().then(() => {
-      this.growing = false;
-      let target = Math.min(this.wantedPages, this.maxPages);
-      if (target <= this.pages.length) return;
-      let pages = [...this.pages];
-      while (pages.length < target) pages.push(this.makePage(pages.length));
-      this.pages = pages;
-    });
-  }
+  private grow = task({ drop: true }, async () => {
+    await timeout(0);
+    let target = Math.min(this.wantedPages, this.maxPages);
+    if (target <= this.pages.length) return;
+    let pages = [...this.pages];
+    while (pages.length < target) pages.push(this.makePage(pages.length));
+    this.pages = pages;
+  });
 
   // How many records the query matches, as the first page last answered; undefined until it has.
   get total(): number | undefined {
@@ -103,7 +102,7 @@ export class AllCards {
   // The pages the count calls for that exist so far; any still missing are created after this render.
   private get needed(): PageResource[] {
     let wanted = this.wantedPages;
-    if (this.pages.length < wanted) this.grow(wanted);
+    if (this.pages.length < wanted) this.grow.perform();
     return this.pages.slice(0, wanted).filter((p): p is PageResource => !!p);
   }
 
