@@ -1750,9 +1750,10 @@ function fileName(url: string | undefined): string | undefined {
 
 // What the server knows about an automation: whether someone switched the
 // automation on, its state, who pays, and how far each trigger has got. The
-// realm's `_automation-status` route answers only the realm's direct writers,
-// so for anyone else `visible` stays false and the views show the card's own
-// fields alone.
+// realm's `_automation-status` route shows this only to the realm's direct
+// writers. It tells anyone else that the viewer isn't a direct writer
+// (`meta.directWriter: false`), so for them `visible` stays false and the
+// views show the card's own fields alone.
 type AutomationState = 'active' | 'paused' | 'waiting-for-credits' | 'done';
 type PauseReason =
   | 'requested'
@@ -1902,16 +1903,18 @@ const WEBHOOK_TRIGGER_CANT_FIRE =
 
 // An incoming webhook an automation may name, as the realm's
 // `_automation-webhooks` route lists it: one that a direct writer of the
-// realm made. The route answers only the realm's direct writers, the people
-// who edit an automation.
+// realm made. The route lists webhooks only to the realm's direct writers.
+// It tells anyone else that the viewer isn't a direct writer
+// (`meta.directWriter: false`), and the editor then takes a typed path.
 interface AutomationWebhook {
   webhookPath: string;
   owner: string;
 }
 type WebhooksState = {
   loading: boolean;
-  // Undefined until the route answers, and when the route can't be asked or
-  // refuses: the editor then takes a typed path.
+  // Undefined until the route answers, and when the route can't be asked,
+  // fails, or says the viewer isn't a direct writer: the editor then takes a
+  // typed path.
   list: AutomationWebhook[] | undefined;
   // What the route's meta says: whether the server starts runs from webhook
   // deliveries. Undefined until the route answers.
@@ -1972,7 +1975,7 @@ function automationWebhooks(
             url: `${realmId}${WEBHOOKS_PATH}`,
             acceptHeader: 'application/json',
           });
-          if (result.ok) {
+          if (result.ok && result.body?.meta?.directWriter !== false) {
             state.list = (
               (result.body?.data ?? []) as { attributes: AutomationWebhook }[]
             ).map(({ attributes }) => attributes);
@@ -2050,9 +2053,10 @@ function automationStatus(
           if (ended || asked !== latest) {
             return;
           }
-          let status = result.ok
-            ? (result.body?.data?.attributes as ServerStatus | undefined)
-            : undefined;
+          let status =
+            result.ok && result.body?.meta?.directWriter !== false
+              ? (result.body?.data?.attributes as ServerStatus | undefined)
+              : undefined;
           state.status = status;
           state.visible = Boolean(status);
           state.known = true;
@@ -2070,10 +2074,10 @@ function automationStatus(
       // milestone, commits or ends, or a pause cancels it), and a change to
       // the automation's own state (such as switching it on, pausing,
       // resuming or removing it), change its row and not the card. The
-      // realm tells its direct writers, the viewers this route answers, with
-      // a `job` event for a run and an `automation` event for the automation,
-      // each naming the automation by its identifier, spelled as the card's
-      // id is.
+      // realm tells its direct writers, the viewers this route shows the row
+      // to, with a `job` event for a run and an `automation` event for the
+      // automation, each naming the automation by its identifier, spelled as
+      // the card's id is.
       let unsubscribe = subscribeToRealm(realm, (event) => {
         if (
           (event.eventName === 'index' &&
