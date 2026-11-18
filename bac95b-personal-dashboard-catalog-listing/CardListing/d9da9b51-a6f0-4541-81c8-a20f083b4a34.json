@@ -1,0 +1,48 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Personal Dashboard Catalog Listing",
+      "summary": "The PersonalDashboard defines a customizable dashboard card designed to help users focus on daily and weekly priorities. It displays a focus area for today's task and a weekly goal, providing a clear overview of what matters. The card offers multiple visual layouts including a wide-format main view with detailed sections, an embedded compact view for quick snapshots, and a fitted version optimized for smaller spaces. Its primary purpose is to assist users in naming and tracking daily focus and weekly intentions within a personal or workspace context.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "examples.0": {
+        "links": {
+          "self": "../PersonalDashboard/your-dashboard"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "@cardstack/catalog/Category/analytics-reporting"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/dashboard"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/personal-dashboard-9e5510ae.png"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "CardListing"
+      }
+    }
+  }
+}
