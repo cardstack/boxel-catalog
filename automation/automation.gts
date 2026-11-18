@@ -28,7 +28,6 @@ import { FileDef } from '@cardstack/base/file-api';
 import {
   getDeclaredOperations,
   operation,
-  params,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
 import {
@@ -5917,19 +5916,6 @@ export class Automation extends CardDef {
   @operation static appendContainsMany = {
     base: 'appendContainsMany',
     nonGrantable: true,
-  } satisfies OperationDeclaration;
-
-  // A new automation with a name and the limits a new automation starts
-  // with, for New automation in the realm config's Automations section (the
-  // automations console), which then opens
-  // the card's edit view for the script and the triggers. Like `create`, it
-  // isn't marked, since a new automation runs nothing until a direct writer
-  // turns it on.
-  @operation static newAutomation = {
-    base: 'create',
-    of: () => Automation,
-    params: { name: StringField },
-    fill: { cardInfo: { name: params('name') }, caps: { ...CAP_DEFAULTS } },
   } satisfies OperationDeclaration;
 
   static isolated = Isolated;
