@@ -1110,8 +1110,9 @@ export class AutomationTrigger extends FieldDef {
             data-test-automation-webhook-picker-loading
           />
         {{else}}
-          {{! Without the list (no way to ask, or the route refused), the
-              path is typed; the server still checks the path on switch-on. }}
+          {{! Without the list (no way to ask, a failed request, or a viewer
+              who isn't a direct writer), the path is typed; the server
+              still checks the path on switch-on. }}
           <Field
             @label='Webhook path'
             @hint='One of this workspace’s incoming webhooks'
@@ -3078,9 +3079,9 @@ class Isolated extends Component<typeof Automation> {
     return this.shownRun ? runLead(this.shownRun) : undefined;
   }
 
-  // What the section says when there is no last run to list: a viewer the
-  // status route refuses never sees runs; an editor sees them once a run
-  // ends and the script reports milestones.
+  // What the section says when there is no last run to list: a viewer who
+  // isn't a direct writer never sees runs; a direct writer sees them once a
+  // run ends and the script reports milestones.
   get milestonesEmptyMessage() {
     if (!this.status) {
       return 'Someone who can edit this workspace sees the milestones of the last run here.';
@@ -4404,7 +4405,7 @@ function stepWindow(glance: MilestoneGlance, size: number): StepWindow {
 
 // What the fitted and embedded views show at a glance: the automation's
 // state, when it runs, how its last run ended and where its milestones stand.
-// A viewer the status route refuses sees the card's own fields and the
+// A viewer who isn't a direct writer sees the card's own fields and the
 // milestones the script declares. A prerender reads neither the status nor
 // the script, so it shows the card's own fields alone.
 class AtAGlance extends Component<typeof Automation> {
