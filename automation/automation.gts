@@ -3,6 +3,7 @@ import { on } from '@ember/modifier';
 import GlimmerComponent from '@glimmer/component';
 import type Owner from '@ember/owner';
 import { cached, tracked } from '@glimmer/tracking';
+import { modifier } from 'ember-modifier';
 import { resource, use } from 'ember-resources';
 import { TrackedObject } from 'tracked-built-ins';
 import { markDefinition } from '@cardstack/base/mark-definition';
@@ -27,6 +28,7 @@ import { FileDef } from '@cardstack/base/file-api';
 import {
   getDeclaredOperations,
   operation,
+  params,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
 import {
@@ -86,7 +88,8 @@ import {
 import { Table } from '@cardstack/pretui/components/table';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
 import { Token } from '@cardstack/pretui/components/token';
-import { bool, eq, or } from '@cardstack/pretui/helpers';
+import { and, bool, eq, or } from '@cardstack/pretui/helpers';
+import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import CalendarCheckIcon from '@cardstack/boxel-icons/calendar-check';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
 import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
@@ -94,6 +97,7 @@ import CircleDashedIcon from '@cardstack/boxel-icons/circle-dashed';
 import CirclePauseIcon from '@cardstack/boxel-icons/circle-pause';
 import CircleXIcon from '@cardstack/boxel-icons/circle-x';
 import HourglassIcon from '@cardstack/boxel-icons/hourglass';
+import OctagonAlertIcon from '@cardstack/boxel-icons/octagon-alert';
 import PlugIcon from '@cardstack/boxel-icons/plug';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
@@ -1809,12 +1813,22 @@ interface RunFailure {
   message: string | null;
   finishedAt: string;
 }
+// What the automation's last run used of each per-run limit.
+type RunUsage = {
+  callApiCalls: number;
+  responseBytes: number;
+  resolveCalls: number;
+  aiCredits: number;
+  writes: number;
+  seconds: number | null;
+};
 type ServerStatus =
   | {
       switchedOn: false;
       webhookDeliveriesStartRuns?: boolean;
       lastRun?: LastRun | null;
       currentRun?: LastRun | null;
+      lastRunUsage?: RunUsage | null;
     }
   | {
       switchedOn: true;
@@ -1837,8 +1851,39 @@ type ServerStatus =
       // absent.
       failuresInARow?: number;
       lastFailure?: RunFailure | null;
+      // The monthly credit cap the payer agreed to, or null when there is
+      // none, and what the automation was charged this UTC month. Absent
+      // from a server that doesn't report them.
+      monthlyCredits?: number | null;
+      spentThisMonth?: number;
+      // The daily credit cap the payer agreed to, or null when there is none,
+      // and what the automation was charged this UTC day.
+      dailyCredits?: number | null;
+      spentToday?: number;
+      lastRunUsage?: RunUsage | null;
       triggers: TriggerStatus[];
     };
+// A limit the automation is near or at.
+interface LimitNear {
+  name: string;
+  // The limit in a word or two, for a chip.
+  short: string;
+  reached: boolean;
+  share: number;
+  text: string;
+}
+// The share of a limit from which the card says the automation is near it.
+const LIMIT_NEAR_SHARE = 0.8;
+// A byte count as people read it: "4.6 MB".
+function bytes(n: number): string {
+  if (n >= 1_000_000) {
+    return `${(n / 1_000_000).toLocaleString('en-US', { maximumFractionDigits: 1 })} MB`;
+  }
+  if (n >= 1_000) {
+    return `${(n / 1_000).toLocaleString('en-US', { maximumFractionDigits: 1 })} KB`;
+  }
+  return `${tally(n)} bytes`;
+}
 type StatusState = {
   // Whether the view knows what to show: the route answered, or the view
   // has no way to ask (no tools, as in a prerender).
@@ -2485,6 +2530,180 @@ class MilestoneTimeline extends GlimmerComponent<{
       }
       .milestones__text {
         color: var(--muted-foreground);
+      }
+    </style>
+  </template>
+}
+
+// The milestones a fitted view lists: the isolated view's timeline, compact,
+// with each milestone's state marked as the isolated view marks it and its
+// name, and its count or where Boxel stopped the run beside it.
+class FittedMilestones extends GlimmerComponent<{
+  // `details` adds each milestone's count and time under its name, for a
+  // view tall enough for two lines a milestone.
+  // `earlier` and `later` say how many milestones the list leaves out
+  // before and after it; the list marks each by running its rail on past
+  // the marker and
+  // tells assistive technology the count.
+  Args: {
+    steps: StepItem[];
+    details?: boolean;
+    earlier?: string;
+    later?: string;
+  };
+}> {
+  get events(): TimelineEvent[] {
+    return this.args.steps.map((step, index) => ({
+      id: String(index),
+      title: step.label,
+    }));
+  }
+  stepOf = (event: TimelineEvent): StepItem =>
+    this.args.steps[Number(event.id)];
+  // The list's first milestone is the plan's first when nothing comes before
+  // it, so no rail runs up from its marker.
+  startsRail = (event: TimelineEvent): boolean =>
+    event.id === '0' && !this.args.earlier;
+  <template>
+    {{#if @earlier}}
+      <span
+        class='fm__more'
+        data-side='earlier'
+        data-test-automation-fitted-milestones-earlier
+      >
+        <VisuallyHidden>{{@earlier}}</VisuallyHidden>
+      </span>
+    {{/if}}
+    <Timeline
+      @events={{this.events}}
+      @density='compact'
+      @label='Milestones'
+      class='fm'
+      data-test-automation-fitted-milestone-list
+    >
+      <:marker as |event|>
+        {{#let (this.stepOf event) as |step|}}
+          <span
+            class='fm__mark'
+            data-step-state={{step.state}}
+            data-rail-start={{if (this.startsRail event) 'true'}}
+          >
+            {{#if (eq step.state 'complete')}}
+              <CircleCheckIcon width='16' height='16' />
+            {{else if (eq step.state 'in-progress')}}
+              <HourglassIcon width='16' height='16' />
+            {{else if (eq step.state 'error')}}
+              <CircleXIcon width='16' height='16' />
+            {{else if (eq step.state 'blocked')}}
+              <CirclePauseIcon width='16' height='16' />
+            {{else}}
+              <CircleDashedIcon width='16' height='16' />
+            {{/if}}
+          </span>
+        {{/let}}
+      </:marker>
+      <:default as |event|>
+        {{#let (this.stepOf event) as |step|}}
+          {{#if (and @details step.detail)}}
+            <span class='fm__detail'>{{step.detail}}</span>
+          {{/if}}
+        {{/let}}
+      </:default>
+    </Timeline>
+    {{#if @later}}
+      <span
+        class='fm__more'
+        data-side='later'
+        data-test-automation-fitted-milestones-later
+      >
+        <VisuallyHidden>{{@later}}</VisuallyHidden>
+      </span>
+    {{/if}}
+    <style scoped>
+      /* The rail runs on past the first milestone's marker when milestones
+         come before the ones listed, and past the last one's when more come
+         after; where the list starts or ends the plan, the rail stops at
+         the marker. Below the list the stretch starts at the last marker,
+         since the rail itself stops there. */
+      .fm__more {
+        position: relative;
+        display: block;
+        inline-size: 1rem;
+        block-size: 0.375rem;
+      }
+      .fm__more::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        /* Pret UI's rail starts at the marker's middle, so this one does. */
+        left: 50%;
+        width: 1px;
+        background: var(--border);
+      }
+      .fm__more[data-side='later']::after {
+        top: -0.75rem;
+      }
+      .fm {
+        font-size: var(--boxel-font-size-xs);
+      }
+      /* Pret UI's marker is a square that hides the rail behind it; the
+         glyph's circle sits inside that square, which left a gap between
+         the rail and the circle. The marker is clear instead, and a disc
+         the size of the glyph's circle hides the rail, so the rail runs
+         right up to the circle. */
+      .fm :deep(.pretui-timeline-marker) {
+        background: transparent;
+      }
+      /* Pret UI draws no rail on the last row, and the row is taller than
+         its marker, so the rail from the row above stops short of the last
+         marker. The last row's rail runs down to its marker's middle. */
+      .fm :deep(.pretui-timeline-event:last-child::before) {
+        display: block;
+        bottom: 50%;
+      }
+      .fm__mark {
+        background: radial-gradient(
+          circle 7px at center,
+          var(--card, var(--background)) 100%,
+          transparent 100%
+        );
+        --milestone-color: var(--muted-foreground);
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        inline-size: 100%;
+        block-size: 100%;
+        color: var(--milestone-color);
+      }
+      /* The row is taller than the marker, so the rail shows above the first
+         marker; a list with nothing before it covers that stub. */
+      .fm__mark[data-rail-start='true']::before {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: calc(50% - 1px);
+        inline-size: 2px;
+        block-size: 0.5rem;
+        background: var(--card, var(--background));
+      }
+      .fm__mark[data-step-state='complete'] {
+        --milestone-color: var(--success);
+      }
+      .fm__mark[data-step-state='in-progress'] {
+        --milestone-color: var(--warning);
+      }
+      .fm__mark[data-step-state='error'] {
+        --milestone-color: var(--destructive);
+      }
+      .fm__detail {
+        display: block;
+        overflow: hidden;
+        color: var(--muted-foreground);
+        font-variant-numeric: tabular-nums;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
     </style>
   </template>
@@ -4159,7 +4378,13 @@ function stepWindow(glance: MilestoneGlance, size: number): StepWindow {
   if (steps.length <= size) {
     return { steps, earlier: undefined, later: undefined };
   }
-  let start = Math.min(Math.max(focus - (size - 2), 0), steps.length - size);
+  // The milestone in focus, with the one after it when there is room: the
+  // run's milestone and the next one, a complete run's last two, or the
+  // first two before any run.
+  let start = Math.min(
+    Math.max(focus - Math.max(size - 2, 0), 0),
+    steps.length - size,
+  );
   let before = start;
   let after = steps.length - start - size;
   return {
@@ -4278,6 +4503,191 @@ class AtAGlance extends Component<typeof Automation> {
   get stepped() {
     return (this.milestones?.total ?? 0) <= 12;
   }
+  // Each trigger in words, for a view with room for more than the first.
+  get triggerLines() {
+    let lines = this.triggers.slice(0, 3).map((trigger) => ({
+      kind: trigger.kind,
+      text: triggerPhrase(trigger),
+    }));
+    let more = this.triggers.length - lines.length;
+    return {
+      lines,
+      more:
+        more > 0
+          ? `Plus ${tally(more)} more ${more === 1 ? 'trigger' : 'triggers'}`
+          : undefined,
+    };
+  }
+  // What one run may spend: its time limit, and its AI credits when the
+  // limits allow AI requests.
+  get runLimit() {
+    let caps = this.args.model.caps;
+    if (typeof caps?.seconds !== 'number') {
+      return undefined;
+    }
+    let time = `Up to ${duration(caps.seconds)}`;
+    return allowsAIRequests(this.args.model)
+      ? `${time} and ${count(caps.aiCredits)} AI credits`
+      : time;
+  }
+  // The outside services a run may call: each operation in words, with the
+  // card type that declares it.
+  get serviceNames(): string[] {
+    return (this.args.model.operations ?? [])
+      .filter((op) => op.operation && op.targetType?.name)
+      .map((op) => `${operationTitle(op.operation)} (${op.targetType!.name})`);
+  }
+  get services() {
+    let names = this.serviceNames;
+    if (names.length === 0) {
+      return 'None';
+    }
+    let shown = names.slice(0, 3).join(', ');
+    let more = names.length - 3;
+    return more > 0 ? `${shown}, plus ${tally(more)} more` : shown;
+  }
+
+  // Why Boxel holds the automation's runs, or why the last one failed, for a
+  // direct writer: a pause, waiting for credits, or a failure streak.
+  get statusNote() {
+    let status = this.status;
+    if (!status?.switchedOn) {
+      return undefined;
+    }
+    if (status.state === 'paused' || status.state === 'waiting-for-credits') {
+      return stateSentence(status);
+    }
+    let error = status.lastFailure?.message || status.lastFailure?.reason;
+    return status.failuresInARow && error ? `Last error: ${error}` : undefined;
+  }
+  // Each limit the automation is near or at: this month's and today's spend
+  // against the credit caps, and what the last run used of each per-run
+  // limit. Near from 80% of a limit, reached at 100%. Most severe first.
+  get limitsNear(): LimitNear[] {
+    let status = this.status;
+    let caps = this.args.model.caps;
+    let near: LimitNear[] = [];
+    let consider = (
+      name: string,
+      short: string,
+      used: number | null | undefined,
+      cap: number | null | undefined,
+      period: string,
+      show: (n: number) => string = tally,
+    ) => {
+      if (typeof used !== 'number' || typeof cap !== 'number' || cap <= 0) {
+        return;
+      }
+      let share = used / cap;
+      if (share < LIMIT_NEAR_SHARE) {
+        return;
+      }
+      near.push({
+        name,
+        short,
+        reached: share >= 1,
+        share,
+        text: `${name}: ${show(used)} of ${show(cap)} ${period}`,
+      });
+    };
+    if (status?.switchedOn) {
+      consider(
+        'Monthly credits',
+        'Monthly',
+        status.spentThisMonth,
+        status.monthlyCredits,
+        'this month',
+      );
+      consider('Daily credits', 'Daily', status.spentToday, status.dailyCredits, 'today');
+    }
+    let usage = status?.lastRunUsage;
+    if (usage) {
+      consider('Outside calls', 'Calls', usage.callApiCalls, caps?.callApiCalls, 'last run');
+      consider('Response size', 'Response size', usage.responseBytes, caps?.responseBytes, 'last run', bytes);
+      consider('AI requests', 'AI requests', usage.resolveCalls, caps?.resolveCalls, 'last run');
+      consider('AI credits', 'AI credits', usage.aiCredits, caps?.aiCredits, 'last run');
+      consider('Saves', 'Saves', usage.writes, caps?.writes, 'last run');
+      consider('Run time', 'Run time', usage.seconds, caps?.seconds, 'last run', duration);
+    }
+    return near.sort(
+      (a, b) => Number(b.reached) - Number(a.reached) || b.share - a.share,
+    );
+  }
+  // The limits as one short chip naming the most pressing one: "AI
+  // requests at limit", "Monthly near limit", with "+2" for the others.
+  get limitLook():
+    | { label: string; tone: 'warning' | 'danger'; hue: string }
+    | undefined {
+    let [first, ...rest] = this.limitsNear;
+    if (!first) {
+      return undefined;
+    }
+    let label = `${first.short} ${first.reached ? 'at' : 'near'} limit${
+      rest.length ? ` +${tally(rest.length)}` : ''
+    }`;
+    return first.reached
+      ? { label, tone: 'danger', hue: 'var(--destructive)' }
+      : { label, tone: 'warning', hue: 'var(--warning)' };
+  }
+  // The monthly spend bar's color: red at the monthly cap, amber near it.
+  get spendHue() {
+    let monthly = this.limitsNear.find(
+      (limit) => limit.name === 'Monthly credits',
+    );
+    return monthly
+      ? monthly.reached
+        ? 'var(--destructive)'
+        : 'var(--warning)'
+      : undefined;
+  }
+  // This month's spend against the monthly cap, as a share for a bar.
+  get spendShare() {
+    let status = this.status;
+    if (
+      !status?.switchedOn ||
+      typeof status.spentThisMonth !== 'number' ||
+      typeof status.monthlyCredits !== 'number' ||
+      status.monthlyCredits <= 0
+    ) {
+      return undefined;
+    }
+    return {
+      spent: status.spentThisMonth,
+      value: Math.min(status.spentThisMonth, status.monthlyCredits),
+      max: status.monthlyCredits,
+    };
+  }
+  // Who pays, for a direct writer's view: "Nobody yet" until someone turns
+  // the automation on.
+  get payer() {
+    let status = this.status;
+    return status ? payerText(status) : undefined;
+  }
+  // The spending line's label and value: this month's spend against the
+  // monthly cap once the automation is on, or the monthly cap the card sets
+  // until then.
+  get spendLabel() {
+    return this.status?.switchedOn ? 'This month' : 'Monthly limit';
+  }
+  get spending() {
+    let status = this.status;
+    if (!status) {
+      return undefined;
+    }
+    if (!status.switchedOn) {
+      let cap = this.args.model.caps?.monthlyCredits;
+      return typeof cap === 'number'
+        ? `Up to ${tally(cap)} credits a month`
+        : 'No monthly limit';
+    }
+    if (typeof status.spentThisMonth !== 'number') {
+      return undefined;
+    }
+    let spent = tally(status.spentThisMonth);
+    return typeof status.monthlyCredits === 'number'
+      ? `${spent} of ${tally(status.monthlyCredits)} credits`
+      : `${spent} credits, with no monthly limit`;
+  }
 }
 
 // Sixteen sizes, one layout: each step up in height adds the next most useful
@@ -4285,9 +4695,11 @@ class AtAGlance extends Component<typeof Automation> {
 // first trigger, or where a running or failed run stands. Then the milestones
 // as a bar. A tile adds the last run and the warnings; a card, or a tile from
 // 240px tall, also the other triggers and the next run; a tile from 240px
-// wide and 270px tall lists the milestones in place of the bar. The root is
-// the size container, so every rule queries its content box; the padding
-// sits on the body inside it.
+// wide and 270px tall lists the milestones in place of the bar. A wide card,
+// from 560px wide and 165px tall (the Wide Card fitted size), also shows
+// who pays and this month's spend against the monthly cap, in a column of its
+// own. The root is the size container, so every rule queries its content box;
+// the padding sits on the body inside it.
 class Fitted extends AtAGlance {
   get focusLine() {
     let m = this.milestones;
@@ -4295,25 +4707,129 @@ class Fitted extends AtAGlance {
       ? m.headline
       : this.when;
   }
-  // The fitted lists name each milestone without its times, which only the
-  // embedded and isolated views have room for.
+  // The fitted lists name each milestone, with its count or where Boxel
+  // stopped the run beside it.
   private list(size: number) {
     if (!this.milestones) {
       return { steps: [], earlier: undefined, later: undefined };
     }
     let { steps, earlier, later } = stepWindow(this.milestones, size);
     return {
-      steps: steps.map(({ label, state }) => ({ label, state })),
+      steps: steps.map(({ label, state, detail }) => ({
+        label,
+        state,
+        detail,
+      })),
       earlier,
       later,
     };
   }
-  get shortList() {
-    return this.list(3);
+  // The space the card leaves the list under the bar (`fitToSpace`), in
+  // pixels: the list names as many milestones as fit there around the one
+  // in focus, so the run's milestone is always named and its neighbours join
+  // as the card grows. With room for two lines a milestone, each also shows
+  // its count and time.
+  @tracked private spaceForList = 0;
+  @tracked private rowHeight = 24;
+  // The stretch of rail that marks milestones before or after the list
+  // takes a little height too.
+  private static moreHeight = 6;
+  get fitDetails() {
+    let total = this.milestones?.total ?? 0;
+    return total > 0 && total * this.rowHeight * 2 <= this.spaceForList;
   }
-  get longList() {
-    return this.list(7);
+  get fitList() {
+    let none = { steps: [], earlier: undefined, later: undefined };
+    let milestones = this.milestones;
+    let total = milestones?.total ?? 0;
+    let space = this.spaceForList;
+    if (!milestones || total === 0) {
+      return none;
+    }
+    let row = this.fitDetails ? this.rowHeight * 2 : this.rowHeight;
+    if (total * row <= space) {
+      return this.list(total);
+    }
+    // A shorter list says what it leaves out, with a line before or after
+    // it, so the list keeps as many milestones as fit beside those lines.
+    let more = Fitted.moreHeight;
+    for (let size = Math.min(total - 1, Math.floor(space / row)); size >= 1; size--) {
+      let window = stepWindow(milestones, size);
+      let before = milestones.steps.indexOf(window.steps[0]);
+      let after = total - before - window.steps.length;
+      let needed =
+        size * row + (before > 0 ? more : 0) + (after > 0 ? more : 0);
+      if (needed <= space) {
+        return {
+          steps: window.steps.map(({ label, state, detail }) => ({
+            label,
+            state,
+            detail,
+          })),
+          earlier:
+            before > 0
+              ? `${tally(before)} earlier ${milestoneWord(before)}`
+              : undefined,
+          later:
+            after > 0
+              ? `${tally(after)} more ${milestoneWord(after)}`
+              : undefined,
+        };
+      }
+    }
+    return none;
   }
+  private fitToSpace = modifier((element: HTMLElement) => {
+    let root = element.closest('.af') as HTMLElement | null;
+    if (!root || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    let measure = () => {
+      let rootBox = root!.getBoundingClientRect();
+      let top = element.getBoundingClientRect().top;
+      // Whatever shows after the milestones takes its space first.
+      let after = 0;
+      let block = element.closest('.af__milestones') as HTMLElement | null;
+      for (
+        let next = block?.nextElementSibling as HTMLElement | null;
+        next;
+        next = next.nextElementSibling as HTMLElement | null
+      ) {
+        if (next.offsetParent !== null && next.offsetHeight > 0) {
+          after += next.offsetHeight + 6;
+        }
+      }
+      let padding = parseFloat(
+        getComputedStyle(element.closest('.af__body') as HTMLElement)
+          .paddingBottom,
+      );
+      let lineHeight = parseFloat(getComputedStyle(element).lineHeight) || 18;
+      // The list may run part way into the card's bottom padding: the
+      // stretch of rail that marks later milestones is small enough to sit
+      // there.
+      let available = Math.max(
+        0,
+        Math.floor(rootBox.bottom - top - after - padding / 2),
+      );
+      if (available !== this.spaceForList) {
+        this.spaceForList = available;
+      }
+      let row = element.querySelector('li') as HTMLElement | null;
+      let rowHeight = row ? Math.ceil(row.getBoundingClientRect().height) : lineHeight + 6;
+      if (rowHeight !== this.rowHeight) {
+        this.rowHeight = rowHeight;
+      }
+    };
+    let observer = new ResizeObserver(() => measure());
+    observer.observe(root);
+    // After the render that installed the modifier, so the measurement
+    // never updates state that render read.
+    let frame = requestAnimationFrame(measure);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  });
   <template>
     <div class='af' data-test-automation-fitted>
       <div class='af__body'>
@@ -4335,6 +4851,67 @@ class Fitted extends AtAGlance {
           {{/if}}
         </div>
 
+        {{#if this.payer}}
+          <dl class='af__money' data-test-automation-fitted-money>
+            <div class='af__money-pair'>
+              <dt>Payer</dt>
+              <dd data-test-automation-fitted-payer>{{this.payer}}</dd>
+            </div>
+            {{#if this.spending}}
+              <div class='af__money-pair'>
+                <dt>{{this.spendLabel}}</dt>
+                <dd data-test-automation-fitted-spending>{{this.spending}}</dd>
+                {{#if this.spendShare}}
+                  <ProgressBar
+                    class='af__spend-bar'
+                    @value={{this.spendShare.value}}
+                    @max={{this.spendShare.max}}
+                    @hue={{this.spendHue}}
+                    @valueText={{this.spending}}
+                    aria-label='This month’s spending'
+                  />
+                {{/if}}
+              </div>
+            {{/if}}
+            {{#if this.runLimit}}
+              <div class='af__money-pair af__money-pair--extra'>
+                <dt>Each run</dt>
+                <dd data-test-automation-fitted-run-limit>{{this.runLimit}}</dd>
+              </div>
+            {{/if}}
+            <div class='af__money-pair af__money-pair--extra'>
+              <dt>Outside services</dt>
+              <dd data-test-automation-fitted-services>{{this.services}}</dd>
+            </div>
+            {{#if this.statusNote}}
+              <p
+                class='af__note'
+                data-test-automation-fitted-note
+              >{{this.statusNote}}</p>
+            {{/if}}
+            {{#if this.limitsNear.length}}
+              <ul class='af__limits' data-test-automation-fitted-limits>
+                {{#each this.limitsNear as |limit|}}
+                  <li
+                    class='af__limit'
+                    data-reached={{if limit.reached 'true' 'false'}}
+                    data-test-automation-fitted-limit-item={{limit.name}}
+                  >
+                    <span class='af__limit-icon' aria-hidden='true'>
+                      {{#if limit.reached}}
+                        <OctagonAlertIcon width='12' height='12' />
+                      {{else}}
+                        <AlertTriangleIcon width='12' height='12' />
+                      {{/if}}
+                    </span>
+                    <span class='af__limit-text'>{{limit.text}}</span>
+                  </li>
+                {{/each}}
+              </ul>
+            {{/if}}
+          </dl>
+        {{/if}}
+
         <p class='af__focus' data-test-automation-fitted-focus>
           {{this.focusLine}}
         </p>
@@ -4354,9 +4931,28 @@ class Fitted extends AtAGlance {
             {{this.moreTriggers}}
           </p>
         {{/if}}
+        <ul class='af__triggers' data-test-automation-fitted-triggers>
+          {{#each this.triggerLines.lines as |line|}}
+            <li class='af__trigger'>
+              {{#if (eq line.kind 'cron')}}
+                <RepeatIcon width='13' height='13' aria-hidden='true' />
+              {{else if (eq line.kind 'once')}}
+                <CalendarCheckIcon width='13' height='13' aria-hidden='true' />
+              {{else if line.kind}}
+                <ZapIcon width='13' height='13' aria-hidden='true' />
+              {{/if}}
+              <span>{{line.text}}</span>
+            </li>
+          {{/each}}
+          {{#if this.triggerLines.more}}
+            <li class='af__trigger af__trigger--more'>
+              {{this.triggerLines.more}}
+            </li>
+          {{/if}}
+        </ul>
 
         {{#if this.nextRun}}
-          <p class='af__fact' data-test-automation-fitted-next>
+          <p class='af__fact af__fact--next' data-test-automation-fitted-next>
             Next run
             <FormatDate
               @date={{this.nextRun}}
@@ -4365,6 +4961,18 @@ class Fitted extends AtAGlance {
               @hour='numeric'
               @minute='2-digit'
             />
+          </p>
+        {{/if}}
+        {{#if this.serviceNames.length}}
+          <p class='af__fact af__fact--services' data-test-automation-fitted-services-line>
+            <PlugIcon width='13' height='13' aria-hidden='true' />
+            <span>Calls {{this.services}}</span>
+          </p>
+        {{/if}}
+        {{#if this.payer}}
+          <p class='af__fact af__fact--payer' data-test-automation-fitted-paid-by>
+            Paid by
+            {{lowerFirst this.payer}}
           </p>
         {{/if}}
         {{#if this.lastRun}}
@@ -4399,32 +5007,14 @@ class Fitted extends AtAGlance {
               @valueText={{this.milestoneValueText}}
               aria-label='Milestones'
             />
-            <div class='af__list af__list--short'>
-              {{#if this.shortList.earlier}}
-                <p class='af__list-more'>{{this.shortList.earlier}}</p>
-              {{/if}}
-              <StepList
-                @steps={{this.shortList.steps}}
-                @variant='track'
-                @announce={{false}}
-                @label='Milestones'
-              />
-              {{#if this.shortList.later}}
-                <p class='af__list-more'>{{this.shortList.later}}</p>
-              {{/if}}
-            </div>
-            <div class='af__list af__list--long'>
-              {{#if this.longList.earlier}}
-                <p class='af__list-more'>{{this.longList.earlier}}</p>
-              {{/if}}
-              <StepList
-                @steps={{this.longList.steps}}
-                @variant='track'
-                @announce={{false}}
-                @label='Milestones'
-              />
-              {{#if this.longList.later}}
-                <p class='af__list-more'>{{this.longList.later}}</p>
+            <div class='af__fit' {{this.fitToSpace}}>
+              {{#if this.fitList.steps.length}}
+                <FittedMilestones
+                  @steps={{this.fitList.steps}}
+                  @details={{this.fitDetails}}
+                  @earlier={{this.fitList.earlier}}
+                  @later={{this.fitList.later}}
+                />
               {{/if}}
             </div>
           </div>
@@ -4440,8 +5030,15 @@ class Fitted extends AtAGlance {
           <p class='af__summary'>{{@model.cardDescription}}</p>
         {{/if}}
 
-        {{#if (or this.hasWarnings (bool this.look))}}
+        {{#if (or this.hasWarnings (bool this.look) (bool this.limitLook))}}
           <div class='af__chips'>
+            {{#if this.limitLook}}
+              <Chip
+                @label={{this.limitLook.label}}
+                @tone={{this.limitLook.tone}}
+                data-test-automation-fitted-limit={{this.limitLook.tone}}
+              />
+            {{/if}}
             {{#if this.look}}
               <Chip
                 class='af__state-foot'
@@ -4541,8 +5138,93 @@ class Fitted extends AtAGlance {
       .af__milestones,
       .af__summary,
       .af__chips,
-      .af__list {
+      .af__money,
+      .af__triggers {
         display: none;
+      }
+      .af__triggers {
+        flex-direction: column;
+        gap: var(--boxel-sp-6xs);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: var(--muted-foreground);
+      }
+      .af__trigger {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-5xs);
+        min-inline-size: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .af__trigger > svg {
+        flex-shrink: 0;
+      }
+      .af__spend-bar {
+        margin-block-start: var(--boxel-sp-6xs);
+      }
+      .af__limits {
+        display: grid;
+        gap: var(--boxel-sp-6xs);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      /* A caution sign marks a limit drawing near and a stop sign one
+         reached, each centered on the limit's first line. A limit wraps
+         onto a second line before it is cut. */
+      .af__limit {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+        gap: var(--boxel-sp-5xs);
+        color: var(--warning-ink);
+      }
+      .af__limit-icon {
+        display: flex;
+        align-items: center;
+        block-size: 1lh;
+      }
+      .af__limit-text {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+      .af__limit[data-reached='true'] {
+        color: var(--destructive-ink);
+      }
+      .af__note {
+        margin: 0;
+        color: var(--muted-foreground);
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+      }
+      .af__money {
+        flex-direction: column;
+        gap: var(--boxel-sp-4xs);
+        margin: 0;
+        padding-inline-start: var(--boxel-sp-sm);
+        border-inline-start: 1px solid var(--border);
+      }
+      .af__money-pair {
+        display: grid;
+        gap: var(--boxel-sp-6xs);
+        min-inline-size: 0;
+      }
+      .af__money dt {
+        color: var(--muted-foreground);
+      }
+      .af__money dd {
+        margin: 0;
+        overflow: hidden;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .af__focus,
       .af__when,
@@ -4561,6 +5243,17 @@ class Fitted extends AtAGlance {
         flex-shrink: 0;
       }
       .af__when > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .af__fact--services {
+        align-items: center;
+        gap: var(--boxel-sp-5xs);
+      }
+      .af__fact--services > svg {
+        flex-shrink: 0;
+      }
+      .af__fact--services > span {
         overflow: hidden;
         text-overflow: ellipsis;
       }
@@ -4681,6 +5374,7 @@ class Fitted extends AtAGlance {
           -webkit-line-clamp: 2;
         }
         .af__fact--last,
+        .af__fact--payer,
         .af__hint {
           display: block;
         }
@@ -4699,6 +5393,36 @@ class Fitted extends AtAGlance {
           display: block;
         }
       }
+      /* The outside services, on a card or tile tall enough. */
+      .af__fact.af__fact--services {
+        display: none;
+      }
+      @container (min-height: 240px) and (min-width: 240px) {
+        .af__fact.af__fact--services {
+          display: flex;
+        }
+      }
+      /* A short card already shows the next and last run, so it leaves out
+         the payer line, which would push the chips off the bottom. */
+      @container (min-height: 165px) and (max-height: 239px) and (min-width: 390px) {
+        .af__fact--payer {
+          display: none;
+        }
+      }
+      /* A small, narrow tile leaves out the payer line, so the chips can wrap
+         onto a second line. */
+      @container (max-width: 239px) and (max-height: 239px) {
+        .af__fact--payer {
+          display: none;
+        }
+      }
+      /* A tall, narrow tile has no room for the milestones' list, so it
+         spends the height on the description. */
+      @container (min-height: 270px) and (max-width: 239px) {
+        .af__summary {
+          display: -webkit-box;
+        }
+      }
       /* A narrow tile gives the title the whole width, and the state moves
          to the footer. */
       @container (min-height: 165px) and (max-width: 239px) {
@@ -4710,24 +5434,119 @@ class Fitted extends AtAGlance {
           display: inline-flex;
         }
       }
-      /* A wide enough tile or card that is tall enough: the milestones as a
-         short list in place of the bar. */
-      @container (min-height: 270px) and (min-width: 240px) {
-        .af__bar {
-          display: none;
+      /* A wide strip, such as the realm config's: three columns, so the
+         strip's width shows what a taller card stacks. The title, state and
+         first trigger with the last run; the milestones with the next run;
+         and who pays, this month's spend and the closest limit. */
+      @container (min-width: 560px) and (min-height: 100px) and (max-height: 164px) {
+        .af__body {
+          display: grid;
+          grid-template-columns:
+            minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
+          grid-template-rows: auto auto auto auto 1fr;
+          column-gap: var(--boxel-sp);
+          row-gap: var(--boxel-sp-5xs);
+          align-content: start;
         }
-        .af__list--short {
+        .af__body:not(:has(.af__money)) {
+          grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        }
+        .af__head {
+          grid-column: 1;
+          grid-row: 1;
+        }
+        .af__when {
+          display: flex;
+          grid-column: 1;
+          grid-row: 2;
+        }
+        .af__fact--next {
           display: block;
+          grid-column: 1;
+          grid-row: 3;
+        }
+        .af__fact--last {
+          display: block;
+          grid-column: 1;
+          grid-row: 4;
+        }
+        .af__milestones {
+          display: flex;
+          grid-column: 2;
+          grid-row: 1 / -1;
+        }
+        .af__money {
+          display: flex;
+          grid-column: 3;
+          grid-row: 1 / -1;
+          gap: var(--boxel-sp-6xs);
+        }
+        .af__money-pair {
+          grid-template-columns: auto minmax(0, 1fr);
+          column-gap: var(--boxel-sp-4xs);
+          align-items: baseline;
+        }
+        .af__spend-bar,
+        .af__note,
+        .af__money-pair--extra,
+        .af__limit:not(:first-child),
+        .af__focus,
+        .af__more,
+        .af__triggers,
+        .af__fact--payer,
+        .af__summary,
+        .af__chips,
+        .af__hint {
+          display: none;
         }
       }
-      /* The tallest card: a longer list and the description. */
-      @container (min-height: 440px) and (min-width: 240px) {
-        .af__list--short {
+      /* A wide card, such as the Wide Card fitted size: who pays and
+         this month's spend, in a column beside the rest. */
+      @container (min-height: 165px) and (min-width: 560px) {
+        .af__body {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 14rem);
+          grid-auto-rows: min-content;
+          column-gap: var(--boxel-sp);
+          align-content: start;
+        }
+        .af__body > * {
+          grid-column: 1;
+        }
+        .af__head {
+          grid-column: 1 / -1;
+        }
+        .af__body:not(:has(.af__money)) {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .af__money {
+          display: flex;
+          grid-column: 2;
+          grid-row: 2 / span 12;
+        }
+        .af__money-pair {
+          grid-template-columns: auto minmax(0, 1fr);
+          column-gap: var(--boxel-sp-4xs);
+          align-items: baseline;
+        }
+        .af__spend-bar {
+          grid-column: 1 / -1;
+        }
+        .af__summary {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+        }
+        .af__when,
+        .af__more,
+        .af__fact--payer {
           display: none;
         }
-        .af__list--long {
-          display: block;
+        .af__triggers {
+          display: flex;
         }
+      }
+      /* The tallest card: the description too. */
+      @container (min-height: 440px) and (min-width: 240px) {
         .af__summary {
           display: -webkit-box;
         }
@@ -5044,6 +5863,19 @@ export class Automation extends CardDef {
   @operation static appendContainsMany = {
     base: 'appendContainsMany',
     nonGrantable: true,
+  } satisfies OperationDeclaration;
+
+  // A new automation with a name and the limits a new automation starts
+  // with, for New automation in the realm config's Automations section (the
+  // automations console), which then opens
+  // the card's edit view for the script and the triggers. Like `create`, it
+  // isn't marked, since a new automation runs nothing until a direct writer
+  // turns it on.
+  @operation static newAutomation = {
+    base: 'create',
+    of: () => Automation,
+    params: { name: StringField },
+    fill: { cardInfo: { name: params('name') }, caps: { ...CAP_DEFAULTS } },
   } satisfies OperationDeclaration;
 
   static isolated = Isolated;
