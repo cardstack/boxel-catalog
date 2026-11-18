@@ -4504,7 +4504,7 @@ class AtAGlance extends Component<typeof Automation> {
     return (this.milestones?.total ?? 0) <= 12;
   }
   // Each trigger in words, for a view with room for more than the first.
-  get triggerLines() {
+  get triggerSummary() {
     let lines = this.triggers.slice(0, 3).map((trigger) => ({
       kind: trigger.kind,
       text: triggerPhrase(trigger),
@@ -4598,16 +4598,54 @@ class AtAGlance extends Component<typeof Automation> {
         status.monthlyCredits,
         'this month',
       );
-      consider('Daily credits', 'Daily', status.spentToday, status.dailyCredits, 'today');
+      consider(
+        'Daily credits',
+        'Daily',
+        status.spentToday,
+        status.dailyCredits,
+        'today',
+      );
     }
     let usage = status?.lastRunUsage;
     if (usage) {
-      consider('Outside calls', 'Calls', usage.callApiCalls, caps?.callApiCalls, 'last run');
-      consider('Response size', 'Response size', usage.responseBytes, caps?.responseBytes, 'last run', bytes);
-      consider('AI requests', 'AI requests', usage.resolveCalls, caps?.resolveCalls, 'last run');
-      consider('AI credits', 'AI credits', usage.aiCredits, caps?.aiCredits, 'last run');
+      consider(
+        'Outside calls',
+        'Calls',
+        usage.callApiCalls,
+        caps?.callApiCalls,
+        'last run',
+      );
+      consider(
+        'Response size',
+        'Response size',
+        usage.responseBytes,
+        caps?.responseBytes,
+        'last run',
+        bytes,
+      );
+      consider(
+        'AI requests',
+        'AI requests',
+        usage.resolveCalls,
+        caps?.resolveCalls,
+        'last run',
+      );
+      consider(
+        'AI credits',
+        'AI credits',
+        usage.aiCredits,
+        caps?.aiCredits,
+        'last run',
+      );
       consider('Saves', 'Saves', usage.writes, caps?.writes, 'last run');
-      consider('Run time', 'Run time', usage.seconds, caps?.seconds, 'last run', duration);
+      consider(
+        'Run time',
+        'Run time',
+        usage.seconds,
+        caps?.seconds,
+        'last run',
+        duration,
+      );
     }
     return near.sort(
       (a, b) => Number(b.reached) - Number(a.reached) || b.share - a.share,
@@ -4753,7 +4791,11 @@ class Fitted extends AtAGlance {
     // A shorter list says what it leaves out, with a line before or after
     // it, so the list keeps as many milestones as fit beside those lines.
     let more = Fitted.moreHeight;
-    for (let size = Math.min(total - 1, Math.floor(space / row)); size >= 1; size--) {
+    for (
+      let size = Math.min(total - 1, Math.floor(space / row));
+      size >= 1;
+      size--
+    ) {
       let window = stepWindow(milestones, size);
       let before = milestones.steps.indexOf(window.steps[0]);
       let after = total - before - window.steps.length;
@@ -4815,7 +4857,9 @@ class Fitted extends AtAGlance {
         this.spaceForList = available;
       }
       let row = element.querySelector('li') as HTMLElement | null;
-      let rowHeight = row ? Math.ceil(row.getBoundingClientRect().height) : lineHeight + 6;
+      let rowHeight = row
+        ? Math.ceil(row.getBoundingClientRect().height)
+        : lineHeight + 6;
       if (rowHeight !== this.rowHeight) {
         this.rowHeight = rowHeight;
       }
@@ -4932,7 +4976,7 @@ class Fitted extends AtAGlance {
           </p>
         {{/if}}
         <ul class='af__triggers' data-test-automation-fitted-triggers>
-          {{#each this.triggerLines.lines as |line|}}
+          {{#each this.triggerSummary.lines as |line|}}
             <li class='af__trigger'>
               {{#if (eq line.kind 'cron')}}
                 <RepeatIcon width='13' height='13' aria-hidden='true' />
@@ -4944,9 +4988,9 @@ class Fitted extends AtAGlance {
               <span>{{line.text}}</span>
             </li>
           {{/each}}
-          {{#if this.triggerLines.more}}
+          {{#if this.triggerSummary.more}}
             <li class='af__trigger af__trigger--more'>
-              {{this.triggerLines.more}}
+              {{this.triggerSummary.more}}
             </li>
           {{/if}}
         </ul>
@@ -4964,13 +5008,19 @@ class Fitted extends AtAGlance {
           </p>
         {{/if}}
         {{#if this.serviceNames.length}}
-          <p class='af__fact af__fact--services' data-test-automation-fitted-services-line>
+          <p
+            class='af__fact af__fact--services'
+            data-test-automation-fitted-services-line
+          >
             <PlugIcon width='13' height='13' aria-hidden='true' />
             <span>Calls {{this.services}}</span>
           </p>
         {{/if}}
         {{#if this.payer}}
-          <p class='af__fact af__fact--payer' data-test-automation-fitted-paid-by>
+          <p
+            class='af__fact af__fact--payer'
+            data-test-automation-fitted-paid-by
+          >
             Paid by
             {{lowerFirst this.payer}}
           </p>
@@ -5441,8 +5491,7 @@ class Fitted extends AtAGlance {
       @container (min-width: 560px) and (min-height: 100px) and (max-height: 164px) {
         .af__body {
           display: grid;
-          grid-template-columns:
-            minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
+          grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
           grid-template-rows: auto auto auto auto 1fr;
           column-gap: var(--boxel-sp);
           row-gap: var(--boxel-sp-5xs);
