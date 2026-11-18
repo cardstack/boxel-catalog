@@ -125,34 +125,6 @@ function listOf(items: string[]): string {
     : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 }
 
-// The first plain number in `field` outside `min`..`max`, if any. Names
-// (MON, JAN) and steps are left to the full parse.
-function outOfRange(
-  field: string,
-  min: number,
-  max: number,
-): string | undefined {
-  for (let part of field.split(',')) {
-    for (let piece of part.split('/')[0].split('-')) {
-      if (/^\d+$/.test(piece)) {
-        let n = Number(piece);
-        if (n < min || n > max) {
-          return piece;
-        }
-      }
-    }
-  }
-  return undefined;
-}
-
-const FIELD_RANGES: [label: string, min: number, max: number][] = [
-  ['minute', 0, 59],
-  ['hour', 0, 23],
-  ['day of the month', 1, 31],
-  ['month', 1, 12],
-  ['day of the week', 0, 7],
-];
-
 function ordinal(n: number): string {
   let tens = n % 100;
   let suffix =
@@ -458,62 +430,4 @@ export function describeCron(
     (g): g is CronDescriptionGroup => Boolean(g),
   );
   return { summary, groups };
-}
-
-// What's wrong with an expression, in words, for an editor to show as the
-// author types; undefined when nothing it can see is wrong. It catches the
-// common slips (not five fields, firing more often than every
-// `minimumMinutes`) and leaves anything subtler to the server, which decides.
-export function cronProblem(
-  expression: string | null | undefined,
-  minimumMinutes = 5,
-): string | undefined {
-  if (typeof expression !== 'string' || expression.trim() === '') {
-    return 'Enter when it runs, such as 0 7 * * MON';
-  }
-  let source = expression.trim();
-  let fields = (MACROS[source.toLowerCase()] ?? source).split(/\s+/);
-  if (fields.length !== 5) {
-    return 'A cron expression has five fields: minute, hour, day of the month, month and day of the week';
-  }
-  for (let [i, [label, min, max]] of FIELD_RANGES.entries()) {
-    let bad = outOfRange(fields[i], min, max);
-    if (bad !== undefined) {
-      return `The ${label} is ${min} to ${max}, so ${bad} is out of range`;
-    }
-  }
-  let minute = parseField(fields[0], 0, 59);
-  let hour = parseField(fields[1], 0, 23);
-  if (!minute || !hour) {
-    return undefined;
-  }
-  let tooOften = `It can run at most once every ${minimumMinutes} minutes`;
-  if (minute.any || (minute.step && minute.step < minimumMinutes)) {
-    return tooOften;
-  }
-  let minutes = minute.step
-    ? Array.from(
-        { length: Math.ceil(60 / minute.step) },
-        (_, i) => i * minute.step!,
-      )
-    : minute.values;
-  for (let i = 1; i < minutes.length; i++) {
-    if (minutes[i] - minutes[i - 1] < minimumMinutes) {
-      return tooOften;
-    }
-  }
-  // The last minute of one hour and the first of the next.
-  let hours = hour.any
-    ? Array.from({ length: 24 }, (_, i) => i)
-    : hour.step
-      ? Array.from(
-          { length: Math.ceil(24 / hour.step) },
-          (_, i) => i * hour.step!,
-        )
-      : hour.values;
-  let wraps = hours.some((h) => hours.includes(h + 1));
-  if (wraps && 60 - minutes[minutes.length - 1] + minutes[0] < minimumMinutes) {
-    return tooOften;
-  }
-  return undefined;
 }

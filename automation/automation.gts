@@ -98,10 +98,8 @@ import PlusIcon from '@cardstack/boxel-icons/plus';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
 import TrashIcon from '@cardstack/boxel-icons/trash-2';
 import ZapIcon from '@cardstack/boxel-icons/zap';
-import {
-  cronProblem,
-  describeCron,
-} from '@cardstack/catalog/automation/describe-cron';
+import { describeCron } from '@cardstack/catalog/automation/describe-cron';
+import { cronTriggerProblem } from '@cardstack/runtime-common/automation-cron-rule';
 import { CodeEdit, CodeView } from '@cardstack/catalog/fields/code/code';
 
 // An automation's definition: the Realm Runner script it runs, when it runs,
@@ -786,8 +784,10 @@ export class AutomationTrigger extends FieldDef {
         : all;
     }
     // What's wrong with each field, shown under it as the author types. The
-    // server checks the same and more when the automation is turned on; these
-    // catch the common slips early.
+    // expression is checked in the trigger's time zone with the rule the
+    // server reads the declaration with, so an expression accepted here is
+    // one the server accepts. The server checks more of the card when someone
+    // turns the automation on; the rest of these catch the common slips early.
     get problems() {
       let m = this.args.model;
       let today = isoDate(new Date())!;
@@ -800,7 +800,7 @@ export class AutomationTrigger extends FieldDef {
           : undefined,
         expression: blank(m.expression)
           ? 'Required: enter when it runs, such as 0 7 * * MON'
-          : cronProblem(m.expression),
+          : cronTriggerProblem(m.expression!, m.timeZone ?? undefined)?.message,
         timeZone: blank(m.timeZone)
           ? 'Required: pick a time zone'
           : isTimeZone(m.timeZone!)
@@ -1659,7 +1659,16 @@ type PauseReason =
   | 'payer-lost-access'
   | 'caps-raised'
   | 'batched-ai-enabled'
-  | 'repeated-failures';
+  | 'repeated-failures'
+  | 'invalid-declaration';
+// One thing the server found wrong when the server read the card as an
+// automation: a `path` into the card (`triggers.0.expression`, `caps.writes`)
+// and a message for a person.
+interface DeclarationProblem {
+  code: string;
+  path: string;
+  message: string;
+}
 interface TriggerStatus {
   label: string;
   runs: number;
@@ -1714,6 +1723,9 @@ type ServerStatus =
       currentRun?: LastRun | null;
       state: AutomationState;
       pauseReason: PauseReason | null;
+      // What the server found wrong with the card, when the pause reason is
+      // `invalid-declaration`.
+      pauseProblems?: DeclarationProblem[] | null;
       payer: string | null;
       viewerIsPayer: boolean;
       nextRun: string | null;
@@ -1887,6 +1899,8 @@ function stateSentence(status: ServerStatus): string {
           return 'Someone turned on batched AI after the payer agreed to the limits, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to batched AI.';
         case 'repeated-failures':
           return repeatedFailuresSentence(status);
+        case 'invalid-declaration':
+          return 'Boxel paused the automation because the automation’s settings have problems. Boxel will resume the automation once someone who can edit this workspace fixes each problem below.';
         default:
           return 'Someone who can edit this workspace paused the automation, so Boxel runs nothing until someone resumes the automation.';
       }
@@ -1904,6 +1918,44 @@ function repeatedFailuresSentence(
       ? 'a run'
       : `${count && count > 1 ? tally(count) : 'several'} runs in a row`;
   return `Boxel paused the automation after ${runs} failed. Boxel runs nothing until someone who can edit this workspace fixes what the runs fail on and resumes the automation.`;
+}
+
+// Each problem the server found, with where on the card the problem is: a
+// trigger by its label, or the section of the card.
+interface PauseProblemRow {
+  place: string;
+  message: string;
+}
+
+const PROBLEM_SECTIONS: Record<string, string> = {
+  script: 'Script',
+  operations: 'Outside services',
+  caps: 'Limits',
+  params: 'Params',
+  batchedAI: 'Batched AI',
+  batchDeadlineMinutes: 'Batched AI',
+};
+
+function pauseProblemRows(
+  status: ServerStatus | undefined,
+  triggerLabels: (string | null | undefined)[],
+): PauseProblemRow[] {
+  if (
+    !status?.switchedOn ||
+    status.state !== 'paused' ||
+    status.pauseReason !== 'invalid-declaration'
+  ) {
+    return [];
+  }
+  return (status.pauseProblems ?? []).map(({ path, message }) => {
+    let [section, index] = path.split('.');
+    let place = PROBLEM_SECTIONS[section] ?? 'Automation';
+    if (section === 'triggers' && index !== undefined) {
+      let label = triggerLabels[Number(index)]?.trim();
+      place = label ? `Trigger “${label}”` : `Trigger ${Number(index) + 1}`;
+    }
+    return { place, message };
+  });
 }
 
 function payerText(status: ServerStatus): string {
@@ -2559,6 +2611,12 @@ class Isolated extends Component<typeof Automation> {
   get statusItems() {
     return this.status ? statusItems(this.status) : [];
   }
+  get pauseProblems() {
+    return pauseProblemRows(
+      this.status,
+      (this.args.model.triggers ?? []).map((trigger) => trigger?.label),
+    );
+  }
   // The script, read once for the Script section and for the milestones the
   // script declares.
   private script = scriptText(this, () => ({
@@ -2651,6 +2709,27 @@ class Isolated extends Component<typeof Automation> {
             {{this.stateSentence}}
           </p>
           <StatusFacts @items={{this.statusItems}} @columns={{2}} />
+          {{#if this.pauseProblems.length}}
+            <Callout
+              @tone='danger'
+              @title='Problems to fix'
+              data-test-automation-pause-problems
+            >
+              <ul class='automation__problems'>
+                {{#each this.pauseProblems as |problem|}}
+                  <li>
+                    <Item
+                      @size='s'
+                      @wrap={{true}}
+                      @title={{problem.place}}
+                      @description={{problem.message}}
+                      data-test-automation-pause-problem={{problem.place}}
+                    />
+                  </li>
+                {{/each}}
+              </ul>
+            </Callout>
+          {{/if}}
         </PanelSection>
       {{else if this.statusKnown}}
         <Callout
@@ -2830,6 +2909,13 @@ class Isolated extends Component<typeof Automation> {
       .automation__lead {
         margin: 0 0 var(--boxel-sp-sm);
         color: var(--foreground);
+      }
+      .automation__problems {
+        display: grid;
+        gap: var(--boxel-sp-xs);
+        margin: 0;
+        padding: 0;
+        list-style: none;
       }
       .automation__rows {
         display: grid;
