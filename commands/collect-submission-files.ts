@@ -37,6 +37,7 @@ import {
   FileCollectionResult,
 } from '../fields/file-content/file-content';
 import { getLoaderService } from './utils';
+import { toCatalogPrefixForm } from '../utils/catalog-prefix-form';
 
 const log = logger('commands:collect-submission-files');
 
@@ -224,7 +225,9 @@ export default class CollectSubmissionFilesCommand extends Command<
         let pattern = new RegExp(escaped + '(?![a-zA-Z0-9_\\-\\.])', 'g');
         content = content.replace(pattern, relative);
       }
-      return content;
+      return toCatalogPrefixForm(content, fromPath, (url) =>
+        virtualNetwork.unresolveURL(url),
+      );
     };
 
     const filesWithContent: FileWithContent[] = [];
