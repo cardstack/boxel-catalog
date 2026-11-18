@@ -1,0 +1,55 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "WorkoutSession",
+        "module": "../workout-session"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "date": "2026-04-05",
+      "title": "Pull Day",
+      "rating": 4,
+      "cardInfo": {
+        "name": "Pull Day",
+        "notes": null,
+        "summary": "Back and biceps session with pull-ups",
+        "cardThumbnailURL": null
+      },
+      "exercises": [
+        {
+          "sets": 4,
+          "reps": 8,
+          "weight": 0,
+          "notes": "Bodyweight only"
+        },
+        {
+          "sets": 3,
+          "reps": 10,
+          "weight": 0,
+          "notes": "Wide grip"
+        }
+      ],
+      "overallNotes": "Back pump was intense. Need to work on grip strength.",
+      "durationMinutes": 55
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "exercises.0.exercise": {
+        "links": {
+          "self": "../Exercise/pull-up"
+        }
+      },
+      "exercises.1.exercise": {
+        "links": {
+          "self": "../Exercise/pull-up"
+        }
+      }
+    }
+  }
+}
