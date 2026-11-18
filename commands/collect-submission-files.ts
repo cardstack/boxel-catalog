@@ -40,6 +40,9 @@ import { getLoaderService } from './utils';
 
 const log = logger('commands:collect-submission-files');
 
+const CATALOG_PREFIX = '@cardstack/catalog/';
+const ABSOLUTE_URL = /https?:\/\/[^\s"'`<>()\\]+/g;
+
 interface FileWithContent {
   path: string;
   content: string;
@@ -224,7 +227,13 @@ export default class CollectSubmissionFilesCommand extends Command<
         let pattern = new RegExp(escaped + '(?![a-zA-Z0-9_\\-\\.])', 'g');
         content = content.replace(pattern, relative);
       }
-      return content;
+      // What's left absolute points outside the submission. A reference into
+      // the catalog realm is spelled with its prefix, so the files read the
+      // same in whichever environment's catalog they land.
+      return content.replace(ABSOLUTE_URL, (url) => {
+        let prefixed = virtualNetwork.unresolveURL(url);
+        return prefixed.startsWith(CATALOG_PREFIX) ? prefixed : url;
+      });
     };
 
     const filesWithContent: FileWithContent[] = [];
