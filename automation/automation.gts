@@ -1109,8 +1109,9 @@ export class AutomationTrigger extends FieldDef {
             data-test-automation-webhook-picker-loading
           />
         {{else}}
-          {{! Without the list (no way to ask, or the route refused), the
-              path is typed; the server still checks the path on switch-on. }}
+          {{! Without the list (no way to ask, a failed request, or a viewer
+              who isn't a direct writer), the path is typed; the server
+              still checks the path on switch-on. }}
           <Field
             @label='Webhook path'
             @hint='One of this workspace’s incoming webhooks'
@@ -1749,9 +1750,11 @@ function fileName(url: string | undefined): string | undefined {
 
 // What the server knows about an automation: whether someone switched the
 // automation on, its state, who pays, and how far each trigger has got. The
-// realm's `_automation-status` route answers only the realm's direct writers,
-// so for anyone else `visible` stays false and the views show the card's own
-// fields alone.
+// realm's `_automation-status` route shows this only to the realm's direct
+// writers. Any other viewer the realm's permissions let read is told it isn't
+// a direct writer (`meta.directWriter: false`), and a viewer only a policy
+// grant admits is refused with a 401 or 403. Either way `visible` stays false
+// and the views show the card's own fields alone.
 type AutomationState = 'active' | 'paused' | 'waiting-for-credits' | 'done';
 type PauseReason =
   | 'requested'
@@ -1901,16 +1904,20 @@ const WEBHOOK_TRIGGER_CANT_FIRE =
 
 // An incoming webhook an automation may name, as the realm's
 // `_automation-webhooks` route lists it: one that a direct writer of the
-// realm made. The route answers only the realm's direct writers, the people
-// who edit an automation.
+// realm made. The route lists webhooks only to the realm's direct writers.
+// Any other viewer the realm's permissions let read is told it isn't a
+// direct writer (`meta.directWriter: false`), and a viewer only a policy
+// grant admits is refused with a 401 or 403. Either way the editor takes a
+// typed path.
 interface AutomationWebhook {
   webhookPath: string;
   owner: string;
 }
 type WebhooksState = {
   loading: boolean;
-  // Undefined until the route answers, and when the route can't be asked or
-  // refuses: the editor then takes a typed path.
+  // Undefined until the route answers, and when the route can't be asked,
+  // fails, or says the viewer isn't a direct writer: the editor then takes a
+  // typed path.
   list: AutomationWebhook[] | undefined;
   // What the route's meta says: whether the server starts runs from webhook
   // deliveries. Undefined until the route answers.
@@ -1971,7 +1978,7 @@ function automationWebhooks(
             url: `${realmId}${WEBHOOKS_PATH}`,
             acceptHeader: 'application/json',
           });
-          if (result.ok) {
+          if (result.ok && result.body?.meta?.directWriter !== false) {
             state.list = (
               (result.body?.data ?? []) as { attributes: AutomationWebhook }[]
             ).map(({ attributes }) => attributes);
@@ -2049,9 +2056,10 @@ function automationStatus(
           if (ended || asked !== latest) {
             return;
           }
-          let status = result.ok
-            ? (result.body?.data?.attributes as ServerStatus | undefined)
-            : undefined;
+          let status =
+            result.ok && result.body?.meta?.directWriter !== false
+              ? (result.body?.data?.attributes as ServerStatus | undefined)
+              : undefined;
           state.status = status;
           state.visible = Boolean(status);
           state.known = true;
@@ -2069,10 +2077,10 @@ function automationStatus(
       // milestone, commits or ends, or a pause cancels it), and a change to
       // the automation's own state (such as switching it on, pausing,
       // resuming or removing it), change its row and not the card. The
-      // realm tells its direct writers, the viewers this route answers, with
-      // a `job` event for a run and an `automation` event for the automation,
-      // each naming the automation by its identifier, spelled as the card's
-      // id is.
+      // realm tells its direct writers, the viewers this route shows the row
+      // to, with a `job` event for a run and an `automation` event for the
+      // automation, each naming the automation by its identifier, spelled as
+      // the card's id is.
       let unsubscribe = subscribeToRealm(realm, (event) => {
         if (
           (event.eventName === 'index' &&
@@ -3073,9 +3081,9 @@ class Isolated extends Component<typeof Automation> {
     return this.shownRun ? runLead(this.shownRun) : undefined;
   }
 
-  // What the section says when there is no last run to list: a viewer the
-  // status route refuses never sees runs; an editor sees them once a run
-  // ends and the script reports milestones.
+  // What the section says when there is no last run to list: a viewer who
+  // isn't a direct writer never sees runs; a direct writer sees them once a
+  // run ends and the script reports milestones.
   get milestonesEmptyMessage() {
     if (!this.status) {
       return 'Someone who can edit this workspace sees the milestones of the last run here.';
@@ -4399,7 +4407,7 @@ function stepWindow(glance: MilestoneGlance, size: number): StepWindow {
 
 // What the fitted and embedded views show at a glance: the automation's
 // state, when it runs, how its last run ended and where its milestones stand.
-// A viewer the status route refuses sees the card's own fields and the
+// A viewer who isn't a direct writer sees the card's own fields and the
 // milestones the script declares. A prerender reads neither the status nor
 // the script, so it shows the card's own fields alone.
 class AtAGlance extends Component<typeof Automation> {
