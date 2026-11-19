@@ -27,6 +27,7 @@ import {
   type PolicyExplanationListing,
   type PolicyValidation,
 } from 'https://cardstack.com/base/operations';
+import PathSpecifierField from '@cardstack/base/path-specifier';
 import PolicyPredicateField from '@cardstack/catalog/fields/policy-predicate/policy-predicate';
 import { subscribeToRealm } from '@cardstack/runtime-common';
 import StringField from 'https://cardstack.com/base/string';
@@ -109,9 +110,19 @@ function rateLimitLine(grant: OperationGrant | undefined): string {
 // whether it admits callers who aren't signed in, and how. A grant reads the
 // same in every listing, so an edit form can be matched up with the policy's
 // view.
+// Whether a grant is limited to some realm paths. A grant with none applies
+// wherever its rule does, so its one-line view says nothing about paths.
+function hasPaths(grant: OperationGrant | undefined): boolean {
+  return (grant?.paths?.length ?? 0) > 0;
+}
+
 class OperationGrantView extends Component<typeof OperationGrant> {
   get opensToAnonymous() {
     return namesAnonymous(this.args.model as OperationGrant);
+  }
+
+  get hasPaths() {
+    return hasPaths(this.args.model as OperationGrant);
   }
 
   get rateLimit() {
@@ -128,6 +139,10 @@ class OperationGrantView extends Component<typeof OperationGrant> {
         <span class='missing' data-test-operation-grant-no-operation>
           No operation
         </span>
+      {{/if}}
+      {{#if this.hasPaths}}
+        <span class='keyword'>under</span>
+        <span data-test-operation-grant-paths><@fields.paths /></span>
       {{/if}}
       {{#if @model.where}}
         <span class='keyword'>where</span>
@@ -198,6 +213,12 @@ export class OperationGrant extends FieldDef {
   // `read` or `update`, or a name a card declares. A grant on a named
   // operation does not grant the base operation it is built on.
   @field operation = contains(StringField);
+  // The realm paths the grant applies to: directories such as `blog/`, single
+  // files such as `blog/post-1.json`, or `/` for the whole realm, relative to
+  // the root of the realm being judged. A target, or the card a create would
+  // store, must be under one of them. Empty means no path limit. A list
+  // holding a prefix the realm can't read leaves the whole grant out.
+  @field paths = contains(PathSpecifierField);
   // A BXL boolean expression over the caller and the target. Absent means
   // the grant is unconditional. For a caller who isn't signed in, `actor()`
   // is `"anonymous"`, and only a grant whose condition names that text admits
@@ -242,6 +263,19 @@ export class OperationGrant extends FieldDef {
           data-test-field='operation'
         >
           <@fields.operation />
+        </FieldContainer>
+        <FieldContainer
+          @label='Paths'
+          @vertical={{true}}
+          data-test-field='paths'
+        >
+          <@fields.paths />
+          <p class='hint'>
+            Where in the realm this grant applies: a directory such as blog/, a
+            single file such as blog/post-1.json, or / for the whole realm. A
+            create is checked where its card would be stored. Left empty, the
+            grant applies wherever its rule does.
+          </p>
         </FieldContainer>
         <FieldContainer
           @label='Condition'
@@ -517,16 +551,21 @@ export class PolicyRule extends FieldDef {
 }
 
 // What each reason an explanation gives means, in the words a policy author
-// reads it in. `reads-actor` is named here as well as through the
-// explanation type, so the map covers it whichever platform version this
-// realm runs on.
+// reads it in. `reads-actor` and `outside-paths` are named here as well as
+// through the explanation type, so the map covers them whichever platform
+// version this realm runs on.
 const REASONS: Record<
-  PolicyExplanation['reason'] | 'reads-actor' | 'blocklist-invalid',
+  | PolicyExplanation['reason']
+  | 'reads-actor'
+  | 'blocklist-invalid'
+  | 'outside-paths',
   string
 > = {
   acl: "The realm's own permissions already allow this, so the policy isn't needed.",
   granted: 'A grant in this policy allows it.',
   'no-grant': "No rule for this card's type grants this operation.",
+  'outside-paths':
+    "This policy has grants for this operation on this card's type, but none of their paths includes this card, or where a new card would be stored.",
   'predicate-false':
     'This policy has grants for this operation on this card, but none of their conditions is met.',
   'predicate-threw':
@@ -569,10 +608,14 @@ const DECISION_VARIANT: Record<
   failed: 'destructive',
 };
 
+// `outside-paths` is named here as well as through the explanation type, as
+// for `REASONS`.
 const OUTCOME_LABEL: Record<
-  PolicyExplanation['rules'][number]['grants'][number]['outcome'],
+  | PolicyExplanation['rules'][number]['grants'][number]['outcome']
+  | 'outside-paths',
   string
 > = {
+  'outside-paths': "its paths don't include this card",
   unconditional: 'always applies',
   held: 'condition met',
   'did-not-hold': 'condition not met',
@@ -890,6 +933,7 @@ type ExplainedGrantDetail =
   PolicyExplanation['rules'][number]['grants'][number] & {
     anonymous?: GrantAnonymousDetail;
     issues?: DraftIssue[];
+    paths?: string[];
   };
 
 // `1 request`, `2 requests`.
@@ -1163,6 +1207,17 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
                         grant
                       }}
                     >
+                      {{#let (this.grantDetail grant) as |detail|}}
+                        {{#if detail.paths.length}}
+                          <span class='keyword'>under</span>
+                          {{#each detail.paths as |prefix|}}
+                            <code
+                              class='path'
+                              data-test-explanation-grant-path
+                            >{{prefix}}</code>
+                          {{/each}}
+                        {{/if}}
+                      {{/let}}
                       {{#if grant.where}}
                         <code
                           class='where'
@@ -1309,11 +1364,13 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
         margin-right: var(--boxel-sp-xs);
       }
       .type-module,
-      .where {
+      .where,
+      .path {
         font-family: var(--boxel-monospace-font-family, monospace);
         font-size: var(--boxel-font-size-xs);
         overflow-wrap: anywhere;
       }
+      .keyword,
       .tier,
       .outcome,
       .empty {
