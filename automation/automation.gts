@@ -4738,7 +4738,7 @@ class AtAGlance extends Component<typeof Automation> {
 // as a bar. A tile adds the last run and the warnings; a card, or a tile from
 // 240px tall, also the other triggers and the next run; a tile from 240px
 // wide and 270px tall lists the milestones in place of the bar. A wide card,
-// from 560px wide and 165px tall (the Wide Card fitted size), also shows
+// from 560px wide and 165px tall (the Extra Wide Card fitted size), also shows
 // who pays and this month's spend against the monthly cap, in a column of its
 // own. The root is the size container, so every rule queries its content box;
 // the padding sits on the body inside it.
@@ -5553,7 +5553,7 @@ class Fitted extends AtAGlance {
           display: none;
         }
       }
-      /* A wide card, such as the Wide Card fitted size: who pays and
+      /* A wide card, such as the Extra Wide Card fitted size: who pays and
          this month's spend, in a column beside the rest. */
       @container (min-height: 165px) and (min-width: 560px) {
         .af__body {
