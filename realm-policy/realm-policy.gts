@@ -106,16 +106,16 @@ function rateLimitLine(grant: OperationGrant | undefined): string {
   }`;
 }
 
-// A grant in one line: its operation, then its condition (or `always`), then
-// whether it admits callers who aren't signed in, and how. A grant reads the
-// same in every listing, so an edit form can be matched up with the policy's
-// view.
 // Whether a grant is limited to some realm paths. A grant with none applies
 // wherever its rule does, so its one-line view says nothing about paths.
 function hasPaths(grant: OperationGrant | undefined): boolean {
   return (grant?.paths?.length ?? 0) > 0;
 }
 
+// A grant in one line: its operation, then the paths it is limited to where it
+// has any, then its condition (or `always`), then whether it admits callers
+// who aren't signed in, and how. A grant reads the same in every listing, so
+// an edit form can be matched up with the policy's view.
 class OperationGrantView extends Component<typeof OperationGrant> {
   get opensToAnonymous() {
     return namesAnonymous(this.args.model as OperationGrant);
@@ -615,7 +615,7 @@ const OUTCOME_LABEL: Record<
   | 'outside-paths',
   string
 > = {
-  'outside-paths': "its paths don't include this card",
+  'outside-paths': 'outside its paths',
   unconditional: 'always applies',
   held: 'condition met',
   'did-not-hold': 'condition not met',
