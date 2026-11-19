@@ -1219,6 +1219,7 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
                         {{/if}}
                       {{/let}}
                       {{#if grant.where}}
+                        <span class='keyword'>where</span>
                         <code
                           class='where'
                           data-test-explanation-grant-where
