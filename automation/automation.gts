@@ -49,6 +49,7 @@ import { Button } from '@cardstack/pretui/components/button';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
 import { List } from '@cardstack/pretui/components/list';
 import { LoadingState } from '@cardstack/pretui/components/loading-state';
+import { Pagination } from '@cardstack/pretui/components/pagination';
 import { Callout } from '@cardstack/pretui/components/callout';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { RelativeTime } from '@cardstack/pretui/components/relative-time';
@@ -88,7 +89,7 @@ import {
 import { Table } from '@cardstack/pretui/components/table';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
 import { Token } from '@cardstack/pretui/components/token';
-import { and, bool, eq, or } from '@cardstack/pretui/helpers';
+import { and, bool, eq, gt, or } from '@cardstack/pretui/helpers';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import CalendarCheckIcon from '@cardstack/boxel-icons/calendar-check';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
@@ -2110,7 +2111,8 @@ function automationStatus(
 // run is, how the run ended and why, and the trigger's later slots that
 // joined a run while the run waited (the slots Boxel skipped). Any other
 // viewer is told the viewer isn't a direct writer, and the card shows no runs.
-type RunState = 'pending' | 'running' | 'complete' | 'error' | 'canceled';
+// A listed run has started, so it is never still waiting in the queue.
+type RunState = 'running' | 'complete' | 'error' | 'canceled';
 interface JoinedSlot {
   trigger: string;
   slot: string;
@@ -2135,49 +2137,50 @@ interface ListedRun {
   startedAt: string | null;
   finishedAt: string | null;
   joined: JoinedSlot[];
+  // The milestones the script planned and the run reached, in the shape the
+  // status route gives the last run's.
+  milestones: LastRun | null;
 }
 type RunsState = {
   // Whether the route answered that the viewer is a direct writer.
   visible: boolean;
   loading: boolean;
   runs: ListedRun[];
-  // The `before` for the page of older runs, or null when the list reached
-  // the oldest.
-  next: string | null;
-  loadingOlder: boolean;
+  // The page shown, counting from 1, how many pages the runs fill, and how
+  // many runs there are in all.
+  page: number;
+  pages: number;
+  total: number;
   failed: boolean;
 };
 
 const RUNS_PATH = '_automation-runs';
 // The runs one page holds.
 const RUNS_PAGE = 20;
-// The most runs a re-read asks for at once, the route's own limit.
-const RUNS_MAX_PAGE = 100;
 
 interface RunsPage {
   visible: boolean;
   runs: ListedRun[];
-  next: string | null;
+  page: number;
+  pages: number;
+  total: number;
 }
 
 async function readRunsPage(
   tools: Tools,
   url: string,
-  limit: number,
-  before?: string,
+  page: number,
 ): Promise<RunsPage | undefined> {
-  let pageURL = `${url}&limit=${limit}${
-    before ? `&before=${encodeURIComponent(before)}` : ''
-  }`;
   let result = await new AuthedFetchTool(tools).execute({
-    url: pageURL,
+    url: `${url}&limit=${RUNS_PAGE}&page=${page}`,
     acceptHeader: 'application/json',
   });
   if (!result.ok) {
     return undefined;
   }
-  if (result.body?.meta?.directWriter === false) {
-    return { visible: false, runs: [], next: null };
+  let meta = result.body?.meta;
+  if (meta?.directWriter === false) {
+    return { visible: false, runs: [], page: 1, pages: 1, total: 0 };
   }
   let data = (result.body?.data ?? []) as {
     id: string;
@@ -2186,15 +2189,16 @@ async function readRunsPage(
   return {
     visible: true,
     runs: data.map(({ id, attributes }) => ({ id, ...attributes })),
-    next: (result.body?.meta?.next as string | null | undefined) ?? null,
+    page: Number(meta?.page ?? page),
+    pages: Number(meta?.pages ?? 1),
+    total: Number(meta?.total ?? data.length),
   };
 }
 
-// The automation's runs, kept live: a `job` realm event naming the
-// automation (a run is made, starts, reaches a milestone, commits or ends)
-// and an `automation` event (a pause or remove cancels the automation's
-// runs) read the runs the view shows again, as many as the viewer has
-// paged through.
+// The automation's runs that have started, a page at a time, kept live: a
+// `job` realm event naming the automation (a run starts, reaches a
+// milestone, commits or ends) and an `automation` event (a pause or remove
+// cancels the automation's runs) read the page shown again.
 function automationRuns(
   owner: object,
   args: () => {
@@ -2208,7 +2212,7 @@ function automationRuns(
     | {
         url: string | undefined;
         state: RunsState;
-        loadOlder: () => Promise<void>;
+        showPage: (page: number) => void;
       }
     | undefined;
   return use(
@@ -2229,11 +2233,12 @@ function automationRuns(
             visible: false,
             loading: true,
             runs: [],
-            next: null,
-            loadingOlder: false,
+            page: 1,
+            pages: 1,
+            total: 0,
             failed: false,
           }),
-          loadOlder: async () => undefined,
+          showPage: () => undefined,
         };
       }
       let current = kept;
@@ -2244,25 +2249,23 @@ function automationRuns(
       }
       let ended = false;
       let latest = 0;
-      let read = async () => {
+      let read = async (page = state.page) => {
         let asked = ++latest;
         await Promise.resolve();
         if (ended || asked !== latest) {
           return;
         }
-        let limit = Math.min(
-          Math.max(state.runs.length, RUNS_PAGE),
-          RUNS_MAX_PAGE,
-        );
         try {
-          let page = await readRunsPage(tools, url, limit);
+          let answer = await readRunsPage(tools, url, page);
           if (ended || asked !== latest) {
             return;
           }
-          if (page) {
-            state.visible = page.visible;
-            state.runs = page.runs;
-            state.next = page.next;
+          if (answer) {
+            state.visible = answer.visible;
+            state.runs = answer.runs;
+            state.page = answer.page;
+            state.pages = answer.pages;
+            state.total = answer.total;
             state.failed = false;
           } else {
             state.failed = state.visible;
@@ -2277,27 +2280,9 @@ function automationRuns(
           }
         }
       };
-      current.loadOlder = async () => {
-        let before = state.next;
-        if (!before || state.loadingOlder) {
-          return;
-        }
-        state.loadingOlder = true;
-        try {
-          let page = await readRunsPage(tools, url, RUNS_PAGE, before);
-          if (!ended && page && state.next === before) {
-            let shown = new Set(state.runs.map((run) => run.id));
-            state.runs = [
-              ...state.runs,
-              ...page.runs.filter((run) => !shown.has(run.id)),
-            ];
-            state.next = page.next;
-          }
-        } finally {
-          if (!ended) {
-            state.loadingOlder = false;
-          }
-        }
+      current.showPage = (page: number) => {
+        state.page = page;
+        read(page);
       };
       read();
       let unsubscribe = subscribeToRealm(realm!, (event) => {
@@ -2471,8 +2456,6 @@ function runReason(run: ListedRun): RunReason | undefined {
 
 function runLook(run: ListedRun): { label: string; tone: RunTone } {
   switch (run.state) {
-    case 'pending':
-      return { label: 'Waiting', tone: 'neutral' };
     case 'running':
       return { label: 'Running', tone: 'info' };
     case 'complete':
@@ -2484,6 +2467,39 @@ function runLook(run: ListedRun): { label: string; tone: RunTone } {
         ? { label: 'Didn’t start', tone: 'warning' }
         : { label: 'Failed', tone: 'danger' };
   }
+}
+
+// How far a run got through the script's milestones, in a line: the
+// milestone a running run is in, the one a failed run failed in, or how many
+// a run that ended reached. Undefined when the script reported none.
+function runProgress(run: ListedRun): string | undefined {
+  let m = run.milestones;
+  if (!m || (m.milestones.length === 0 && m.plan.length === 0)) {
+    return undefined;
+  }
+  let reached = m.milestones.length;
+  let total = reached + m.ahead.length;
+  let last = m.milestones.at(-1);
+  let count =
+    last?.done !== undefined && last?.total !== undefined
+      ? ` (${tally(last.done)} of ${tally(last.total)})`
+      : '';
+  if (run.state === 'running') {
+    return m.current
+      ? `Milestone ${tally(reached)} of ${tally(total)}: ${m.current}${count}`
+      : `No milestone reached yet, ${tally(total)} planned`;
+  }
+  if (run.state === 'error' && m.failedIn) {
+    return `Failed in milestone ${tally(reached)} of ${tally(total)}: ${m.failedIn}`;
+  }
+  if (run.state === 'canceled' && last) {
+    return `Stopped in milestone ${tally(reached)} of ${tally(total)}: ${last.name}`;
+  }
+  return reached === 0
+    ? 'No milestone reached'
+    : `Reached ${tally(reached)} of ${tally(total)} ${
+        total === 1 ? 'milestone' : 'milestones'
+      }`;
 }
 
 // One row of the run list: a run, or a later slot that joined a run.
@@ -3399,12 +3415,13 @@ class ScriptEditor extends GlimmerComponent<{
 // The automation's runs, for the realm's direct writers: one row per run,
 // newest first, with what started the run, the run's state, and why a run
 // that didn't complete ended as the run did. A later slot of a schedule that
-// joined a run still waiting to start shows as its own row, above the run
-// the slot joined. Shows nothing to anyone else.
+// came due before the schedule's run had started, and joined that run, shows
+// as its own row above the run. Only runs that have started are listed, a
+// page at a time. Shows nothing to anyone else.
 class AutomationRuns extends GlimmerComponent<{
   Args: {
     runs: RunsState;
-    loadOlder: () => Promise<void>;
+    showPage: (page: number) => void;
     // The kind of each trigger the card declares, by label.
     triggerKind: (label: string | null) => string | undefined;
   };
@@ -3446,14 +3463,14 @@ class AutomationRuns extends GlimmerComponent<{
       : 'The trigger started the run.';
   };
   look = (run: ListedRun) => runLook(run);
+  progress = (run: ListedRun) => runProgress(run);
+  milestoneRows = (run: ListedRun) =>
+    run.milestones ? runMilestoneRows(run.milestones) : [];
   reason = (run: ListedRun) => runReason(run);
   slotTime = (slot: string | null) => slotTime(slot);
   // When the row's run last moved: when the run ended, started, or was made.
   when = (run: ListedRun) => run.finishedAt ?? run.startedAt ?? run.createdAt;
-  get loadingOlder() {
-    return this.args.runs.loadingOlder;
-  }
-  loadOlder = () => this.args.loadOlder();
+  showPage = (page: number) => this.args.showPage(page);
 
   <template>
     {{#if @runs.failed}}
@@ -3497,9 +3514,9 @@ class AutomationRuns extends GlimmerComponent<{
                   @hour='numeric'
                   @minute='2-digit'
                 />
-                slot: the slot joined the
+                slot because the
                 {{this.startedBy row.run}}
-                run still waiting to start
+                run
                 {{#let (this.slotTime row.run.slot) as |runSlot|}}
                   {{#if runSlot}}
                     for
@@ -3512,6 +3529,7 @@ class AutomationRuns extends GlimmerComponent<{
                     />
                   {{/if}}
                 {{/let}}
+                hadn’t started yet. The slot joined that run.
               </:description>
               <:trailing>
                 <RelativeTime @date={{row.skipped.at}} />
@@ -3550,6 +3568,14 @@ class AutomationRuns extends GlimmerComponent<{
                   <RelativeTime @date={{this.when row.run}} />
                 </:trailing>
                 <:default>
+                  {{#let (this.progress row.run) as |progress|}}
+                    {{#if progress}}
+                      <p
+                        class='runs__progress'
+                        data-test-automation-run-progress
+                      >{{progress}}</p>
+                    {{/if}}
+                  {{/let}}
                   {{#if reason}}
                     <p
                       class='runs__reason'
@@ -3574,20 +3600,40 @@ class AutomationRuns extends GlimmerComponent<{
             {{/let}}
           {{/if}}
         </:item>
+        <:expanded as |row|>
+          {{#if row.skipped}}
+            <p class='runs__expanded-note'>
+              Boxel started no run for the skipped slot, so the slot has no
+              milestones of its own.
+            </p>
+          {{else}}
+            {{#let (this.milestoneRows row.run) as |rows|}}
+              {{#if rows.length}}
+                <div data-test-automation-run-milestones>
+                  <MilestoneTimeline
+                    @rows={{rows}}
+                    @label='Milestones of the run'
+                  />
+                </div>
+              {{else}}
+                <p class='runs__expanded-note'>
+                  The script reported no milestones on the run. A script reports
+                  milestones with realm.progress.plan and
+                  realm.progress.milestone.
+                </p>
+              {{/if}}
+            {{/let}}
+          {{/if}}
+        </:expanded>
       </List>
-      {{#if @runs.next}}
-        <Button
-          class='runs__older'
-          @tone='neutral'
-          @appearance='outlined'
-          @size='s'
-          @busy={{this.loadingOlder}}
-          @busyLabel='Loading older runs'
-          {{on 'click' this.loadOlder}}
-          data-test-automation-runs-older
-        >
-          Show older runs
-        </Button>
+      {{#if (gt @runs.pages 1)}}
+        <Pagination
+          class='runs__pager'
+          @pages={{@runs.pages}}
+          @page={{@runs.page}}
+          @onPageChange={{this.showPage}}
+          data-test-automation-runs-pager
+        />
       {{/if}}
     {{else if @runs.loading}}
       <LoadingState @label='Loading runs' />
@@ -3596,7 +3642,7 @@ class AutomationRuns extends GlimmerComponent<{
         @size='s'
         @texture={{false}}
         @title='No runs yet'
-        @message='Each run shows here once a trigger fires, or once someone previews or runs the automation by hand.'
+        @message='A run shows here once the run starts, whether a trigger fired the run or someone previewed or ran the automation by hand.'
         data-test-automation-runs-empty
       />
     {{/if}}
@@ -3607,6 +3653,14 @@ class AutomationRuns extends GlimmerComponent<{
         display: block;
         inline-size: 7.5rem;
       }
+      .runs__progress {
+        margin-top: var(--boxel-sp-4xs);
+        font-weight: 600;
+      }
+      .runs__expanded-note {
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
+      }
       .runs__reason {
         margin-top: var(--boxel-sp-4xs);
         color: var(--foreground);
@@ -3614,9 +3668,8 @@ class AutomationRuns extends GlimmerComponent<{
       .runs__detail {
         margin-top: var(--boxel-sp-4xs);
       }
-      .runs__older {
-        justify-self: start;
-        margin-top: var(--boxel-sp-xs);
+      .runs__pager {
+        margin-top: var(--boxel-sp-sm);
       }
     </style>
   </template>
@@ -3682,7 +3735,11 @@ class Isolated extends Component<typeof Automation> {
   get showsRuns() {
     return this.runs.visible;
   }
-  loadOlderRuns = () => this.runList.current.loadOlder();
+  showRunsPage = (page: number) => this.runList.current.showPage(page);
+  get runsSummary() {
+    let total = this.runs.total;
+    return total === 1 ? '1 run' : `${total.toLocaleString('en-US')} runs`;
+  }
   triggerKindOf = (label: string | null) =>
     (this.args.model.triggers ?? []).find((trigger) => trigger?.label === label)
       ?.kind ?? undefined;
@@ -3834,12 +3891,13 @@ class Isolated extends Component<typeof Automation> {
       {{#if this.showsRuns}}
         <PanelSection
           @title='Runs'
-          @collapsible={{false}}
+          @defaultOpen={{false}}
+          @summary={{this.runsSummary}}
           data-test-automation-runs-section
         >
           <AutomationRuns
             @runs={{this.runs}}
-            @loadOlder={{this.loadOlderRuns}}
+            @showPage={{this.showRunsPage}}
             @triggerKind={{this.triggerKindOf}}
           />
         </PanelSection>
@@ -3978,6 +4036,11 @@ class Isolated extends Component<typeof Automation> {
     </article>
     <style scoped>
       .automation {
+        /* The containing block of the visually hidden text Pret UI
+           components carry, which is positioned: without one here, that
+           text lands on the host's card container, which then scrolls as
+           well as this view. */
+        position: relative;
         display: grid;
         align-content: start;
         gap: var(--boxel-sp-lg);
