@@ -7,6 +7,7 @@ import { modifier } from 'ember-modifier';
 import { resource, use } from 'ember-resources';
 import { TrackedObject } from 'tracked-built-ins';
 import { markDefinition } from '@cardstack/base/mark-definition';
+import { nowDate } from '@cardstack/base/helpers/clock';
 import {
   CardDef,
   Component,
@@ -2258,7 +2259,7 @@ function automationRuns(
             total: 0,
             failed: false,
             paging: false,
-            readAt: new Date(),
+            readAt: nowDate(),
           }),
           page: 1,
           showPage: () => undefined,
@@ -2287,7 +2288,7 @@ function automationRuns(
             current.page = answer.page;
             state.visible = answer.visible;
             state.runs = answer.runs;
-            state.readAt = new Date();
+            state.readAt = nowDate();
             state.page = answer.page;
             state.pages = answer.pages;
             state.total = answer.total;
@@ -3478,14 +3479,18 @@ class AutomationRuns extends GlimmerComponent<{
   }
   rowKey = (row: RunRow) => row.key;
   // Each row's accessible name, which names the row's expander and detail:
-  // with the slot's time, or the time the run was made, so rows of one
-  // trigger read apart.
-  rowLabel = (row: RunRow) =>
-    row.skipped
-      ? `Skipped ${row.skipped.trigger} slot for ${rowTime(row.skipped.slot)}`
-      : `${this.startedBy(row.run)} run for ${rowTime(
-          slotTime(row.run.slot) ?? row.run.createdAt,
-        )}, ${runLook(row.run).label}`;
+  // with the slot's time, or, for a run that served no slot, the time the
+  // run was made, so rows of one trigger read apart.
+  rowLabel = (row: RunRow) => {
+    if (row.skipped) {
+      return `Skipped ${row.skipped.trigger} slot for ${rowTime(row.skipped.slot)}`;
+    }
+    let slot = slotTime(row.run.slot);
+    let when = slot
+      ? `for ${rowTime(slot)}`
+      : `made ${rowTime(row.run.createdAt)}`;
+    return `${this.startedBy(row.run)} run ${when}, ${runLook(row.run).label}`;
+  };
   startedBy = (run: ListedRun): string => {
     switch (run.startedBy) {
       case 'preview':
