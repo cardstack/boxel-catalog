@@ -2111,8 +2111,7 @@ function automationStatus(
 // run is, how the run ended and why, and the trigger's later slots that
 // joined a run while the run waited (the slots Boxel skipped). Any other
 // viewer is told the viewer isn't a direct writer, and the card shows no runs.
-// A listed run has started, so it is never still waiting in the queue.
-type RunState = 'running' | 'complete' | 'error' | 'canceled';
+type RunState = 'pending' | 'running' | 'complete' | 'error' | 'canceled';
 interface JoinedSlot {
   trigger: string;
   slot: string;
@@ -2140,6 +2139,19 @@ interface ListedRun {
   // The milestones the script planned and the run reached, in the shape the
   // status route gives the last run's.
   milestones: LastRun | null;
+  // For a run still waiting for its first attempt, what the run waits for:
+  // the automation's run ahead of it in the queue, or a Boxel worker.
+  waitingFor:
+    | {
+        kind: 'run';
+        runId: string;
+        startedBy: ListedRun['startedBy'];
+        trigger: string | null;
+        slot: string | null;
+        state: 'pending' | 'running';
+      }
+    | { kind: 'worker' }
+    | null;
 }
 type RunsState = {
   // Whether the route answered that the viewer is a direct writer.
@@ -2195,10 +2207,10 @@ async function readRunsPage(
   };
 }
 
-// The automation's runs that have started, a page at a time, kept live: a
-// `job` realm event naming the automation (a run starts, reaches a
-// milestone, commits or ends) and an `automation` event (a pause or remove
-// cancels the automation's runs) read the page shown again.
+// The automation's runs, a page at a time, kept live: a `job` realm event
+// naming the automation (a run is made, starts, reaches a milestone,
+// commits or ends) and an `automation` event (a pause or remove cancels the
+// automation's runs) read the page shown again.
 function automationRuns(
   owner: object,
   args: () => {
@@ -2456,6 +2468,8 @@ function runReason(run: ListedRun): RunReason | undefined {
 
 function runLook(run: ListedRun): { label: string; tone: RunTone } {
   switch (run.state) {
+    case 'pending':
+      return { label: 'Waiting', tone: 'neutral' };
     case 'running':
       return { label: 'Running', tone: 'info' };
     case 'complete':
@@ -2480,13 +2494,9 @@ function runProgress(run: ListedRun): string | undefined {
   let reached = m.milestones.length;
   let total = reached + m.ahead.length;
   let last = m.milestones.at(-1);
-  let count =
-    last?.done !== undefined && last?.total !== undefined
-      ? ` (${tally(last.done)} of ${tally(last.total)})`
-      : '';
   if (run.state === 'running') {
     return m.current
-      ? `Milestone ${tally(reached)} of ${tally(total)}: ${m.current}${count}`
+      ? `Milestone ${tally(reached)} of ${tally(total)}: ${m.current}`
       : `No milestone reached yet, ${tally(total)} planned`;
   }
   if (run.state === 'error' && m.failedIn) {
@@ -3416,8 +3426,8 @@ class ScriptEditor extends GlimmerComponent<{
 // newest first, with what started the run, the run's state, and why a run
 // that didn't complete ended as the run did. A later slot of a schedule that
 // came due before the schedule's run had started, and joined that run, shows
-// as its own row above the run. Only runs that have started are listed, a
-// page at a time. Shows nothing to anyone else.
+// as its own row above the run. Runs are listed a page at a time, from the
+// moment a trigger fires. Shows nothing to anyone else.
 class AutomationRuns extends GlimmerComponent<{
   Args: {
     runs: RunsState;
@@ -3454,15 +3464,34 @@ class AutomationRuns extends GlimmerComponent<{
     }
     let kind = this.args.triggerKind(run.trigger);
     if (kind === 'webhook') {
-      return 'A webhook delivery started the run.';
+      return 'A webhook delivery fired the run.';
     }
     return slotTime(run.slot)
       ? kind === 'once'
-        ? 'The one-time trigger started the run for'
-        : 'The schedule started the run for'
-      : 'The trigger started the run.';
+        ? 'The one-time trigger fired the run for'
+        : 'The schedule fired the run for'
+      : 'The trigger fired the run.';
   };
   look = (run: ListedRun) => runLook(run);
+  // The run ahead of a waiting run in the automation's queue, when one is.
+  aheadOf = (run: ListedRun) =>
+    run.waitingFor?.kind === 'run' ? run.waitingFor : undefined;
+  // Whether the run is in its admission checks: an attempt started the run
+  // and checks that the run may start before the script runs.
+  admitting = (run: ListedRun) =>
+    run.state === 'running' && run.step === 'admission';
+  // The name a run goes by in a sentence: its trigger's label, or Preview or
+  // Run now.
+  runName = (run: Pick<ListedRun, 'startedBy' | 'trigger'>): string => {
+    switch (run.startedBy) {
+      case 'preview':
+        return 'Preview';
+      case 'run-now':
+        return 'Run now';
+      default:
+        return run.trigger || 'unnamed trigger';
+    }
+  };
   progress = (run: ListedRun) => runProgress(run);
   milestoneRows = (run: ListedRun) =>
     run.milestones ? runMilestoneRows(run.milestones) : [];
@@ -3568,6 +3597,42 @@ class AutomationRuns extends GlimmerComponent<{
                   <RelativeTime @date={{this.when row.run}} />
                 </:trailing>
                 <:default>
+                  {{#if row.run.waitingFor}}
+                    <p
+                      class='runs__reason'
+                      data-test-automation-run-waiting={{row.run.waitingFor.kind}}
+                    >
+                      {{#let (this.aheadOf row.run) as |ahead|}}
+                        {{#if ahead}}
+                          Waiting for the
+                          {{this.runName ahead}}
+                          run
+                          {{#let (this.slotTime ahead.slot) as |aheadSlot|}}
+                            {{#if aheadSlot}}
+                              for
+                              <FormatDate
+                                @date={{aheadSlot}}
+                                @month='short'
+                                @day='numeric'
+                                @hour='numeric'
+                                @minute='2-digit'
+                              />
+                            {{/if}}
+                          {{/let}}
+                          to finish first: Boxel runs one run of an automation
+                          at a time.
+                        {{else}}
+                          Waiting for a Boxel worker.
+                        {{/if}}
+                      {{/let}}
+                    </p>
+                  {{else if (this.admitting row.run)}}
+                    <p class='runs__reason' data-test-automation-run-admitting>
+                      Checking that the run may start: the payer’s access, the
+                      script, the outside services the automation calls, and the
+                      credits.
+                    </p>
+                  {{/if}}
                   {{#let (this.progress row.run) as |progress|}}
                     {{#if progress}}
                       <p
@@ -3642,7 +3707,7 @@ class AutomationRuns extends GlimmerComponent<{
         @size='s'
         @texture={{false}}
         @title='No runs yet'
-        @message='A run shows here once the run starts, whether a trigger fired the run or someone previewed or ran the automation by hand.'
+        @message='A run shows here as soon as a trigger fires, or someone previews or runs the automation by hand.'
         data-test-automation-runs-empty
       />
     {{/if}}
