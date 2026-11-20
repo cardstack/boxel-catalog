@@ -2164,6 +2164,10 @@ type RunsState = {
   pages: number;
   total: number;
   failed: boolean;
+  // A page the viewer asked for is still loading.
+  paging: boolean;
+  // When the shown page was read, which the rows' relative times count from.
+  readAt: Date;
 };
 
 const RUNS_PATH = '_automation-runs';
@@ -2224,6 +2228,10 @@ function automationRuns(
     | {
         url: string | undefined;
         state: RunsState;
+        // The page the reads ask for: kept out of tracked state, since the
+        // resource's first read runs while the resource sets up, and a
+        // tracked read there would run the resource again on every answer.
+        page: number;
         showPage: (page: number) => void;
       }
     | undefined;
@@ -2249,7 +2257,10 @@ function automationRuns(
             pages: 1,
             total: 0,
             failed: false,
+            paging: false,
+            readAt: new Date(),
           }),
+          page: 1,
           showPage: () => undefined,
         };
       }
@@ -2261,7 +2272,7 @@ function automationRuns(
       }
       let ended = false;
       let latest = 0;
-      let read = async (page = state.page) => {
+      let read = async (page: number) => {
         let asked = ++latest;
         await Promise.resolve();
         if (ended || asked !== latest) {
@@ -2273,8 +2284,10 @@ function automationRuns(
             return;
           }
           if (answer) {
+            current.page = answer.page;
             state.visible = answer.visible;
             state.runs = answer.runs;
+            state.readAt = new Date();
             state.page = answer.page;
             state.pages = answer.pages;
             state.total = answer.total;
@@ -2289,20 +2302,22 @@ function automationRuns(
         } finally {
           if (!ended && asked === latest) {
             state.loading = false;
+            state.paging = false;
           }
         }
       };
       current.showPage = (page: number) => {
-        state.page = page;
+        current.page = page;
+        state.paging = true;
         read(page);
       };
-      read();
+      read(current.page);
       let unsubscribe = subscribeToRealm(realm!, (event) => {
         if (
           (event.eventName === 'job' || event.eventName === 'automation') &&
           event.automation === id
         ) {
-          read();
+          read(current.page);
         }
       });
       on.cleanup(() => {
@@ -2316,8 +2331,8 @@ function automationRuns(
 
 type RunTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
-// The spending and access refusals that mean Boxel never started the run,
-// in plain words. Each names who acts and what fixes it.
+// The admission refusals that mean Boxel never started the run, in plain
+// words: each says why, and who does what so the next run starts.
 const NOT_STARTED: Record<string, string> = {
   'insufficient-credits':
     'Boxel didn’t start the run because the payer’s credit balance was too low. Boxel starts the next run once the payer adds credits.',
@@ -2326,31 +2341,37 @@ const NOT_STARTED: Record<string, string> = {
   'monthly-credit-cap-reached':
     'Boxel didn’t start the run because the automation reached the monthly credit limit. Boxel starts runs again the next month, or once someone raises the limit and resumes the automation.',
   'pricing-unavailable':
-    'Boxel didn’t start the run because Boxel couldn’t read the current prices. Boxel starts the next run once the prices are back.',
+    'Boxel didn’t start the run because Boxel couldn’t read the current prices. Boxel starts the next run once Boxel can read the prices again.',
   'not-a-direct-writer':
-    'Boxel didn’t start the run because the person the run acts as can no longer edit this workspace.',
+    'Boxel didn’t start the run because the person the run acts as can no longer edit this workspace. Someone who can edit this workspace resumes the automation and becomes the payer.',
   'session-revoked':
     'Boxel didn’t start the run because the person the run acts as signed out of every session. That person signs in again, and someone who can edit this workspace resumes the automation.',
   'account-deactivated':
-    'Boxel didn’t start the run because someone deactivated the account of the person the run acts as.',
+    'Boxel didn’t start the run because someone deactivated the account of the person the run acts as. Someone who can edit this workspace resumes the automation and becomes the payer.',
+  'account-unverifiable':
+    'Boxel didn’t start the run because Boxel couldn’t check the account of the person the run acts as. Boxel checks again at the next run.',
   'payer-changed':
     'Boxel didn’t start the run because someone else became the payer after Boxel queued the run. The next run acts as the new payer.',
   'automation-paused':
-    'Boxel didn’t start the run because someone paused the automation after Boxel queued the run.',
+    'Boxel didn’t start the run because someone paused the automation after Boxel queued the run. Boxel starts runs again once someone who can edit this workspace resumes the automation.',
   'not-switched-on':
-    'Boxel didn’t start the run because nobody has the automation turned on.',
+    'Boxel didn’t start the run because nobody has the automation turned on. Boxel starts runs once someone who can edit this workspace turns the automation on.',
   'missing-script':
-    'Boxel didn’t start the run because Boxel couldn’t read the script.',
+    'Boxel didn’t start the run because Boxel couldn’t read the script. Someone fixes the script link in the edit view.',
   'not-an-automation':
-    'Boxel didn’t start the run because the card no longer reads as an automation.',
+    'Boxel didn’t start the run because the card no longer reads as an automation. Someone fixes the automation’s settings in the edit view.',
   'binding-not-approved':
-    'Boxel didn’t start the run because nobody approved an outside service the automation calls.',
+    'Boxel didn’t start the run because nobody approved an outside service the automation calls. The person the run acts as approves the service in the secure window.',
   'binding-needs-reapproval':
-    'Boxel didn’t start the run because an outside service the automation calls changed since someone approved the service. The person approves the service again in the secure window.',
+    'Boxel didn’t start the run because an outside service the automation calls changed since someone approved the service. The person the run acts as approves the service again in the secure window.',
   'share-suspended':
-    'Boxel didn’t start the run because someone suspended the shared key an outside service uses.',
+    'Boxel didn’t start the run because someone suspended the shared key an outside service uses. Someone who can edit this workspace resumes the shared key, or the key’s owner swaps in another key.',
   'credential-rejected':
-    'Boxel didn’t start the run because the outside service refused the key or connection the automation uses.',
+    'Boxel didn’t start the run because the outside service refused the key or connection the automation uses. The person the run acts as reconnects or replaces the key.',
+  'run-admission-failed':
+    'Boxel didn’t start the run because Boxel couldn’t ask the workspace whether the run may start. Boxel asks again at the next run.',
+  'run-admission-unavailable':
+    'Boxel didn’t start the run because a published workspace doesn’t run automations.',
 };
 
 // Why Boxel paused the automation, for a run the pause canceled when no
@@ -2420,7 +2441,7 @@ function runReason(run: ListedRun): RunReason | undefined {
     case 'script-error':
       return run.step === 'admission'
         ? {
-            text: 'Boxel didn’t start the run because the script doesn’t parse.',
+            text: 'Boxel didn’t start the run because the script is empty, too long, or doesn’t parse. Someone fixes the script in the edit view.',
             detail: message,
           }
         : {
@@ -2438,15 +2459,17 @@ function runReason(run: ListedRun): RunReason | undefined {
       };
     case 'timed-out':
       return {
-        text: 'Boxel stopped the run when the run reached the time limit.',
+        text: 'Boxel stopped the run when the run reached the time limit. Someone who can edit this workspace raises the limit in the edit view and resumes the automation.',
       };
     case 'hit-a-cap': {
       let cap = message ? HIT_A_CAP.exec(message)?.[1] : undefined;
       let words = cap ? CAP_WORDS[cap] : undefined;
       return {
-        text: words
-          ? `Boxel stopped the run when the run reached the limit on ${words}.`
-          : 'Boxel stopped the run when the run reached one of the run’s limits.',
+        text: `${
+          words
+            ? `Boxel stopped the run when the run reached the limit on ${words}.`
+            : 'Boxel stopped the run when the run reached one of the run’s limits.'
+        } Someone who can edit this workspace raises the limit in the edit view and resumes the automation.`,
       };
     }
   }
@@ -2456,7 +2479,7 @@ function runReason(run: ListedRun): RunReason | undefined {
   }
   if (run.step === 'admission') {
     return {
-      text: 'Boxel didn’t start the run because Boxel refused an outside service the automation calls.',
+      text: 'Boxel didn’t start the run because Boxel couldn’t use an outside service the automation calls. Someone fixes the service in the automation’s settings.',
       detail: message,
     };
   }
@@ -2497,7 +2520,7 @@ function runProgress(run: ListedRun): string | undefined {
   if (run.state === 'running') {
     return m.current
       ? `Milestone ${tally(reached)} of ${tally(total)}: ${m.current}`
-      : `No milestone reached yet, ${tally(total)} planned`;
+      : `The run has reached no milestone yet; the script plans ${tally(total)}.`;
   }
   if (run.state === 'error' && m.failedIn) {
     return `Failed in milestone ${tally(reached)} of ${tally(total)}: ${m.failedIn}`;
@@ -2506,10 +2529,24 @@ function runProgress(run: ListedRun): string | undefined {
     return `Stopped in milestone ${tally(reached)} of ${tally(total)}: ${last.name}`;
   }
   return reached === 0
-    ? 'No milestone reached'
+    ? 'The run reached no milestone.'
     : `Reached ${tally(reached)} of ${tally(total)} ${
         total === 1 ? 'milestone' : 'milestones'
       }`;
+}
+
+// A time in a row's accessible name, as the row shows the time: "Nov 20,
+// 10:00 AM" in the viewer's own zone. One formatter serves every row, since
+// each formatter holds native memory the engine never frees.
+const ROW_TIME = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+});
+function rowTime(iso: string): string {
+  let date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? iso : ROW_TIME.format(date);
 }
 
 // One row of the run list: a run, or a later slot that joined a run.
@@ -3440,10 +3477,15 @@ class AutomationRuns extends GlimmerComponent<{
     return runRows(this.args.runs.runs);
   }
   rowKey = (row: RunRow) => row.key;
+  // Each row's accessible name, which names the row's expander and detail:
+  // with the slot's time, or the time the run was made, so rows of one
+  // trigger read apart.
   rowLabel = (row: RunRow) =>
     row.skipped
-      ? `Skipped ${row.skipped.trigger} slot`
-      : `${this.startedBy(row.run)} run, ${runLook(row.run).label}`;
+      ? `Skipped ${row.skipped.trigger} slot for ${rowTime(row.skipped.slot)}`
+      : `${this.startedBy(row.run)} run for ${rowTime(
+          slotTime(row.run.slot) ?? row.run.createdAt,
+        )}, ${runLook(row.run).label}`;
   startedBy = (run: ListedRun): string => {
     switch (run.startedBy) {
       case 'preview':
@@ -3518,6 +3560,7 @@ class AutomationRuns extends GlimmerComponent<{
         @rowLabel={{this.rowLabel}}
         @label='Runs of the automation'
         @bordered={{true}}
+        @busy={{@runs.paging}}
         data-test-automation-runs
       >
         <:item as |row|>
@@ -3561,7 +3604,7 @@ class AutomationRuns extends GlimmerComponent<{
                 hadn’t started yet. The slot joined that run.
               </:description>
               <:trailing>
-                <RelativeTime @date={{row.skipped.at}} />
+                <RelativeTime @date={{row.skipped.at}} @now={{@runs.readAt}} />
               </:trailing>
             </Item>
           {{else}}
@@ -3594,7 +3637,10 @@ class AutomationRuns extends GlimmerComponent<{
                   {{/let}}
                 </:description>
                 <:trailing>
-                  <RelativeTime @date={{this.when row.run}} />
+                  <RelativeTime
+                    @date={{this.when row.run}}
+                    @now={{@runs.readAt}}
+                  />
                 </:trailing>
                 <:default>
                   {{#if row.run.waitingFor}}
@@ -3628,9 +3674,9 @@ class AutomationRuns extends GlimmerComponent<{
                     </p>
                   {{else if (this.admitting row.run)}}
                     <p class='runs__reason' data-test-automation-run-admitting>
-                      Checking that the run may start: the payer’s access, the
-                      script, the outside services the automation calls, and the
-                      credits.
+                      Boxel is checking that the run may start: the payer’s
+                      access, the script, the outside services the automation
+                      calls, and the credits.
                     </p>
                   {{/if}}
                   {{#let (this.progress row.run) as |progress|}}
@@ -3668,8 +3714,8 @@ class AutomationRuns extends GlimmerComponent<{
         <:expanded as |row|>
           {{#if row.skipped}}
             <p class='runs__expanded-note'>
-              Boxel started no run for the skipped slot, so the slot has no
-              milestones of its own.
+              Boxel started no run for the skipped slot, so the skipped slot has
+              no milestones.
             </p>
           {{else}}
             {{#let (this.milestoneRows row.run) as |rows|}}
@@ -3728,7 +3774,6 @@ class AutomationRuns extends GlimmerComponent<{
       }
       .runs__reason {
         margin-top: var(--boxel-sp-4xs);
-        color: var(--foreground);
       }
       .runs__detail {
         margin-top: var(--boxel-sp-4xs);
