@@ -47,6 +47,7 @@ import ReadSourceTool from '@cardstack/boxel-host/tools/read-source';
 import WriteTextFileTool from '@cardstack/boxel-host/tools/write-text-file';
 import { Button } from '@cardstack/pretui/components/button';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
+import { List } from '@cardstack/pretui/components/list';
 import { LoadingState } from '@cardstack/pretui/components/loading-state';
 import { Callout } from '@cardstack/pretui/components/callout';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
@@ -2104,6 +2105,414 @@ function automationStatus(
   );
 }
 
+// An automation's runs, newest first, as the realm's `_automation-runs` route
+// lists them to the realm's direct writers: what started each run, where the
+// run is, how the run ended and why, and the trigger's later slots that
+// joined a run while the run waited (the slots Boxel skipped). Any other
+// viewer is told the viewer isn't a direct writer, and the card shows no runs.
+type RunState = 'pending' | 'running' | 'complete' | 'error' | 'canceled';
+interface JoinedSlot {
+  trigger: string;
+  slot: string;
+  at: string;
+}
+interface ListedRun {
+  id: string;
+  startedBy: 'trigger' | 'preview' | 'run-now';
+  trigger: string | null;
+  slot: string | null;
+  state: RunState;
+  // The step the run is in, or the step an ended run got to: an error at
+  // `admission` means Boxel never started the script.
+  step: 'admission' | 'script' | 'commit' | null;
+  errorReason: string | null;
+  errorMessage: string | null;
+  scriptLine: number | null;
+  canceledBy: string | null;
+  canceledByAPerson: boolean;
+  viewerCanceled: boolean;
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  joined: JoinedSlot[];
+}
+type RunsState = {
+  // Whether the route answered that the viewer is a direct writer.
+  visible: boolean;
+  loading: boolean;
+  runs: ListedRun[];
+  // The `before` for the page of older runs, or null when the list reached
+  // the oldest.
+  next: string | null;
+  loadingOlder: boolean;
+  failed: boolean;
+};
+
+const RUNS_PATH = '_automation-runs';
+// The runs one page holds.
+const RUNS_PAGE = 20;
+// The most runs a re-read asks for at once, the route's own limit.
+const RUNS_MAX_PAGE = 100;
+
+interface RunsPage {
+  visible: boolean;
+  runs: ListedRun[];
+  next: string | null;
+}
+
+async function readRunsPage(
+  tools: Tools,
+  url: string,
+  limit: number,
+  before?: string,
+): Promise<RunsPage | undefined> {
+  let pageURL = `${url}&limit=${limit}${
+    before ? `&before=${encodeURIComponent(before)}` : ''
+  }`;
+  let result = await new AuthedFetchTool(tools).execute({
+    url: pageURL,
+    acceptHeader: 'application/json',
+  });
+  if (!result.ok) {
+    return undefined;
+  }
+  if (result.body?.meta?.directWriter === false) {
+    return { visible: false, runs: [], next: null };
+  }
+  let data = (result.body?.data ?? []) as {
+    id: string;
+    attributes: Omit<ListedRun, 'id'>;
+  }[];
+  return {
+    visible: true,
+    runs: data.map(({ id, attributes }) => ({ id, ...attributes })),
+    next: (result.body?.meta?.next as string | null | undefined) ?? null,
+  };
+}
+
+// The automation's runs, kept live: a `job` realm event naming the
+// automation (a run is made, starts, reaches a milestone, commits or ends)
+// and an `automation` event (a pause or remove cancels the automation's
+// runs) read the runs the view shows again, as many as the viewer has
+// paged through.
+function automationRuns(
+  owner: object,
+  args: () => {
+    id: string | undefined;
+    realm: string | undefined;
+    realmId: string | undefined;
+    tools: Tools | undefined;
+  },
+) {
+  let kept:
+    | {
+        url: string | undefined;
+        state: RunsState;
+        loadOlder: () => Promise<void>;
+      }
+    | undefined;
+  return use(
+    owner,
+    resource(({ on }) => {
+      let { id, realm, realmId, tools } = args();
+      let path = id && realmId ? pathInRealm(id, realmId) : undefined;
+      let url =
+        realm && path !== undefined
+          ? `${realm}${RUNS_PATH}?automation=${encodeURIComponent(
+              realm + path,
+            )}`
+          : undefined;
+      if (!kept || kept.url !== url) {
+        kept = {
+          url,
+          state: new TrackedObject<RunsState>({
+            visible: false,
+            loading: true,
+            runs: [],
+            next: null,
+            loadingOlder: false,
+            failed: false,
+          }),
+          loadOlder: async () => undefined,
+        };
+      }
+      let current = kept;
+      let state = current.state;
+      if (!url || !tools) {
+        state.loading = false;
+        return current;
+      }
+      let ended = false;
+      let latest = 0;
+      let read = async () => {
+        let asked = ++latest;
+        await Promise.resolve();
+        if (ended || asked !== latest) {
+          return;
+        }
+        let limit = Math.min(
+          Math.max(state.runs.length, RUNS_PAGE),
+          RUNS_MAX_PAGE,
+        );
+        try {
+          let page = await readRunsPage(tools, url, limit);
+          if (ended || asked !== latest) {
+            return;
+          }
+          if (page) {
+            state.visible = page.visible;
+            state.runs = page.runs;
+            state.next = page.next;
+            state.failed = false;
+          } else {
+            state.failed = state.visible;
+          }
+        } catch {
+          if (!ended && asked === latest) {
+            state.failed = state.visible;
+          }
+        } finally {
+          if (!ended && asked === latest) {
+            state.loading = false;
+          }
+        }
+      };
+      current.loadOlder = async () => {
+        let before = state.next;
+        if (!before || state.loadingOlder) {
+          return;
+        }
+        state.loadingOlder = true;
+        try {
+          let page = await readRunsPage(tools, url, RUNS_PAGE, before);
+          if (!ended && page && state.next === before) {
+            let shown = new Set(state.runs.map((run) => run.id));
+            state.runs = [
+              ...state.runs,
+              ...page.runs.filter((run) => !shown.has(run.id)),
+            ];
+            state.next = page.next;
+          }
+        } finally {
+          if (!ended) {
+            state.loadingOlder = false;
+          }
+        }
+      };
+      read();
+      let unsubscribe = subscribeToRealm(realm!, (event) => {
+        if (
+          (event.eventName === 'job' || event.eventName === 'automation') &&
+          event.automation === id
+        ) {
+          read();
+        }
+      });
+      on.cleanup(() => {
+        ended = true;
+        unsubscribe?.();
+      });
+      return current;
+    }),
+  );
+}
+
+type RunTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+
+// The spending and access refusals that mean Boxel never started the run,
+// in plain words. Each names who acts and what fixes it.
+const NOT_STARTED: Record<string, string> = {
+  'insufficient-credits':
+    'Boxel didn’t start the run because the payer’s credit balance was too low. Boxel starts the next run once the payer adds credits.',
+  'daily-credit-cap-reached':
+    'Boxel didn’t start the run because the automation reached the daily credit limit. Boxel starts runs again the next day, or once someone raises the limit and resumes the automation.',
+  'monthly-credit-cap-reached':
+    'Boxel didn’t start the run because the automation reached the monthly credit limit. Boxel starts runs again the next month, or once someone raises the limit and resumes the automation.',
+  'pricing-unavailable':
+    'Boxel didn’t start the run because Boxel couldn’t read the current prices. Boxel starts the next run once the prices are back.',
+  'not-a-direct-writer':
+    'Boxel didn’t start the run because the person the run acts as can no longer edit this workspace.',
+  'session-revoked':
+    'Boxel didn’t start the run because the person the run acts as signed out of every session. That person signs in again, and someone who can edit this workspace resumes the automation.',
+  'account-deactivated':
+    'Boxel didn’t start the run because someone deactivated the account of the person the run acts as.',
+  'payer-changed':
+    'Boxel didn’t start the run because someone else became the payer after Boxel queued the run. The next run acts as the new payer.',
+  'automation-paused':
+    'Boxel didn’t start the run because someone paused the automation after Boxel queued the run.',
+  'not-switched-on':
+    'Boxel didn’t start the run because nobody has the automation turned on.',
+  'missing-script':
+    'Boxel didn’t start the run because Boxel couldn’t read the script.',
+  'not-an-automation':
+    'Boxel didn’t start the run because the card no longer reads as an automation.',
+  'binding-not-approved':
+    'Boxel didn’t start the run because nobody approved an outside service the automation calls.',
+  'binding-needs-reapproval':
+    'Boxel didn’t start the run because an outside service the automation calls changed since someone approved the service. The person approves the service again in the secure window.',
+  'share-suspended':
+    'Boxel didn’t start the run because someone suspended the shared key an outside service uses.',
+  'credential-rejected':
+    'Boxel didn’t start the run because the outside service refused the key or connection the automation uses.',
+};
+
+// Why Boxel paused the automation, for a run the pause canceled when no
+// person asked for the pause.
+const PAUSE_CANCELED: Record<string, string> = {
+  'caps-raised':
+    'Boxel canceled the run when Boxel paused the automation: someone raised a limit above what the payer agreed to pay for.',
+  'batched-ai-enabled':
+    'Boxel canceled the run when Boxel paused the automation: someone turned on batched AI after the payer agreed to the limits.',
+  'webhook-changed':
+    'Boxel canceled the run when Boxel paused the automation: a workspace administrator pointed a trigger at a webhook the payer didn’t agree to.',
+  'payer-lost-access':
+    'Boxel canceled the run when Boxel paused the automation: the payer can no longer edit this workspace.',
+  'realm-archived':
+    'Boxel canceled the run when someone archived this workspace.',
+  'repeated-failures':
+    'Boxel canceled the run when Boxel paused the automation after the automation’s runs kept failing.',
+  'invalid-declaration':
+    'Boxel canceled the run when Boxel paused the automation: the automation’s settings have problems.',
+};
+
+// A run's per-run limit in words, by the name the server's message gives
+// the limit (`The run hit its writes cap`).
+const CAP_WORDS: Record<string, string> = {
+  callApiCalls: 'outside calls',
+  responseBytes: 'outside response size',
+  resolveCalls: 'AI requests',
+  aiCredits: 'AI spending',
+  writes: 'saves',
+  seconds: 'time',
+};
+
+const HIT_A_CAP = /hit its (\w+) cap/;
+
+interface RunReason {
+  // A sentence on why the run ended as the run did.
+  text: string;
+  // The server's own detail, when the sentence doesn't already carry it.
+  detail?: string;
+  // The script line a script's error points at.
+  line?: number;
+}
+
+function runReason(run: ListedRun): RunReason | undefined {
+  if (run.state === 'canceled') {
+    if (run.canceledByAPerson) {
+      return {
+        text: run.viewerCanceled
+          ? 'You canceled the run.'
+          : run.canceledBy
+            ? `${run.canceledBy} canceled the run.`
+            : 'A person who shares no workspace with you canceled the run.',
+      };
+    }
+    return {
+      text:
+        (run.errorReason && PAUSE_CANCELED[run.errorReason]) ??
+        'Boxel canceled the run.',
+    };
+  }
+  if (run.state !== 'error') {
+    return undefined;
+  }
+  let reason = run.errorReason ?? '';
+  let message = run.errorMessage ?? undefined;
+  switch (reason) {
+    case 'script-error':
+      return run.step === 'admission'
+        ? {
+            text: 'Boxel didn’t start the run because the script doesn’t parse.',
+            detail: message,
+          }
+        : {
+            text:
+              run.scriptLine !== null
+                ? 'The script threw an error on line'
+                : 'The script threw an error.',
+            detail: message,
+            line: run.scriptLine ?? undefined,
+          };
+    case 'call-failed':
+      return {
+        text: 'A call the script made failed, and the script didn’t catch the error.',
+        detail: message,
+      };
+    case 'timed-out':
+      return {
+        text: 'Boxel stopped the run when the run reached the time limit.',
+      };
+    case 'hit-a-cap': {
+      let cap = message ? HIT_A_CAP.exec(message)?.[1] : undefined;
+      let words = cap ? CAP_WORDS[cap] : undefined;
+      return {
+        text: words
+          ? `Boxel stopped the run when the run reached the limit on ${words}.`
+          : 'Boxel stopped the run when the run reached one of the run’s limits.',
+      };
+    }
+  }
+  let notStarted = NOT_STARTED[reason];
+  if (notStarted) {
+    return { text: notStarted, detail: message };
+  }
+  if (run.step === 'admission') {
+    return {
+      text: 'Boxel didn’t start the run because Boxel refused an outside service the automation calls.',
+      detail: message,
+    };
+  }
+  return {
+    text: 'Boxel couldn’t finish the run.',
+    detail: message ?? (reason || undefined),
+  };
+}
+
+function runLook(run: ListedRun): { label: string; tone: RunTone } {
+  switch (run.state) {
+    case 'pending':
+      return { label: 'Waiting', tone: 'neutral' };
+    case 'running':
+      return { label: 'Running', tone: 'info' };
+    case 'complete':
+      return { label: 'Complete', tone: 'success' };
+    case 'canceled':
+      return { label: 'Canceled', tone: 'warning' };
+    case 'error':
+      return run.step === 'admission'
+        ? { label: 'Didn’t start', tone: 'warning' }
+        : { label: 'Failed', tone: 'danger' };
+  }
+}
+
+// One row of the run list: a run, or a later slot that joined a run.
+// `skipped` is the joined slot on a skipped slot's row, absent on a run's.
+interface RunRow {
+  key: string;
+  run: ListedRun;
+  skipped?: JoinedSlot;
+}
+
+function runRows(runs: ListedRun[]): RunRow[] {
+  let rows: RunRow[] = [];
+  for (let run of runs) {
+    // A slot joins a run after the run was made, so the slots come first,
+    // newest first, like the runs.
+    for (let slot of [...run.joined].reverse()) {
+      rows.push({ key: `${run.id}:${slot.slot}`, run, skipped: slot });
+    }
+    rows.push({ key: run.id, run });
+  }
+  return rows;
+}
+
+// When a scheduled slot fires, as an ISO time; undefined for a webhook
+// delivery's id.
+function slotTime(slot: string | null): string | undefined {
+  return slot && !Number.isNaN(Date.parse(slot)) ? slot : undefined;
+}
+
 type Tone = 'neutral' | 'success' | 'warning' | 'info';
 interface StateLook {
   label: string;
@@ -2987,6 +3396,223 @@ class ScriptEditor extends GlimmerComponent<{
   </template>
 }
 
+// The automation's runs, for the realm's direct writers: one row per run,
+// newest first, with what started the run, the run's state, and why a run
+// that didn't complete ended as the run did. A later slot of a schedule that
+// joined a run still waiting to start shows as its own row, above the run
+// the slot joined. Shows nothing to anyone else.
+class AutomationRuns extends GlimmerComponent<{
+  Args: {
+    runs: RunsState;
+    loadOlder: () => Promise<void>;
+    // The kind of each trigger the card declares, by label.
+    triggerKind: (label: string | null) => string | undefined;
+  };
+}> {
+  get rows() {
+    return runRows(this.args.runs.runs);
+  }
+  rowKey = (row: RunRow) => row.key;
+  rowLabel = (row: RunRow) =>
+    row.skipped
+      ? `Skipped ${row.skipped.trigger} slot`
+      : `${this.startedBy(row.run)} run, ${runLook(row.run).label}`;
+  startedBy = (run: ListedRun): string => {
+    switch (run.startedBy) {
+      case 'preview':
+        return 'Preview';
+      case 'run-now':
+        return 'Run now';
+      default:
+        return run.trigger || 'Unnamed trigger';
+    }
+  };
+  // What fired the run, under its name.
+  firedBy = (run: ListedRun): string => {
+    switch (run.startedBy) {
+      case 'preview':
+        return 'Someone previewed the script: a Preview saves nothing.';
+      case 'run-now':
+        return 'Someone ran the automation by hand.';
+    }
+    let kind = this.args.triggerKind(run.trigger);
+    if (kind === 'webhook') {
+      return 'A webhook delivery started the run.';
+    }
+    return slotTime(run.slot)
+      ? kind === 'once'
+        ? 'The one-time trigger started the run for'
+        : 'The schedule started the run for'
+      : 'The trigger started the run.';
+  };
+  look = (run: ListedRun) => runLook(run);
+  reason = (run: ListedRun) => runReason(run);
+  slotTime = (slot: string | null) => slotTime(slot);
+  // When the row's run last moved: when the run ended, started, or was made.
+  when = (run: ListedRun) => run.finishedAt ?? run.startedAt ?? run.createdAt;
+  get loadingOlder() {
+    return this.args.runs.loadingOlder;
+  }
+  loadOlder = () => this.args.loadOlder();
+
+  <template>
+    {{#if @runs.failed}}
+      <Callout
+        @tone='warning'
+        @title='Boxel couldn’t read the runs'
+        data-test-automation-runs-failed
+      >
+        Boxel reads the runs again the next time a run moves.
+      </Callout>
+    {{/if}}
+    {{#if this.rows.length}}
+      <List
+        @items={{this.rows}}
+        @key={{this.rowKey}}
+        @rowLabel={{this.rowLabel}}
+        @label='Runs of the automation'
+        @bordered={{true}}
+        data-test-automation-runs
+      >
+        <:item as |row|>
+          {{#if row.skipped}}
+            <Item
+              @size='s'
+              @wrap={{true}}
+              @alignStart={{true}}
+              data-test-automation-skipped={{row.skipped.slot}}
+            >
+              <:leading>
+                <Chip @label='Skipped' @tone='neutral' />
+              </:leading>
+              <:title>{{row.skipped.trigger}}</:title>
+              <:description>
+                The
+                <FormatDate
+                  @date={{row.skipped.slot}}
+                  @month='short'
+                  @day='numeric'
+                  @hour='numeric'
+                  @minute='2-digit'
+                />
+                slot joined the
+                {{this.startedBy row.run}}
+                run for
+                {{#let (this.slotTime row.run.slot) as |runSlot|}}
+                  {{#if runSlot}}
+                    <FormatDate
+                      @date={{runSlot}}
+                      @month='short'
+                      @day='numeric'
+                      @hour='numeric'
+                      @minute='2-digit'
+                    />,
+                  {{/if}}
+                {{/let}}
+                which was still waiting to start, so Boxel started no run of the
+                slot’s own.
+              </:description>
+              <:trailing>
+                <RelativeTime @date={{row.skipped.at}} />
+              </:trailing>
+            </Item>
+          {{else}}
+            {{#let (this.look row.run) (this.reason row.run) as |look reason|}}
+              <Item
+                @size='s'
+                @wrap={{true}}
+                @alignStart={{true}}
+                data-test-automation-run={{row.run.id}}
+                data-test-automation-run-state={{look.label}}
+              >
+                <:leading>
+                  <Chip @label={{look.label}} @tone={{look.tone}} />
+                </:leading>
+                <:title>{{this.startedBy row.run}}</:title>
+                <:description>
+                  {{this.firedBy row.run}}
+                  {{#let (this.slotTime row.run.slot) as |runSlot|}}
+                    {{#if runSlot}}
+                      <FormatDate
+                        @date={{runSlot}}
+                        @month='short'
+                        @day='numeric'
+                        @hour='numeric'
+                        @minute='2-digit'
+                      />.
+                    {{/if}}
+                  {{/let}}
+                </:description>
+                <:trailing>
+                  <RelativeTime @date={{this.when row.run}} />
+                </:trailing>
+                <:default>
+                  {{#if reason}}
+                    <p
+                      class='runs__reason'
+                      data-test-automation-run-reason={{row.run.errorReason}}
+                    >
+                      {{reason.text}}
+                      {{#if reason.line}}
+                        <Token @value={{reason.line}} />
+                      {{/if}}
+                    </p>
+                    {{#if reason.detail}}
+                      <Token
+                        class='runs__detail'
+                        @value={{reason.detail}}
+                        @wrap={{true}}
+                        data-test-automation-run-detail
+                      />
+                    {{/if}}
+                  {{/if}}
+                </:default>
+              </Item>
+            {{/let}}
+          {{/if}}
+        </:item>
+      </List>
+      {{#if @runs.next}}
+        <Button
+          class='runs__older'
+          @tone='neutral'
+          @appearance='outlined'
+          @size='s'
+          @busy={{this.loadingOlder}}
+          @busyLabel='Loading older runs'
+          {{on 'click' this.loadOlder}}
+          data-test-automation-runs-older
+        >
+          Show older runs
+        </Button>
+      {{/if}}
+    {{else if @runs.loading}}
+      <LoadingState @label='Loading runs' />
+    {{else}}
+      <EmptyState
+        @size='s'
+        @texture={{false}}
+        @title='No runs yet'
+        @message='Each run shows here once a trigger fires, or once someone previews or runs the automation by hand.'
+        data-test-automation-runs-empty
+      />
+    {{/if}}
+    <style scoped>
+      .runs__reason {
+        margin-top: var(--boxel-sp-4xs);
+        color: var(--foreground);
+      }
+      .runs__detail {
+        margin-top: var(--boxel-sp-4xs);
+      }
+      .runs__older {
+        justify-self: start;
+        margin-top: var(--boxel-sp-xs);
+      }
+    </style>
+  </template>
+}
+
 class Isolated extends Component<typeof Automation> {
   // Leads the triggers: how many there are, and how they combine.
   get showsBatchedAI() {
@@ -3035,6 +3661,22 @@ class Isolated extends Component<typeof Automation> {
   get statusKnown() {
     return this.server.current.known;
   }
+  private runList = automationRuns(this, () => ({
+    id: this.args.model.id,
+    realm: this.realmHref,
+    realmId: this.realmId,
+    tools: toolsOf(this.args.context),
+  }));
+  get runs() {
+    return this.runList.current.state;
+  }
+  get showsRuns() {
+    return this.runs.visible;
+  }
+  loadOlderRuns = () => this.runList.current.loadOlder();
+  triggerKindOf = (label: string | null) =>
+    (this.args.model.triggers ?? []).find((trigger) => trigger?.label === label)
+      ?.kind ?? undefined;
   get look() {
     return stateLook(this.status);
   }
@@ -3178,6 +3820,20 @@ class Isolated extends Component<typeof Automation> {
           This automation runs only after someone who can edit this workspace
           turns the automation on. That person pays for every run.
         </Callout>
+      {{/if}}
+
+      {{#if this.showsRuns}}
+        <PanelSection
+          @title='Runs'
+          @collapsible={{false}}
+          data-test-automation-runs-section
+        >
+          <AutomationRuns
+            @runs={{this.runs}}
+            @loadOlder={{this.loadOlderRuns}}
+            @triggerKind={{this.triggerKindOf}}
+          />
+        </PanelSection>
       {{/if}}
 
       <PanelSection @title='Script' @collapsible={{false}}>
