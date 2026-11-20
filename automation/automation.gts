@@ -3483,11 +3483,13 @@ class AutomationRuns extends GlimmerComponent<{
               data-test-automation-skipped={{row.skipped.slot}}
             >
               <:leading>
-                <Chip @label='Skipped' @tone='neutral' />
+                <span class='runs__state'>
+                  <Chip @label='Skipped' @tone='neutral' />
+                </span>
               </:leading>
               <:title>{{row.skipped.trigger}}</:title>
               <:description>
-                The
+                Boxel started no run for the
                 <FormatDate
                   @date={{row.skipped.slot}}
                   @month='short'
@@ -3495,22 +3497,21 @@ class AutomationRuns extends GlimmerComponent<{
                   @hour='numeric'
                   @minute='2-digit'
                 />
-                slot joined the
+                slot: the slot joined the
                 {{this.startedBy row.run}}
-                run for
+                run still waiting to start
                 {{#let (this.slotTime row.run.slot) as |runSlot|}}
                   {{#if runSlot}}
+                    for
                     <FormatDate
                       @date={{runSlot}}
                       @month='short'
                       @day='numeric'
                       @hour='numeric'
                       @minute='2-digit'
-                    />,
+                    />
                   {{/if}}
                 {{/let}}
-                which was still waiting to start, so Boxel started no run of the
-                slot’s own.
               </:description>
               <:trailing>
                 <RelativeTime @date={{row.skipped.at}} />
@@ -3526,7 +3527,9 @@ class AutomationRuns extends GlimmerComponent<{
                 data-test-automation-run-state={{look.label}}
               >
                 <:leading>
-                  <Chip @label={{look.label}} @tone={{look.tone}} />
+                  <span class='runs__state'>
+                    <Chip @label={{look.label}} @tone={{look.tone}} />
+                  </span>
                 </:leading>
                 <:title>{{this.startedBy row.run}}</:title>
                 <:description>
@@ -3539,7 +3542,7 @@ class AutomationRuns extends GlimmerComponent<{
                         @day='numeric'
                         @hour='numeric'
                         @minute='2-digit'
-                      />.
+                      />
                     {{/if}}
                   {{/let}}
                 </:description>
@@ -3598,6 +3601,12 @@ class AutomationRuns extends GlimmerComponent<{
       />
     {{/if}}
     <style scoped>
+      /* One width for the state column, so each row's title starts at the
+         same place whatever the state's label. */
+      .runs__state {
+        display: block;
+        inline-size: 7.5rem;
+      }
       .runs__reason {
         margin-top: var(--boxel-sp-4xs);
         color: var(--foreground);
