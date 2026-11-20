@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Underwear",
+      "category": "wardrobe",
+      "status": "packed",
+      "need": 7,
+      "why": "daily use",
+      "litres": 0.1,
+      "kg": 0.05,
+      "kind": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/hokkaido"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

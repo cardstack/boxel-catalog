@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Thermal leggings",
+      "category": "wardrobe",
+      "status": "have",
+      "need": 2,
+      "why": "extra warmth under trousers",
+      "litres": 0.5,
+      "kg": 0.2,
+      "kind": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/hokkaido"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

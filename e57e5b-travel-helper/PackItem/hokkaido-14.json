@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Doctor's note/prescription",
+      "category": "medicine",
+      "status": "needed",
+      "need": 1,
+      "why": "prescription medications",
+      "litres": 0.05,
+      "kg": 0.01,
+      "kind": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/hokkaido"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

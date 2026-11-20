@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Mouse",
+      "category": "electronics",
+      "status": "needed",
+      "need": null,
+      "why": null,
+      "litres": null,
+      "kg": null,
+      "kind": "item"
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/hokkaido"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

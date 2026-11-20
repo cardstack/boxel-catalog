@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Universal travel adapter (Type C/F)",
+      "category": "electronics",
+      "status": "needed",
+      "need": 1,
+      "why": "Indonesia uses Type C/F sockets",
+      "litres": 0.1,
+      "kg": 0.05,
+      "kind": null,
+      "leaveWhy": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/bali"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Rain jacket/poncho",
+      "category": "wardrobe",
+      "status": "needed",
+      "need": 1,
+      "why": "wet season, daily rain",
+      "litres": 1.5,
+      "kg": 0.3,
+      "kind": null,
+      "leaveWhy": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/bali"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}
