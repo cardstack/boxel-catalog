@@ -1877,12 +1877,13 @@ interface LimitNear {
 // The share of a limit from which the card says the automation is near it.
 const LIMIT_NEAR_SHARE = 0.8;
 // A byte count as people read it: "4.6 MB".
+const oneDecimal = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
 function bytes(n: number): string {
   if (n >= 1_000_000) {
-    return `${(n / 1_000_000).toLocaleString('en-US', { maximumFractionDigits: 1 })} MB`;
+    return `${oneDecimal.format(n / 1_000_000)} MB`;
   }
   if (n >= 1_000) {
-    return `${(n / 1_000).toLocaleString('en-US', { maximumFractionDigits: 1 })} KB`;
+    return `${oneDecimal.format(n / 1_000)} KB`;
   }
   return `${tally(n)} bytes`;
 }
@@ -2612,7 +2613,10 @@ class FittedMilestones extends GlimmerComponent<{
       <:default as |event|>
         {{#let (this.stepOf event) as |step|}}
           {{#if (and @details step.detail)}}
-            <span class='fm__detail'>{{step.detail}}</span>
+            <span
+              class='fm__detail'
+              data-milestone-detail
+            >{{step.detail}}</span>
           {{/if}}
         {{/let}}
       </:default>
@@ -2696,13 +2700,13 @@ class FittedMilestones extends GlimmerComponent<{
         background: var(--card, var(--background));
       }
       .fm__mark[data-step-state='complete'] {
-        --milestone-color: var(--success);
+        --milestone-color: var(--success-ink);
       }
       .fm__mark[data-step-state='in-progress'] {
-        --milestone-color: var(--warning);
+        --milestone-color: var(--warning-ink);
       }
       .fm__mark[data-step-state='error'] {
-        --milestone-color: var(--destructive);
+        --milestone-color: var(--destructive-ink);
       }
       .fm__detail {
         display: block;
@@ -4828,9 +4832,20 @@ class Fitted extends AtAGlance {
     }
     return none;
   }
+  // Measures the space the milestone list has, and the height of one of its
+  // rows, whenever the card or anything shown after the list changes size,
+  // and whenever something after the list appears.
   private fitToSpace = modifier((element: HTMLElement) => {
-    let root = element.closest('.af') as HTMLElement | null;
-    if (!root || typeof ResizeObserver === 'undefined') {
+    let root = element.closest('[data-fit-root]') as HTMLElement | null;
+    let body = element.closest('[data-fit-body]') as HTMLElement | null;
+    let block = element.closest('[data-fit-milestones]') as HTMLElement | null;
+    if (
+      !root ||
+      !body ||
+      !block ||
+      typeof ResizeObserver === 'undefined' ||
+      typeof MutationObserver === 'undefined'
+    ) {
       return;
     }
     let measure = () => {
@@ -4838,9 +4853,8 @@ class Fitted extends AtAGlance {
       let top = element.getBoundingClientRect().top;
       // Whatever shows after the milestones takes its space first.
       let after = 0;
-      let block = element.closest('.af__milestones') as HTMLElement | null;
       for (
-        let next = block?.nextElementSibling as HTMLElement | null;
+        let next = block!.nextElementSibling as HTMLElement | null;
         next;
         next = next.nextElementSibling as HTMLElement | null
       ) {
@@ -4848,10 +4862,7 @@ class Fitted extends AtAGlance {
           after += next.offsetHeight + 6;
         }
       }
-      let padding = parseFloat(
-        getComputedStyle(element.closest('.af__body') as HTMLElement)
-          .paddingBottom,
-      );
+      let padding = parseFloat(getComputedStyle(body!).paddingBottom);
       let lineHeight = parseFloat(getComputedStyle(element).lineHeight) || 18;
       // The list may run part way into the card's bottom padding: the
       // stretch of rail that marks later milestones is small enough to sit
@@ -4863,27 +4874,55 @@ class Fitted extends AtAGlance {
       if (available !== this.spaceForList) {
         this.spaceForList = available;
       }
-      let row = element.querySelector('li') as HTMLElement | null;
-      let rowHeight = row
-        ? Math.ceil(row.getBoundingClientRect().height)
-        : lineHeight + 6;
+      // A row's height without its detail line. A row with one is two
+      // lines tall, so it counts half when every row has one.
+      let rows = [...element.querySelectorAll('li')] as HTMLElement[];
+      let plain = rows.find(
+        (row) => !row.querySelector('[data-milestone-detail]'),
+      );
+      let rowHeight = plain
+        ? Math.ceil(plain.getBoundingClientRect().height)
+        : rows[0]
+          ? Math.ceil(rows[0].getBoundingClientRect().height / 2)
+          : lineHeight + 6;
       if (rowHeight !== this.rowHeight) {
         this.rowHeight = rowHeight;
       }
     };
-    let observer = new ResizeObserver(() => measure());
-    observer.observe(root);
+    let resized = new ResizeObserver(() => measure());
+    // The card's own size, and each element after the list: one that goes
+    // from hidden to shown, or wraps onto another line, takes space from
+    // the list.
+    let watchAfterList = () => {
+      for (
+        let next = block!.nextElementSibling;
+        next;
+        next = next.nextElementSibling
+      ) {
+        resized.observe(next);
+      }
+    };
+    resized.observe(root);
+    watchAfterList();
+    // An element rendered after the list later, such as a limit chip once
+    // the status arrives, is watched too.
+    let added = new MutationObserver(() => {
+      watchAfterList();
+      measure();
+    });
+    added.observe(body, { childList: true });
     // After the render that installed the modifier, so the measurement
     // never updates state that render read.
     let frame = requestAnimationFrame(measure);
     return () => {
       cancelAnimationFrame(frame);
-      observer.disconnect();
+      resized.disconnect();
+      added.disconnect();
     };
   });
   <template>
-    <div class='af' data-test-automation-fitted>
-      <div class='af__body'>
+    <div class='af' data-fit-root data-test-automation-fitted>
+      <div class='af__body' data-fit-body>
         <div class='af__head'>
           <span class='af__icon' aria-hidden='true'>
             <CalendarClockIcon width='16' height='16' />
@@ -4903,37 +4942,45 @@ class Fitted extends AtAGlance {
         </div>
 
         {{#if this.payer}}
-          <dl class='af__money' data-test-automation-fitted-money>
-            <div class='af__money-pair'>
-              <dt>Payer</dt>
-              <dd data-test-automation-fitted-payer>{{this.payer}}</dd>
-            </div>
-            {{#if this.spending}}
+          <div class='af__money' data-test-automation-fitted-money>
+            <dl class='af__pairs'>
               <div class='af__money-pair'>
-                <dt>{{this.spendLabel}}</dt>
-                <dd data-test-automation-fitted-spending>{{this.spending}}</dd>
-                {{#if this.spendShare}}
-                  <ProgressBar
-                    class='af__spend-bar'
-                    @value={{this.spendShare.value}}
-                    @max={{this.spendShare.max}}
-                    @hue={{this.spendHue}}
-                    @valueText={{this.spending}}
-                    aria-label='This month’s spending'
-                  />
-                {{/if}}
+                <dt>Payer</dt>
+                <dd data-test-automation-fitted-payer>{{this.payer}}</dd>
               </div>
+              {{#if this.spending}}
+                <div class='af__money-pair'>
+                  <dt>{{this.spendLabel}}</dt>
+                  <dd
+                    data-test-automation-fitted-spending
+                  >{{this.spending}}</dd>
+                </div>
+              {{/if}}
+            </dl>
+            {{#if this.spendShare}}
+              <ProgressBar
+                class='af__spend-bar'
+                @value={{this.spendShare.value}}
+                @max={{this.spendShare.max}}
+                @hue={{this.spendHue}}
+                @valueText={{this.spending}}
+                aria-label='This month’s spending'
+              />
             {{/if}}
-            {{#if this.runLimit}}
-              <div class='af__money-pair af__money-pair--extra'>
-                <dt>Each run</dt>
-                <dd data-test-automation-fitted-run-limit>{{this.runLimit}}</dd>
+            <dl class='af__pairs af__pairs--extra'>
+              {{#if this.runLimit}}
+                <div class='af__money-pair'>
+                  <dt>Each run</dt>
+                  <dd
+                    data-test-automation-fitted-run-limit
+                  >{{this.runLimit}}</dd>
+                </div>
+              {{/if}}
+              <div class='af__money-pair'>
+                <dt>Outside services</dt>
+                <dd data-test-automation-fitted-services>{{this.services}}</dd>
               </div>
-            {{/if}}
-            <div class='af__money-pair af__money-pair--extra'>
-              <dt>Outside services</dt>
-              <dd data-test-automation-fitted-services>{{this.services}}</dd>
-            </div>
+            </dl>
             {{#if this.statusNote}}
               <p
                 class='af__note'
@@ -4960,7 +5007,7 @@ class Fitted extends AtAGlance {
                 {{/each}}
               </ul>
             {{/if}}
-          </dl>
+          </div>
         {{/if}}
 
         <p class='af__focus' data-test-automation-fitted-focus>
@@ -5046,6 +5093,7 @@ class Fitted extends AtAGlance {
         {{#if this.milestones}}
           <div
             class='af__milestones'
+            data-fit-milestones
             data-kind={{this.milestones.kind}}
             data-test-automation-fitted-milestones={{this.milestones.kind}}
           >
@@ -5219,6 +5267,13 @@ class Fitted extends AtAGlance {
       .af__trigger > svg {
         flex-shrink: 0;
       }
+      /* The ellipsis goes on the text, since a flex container cuts its
+         content without one. */
+      .af__trigger > span {
+        min-inline-size: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
       .af__spend-bar {
         margin-block-start: var(--boxel-sp-6xs);
       }
@@ -5267,6 +5322,14 @@ class Fitted extends AtAGlance {
         margin: 0;
         padding-inline-start: var(--boxel-sp-sm);
         border-inline-start: 1px solid var(--border);
+      }
+      /* The pairs read as one list to a screen reader; the spending bar,
+         the note and the limits sit between and after the lists. */
+      .af__pairs {
+        display: flex;
+        flex-direction: column;
+        gap: inherit;
+        margin: 0;
       }
       .af__money-pair {
         display: grid;
@@ -5544,7 +5607,7 @@ class Fitted extends AtAGlance {
         }
         .af__spend-bar,
         .af__note,
-        .af__money-pair--extra,
+        .af__pairs--extra,
         .af__limit:not(:first-child),
         .af__focus,
         .af__more,
