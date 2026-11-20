@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Heritage Textile Consultation",
+      "status": "sent",
+      "discountPercent": 0,
+      "lines": [
+        {
+          "qty": 4
+        }
+      ]
+    },
+    "relationships": {
+      "client": {
+        "links": {
+          "self": "../Client/toko-batik-nusantara"
+        }
+      },
+      "lines.0.item": {
+        "links": {
+          "self": "../ServiceItem/konsultasi"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../quote",
+        "name": "Quote"
+      }
+    }
+  }
+}

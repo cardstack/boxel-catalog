@@ -1,0 +1,42 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Heritage Textile Premium Website",
+      "status": "sent",
+      "discountPercent": 15,
+      "lines": [
+        {
+          "qty": 2
+        }
+      ],
+      "approvalDecision": "approved",
+      "approvedBy": "Owner1",
+      "approvalNote": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "client": {
+        "links": {
+          "self": "../Client/toko-batik-nusantara"
+        }
+      },
+      "lines.0.item": {
+        "links": {
+          "self": "../ServiceItem/pembuatan-website"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../quote",
+        "name": "Quote"
+      }
+    }
+  }
+}

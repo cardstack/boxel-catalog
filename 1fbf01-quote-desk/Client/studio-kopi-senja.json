@@ -1,0 +1,18 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Emma Clarke",
+      "company": "Sunset Brew Café",
+      "phone": "+44 7700 900123",
+      "email": "emma@sunsetbrew.example",
+      "stage": "active"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../client",
+        "name": "Client"
+      }
+    }
+  }
+}

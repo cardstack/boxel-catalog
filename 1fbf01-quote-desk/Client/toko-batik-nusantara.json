@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Daniel Reed",
+      "company": "Heritage Textile Co.",
+      "phone": "+44 7700 900456",
+      "stage": "active"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../client",
+        "name": "Client"
+      }
+    }
+  }
+}
