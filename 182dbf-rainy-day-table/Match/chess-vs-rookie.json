@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "seed": 64,
+      "status": "setup",
+      "seats": [
+        {
+          "seatId": "white",
+          "label": "White",
+          "occupant": "human",
+          "colour": "#efe2c6",
+          "score": null,
+          "resources": {}
+        },
+        {
+          "seatId": "black",
+          "label": "Black",
+          "occupant": "bot",
+          "colour": "#2b2420",
+          "score": null,
+          "resources": {}
+        }
+      ],
+      "cardInfo": {
+        "name": null,
+        "summary": null
+      }
+    },
+    "relationships": {
+      "game": {
+        "links": {
+          "self": "../Game/chess"
+        }
+      },
+      "seats.1.opponent": {
+        "links": {
+          "self": "../Opponent/rookie"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../match",
+        "name": "Match"
+      }
+    }
+  }
+}

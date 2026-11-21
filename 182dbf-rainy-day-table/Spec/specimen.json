@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Parts Specimen\n\nThe toolbox: cards, card backs, dice, chips, coins, tokens, pieces, tiles and boards, each at four depths from flat print to a raised, lit piece.",
+      "ref": {
+        "module": "../specimen",
+        "name": "PartsSpecimen"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Parts Specimen",
+      "cardDescription": "Every part the table can draw, from flat print to a lit, raised piece: the design reference for game authors.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Game\n\nOne card type draws every game. A Game holds plain data: the parts in the box, where they sit on the table, and the rules (setup, turns, moves, who wins).\n\nFour come in the box: **Blackjack**, **Chess**, **Snakes & Ladders** and **Painted Skin** (a card battler made from a Playground sketch).\n\nTo make a new one, describe it to the AI assistant: the bundled *game authoring* skill writes the game's data.",
+      "ref": {
+        "module": "../game",
+        "name": "Game"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Game",
+      "cardDescription": "A tabletop game as data: its parts (cards, dice, chips, tokens, boards), the table layout and the rules. Open one to see the box, pick a seat and start a match.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

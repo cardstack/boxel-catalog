@@ -1,0 +1,60 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "seed": 1234,
+      "status": "setup",
+      "seats": [
+        {
+          "seatId": "red",
+          "label": "You",
+          "occupant": "human",
+          "colour": "#c8553d",
+          "score": null,
+          "resources": {}
+        },
+        {
+          "seatId": "blue",
+          "label": "Pip",
+          "occupant": "bot",
+          "colour": "#3f6f9f",
+          "score": null,
+          "resources": {}
+        },
+        {
+          "seatId": "gold",
+          "label": "Dot",
+          "occupant": "bot",
+          "colour": "#d5a021",
+          "score": null,
+          "resources": {}
+        },
+        {
+          "seatId": "green",
+          "label": "Bo",
+          "occupant": "bot",
+          "colour": "#5f8f4e",
+          "score": null,
+          "resources": {}
+        }
+      ],
+      "cardInfo": {
+        "name": null,
+        "summary": null
+      }
+    },
+    "relationships": {
+      "game": {
+        "links": {
+          "self": "../Game/snakes-and-ladders"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../match",
+        "name": "Match"
+      }
+    }
+  }
+}

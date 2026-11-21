@@ -1,0 +1,482 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Painted Skin",
+      "summary": "Hero against three monsters. Attack for 1, Magic for 3, Defend to block a strike. Chips are hit points.",
+      "minPlayers": 1,
+      "maxPlayers": 1,
+      "playTime": "10–15 min",
+      "tableColour": "#3d2b1f",
+      "surface": "wood",
+      "lidArt": "../Playground/images/lucky-thirteen-gs1rwa.jpg",
+      "components": [
+        {
+          "defId": "atk",
+          "kind": "card",
+          "name": "🗡 Attack",
+          "quantity": 6,
+          "startZone": "deck",
+          "value": 1,
+          "tags": [],
+          "look": {
+            "fill": "#f4e4c1",
+            "edge": "#7a2e1f",
+            "ink": "#7a2e1f",
+            "depth": 1
+          }
+        },
+        {
+          "defId": "def",
+          "kind": "card",
+          "name": "🛡 Defend",
+          "quantity": 6,
+          "startZone": "deck",
+          "value": 1,
+          "tags": [],
+          "look": {
+            "fill": "#dfe7ef",
+            "edge": "#2d4a63",
+            "ink": "#2d4a63",
+            "depth": 1
+          }
+        },
+        {
+          "defId": "mag",
+          "kind": "card",
+          "name": "✨ Magic",
+          "quantity": 3,
+          "startZone": "deck",
+          "value": 3,
+          "tags": [],
+          "look": {
+            "fill": "#e8d6f5",
+            "edge": "#5b2a7a",
+            "ink": "#5b2a7a",
+            "depth": 1
+          }
+        }
+      ],
+      "cardLook": {
+        "backPattern": "lattice",
+        "backColour": "#2f3b52",
+        "depth": 1
+      },
+      "layout": {
+        "aspect": 1.6,
+        "zones": [
+          {
+            "id": "deck",
+            "kind": "pot",
+            "label": "Deck",
+            "badge": "count('deck')",
+            "x": 3.4,
+            "y": 36,
+            "w": 19.8,
+            "h": 18.1,
+            "partW": 6
+          },
+          {
+            "id": "discard",
+            "kind": "pot",
+            "label": "Discard",
+            "badge": "count('discard')",
+            "x": 24,
+            "y": 36,
+            "w": 9,
+            "h": 18.1,
+            "partW": 6
+          },
+          {
+            "id": "hand:you",
+            "kind": "spread",
+            "label": "Your hand",
+            "name": "your hand",
+            "owner": "you",
+            "x": 63.9,
+            "y": 45.3,
+            "w": 33.5,
+            "h": 15.6,
+            "partW": 7
+          },
+          {
+            "id": "mon1",
+            "kind": "pot",
+            "label": "Medusa",
+            "x": 9,
+            "y": 0.9,
+            "w": 18,
+            "h": 29.5,
+            "image": "../Playground/images/lucky-thirteen-bh85dm.jpg"
+          },
+          {
+            "id": "mon2",
+            "kind": "pot",
+            "label": "Skeleton demon",
+            "x": 41.1,
+            "y": 0.7,
+            "w": 18,
+            "h": 29.5,
+            "image": "../Playground/images/lucky-thirteen-kjgysi.jpg"
+          },
+          {
+            "id": "mon3",
+            "kind": "pot",
+            "label": "Zombie",
+            "x": 70,
+            "y": 0.6,
+            "w": 18.8,
+            "h": 30.5,
+            "image": "../Playground/images/lucky-thirteen-u0xuk0.jpg"
+          }
+        ],
+        "meters": [
+          {
+            "seat": "m1",
+            "resource": "chips",
+            "label": "Medusa",
+            "look": "chips",
+            "x": 6,
+            "y": 31.5
+          },
+          {
+            "seat": "m2",
+            "resource": "chips",
+            "label": "Skeleton demon",
+            "look": "chips",
+            "x": 38,
+            "y": 31.5
+          },
+          {
+            "seat": "m3",
+            "resource": "chips",
+            "label": "Zombie",
+            "look": "chips",
+            "x": 68,
+            "y": 31.5
+          },
+          {
+            "seat": "you",
+            "resource": "chips",
+            "label": "Hero",
+            "look": "chips",
+            "x": 44,
+            "y": 56
+          },
+          {
+            "var": "shield",
+            "label": "Guard",
+            "look": "number",
+            "x": 64,
+            "y": 40
+          }
+        ]
+      },
+      "ruleset": {
+        "options": {},
+        "defines": {},
+        "setup": [
+          {
+            "set": "shield",
+            "to": 0
+          },
+          {
+            "shuffle": "deck"
+          },
+          {
+            "move": {
+              "from": "deck",
+              "to": "hand:you",
+              "count": 4,
+              "facing": "up",
+              "visibleTo": "owner"
+            }
+          }
+        ],
+        "turnOrder": [
+          "you",
+          "m1",
+          "m2",
+          "m3"
+        ],
+        "phases": [],
+        "actions": [
+          {
+            "id": "attack",
+            "label": "Attack monster {args.target}",
+            "options": {
+              "target": [
+                1,
+                2,
+                3
+              ]
+            },
+            "when": "seat == 'you' && (args.copy == 'atk#1' || args.copy == 'atk#2' || args.copy == 'atk#3' || args.copy == 'atk#4' || args.copy == 'atk#5' || args.copy == 'atk#6') && ((args.target == 1 && res('m1', 'chips') > 0) || (args.target == 2 && res('m2', 'chips') > 0) || (args.target == 3 && res('m3', 'chips') > 0))",
+            "button": false,
+            "gesture": {
+              "drag": {
+                "from": "hand:you",
+                "to": "mon{args.target}",
+                "pick": "any"
+              }
+            },
+            "effect": [
+              {
+                "move": {
+                  "copy": "args.copy",
+                  "to": "discard",
+                  "facing": "up",
+                  "visibleTo": "all"
+                }
+              },
+              {
+                "resource": {
+                  "seat": "m{args.target}",
+                  "name": "chips",
+                  "add": "-1"
+                }
+              },
+              {
+                "log": "You strike monster {args.target} for 1"
+              },
+              {
+                "nextTurn": true
+              }
+            ]
+          },
+          {
+            "id": "magic",
+            "label": "Magic on monster {args.target}",
+            "options": {
+              "target": [
+                1,
+                2,
+                3
+              ]
+            },
+            "when": "seat == 'you' && (args.copy == 'mag#1' || args.copy == 'mag#2' || args.copy == 'mag#3') && ((args.target == 1 && res('m1', 'chips') > 0) || (args.target == 2 && res('m2', 'chips') > 0) || (args.target == 3 && res('m3', 'chips') > 0))",
+            "button": false,
+            "gesture": {
+              "drag": {
+                "from": "hand:you",
+                "to": "mon{args.target}",
+                "pick": "any"
+              }
+            },
+            "effect": [
+              {
+                "move": {
+                  "copy": "args.copy",
+                  "to": "discard",
+                  "facing": "up",
+                  "visibleTo": "all"
+                }
+              },
+              {
+                "resource": {
+                  "seat": "m{args.target}",
+                  "name": "chips",
+                  "add": "-3"
+                }
+              },
+              {
+                "log": "You cast magic on monster {args.target} for 3"
+              },
+              {
+                "nextTurn": true
+              }
+            ]
+          },
+          {
+            "id": "defend",
+            "label": "Defend",
+            "when": "seat == 'you' && (args.copy == 'def#1' || args.copy == 'def#2' || args.copy == 'def#3' || args.copy == 'def#4' || args.copy == 'def#5' || args.copy == 'def#6')",
+            "button": false,
+            "gesture": {
+              "drag": {
+                "from": "hand:you",
+                "to": "discard",
+                "pick": "any"
+              }
+            },
+            "effect": [
+              {
+                "move": {
+                  "copy": "args.copy",
+                  "to": "discard",
+                  "facing": "up",
+                  "visibleTo": "all"
+                }
+              },
+              {
+                "add": "shield",
+                "by": "1"
+              },
+              {
+                "log": "You raise a guard against the next blow"
+              },
+              {
+                "nextTurn": true
+              }
+            ]
+          },
+          {
+            "id": "strike",
+            "label": "{label(seat)} strikes",
+            "when": "seat != 'you'",
+            "effect": [
+              {
+                "if": "res(seat, 'chips') > 0 && (seat == 'm1' || (seat == 'm2' && res('m1', 'chips') <= 0) || (seat == 'm3' && res('m1', 'chips') <= 0 && res('m2', 'chips') <= 0))",
+                "then": [
+                  {
+                    "if": "shield > 0",
+                    "then": [
+                      {
+                        "add": "shield",
+                        "by": "-1"
+                      },
+                      {
+                        "log": "{label(seat)} lunges, and the guard takes the blow"
+                      }
+                    ],
+                    "else": [
+                      {
+                        "resource": {
+                          "seat": "you",
+                          "name": "chips",
+                          "add": "-1"
+                        }
+                      },
+                      {
+                        "log": "{label(seat)} strikes the hero for 1"
+                      }
+                    ]
+                  }
+                ],
+                "else": [
+                  {
+                    "log": "{label(seat)} waits"
+                  }
+                ]
+              },
+              {
+                "if": "seat == 'm3'",
+                "then": [
+                  {
+                    "if": "count('deck') == 0",
+                    "then": [
+                      {
+                        "collect": {
+                          "from": [
+                            "discard"
+                          ],
+                          "to": "deck",
+                          "facing": "down"
+                        }
+                      },
+                      {
+                        "shuffle": "deck"
+                      },
+                      {
+                        "log": "The discard pile is reshuffled into the deck"
+                      }
+                    ]
+                  },
+                  {
+                    "move": {
+                      "from": "deck",
+                      "to": "hand:you",
+                      "count": 1,
+                      "facing": "up",
+                      "visibleTo": "owner"
+                    }
+                  }
+                ]
+              },
+              {
+                "nextTurn": true
+              }
+            ]
+          }
+        ],
+        "winConditions": [
+          {
+            "when": "res('m1', 'chips') <= 0 && res('m2', 'chips') <= 0 && res('m3', 'chips') <= 0",
+            "winner": "'you'",
+            "text": "The painted skin is undone. The monsters fall."
+          },
+          {
+            "when": "res('you', 'chips') <= 0",
+            "winner": null,
+            "text": "The monsters overwhelm the hero."
+          }
+        ]
+      },
+      "ruleModule": null,
+      "defaultSeats": [
+        {
+          "id": "you",
+          "label": "Hero",
+          "occupant": "human",
+          "colour": "#e3a33b",
+          "resources": {
+            "chips": 12
+          },
+          "image": "../Playground/images/lucky-thirteen-gs1rwa.jpg"
+        },
+        {
+          "id": "m1",
+          "label": "Medusa",
+          "occupant": "bot",
+          "colour": "#6a8f4e",
+          "resources": {
+            "chips": 3
+          },
+          "opponent": "../Opponent/painted-pack",
+          "image": "../Playground/images/lucky-thirteen-bh85dm.jpg"
+        },
+        {
+          "id": "m2",
+          "label": "Skeleton demon",
+          "occupant": "bot",
+          "colour": "#6a8f4e",
+          "resources": {
+            "chips": 3
+          },
+          "opponent": "../Opponent/painted-pack",
+          "image": "../Playground/images/lucky-thirteen-kjgysi.jpg"
+        },
+        {
+          "id": "m3",
+          "label": "Zombie",
+          "occupant": "bot",
+          "colour": "#6a8f4e",
+          "resources": {
+            "chips": 3
+          },
+          "opponent": "../Opponent/painted-pack",
+          "image": "../Playground/images/lucky-thirteen-u0xuk0.jpg"
+        }
+      ],
+      "rulesText": "The hero faces three monsters. The hero has 12 HP, each monster 3 HP. Hit points are chips.\n\n**On your turn**, drag one card from your hand:\n- **Attack** onto a monster: 1 damage.\n- **Magic** onto a monster: 3 damage.\n- **Defend** onto the discard pile: a guard that prevents 1 damage from the next strike.\n\n**The monsters** then strike in turn. The first monster still standing hits the hero for 1, unless your guard blocks it. After the last monster strikes, you draw one card.\n\nThe deck holds 15 cards: 6 Attack, 6 Defend, 3 Magic (a 2:2:1 ratio). The hand starts at 4 cards, with no maximum. When the deck runs out, the discard pile is shuffled to make a new deck.\n\n- The hero reaching 0 HP: the monsters win.\n- All three monsters at 0 HP: the hero wins.\n\n**Assumptions** (correct these on the Playground if wrong)\n- Monster HP is 3 each and hero HP is 12. Tune these in the seats.\n- Guards stack: two Defends block two strikes.\n- Attack and Magic go to the discard pile after use. The discard pile was not on the sketch and was added.\n- The sketch shows three card faces. The deck follows the 2:2:1 ratio from the notes instead.\n- The hand has no maximum, as the notes say. The sketch label \"max 4\" was ignored.",
+      "version": 1,
+      "cardInfo": {
+        "name": null,
+        "summary": null
+      }
+    },
+    "relationships": {
+      "opponents.0": {
+        "links": {
+          "self": "../Opponent/painted-pack"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../game",
+        "name": "Game"
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Rookie",
+      "style": "Keen, a little greedy",
+      "kind": "search",
+      "policy": [],
+      "searchDepth": 2,
+      "scoring": {
+        "pieceValues": {
+          "P": 1,
+          "N": 3,
+          "B": 3,
+          "R": 5,
+          "Q": 9
+        }
+      },
+      "thinkingDelay": 600,
+      "persona": null,
+      "colour": "#5a3d2b",
+      "cardInfo": {
+        "name": null,
+        "summary": null
+      }
+    },
+    "relationships": {
+      "game": {
+        "links": {
+          "self": "../Game/chess"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../opponent",
+        "name": "Opponent"
+      }
+    }
+  }
+}

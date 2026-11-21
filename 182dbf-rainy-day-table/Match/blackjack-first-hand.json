@@ -1,0 +1,1638 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "seed": 918273,
+      "status": "playing",
+      "seats": [
+        {
+          "seatId": "dealer",
+          "label": "Dealer",
+          "occupant": "bot",
+          "colour": "#8c2f39",
+          "score": null,
+          "resources": {}
+        },
+        {
+          "seatId": "you",
+          "label": "You",
+          "occupant": "human",
+          "colour": "#e3a33b",
+          "score": null,
+          "resources": {
+            "chips": 235
+          }
+        }
+      ],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "rngCalls": 103,
+      "copies": [
+        {
+          "copyId": "AS#1",
+          "defId": "AS",
+          "zone": "shoe",
+          "position": 11,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "AS#2",
+          "defId": "AS",
+          "zone": "shoe",
+          "position": 42,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "2S#1",
+          "defId": "2S",
+          "zone": "shoe",
+          "position": 20,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "2S#2",
+          "defId": "2S",
+          "zone": "shoe",
+          "position": 6,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "3S#1",
+          "defId": "3S",
+          "zone": "shoe",
+          "position": 36,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "3S#2",
+          "defId": "3S",
+          "zone": "shoe",
+          "position": 33,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "4S#1",
+          "defId": "4S",
+          "zone": "shoe",
+          "position": 26,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "4S#2",
+          "defId": "4S",
+          "zone": "shoe",
+          "position": 92,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "5S#1",
+          "defId": "5S",
+          "zone": "shoe",
+          "position": 63,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "5S#2",
+          "defId": "5S",
+          "zone": "shoe",
+          "position": 52,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "6S#1",
+          "defId": "6S",
+          "zone": "shoe",
+          "position": 60,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "6S#2",
+          "defId": "6S",
+          "zone": "shoe",
+          "position": 89,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "7S#1",
+          "defId": "7S",
+          "zone": "shoe",
+          "position": 18,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "7S#2",
+          "defId": "7S",
+          "zone": "shoe",
+          "position": 88,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "8S#1",
+          "defId": "8S",
+          "zone": "shoe",
+          "position": 1,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "8S#2",
+          "defId": "8S",
+          "zone": "shoe",
+          "position": 27,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "9S#1",
+          "defId": "9S",
+          "zone": "hand:dealer",
+          "position": 2,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "all",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            5
+          ]
+        },
+        {
+          "copyId": "9S#2",
+          "defId": "9S",
+          "zone": "shoe",
+          "position": 29,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "10S#1",
+          "defId": "10S",
+          "zone": "shoe",
+          "position": 3,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "10S#2",
+          "defId": "10S",
+          "zone": "shoe",
+          "position": 74,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "JS#1",
+          "defId": "JS",
+          "zone": "shoe",
+          "position": 95,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "JS#2",
+          "defId": "JS",
+          "zone": "shoe",
+          "position": 75,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "QS#1",
+          "defId": "QS",
+          "zone": "shoe",
+          "position": 50,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "QS#2",
+          "defId": "QS",
+          "zone": "shoe",
+          "position": 28,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "KS#1",
+          "defId": "KS",
+          "zone": "shoe",
+          "position": 41,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "KS#2",
+          "defId": "KS",
+          "zone": "shoe",
+          "position": 14,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "AH#1",
+          "defId": "AH",
+          "zone": "hand:you",
+          "position": 1,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "all",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            3
+          ]
+        },
+        {
+          "copyId": "AH#2",
+          "defId": "AH",
+          "zone": "shoe",
+          "position": 86,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "2H#1",
+          "defId": "2H",
+          "zone": "shoe",
+          "position": 85,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "2H#2",
+          "defId": "2H",
+          "zone": "shoe",
+          "position": 32,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "3H#1",
+          "defId": "3H",
+          "zone": "shoe",
+          "position": 25,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "3H#2",
+          "defId": "3H",
+          "zone": "shoe",
+          "position": 54,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "4H#1",
+          "defId": "4H",
+          "zone": "shoe",
+          "position": 67,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "4H#2",
+          "defId": "4H",
+          "zone": "shoe",
+          "position": 72,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "5H#1",
+          "defId": "5H",
+          "zone": "shoe",
+          "position": 62,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "5H#2",
+          "defId": "5H",
+          "zone": "shoe",
+          "position": 76,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "6H#1",
+          "defId": "6H",
+          "zone": "shoe",
+          "position": 30,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "6H#2",
+          "defId": "6H",
+          "zone": "shoe",
+          "position": 8,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "7H#1",
+          "defId": "7H",
+          "zone": "shoe",
+          "position": 9,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "7H#2",
+          "defId": "7H",
+          "zone": "shoe",
+          "position": 47,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "8H#1",
+          "defId": "8H",
+          "zone": "shoe",
+          "position": 35,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "8H#2",
+          "defId": "8H",
+          "zone": "shoe",
+          "position": 64,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "9H#1",
+          "defId": "9H",
+          "zone": "shoe",
+          "position": 15,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "9H#2",
+          "defId": "9H",
+          "zone": "shoe",
+          "position": 91,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "10H#1",
+          "defId": "10H",
+          "zone": "shoe",
+          "position": 79,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "10H#2",
+          "defId": "10H",
+          "zone": "shoe",
+          "position": 7,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "JH#1",
+          "defId": "JH",
+          "zone": "shoe",
+          "position": 87,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "JH#2",
+          "defId": "JH",
+          "zone": "shoe",
+          "position": 51,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "QH#1",
+          "defId": "QH",
+          "zone": "shoe",
+          "position": 81,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "QH#2",
+          "defId": "QH",
+          "zone": "shoe",
+          "position": 97,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "KH#1",
+          "defId": "KH",
+          "zone": "shoe",
+          "position": 44,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "KH#2",
+          "defId": "KH",
+          "zone": "shoe",
+          "position": 24,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "AD#1",
+          "defId": "AD",
+          "zone": "shoe",
+          "position": 21,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "AD#2",
+          "defId": "AD",
+          "zone": "shoe",
+          "position": 46,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "2D#1",
+          "defId": "2D",
+          "zone": "shoe",
+          "position": 48,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "2D#2",
+          "defId": "2D",
+          "zone": "shoe",
+          "position": 53,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "3D#1",
+          "defId": "3D",
+          "zone": "shoe",
+          "position": 43,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "3D#2",
+          "defId": "3D",
+          "zone": "shoe",
+          "position": 23,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "4D#1",
+          "defId": "4D",
+          "zone": "shoe",
+          "position": 17,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "4D#2",
+          "defId": "4D",
+          "zone": "shoe",
+          "position": 80,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "5D#1",
+          "defId": "5D",
+          "zone": "hand:dealer",
+          "position": 0,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "all",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            3
+          ]
+        },
+        {
+          "copyId": "5D#2",
+          "defId": "5D",
+          "zone": "shoe",
+          "position": 2,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "6D#1",
+          "defId": "6D",
+          "zone": "shoe",
+          "position": 45,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "6D#2",
+          "defId": "6D",
+          "zone": "shoe",
+          "position": 66,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "7D#1",
+          "defId": "7D",
+          "zone": "shoe",
+          "position": 0,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "7D#2",
+          "defId": "7D",
+          "zone": "shoe",
+          "position": 5,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "8D#1",
+          "defId": "8D",
+          "zone": "shoe",
+          "position": 16,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "8D#2",
+          "defId": "8D",
+          "zone": "shoe",
+          "position": 96,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "9D#1",
+          "defId": "9D",
+          "zone": "shoe",
+          "position": 57,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "9D#2",
+          "defId": "9D",
+          "zone": "shoe",
+          "position": 69,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "10D#1",
+          "defId": "10D",
+          "zone": "shoe",
+          "position": 61,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "10D#2",
+          "defId": "10D",
+          "zone": "shoe",
+          "position": 4,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "JD#1",
+          "defId": "JD",
+          "zone": "shoe",
+          "position": 34,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "JD#2",
+          "defId": "JD",
+          "zone": "shoe",
+          "position": 94,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "QD#1",
+          "defId": "QD",
+          "zone": "shoe",
+          "position": 13,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "QD#2",
+          "defId": "QD",
+          "zone": "shoe",
+          "position": 55,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "KD#1",
+          "defId": "KD",
+          "zone": "shoe",
+          "position": 39,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "KD#2",
+          "defId": "KD",
+          "zone": "shoe",
+          "position": 83,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "AC#1",
+          "defId": "AC",
+          "zone": "shoe",
+          "position": 59,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "AC#2",
+          "defId": "AC",
+          "zone": "shoe",
+          "position": 56,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "2C#1",
+          "defId": "2C",
+          "zone": "shoe",
+          "position": 22,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "2C#2",
+          "defId": "2C",
+          "zone": "shoe",
+          "position": 77,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "3C#1",
+          "defId": "3C",
+          "zone": "shoe",
+          "position": 19,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "3C#2",
+          "defId": "3C",
+          "zone": "shoe",
+          "position": 68,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "4C#1",
+          "defId": "4C",
+          "zone": "shoe",
+          "position": 71,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "4C#2",
+          "defId": "4C",
+          "zone": "shoe",
+          "position": 49,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "5C#1",
+          "defId": "5C",
+          "zone": "shoe",
+          "position": 37,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "5C#2",
+          "defId": "5C",
+          "zone": "hand:you",
+          "position": 0,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "all",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            3
+          ]
+        },
+        {
+          "copyId": "6C#1",
+          "defId": "6C",
+          "zone": "shoe",
+          "position": 12,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "6C#2",
+          "defId": "6C",
+          "zone": "shoe",
+          "position": 93,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "7C#1",
+          "defId": "7C",
+          "zone": "shoe",
+          "position": 10,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "7C#2",
+          "defId": "7C",
+          "zone": "shoe",
+          "position": 58,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "8C#1",
+          "defId": "8C",
+          "zone": "shoe",
+          "position": 65,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "8C#2",
+          "defId": "8C",
+          "zone": "shoe",
+          "position": 70,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "9C#1",
+          "defId": "9C",
+          "zone": "shoe",
+          "position": 38,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "9C#2",
+          "defId": "9C",
+          "zone": "shoe",
+          "position": 73,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "10C#1",
+          "defId": "10C",
+          "zone": "shoe",
+          "position": 78,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "10C#2",
+          "defId": "10C",
+          "zone": "shoe",
+          "position": 82,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "JC#1",
+          "defId": "JC",
+          "zone": "shoe",
+          "position": 31,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "JC#2",
+          "defId": "JC",
+          "zone": "shoe",
+          "position": 90,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "QC#1",
+          "defId": "QC",
+          "zone": "shoe",
+          "position": 40,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "QC#2",
+          "defId": "QC",
+          "zone": "shoe",
+          "position": 98,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "KC#1",
+          "defId": "KC",
+          "zone": "shoe",
+          "position": 84,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "KC#2",
+          "defId": "KC",
+          "zone": "hand:dealer",
+          "position": 1,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "all",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            3,
+            4
+          ]
+        },
+        {
+          "copyId": "chip#1",
+          "defId": "chip",
+          "zone": "rack",
+          "position": 0,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "all",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        }
+      ],
+      "turn": {
+        "seat": "you",
+        "phase": "settle",
+        "step": null,
+        "number": 3
+      },
+      "vars": {
+        "bet": 0,
+        "hand": 1,
+        "outcome": "Dealer busts. You win 35"
+      },
+      "log": [
+        {
+          "index": 0,
+          "turn": 0,
+          "seat": "",
+          "action": "setup",
+          "args": {
+            "seats": [
+              {
+                "id": "dealer",
+                "label": "Dealer",
+                "occupant": "bot",
+                "colour": "#8c2f39",
+                "resources": {}
+              },
+              {
+                "id": "you",
+                "label": "You",
+                "occupant": "human",
+                "colour": "#e3a33b",
+                "resources": {
+                  "chips": 200
+                }
+              }
+            ]
+          },
+          "rngCalls": 103,
+          "resultSummary": "105 parts set out",
+          "undone": false,
+          "at": null
+        },
+        {
+          "index": 1,
+          "turn": 1,
+          "seat": "you",
+          "action": "chip",
+          "args": {
+            "amount": 25
+          },
+          "rngCalls": 0,
+          "resultSummary": "puts 25 on the bet (25)",
+          "undone": false,
+          "at": "2026-10-28T11:27:00.520Z"
+        },
+        {
+          "index": 2,
+          "turn": 1,
+          "seat": "you",
+          "action": "chip",
+          "args": {
+            "amount": 10
+          },
+          "rngCalls": 0,
+          "resultSummary": "puts 10 on the bet (35)",
+          "undone": false,
+          "at": "2026-10-28T11:27:01.702Z"
+        },
+        {
+          "index": 3,
+          "turn": 1,
+          "seat": "you",
+          "action": "deal",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "deals on a bet of 35; you show 16",
+          "undone": false,
+          "at": "2026-10-28T11:27:02.939Z"
+        },
+        {
+          "index": 4,
+          "turn": 1,
+          "seat": "you",
+          "action": "stand",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "stands on 16",
+          "undone": false,
+          "at": "2026-10-28T11:27:05.304Z"
+        },
+        {
+          "index": 5,
+          "turn": 2,
+          "seat": "dealer",
+          "action": "hit",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "dealer hits: 24; Dealer busts. You win 35",
+          "undone": false,
+          "at": "2026-10-28T11:27:06.083Z"
+        }
+      ],
+      "winner": null,
+      "resultText": null,
+      "startedAt": "2026-10-28T11:26:56.775Z",
+      "updatedAt": "2026-10-28T11:27:06.087Z"
+    },
+    "relationships": {
+      "game": {
+        "links": {
+          "self": "../Game/blackjack"
+        }
+      },
+      "seats.0.opponent": {
+        "links": {
+          "self": "../Opponent/house-dealer"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../match",
+        "name": "Match"
+      }
+    }
+  }
+}
