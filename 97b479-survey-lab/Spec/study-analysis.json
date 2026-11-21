@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Study Analysis\n\nA blank whiteboard and a small chat. Ask a question (\"present the headline results\", \"did people who picked Pip answer differently?\") and the analyst presents it like a talk: each point arrives as a tile, big at first, then settles into its slot. A new question clears the board to the dock.\n\nTiles draw their numbers from the interviews themselves (each measure across people, groups compared, This-or-that pooled with win rates by where screens came from, the Picture it gallery). The analyst only chooses what to show and writes the words.",
+      "ref": {
+        "module": "../analysis",
+        "name": "StudyAnalysis"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Study Analysis",
+      "cardDescription": "A researcher's whiteboard beside a study. Ask the analyst a question and it presents the answer one point at a time, putting up the tile that shows it.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

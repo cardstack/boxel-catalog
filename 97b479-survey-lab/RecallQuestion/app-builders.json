@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Tools for building your own apps",
+      "brief": "Which no-code and AI app builders do people think of first, and which do they only recognise? Is Boxel on anyone's mind yet, and who are we really up against?",
+      "prompt": "Which tools come to mind for building your own apps or internal tools, without much coding?",
+      "options": "Notion\nAirtable\nRetool\nBubble\nGlide\nSoftr\nCoda\nLovable\nBolt\nMicrosoft Power Apps\nBoxel"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../recall",
+        "name": "RecallQuestion"
+      }
+    }
+  }
+}

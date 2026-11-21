@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Sam",
+      "portraitPrompt": "Photorealistic editorial portrait photograph of a fictional man of about forty-five, Caucasian, a little overweight with a soft jawline and fuller cheeks, light brown hair thinning on top with a receding hairline and a bald patch at the crown, short neat stubble with a few grey hairs, wearing a faded navy cotton henley with the top button undone. Head and shoulders, centred, facing the camera directly, looking straight into the lens with a calm, relaxed, easygoing neutral expression, lips gently closed, eyes fully open. Soft window light from the left, gentle shadows, warm dark charcoal studio background with subtle falloff. Shot on an 85mm lens at f/2, sharp focus on the eyes, natural skin texture, no retouching, no text, no watermark.",
+      "baseImage": "../Portraits/sam-base.jpg",
+      "blinkImage": "../Portraits/sam-blink.jpg",
+      "mouthAImage": "../Portraits/sam-mouthA.jpg",
+      "mouthOImage": "../Portraits/sam-mouthO.jpg",
+      "smileImage": "../Portraits/sam-smile.jpg",
+      "depthImage": "../Portraits/sam-depth.jpg",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../living-portrait",
+        "name": "LivingPortrait"
+      }
+    }
+  }
+}

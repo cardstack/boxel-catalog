@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Pip",
+      "portraitPrompt": "An original cute mascot character: a small red panda rendered in a soft, rounded 3D animated-film style. Big friendly dark eyes, round fluffy cheeks, soft russet and cream fur, a tiny mustard-yellow knitted scarf. Head and shoulders, centred, facing the camera directly, looking straight into the lens with a calm, friendly, neutral expression, mouth gently closed, eyes fully open. Soft window light from the left, gentle shadows, warm dark charcoal studio background with subtle falloff. Clean, high detail fur, no text, no logo, not based on any existing character.",
+      "baseImage": "../Portraits/pip-base.jpg",
+      "blinkImage": "../Portraits/pip-blink.jpg",
+      "mouthAImage": "../Portraits/pip-mouthA.jpg",
+      "mouthOImage": "../Portraits/pip-mouthO.jpg",
+      "smileImage": "../Portraits/pip-smile.jpg",
+      "depthImage": "../Portraits/pip-depth.jpg",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../living-portrait",
+        "name": "LivingPortrait"
+      }
+    }
+  }
+}

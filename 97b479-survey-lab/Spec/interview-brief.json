@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Interview Brief\n\nWrite a few sentences on what you want to learn. The AI drafts the **aims**, and a **study designer** sets how the interviews run: what people see at the end (their result with evidence, a short result, or just thanks), how warm the interviewer may be before it skews answers, whether the style adapts to each person, warm-up questions, length, and which tools it may use.\n\nParticipants pick who to talk to (Mei, Sam or Pip come in the box) and start a chat. Two studies are included: **Which of the 16 types are you?** (a fun self-reflection) and **Our Taste Test** (what makes an app screen feel right, with 18 real screens).",
+      "ref": {
+        "module": "../interview",
+        "name": "InterviewBrief"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Interview Brief",
+      "cardDescription": "A research study as a brief: what you want to learn, the aims, the must-ask questions, the study design, and which interviewers people can pick. Participants start here.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

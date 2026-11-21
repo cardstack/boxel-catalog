@@ -1,0 +1,21 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Getting a new internal tool",
+      "brief": "When a team needs a new internal tool, what's their default route today? That's the habit an AI app builder has to beat.",
+      "prompt": "Last time your team needed a new internal tool, how did you mostly get it?",
+      "options": "Asked our engineers to build it\nBought or subscribed to a product\nBuilt it ourselves in a no-code tool\nMade do with a spreadsheet\nAsked an AI to build it\nWent without",
+      "multi": false,
+      "maxPicks": null,
+      "allowOther": true,
+      "shuffle": true
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../choice",
+        "name": "ChoiceQuestion"
+      }
+    }
+  }
+}
