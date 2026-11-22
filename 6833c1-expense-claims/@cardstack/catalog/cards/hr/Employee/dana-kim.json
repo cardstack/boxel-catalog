@@ -1,0 +1,49 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Employee",
+        "module": "../employee"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Dana Kim",
+      "role": "Head of People",
+      "email": "dana.kim@example.com",
+      "phone": "+1 555 0103",
+      "photo": {
+        "url": "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg",
+        "sourceMode": "url"
+      },
+      "salary": 165000,
+      "status": "active",
+      "cardInfo": {
+        "name": "Dana Kim",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "startDate": "2023-06-05",
+      "department": "People Ops",
+      "ptoBalance": null,
+      "employmentType": null,
+      "terminationDate": null,
+      "onboardingStatus": null,
+      "ptoAllowanceDays": 25,
+      "weeklyInterviewCapacityHours": null
+    },
+    "relationships": {
+      "manager": {
+        "links": {
+          "self": "./sofia-reyes"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    }
+  }
+}

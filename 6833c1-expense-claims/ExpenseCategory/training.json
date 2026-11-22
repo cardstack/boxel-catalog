@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "labelEn": "Training & courses",
+      "labelMs": "Latihan & kursus",
+      "account": "6840",
+      "capAmount": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../expense-category",
+        "name": "ExpenseCategory"
+      }
+    }
+  }
+}

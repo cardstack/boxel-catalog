@@ -1,0 +1,157 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "claimNo": "EC-2026-0002",
+      "purpose": "Customer workshop at Demo Holdings, Shah Alam (5–12 Nov)",
+      "lines": [
+        {
+          "date": "2026-11-12",
+          "merchant": "Restoran Seri Demo",
+          "amount": 181.2,
+          "receipt": {
+            "url": null,
+            "sourceMode": "file"
+          },
+          "note": null,
+          "aiFilled": [
+            "merchant=Restoran Seri Demo",
+            "date=2026-11-12",
+            "amount=181.2",
+            "category=Client meals",
+            "receipt=../receipts/demo-restoran.jpg"
+          ]
+        },
+        {
+          "date": "2026-11-05",
+          "merchant": "KEDAI ALAT TULIS DEMO",
+          "amount": 149.3,
+          "receipt": {
+            "url": null,
+            "sourceMode": "file"
+          },
+          "note": null,
+          "aiFilled": [
+            "merchant=KEDAI ALAT TULIS DEMO",
+            "date=2026-11-05",
+            "amount=149.3",
+            "category=Office supplies",
+            "receipt=../receipts/demo-kedai-alat-tulis.jpg"
+          ]
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Demo Learning Lab, Inc.",
+          "amount": 231.6,
+          "receipt": {
+            "url": null,
+            "sourceMode": "file"
+          },
+          "note": "USD 49.00; RM 231.60 on the card statement",
+          "aiFilled": [
+            "merchant=Demo Learning Lab, Inc.",
+            "date=2026-11-03",
+            "category=Training & courses",
+            "receipt=../receipts/demo-kursus-usd.jpg"
+          ]
+        }
+      ],
+      "approvalNotes": [
+        "Sofia Reyes: Finance sign-off above 500: value exceeds 500"
+      ],
+      "policyFlags": [
+        {
+          "rule": "P1",
+          "lineNo": 1,
+          "message": "Line 1 (Restoran Seri Demo) is RM 181.20, over the Client meals cap of RM 150.00 per receipt."
+        }
+      ],
+      "submittedDate": "2026-11-17",
+      "approvalChain": {
+        "startedAt": "2026-11-17T13:38:54.178Z",
+        "steps": [
+          {
+            "decision": "pending",
+            "decidedAt": null,
+            "comment": null,
+            "openedAt": "2026-11-17T13:38:54.178Z",
+            "holdReason": null,
+            "conditions": null
+          },
+          {
+            "decision": "pending",
+            "decidedAt": null,
+            "comment": null,
+            "openedAt": null,
+            "holdReason": null,
+            "conditions": null
+          }
+        ]
+      },
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "employee": {
+        "links": {
+          "self": "../@cardstack/catalog/cards/hr/Employee/priya-nair"
+        }
+      },
+      "policy": {
+        "links": {
+          "self": "../ExpensePolicy/default"
+        }
+      },
+      "lines.0.receipt.file": {
+        "links": {
+          "self": "../receipts/demo-restoran.jpg"
+        }
+      },
+      "lines.1.receipt.file": {
+        "links": {
+          "self": "../receipts/demo-kedai-alat-tulis.jpg"
+        }
+      },
+      "lines.2.receipt.file": {
+        "links": {
+          "self": "../receipts/demo-kursus-usd.jpg"
+        }
+      },
+      "lines.0.category": {
+        "links": {
+          "self": "../ExpenseCategory/meals"
+        }
+      },
+      "lines.1.category": {
+        "links": {
+          "self": "../ExpenseCategory/supplies"
+        }
+      },
+      "lines.2.category": {
+        "links": {
+          "self": "../ExpenseCategory/training"
+        }
+      },
+      "approvalChain.steps.0.approver": {
+        "links": {
+          "self": "../@cardstack/catalog/cards/hr/Employee/marcus-webb"
+        }
+      },
+      "approvalChain.steps.1.approver": {
+        "links": {
+          "self": "../@cardstack/catalog/cards/hr/Employee/sofia-reyes"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../expense-claim",
+        "name": "ExpenseClaim"
+      }
+    }
+  }
+}

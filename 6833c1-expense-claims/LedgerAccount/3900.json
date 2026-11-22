@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "3900",
+      "name": "Opening Balance Equity",
+      "type": "equity",
+      "active": true,
+      "cardInfo": {
+        "name": "3900 Opening Balance Equity"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/cards/accounting/ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "6820",
+      "name": "Client Meals",
+      "type": "expense",
+      "active": true,
+      "cardInfo": {
+        "name": "6820 Client Meals"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/cards/accounting/ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "claimNo": "EC-2026-0003",
+      "purpose": "Candidate interviews in Kuala Lumpur (8–10 Nov)",
+      "lines": [
+        {
+          "date": "2026-11-08",
+          "merchant": "KitaRide DEMO",
+          "amount": 32.4,
+          "receipt": {
+            "url": null,
+            "sourceMode": "file"
+          },
+          "note": null,
+          "aiFilled": [
+            "merchant=KitaRide DEMO",
+            "date=2026-11-08",
+            "amount=32.4",
+            "category=Travel & transport",
+            "receipt=../receipts/demo-ehailing.png"
+          ]
+        },
+        {
+          "date": "2026-11-10",
+          "merchant": "PARKIR DEMO PLAZA",
+          "amount": 12,
+          "receipt": {
+            "url": null,
+            "sourceMode": "file"
+          },
+          "note": null,
+          "aiFilled": [
+            "merchant=PARKIR DEMO PLAZA",
+            "date=2026-11-10",
+            "amount=12",
+            "category=Travel & transport",
+            "receipt=../receipts/demo-parkir.jpg"
+          ]
+        }
+      ],
+      "approvalNotes": [],
+      "policyFlags": [],
+      "submittedDate": "2026-11-17",
+      "approvalChain": {
+        "startedAt": "2026-11-17T13:39:54.772Z",
+        "steps": [
+          {
+            "decision": "approved",
+            "decidedAt": "2026-11-17T13:41:56.043Z",
+            "comment": "Interview travel, all within policy.",
+            "openedAt": "2026-11-17T13:39:54.772Z",
+            "holdReason": null,
+            "conditions": null
+          }
+        ]
+      },
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "employee": {
+        "links": {
+          "self": "../@cardstack/catalog/cards/hr/Employee/dana-kim"
+        }
+      },
+      "policy": {
+        "links": {
+          "self": "../ExpensePolicy/default"
+        }
+      },
+      "lines.0.receipt.file": {
+        "links": {
+          "self": "../receipts/demo-ehailing.png"
+        }
+      },
+      "lines.1.receipt.file": {
+        "links": {
+          "self": "../receipts/demo-parkir.jpg"
+        }
+      },
+      "lines.0.category": {
+        "links": {
+          "self": "../ExpenseCategory/travel"
+        }
+      },
+      "lines.1.category": {
+        "links": {
+          "self": "../ExpenseCategory/travel"
+        }
+      },
+      "approvalChain.steps.0.approver": {
+        "links": {
+          "self": "../@cardstack/catalog/cards/hr/Employee/sofia-reyes"
+        }
+      },
+      "bill": {
+        "links": {
+          "self": "../Bill/7860e063-75cd-44f8-af23-dbe9d1b67a31"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../expense-claim",
+        "name": "ExpenseClaim"
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "deskName": "Expense Claims",
+      "claimNoPrefix": "EC"
+    },
+    "relationships": {
+      "policy": {
+        "links": {
+          "self": "../ExpensePolicy/default"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../expense-desk",
+        "name": "ExpenseDesk"
+      }
+    }
+  }
+}

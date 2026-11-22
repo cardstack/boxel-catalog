@@ -1,0 +1,48 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "@cardstack/catalog/cards/accounting/ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-11-17",
+      "date": "2026-11-17",
+      "memo": "Expense claim EC-2026-0003 · Dana Kim · 2 receipts",
+      "lines": [
+        {
+          "account": "6810",
+          "sku": null,
+          "qty": null,
+          "unitCostMinor": null,
+          "amountMinor": 3240,
+          "lot": null,
+          "debitAccount": "6810",
+          "description": "KitaRide DEMO · Travel & transport · 2026-11-08",
+          "cls": null,
+          "loc": null
+        },
+        {
+          "account": "6810",
+          "sku": null,
+          "qty": null,
+          "unitCostMinor": null,
+          "amountMinor": 1200,
+          "lot": null,
+          "debitAccount": "6810",
+          "description": "PARKIR DEMO PLAZA · Travel & transport · 2026-11-10",
+          "cls": null,
+          "loc": null
+        }
+      ],
+      "billNo": "EC-2026-0003",
+      "status": "posted",
+      "vendorId": "emp-dana-kim",
+      "enteredBy": "@aimanmalib:boxel.ai",
+      "paidMinor": 0,
+      "postedBy": "@aimanmalib:boxel.ai"
+    }
+  }
+}

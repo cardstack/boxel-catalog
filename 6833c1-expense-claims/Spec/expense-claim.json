@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Expense Claim\n\nAn employee's receipts as one document. **Submit** checks the policy (every line needs a category, and a receipt from the policy's amount), then builds the approval chain: the employee's manager, then the roles the policy's ApprovalRules require for the total. It records the policy flags an approver should check: a receipt over its category's cap, an old or future-dated receipt, or the same receipt claimed twice. Approvers decide on the claim page with the catalog's ApproveChainStepCommand. **Send to books** turns an approved claim into a draft Bill through Ledger.enterBill, one bill per claim; its status then follows the bill (in the books, posted, paid). The employee's fields lock once the claim is submitted.\n\nPart of Expense Claims.",
+      "ref": {
+        "module": "../expense-claim",
+        "name": "ExpenseClaim"
+      },
+      "specType": "card",
+      "cardInfo": {
+        "name": "Expense Claim",
+        "summary": "One employee's receipts, approved through the HR approval chain and sent to the books as a draft Bill."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../ExpenseClaim/EC-2026-0002"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../ExpenseClaim/EC-2026-0001"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

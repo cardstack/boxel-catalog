@@ -1,0 +1,68 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "claimNo": "EC-2026-0001",
+      "purpose": "Site visit to a customer in Ipoh, 14 Nov",
+      "lines": [
+        {
+          "date": null,
+          "merchant": null,
+          "amount": null,
+          "note": null,
+          "aiFilled": [],
+          "receipt": {
+            "url": null,
+            "sourceMode": "file"
+          }
+        },
+        {
+          "date": null,
+          "merchant": null,
+          "amount": null,
+          "note": null,
+          "aiFilled": [],
+          "receipt": {
+            "url": null,
+            "sourceMode": "file"
+          }
+        }
+      ],
+      "approvalNotes": [],
+      "policyFlags": [],
+      "submittedDate": null,
+      "approvalChain": {
+        "startedAt": null,
+        "steps": []
+      }
+    },
+    "relationships": {
+      "employee": {
+        "links": {
+          "self": "../@cardstack/catalog/cards/hr/Employee/leo-park"
+        }
+      },
+      "policy": {
+        "links": {
+          "self": "../ExpensePolicy/default"
+        }
+      },
+      "lines.0.receipt.file": {
+        "links": {
+          "self": "../receipts/demo-kopi.jpg"
+        }
+      },
+      "lines.1.receipt.file": {
+        "links": {
+          "self": "../receipts/demo-tol.jpg"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../expense-claim",
+        "name": "ExpenseClaim"
+      }
+    }
+  }
+}
