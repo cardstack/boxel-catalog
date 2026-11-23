@@ -44,6 +44,7 @@ import {
   type ResolvedCodeRef,
 } from '@cardstack/runtime-common';
 import AuthedFetchTool from '@cardstack/boxel-host/tools/authed-fetch';
+import AutomationRequestTool from '@cardstack/boxel-host/tools/automation-request';
 import ReadSourceTool from '@cardstack/boxel-host/tools/read-source';
 import WriteTextFileTool from '@cardstack/boxel-host/tools/write-text-file';
 import { Button } from '@cardstack/pretui/components/button';
@@ -3788,6 +3789,532 @@ class AutomationRuns extends GlimmerComponent<{
   </template>
 }
 
+// What the realm server's switch-on estimate says (`GET
+// /_automation-switch-on`): the monthly limit the card sets, which turning
+// the automation on agrees to, what the automation is likely to cost a month,
+// and who beyond the people the workspace names can read what the automation
+// writes.
+interface SwitchOnEstimate {
+  switchedOn: boolean;
+  monthlyCredits: number | null;
+  estimate: {
+    credits: number;
+    perRun: { totalCredits: number };
+    unboundedRunsPerMonth: number;
+    boundedRunsPerMonth: number;
+    onceRuns: number;
+    webhookTriggers: string[];
+    // What the viewer's latest finished Preview of the automation cost,
+    // absent before the viewer's first one.
+    recentPreviewCredits?: number;
+  };
+  broadReaders?: {
+    anyone: boolean;
+    everySignedInUser: boolean;
+    policyGrants: { path: string; who: 'anyone' | 'signed-in' }[];
+  };
+}
+
+// The routes the switch-on screen calls on the realm server. Each acts as the
+// signed-in person, and answers only a direct writer of the workspace.
+const SWITCH_ON_ROUTE = '_automation-switch-on';
+const RESUME_ROUTE = '_automation-resume';
+
+// How long the screen waits, after writing a new monthly limit to the card,
+// for the realm server to read the card with that limit.
+const CAP_SAVED_WAIT_MS = 30_000;
+const CAP_SAVED_POLL_MS = 500;
+
+// Whether a paused automation waits for someone to agree to what its card
+// asks for beyond the payer's agreement: a limit raised above what the payer
+// agreed to, or batched AI turned on. Resuming such an automation goes through the switch-on screen,
+// which shows the estimate and the monthly limit again.
+function needsReconfirm(status: ServerStatus | undefined): boolean {
+  return (
+    status?.switchedOn === true &&
+    status.state === 'paused' &&
+    (status.pauseReason === 'caps-raised' ||
+      status.pauseReason === 'batched-ai-enabled')
+  );
+}
+
+// The lines of the broad-read warning: who beyond the people the workspace
+// names can read what the automation writes.
+function broadReaderLines(readers: SwitchOnEstimate['broadReaders']): string[] {
+  if (!readers) {
+    return [];
+  }
+  let lines: string[] = [];
+  if (readers.anyone) {
+    lines.push('Anyone, signed in or not, can read this workspace.');
+  }
+  if (readers.everySignedInUser) {
+    lines.push('Every signed-in Boxel user can read this workspace.');
+  }
+  let toAnyone = readers.policyGrants.filter((g) => g.who === 'anyone').length;
+  let toSignedIn = readers.policyGrants.length - toAnyone;
+  if (toAnyone > 0) {
+    lines.push(
+      toAnyone === 1
+        ? 'One grant in the workspace’s policy lets anyone, signed in or not, read cards.'
+        : `${tally(toAnyone)} grants in the workspace’s policy let anyone, signed in or not, read cards.`,
+    );
+  }
+  if (toSignedIn > 0) {
+    lines.push(
+      toSignedIn === 1
+        ? 'One grant in the workspace’s policy lets every signed-in Boxel user read cards.'
+        : `${tally(toSignedIn)} grants in the workspace’s policy let every signed-in Boxel user read cards.`,
+    );
+  }
+  return lines;
+}
+
+// The switch-on screen. A direct writer of the workspace turns the
+// automation on here and becomes the automation's payer, after reading what
+// the automation is likely to cost a month and agreeing to a monthly limit.
+// The same screen resumes an automation that Boxel paused because the card
+// asks for more than the payer agreed to (`needsReconfirm`): whoever
+// resumes it agrees to the card as it is and becomes the payer.
+//
+// The realm server takes the switch-on only at the monthly limit the card
+// sets, so a person who picks another limit gets that limit written to the
+// card first. The screen then waits for the server to read the card with the
+// new limit before asking it to turn the automation on.
+export class SwitchOnDialog extends GlimmerComponent<{
+  Args: {
+    model: Automation;
+    context: CardContext | undefined;
+    // The workspace's URL, as the workspace's permissions name the
+    // workspace.
+    realm: string | undefined;
+    status: ServerStatus | undefined;
+  };
+}> {
+  @tracked open = false;
+  @tracked loading = false;
+  @tracked estimate: SwitchOnEstimate | undefined;
+  @tracked estimateFailure: string | undefined;
+  // The monthly limit the person typed, or undefined while the person keeps
+  // the card's own.
+  @tracked typedCap: number | null | undefined;
+  @tracked submitted = false;
+  @tracked saving = false;
+  @tracked failure: string | undefined;
+
+  get mode(): 'switch-on' | 'reconfirm' {
+    return needsReconfirm(this.args.status) ? 'reconfirm' : 'switch-on';
+  }
+  get available() {
+    let status = this.args.status;
+    return (
+      Boolean(this.args.realm && this.args.model.id && this.tools) &&
+      (status?.switchedOn === false || this.mode === 'reconfirm')
+    );
+  }
+  get tools() {
+    return toolsOf(this.args.context);
+  }
+  get title() {
+    return this.mode === 'reconfirm'
+      ? 'Resume the automation'
+      : 'Turn the automation on';
+  }
+  get openLabel() {
+    return this.mode === 'reconfirm' ? 'Review and resume' : 'Turn on';
+  }
+  get confirmLabel() {
+    return this.mode === 'reconfirm' ? 'Resume and pay' : 'Turn on and pay';
+  }
+  // Why Boxel paused an automation that the screen resumes.
+  get reconfirmLead() {
+    let status = this.args.status;
+    if (!status?.switchedOn) {
+      return undefined;
+    }
+    return status.pauseReason === 'batched-ai-enabled'
+      ? 'Someone turned on batched AI after the payer agreed to the automation’s limits, so Boxel paused the automation. Resuming the automation makes you the payer, with batched AI on.'
+      : 'Someone raised one of the automation’s limits above what the payer agreed to, so Boxel paused the automation. Resuming the automation makes you the payer of the new limits.';
+  }
+
+  get cap(): number | null {
+    if (this.typedCap !== undefined) {
+      return this.typedCap;
+    }
+    return this.estimate?.monthlyCredits ?? null;
+  }
+  get capProblem() {
+    if (!this.submitted && this.typedCap === undefined) {
+      return undefined;
+    }
+    let cap = this.cap;
+    if (cap === null) {
+      return 'Enter a monthly limit. Boxel turns an automation on only with a monthly limit.';
+    }
+    if (!Number.isInteger(cap) || cap < 0) {
+      return 'Enter a whole number of credits, or 0 to forbid any spending.';
+    }
+    return undefined;
+  }
+  get capBelowEstimate() {
+    let cap = this.cap;
+    return (
+      typeof cap === 'number' &&
+      this.estimate !== undefined &&
+      cap < this.estimate.estimate.credits
+    );
+  }
+  get capHint() {
+    return this.capBelowEstimate
+      ? 'The limit is below the estimate, so Boxel may stop starting runs before the month ends.'
+      : 'Boxel starts no run in a calendar month once the automation’s charges that month reach this limit.';
+  }
+
+  get estimateItems() {
+    let e = this.estimate?.estimate;
+    if (!e) {
+      return [];
+    }
+    let runs = Math.ceil(
+      e.unboundedRunsPerMonth + e.boundedRunsPerMonth + e.onceRuns,
+    );
+    return [
+      {
+        key: 'estimate',
+        label: 'Estimate',
+        value: `${tally(e.credits)} credits a month`,
+        hint: 'The most each run can cost, times the runs the triggers make in a month.',
+      },
+      {
+        key: 'perRun',
+        label: 'Most one run can cost',
+        value: `${tally(Math.ceil(e.perRun.totalCredits))} credits`,
+        hint: 'What the per-run limits let one run spend on time, downloads and AI.',
+      },
+      {
+        key: 'runs',
+        label: 'Runs counted',
+        value: runs === 1 ? '1 run a month' : `${tally(runs)} runs a month`,
+        hint: 'Every scheduled run in an average month, and each one-time run still to come.',
+      },
+      {
+        key: 'preview',
+        label: 'Your last Preview',
+        value:
+          e.recentPreviewCredits === undefined
+            ? 'No Preview yet'
+            : `${tally(e.recentPreviewCredits)} credits`,
+        hint: 'Boxel charges a Preview to the person who runs the Preview, so the estimate leaves Previews out.',
+      },
+    ];
+  }
+  hintOf = (key: string | undefined) =>
+    this.estimateItems.find((item) => item.key === key)?.hint;
+  get webhookTriggers() {
+    return this.estimate?.estimate.webhookTriggers ?? [];
+  }
+  get broadReaderLines() {
+    return broadReaderLines(this.estimate?.broadReaders);
+  }
+  get canConfirm() {
+    return (
+      this.estimate !== undefined &&
+      !this.loading &&
+      !this.saving &&
+      !this.capProblem
+    );
+  }
+
+  show = () => {
+    this.typedCap = undefined;
+    this.submitted = false;
+    this.failure = undefined;
+    this.estimate = undefined;
+    this.estimateFailure = undefined;
+    this.open = true;
+    this.readEstimate();
+  };
+  close = () => {
+    if (!this.saving) {
+      this.open = false;
+    }
+  };
+  setCap = (value: number | null) => {
+    this.typedCap = value;
+    this.failure = undefined;
+  };
+
+  private request(attributes: {
+    route: string;
+    method: 'GET' | 'POST';
+    monthlyCredits?: number;
+  }) {
+    return new AutomationRequestTool(this.tools!).execute({
+      ...attributes,
+      realm: this.args.realm,
+      automation: this.args.model.id,
+    });
+  }
+
+  private async fetchEstimate(): Promise<SwitchOnEstimate> {
+    let result = await this.request({ route: SWITCH_ON_ROUTE, method: 'GET' });
+    if (!result.ok) {
+      throw new Error(
+        result.errors?.[0] ??
+          `The realm server answered ${result.status} for the estimate.`,
+      );
+    }
+    return result.body?.data?.attributes as SwitchOnEstimate;
+  }
+
+  readEstimate = async () => {
+    this.loading = true;
+    try {
+      this.estimate = await this.fetchEstimate();
+      this.estimateFailure = undefined;
+    } catch (e) {
+      this.estimateFailure = e instanceof Error ? e.message : String(e);
+    } finally {
+      this.loading = false;
+    }
+  };
+
+  // Writes the monthly limit to the card, and waits for the realm server to
+  // read the card with that limit.
+  private async writeCap(cap: number) {
+    let model = this.args.model;
+    if (model.caps) {
+      model.caps.monthlyCredits = cap;
+    } else {
+      model.caps = new AutomationCaps({ ...CAP_DEFAULTS, monthlyCredits: cap });
+    }
+    let started = Date.now();
+    for (;;) {
+      let estimate = await this.fetchEstimate();
+      if (estimate.monthlyCredits === cap) {
+        this.estimate = estimate;
+        return;
+      }
+      if (Date.now() - started > CAP_SAVED_WAIT_MS) {
+        throw new Error(
+          'Boxel saved the new monthly limit, but the realm server hasn’t read the card with the new limit yet. Try again in a moment.',
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, CAP_SAVED_POLL_MS));
+    }
+  }
+
+  confirm = async () => {
+    this.submitted = true;
+    let cap = this.cap;
+    if (!this.canConfirm || cap === null) {
+      return;
+    }
+    this.saving = true;
+    this.failure = undefined;
+    try {
+      if (cap !== this.estimate?.monthlyCredits) {
+        await this.writeCap(cap);
+      }
+      let result = await this.request({
+        route: this.mode === 'reconfirm' ? RESUME_ROUTE : SWITCH_ON_ROUTE,
+        method: 'POST',
+        monthlyCredits: cap,
+      });
+      if (!result.ok) {
+        this.failure =
+          result.errors?.[0] ?? `The realm server answered ${result.status}.`;
+        if (result.status === 409) {
+          // The card changed after the screen read it: show the limits the
+          // card holds.
+          await this.readEstimate();
+        }
+        return;
+      }
+      this.open = false;
+    } catch (e) {
+      this.failure = e instanceof Error ? e.message : String(e);
+    } finally {
+      this.saving = false;
+    }
+  };
+
+  <template>
+    {{#if this.available}}
+      <Button {{on 'click' this.show}} data-test-automation-switch-on>
+        {{this.openLabel}}
+      </Button>
+      <Dialog
+        @open={{this.open}}
+        @onClose={{this.close}}
+        @size='m'
+        @label={{this.title}}
+      >
+        <:title>{{this.title}}</:title>
+        <:default>
+          <div class='switch-on' data-test-automation-switch-on-screen>
+            {{#if this.reconfirmLead}}
+              <p
+                class='switch-on__lead'
+                data-test-automation-switch-on-reconfirm
+              >{{this.reconfirmLead}}</p>
+            {{/if}}
+            {{#if this.estimate}}
+              <Descriptions
+                @items={{this.estimateItems}}
+                @columns={{2}}
+                @layout='vertical'
+                @bordered={{true}}
+                data-test-automation-switch-on-estimate
+              >
+                <:value as |item|>
+                  <span
+                    class='switch-on__value'
+                    data-test-automation-switch-on-fact={{item.key}}
+                  >{{item.value}}</span>
+                  <span class='switch-on__hint'>{{this.hintOf item.key}}</span>
+                </:value>
+              </Descriptions>
+              <Callout
+                @tone='info'
+                @title='What the estimate leaves out'
+                data-test-automation-switch-on-left-out
+              >
+                <ul class='switch-on__list'>
+                  <li>The indexing that each run’s saves cause.</li>
+                  <li>The daily storage of the files the runs create.</li>
+                  <li>
+                    Runs that a webhook delivery starts, since no schedule
+                    predicts webhook deliveries.
+                    {{#if this.webhookTriggers.length}}
+                      This automation has webhook triggers:
+                      {{#each this.webhookTriggers as |label|}}
+                        <Token @value={{label}} />
+                      {{/each}}
+                    {{/if}}
+                  </li>
+                </ul>
+                The monthly limit covers every charge, including these.
+              </Callout>
+              <Field
+                @label='Monthly limit, in credits'
+                @hint={{this.capHint}}
+                @error={{this.capProblem}}
+                as |id|
+              >
+                <NumberInput
+                  @controlId={{id}}
+                  @value={{this.cap}}
+                  @min={{0}}
+                  @onInput={{this.setCap}}
+                  data-test-automation-switch-on-cap
+                />
+              </Field>
+              <Callout
+                @tone='info'
+                @title='You become the payer'
+                data-test-automation-switch-on-payer
+              >
+                Boxel charges every scheduled run, and the storage of the files
+                the runs create, to your credits, up to the monthly limit.
+                Anyone who can edit this workspace can pause the automation, or
+                resume the automation and become the payer instead.
+              </Callout>
+              {{#if this.broadReaderLines.length}}
+                <Callout
+                  @tone='warning'
+                  @title='Many people can read what this automation writes'
+                  data-test-automation-switch-on-broad-read
+                >
+                  <p class='switch-on__warning-lead'>Whoever can read this
+                    workspace can read every file the automation writes. Keep
+                    sensitive data, such as HR records, in a workspace that
+                    names each reader.</p>
+                  <ul class='switch-on__list'>
+                    {{#each this.broadReaderLines as |line|}}
+                      <li
+                        data-test-automation-switch-on-broad-reader
+                      >{{line}}</li>
+                    {{/each}}
+                  </ul>
+                </Callout>
+              {{/if}}
+            {{else if this.estimateFailure}}
+              <div data-test-automation-switch-on-estimate-failure>
+                <Callout
+                  @tone='danger'
+                  @title='Boxel couldn’t read the estimate'
+                >{{this.estimateFailure}}</Callout>
+              </div>
+            {{else}}
+              <LoadingState @label='Reading the estimate' />
+            {{/if}}
+            {{#if this.failure}}
+              <div data-test-automation-switch-on-failure>
+                <Callout
+                  @tone='danger'
+                  @title={{if
+                    (eq this.mode 'reconfirm')
+                    'Boxel didn’t resume the automation'
+                    'Boxel didn’t turn the automation on'
+                  }}
+                >{{this.failure}}</Callout>
+              </div>
+            {{/if}}
+          </div>
+        </:default>
+        <:footer>
+          <Button
+            @tone='neutral'
+            @appearance='outlined'
+            @disabled={{this.saving}}
+            {{on 'click' this.close}}
+          >Cancel</Button>
+          {{#if this.estimateFailure}}
+            <Button
+              @busy={{this.loading}}
+              {{on 'click' this.readEstimate}}
+              data-test-automation-switch-on-retry
+            >Try again</Button>
+          {{else}}
+            <Button
+              @busy={{this.saving}}
+              @disabled={{if this.estimate false true}}
+              {{on 'click' this.confirm}}
+              data-test-automation-switch-on-confirm
+            >{{this.confirmLabel}}</Button>
+          {{/if}}
+        </:footer>
+      </Dialog>
+    {{/if}}
+    <style scoped>
+      .switch-on {
+        display: grid;
+        gap: var(--boxel-sp);
+      }
+      .switch-on__lead,
+      .switch-on__warning-lead {
+        margin: 0;
+      }
+      .switch-on__value {
+        display: block;
+        font-size: var(--boxel-font-size-md);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .switch-on__hint {
+        display: block;
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+      }
+      .switch-on__list {
+        margin: var(--boxel-sp-4xs) 0;
+        padding-inline-start: var(--boxel-sp-lg);
+      }
+    </style>
+  </template>
+}
+
 class Isolated extends Component<typeof Automation> {
   // Leads the triggers: how many there are, and how they combine.
   get showsBatchedAI() {
@@ -3823,6 +4350,9 @@ class Isolated extends Component<typeof Automation> {
   }
   get realmId() {
     return instanceRealmId(this.args.model as Automation);
+  }
+  get automation() {
+    return this.args.model as Automation;
   }
   private server = automationStatus(this, () => ({
     id: this.args.model.id,
@@ -3967,6 +4497,14 @@ class Isolated extends Component<typeof Automation> {
           <p class='automation__lead' data-test-automation-state-sentence>
             {{this.stateSentence}}
           </p>
+          <div class='automation__switch-on'>
+            <SwitchOnDialog
+              @model={{this.automation}}
+              @context={{@context}}
+              @realm={{this.realmHref}}
+              @status={{this.status}}
+            />
+          </div>
           <StatusFacts @items={{this.statusItems}} @columns={{2}} />
           {{#if this.pauseProblems.length}}
             <Callout
@@ -4194,6 +4732,9 @@ class Isolated extends Component<typeof Automation> {
       .automation__lead {
         margin: 0 0 var(--boxel-sp-sm);
         color: var(--foreground);
+      }
+      .automation__switch-on:not(:empty) {
+        margin: 0 0 var(--boxel-sp-sm);
       }
       .automation__problems {
         display: grid;
