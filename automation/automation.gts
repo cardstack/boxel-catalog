@@ -4209,6 +4209,9 @@ class RunDetail extends GlimmerComponent<{
     realm: string | undefined;
     // The automation card's id, whose storage the run adds to.
     automation: string | undefined;
+    // The per-run limits the automation sets, which the Limits tab measures
+    // the run against.
+    caps: AutomationCaps | undefined;
     tools: Tools | undefined;
     // The automation's run before this one, whose milestone times the
     // milestones read against.
@@ -4308,6 +4311,7 @@ class RunDetail extends GlimmerComponent<{
       { value: 'calls', label: 'Calls' },
       { value: 'writes', label: 'Writes' },
       { value: 'cost', label: 'Cost' },
+      { value: 'limits', label: 'Limits' },
     ];
   }
   showTab = (tab: string) => (this.tab = tab);
@@ -4550,19 +4554,77 @@ class RunDetail extends GlimmerComponent<{
     }
     return sentences.join(' ');
   }
-  get usageItems(): StatusItem[] {
+  // How far the run went toward each limit the automation sets for a run, in
+  // the order the card's limits list them. A limit the card leaves unset
+  // reads as no limit; a limit of 0 allows none of that use.
+  get limitRows(): {
+    key: string;
+    label: string;
+    text: string;
+    value: number;
+    max: number;
+    hue: string | undefined;
+    reached: boolean;
+  }[] {
     let report = this.report;
     if (!report) {
       return [];
     }
-    let { cost } = report;
-    return [
-      { label: 'Outside service calls made', value: tally(cost.callApiCalls) },
-      { label: 'Data received', value: bytes(cost.callApiResponseBytes) },
-      { label: 'AI requests made', value: tally(cost.resolveCalls) },
-      { label: 'Files saved', value: tally(cost.writes) },
-    ];
+    let { cost, timings } = report;
+    let caps = this.args.caps;
+    let ranMs =
+      timings.runMs ??
+      (this.args.run.startedAt
+        ? Date.now() - Date.parse(this.args.run.startedAt)
+        : 0);
+    let used: Record<string, number> = {
+      callApiCalls: cost.callApiCalls,
+      responseBytes: cost.callApiResponseBytes,
+      writes: cost.writes,
+      resolveCalls: cost.resolveCalls,
+      aiCredits: cost.aiCreditsSpent,
+      seconds: Math.round(ranMs / 1000),
+    };
+    let show = (key: string, n: number) =>
+      key === 'responseBytes'
+        ? bytes(n)
+        : key === 'seconds'
+          ? durationText(n * 1000)
+          : key === 'aiCredits'
+            ? `${tally(n)} ${n === 1 ? 'credit' : 'credits'}`
+            : tally(n);
+    return RUN_LIMITS.map(({ key, label }) => {
+      let n = used[key] ?? 0;
+      let cap = caps?.[key as keyof AutomationCaps] as
+        | number
+        | null
+        | undefined;
+      let limited = typeof cap === 'number';
+      let limit = limited ? (cap as number) : 0;
+      let share = limit > 0 ? n / limit : n > 0 ? 1 : 0;
+      let reached = limited && n >= limit && (limit > 0 || n > 0);
+      return {
+        key,
+        label,
+        text: !limited
+          ? `${show(key, n)}, no limit set`
+          : limit === 0
+            ? n > 0
+              ? `${show(key, n)} of none allowed`
+              : 'None allowed'
+            : `${show(key, n)} of ${show(key, limit)}`,
+        value: limit > 0 ? Math.min(n, limit) : reached ? 1 : 0,
+        max: limit > 0 ? limit : 1,
+        hue: reached
+          ? 'var(--destructive)'
+          : limited && share >= LIMIT_NEAR_SHARE
+            ? 'var(--warning)'
+            : undefined,
+        reached,
+      };
+    });
   }
+
   <template>
     <div class='run-detail' data-test-automation-run-timeline={{@run.id}}>
       <p class='run-detail__note' data-test-automation-run-time-zone>
@@ -4877,6 +4939,48 @@ class RunDetail extends GlimmerComponent<{
                 <LoadingState @label='Loading the writes' />
               {{/if}}
             </div>
+          {{else if (eq tab 'limits')}}
+            <div class='run-detail__panel' data-test-automation-run-limits>
+              {{#if this.report}}
+                <p class='run-detail__note'>
+                  How far the run went toward each limit the automation sets for
+                  a run. Boxel stops a run that tries to go past a limit.
+                </p>
+                <ul class='run-detail__limits'>
+                  {{#each this.limitRows as |limit|}}
+                    <li
+                      class='run-detail__limit'
+                      data-test-automation-run-limit={{limit.key}}
+                      data-test-automation-run-limit-reached={{if
+                        limit.reached
+                        'true'
+                      }}
+                    >
+                      <span class='run-detail__limit-head'>
+                        <span
+                          class='run-detail__limit-name'
+                        >{{limit.label}}</span>
+                        <span
+                          class='run-detail__limit-text'
+                        >{{limit.text}}</span>
+                      </span>
+                      <ProgressBar
+                        @value={{limit.value}}
+                        @max={{limit.max}}
+                        @hue={{limit.hue}}
+                        @steps={{false}}
+                        @valueText={{limit.text}}
+                        aria-label={{limit.label}}
+                      />
+                    </li>
+                  {{/each}}
+                </ul>
+              {{else if this.reportFailure}}
+                {{! The callout above says Boxel couldn't read the run. }}
+              {{else}}
+                <LoadingState @label='Loading the limits' />
+              {{/if}}
+            </div>
           {{else}}
             <div class='run-detail__panel' data-test-automation-run-cost>
               {{#if this.report}}
@@ -4933,8 +5037,6 @@ class RunDetail extends GlimmerComponent<{
                   </ul>
                 </Callout>
 
-                <h4 class='run-detail__heading'>What the run used</h4>
-                <StatusFacts @items={{this.usageItems}} />
               {{else if this.reportFailure}}
                 {{! The callout above says Boxel couldn't read the run. }}
               {{else}}
@@ -4971,6 +5073,33 @@ class RunDetail extends GlimmerComponent<{
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
+      .run-detail__limits {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-sm);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        max-inline-size: 34rem;
+      }
+      .run-detail__limit {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-4xs);
+      }
+      .run-detail__limit-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+      }
+      .run-detail__limit-name {
+        font-weight: 600;
+      }
+      .run-detail__limit-text {
+        color: var(--muted-foreground);
+        font-variant-numeric: tabular-nums;
+      }
       .run-detail__rules {
         display: flex;
         flex-direction: column;
@@ -5002,9 +5131,11 @@ class AutomationRuns extends GlimmerComponent<{
     showPage: (page: number) => void;
     // The kind of each trigger the card declares, by label.
     triggerKind: (label: string | null) => string | undefined;
-    // What an opened run reads its details with.
+    // What an opened run reads its details with, and the limits the run is
+    // measured against.
     realm: string | undefined;
     automation: string | undefined;
+    caps: AutomationCaps | undefined;
     tools: Tools | undefined;
   };
 }> {
@@ -5278,6 +5409,7 @@ class AutomationRuns extends GlimmerComponent<{
               @run={{row.run}}
               @realm={{@realm}}
               @automation={{@automation}}
+              @caps={{@caps}}
               @tools={{@tools}}
               @previous={{this.previousRun row.run}}
             />
@@ -5561,6 +5693,7 @@ class Isolated extends Component<typeof Automation> {
             @triggerKind={{this.triggerKindOf}}
             @realm={{this.realmHref}}
             @automation={{@model.id}}
+            @caps={{@model.caps}}
             @tools={{this.tools}}
           />
         </PanelSection>
