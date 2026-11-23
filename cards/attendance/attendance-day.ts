@@ -97,8 +97,10 @@ export function clockMinutes(label: string | null | undefined): number | null {
   if (!label) {
     return null;
   }
-  let [time, suffix] = String(label).trim().toLowerCase().split(/\s+/);
-  let [h, m] = (time ?? '').split(':').map(Number);
+  let text = String(label).trim().toLowerCase().replace(/\s+/g, '');
+  let suffix = text.endsWith('am') ? 'am' : text.endsWith('pm') ? 'pm' : '';
+  let time = suffix ? text.slice(0, -2) : text;
+  let [h, m] = time.split(':').map(Number);
   if (!Number.isFinite(h) || !Number.isFinite(m)) {
     return null;
   }
@@ -197,6 +199,70 @@ export function foldDays(
     });
   }
   return days;
+}
+
+// A shift can run past midnight, so whether someone is in is read from their
+// last counted punch, not from today's: in, and within the last 16 hours.
+const MAX_SHIFT_MS = 16 * 60 * 60 * 1000;
+
+export function lastCountedPunch(
+  punches: PunchLike[] | null | undefined,
+): { direction: string; at: Date } | undefined {
+  let last: { direction: string; at: Date } | undefined;
+  for (let p of punches ?? []) {
+    if (!countsTowardDays(p)) {
+      continue;
+    }
+    let at = instant(p.punchedAt);
+    if (at && (!last || at.getTime() > last.at.getTime())) {
+      last = { direction: String(p.direction), at };
+    }
+  }
+  return last;
+}
+
+export function isCheckedIn(
+  punches: PunchLike[] | null | undefined,
+  now = new Date(),
+): boolean {
+  let last = lastCountedPunch(punches);
+  return (
+    last?.direction === 'in' &&
+    now.getTime() - last.at.getTime() < MAX_SHIFT_MS
+  );
+}
+
+// Minutes since the open check-in, for someone still in.
+export function openMinutes(
+  punches: PunchLike[] | null | undefined,
+  now = new Date(),
+): number {
+  let last = lastCountedPunch(punches);
+  if (!last || last.direction !== 'in') {
+    return 0;
+  }
+  return Math.max(0, Math.round((now.getTime() - last.at.getTime()) / 60000));
+}
+
+// A wall-clock time typed in the organization's zone ("2026-11-20T08:30"),
+// as the instant it names there, whatever zone the device is in.
+export function zonedToUtc(local: string, timezone: string): Date | null {
+  let [datePart, timePart] = local.split('T');
+  let [y, mo, d] = (datePart ?? '').split('-').map(Number);
+  let [h, mi] = (timePart ?? '').split(':').map(Number);
+  if (![y, mo, d, h, mi].every(Number.isFinite)) {
+    return null;
+  }
+  let wanted = Date.UTC(y, mo - 1, d, h, mi);
+  let guess = wanted;
+  // Two passes settle the zone offset, including across a DST change.
+  for (let i = 0; i < 2; i++) {
+    let shown = localClock(new Date(guess), timezone);
+    let [sy, sm, sd] = shown.day.split('-').map(Number);
+    let shownUtc = Date.UTC(sy, sm - 1, sd, 0, shown.minutes);
+    guess += wanted - shownUtc;
+  }
+  return new Date(guess);
 }
 
 // The organization's today, as a day key.

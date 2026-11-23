@@ -23,7 +23,6 @@ import {
   type OperationDeclaration,
 } from 'https://cardstack.com/base/operations';
 import ClockIcon from '@cardstack/boxel-icons/clock';
-import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Input } from '@cardstack/pretui/components/input';
@@ -35,9 +34,12 @@ import { ReceptionDisplay } from './reception-display';
 import {
   VERDICT_LABEL,
   foldDays,
+  isCheckedIn,
   localClock,
   minutesLabel,
+  openMinutes,
   todayKey,
+  zonedToUtc,
   type FoldedDay,
 } from './attendance-day';
 
@@ -99,6 +101,7 @@ class RecordView extends Component<typeof AttendanceRecord> {
   @tracked running: string | undefined;
   @tracked message: string | undefined;
   @tracked failed = false;
+  @tracked code = '';
 
   get record(): AttendanceRecord {
     return this.args.model as AttendanceRecord;
@@ -108,26 +111,34 @@ class RecordView extends Component<typeof AttendanceRecord> {
     return operations<typeof AttendanceRecord>(this.record);
   }
 
+  get timezone(): string {
+    return this.record.schedule?.timezone || 'UTC';
+  }
+
   get days(): FoldedDay[] {
     return foldDays(this.record.punches, this.record.schedule);
   }
 
   get today(): FoldedDay | undefined {
-    let key = todayKey(this.record.schedule?.timezone);
+    let key = todayKey(this.timezone);
     return this.days.find((d) => d.key === key);
   }
 
   get isIn(): boolean {
-    return this.record.status === 'in';
+    return isCheckedIn(this.record.punches);
   }
 
   get todayLine(): string {
     let d = this.today;
+    if (this.isIn) {
+      let since = d?.firstIn ? `In since ${d.firstIn}` : 'In';
+      let worked = (d?.minutes ?? 0) + openMinutes(this.record.punches);
+      return `${since} · ${minutesLabel(worked)}`;
+    }
     if (!d) {
       return 'Not checked in today';
     }
-    let span = `${d.firstIn || '—'}–${d.stillIn ? 'now' : d.lastOut || '—'}`;
-    return `${span} · ${minutesLabel(d.minutes)}`;
+    return `${d.firstIn || '—'}–${d.lastOut || '—'} · ${minutesLabel(d.minutes)}`;
   }
 
   // Hide on a definite no only; undefined is "not answered yet".
@@ -143,7 +154,24 @@ class RecordView extends Component<typeof AttendanceRecord> {
     return !this.isIn || this.denied('checkOut');
   }
 
+  get showCodeCheckIn(): boolean {
+    return (
+      !this.isIn &&
+      Boolean(this.record.display?.id) &&
+      !this.denied('checkInWithCode')
+    );
+  }
+
+  isBusy = (name: string): boolean => this.running === name;
+
+  get anyBusy(): boolean {
+    return this.running !== undefined;
+  }
+
   run = async (name: string, invoke: () => Promise<unknown>, done: string) => {
+    if (this.running) {
+      return;
+    }
     this.running = name;
     this.message = undefined;
     this.failed = false;
@@ -163,6 +191,23 @@ class RecordView extends Component<typeof AttendanceRecord> {
 
   checkOut = () =>
     this.run('checkOut', () => this.ops.checkOut({}), 'Checked out.');
+
+  setCode = (value: string) => (this.code = value.trim().toUpperCase());
+
+  checkInWithCode = (event?: Event) => {
+    event?.preventDefault();
+    return this.run(
+      'checkInWithCode',
+      async () => {
+        if (!this.code) {
+          throw new Error('Enter the code shown on the reception screen.');
+        }
+        await this.ops.checkInWithCode({ code: this.code });
+        this.code = '';
+      },
+      'Checked in at reception.',
+    );
+  };
 }
 
 class Embedded extends RecordView {
@@ -182,20 +227,42 @@ class Embedded extends RecordView {
           <Button
             @tone='primary'
             @appearance='accent'
-            @busy={{if this.running true false}}
+            @busy={{this.isBusy 'checkIn'}}
             @busyLabel='Checking in…'
+            @disabled={{this.anyBusy}}
             {{on 'click' this.checkIn}}
           >Check in</Button>
         {{/unless}}
         {{#unless this.hideCheckOut}}
           <Button
             @appearance='outlined'
-            @busy={{if this.running true false}}
+            @busy={{this.isBusy 'checkOut'}}
             @busyLabel='Checking out…'
+            @disabled={{this.anyBusy}}
             {{on 'click' this.checkOut}}
           >Check out</Button>
         {{/unless}}
       </div>
+      {{#if this.showCodeCheckIn}}
+        <form
+          class='code'
+          aria-label='Check in with the reception code'
+          {{on 'submit' this.checkInWithCode}}
+        >
+          <Input
+            @value={{this.code}}
+            @onInput={{this.setCode}}
+            @placeholder='Code on the reception screen'
+            aria-label='Reception code'
+          />
+          <Button
+            type='submit'
+            @busy={{this.isBusy 'checkInWithCode'}}
+            @busyLabel='Checking in…'
+            @disabled={{this.anyBusy}}
+          >Check in with code</Button>
+        </form>
+      {{/if}}
       <p class='message {{if this.failed "is-error"}}' role='status'>
         {{this.message}}
       </p>
@@ -228,8 +295,10 @@ class Embedded extends RecordView {
         color: var(--muted-foreground);
         font-size: var(--boxel-font-size-sm);
       }
-      .actions {
+      .actions,
+      .code {
         display: flex;
+        flex-wrap: wrap;
         gap: var(--boxel-sp-xs);
       }
       .message {
@@ -245,10 +314,17 @@ class Embedded extends RecordView {
   </template>
 }
 
+function nonce(): string {
+  let bytes = new Uint8Array(4);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 class Isolated extends RecordView {
   @tracked correctionDirection = 'in';
   @tracked correctionAt = '';
   @tracked correctionReason = '';
+  @tracked deciding: string | undefined;
 
   directionOptions = [
     { value: 'in', label: 'Check in' },
@@ -267,10 +343,7 @@ class Isolated extends RecordView {
   }
 
   localTime(at: Date | string): string {
-    let { day, label } = localClock(
-      new Date(at),
-      this.record.schedule?.timezone || 'UTC',
-    );
+    let { day, label } = localClock(new Date(at), this.timezone);
     return `${day} ${label}`;
   }
 
@@ -300,31 +373,47 @@ class Isolated extends RecordView {
   setAt = (value: string) => (this.correctionAt = value);
   setReason = (value: string) => (this.correctionReason = value);
 
-  requestCorrection = () =>
-    this.run(
+  isDeciding = (eventId: string): boolean => this.deciding === eventId;
+
+  requestCorrection = (event?: Event) => {
+    event?.preventDefault();
+    return this.run(
       'requestCorrection',
       async () => {
-        let at = this.correctionAt ? new Date(this.correctionAt) : null;
-        if (!at || Number.isNaN(at.getTime())) {
+        // The time is typed on the organization's clock, not the device's.
+        let at = this.correctionAt
+          ? zonedToUtc(this.correctionAt, this.timezone)
+          : null;
+        if (!at) {
           throw new Error('Enter the date and time of the missing punch.');
         }
         await this.ops.requestCorrection({
           direction: this.correctionDirection,
           punchedAt: at.toISOString(),
           reason: this.correctionReason,
+          nonce: nonce(),
         });
         this.correctionAt = '';
         this.correctionReason = '';
       },
       'Correction sent to your manager.',
     );
+  };
 
-  decide = (eventId: string, decision: 'approved' | 'declined') =>
-    this.run(
-      'decideCorrection',
-      () => this.ops.decideCorrection({ eventId, decision }),
-      decision === 'approved' ? 'Correction approved.' : 'Correction declined.',
-    );
+  decide = async (eventId: string, decision: 'approved' | 'declined') => {
+    this.deciding = eventId;
+    try {
+      await this.run(
+        'decideCorrection',
+        () => this.ops.decideCorrection({ eventId, decision }),
+        decision === 'approved'
+          ? 'Correction approved.'
+          : 'Correction declined.',
+      );
+    } finally {
+      this.deciding = undefined;
+    }
+  };
 
   <template>
     <article class='sheet'>
@@ -339,8 +428,9 @@ class Isolated extends RecordView {
               @tone='primary'
               @appearance='accent'
               @size='l'
-              @busy={{if this.running true false}}
+              @busy={{this.isBusy 'checkIn'}}
               @busyLabel='Checking in…'
+              @disabled={{this.anyBusy}}
               {{on 'click' this.checkIn}}
             >Check in</Button>
           {{/unless}}
@@ -348,22 +438,42 @@ class Isolated extends RecordView {
             <Button
               @appearance='outlined'
               @size='l'
-              @busy={{if this.running true false}}
+              @busy={{this.isBusy 'checkOut'}}
               @busyLabel='Checking out…'
+              @disabled={{this.anyBusy}}
               {{on 'click' this.checkOut}}
             >Check out</Button>
           {{/unless}}
         </div>
       </header>
 
-      {{#if this.message}}
-        <Alert @tone={{if this.failed 'danger' 'success'}}>
-          {{this.message}}
-        </Alert>
+      {{#if this.showCodeCheckIn}}
+        <form
+          class='code'
+          aria-label='Check in with the reception code'
+          {{on 'submit' this.checkInWithCode}}
+        >
+          <Input
+            @value={{this.code}}
+            @onInput={{this.setCode}}
+            @placeholder='Code on the reception screen'
+            aria-label='Reception code'
+          />
+          <Button
+            type='submit'
+            @busy={{this.isBusy 'checkInWithCode'}}
+            @busyLabel='Checking in…'
+            @disabled={{this.anyBusy}}
+          >Check in with code</Button>
+        </form>
       {{/if}}
 
+      <p class='message {{if this.failed "is-error"}}' role='status'>
+        {{this.message}}
+      </p>
+
       <section>
-        <h2>Last 14 days</h2>
+        <h2>Recent days</h2>
         {{#if this.recentDays.length}}
           <table class='days'>
             <thead>
@@ -408,12 +518,15 @@ class Isolated extends RecordView {
                     @tone='success'
                     @appearance='outlined'
                     @size='s'
+                    @busy={{this.isDeciding c.eventId}}
+                    @disabled={{this.anyBusy}}
                     {{on 'click' (fn this.decide c.eventId 'approved')}}
                   >Approve</Button>
                   <Button
                     @tone='danger'
                     @appearance='outlined'
                     @size='s'
+                    @disabled={{this.anyBusy}}
                     {{on 'click' (fn this.decide c.eventId 'declined')}}
                   >Decline</Button>
                 </div>
@@ -425,15 +538,22 @@ class Isolated extends RecordView {
         {{/each}}
 
         {{#unless this.hideRequest}}
-          <form class='request' aria-label='Request a correction'>
+          <form
+            class='request'
+            aria-label='Request a correction'
+            {{on 'submit' this.requestCorrection}}
+          >
             <h3>Missing or wrong punch?</h3>
-            <SegmentedControl
-              @options={{this.directionOptions}}
-              @value={{this.correctionDirection}}
-              @onValueChange={{this.setDirection}}
-            />
+            <fieldset class='direction'>
+              <legend>Which punch is missing</legend>
+              <SegmentedControl
+                @options={{this.directionOptions}}
+                @value={{this.correctionDirection}}
+                @onValueChange={{this.setDirection}}
+              />
+            </fieldset>
             <label class='label'>
-              When
+              When ({{this.timezone}})
               <Input
                 @type='datetime-local'
                 @value={{this.correctionAt}}
@@ -450,9 +570,10 @@ class Isolated extends RecordView {
             </label>
             <div>
               <Button
-                @busy={{if this.running true false}}
+                type='submit'
+                @busy={{this.isBusy 'requestCorrection'}}
                 @busyLabel='Sending…'
-                {{on 'click' this.requestCorrection}}
+                @disabled={{this.anyBusy}}
               >Send to my manager</Button>
             </div>
           </form>
@@ -492,9 +613,19 @@ class Isolated extends RecordView {
         color: var(--muted-foreground);
       }
       .actions,
-      .decide {
+      .decide,
+      .code {
         display: flex;
+        flex-wrap: wrap;
         gap: var(--boxel-sp-xs);
+      }
+      .message {
+        margin: 0;
+        min-height: 1lh;
+        color: var(--muted-foreground);
+      }
+      .message.is-error {
+        color: var(--destructive);
       }
       .days {
         width: 100%;
@@ -539,10 +670,20 @@ class Isolated extends RecordView {
         gap: var(--boxel-sp-xs);
         margin-top: var(--boxel-sp);
       }
+      .direction {
+        display: grid;
+        gap: var(--boxel-sp-5xs);
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+      .direction legend,
+      .label {
+        font-size: var(--boxel-font-size-sm);
+      }
       .label {
         display: grid;
         gap: var(--boxel-sp-5xs);
-        font-size: var(--boxel-font-size-sm);
       }
     </style>
   </template>
@@ -570,11 +711,10 @@ export class AttendanceRecord extends CardDef {
     },
   });
 
+  // As of the last index; templates read isCheckedIn live.
   @field status = contains(StringField, {
     computeVia: function (this: AttendanceRecord) {
-      let days = foldDays(this.punches, this.schedule);
-      let today = days.find((d) => d.key === todayKey(this.schedule?.timezone));
-      return today?.stillIn ? 'in' : 'out';
+      return isCheckedIn(this.punches) ? 'in' : 'out';
     },
   });
 
@@ -670,11 +810,13 @@ export class AttendanceRecord extends CardDef {
       reason: StringField,
       eventId: StringField,
       requestedAt: StringField,
+      nonce: StringField,
     },
-    input: bxl`NOW() as $n | . + { eventId: ("c-" + TEXT($n; "yyyymmddhhmmss")), requestedAt: (TEXT($n; "yyyy-mm-dd") + "T" + TEXT($n; "hh:mm:ss") + "Z") }`,
+    input: bxl`NOW() as $n | . + { eventId: ("c-" + TEXT($n; "yyyymmddhhmmss") + "-" + params("nonce")), requestedAt: (TEXT($n; "yyyy-mm-dd") + "T" + TEXT($n; "hh:mm:ss") + "Z") }`,
     transformations: bxl`
       assert(OR(params("direction") == "in"; params("direction") == "out"); "Say whether the missing punch was a check in or a check out");
       assert((params("reason") | length) > 0; "Add a note saying what happened");
+      assert((params("nonce") | length) > 0; "The request is missing its id");
       .punches += [{ eventId: params("eventId"), kind: "correction", direction: params("direction"), punchedAt: params("punchedAt"), assurance: "correction", reason: params("reason"), by: actor(), state: "pending", requestedAt: params("requestedAt") }];
     `,
   } satisfies OperationDeclaration;

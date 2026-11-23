@@ -21,6 +21,8 @@ interface LiveRecordsSignature {
     entries: { id: string }[] | undefined;
     isLoading: boolean;
     context: CardContext | undefined;
+    // Show only the first N rows; `mine` sorts the current year first.
+    limit?: number;
   };
   Blocks: { empty: [] };
 }
@@ -29,7 +31,7 @@ interface LiveRecordsSignature {
 // card, so its check-in button works without the hover a prerendered row needs.
 class LiveRecords extends GlimmerComponent<LiveRecordsSignature> {
   collection = this.args.context?.getCardCollection(this, () =>
-    this.args.entries?.map((e) => e.id),
+    this.args.entries?.slice(0, this.args.limit ?? undefined).map((e) => e.id),
   );
 
   get items(): { id: string; component: ComponentLike }[] {
@@ -100,6 +102,7 @@ class AppView extends Component<typeof AttendanceApp> {
               @entries={{results.entries}}
               @isLoading={{results.isLoading}}
               @context={{@context}}
+              @limit={{1}}
             >
               <:empty>
                 <EmptyState
@@ -115,18 +118,20 @@ class AppView extends Component<typeof AttendanceApp> {
       <section aria-labelledby='team-heading'>
         <h2 id='team-heading'>My team</h2>
         {{#if @context.searchResultsComponent}}
-          <@context.searchResultsComponent @query={{this.myTeam}} as |results|>
-            {{#if results.entries.length}}
-              <div class='team'>
-                {{#each results.entries key='id' as |entry|}}
-                  <entry.component />
-                {{/each}}
-              </div>
-            {{else if results.isLoading}}
-              <p class='sub'>Loading…</p>
-            {{else}}
-              <p class='sub'>Nobody reports to you here.</p>
-            {{/if}}
+          <@context.searchResultsComponent
+            @query={{this.myTeam}}
+            @overlays={{false}}
+            as |results|
+          >
+            <LiveRecords
+              @entries={{results.entries}}
+              @isLoading={{results.isLoading}}
+              @context={{@context}}
+            >
+              <:empty>
+                <p class='sub'>Nobody reports to you here.</p>
+              </:empty>
+            </LiveRecords>
           </@context.searchResultsComponent>
         {{/if}}
       </section>
@@ -149,11 +154,6 @@ class AppView extends Component<typeof AttendanceApp> {
       .sub {
         margin: 0;
         color: var(--muted-foreground);
-      }
-      .team {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-        gap: var(--boxel-sp);
       }
     </style>
   </template>

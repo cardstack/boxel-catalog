@@ -32,10 +32,16 @@ function newCode(): string {
     .toUpperCase();
 }
 
+// A check-in accepts a code for 165 seconds; the screen stops showing one a
+// little before that, so it never shows a code that would be refused.
+const SHOW_FOR_MS = 150_000;
+
 class DisplayView extends Component<typeof ReceptionDisplay> {
   @tracked error: string | undefined;
   @tracked live = false;
+  @tracked now = Date.now();
   private timer: ReturnType<typeof setInterval> | undefined;
+  private rotating = false;
 
   constructor(owner: Owner, args: any) {
     super(owner, args);
@@ -46,18 +52,32 @@ class DisplayView extends Component<typeof ReceptionDisplay> {
     return this.args.model as ReceptionDisplay;
   }
 
+  get isFresh(): boolean {
+    let issued = this.display.issuedAt ? Date.parse(this.display.issuedAt) : NaN;
+    return Number.isFinite(issued) && this.now - issued < SHOW_FOR_MS;
+  }
+
+  // A failed rotation is retried on the next tick; the old code stays only
+  // while it is still accepted.
   rotate = async () => {
-    this.error = undefined;
+    this.now = Date.now();
+    if (this.rotating) {
+      return;
+    }
+    this.rotating = true;
     try {
       await operations<typeof ReceptionDisplay>(this.display).rotate({
         code: newCode(),
       });
+      this.error = undefined;
     } catch (err) {
       this.error =
         err instanceof OperationsError
           ? (err.detail ?? err.message)
           : String(err);
-      this.stop();
+    } finally {
+      this.rotating = false;
+      this.now = Date.now();
     }
   };
 
@@ -80,33 +100,28 @@ class DisplayView extends Component<typeof ReceptionDisplay> {
 
   <template>
     <article class='display'>
-      <h1>Scan to check in</h1>
-      {{#if this.display.code}}
-        <QrCode
-          @value={{this.display.code}}
-          @size={{320}}
-          @label='Check-in code'
-          @valueDisplay='text'
-        />
-      {{else}}
-        <p class='hint'>No code yet. Start the display to show one.</p>
-      {{/if}}
-      <div class='controls'>
-        {{#if this.live}}
-          <Button @appearance='outlined' {{on 'click' this.stop}}>Stop</Button>
+      <h1>Check in at reception</h1>
+      {{#if this.live}}
+        {{#if this.isFresh}}
+          <QrCode
+            @value={{this.display.code}}
+            @size={{320}}
+            @label='Check-in code'
+            @valueDisplay='text'
+          />
+          <p class='hint'>Enter this code in Time Card, or scan it.</p>
         {{else}}
-          <Button @tone='primary' @appearance='accent' {{on 'click' this.start}}>
-            Start the display
-          </Button>
+          <p class='warning' role='alert'>Waiting for a new code…</p>
         {{/if}}
-      </div>
-      <p class='hint' role='status'>
-        {{if
-          this.error
-          this.error
-          (if this.live 'A new code every 30 seconds.' '')
-        }}
-      </p>
+        <Button @appearance='outlined' {{on 'click' this.stop}}>Stop</Button>
+      {{else}}
+        <p class='hint'>The display shows a new code every 30 seconds while it
+          runs.</p>
+        <Button @tone='primary' @appearance='accent' {{on 'click' this.start}}>
+          Start the display
+        </Button>
+      {{/if}}
+      <p class='hint' role='status'>{{this.error}}</p>
     </article>
     <style scoped>
       .display {
@@ -125,12 +140,19 @@ class DisplayView extends Component<typeof ReceptionDisplay> {
         min-height: 1lh;
         color: var(--muted-foreground);
       }
+      .warning {
+        margin: 0;
+        color: var(--destructive);
+        font-weight: 600;
+      }
     </style>
   </template>
 }
 
 // The reception screen's rotating code. A check-in that requires presence
-// asserts against the code and issue time stored here.
+// asserts against the code and issue time stored here. Whoever may call
+// `rotate` or read this card can check in without being there, so grant both
+// only to the account the reception screen runs as, never to staff.
 export class ReceptionDisplay extends CardDef {
   static displayName = 'Reception Display';
   static icon = QrCodeIcon;
