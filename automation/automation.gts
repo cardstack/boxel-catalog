@@ -7313,31 +7313,38 @@ class Fitted extends AtAGlance {
       ? m.headline
       : this.when;
   }
+  // The milestones as the fitted lists show them: each step's detail ends
+  // with the milestone's last task, joined by index here once, so the lists
+  // window over these steps rather than finding each one again.
+  @cached
+  get fittedMilestones(): MilestoneGlance | undefined {
+    let milestones = this.milestones;
+    if (!milestones) {
+      return undefined;
+    }
+    let { lastTasks } = milestones;
+    return {
+      ...milestones,
+      steps: milestones.steps.map((step, index) => {
+        let detail = [step.detail, lastTasks[index]]
+          .filter(Boolean)
+          .join(' · ');
+        return {
+          label: step.label,
+          state: step.state,
+          ...(detail ? { detail } : {}),
+        };
+      }),
+    };
+  }
   // The fitted lists name each milestone, with its time, last task or where
   // Boxel stopped the run beside it.
   private list(size: number) {
-    if (!this.milestones) {
+    if (!this.fittedMilestones) {
       return { steps: [], earlier: undefined, later: undefined };
     }
-    let { steps, earlier, later } = stepWindow(this.milestones, size);
-    return {
-      steps: steps.map(this.fittedStep),
-      earlier,
-      later,
-    };
+    return stepWindow(this.fittedMilestones, size);
   }
-  // A step as the fitted list shows it: its detail with the milestone's
-  // last task.
-  private fittedStep = (step: StepItem): StepItem => {
-    let index = this.milestones?.steps.indexOf(step) ?? -1;
-    let task = index >= 0 ? this.milestones?.lastTasks[index] : undefined;
-    let detail = [step.detail, task].filter(Boolean).join(' · ');
-    return {
-      label: step.label,
-      state: step.state,
-      ...(detail ? { detail } : {}),
-    };
-  };
   // The space the card leaves the list under the bar (`fitToSpace`), in
   // pixels: the list names as many milestones as fit there around the one
   // in focus, so the run's milestone is always named and its neighbours join
@@ -7354,7 +7361,7 @@ class Fitted extends AtAGlance {
   }
   get fitList() {
     let none = { steps: [], earlier: undefined, later: undefined };
-    let milestones = this.milestones;
+    let milestones = this.fittedMilestones;
     let total = milestones?.total ?? 0;
     let space = this.spaceForList;
     if (!milestones || total === 0) {
@@ -7379,7 +7386,7 @@ class Fitted extends AtAGlance {
         size * row + (before > 0 ? more : 0) + (after > 0 ? more : 0);
       if (needed <= space) {
         return {
-          steps: window.steps.map(this.fittedStep),
+          steps: window.steps,
           earlier:
             before > 0
               ? `${tally(before)} earlier ${milestoneWord(before)}`
