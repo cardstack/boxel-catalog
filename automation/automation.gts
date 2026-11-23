@@ -3811,11 +3811,6 @@ interface SwitchOnEstimate {
   // What the server says about the card that bears on switching on, such as
   // webhook triggers that start no runs.
   notices?: { code: string; message: string }[];
-  broadReaders?: {
-    anyone: boolean;
-    everySignedInUser: boolean;
-    policyGrants: { path: string; who: 'anyone' | 'signed-in' }[];
-  };
 }
 
 // The routes the switch-on screen calls on the realm server. Each acts as the
@@ -3842,38 +3837,6 @@ function needsReconfirm(status: ServerStatus | undefined): boolean {
     (status.pauseReason === 'caps-raised' ||
       status.pauseReason === 'batched-ai-enabled')
   );
-}
-
-// The lines of the broad-read warning: who beyond the people the workspace
-// names can read what the automation writes.
-function broadReaderLines(readers: SwitchOnEstimate['broadReaders']): string[] {
-  if (!readers) {
-    return [];
-  }
-  let lines: string[] = [];
-  if (readers.anyone) {
-    lines.push('Anyone, signed in or not, can read this workspace.');
-  }
-  if (readers.everySignedInUser) {
-    lines.push('Every signed-in Boxel user can read this workspace.');
-  }
-  let toAnyone = readers.policyGrants.filter((g) => g.who === 'anyone').length;
-  let toSignedIn = readers.policyGrants.length - toAnyone;
-  if (toAnyone > 0) {
-    lines.push(
-      toAnyone === 1
-        ? 'One grant in the workspace’s policy lets anyone, signed in or not, read cards.'
-        : `${tally(toAnyone)} grants in the workspace’s policy let anyone, signed in or not, read cards.`,
-    );
-  }
-  if (toSignedIn > 0) {
-    lines.push(
-      toSignedIn === 1
-        ? 'One grant in the workspace’s policy lets every signed-in Boxel user read cards.'
-        : `${tally(toSignedIn)} grants in the workspace’s policy let every signed-in Boxel user read cards.`,
-    );
-  }
-  return lines;
 }
 
 // The switch-on screen. A direct writer of the workspace turns the
@@ -4034,9 +3997,6 @@ export class SwitchOnDialog extends GlimmerComponent<{
     this.estimateItems.find((item) => item.key === key)?.hint;
   get webhookTriggers() {
     return this.estimate?.estimate.webhookTriggers ?? [];
-  }
-  get broadReaderLines() {
-    return broadReaderLines(this.estimate?.broadReaders);
   }
   // Whether the server starts no runs from webhook deliveries, so the card's
   // webhook triggers can't fire.
@@ -4270,25 +4230,6 @@ export class SwitchOnDialog extends GlimmerComponent<{
                 automation, or resume the automation and become the payer
                 instead.
               </Callout>
-              {{#if this.broadReaderLines.length}}
-                <Callout
-                  @tone='warning'
-                  @title='Many people can read what this automation writes'
-                  data-test-automation-switch-on-broad-read
-                >
-                  <p class='switch-on__warning-lead'>Whoever can read this
-                    workspace can read every file the automation writes. Keep
-                    sensitive data, such as HR records, in a workspace that
-                    names each reader.</p>
-                  <ul class='switch-on__list'>
-                    {{#each this.broadReaderLines as |line|}}
-                      <li
-                        data-test-automation-switch-on-broad-reader
-                      >{{line}}</li>
-                    {{/each}}
-                  </ul>
-                </Callout>
-              {{/if}}
             {{else if this.estimateFailure}}
               <div data-test-automation-switch-on-estimate-failure>
                 <Callout
@@ -4341,8 +4282,7 @@ export class SwitchOnDialog extends GlimmerComponent<{
       .switch-on__open {
         margin: 0 0 var(--boxel-sp-sm);
       }
-      .switch-on__lead,
-      .switch-on__warning-lead {
+      .switch-on__lead {
         margin: 0;
       }
       .switch-on__value {
