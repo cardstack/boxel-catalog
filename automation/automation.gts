@@ -88,6 +88,11 @@ import {
   Timeline,
   type TimelineEvent,
 } from '@cardstack/pretui/components/timeline';
+import {
+  StatementTable,
+  type StatementColumn,
+  type StatementRow,
+} from '@cardstack/pretui/components/statement-table';
 import { Table } from '@cardstack/pretui/components/table';
 import { Tabs } from '@cardstack/pretui/components/tabs';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
@@ -3786,6 +3791,101 @@ function automationRunReport(
   );
 }
 
+// The storage an automation's runs keep, as the realm server's
+// `_automation-storage` route answers it: each file a run created that still
+// exists, with its size on disk and in the index, and what one day of that
+// storage costs in credits at today's prices (null while the server has no
+// prices).
+interface AutomationStorage {
+  switchedOn: boolean;
+  files: { path: string; run: string; fileBytes: number; indexBytes: number }[];
+  fileBytes: number;
+  indexBytes: number;
+  dailyCredits: number | null;
+}
+type AutomationStorageState = {
+  storage: AutomationStorage | undefined;
+  failure: RunReadFailure | undefined;
+};
+
+// The automation's storage, read when a run opens and again whenever
+// `reread` is called: the run's log reads a new page, so a commit that saved
+// files shows in the storage too. A read that fails on the way is tried
+// again after `RUN_LOG_FOLLOW_MS`; a refusal ends the reads.
+function automationStorage(
+  owner: object,
+  args: () => {
+    realm: string | undefined;
+    automation: string | undefined;
+    tools: Tools | undefined;
+  },
+) {
+  let kept:
+    | { key: string; state: AutomationStorageState; reread: () => void }
+    | undefined;
+  return use(
+    owner,
+    resource(({ on }) => {
+      let { realm, automation, tools } = args();
+      let key = `${realm}|${automation}`;
+      if (!kept || kept.key !== key) {
+        kept = {
+          key,
+          state: new TrackedObject<AutomationStorageState>({
+            storage: undefined,
+            failure: undefined,
+          }),
+          reread: () => undefined,
+        };
+      }
+      let current = kept;
+      let state = current.state;
+      if (!realm || !automation || !tools) {
+        return current;
+      }
+      let ended = false;
+      let latest = 0;
+      let retry: ReturnType<typeof setTimeout> | undefined;
+      let read = async () => {
+        let asked = ++latest;
+        clearTimeout(retry);
+        await Promise.resolve();
+        if (ended || asked !== latest || state.failure === 'refused') {
+          return;
+        }
+        let answer: ReadRunAnswer | undefined;
+        try {
+          answer = await readRun(tools, { realm, automation, read: 'storage' });
+        } catch {
+          answer = undefined;
+        }
+        if (ended || asked !== latest) {
+          return;
+        }
+        let attributes = answer?.ok ? answer.body.data?.attributes : undefined;
+        if (attributes) {
+          state.storage = attributes as unknown as AutomationStorage;
+          state.failure = undefined;
+        } else if (refused(answer)) {
+          state.failure = 'refused';
+        } else {
+          state.failure = 'unreachable';
+          retry = setTimeout(() => read(), RUN_LOG_FOLLOW_MS);
+        }
+      };
+      current.reread = () => {
+        read();
+      };
+      read();
+      on.cleanup(() => {
+        ended = true;
+        clearTimeout(retry);
+      });
+      return current;
+    }),
+  );
+}
+
 interface RunLogLine {
   seq: number;
   // ms since the epoch
@@ -4109,6 +4209,8 @@ class RunDetail extends GlimmerComponent<{
   Args: {
     run: ListedRun;
     realm: string | undefined;
+    // The automation card's id, whose storage the run adds to.
+    automation: string | undefined;
     tools: Tools | undefined;
     // The automation's run before this one, whose milestone times the
     // milestones read against.
@@ -4131,7 +4233,15 @@ class RunDetail extends GlimmerComponent<{
     runId: this.runId,
     tools: this.args.tools,
     levels: this.levels,
-    onProgress: () => this.reportResource.current.reread(),
+    onProgress: () => {
+      this.reportResource.current.reread();
+      this.storageResource.current.reread();
+    },
+  }));
+  private storageResource = automationStorage(this, () => ({
+    realm: this.args.realm,
+    automation: this.args.automation,
+    tools: this.args.tools,
   }));
 
   get report() {
@@ -4327,26 +4437,120 @@ class RunDetail extends GlimmerComponent<{
         : 'The run saved no files: the run ended before the commit.';
   }
 
-  get costItems(): StatusItem[] {
-    let report = this.report;
-    if (!report) {
-      return [];
-    }
-    let { cost } = report;
-    let items: StatusItem[] = [
-      { label: 'Credits in all', value: credits(cost.credits) },
-      ...CREDIT_KINDS.map(({ kind, label }) => ({
-        label,
-        value: credits(cost.creditsByKind[kind] ?? 0),
-      })),
+  get storage() {
+    return this.storageResource.current.state.storage;
+  }
+  // The run's charges as a receipt: one line per kind of charge, and a
+  // total that is the sum of the lines, so the total reads as their sum.
+  get receiptColumns(): StatementColumn[] {
+    return [
+      { key: 'charge', label: 'Charge' },
+      {
+        key: 'credits',
+        label: 'Credits',
+        kind: 'number',
+        digits: this.receiptDigits,
+        width: '8rem',
+      },
     ];
-    if (cost.aiCreditsReserved > 0) {
-      items.push({
-        label: 'AI credits Boxel holds for answers still to come',
-        value: credits(cost.aiCreditsReserved),
-      });
+  }
+  get receiptLines(): { key: string; label: string; credits: number }[] {
+    let byKind = this.report?.cost.creditsByKind ?? {};
+    let lines = CREDIT_KINDS.map(({ kind, label }) => ({
+      key: kind,
+      label,
+      credits: byKind[kind] ?? 0,
+    }));
+    let named = new Set(CREDIT_KINDS.map(({ kind }) => kind));
+    let other = Object.entries(byKind)
+      .filter(([kind]) => !named.has(kind))
+      .reduce((sum, [, credits]) => sum + credits, 0);
+    if (other) {
+      lines.push({ key: 'other', label: 'Other charges', credits: other });
     }
-    return items;
+    return lines;
+  }
+  get receiptDigits() {
+    return this.receiptLines.every(({ credits }) => Number.isInteger(credits))
+      ? 0
+      : 2;
+  }
+  get receiptRows(): StatementRow[] {
+    let lines = this.receiptLines;
+    let total = lines.reduce((sum, { credits }) => sum + credits, 0);
+    return [
+      ...lines.map(({ key, label, credits }) => ({
+        key,
+        cells: { charge: label, credits },
+        data: { testAutomationRunCharge: key },
+      })),
+      {
+        key: 'total',
+        role: 'total' as const,
+        cells: { charge: 'Total charged for the run', credits: total },
+        data: { testAutomationRunCharge: 'total' },
+      },
+    ];
+  }
+  // What the run adds to the automation's storage: the files the run created
+  // that still exist, and their size on disk and in the index.
+  get runStorage() {
+    let files = (this.storage?.files ?? []).filter(
+      (file) => file.run === this.args.run.id,
+    );
+    return {
+      count: files.length,
+      bytes: files.reduce(
+        (sum, file) => sum + file.fileBytes + file.indexBytes,
+        0,
+      ),
+    };
+  }
+  get storageBytes() {
+    let storage = this.storage;
+    return storage ? storage.fileBytes + storage.indexBytes : 0;
+  }
+  // A day of storage for every file the automation's runs keep, at today's
+  // prices, to two significant figures: a few small files cost a small
+  // fraction of a credit a day.
+  get dailyStorageCredits() {
+    let credits = this.storage?.dailyCredits;
+    return credits == null
+      ? undefined
+      : credits.toLocaleString('en-US', { maximumSignificantDigits: 2 });
+  }
+  get heldCredits() {
+    let held = this.report?.cost.aiCreditsReserved ?? 0;
+    return held > 0 ? credits(held) : undefined;
+  }
+  plural = (n: number, one: string, many: string) =>
+    `${tally(n)} ${n === 1 ? one : many}`;
+  // What the run adds to the automation's storage, what the automation's
+  // runs keep in all, and what a day of that storage costs.
+  get storageSentence() {
+    let storage = this.storage;
+    if (!storage) {
+      return 'Boxel is reading the automation’s storage.';
+    }
+    let { count, bytes: runBytes } = this.runStorage;
+    let sentences = [
+      count > 0
+        ? `The run saved ${this.plural(count, 'file', 'files')} (${bytes(
+            runBytes,
+          )}) that still exist.`
+        : 'The run added no files the automation keeps.',
+      `The automation’s runs keep ${this.plural(
+        storage.files.length,
+        'file',
+        'files',
+      )} in all (${bytes(this.storageBytes)}).`,
+    ];
+    if (this.dailyStorageCredits) {
+      sentences.push(
+        `At today’s prices, a day of storage for those files costs ${this.dailyStorageCredits} credits.`,
+      );
+    }
+    return sentences.join(' ');
   }
   get usageItems(): StatusItem[] {
     let report = this.report;
@@ -4678,8 +4882,15 @@ class RunDetail extends GlimmerComponent<{
           {{else}}
             <div class='run-detail__panel' data-test-automation-run-cost>
               {{#if this.report}}
-                <h4 class='run-detail__heading'>Credits</h4>
-                <StatusFacts @items={{this.costItems}} @columns={{3}} />
+                <h4 class='run-detail__heading'>Charges for the run</h4>
+                <StatementTable
+                  @columns={{this.receiptColumns}}
+                  @rows={{this.receiptRows}}
+                  @label='Charges for the run'
+                  @zero='show'
+                  @density='compact'
+                  data-test-automation-run-receipt
+                />
                 {{#unless this.report.dryRun}}
                   <p
                     class='run-detail__note'
@@ -4690,6 +4901,40 @@ class RunDetail extends GlimmerComponent<{
                     ends.
                   </p>
                 {{/unless}}
+                {{#if this.heldCredits}}
+                  <p class='run-detail__note' data-test-automation-run-held>
+                    Boxel also holds
+                    {{this.heldCredits}}
+                    credits for AI answers still to come. Boxel charges what the
+                    answers cost once the answers arrive, and the hold goes
+                    away.
+                  </p>
+                {{/if}}
+
+                <h4 class='run-detail__heading'>Storage, charged daily</h4>
+                <p data-test-automation-run-storage>
+                  {{this.storageSentence}}
+                </p>
+                <Callout
+                  @tone='info'
+                  @title='How Boxel charges for storage'
+                  data-test-automation-run-storage-rules
+                >
+                  <ul class='run-detail__rules'>
+                    <li>Storage isn’t part of any one run’s total. Boxel charges
+                      the automation’s payer once a day for every file the
+                      automation’s runs created that still exists, and for the
+                      files’ entries in the workspace’s search index.</li>
+                    <li>Boxel charges every day the automation is switched on,
+                      including while the automation is paused or done. Removing
+                      the automation, or deleting the files, stops the charge.</li>
+                    <li>Boxel charges whole credits: the daily amounts add up,
+                      and Boxel charges the days together once the days cost at
+                      least 1 credit.</li>
+                    <li>A Preview saves no files, so a Preview adds no storage.</li>
+                  </ul>
+                </Callout>
+
                 <h4 class='run-detail__heading'>What the run used</h4>
                 <StatusFacts @items={{this.usageItems}} />
               {{else if this.reportFailure}}
@@ -4728,6 +4973,13 @@ class RunDetail extends GlimmerComponent<{
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
+      .run-detail__rules {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-4xs);
+        margin: 0;
+        padding-inline-start: var(--boxel-sp-lg);
+      }
       .run-detail__time {
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
@@ -4754,6 +5006,7 @@ class AutomationRuns extends GlimmerComponent<{
     triggerKind: (label: string | null) => string | undefined;
     // What an opened run reads its details with.
     realm: string | undefined;
+    automation: string | undefined;
     tools: Tools | undefined;
   };
 }> {
@@ -5026,6 +5279,7 @@ class AutomationRuns extends GlimmerComponent<{
             <RunDetail
               @run={{row.run}}
               @realm={{@realm}}
+              @automation={{@automation}}
               @tools={{@tools}}
               @previous={{this.previousRun row.run}}
             />
@@ -5308,6 +5562,7 @@ class Isolated extends Component<typeof Automation> {
             @showPage={{this.showRunsPage}}
             @triggerKind={{this.triggerKindOf}}
             @realm={{this.realmHref}}
+            @automation={{@model.id}}
             @tools={{this.tools}}
           />
         </PanelSection>
