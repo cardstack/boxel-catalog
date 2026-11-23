@@ -1758,7 +1758,12 @@ function fileName(url: string | undefined): string | undefined {
 // a direct writer (`meta.directWriter: false`), and a viewer only a policy
 // grant admits is refused with a 401 or 403. Either way `visible` stays false
 // and the views show the card's own fields alone.
-type AutomationState = 'active' | 'paused' | 'waiting-for-credits' | 'done';
+type AutomationState =
+  | 'active'
+  | 'paused'
+  | 'waiting-for-credits'
+  | 'waiting-for-key-approval'
+  | 'done';
 type PauseReason =
   | 'requested'
   | 'realm-archived'
@@ -2595,6 +2600,8 @@ function stateLook(status: ServerStatus | undefined): StateLook | undefined {
       return { label: 'Paused', tone: 'warning' };
     case 'waiting-for-credits':
       return { label: 'Waiting for credits', tone: 'warning' };
+    case 'waiting-for-key-approval':
+      return { label: 'Waiting for key approval', tone: 'warning' };
     case 'done':
       return { label: 'Done', tone: 'info' };
   }
@@ -2610,6 +2617,8 @@ function stateSentence(status: ServerStatus): string {
       return 'Boxel runs this automation each time a trigger fires and charges the payer for every run.';
     case 'waiting-for-credits':
       return 'The payer has no credits left, so Boxel holds every run. Boxel runs the automation again once the payer adds credits.';
+    case 'waiting-for-key-approval':
+      return 'A key owner hasn’t approved the automation’s use of a key yet, so Boxel holds every run. Boxel runs the automation once each key owner approves the automation in the API Keys window. An approval lasts for the life of the automation, and an edit to the script, a trigger, the params or the operations asks each key owner again.';
     case 'done':
       return 'The automation has no runs left on any trigger, so Boxel runs nothing more. Boxel runs the automation again when someone who can edit this workspace adds a trigger.';
     case 'paused':
@@ -5400,13 +5409,18 @@ class AtAGlance extends Component<typeof Automation> {
   }
 
   // Why Boxel holds the automation's runs, or why the last one failed, for a
-  // direct writer: a pause, waiting for credits, or a failure streak.
+  // direct writer: a pause, waiting for credits or for key approval, or a
+  // failure streak.
   get statusNote() {
     let status = this.status;
     if (!status?.switchedOn) {
       return undefined;
     }
-    if (status.state === 'paused' || status.state === 'waiting-for-credits') {
+    if (
+      status.state === 'paused' ||
+      status.state === 'waiting-for-credits' ||
+      status.state === 'waiting-for-key-approval'
+    ) {
       return stateSentence(status);
     }
     let error = status.lastFailure?.message || status.lastFailure?.reason;
