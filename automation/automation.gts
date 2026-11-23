@@ -3695,14 +3695,36 @@ async function readRun(
   return result?.json as ReadRunAnswer | undefined;
 }
 
+// Why a read of a run came back empty: the realm server refused the viewer
+// (a 4xx: only the realm's direct writers read a run), or the read failed
+// on the way and the console tries again.
+type RunReadFailure = 'refused' | 'unreachable';
+
 type RunReportState = {
   loading: boolean;
-  failed: boolean;
+  failure: RunReadFailure | undefined;
   report: RunReport | undefined;
 };
 
+// How often the console asks for new lines while the run is pending or
+// running and no `job` event wakes the console sooner, and how long the
+// console waits before reading again after a read fails on the way.
+const RUN_LOG_FOLLOW_MS = 2000;
+// The most lines one page of the log holds.
+const RUN_LOG_PAGE = 500;
+
+function refused(answer: ReadRunAnswer | undefined): boolean {
+  return Boolean(answer && answer.status >= 400 && answer.status < 500);
+}
+
 // A run's report, read again on each `job` realm event naming the run (the
-// run started, reached a milestone, reported a task, committed or ended).
+// run started, reached a milestone, reported a task, committed or ended),
+// and whenever `reread` is called: the run's log reads a new page, since a
+// call, an AI request or a console line sends no `job` event, and Boxel
+// writes the run's charges after the run's last event. A read that fails on
+// the way is tried again after `RUN_LOG_FOLLOW_MS`; a refusal ends the
+// reads. The state is kept for as long as the run is the same, so a change
+// to the card (a save) keeps what the tabs show.
 function automationRunReport(
   owner: object,
   args: () => {
@@ -3711,54 +3733,68 @@ function automationRunReport(
     tools: Tools | undefined;
   },
 ) {
+  let kept:
+    | { key: string; state: RunReportState; reread: () => void }
+    | undefined;
   return use(
     owner,
     resource(({ on }) => {
       let { realm, runId, tools } = args();
-      let state = new TrackedObject<RunReportState>({
-        loading: true,
-        failed: false,
-        report: undefined,
-      });
+      let key = `${realm}|${runId}`;
+      if (!kept || kept.key !== key) {
+        kept = {
+          key,
+          state: new TrackedObject<RunReportState>({
+            loading: true,
+            failure: undefined,
+            report: undefined,
+          }),
+          reread: () => undefined,
+        };
+      }
+      let current = kept;
+      let state = current.state;
       if (!realm || !tools) {
         state.loading = false;
-        return state;
+        return current;
       }
       let ended = false;
       let latest = 0;
+      let retry: ReturnType<typeof setTimeout> | undefined;
       let read = async () => {
         let asked = ++latest;
+        clearTimeout(retry);
         await Promise.resolve();
-        if (ended || asked !== latest) {
+        if (ended || asked !== latest || state.failure === 'refused') {
           return;
         }
+        let answer: ReadRunAnswer | undefined;
         try {
-          let answer = await readRun(tools, {
+          answer = await readRun(tools, {
             realm,
             run: runId,
             read: 'report',
           });
-          if (ended || asked !== latest) {
-            return;
-          }
-          let attributes = answer?.ok
-            ? answer.body.data?.attributes
-            : undefined;
-          if (attributes) {
-            state.report = attributes as unknown as RunReport;
-            state.failed = false;
-          } else {
-            state.failed = true;
-          }
         } catch {
-          if (!ended && asked === latest) {
-            state.failed = true;
-          }
-        } finally {
-          if (!ended && asked === latest) {
-            state.loading = false;
-          }
+          answer = undefined;
         }
+        if (ended || asked !== latest) {
+          return;
+        }
+        state.loading = false;
+        let attributes = answer?.ok ? answer.body.data?.attributes : undefined;
+        if (attributes) {
+          state.report = attributes as unknown as RunReport;
+          state.failure = undefined;
+        } else if (refused(answer)) {
+          state.failure = 'refused';
+        } else {
+          state.failure = 'unreachable';
+          retry = setTimeout(() => read(), RUN_LOG_FOLLOW_MS);
+        }
+      };
+      current.reread = () => {
+        read();
       };
       read();
       let unsubscribe = subscribeToRealm(realm, (event) => {
@@ -3768,9 +3804,10 @@ function automationRunReport(
       });
       on.cleanup(() => {
         ended = true;
+        clearTimeout(retry);
         unsubscribe?.();
       });
-      return state;
+      return current;
     }),
   );
 }
@@ -3787,7 +3824,7 @@ interface RunLogLine {
 }
 type RunLogState = {
   loading: boolean;
-  failed: boolean;
+  failure: RunReadFailure | undefined;
   // The run's state as the last page read the run.
   runState: RunState | undefined;
   lines: RunLogLine[];
@@ -3795,20 +3832,22 @@ type RunLogState = {
   dropped: number;
 };
 
-// How often the console asks for new lines while the run is pending or
-// running and no `job` event wakes the console sooner.
-const RUN_LOG_FOLLOW_MS = 2000;
-// The most lines one page of the log holds.
-const RUN_LOG_PAGE = 500;
-
 // A run's log, kept only to the levels asked for, followed while the run
-// goes: the console reads page after page, reads on at once while a page
-// says the log holds more, and otherwise asks again every
-// `RUN_LOG_FOLLOW_MS` while the run is pending or running. A `job` event
-// naming the run reads at once. Boxel writes the run's last line just after
-// the run ends, so once a page finds the run ended with nothing more, the
-// console reads once more an interval later, and then stops. A refusal
-// stops the reads; any other failure is tried again at the next interval.
+// goes. This follows the rules of the platform's `followAutomationRunLog`
+// (`runtime-common/automation-run-log-follow.ts`), which reads through a
+// fetch a card doesn't have, so a change to one belongs in both: the console
+// reads page after page, reads on at once while a page says the log holds
+// more, and otherwise asks again every `RUN_LOG_FOLLOW_MS` while the run is
+// pending or running. A `job` event naming the run reads at once, and one
+// that comes while a read is in flight ends the next wait at once. Boxel
+// writes the run's last line just after the run ends, so once a page finds
+// the run ended with nothing more, the console reads once more an interval
+// later, which a wake doesn't shorten, and then stops. A refusal stops the
+// reads; any other failure is tried again at the next interval, or at once
+// on a wake. `onProgress` hears of each page that brings lines or a new
+// state. The state and the place in the log are kept for as long as the
+// run and the levels are the same, so a change to the card (a save) picks
+// the log up where the log was.
 function automationRunLog(
   owner: object,
   args: () => {
@@ -3816,28 +3855,55 @@ function automationRunLog(
     runId: string;
     tools: Tools | undefined;
     levels: RunLogLevel[];
+    onProgress: () => void;
   },
 ) {
+  let kept:
+    | {
+        key: string;
+        state: RunLogState;
+        after: number;
+        endedReads: number;
+        done: boolean;
+      }
+    | undefined;
   return use(
     owner,
     resource(({ on }) => {
-      let { realm, runId, tools, levels } = args();
-      let state = new TrackedObject<RunLogState>({
-        loading: true,
-        failed: false,
-        runState: undefined,
-        lines: [],
-        dropped: 0,
-      });
-      if (!realm || !tools || levels.length === 0) {
+      let { realm, runId, tools, levels, onProgress } = args();
+      let key = `${realm}|${runId}|${levels.join(',')}`;
+      if (!kept || kept.key !== key) {
+        kept = {
+          key,
+          state: new TrackedObject<RunLogState>({
+            loading: true,
+            failure: undefined,
+            runState: undefined,
+            lines: [],
+            dropped: 0,
+          }),
+          after: -1,
+          endedReads: 0,
+          done: false,
+        };
+      }
+      let current = kept;
+      let state = current.state;
+      if (!realm || !tools || levels.length === 0 || current.done) {
         state.loading = false;
         return state;
       }
       let stopped = false;
+      let woken = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
       let wakeUp: (() => void) | undefined;
       let wait = (wakeable: boolean) =>
         new Promise<void>((settle) => {
+          if (wakeable && woken) {
+            woken = false;
+            settle();
+            return;
+          }
           let done = () => {
             clearTimeout(timer);
             wakeUp = undefined;
@@ -3850,16 +3916,15 @@ function automationRunLog(
         });
       let follow = async () => {
         await Promise.resolve();
-        let after = -1;
-        let endedReads = 0;
         while (!stopped) {
+          woken = false;
           let answer: ReadRunAnswer | undefined;
           try {
             answer = await readRun(tools, {
               realm,
               run: runId,
               read: 'log',
-              after,
+              after: current.after,
               limit: RUN_LOG_PAGE,
               levels,
             });
@@ -3882,20 +3947,26 @@ function automationRunLog(
                 | undefined)
             : undefined;
           if (!page) {
-            state.failed = true;
-            if (answer && answer.status >= 400 && answer.status < 500) {
+            if (refused(answer)) {
+              state.failure = 'refused';
+              current.done = true;
               return;
             }
-            await wait(false);
+            state.failure = 'unreachable';
+            await wait(true);
             continue;
           }
-          state.failed = false;
+          state.failure = undefined;
+          let moved = page.lines.length > 0 || page.state !== state.runState;
           if (page.lines.length > 0) {
             state.lines = [...state.lines, ...page.lines];
           }
           state.dropped = page.dropped;
           state.runState = page.state;
-          after = page.next;
+          current.after = page.next;
+          if (moved) {
+            onProgress();
+          }
           if (page.more) {
             continue;
           }
@@ -3903,17 +3974,25 @@ function automationRunLog(
             await wait(true);
             continue;
           }
-          if (endedReads > 0) {
+          if (current.endedReads > 0) {
+            // The trailing read: the run's charges land after the run's
+            // last event, so the report reads once more too.
+            onProgress();
+            current.done = true;
             return;
           }
-          endedReads++;
+          current.endedReads++;
           await wait(false);
         }
       };
       follow();
       let unsubscribe = subscribeToRealm(realm, (event) => {
         if (event.eventName === 'job' && event.runId === runId) {
-          wakeUp?.();
+          if (wakeUp) {
+            wakeUp();
+          } else {
+            woken = true;
+          }
         }
       });
       on.cleanup(() => {
@@ -3938,9 +4017,11 @@ const LEVEL_LOOKS: Record<RunLogLevel, { label: string; tone: RunTone }> = {
   info: { label: 'Info', tone: 'info' },
   log: { label: 'Log', tone: 'neutral' },
 };
-// The most log lines the console lists before a button shows the rest: the
-// latest ones, since the latest say what the run did last.
+// The most log lines the console lists at first: the latest ones, since the
+// latest say what the run did last. A button lists earlier lines a batch at
+// a time, so a long log never renders whole at once.
 const SHOWN_LOG_LINES = 200;
+const EARLIER_LOG_LINES = 500;
 
 const LOG_TIME = new Intl.DateTimeFormat('en-US', {
   hour: 'numeric',
@@ -3968,6 +4049,14 @@ function runStepRows(
 ): MilestoneRow[] {
   let reached = RUN_STEPS.findIndex(({ step }) => step === run.step);
   let timings = report?.timings;
+  // A run canceled while waiting, or one Boxel ended because the run's job
+  // was lost, ended before any attempt started the run: the run stopped at
+  // admission.
+  let endedUnstarted =
+    reached < 0 && (run.state === 'error' || run.state === 'canceled');
+  if (endedUnstarted) {
+    reached = 0;
+  }
   return RUN_STEPS.map(({ step, name }, index) => {
     let state: MilestoneState =
       reached < 0 || index > reached
@@ -3985,7 +4074,9 @@ function runStepRows(
     let badge = look.badge;
     let detail: string | undefined;
     if (step === 'admission') {
-      if (run.state === 'pending') {
+      if (endedUnstarted) {
+        detail = 'The run ended before Boxel started the run.';
+      } else if (run.state === 'pending') {
         detail = 'Waiting to start';
       } else if (timings?.queuedMs != null) {
         detail = `Waited ${durationText(timings.queuedMs)} to start`;
@@ -4049,7 +4140,7 @@ class RunDetail extends GlimmerComponent<{
   private runId = this.args.run.id;
   @tracked tab = 'log';
   @tracked levels: RunLogLevel[] = LOG_LEVELS.map(({ value }) => value);
-  @tracked allLinesShown = false;
+  @tracked shownLineCount = SHOWN_LOG_LINES;
 
   private reportResource = automationRunReport(this, () => ({
     realm: this.args.realm,
@@ -4061,13 +4152,15 @@ class RunDetail extends GlimmerComponent<{
     runId: this.runId,
     tools: this.args.tools,
     levels: this.levels,
+    onProgress: () => this.reportResource.current.reread(),
   }));
 
   get report() {
-    return this.reportResource.current.report;
+    return this.reportResource.current.state.report;
   }
-  get reportFailed() {
-    return this.reportResource.current.failed && !this.report;
+  // Why the run's details didn't read, while no earlier read shows them.
+  get reportFailure() {
+    return this.report ? undefined : this.reportResource.current.state.failure;
   }
   get log() {
     return this.logResource.current;
@@ -4095,10 +4188,27 @@ class RunDetail extends GlimmerComponent<{
   }
   showTab = (tab: string) => (this.tab = tab);
 
+  // Each level's count. The report counts only the lines that store a level,
+  // while the log's level filter reads a line with no level (a milestone, a
+  // task, most of Boxel's own lines) as info, so info is every line the
+  // other levels don't count.
   get levelOptions() {
-    let byLevel = this.report?.log.byLevel ?? {};
+    let log = this.report?.log;
+    let counts: Partial<Record<RunLogLevel, number>> = {};
+    if (log) {
+      let { byLevel } = log;
+      counts = {
+        log: byLevel.log ?? 0,
+        warn: byLevel.warn ?? 0,
+        error: byLevel.error ?? 0,
+      };
+      counts.info = Math.max(
+        log.lines - counts.log! - counts.warn! - counts.error!,
+        0,
+      );
+    }
     return LOG_LEVELS.map(({ value, label }) => {
-      let n = byLevel[value];
+      let n = counts[value];
       return {
         value,
         label: n === undefined ? label : `${label} (${tally(n)})`,
@@ -4107,22 +4217,22 @@ class RunDetail extends GlimmerComponent<{
   }
   showLevels = (values: string[]) => {
     this.levels = values as RunLogLevel[];
-    this.allLinesShown = false;
+    this.shownLineCount = SHOWN_LOG_LINES;
   };
   get shownLines(): RunLogLine[] {
-    let lines = this.log.lines;
-    return this.allLinesShown ? lines : lines.slice(-SHOWN_LOG_LINES);
+    return this.log.lines.slice(-this.shownLineCount);
   }
   get earlierLines() {
-    return Math.max(this.log.lines.length - SHOWN_LOG_LINES, 0);
+    return Math.min(
+      Math.max(this.log.lines.length - this.shownLineCount, 0),
+      EARLIER_LOG_LINES,
+    );
   }
   get earlierLinesLabel() {
     let n = this.earlierLines;
-    return `${this.allLinesShown ? 'Hide' : 'Show'} ${tally(n)} earlier ${
-      n === 1 ? 'line' : 'lines'
-    }`;
+    return `Show ${tally(n)} earlier ${n === 1 ? 'line' : 'lines'}`;
   }
-  toggleEarlierLines = () => (this.allLinesShown = !this.allLinesShown);
+  showEarlierLines = () => (this.shownLineCount += EARLIER_LOG_LINES);
   get droppedSentence() {
     let n = this.log.dropped;
     return `Boxel didn’t keep ${tally(n)} more ${
@@ -4165,8 +4275,11 @@ class RunDetail extends GlimmerComponent<{
     }
     let { writes, dryRun, state } = report;
     if (dryRun) {
-      if (state !== 'complete') {
+      if (state === 'pending' || state === 'running') {
         return 'A Preview stages the files the script writes, and keeps the files once the Preview completes. A Preview saves nothing to the workspace.';
+      }
+      if (state !== 'complete') {
+        return 'The Preview ended before completing, so Boxel kept none of the files the script staged.';
       }
       if (writes.stagedReplacedBy) {
         return 'A later Preview of the automation replaced the files this Preview staged.';
@@ -4233,7 +4346,7 @@ class RunDetail extends GlimmerComponent<{
     if (!timings) {
       return [];
     }
-    let items: StatusItem[] = [{ label: 'Made', date: timings.createdAt }];
+    let items: StatusItem[] = [{ label: 'Queued', date: timings.createdAt }];
     if (timings.startedAt) {
       items.push({ label: 'Started', date: timings.startedAt });
     }
@@ -4255,7 +4368,7 @@ class RunDetail extends GlimmerComponent<{
   }
 
   <template>
-    <div class='run-detail' data-test-automation-run-detail={{@run.id}}>
+    <div class='run-detail' data-test-automation-run-timeline={{@run.id}}>
       <MilestoneTimeline @rows={{this.steps}} @label='Steps of the run'>
         <:body as |step|>
           {{#if (eq step.id 'script')}}
@@ -4282,13 +4395,19 @@ class RunDetail extends GlimmerComponent<{
         </:body>
       </MilestoneTimeline>
 
-      {{#if this.reportFailed}}
+      {{#if (eq this.reportFailure 'refused')}}
+        <Callout
+          @tone='warning'
+          @title='Only the workspace’s direct writers can read the run’s details'
+          data-test-automation-run-report-failed='refused'
+        />
+      {{else if this.reportFailure}}
         <Callout
           @tone='warning'
           @title='Boxel couldn’t read the run’s details'
-          data-test-automation-run-detail-failed
+          data-test-automation-run-report-failed='unreachable'
         >
-          Boxel reads the run’s details again the next time the run moves.
+          Boxel tries again every few seconds.
         </Callout>
       {{/if}}
 
@@ -4319,21 +4438,28 @@ class RunDetail extends GlimmerComponent<{
                   {{this.droppedSentence}}
                 </p>
               {{/if}}
-              {{#if this.log.failed}}
+              {{#if (eq this.log.failure 'refused')}}
+                <Callout
+                  @tone='warning'
+                  @title='Only the workspace’s direct writers can read the run’s log'
+                  data-test-automation-run-log-failed='refused'
+                />
+              {{else if this.log.failure}}
                 <Callout
                   @tone='warning'
                   @title='Boxel couldn’t read the run’s log'
-                  data-test-automation-run-log-failed
-                />
+                  data-test-automation-run-log-failed='unreachable'
+                >
+                  Boxel tries again every few seconds.
+                </Callout>
               {{/if}}
               {{#if this.shownLines.length}}
                 {{#if this.earlierLines}}
                   <Button
                     @appearance='link'
                     @size='s'
-                    aria-expanded={{if this.allLinesShown 'true' 'false'}}
                     data-test-automation-run-log-earlier
-                    {{on 'click' this.toggleEarlierLines}}
+                    {{on 'click' this.showEarlierLines}}
                   >{{this.earlierLinesLabel}}</Button>
                 {{/if}}
                 <Table @label='Lines of the run’s log' @striped={{false}}>
@@ -4342,7 +4468,7 @@ class RunDetail extends GlimmerComponent<{
                       <th scope='col'>Time</th>
                       <th scope='col'>Level</th>
                       <th scope='col'>From</th>
-                      <th scope='col'>Line</th>
+                      <th scope='col'>Message</th>
                     </tr>
                   </:head>
                   <:body>
@@ -4376,6 +4502,8 @@ class RunDetail extends GlimmerComponent<{
                     {{/each}}
                   </:body>
                 </Table>
+              {{else if this.log.failure}}
+                {{! The callout above says why no line shows. }}
               {{else if this.log.loading}}
                 <LoadingState @label='Loading the log' />
               {{else if this.levels.length}}
@@ -4385,7 +4513,7 @@ class RunDetail extends GlimmerComponent<{
                   @title='No lines'
                   @message={{if
                     this.running
-                    'Lines show here as the run writes them.'
+                    'The run hasn’t written a line at the picked levels yet.'
                     'The run wrote no lines at the picked levels.'
                   }}
                   data-test-automation-run-log-empty
@@ -4451,9 +4579,13 @@ class RunDetail extends GlimmerComponent<{
                     </:body>
                   </Table>
                 {{else}}
-                  <p class='run-detail__note' data-test-automation-run-no-calls>
-                    The script called no outside service.
-                  </p>
+                  <EmptyState
+                    @size='s'
+                    @texture={{false}}
+                    @title='No outside service calls'
+                    @message='The script called no outside service.'
+                    data-test-automation-run-no-calls
+                  />
                 {{/if}}
                 <h4 class='run-detail__heading'>AI requests</h4>
                 {{#if this.report.resolveCalls.length}}
@@ -4492,14 +4624,15 @@ class RunDetail extends GlimmerComponent<{
                     </:body>
                   </Table>
                 {{else}}
-                  <p
-                    class='run-detail__note'
+                  <EmptyState
+                    @size='s'
+                    @texture={{false}}
+                    @title='No AI requests'
+                    @message='The script made no AI requests.'
                     data-test-automation-run-no-resolves
-                  >
-                    The script made no AI requests.
-                  </p>
+                  />
                 {{/if}}
-              {{else if this.reportFailed}}
+              {{else if this.reportFailure}}
                 {{! The callout above says Boxel couldn't read the run. }}
               {{else}}
                 <LoadingState @label='Loading the calls' />
@@ -4545,7 +4678,7 @@ class RunDetail extends GlimmerComponent<{
                     {{/each}}
                   </ul>
                 {{/if}}
-              {{else if this.reportFailed}}
+              {{else if this.reportFailure}}
                 {{! The callout above says Boxel couldn't read the run. }}
               {{else}}
                 <LoadingState @label='Loading the writes' />
@@ -4560,6 +4693,16 @@ class RunDetail extends GlimmerComponent<{
                   @columns={{3}}
                   @size='s'
                 />
+                {{#unless this.report.dryRun}}
+                  <p
+                    class='run-detail__note'
+                    data-test-automation-run-indexing-note
+                  >
+                    Boxel charges for indexing the saved files once Boxel
+                    finishes indexing the files, which can come after the run
+                    ends.
+                  </p>
+                {{/unless}}
                 <h4 class='run-detail__heading'>What the run used</h4>
                 <StatusFacts @items={{this.usageItems}} @size='s' />
                 <h4 class='run-detail__heading'>Timings</h4>
@@ -4568,7 +4711,7 @@ class RunDetail extends GlimmerComponent<{
                   @columns={{3}}
                   @size='s'
                 />
-              {{else if this.reportFailed}}
+              {{else if this.reportFailure}}
                 {{! The callout above says Boxel couldn't read the run. }}
               {{else}}
                 <LoadingState @label='Loading the cost' />
@@ -4642,21 +4785,23 @@ class AutomationRuns extends GlimmerComponent<{
   get rows() {
     return runRows(this.args.runs.runs);
   }
-  // The automation's run before `run` on the page shown, leaving Previews
-  // out, as the automation's last run leaves them out: the run whose
-  // milestone times an opened run's milestones read against.
+  // The automation's run before `run` on the page shown that started and
+  // ended, leaving Previews out as the automation's last run does, and
+  // leaving out a run admission refused: the run whose milestone times an
+  // opened run's milestones read against.
   previousRun = (run: ListedRun): LastRun | undefined => {
     let runs = this.args.runs.runs;
     let index = runs.findIndex(({ id }) => id === run.id);
     return (
-      runs
-        .slice(index + 1)
-        .find(
-          (earlier) =>
-            earlier.startedBy !== 'preview' &&
-            earlier.finishedAt !== null &&
-            earlier.milestones !== null,
-        )?.milestones ?? undefined
+      runs.slice(index + 1).find(
+        (earlier) =>
+          earlier.startedBy !== 'preview' &&
+          earlier.startedAt !== null &&
+          earlier.finishedAt !== null &&
+          // A run admission refused never ran the script, so the run
+          // has no milestone times to read against.
+          !(earlier.state === 'error' && earlier.step === 'admission'),
+      )?.milestones ?? undefined
     );
   };
   rowKey = (row: RunRow) => row.key;
