@@ -227,8 +227,7 @@ export function isCheckedIn(
 ): boolean {
   let last = lastCountedPunch(punches);
   return (
-    last?.direction === 'in' &&
-    now.getTime() - last.at.getTime() < MAX_SHIFT_MS
+    last?.direction === 'in' && now.getTime() - last.at.getTime() < MAX_SHIFT_MS
   );
 }
 

@@ -15,7 +15,6 @@ import {
   operation,
   operations,
   OperationsError,
-  params,
   type OperationDeclaration,
 } from 'https://cardstack.com/base/operations';
 import QrCodeIcon from '@cardstack/boxel-icons/qr-code';
@@ -53,7 +52,9 @@ class DisplayView extends Component<typeof ReceptionDisplay> {
   }
 
   get isFresh(): boolean {
-    let issued = this.display.issuedAt ? Date.parse(this.display.issuedAt) : NaN;
+    let issued = this.display.issuedAt
+      ? Date.parse(this.display.issuedAt)
+      : NaN;
     return Number.isFinite(issued) && this.now - issued < SHOW_FOR_MS;
   }
 
@@ -66,9 +67,9 @@ class DisplayView extends Component<typeof ReceptionDisplay> {
     }
     this.rotating = true;
     try {
-      await operations<typeof ReceptionDisplay>(this.display).rotate({
-        code: newCode(),
-      });
+      // `input` stamps issuedAt and issuedAtSerial, so the payload carries
+      // only the code; the typed signature still lists every declared param.
+      await operations(this.display).rotate({ code: newCode() });
       this.error = undefined;
     } catch (err) {
       this.error =

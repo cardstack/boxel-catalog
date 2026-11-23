@@ -107,8 +107,11 @@ class RecordView extends Component<typeof AttendanceRecord> {
     return this.args.model as AttendanceRecord;
   }
 
+  // Every operation here gets the realm's clock (and a correction's id) from
+  // its `input` stage, so the caller sends less than the declared params the
+  // typed signature lists. This handle takes the payload as sent.
   get ops() {
-    return operations<typeof AttendanceRecord>(this.record);
+    return operations(this.record);
   }
 
   get timezone(): string {
