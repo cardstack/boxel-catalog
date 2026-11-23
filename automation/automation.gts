@@ -4612,7 +4612,10 @@ class RunDetail extends GlimmerComponent<{
             ? n > 0
               ? `${show(key, n)} of none allowed`
               : 'None allowed'
-            : `${show(key, n)} of ${show(key, limit)}`,
+            : `${key === 'aiCredits' ? tally(n) : show(key, n)} of ${show(
+                key,
+                limit,
+              )}`,
         value: limit > 0 ? Math.min(n, limit) : reached ? 1 : 0,
         max: limit > 0 ? limit : 1,
         hue: reached
