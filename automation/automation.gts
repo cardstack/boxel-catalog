@@ -4097,17 +4097,15 @@ const LEVEL_LOOKS: Record<RunLogLevel, { label: string; tone: RunTone }> = {
 const SHOWN_LOG_LINES = 200;
 const EARLIER_LOG_LINES = 500;
 
-// A time of a run, to the second, in the viewer's own time zone with the
-// zone named, as the log and the timeline show each time.
+// A time of a run, to the second, in the viewer's own time zone, which one
+// line at the top of an opened run names.
 const RUN_CLOCK = new Intl.DateTimeFormat('en-US', {
   hour: 'numeric',
   minute: '2-digit',
   second: '2-digit',
-  timeZoneName: 'short',
 });
 function runClock(at: string | number): string {
-  // The zone stays on the line with its time.
-  return RUN_CLOCK.format(new Date(at)).replace(/ (\S+)$/, '\u00a0$1');
+  return RUN_CLOCK.format(new Date(at));
 }
 function msBetween(from: string | null, to: string | null): number | undefined {
   return from && to ? Date.parse(to) - Date.parse(from) : undefined;
@@ -4567,6 +4565,10 @@ class RunDetail extends GlimmerComponent<{
   }
   <template>
     <div class='run-detail' data-test-automation-run-timeline={{@run.id}}>
+      <p class='run-detail__note' data-test-automation-run-time-zone>
+        All times are in the local time zone,
+        {{this.timeZone}}.
+      </p>
       <div data-test-automation-run-milestones>
         <MilestoneTimeline
           @rows={{this.timelineRows}}
@@ -4609,10 +4611,6 @@ class RunDetail extends GlimmerComponent<{
                 @wrap={{true}}
                 data-test-automation-run-log-levels
               />
-              <p class='run-detail__note' data-test-automation-run-time-zone>
-                Boxel shows each time of the run in the viewer’s time zone,
-                {{this.timeZone}}.
-              </p>
               {{#if this.log.dropped}}
                 <p
                   class='run-detail__note'
