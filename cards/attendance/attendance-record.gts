@@ -1,0 +1,728 @@
+import { fn } from '@ember/helper';
+import { on } from '@ember/modifier';
+import { tracked } from '@glimmer/tracking';
+import {
+  CardDef,
+  Component,
+  FieldDef,
+  contains,
+  containsMany,
+  field,
+  linksTo,
+} from 'https://cardstack.com/base/card-api';
+import StringField from 'https://cardstack.com/base/string';
+import NumberField from 'https://cardstack.com/base/number';
+import DateTimeField from 'https://cardstack.com/base/datetime';
+import {
+  actor,
+  bxl,
+  operation,
+  operations,
+  OperationsError,
+  params,
+  type OperationDeclaration,
+} from 'https://cardstack.com/base/operations';
+import ClockIcon from '@cardstack/boxel-icons/clock';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Input } from '@cardstack/pretui/components/input';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import { Textarea } from '@cardstack/pretui/components/textarea';
+
+import { Employee } from '../hr/employee';
+import { ReceptionDisplay } from './reception-display';
+import {
+  VERDICT_LABEL,
+  foldDays,
+  localClock,
+  minutesLabel,
+  todayKey,
+  type FoldedDay,
+} from './attendance-day';
+
+// The punch shape production records use, minus the gateway-only network
+// fields, plus who made it and where a correction stands.
+export class PunchEvent extends FieldDef {
+  static displayName = 'Punch';
+  @field eventId = contains(StringField);
+  // 'punch' or 'correction'
+  @field kind = contains(StringField);
+  @field direction = contains(StringField);
+  @field punchedAt = contains(DateTimeField);
+  // 'button', 'kiosk' or 'correction'
+  @field assurance = contains(StringField);
+  @field kioskId = contains(StringField);
+  @field kioskCode = contains(StringField);
+  @field by = contains(StringField);
+  @field reason = contains(StringField);
+  // 'recorded' for a punch; 'pending', 'approved' or 'declined' for a correction
+  @field state = contains(StringField);
+  @field requestedAt = contains(DateTimeField);
+  @field decidedBy = contains(StringField);
+  @field decidedAt = contains(DateTimeField);
+}
+
+export class WorkSchedule extends FieldDef {
+  static displayName = 'Work Schedule';
+  // An IANA zone such as America/New_York; it decides the day and late or early
+  @field timezone = contains(StringField);
+  @field scheduledArrival = contains(StringField);
+  @field scheduledDeparture = contains(StringField);
+  @field graceMinutes = contains(NumberField);
+}
+
+export class AttendanceDay extends FieldDef {
+  static displayName = 'Attendance Day';
+  @field day = contains(StringField);
+  @field firstIn = contains(StringField);
+  @field lastOut = contains(StringField);
+  @field minutes = contains(NumberField);
+  @field punchCount = contains(NumberField);
+  @field lateBy = contains(NumberField);
+  @field earlyBy = contains(NumberField);
+  @field verdict = contains(StringField);
+}
+
+// Every write stamps the realm's own clock. NOW() is only allowed in `input`,
+// and is UTC.
+const STAMP_PUNCH = bxl`NOW() as $n | . + { punchedAt: (TEXT($n; "yyyy-mm-dd") + "T" + TEXT($n; "hh:mm:ss") + "Z") }`;
+
+function refusal(err: unknown): string {
+  if (err instanceof OperationsError) {
+    return err.detail ?? err.message;
+  }
+  return err instanceof Error ? err.message : String(err);
+}
+
+class RecordView extends Component<typeof AttendanceRecord> {
+  @tracked running: string | undefined;
+  @tracked message: string | undefined;
+  @tracked failed = false;
+
+  get record(): AttendanceRecord {
+    return this.args.model as AttendanceRecord;
+  }
+
+  get ops() {
+    return operations<typeof AttendanceRecord>(this.record);
+  }
+
+  get days(): FoldedDay[] {
+    return foldDays(this.record.punches, this.record.schedule);
+  }
+
+  get today(): FoldedDay | undefined {
+    let key = todayKey(this.record.schedule?.timezone);
+    return this.days.find((d) => d.key === key);
+  }
+
+  get isIn(): boolean {
+    return this.record.status === 'in';
+  }
+
+  get todayLine(): string {
+    let d = this.today;
+    if (!d) {
+      return 'Not checked in today';
+    }
+    let span = `${d.firstIn || '—'}–${d.stillIn ? 'now' : d.lastOut || '—'}`;
+    return `${span} · ${minutesLabel(d.minutes)}`;
+  }
+
+  // Hide on a definite no only; undefined is "not answered yet".
+  denied(name: string): boolean {
+    return this.args.context?.canInvoke?.(name, this.record) === false;
+  }
+
+  get hideCheckIn(): boolean {
+    return this.isIn || this.denied('checkIn');
+  }
+
+  get hideCheckOut(): boolean {
+    return !this.isIn || this.denied('checkOut');
+  }
+
+  run = async (name: string, invoke: () => Promise<unknown>, done: string) => {
+    this.running = name;
+    this.message = undefined;
+    this.failed = false;
+    try {
+      await invoke();
+      this.message = done;
+    } catch (err) {
+      this.message = refusal(err);
+      this.failed = true;
+    } finally {
+      this.running = undefined;
+    }
+  };
+
+  checkIn = () =>
+    this.run('checkIn', () => this.ops.checkIn({}), 'Checked in.');
+
+  checkOut = () =>
+    this.run('checkOut', () => this.ops.checkOut({}), 'Checked out.');
+}
+
+class Embedded extends RecordView {
+  <template>
+    <article class='record'>
+      <div class='who'>
+        <span class='name'>{{this.record.employeeName}}</span>
+        <span class='status {{if this.isIn "is-in"}}'>{{if
+            this.isIn
+            'In'
+            'Out'
+          }}</span>
+      </div>
+      <p class='today'>{{this.todayLine}}</p>
+      <div class='actions'>
+        {{#unless this.hideCheckIn}}
+          <Button
+            @tone='primary'
+            @appearance='accent'
+            @busy={{if this.running true false}}
+            @busyLabel='Checking in…'
+            {{on 'click' this.checkIn}}
+          >Check in</Button>
+        {{/unless}}
+        {{#unless this.hideCheckOut}}
+          <Button
+            @appearance='outlined'
+            @busy={{if this.running true false}}
+            @busyLabel='Checking out…'
+            {{on 'click' this.checkOut}}
+          >Check out</Button>
+        {{/unless}}
+      </div>
+      <p class='message {{if this.failed "is-error"}}' role='status'>
+        {{this.message}}
+      </p>
+    </article>
+    <style scoped>
+      .record {
+        display: grid;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp);
+      }
+      .who {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+      }
+      .name {
+        font-weight: 600;
+      }
+      .status {
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
+      }
+      .status.is-in {
+        color: var(--success);
+        font-weight: 600;
+      }
+      .today {
+        margin: 0;
+        color: var(--muted-foreground);
+        font-size: var(--boxel-font-size-sm);
+      }
+      .actions {
+        display: flex;
+        gap: var(--boxel-sp-xs);
+      }
+      .message {
+        margin: 0;
+        min-height: 1lh;
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
+      }
+      .message.is-error {
+        color: var(--destructive);
+      }
+    </style>
+  </template>
+}
+
+class Isolated extends RecordView {
+  @tracked correctionDirection = 'in';
+  @tracked correctionAt = '';
+  @tracked correctionReason = '';
+
+  directionOptions = [
+    { value: 'in', label: 'Check in' },
+    { value: 'out', label: 'Check out' },
+  ];
+
+  get recentDays(): (FoldedDay & { label: string; hours: string })[] {
+    return this.days
+      .slice(-14)
+      .reverse()
+      .map((d) => ({
+        ...d,
+        label: VERDICT_LABEL[d.verdict],
+        hours: minutesLabel(d.minutes),
+      }));
+  }
+
+  localTime(at: Date | string): string {
+    let { day, label } = localClock(
+      new Date(at),
+      this.record.schedule?.timezone || 'UTC',
+    );
+    return `${day} ${label}`;
+  }
+
+  get corrections() {
+    return (this.record.punches ?? [])
+      .filter((p) => p.kind === 'correction')
+      .map((p) => ({
+        eventId: p.eventId ?? '',
+        direction: p.direction === 'out' ? 'Check out' : 'Check in',
+        at: p.punchedAt ? this.localTime(p.punchedAt) : '—',
+        reason: p.reason ?? '',
+        state: p.state ?? 'pending',
+        isPending: p.state === 'pending',
+      }))
+      .reverse();
+  }
+
+  get hideRequest(): boolean {
+    return this.denied('requestCorrection');
+  }
+
+  get hideDecide(): boolean {
+    return this.denied('decideCorrection');
+  }
+
+  setDirection = (value: string) => (this.correctionDirection = value);
+  setAt = (value: string) => (this.correctionAt = value);
+  setReason = (value: string) => (this.correctionReason = value);
+
+  requestCorrection = () =>
+    this.run(
+      'requestCorrection',
+      async () => {
+        let at = this.correctionAt ? new Date(this.correctionAt) : null;
+        if (!at || Number.isNaN(at.getTime())) {
+          throw new Error('Enter the date and time of the missing punch.');
+        }
+        await this.ops.requestCorrection({
+          direction: this.correctionDirection,
+          punchedAt: at.toISOString(),
+          reason: this.correctionReason,
+        });
+        this.correctionAt = '';
+        this.correctionReason = '';
+      },
+      'Correction sent to your manager.',
+    );
+
+  decide = (eventId: string, decision: 'approved' | 'declined') =>
+    this.run(
+      'decideCorrection',
+      () => this.ops.decideCorrection({ eventId, decision }),
+      decision === 'approved' ? 'Correction approved.' : 'Correction declined.',
+    );
+
+  <template>
+    <article class='sheet'>
+      <header class='head'>
+        <div>
+          <h1>{{this.record.employeeName}}</h1>
+          <p class='sub'>{{this.record.year}} · {{this.todayLine}}</p>
+        </div>
+        <div class='actions'>
+          {{#unless this.hideCheckIn}}
+            <Button
+              @tone='primary'
+              @appearance='accent'
+              @size='l'
+              @busy={{if this.running true false}}
+              @busyLabel='Checking in…'
+              {{on 'click' this.checkIn}}
+            >Check in</Button>
+          {{/unless}}
+          {{#unless this.hideCheckOut}}
+            <Button
+              @appearance='outlined'
+              @size='l'
+              @busy={{if this.running true false}}
+              @busyLabel='Checking out…'
+              {{on 'click' this.checkOut}}
+            >Check out</Button>
+          {{/unless}}
+        </div>
+      </header>
+
+      {{#if this.message}}
+        <Alert @tone={{if this.failed 'danger' 'success'}}>
+          {{this.message}}
+        </Alert>
+      {{/if}}
+
+      <section>
+        <h2>Last 14 days</h2>
+        {{#if this.recentDays.length}}
+          <table class='days'>
+            <thead>
+              <tr><th>Day</th><th>In</th><th>Out</th><th>Time</th><th
+                >Status</th></tr>
+            </thead>
+            <tbody>
+              {{#each this.recentDays as |d|}}
+                <tr>
+                  <td>{{d.key}}</td>
+                  <td>{{if d.firstIn d.firstIn '—'}}</td>
+                  <td>{{if d.lastOut d.lastOut '—'}}</td>
+                  <td>{{d.hours}}</td>
+                  <td class='verdict {{d.verdict}}'>{{d.label}}</td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        {{else}}
+          <EmptyState
+            @title='No punches yet'
+            @message='Check in to start this year’s record.'
+          />
+        {{/if}}
+      </section>
+
+      <section>
+        <h2>Corrections</h2>
+        {{#each this.corrections as |c|}}
+          <div class='correction'>
+            <div>
+              <strong>{{c.direction}}</strong>
+              at
+              {{c.at}}
+              <span class='state {{c.state}}'>{{c.state}}</span>
+              <p class='reason'>{{c.reason}}</p>
+            </div>
+            {{#if c.isPending}}
+              {{#unless this.hideDecide}}
+                <div class='decide'>
+                  <Button
+                    @tone='success'
+                    @appearance='outlined'
+                    @size='s'
+                    {{on 'click' (fn this.decide c.eventId 'approved')}}
+                  >Approve</Button>
+                  <Button
+                    @tone='danger'
+                    @appearance='outlined'
+                    @size='s'
+                    {{on 'click' (fn this.decide c.eventId 'declined')}}
+                  >Decline</Button>
+                </div>
+              {{/unless}}
+            {{/if}}
+          </div>
+        {{else}}
+          <p class='none'>No corrections requested.</p>
+        {{/each}}
+
+        {{#unless this.hideRequest}}
+          <form class='request' aria-label='Request a correction'>
+            <h3>Missing or wrong punch?</h3>
+            <SegmentedControl
+              @options={{this.directionOptions}}
+              @value={{this.correctionDirection}}
+              @onValueChange={{this.setDirection}}
+            />
+            <label class='label'>
+              When
+              <Input
+                @type='datetime-local'
+                @value={{this.correctionAt}}
+                @onInput={{this.setAt}}
+              />
+            </label>
+            <label class='label'>
+              What happened
+              <Textarea
+                @value={{this.correctionReason}}
+                @onInput={{this.setReason}}
+                @placeholder='For example: forgot to check out'
+              />
+            </label>
+            <div>
+              <Button
+                @busy={{if this.running true false}}
+                @busyLabel='Sending…'
+                {{on 'click' this.requestCorrection}}
+              >Send to my manager</Button>
+            </div>
+          </form>
+        {{/unless}}
+      </section>
+    </article>
+    <style scoped>
+      .sheet {
+        display: grid;
+        gap: var(--boxel-sp-lg);
+        padding: var(--boxel-sp-lg);
+        max-width: 48rem;
+      }
+      .head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: var(--boxel-sp);
+      }
+      h1 {
+        margin: 0;
+        font-size: var(--boxel-font-size-xl);
+      }
+      h2 {
+        margin: 0 0 var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size);
+      }
+      h3 {
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+      }
+      .sub,
+      .none,
+      .reason {
+        margin: 0;
+        color: var(--muted-foreground);
+      }
+      .actions,
+      .decide {
+        display: flex;
+        gap: var(--boxel-sp-xs);
+      }
+      .days {
+        width: 100%;
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+      }
+      .days th,
+      .days td {
+        text-align: start;
+        padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
+        border-bottom: 1px solid var(--border);
+      }
+      .days th {
+        color: var(--muted-foreground);
+        font-weight: 500;
+      }
+      .verdict.late,
+      .verdict.early,
+      .verdict.late-early,
+      .verdict.no-checkout {
+        color: var(--destructive);
+      }
+      .correction {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--boxel-sp);
+        padding: var(--boxel-sp-xs) 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .state {
+        margin-inline-start: var(--boxel-sp-xs);
+        color: var(--muted-foreground);
+      }
+      .state.approved {
+        color: var(--success);
+      }
+      .state.declined {
+        color: var(--destructive);
+      }
+      .request {
+        display: grid;
+        gap: var(--boxel-sp-xs);
+        margin-top: var(--boxel-sp);
+      }
+      .label {
+        display: grid;
+        gap: var(--boxel-sp-5xs);
+        font-size: var(--boxel-font-size-sm);
+      }
+    </style>
+  </template>
+}
+
+// One person's attendance for one year. The employee lives in the ERP realm;
+// `userId` and `managerUserId` are copied here because a realm policy grant
+// reads the record's own fields, never a linked card's.
+export class AttendanceRecord extends CardDef {
+  static displayName = 'Attendance Record';
+  static icon = ClockIcon;
+
+  @field employee = linksTo(Employee);
+  @field userId = contains(StringField);
+  @field managerUserId = contains(StringField);
+  @field year = contains(StringField);
+  @field schedule = contains(WorkSchedule);
+  @field punches = containsMany(PunchEvent);
+  // Set when check-in requires the reception display's code.
+  @field display = linksTo(ReceptionDisplay, { searchable: true });
+
+  @field employeeName = contains(StringField, {
+    computeVia: function (this: AttendanceRecord) {
+      return this.employee?.name || this.userId || 'Unknown employee';
+    },
+  });
+
+  @field status = contains(StringField, {
+    computeVia: function (this: AttendanceRecord) {
+      let days = foldDays(this.punches, this.schedule);
+      let today = days.find((d) => d.key === todayKey(this.schedule?.timezone));
+      return today?.stillIn ? 'in' : 'out';
+    },
+  });
+
+  @field days = containsMany(AttendanceDay, {
+    computeVia: function (this: AttendanceRecord) {
+      return foldDays(this.punches, this.schedule).map(
+        (d) =>
+          new AttendanceDay({
+            day: d.key,
+            firstIn: d.firstIn,
+            lastOut: d.lastOut,
+            minutes: d.minutes,
+            punchCount: d.punchCount,
+            lateBy: d.lateBy,
+            earlyBy: d.earlyBy,
+            verdict: d.verdict,
+          }),
+      );
+    },
+  });
+
+  @field pendingCorrections = contains(NumberField, {
+    computeVia: function (this: AttendanceRecord) {
+      return (this.punches ?? []).filter(
+        (p) => p.kind === 'correction' && p.state === 'pending',
+      ).length;
+    },
+  });
+
+  @field cardTitle = contains(StringField, {
+    computeVia: function (this: AttendanceRecord) {
+      return `${this.employeeName} · ${this.year ?? ''}`.trim();
+    },
+  });
+
+  @operation static read = {
+    base: 'read',
+    links: 'ids',
+  } satisfies OperationDeclaration;
+
+  @operation static checkIn = {
+    base: 'appendContainsMany',
+    field: 'punches',
+    params: { punchedAt: StringField },
+    input: STAMP_PUNCH,
+    item: {
+      kind: 'punch',
+      direction: 'in',
+      punchedAt: params('punchedAt'),
+      assurance: 'button',
+      by: actor(),
+      state: 'recorded',
+    },
+  } satisfies OperationDeclaration;
+
+  @operation static checkOut = {
+    base: 'appendContainsMany',
+    field: 'punches',
+    params: { punchedAt: StringField },
+    input: STAMP_PUNCH,
+    item: {
+      kind: 'punch',
+      direction: 'out',
+      punchedAt: params('punchedAt'),
+      assurance: 'button',
+      by: actor(),
+      state: 'recorded',
+    },
+  } satisfies OperationDeclaration;
+
+  // A check-in that proves presence: the code must be the one the linked
+  // reception display shows now, and issued within the last 165 seconds.
+  @operation static checkInWithCode = {
+    base: 'transform',
+    params: {
+      code: StringField,
+      punchedAt: StringField,
+      cutoff: NumberField,
+    },
+    input: bxl`NOW() as $n | . + { punchedAt: (TEXT($n; "yyyy-mm-dd") + "T" + TEXT($n; "hh:mm:ss") + "Z"), cutoff: ($n - 165 / 86400) }`,
+    transformations: bxl`
+      assert(.display.code == params("code"); "That code is not the one on the reception display"; { snapshot: true });
+      assert(.display.issuedAtSerial > params("cutoff"); "That code has expired. Scan the display again"; { snapshot: true });
+      .punches += [{ kind: "punch", direction: "in", punchedAt: params("punchedAt"), assurance: "kiosk", kioskCode: params("code"), by: actor(), state: "recorded" }];
+    `,
+  } satisfies OperationDeclaration;
+
+  @operation static requestCorrection = {
+    base: 'transform',
+    params: {
+      direction: StringField,
+      punchedAt: StringField,
+      reason: StringField,
+      eventId: StringField,
+      requestedAt: StringField,
+    },
+    input: bxl`NOW() as $n | . + { eventId: ("c-" + TEXT($n; "yyyymmddhhmmss")), requestedAt: (TEXT($n; "yyyy-mm-dd") + "T" + TEXT($n; "hh:mm:ss") + "Z") }`,
+    transformations: bxl`
+      assert(OR(params("direction") == "in"; params("direction") == "out"); "Say whether the missing punch was a check in or a check out");
+      assert((params("reason") | length) > 0; "Add a note saying what happened");
+      .punches += [{ eventId: params("eventId"), kind: "correction", direction: params("direction"), punchedAt: params("punchedAt"), assurance: "correction", reason: params("reason"), by: actor(), state: "pending", requestedAt: params("requestedAt") }];
+    `,
+  } satisfies OperationDeclaration;
+
+  @operation static decideCorrection = {
+    base: 'transform',
+    params: {
+      eventId: StringField,
+      decision: StringField,
+      decidedAt: StringField,
+    },
+    input: bxl`NOW() as $n | . + { decidedAt: (TEXT($n; "yyyy-mm-dd") + "T" + TEXT($n; "hh:mm:ss") + "Z") }`,
+    transformations: bxl`
+      assert(OR(params("decision") == "approved"; params("decision") == "declined"); "A correction is either approved or declined");
+      assert(any(.punches[]; .eventId == params("eventId") and .state == "pending"); "That correction is not waiting for a decision");
+      (.punches[] | select(.eventId == params("eventId")) | .state) = params("decision");
+      (.punches[] | select(.eventId == params("eventId")) | .decidedBy) = actor();
+      (.punches[] | select(.eventId == params("eventId")) | .decidedAt) = params("decidedAt");
+    `,
+  } satisfies OperationDeclaration;
+
+  @operation static mine = {
+    base: 'query',
+    links: 'ids',
+    query: {
+      filter: {
+        on: () => AttendanceRecord,
+        eq: { userId: actor() },
+      },
+      sort: [{ on: () => AttendanceRecord, by: 'year', direction: 'desc' }],
+    },
+  } satisfies OperationDeclaration;
+
+  @operation static myTeam = {
+    base: 'query',
+    links: 'ids',
+    query: {
+      filter: {
+        on: () => AttendanceRecord,
+        eq: { managerUserId: actor() },
+      },
+      sort: [
+        { on: () => AttendanceRecord, by: 'employeeName', direction: 'asc' },
+      ],
+    },
+  } satisfies OperationDeclaration;
+
+  static embedded = Embedded;
+  static fitted = Embedded;
+  static isolated = Isolated;
+}
