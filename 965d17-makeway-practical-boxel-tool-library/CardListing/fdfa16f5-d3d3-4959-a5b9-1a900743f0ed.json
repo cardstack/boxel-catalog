@@ -1,0 +1,188 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Makeway — Practical Boxel Tool Library",
+      "summary": "# Makeway — a practical Boxel tool shelf\n\nMakeway is a Boxel workspace with a curated collection of focused utilities and a guided tool-library home. It includes a prompt brief builder, Markdown outline extractor, text cleaner, UTM builder, aspect-ratio calculator, QR value presenter, regex tester, CSV normalizer, and cURL-to-Fetch converter. Tools validate input and show their output in the workspace.\n\nThe Skills section can open workspace skills in the Boxel AI assistant. The experimental MCP connector supports browser-side HTTPS Streamable HTTP servers that need no authentication and allow CORS; it can list tools and invoke a selected tool with JSON arguments. It does not support local stdio servers, OAuth or API-key authentication, legacy SSE-only endpoints, or servers that deny browser access. Only connect to a server you trust; calls go directly from the browser to that server.\n\nBuilt as Boxel Cards and Commands with a responsive home view. No external service credentials are embedded. This listing does not promise persistent tool results, scheduled jobs, or arbitrary MCP execution.\n\n## License\n\nMIT License — Copyright (c) 2026 Akmal Irsyad. Permission is granted, free of charge, to any person obtaining a copy of this software and associated documentation files to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies, subject to including this copyright and permission notice. The software is provided “AS IS”, without warranty of any kind. The full standard MIT terms are set out here: https://opensource.org/license/mit/",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "examples.0": {
+        "links": {
+          "self": "../MakewayHome/home"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "@cardstack/catalog/Category/ai-automation"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/app"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/e909f521-30be-4bdd-b930-8cf0cf074439"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/864ea533-b0d8-4f19-81a8-18078f7d7724"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/a818078f-7d77-44a0-a1d9-7db05b91146e"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/e5e909f5-2130-4e5b-9df9-308cf0cf0744"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/b0d8df19-c1a8-4807-8f7d-7724a061d97d"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/78864ea5-33b0-48df-99c1-a818078f7d77"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/ddf9308c-f0cf-4744-b944-d278864ea533"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/c1a81807-8f7d-4724-a061-d97db05b9114"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/d278864e-a533-40d8-9f19-c1a818078f7d"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/09f52130-be5b-4df9-b08c-f0cf07443944"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/078f7d77-24a0-41d9-bdb0-5b91146ee2c5"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/44d27886-4ea5-43b0-98df-19c1a818078f"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/2130be5b-ddf9-408c-b0cf-07443944d278"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/a533b0d8-df19-41a8-9807-8f7d7724a061"
+        }
+      },
+      "specs.14": {
+        "links": {
+          "self": "../Spec/33b0d8df-19c1-4818-878f-7d7724a061d9"
+        }
+      },
+      "specs.15": {
+        "links": {
+          "self": "../Spec/7724a061-d97d-405b-9114-6ee2c5dee0ed"
+        }
+      },
+      "specs.16": {
+        "links": {
+          "self": "../Spec/c6e5e909-f521-40be-9bdd-f9308cf0cf07"
+        }
+      },
+      "specs.17": {
+        "links": {
+          "self": "../Spec/4ea533b0-d8df-49c1-a818-078f7d7724a0"
+        }
+      },
+      "specs.18": {
+        "links": {
+          "self": "../Spec/18078f7d-7724-4061-997d-b05b91146ee2"
+        }
+      },
+      "specs.19": {
+        "links": {
+          "self": "../Spec/cec6e5e9-09f5-4130-be5b-ddf9308cf0cf"
+        }
+      },
+      "specs.20": {
+        "links": {
+          "self": "../Spec/30be5bdd-f930-4cf0-8f07-443944d27886"
+        }
+      },
+      "specs.21": {
+        "links": {
+          "self": "../Spec/df19c1a8-1807-4f7d-b724-a061d97db05b"
+        }
+      },
+      "specs.22": {
+        "links": {
+          "self": "../Spec/19c1a818-078f-4d77-a4a0-61d97db05b91"
+        }
+      },
+      "specs.23": {
+        "links": {
+          "self": "../Spec/f52130be-5bdd-4930-8cf0-cf07443944d2"
+        }
+      },
+      "specs.24": {
+        "links": {
+          "self": "../Spec/24a061d9-7db0-4b91-946e-e2c5dee0edbe"
+        }
+      },
+      "specs.25": {
+        "links": {
+          "self": "../Spec/8f7d7724-a061-497d-b05b-91146ee2c5de"
+        }
+      },
+      "specs.26": {
+        "links": {
+          "self": "../Spec/52cec6e5-e909-4521-b0be-5bddf9308cf0"
+        }
+      },
+      "specs.27": {
+        "links": {
+          "self": "../Spec/d8df19c1-a818-478f-bd77-24a061d97db0"
+        }
+      },
+      "specs.28": {
+        "links": {
+          "self": "../Spec/7d7724a0-61d9-4db0-9b91-146ee2c5dee0"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/makeway-0bb76b77.png"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "CardListing"
+      }
+    }
+  }
+}
