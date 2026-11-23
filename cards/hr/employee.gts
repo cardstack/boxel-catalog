@@ -203,7 +203,7 @@ class EmployeeIsolated extends Component<typeof Employee> {
   get employmentFacts(): DescriptionsItem[] {
     let m = this.args.model;
     let rows: DescriptionsItem[] = [
-      { label: 'Employee ID', value: m?.employeeId || '—' },
+      { label: 'Employee number', value: m?.employeeNumber || '—' },
       { label: 'Role', value: m?.role || '—' },
       { label: 'Department', value: m?.department || '—' },
       { label: 'Location', value: m?.location || '—' },
@@ -517,7 +517,7 @@ export class Employee extends PersonBase {
   static displayName = 'Employee';
   static icon = BriefcaseIcon;
 
-  @field employeeId = contains(StringField, {
+  @field employeeNumber = contains(StringField, {
     description: 'The number the organization assigns this person',
   });
   @field userId = contains(StringField, {
