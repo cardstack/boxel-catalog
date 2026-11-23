@@ -4471,7 +4471,7 @@ class RunDetail extends GlimmerComponent<{
       { key: 'charge', label: 'Charge' },
       {
         key: 'credits',
-        label: 'Credits',
+        label: 'Boxel Credits',
         kind: 'number',
         digits: this.receiptDigits,
         width: '8rem',
