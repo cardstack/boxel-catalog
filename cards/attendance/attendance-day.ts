@@ -253,14 +253,29 @@ export function zonedToUtc(local: string, timezone: string): Date | null {
     return null;
   }
   let wanted = Date.UTC(y, mo - 1, d, h, mi);
+  let typed = new Date(wanted);
+  // Refuse a date that doesn't exist, such as Feb 31 or 25:99.
+  if (
+    typed.getUTCMonth() !== mo - 1 ||
+    typed.getUTCDate() !== d ||
+    typed.getUTCHours() !== h ||
+    typed.getUTCMinutes() !== mi
+  ) {
+    return null;
+  }
+  let shownAt = (at: number) => {
+    let shown = localClock(new Date(at), timezone);
+    let [sy, sm, sd] = shown.day.split('-').map(Number);
+    return Date.UTC(sy, sm - 1, sd, 0, shown.minutes);
+  };
   let guess = wanted;
   // Two passes settle the zone offset, including across a DST change.
   for (let i = 0; i < 2; i++) {
-    let shown = localClock(new Date(guess), timezone);
-    let [sy, sm, sd] = shown.day.split('-').map(Number);
-    let shownUtc = Date.UTC(sy, sm - 1, sd, 0, shown.minutes);
-    guess += wanted - shownUtc;
+    guess += wanted - shownAt(guess);
   }
+  // A time the clocks skip on the spring-forward night: move it forward by
+  // the gap, as a wall clock would read it.
+  guess += wanted - shownAt(guess);
   return new Date(guess);
 }
 

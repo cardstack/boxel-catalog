@@ -167,9 +167,10 @@ class RecordView extends Component<typeof AttendanceRecord> {
 
   isBusy = (name: string): boolean => this.running === name;
 
-  get anyBusy(): boolean {
-    return this.running !== undefined;
-  }
+  // The clicked button shows its busy state; the others are disabled, since
+  // a native disabled would cancel the busy state and drop focus.
+  otherBusy = (name: string): boolean =>
+    this.running !== undefined && this.running !== name;
 
   run = async (name: string, invoke: () => Promise<unknown>, done: string) => {
     if (this.running) {
@@ -232,7 +233,7 @@ class Embedded extends RecordView {
             @appearance='accent'
             @busy={{this.isBusy 'checkIn'}}
             @busyLabel='Checking in…'
-            @disabled={{this.anyBusy}}
+            @disabled={{this.otherBusy 'checkIn'}}
             {{on 'click' this.checkIn}}
           >Check in</Button>
         {{/unless}}
@@ -241,7 +242,7 @@ class Embedded extends RecordView {
             @appearance='outlined'
             @busy={{this.isBusy 'checkOut'}}
             @busyLabel='Checking out…'
-            @disabled={{this.anyBusy}}
+            @disabled={{this.otherBusy 'checkOut'}}
             {{on 'click' this.checkOut}}
           >Check out</Button>
         {{/unless}}
@@ -262,7 +263,7 @@ class Embedded extends RecordView {
             type='submit'
             @busy={{this.isBusy 'checkInWithCode'}}
             @busyLabel='Checking in…'
-            @disabled={{this.anyBusy}}
+            @disabled={{this.otherBusy 'checkInWithCode'}}
           >Check in with code</Button>
         </form>
       {{/if}}
@@ -376,7 +377,11 @@ class Isolated extends RecordView {
   setAt = (value: string) => (this.correctionAt = value);
   setReason = (value: string) => (this.correctionReason = value);
 
-  isDeciding = (eventId: string): boolean => this.deciding === eventId;
+  isDeciding = (eventId: string, decision: string): boolean =>
+    this.deciding === `${eventId}:${decision}`;
+
+  otherDeciding = (eventId: string, decision: string): boolean =>
+    this.running !== undefined && !this.isDeciding(eventId, decision);
 
   requestCorrection = (event?: Event) => {
     event?.preventDefault();
@@ -404,7 +409,7 @@ class Isolated extends RecordView {
   };
 
   decide = async (eventId: string, decision: 'approved' | 'declined') => {
-    this.deciding = eventId;
+    this.deciding = `${eventId}:${decision}`;
     try {
       await this.run(
         'decideCorrection',
@@ -433,7 +438,7 @@ class Isolated extends RecordView {
               @size='l'
               @busy={{this.isBusy 'checkIn'}}
               @busyLabel='Checking in…'
-              @disabled={{this.anyBusy}}
+              @disabled={{this.otherBusy 'checkIn'}}
               {{on 'click' this.checkIn}}
             >Check in</Button>
           {{/unless}}
@@ -443,7 +448,7 @@ class Isolated extends RecordView {
               @size='l'
               @busy={{this.isBusy 'checkOut'}}
               @busyLabel='Checking out…'
-              @disabled={{this.anyBusy}}
+              @disabled={{this.otherBusy 'checkOut'}}
               {{on 'click' this.checkOut}}
             >Check out</Button>
           {{/unless}}
@@ -466,7 +471,7 @@ class Isolated extends RecordView {
             type='submit'
             @busy={{this.isBusy 'checkInWithCode'}}
             @busyLabel='Checking in…'
-            @disabled={{this.anyBusy}}
+            @disabled={{this.otherBusy 'checkInWithCode'}}
           >Check in with code</Button>
         </form>
       {{/if}}
@@ -521,15 +526,16 @@ class Isolated extends RecordView {
                     @tone='success'
                     @appearance='outlined'
                     @size='s'
-                    @busy={{this.isDeciding c.eventId}}
-                    @disabled={{this.anyBusy}}
+                    @busy={{this.isDeciding c.eventId 'approved'}}
+                    @disabled={{this.otherDeciding c.eventId 'approved'}}
                     {{on 'click' (fn this.decide c.eventId 'approved')}}
                   >Approve</Button>
                   <Button
                     @tone='danger'
                     @appearance='outlined'
                     @size='s'
-                    @disabled={{this.anyBusy}}
+                    @busy={{this.isDeciding c.eventId 'declined'}}
+                    @disabled={{this.otherDeciding c.eventId 'declined'}}
                     {{on 'click' (fn this.decide c.eventId 'declined')}}
                   >Decline</Button>
                 </div>
@@ -576,7 +582,7 @@ class Isolated extends RecordView {
                 type='submit'
                 @busy={{this.isBusy 'requestCorrection'}}
                 @busyLabel='Sending…'
-                @disabled={{this.anyBusy}}
+                @disabled={{this.otherBusy 'requestCorrection'}}
               >Send to my manager</Button>
             </div>
           </form>
@@ -820,6 +826,7 @@ export class AttendanceRecord extends CardDef {
       assert(OR(params("direction") == "in"; params("direction") == "out"); "Say whether the missing punch was a check in or a check out");
       assert((params("reason") | length) > 0; "Add a note saying what happened");
       assert((params("nonce") | length) > 0; "The request is missing its id");
+      assert(any(.punches[]; .eventId == params("eventId")) == false; "That correction was already sent. Send it again to get a new id");
       .punches += [{ eventId: params("eventId"), kind: "correction", direction: params("direction"), punchedAt: params("punchedAt"), assurance: "correction", reason: params("reason"), by: actor(), state: "pending", requestedAt: params("requestedAt") }];
     `,
   } satisfies OperationDeclaration;

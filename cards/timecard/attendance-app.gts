@@ -21,7 +21,8 @@ interface LiveRecordsSignature {
     entries: { id: string }[] | undefined;
     isLoading: boolean;
     context: CardContext | undefined;
-    // Show only the first N rows; `mine` sorts the current year first.
+    // Show only the first N rows; `mine` sorts the latest year first, so an
+    // admin creates next year's record when the year turns over.
     limit?: number;
   };
   Blocks: { empty: [] };

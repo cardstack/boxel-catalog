@@ -31,15 +31,19 @@ function newCode(): string {
     .toUpperCase();
 }
 
-// A check-in accepts a code for 165 seconds; the screen stops showing one a
-// little before that, so it never shows a code that would be refused.
-const SHOW_FOR_MS = 150_000;
+// A check-in accepts a code for 165 seconds from the realm's stamp. The screen
+// times a code from when its rotation came back, on its own clock, and stops
+// showing it well before that, so it never shows a code that would be refused.
+const SHOW_FOR_MS = 140_000;
+const TICK_MS = 2_000;
 
 class DisplayView extends Component<typeof ReceptionDisplay> {
   @tracked error: string | undefined;
   @tracked live = false;
   @tracked now = Date.now();
+  @tracked shownAt: number | undefined;
   private timer: ReturnType<typeof setInterval> | undefined;
+  private ticker: ReturnType<typeof setInterval> | undefined;
   private rotating = false;
 
   constructor(owner: Owner, args: any) {
@@ -52,24 +56,27 @@ class DisplayView extends Component<typeof ReceptionDisplay> {
   }
 
   get isFresh(): boolean {
-    let issued = this.display.issuedAt
-      ? Date.parse(this.display.issuedAt)
-      : NaN;
-    return Number.isFinite(issued) && this.now - issued < SHOW_FOR_MS;
+    return (
+      this.shownAt !== undefined &&
+      Boolean(this.display.code) &&
+      this.now - this.shownAt < SHOW_FOR_MS
+    );
   }
 
   // A failed rotation is retried on the next tick; the old code stays only
   // while it is still accepted.
   rotate = async () => {
-    this.now = Date.now();
     if (this.rotating) {
       return;
     }
     this.rotating = true;
+    let sentAt = Date.now();
     try {
       // `input` stamps issuedAt and issuedAtSerial, so the payload carries
       // only the code; the typed signature still lists every declared param.
       await operations(this.display).rotate({ code: newCode() });
+      // Timed from the send, which is never later than the realm's stamp.
+      this.shownAt = sentAt;
       this.error = undefined;
     } catch (err) {
       this.error =
@@ -78,7 +85,6 @@ class DisplayView extends Component<typeof ReceptionDisplay> {
           : String(err);
     } finally {
       this.rotating = false;
-      this.now = Date.now();
     }
   };
 
@@ -87,15 +93,21 @@ class DisplayView extends Component<typeof ReceptionDisplay> {
       return;
     }
     this.live = true;
+    this.shownAt = undefined;
     this.rotate();
     this.timer = setInterval(this.rotate, ROTATE_EVERY_MS);
+    this.ticker = setInterval(() => (this.now = Date.now()), TICK_MS);
   };
 
   stop = () => {
     if (this.timer) {
       clearInterval(this.timer);
     }
+    if (this.ticker) {
+      clearInterval(this.ticker);
+    }
     this.timer = undefined;
+    this.ticker = undefined;
     this.live = false;
   };
 
