@@ -5,7 +5,7 @@ import type Owner from '@ember/owner';
 import { cached, tracked } from '@glimmer/tracking';
 import { modifier } from 'ember-modifier';
 import { resource, use } from 'ember-resources';
-import { TrackedObject } from 'tracked-built-ins';
+import { TrackedObject, TrackedSet } from 'tracked-built-ins';
 import { markDefinition } from '@cardstack/base/mark-definition';
 import { nowDate } from '@cardstack/base/helpers/clock';
 import {
@@ -1796,8 +1796,13 @@ interface RunMilestone {
   startedAt: string;
   endedAt: string | null;
   ms: number;
-  done?: number;
-  total?: number;
+  // The notable tasks the script reported inside the milestone with
+  // `realm.progress.task(text)`, in order.
+  tasks?: RunTask[];
+}
+interface RunTask {
+  text: string;
+  at: string;
 }
 interface LastRun {
   runId: string;
@@ -1811,6 +1816,9 @@ interface LastRun {
   ahead: string[];
   failedIn: string | null;
   dropped: number;
+  // Tasks the script reported that the run didn't record: past the most a
+  // run records, or inside a milestone the run didn't record.
+  tasksDropped?: number;
 }
 interface RunFailure {
   runId: string;
@@ -2506,8 +2514,9 @@ function runLook(run: ListedRun): { label: string; tone: RunTone } {
 }
 
 // How far a run got through the script's milestones, in a line: the
-// milestone a running run is in, the one a failed run failed in, or how many
-// a run that ended reached. Undefined when the script reported none.
+// milestone a running run is in with the last task the script reported in
+// it, the one a failed run failed in, or how many a run that ended reached.
+// Undefined when the script reported none.
 function runProgress(run: ListedRun): string | undefined {
   let m = run.milestones;
   if (!m || (m.milestones.length === 0 && m.plan.length === 0)) {
@@ -2517,8 +2526,9 @@ function runProgress(run: ListedRun): string | undefined {
   let total = reached + m.ahead.length;
   let last = m.milestones.at(-1);
   if (run.state === 'running') {
+    let task = last?.tasks?.at(-1)?.text;
     return m.current
-      ? `Milestone ${tally(reached)} of ${tally(total)}: ${m.current}`
+      ? `Milestone ${tally(reached)} of ${tally(total)}: ${m.current}${task ? ` — ${task}` : ''}`
       : `The run has reached no milestone yet; the script plans ${tally(total)}.`;
   }
   if (run.state === 'error' && m.failedIn) {
@@ -2819,15 +2829,8 @@ interface MilestoneRow {
   badge: string;
   tone: 'neutral' | 'success' | 'warning' | 'danger';
   detail?: string;
-}
-
-function countText(done?: number, total?: number): string | undefined {
-  if (done === undefined) {
-    return undefined;
-  }
-  return total !== undefined
-    ? `${tally(done)} of ${tally(total)}`
-    : tally(done);
+  // The notable tasks the script reported inside the milestone, in order.
+  tasks: string[];
 }
 
 // One row per milestone the run reached, in the order reached, then one per
@@ -2851,7 +2854,6 @@ function runMilestoneRows(run: LastRun): MilestoneRow[] {
         : state === 'reached'
           ? `Took ${time}`
           : `Ran for ${time}`,
-      countText(milestone.done, milestone.total),
       !milestone.planned && run.plan.length > 0 ? 'Not in the plan' : undefined,
     ].filter((part): part is string => Boolean(part));
     let look = MILESTONE_LOOKS[state];
@@ -2862,6 +2864,7 @@ function runMilestoneRows(run: LastRun): MilestoneRow[] {
       badge: look.badge,
       tone: look.tone,
       detail: parts.join(' · '),
+      tasks: (milestone.tasks ?? []).map(({ text }) => text),
     };
   });
   return [
@@ -2872,6 +2875,7 @@ function runMilestoneRows(run: LastRun): MilestoneRow[] {
       state: 'not-started' as const,
       badge: 'Not started',
       tone: 'neutral' as const,
+      tasks: [],
     })),
   ];
 }
@@ -2884,6 +2888,7 @@ function declaredMilestoneRows(names: string[]): MilestoneRow[] {
     state: 'not-started',
     badge: 'Not started',
     tone: 'neutral',
+    tasks: [],
   }));
 }
 
@@ -2914,21 +2919,51 @@ function runLead(run: LastRun): string {
       run.dropped === 1 ? 'milestone' : 'milestones'
     } past the ${tally(MAX_RUN_MILESTONES)} a run records, so the last milestone shown also holds the time of the unrecorded milestones.`;
   }
+  let tasksDropped = run.tasksDropped ?? 0;
+  if (tasksDropped > 0) {
+    lead += ` Boxel didn’t record ${tally(tasksDropped)} more ${
+      tasksDropped === 1 ? 'task' : 'tasks'
+    } the script reported: a run records at most ${tally(MAX_RUN_TASKS)} tasks.`;
+  }
   return lead;
 }
+
+// The most tasks a milestone lists before a button shows the rest: the
+// latest ones, since the latest says what the run did last.
+const SHOWN_TASKS = 5;
 
 // The milestones as a timeline, one row each, joined by the timeline's rail
 // so they read as a progression. Each marker is shaded in its state's color:
 // gray before the milestone runs, yellow while it runs, green once it is
-// done, red where the run ended with an error.
+// done, red where the run ended with an error. Under each milestone, the
+// notable tasks the script reported inside the milestone, in order.
 class MilestoneTimeline extends GlimmerComponent<{
   Args: { rows: MilestoneRow[]; label: string };
 }> {
+  // The milestones whose every task shows, by row id.
+  private allTasksShown = new TrackedSet<string>();
   get events(): TimelineEvent[] {
     return this.args.rows.map((row) => ({ id: row.id, title: row.name }));
   }
   rowOf = (event: TimelineEvent): MilestoneRow =>
     this.args.rows.find((row) => row.id === event.id)!;
+  shownTasks = (row: MilestoneRow): { tasks: string[]; earlier: number } => {
+    if (
+      this.allTasksShown.has(row.id) ||
+      row.tasks.length <= SHOWN_TASKS
+    ) {
+      return { tasks: row.tasks, earlier: 0 };
+    }
+    return {
+      tasks: row.tasks.slice(-SHOWN_TASKS),
+      earlier: row.tasks.length - SHOWN_TASKS,
+    };
+  };
+  earlierTasksLabel = (earlier: number): string =>
+    `Show ${tally(earlier)} earlier ${earlier === 1 ? 'task' : 'tasks'}`;
+  showAllTasks = (row: MilestoneRow) => {
+    this.allTasksShown.add(row.id);
+  };
   <template>
     <Timeline
       @events={{this.events}}
@@ -2965,6 +3000,31 @@ class MilestoneTimeline extends GlimmerComponent<{
               <span class='milestones__text'>{{row.detail}}</span>
             {{/if}}
           </span>
+          {{#if row.tasks.length}}
+            {{#let (this.shownTasks row) as |shown|}}
+              {{#if shown.earlier}}
+                <Button
+                  @appearance='link'
+                  @size='s'
+                  class='milestones__earlier'
+                  data-test-automation-milestone-earlier-tasks
+                  {{on 'click' (fn this.showAllTasks row)}}
+                >{{this.earlierTasksLabel shown.earlier}}</Button>
+              {{/if}}
+              <ul
+                class='milestones__tasks'
+                aria-label='Tasks in {{row.name}}'
+                data-test-automation-milestone-tasks
+              >
+                {{#each shown.tasks as |task|}}
+                  <li
+                    class='milestones__task'
+                    data-test-automation-milestone-task
+                  >{{task}}</li>
+                {{/each}}
+              </ul>
+            {{/let}}
+          {{/if}}
         {{/let}}
       </:default>
     </Timeline>
@@ -3010,15 +3070,31 @@ class MilestoneTimeline extends GlimmerComponent<{
       .milestones__text {
         color: var(--muted-foreground);
       }
+      .milestones__earlier {
+        align-self: flex-start;
+        margin-block-start: var(--boxel-sp-4xs);
+      }
+      .milestones__tasks {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-5xs, 2px);
+        margin: var(--boxel-sp-4xs) 0 0;
+        padding-inline-start: var(--boxel-sp-sm);
+        list-style: disc;
+        overflow-wrap: anywhere;
+      }
+      .milestones__task::marker {
+        color: var(--muted-foreground);
+      }
     </style>
   </template>
 }
 
 // The milestones a fitted view lists: the isolated view's timeline, compact,
 // with each milestone's state marked as the isolated view marks it and its
-// name, and its count or where Boxel stopped the run beside it.
+// name, and its time, last task or where Boxel stopped the run beside it.
 class FittedMilestones extends GlimmerComponent<{
-  // `details` adds each milestone's count and time under its name, for a
+  // `details` adds each milestone's time and last task under its name, for a
   // view tall enough for two lines a milestone.
   // `earlier` and `later` say how many milestones the list leaves out
   // before and after it; the list marks each by running its rail on past
@@ -3191,8 +3267,9 @@ class FittedMilestones extends GlimmerComponent<{
   </template>
 }
 
-// The most milestones the server records for one run.
+// The most milestones and the most tasks the server records for one run.
 const MAX_RUN_MILESTONES = 200;
+const MAX_RUN_TASKS = 200;
 
 // A trigger's times read in the trigger's own zone, as the trigger's
 // sentences do.
@@ -4238,7 +4315,8 @@ const STARTER_SCRIPT = `/* global realm */
 // automation's \`realm\` object. Find cards with realm.cards.search and
 // write files with realm.fs.writeText. Name the run's milestones up front
 // with realm.progress.plan, mark each as the script reaches it with
-// realm.progress.milestone, and count inside one with realm.progress.count.
+// realm.progress.milestone, and report each notable task inside one, such
+// as "Grouped the bug label", with realm.progress.task.
 
 realm.progress.plan(['Start']);
 realm.progress.milestone('Start');
@@ -5198,10 +5276,13 @@ function milestoneGlance(
     steps: rows.map((row) => ({
       label: row.name,
       state: STEP_STATES[row.state],
-      detail:
-        row.state === 'stopped'
-          ? ['Stopped here', row.detail].filter(Boolean).join(' · ')
-          : row.detail,
+      detail: [
+        row.state === 'stopped' ? 'Stopped here' : undefined,
+        row.detail,
+        row.tasks.at(-1),
+      ]
+        .filter(Boolean)
+        .join(' · '),
     })),
     // The milestone a run is in, failed in or stopped in. Otherwise the
     // first milestone the run didn't reach, or the last one when the run
@@ -5597,8 +5678,8 @@ class Fitted extends AtAGlance {
       ? m.headline
       : this.when;
   }
-  // The fitted lists name each milestone, with its count or where Boxel
-  // stopped the run beside it.
+  // The fitted lists name each milestone, with its time, last task or where
+  // Boxel stopped the run beside it.
   private list(size: number) {
     if (!this.milestones) {
       return { steps: [], earlier: undefined, later: undefined };
@@ -5618,7 +5699,7 @@ class Fitted extends AtAGlance {
   // pixels: the list names as many milestones as fit there around the one
   // in focus, so the run's milestone is always named and its neighbours join
   // as the card grows. With room for two lines a milestone, each also shows
-  // its count and time.
+  // its time and last task.
   @tracked private spaceForList = 0;
   @tracked private rowHeight = 24;
   // The stretch of rail that marks milestones before or after the list
