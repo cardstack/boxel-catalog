@@ -44,6 +44,7 @@ import {
   type ResolvedCodeRef,
 } from '@cardstack/runtime-common';
 import AuthedFetchTool from '@cardstack/boxel-host/tools/authed-fetch';
+import ReadAutomationRunTool from '@cardstack/boxel-host/tools/read-automation-run';
 import ReadSourceTool from '@cardstack/boxel-host/tools/read-source';
 import WriteTextFileTool from '@cardstack/boxel-host/tools/write-text-file';
 import { Button } from '@cardstack/pretui/components/button';
@@ -88,7 +89,9 @@ import {
   type TimelineEvent,
 } from '@cardstack/pretui/components/timeline';
 import { Table } from '@cardstack/pretui/components/table';
+import { Tabs } from '@cardstack/pretui/components/tabs';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
+import { ToggleGroup } from '@cardstack/pretui/components/toggle-group';
 import { Token } from '@cardstack/pretui/components/token';
 import { and, bool, eq, gt, or } from '@cardstack/pretui/helpers';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
@@ -2855,10 +2858,31 @@ interface MilestoneRow {
   tasks: string[];
 }
 
+// How long the milestone of each name took on an earlier run: the first
+// time that run reached the milestone, as a run's plan names each milestone
+// once.
+function milestoneTimes(run: LastRun | undefined): Map<string, number> {
+  let times = new Map<string, number>();
+  for (let milestone of run?.milestones ?? []) {
+    if (!times.has(milestone.name)) {
+      times.set(milestone.name, milestone.ms);
+    }
+  }
+  return times;
+}
+
 // One row per milestone the run reached, in the order reached, then one per
-// milestone of the plan the run hasn't reached.
-function runMilestoneRows(run: LastRun): MilestoneRow[] {
+// milestone of the plan the run hasn't reached. With `previous`, the run
+// before this one, each row also says how long the milestone took on that
+// run, so a running run's current milestone and the ones ahead read against
+// the last run's pace.
+function runMilestoneRows(run: LastRun, previous?: LastRun): MilestoneRow[] {
   let lastIndex = run.milestones.length - 1;
+  let before = milestoneTimes(previous);
+  let lastRunPart = (name: string) => {
+    let ms = before.get(name);
+    return ms === undefined ? undefined : `Last run took ${durationText(ms)}`;
+  };
   let rows: MilestoneRow[] = run.milestones.map((milestone, index) => {
     let last = index === lastIndex;
     let state: MilestoneState =
@@ -2876,6 +2900,7 @@ function runMilestoneRows(run: LastRun): MilestoneRow[] {
         : state === 'reached'
           ? `Took ${time}`
           : `Ran for ${time}`,
+      lastRunPart(milestone.name),
       !milestone.planned && run.plan.length > 0 ? 'Not in the plan' : undefined,
     ].filter((part): part is string => Boolean(part));
     let look = MILESTONE_LOOKS[state];
@@ -2899,6 +2924,7 @@ function runMilestoneRows(run: LastRun): MilestoneRow[] {
       state: 'not-started' as const,
       badge: 'Not started',
       tone: 'neutral' as const,
+      detail: lastRunPart(name),
       tasks: [],
     })),
   ];
@@ -2966,6 +2992,9 @@ const SHOWN_TASKS = 5;
 // notable tasks the script reported inside the milestone, in order.
 class MilestoneTimeline extends GlimmerComponent<{
   Args: { rows: MilestoneRow[]; label: string };
+  // More under a row, after its tasks: the run's timeline puts the script's
+  // milestones under the script's step.
+  Blocks: { body: [MilestoneRow] };
 }> {
   // The milestones whose every task shows, by row key.
   private allTasksShown = new TrackedSet<string>();
@@ -3062,6 +3091,9 @@ class MilestoneTimeline extends GlimmerComponent<{
                 {{/each}}
               </ul>
             {{/let}}
+          {{/if}}
+          {{#if (has-block 'body')}}
+            {{yield row to='body'}}
           {{/if}}
         {{/let}}
       </:default>
@@ -3579,6 +3611,1017 @@ class ScriptEditor extends GlimmerComponent<{
   </template>
 }
 
+// One run as the automations console shows the run when its row opens, read
+// from the realm server's `_automation-run-report` route through the host's
+// `read-automation-run` tool, for the realm's direct writers.
+type RunLogLevel = 'log' | 'info' | 'warn' | 'error';
+interface RunCallApiCall {
+  seq: number;
+  at: string;
+  operation: string;
+  method?: string;
+  // The request's destination, with query values masked.
+  destination?: string;
+  // The vendor's status; absent when Boxel refused the call or the call
+  // failed, and `code` then says which.
+  status?: number;
+  code?: string;
+  ms?: number;
+  bytes?: number;
+}
+interface RunResolveCall {
+  seq: number;
+  at: string;
+  model?: string;
+  status?: number;
+  ms?: number;
+  costInUsd?: number;
+}
+interface RunReport {
+  dryRun: boolean;
+  state: RunState;
+  timings: {
+    createdAt: string;
+    startedAt: string | null;
+    commitStartedAt: string | null;
+    committedAt: string | null;
+    finishedAt: string | null;
+    queuedMs: number | null;
+    runMs: number | null;
+    commitMs: number | null;
+  };
+  log: {
+    lines: number;
+    dropped: number;
+    byLevel: Partial<Record<RunLogLevel, number>>;
+  };
+  callApiCalls: RunCallApiCall[];
+  resolveCalls: RunResolveCall[];
+  writes: {
+    count: number;
+    // A complete Preview's staged files, unless a later Preview replaced
+    // the batch (`stagedReplacedBy`).
+    staged?: { path: string; size: number }[];
+    stagedReplacedBy?: string;
+    // The realm-local paths a landed commit saved.
+    committed?: string[];
+  };
+  cost: {
+    credits: number;
+    creditsByKind: Record<string, number>;
+    callApiCalls: number;
+    callApiResponseBytes: number;
+    resolveCalls: number;
+    writes: number;
+    aiCreditsSpent: number;
+    aiCreditsReserved: number;
+  };
+}
+interface ReadRunAnswer {
+  ok: boolean;
+  status: number;
+  body: {
+    data?: { id: string; attributes: Record<string, unknown> };
+  };
+}
+
+async function readRun(
+  tools: Tools,
+  input: Record<string, unknown>,
+): Promise<ReadRunAnswer | undefined> {
+  let result = await new ReadAutomationRunTool(tools).execute({
+    json: input,
+  });
+  return result?.json as ReadRunAnswer | undefined;
+}
+
+type RunReportState = {
+  loading: boolean;
+  failed: boolean;
+  report: RunReport | undefined;
+};
+
+// A run's report, read again on each `job` realm event naming the run (the
+// run started, reached a milestone, reported a task, committed or ended).
+function automationRunReport(
+  owner: object,
+  args: () => {
+    realm: string | undefined;
+    runId: string;
+    tools: Tools | undefined;
+  },
+) {
+  return use(
+    owner,
+    resource(({ on }) => {
+      let { realm, runId, tools } = args();
+      let state = new TrackedObject<RunReportState>({
+        loading: true,
+        failed: false,
+        report: undefined,
+      });
+      if (!realm || !tools) {
+        state.loading = false;
+        return state;
+      }
+      let ended = false;
+      let latest = 0;
+      let read = async () => {
+        let asked = ++latest;
+        await Promise.resolve();
+        if (ended || asked !== latest) {
+          return;
+        }
+        try {
+          let answer = await readRun(tools, {
+            realm,
+            run: runId,
+            read: 'report',
+          });
+          if (ended || asked !== latest) {
+            return;
+          }
+          let attributes = answer?.ok
+            ? answer.body.data?.attributes
+            : undefined;
+          if (attributes) {
+            state.report = attributes as unknown as RunReport;
+            state.failed = false;
+          } else {
+            state.failed = true;
+          }
+        } catch {
+          if (!ended && asked === latest) {
+            state.failed = true;
+          }
+        } finally {
+          if (!ended && asked === latest) {
+            state.loading = false;
+          }
+        }
+      };
+      read();
+      let unsubscribe = subscribeToRealm(realm, (event) => {
+        if (event.eventName === 'job' && event.runId === runId) {
+          read();
+        }
+      });
+      on.cleanup(() => {
+        ended = true;
+        unsubscribe?.();
+      });
+      return state;
+    }),
+  );
+}
+
+interface RunLogLine {
+  seq: number;
+  // ms since the epoch
+  at: number;
+  source: 'script' | 'platform';
+  kind: string;
+  level?: RunLogLevel;
+  message: string;
+  scriptLine?: number;
+}
+type RunLogState = {
+  loading: boolean;
+  failed: boolean;
+  // The run's state as the last page read the run.
+  runState: RunState | undefined;
+  lines: RunLogLine[];
+  // The lines Boxel refused past the log's cap.
+  dropped: number;
+};
+
+// How often the console asks for new lines while the run is pending or
+// running and no `job` event wakes the console sooner.
+const RUN_LOG_FOLLOW_MS = 2000;
+// The most lines one page of the log holds.
+const RUN_LOG_PAGE = 500;
+
+// A run's log, kept only to the levels asked for, followed while the run
+// goes: the console reads page after page, reads on at once while a page
+// says the log holds more, and otherwise asks again every
+// `RUN_LOG_FOLLOW_MS` while the run is pending or running. A `job` event
+// naming the run reads at once. Boxel writes the run's last line just after
+// the run ends, so once a page finds the run ended with nothing more, the
+// console reads once more an interval later, and then stops. A refusal
+// stops the reads; any other failure is tried again at the next interval.
+function automationRunLog(
+  owner: object,
+  args: () => {
+    realm: string | undefined;
+    runId: string;
+    tools: Tools | undefined;
+    levels: RunLogLevel[];
+  },
+) {
+  return use(
+    owner,
+    resource(({ on }) => {
+      let { realm, runId, tools, levels } = args();
+      let state = new TrackedObject<RunLogState>({
+        loading: true,
+        failed: false,
+        runState: undefined,
+        lines: [],
+        dropped: 0,
+      });
+      if (!realm || !tools || levels.length === 0) {
+        state.loading = false;
+        return state;
+      }
+      let stopped = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let wakeUp: (() => void) | undefined;
+      let wait = (wakeable: boolean) =>
+        new Promise<void>((settle) => {
+          let done = () => {
+            clearTimeout(timer);
+            wakeUp = undefined;
+            settle();
+          };
+          timer = setTimeout(done, RUN_LOG_FOLLOW_MS);
+          if (wakeable) {
+            wakeUp = done;
+          }
+        });
+      let follow = async () => {
+        await Promise.resolve();
+        let after = -1;
+        let endedReads = 0;
+        while (!stopped) {
+          let answer: ReadRunAnswer | undefined;
+          try {
+            answer = await readRun(tools, {
+              realm,
+              run: runId,
+              read: 'log',
+              after,
+              limit: RUN_LOG_PAGE,
+              levels,
+            });
+          } catch {
+            answer = undefined;
+          }
+          if (stopped) {
+            return;
+          }
+          state.loading = false;
+          let page = answer?.ok
+            ? (answer.body.data?.attributes as
+                | {
+                    state: RunState;
+                    lines: RunLogLine[];
+                    next: number;
+                    more: boolean;
+                    dropped: number;
+                  }
+                | undefined)
+            : undefined;
+          if (!page) {
+            state.failed = true;
+            if (answer && answer.status >= 400 && answer.status < 500) {
+              return;
+            }
+            await wait(false);
+            continue;
+          }
+          state.failed = false;
+          if (page.lines.length > 0) {
+            state.lines = [...state.lines, ...page.lines];
+          }
+          state.dropped = page.dropped;
+          state.runState = page.state;
+          after = page.next;
+          if (page.more) {
+            continue;
+          }
+          if (page.state === 'pending' || page.state === 'running') {
+            await wait(true);
+            continue;
+          }
+          if (endedReads > 0) {
+            return;
+          }
+          endedReads++;
+          await wait(false);
+        }
+      };
+      follow();
+      let unsubscribe = subscribeToRealm(realm, (event) => {
+        if (event.eventName === 'job' && event.runId === runId) {
+          wakeUp?.();
+        }
+      });
+      on.cleanup(() => {
+        stopped = true;
+        clearTimeout(timer);
+        unsubscribe?.();
+      });
+      return state;
+    }),
+  );
+}
+
+const LOG_LEVELS: { value: RunLogLevel; label: string }[] = [
+  { value: 'error', label: 'Errors' },
+  { value: 'warn', label: 'Warnings' },
+  { value: 'info', label: 'Info' },
+  { value: 'log', label: 'Log' },
+];
+const LEVEL_LOOKS: Record<RunLogLevel, { label: string; tone: RunTone }> = {
+  error: { label: 'Error', tone: 'danger' },
+  warn: { label: 'Warning', tone: 'warning' },
+  info: { label: 'Info', tone: 'info' },
+  log: { label: 'Log', tone: 'neutral' },
+};
+// The most log lines the console lists before a button shows the rest: the
+// latest ones, since the latest say what the run did last.
+const SHOWN_LOG_LINES = 200;
+
+const LOG_TIME = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  second: '2-digit',
+});
+
+// The run's steps, in order: Boxel admits the run, the script runs, and
+// Boxel commits the files the script staged. The script's step holds the
+// run milestones. A step another part of a run needs, such as the batches
+// of AI requests a batched run waits on, goes into `RUN_STEPS` between the
+// script and the commit.
+const RUN_STEPS: {
+  step: NonNullable<ListedRun['step']>;
+  name: string;
+}[] = [
+  { step: 'admission', name: 'Admission' },
+  { step: 'script', name: 'Script' },
+  { step: 'commit', name: 'Commit' },
+];
+
+function runStepRows(
+  run: ListedRun,
+  report: RunReport | undefined,
+): MilestoneRow[] {
+  let reached = RUN_STEPS.findIndex(({ step }) => step === run.step);
+  let timings = report?.timings;
+  return RUN_STEPS.map(({ step, name }, index) => {
+    let state: MilestoneState =
+      reached < 0 || index > reached
+        ? 'not-started'
+        : index < reached
+          ? 'reached'
+          : run.state === 'running'
+            ? 'running'
+            : run.state === 'error'
+              ? 'failed'
+              : run.state === 'canceled'
+                ? 'stopped'
+                : 'reached';
+    let look = MILESTONE_LOOKS[state];
+    let badge = look.badge;
+    let detail: string | undefined;
+    if (step === 'admission') {
+      if (run.state === 'pending') {
+        detail = 'Waiting to start';
+      } else if (timings?.queuedMs != null) {
+        detail = `Waited ${durationText(timings.queuedMs)} to start`;
+      }
+    } else if (step === 'script') {
+      if (timings?.runMs != null && state !== 'not-started') {
+        detail = `The run took ${durationText(timings.runMs)} from start to finish`;
+      }
+    } else if (run.startedBy === 'preview' && run.state === 'complete') {
+      badge = 'Skipped';
+      detail = 'A Preview saves nothing, so Boxel skipped the commit.';
+    } else if (timings?.commitMs != null) {
+      detail = `Took ${durationText(timings.commitMs)}`;
+    }
+    return {
+      id: step,
+      key: `${run.id}:${step}`,
+      name,
+      state,
+      badge,
+      tone: look.tone,
+      detail,
+      tasks: [],
+    };
+  });
+}
+
+const CREDIT_KINDS: { kind: string; label: string }[] = [
+  { kind: 'run', label: 'Compute and network' },
+  { kind: 'ai', label: 'AI requests' },
+  { kind: 'batched_ai', label: 'Batched AI requests' },
+  { kind: 'run_indexing', label: 'Indexing the saved files' },
+];
+
+function credits(n: number): string {
+  return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+function usd(n: number): string {
+  return n.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 4,
+  });
+}
+
+// One opened run: the run's steps, with the script's milestones inside the
+// script's step, then the run's log, calls, writes, and cost, a tab each.
+// Everything reads live while the run goes.
+class RunDetail extends GlimmerComponent<{
+  Args: {
+    run: ListedRun;
+    realm: string | undefined;
+    tools: Tools | undefined;
+    // The automation's run before this one, whose milestone times the
+    // milestones read against.
+    previous: LastRun | undefined;
+  };
+}> {
+  // A row's run is the same run for as long as the row is open.
+  private runId = this.args.run.id;
+  @tracked tab = 'log';
+  @tracked levels: RunLogLevel[] = LOG_LEVELS.map(({ value }) => value);
+  @tracked allLinesShown = false;
+
+  private reportResource = automationRunReport(this, () => ({
+    realm: this.args.realm,
+    runId: this.runId,
+    tools: this.args.tools,
+  }));
+  private logResource = automationRunLog(this, () => ({
+    realm: this.args.realm,
+    runId: this.runId,
+    tools: this.args.tools,
+    levels: this.levels,
+  }));
+
+  get report() {
+    return this.reportResource.current.report;
+  }
+  get reportFailed() {
+    return this.reportResource.current.failed && !this.report;
+  }
+  get log() {
+    return this.logResource.current;
+  }
+  get steps() {
+    return runStepRows(this.args.run, this.report);
+  }
+  get milestoneRows() {
+    return this.args.run.milestones
+      ? runMilestoneRows(this.args.run.milestones, this.args.previous)
+      : [];
+  }
+  get running() {
+    return (
+      this.args.run.state === 'pending' || this.args.run.state === 'running'
+    );
+  }
+  get tabs() {
+    return [
+      { value: 'log', label: 'Log' },
+      { value: 'calls', label: 'Calls' },
+      { value: 'writes', label: 'Writes' },
+      { value: 'cost', label: 'Cost and timings' },
+    ];
+  }
+  showTab = (tab: string) => (this.tab = tab);
+
+  get levelOptions() {
+    let byLevel = this.report?.log.byLevel ?? {};
+    return LOG_LEVELS.map(({ value, label }) => {
+      let n = byLevel[value];
+      return {
+        value,
+        label: n === undefined ? label : `${label} (${tally(n)})`,
+      };
+    });
+  }
+  showLevels = (values: string[]) => {
+    this.levels = values as RunLogLevel[];
+    this.allLinesShown = false;
+  };
+  get shownLines(): RunLogLine[] {
+    let lines = this.log.lines;
+    return this.allLinesShown ? lines : lines.slice(-SHOWN_LOG_LINES);
+  }
+  get earlierLines() {
+    return Math.max(this.log.lines.length - SHOWN_LOG_LINES, 0);
+  }
+  get earlierLinesLabel() {
+    let n = this.earlierLines;
+    return `${this.allLinesShown ? 'Hide' : 'Show'} ${tally(n)} earlier ${
+      n === 1 ? 'line' : 'lines'
+    }`;
+  }
+  toggleEarlierLines = () => (this.allLinesShown = !this.allLinesShown);
+  get droppedSentence() {
+    let n = this.log.dropped;
+    return `Boxel didn’t keep ${tally(n)} more ${
+      n === 1 ? 'line' : 'lines'
+    }: a run’s log holds at most 10,000 lines and 5,000,000 characters.`;
+  }
+  lineTime = (line: RunLogLine) => LOG_TIME.format(new Date(line.at));
+  lineLook = (line: RunLogLine) => LEVEL_LOOKS[line.level ?? 'info'];
+  lineSource = (line: RunLogLine) =>
+    line.source === 'script' ? 'Script' : 'Boxel';
+  lineNumber = (line: RunLogLine) =>
+    line.scriptLine === undefined ? undefined : `line ${line.scriptLine}`;
+
+  duration = (ms: number | undefined) =>
+    ms === undefined ? '—' : durationText(ms);
+  callStatus = (call: RunCallApiCall): { label: string; tone: RunTone } =>
+    call.status !== undefined
+      ? {
+          label: String(call.status),
+          tone: call.status < 400 ? 'success' : 'danger',
+        }
+      : {
+          label: call.code === 'failed' ? 'Failed' : 'Refused',
+          tone: 'danger',
+        };
+  resolveStatus = (call: RunResolveCall): { label: string; tone: RunTone } =>
+    call.status === undefined
+      ? { label: 'No answer', tone: 'danger' }
+      : {
+          label: String(call.status),
+          tone: call.status < 400 ? 'success' : 'danger',
+        };
+  cost = (call: RunResolveCall) =>
+    call.costInUsd === undefined ? '—' : usd(call.costInUsd);
+
+  get writesSentence() {
+    let report = this.report;
+    if (!report) {
+      return undefined;
+    }
+    let { writes, dryRun, state } = report;
+    if (dryRun) {
+      if (state !== 'complete') {
+        return 'A Preview stages the files the script writes, and keeps the files once the Preview completes. A Preview saves nothing to the workspace.';
+      }
+      if (writes.stagedReplacedBy) {
+        return 'A later Preview of the automation replaced the files this Preview staged.';
+      }
+      return writes.staged?.length
+        ? `The Preview staged ${tally(writes.staged.length)} ${
+            writes.staged.length === 1 ? 'file' : 'files'
+          }, and saved nothing to the workspace.`
+        : 'The script staged no files.';
+    }
+    if (writes.committed) {
+      return `The run saved ${tally(writes.count)} ${
+        writes.count === 1 ? 'file' : 'files'
+      } to the workspace.`;
+    }
+    if (writes.count > 0) {
+      return `The run saved ${tally(writes.count)} ${
+        writes.count === 1 ? 'file' : 'files'
+      } to the workspace. The run’s log reached the log’s limit before the log named the files.`;
+    }
+    return state === 'complete'
+      ? 'The run saved no files.'
+      : state === 'pending' || state === 'running'
+        ? 'The run saves the files the script writes once the script finishes.'
+        : 'The run saved no files: the run ended before the commit.';
+  }
+
+  get costItems(): StatusItem[] {
+    let report = this.report;
+    if (!report) {
+      return [];
+    }
+    let { cost } = report;
+    let items: StatusItem[] = [
+      { label: 'Credits in all', value: credits(cost.credits) },
+      ...CREDIT_KINDS.map(({ kind, label }) => ({
+        label,
+        value: credits(cost.creditsByKind[kind] ?? 0),
+      })),
+    ];
+    if (cost.aiCreditsReserved > 0) {
+      items.push({
+        label: 'AI credits Boxel holds for answers still to come',
+        value: credits(cost.aiCreditsReserved),
+      });
+    }
+    return items;
+  }
+  get usageItems(): StatusItem[] {
+    let report = this.report;
+    if (!report) {
+      return [];
+    }
+    let { cost } = report;
+    return [
+      { label: 'Outside service calls', value: tally(cost.callApiCalls) },
+      { label: 'Data received', value: bytes(cost.callApiResponseBytes) },
+      { label: 'AI requests', value: tally(cost.resolveCalls) },
+      { label: 'Files saved', value: tally(cost.writes) },
+    ];
+  }
+  get timingItems(): StatusItem[] {
+    let timings = this.report?.timings;
+    if (!timings) {
+      return [];
+    }
+    let items: StatusItem[] = [{ label: 'Made', date: timings.createdAt }];
+    if (timings.startedAt) {
+      items.push({ label: 'Started', date: timings.startedAt });
+    }
+    if (timings.finishedAt) {
+      items.push({ label: 'Finished', date: timings.finishedAt });
+    }
+    items.push(
+      {
+        label: 'Waited to start',
+        value: this.duration(timings.queuedMs ?? undefined),
+      },
+      { label: 'Ran for', value: this.duration(timings.runMs ?? undefined) },
+      {
+        label: 'Commit took',
+        value: this.duration(timings.commitMs ?? undefined),
+      },
+    );
+    return items;
+  }
+
+  <template>
+    <div class='run-detail' data-test-automation-run-detail={{@run.id}}>
+      <MilestoneTimeline @rows={{this.steps}} @label='Steps of the run'>
+        <:body as |step|>
+          {{#if (eq step.id 'script')}}
+            {{#if this.milestoneRows.length}}
+              <div
+                class='run-detail__milestones'
+                data-test-automation-run-milestones
+              >
+                <MilestoneTimeline
+                  @rows={{this.milestoneRows}}
+                  @label='Milestones of the run'
+                />
+              </div>
+            {{else if (eq step.state 'not-started')}}
+              {{! The script hasn't started, so no milestone shows yet. }}
+            {{else}}
+              <p class='run-detail__note'>
+                The script reported no milestones on the run. A script reports
+                milestones with realm.progress.plan and
+                realm.progress.milestone.
+              </p>
+            {{/if}}
+          {{/if}}
+        </:body>
+      </MilestoneTimeline>
+
+      {{#if this.reportFailed}}
+        <Callout
+          @tone='warning'
+          @title='Boxel couldn’t read the run’s details'
+          data-test-automation-run-detail-failed
+        >
+          Boxel reads the run’s details again the next time the run moves.
+        </Callout>
+      {{/if}}
+
+      <Tabs
+        @options={{this.tabs}}
+        @value={{this.tab}}
+        @onValueChange={{this.showTab}}
+        data-test-automation-run-tabs
+      >
+        <:default as |tab|>
+          {{#if (eq tab 'log')}}
+            <div class='run-detail__panel' data-test-automation-run-log>
+              <ToggleGroup
+                @label='Levels to show'
+                @multiple={{true}}
+                @options={{this.levelOptions}}
+                @values={{this.levels}}
+                @onValuesChange={{this.showLevels}}
+                @size='s'
+                @wrap={{true}}
+                data-test-automation-run-log-levels
+              />
+              {{#if this.log.dropped}}
+                <p
+                  class='run-detail__note'
+                  data-test-automation-run-log-dropped
+                >
+                  {{this.droppedSentence}}
+                </p>
+              {{/if}}
+              {{#if this.log.failed}}
+                <Callout
+                  @tone='warning'
+                  @title='Boxel couldn’t read the run’s log'
+                  data-test-automation-run-log-failed
+                />
+              {{/if}}
+              {{#if this.shownLines.length}}
+                {{#if this.earlierLines}}
+                  <Button
+                    @appearance='link'
+                    @size='s'
+                    aria-expanded={{if this.allLinesShown 'true' 'false'}}
+                    data-test-automation-run-log-earlier
+                    {{on 'click' this.toggleEarlierLines}}
+                  >{{this.earlierLinesLabel}}</Button>
+                {{/if}}
+                <Table @label='Lines of the run’s log' @striped={{false}}>
+                  <:head>
+                    <tr>
+                      <th scope='col'>Time</th>
+                      <th scope='col'>Level</th>
+                      <th scope='col'>From</th>
+                      <th scope='col'>Line</th>
+                    </tr>
+                  </:head>
+                  <:body>
+                    {{#each this.shownLines as |line|}}
+                      {{#let (this.lineLook line) as |look|}}
+                        <tr
+                          data-test-automation-run-log-line={{line.seq}}
+                          data-test-automation-run-log-level={{look.label}}
+                        >
+                          <td class='run-detail__time'>{{this.lineTime
+                              line
+                            }}</td>
+                          <td>
+                            <Chip
+                              @label={{look.label}}
+                              @tone={{look.tone}}
+                              @appearance='plain'
+                            />
+                          </td>
+                          <td>{{this.lineSource line}}</td>
+                          <td class='run-detail__message'>
+                            {{line.message}}
+                            {{#let (this.lineNumber line) as |number|}}
+                              {{#if number}}
+                                <Token @value={{number}} />
+                              {{/if}}
+                            {{/let}}
+                          </td>
+                        </tr>
+                      {{/let}}
+                    {{/each}}
+                  </:body>
+                </Table>
+              {{else if this.log.loading}}
+                <LoadingState @label='Loading the log' />
+              {{else if this.levels.length}}
+                <EmptyState
+                  @size='s'
+                  @texture={{false}}
+                  @title='No lines'
+                  @message={{if
+                    this.running
+                    'Lines show here as the run writes them.'
+                    'The run wrote no lines at the picked levels.'
+                  }}
+                  data-test-automation-run-log-empty
+                />
+              {{else}}
+                <EmptyState
+                  @size='s'
+                  @texture={{false}}
+                  @title='Pick a level'
+                  @message='Pick one or more levels above to show the log’s lines.'
+                  data-test-automation-run-log-no-level
+                />
+              {{/if}}
+            </div>
+          {{else if (eq tab 'calls')}}
+            <div class='run-detail__panel' data-test-automation-run-calls>
+              {{#if this.report}}
+                <h4 class='run-detail__heading'>Outside service calls</h4>
+                {{#if this.report.callApiCalls.length}}
+                  <Table
+                    @label='Outside service calls of the run'
+                    @striped={{false}}
+                  >
+                    <:head>
+                      <tr>
+                        <th scope='col'>Operation</th>
+                        <th scope='col'>Status</th>
+                        <th scope='col'>Time</th>
+                        <th scope='col'>Size</th>
+                      </tr>
+                    </:head>
+                    <:body>
+                      {{#each this.report.callApiCalls as |call|}}
+                        {{#let (this.callStatus call) as |status|}}
+                          <tr data-test-automation-run-call={{call.seq}}>
+                            <td class='run-detail__message'>
+                              {{operationTitle call.operation}}
+                              {{#if call.destination}}
+                                <Token
+                                  @value='{{call.method}} {{call.destination}}'
+                                  @wrap={{true}}
+                                />
+                              {{/if}}
+                            </td>
+                            <td>
+                              <Chip
+                                @label={{status.label}}
+                                @tone={{status.tone}}
+                                @appearance='plain'
+                              />
+                            </td>
+                            <td>{{this.duration call.ms}}</td>
+                            <td>
+                              {{#if call.bytes}}
+                                <FormatBytes @value={{call.bytes}} />
+                              {{else}}
+                                —
+                              {{/if}}
+                            </td>
+                          </tr>
+                        {{/let}}
+                      {{/each}}
+                    </:body>
+                  </Table>
+                {{else}}
+                  <p class='run-detail__note' data-test-automation-run-no-calls>
+                    The script called no outside service.
+                  </p>
+                {{/if}}
+                <h4 class='run-detail__heading'>AI requests</h4>
+                {{#if this.report.resolveCalls.length}}
+                  <Table @label='AI requests of the run' @striped={{false}}>
+                    <:head>
+                      <tr>
+                        <th scope='col'>Model</th>
+                        <th scope='col'>Status</th>
+                        <th scope='col'>Time</th>
+                        <th scope='col'>Cost</th>
+                      </tr>
+                    </:head>
+                    <:body>
+                      {{#each this.report.resolveCalls as |call|}}
+                        {{#let (this.resolveStatus call) as |status|}}
+                          <tr data-test-automation-run-resolve={{call.seq}}>
+                            <td class='run-detail__message'>
+                              {{#if call.model}}
+                                <Token @value={{call.model}} @wrap={{true}} />
+                              {{else}}
+                                —
+                              {{/if}}
+                            </td>
+                            <td>
+                              <Chip
+                                @label={{status.label}}
+                                @tone={{status.tone}}
+                                @appearance='plain'
+                              />
+                            </td>
+                            <td>{{this.duration call.ms}}</td>
+                            <td>{{this.cost call}}</td>
+                          </tr>
+                        {{/let}}
+                      {{/each}}
+                    </:body>
+                  </Table>
+                {{else}}
+                  <p
+                    class='run-detail__note'
+                    data-test-automation-run-no-resolves
+                  >
+                    The script made no AI requests.
+                  </p>
+                {{/if}}
+              {{else if this.reportFailed}}
+                {{! The callout above says Boxel couldn't read the run. }}
+              {{else}}
+                <LoadingState @label='Loading the calls' />
+              {{/if}}
+            </div>
+          {{else if (eq tab 'writes')}}
+            <div class='run-detail__panel' data-test-automation-run-writes>
+              {{#if this.report}}
+                <p data-test-automation-run-writes-sentence>
+                  {{this.writesSentence}}
+                </p>
+                {{#if this.report.writes.staged.length}}
+                  <Table @label='Files the Preview staged' @striped={{false}}>
+                    <:head>
+                      <tr>
+                        <th scope='col'>File</th>
+                        <th scope='col'>Size</th>
+                      </tr>
+                    </:head>
+                    <:body>
+                      {{#each this.report.writes.staged as |file|}}
+                        <tr data-test-automation-run-staged={{file.path}}>
+                          <td class='run-detail__message'><Token
+                              @value={{file.path}}
+                              @wrap={{true}}
+                            /></td>
+                          <td><FormatBytes @value={{file.size}} /></td>
+                        </tr>
+                      {{/each}}
+                    </:body>
+                  </Table>
+                {{/if}}
+                {{#if this.report.writes.committed.length}}
+                  <ul
+                    class='run-detail__files'
+                    aria-label='Files the run saved'
+                  >
+                    {{#each this.report.writes.committed as |path|}}
+                      <li data-test-automation-run-saved={{path}}><Token
+                          @value={{path}}
+                          @wrap={{true}}
+                        /></li>
+                    {{/each}}
+                  </ul>
+                {{/if}}
+              {{else if this.reportFailed}}
+                {{! The callout above says Boxel couldn't read the run. }}
+              {{else}}
+                <LoadingState @label='Loading the writes' />
+              {{/if}}
+            </div>
+          {{else}}
+            <div class='run-detail__panel' data-test-automation-run-cost>
+              {{#if this.report}}
+                <h4 class='run-detail__heading'>Credits</h4>
+                <StatusFacts
+                  @items={{this.costItems}}
+                  @columns={{3}}
+                  @size='s'
+                />
+                <h4 class='run-detail__heading'>What the run used</h4>
+                <StatusFacts @items={{this.usageItems}} @size='s' />
+                <h4 class='run-detail__heading'>Timings</h4>
+                <StatusFacts
+                  @items={{this.timingItems}}
+                  @columns={{3}}
+                  @size='s'
+                />
+              {{else if this.reportFailed}}
+                {{! The callout above says Boxel couldn't read the run. }}
+              {{else}}
+                <LoadingState @label='Loading the cost' />
+              {{/if}}
+            </div>
+          {{/if}}
+        </:default>
+      </Tabs>
+    </div>
+    <style scoped>
+      .run-detail {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-sm);
+        min-width: 0;
+      }
+      .run-detail__milestones {
+        margin-block-start: var(--boxel-sp-xs);
+      }
+      .run-detail__panel {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        padding-block-start: var(--boxel-sp-xs);
+        min-width: 0;
+      }
+      .run-detail__heading {
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
+      }
+      .run-detail__note {
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
+      }
+      .run-detail__time {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .run-detail__message {
+        min-width: 0;
+        overflow-wrap: break-word;
+      }
+      .run-detail__files {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-5xs);
+        margin: 0;
+        padding-inline-start: var(--boxel-sp-sm);
+      }
+    </style>
+  </template>
+}
+
 // The automation's runs, for the realm's direct writers: one row per run,
 // newest first, with what started the run, the run's state, and why a run
 // that didn't complete ended as the run did. A later slot of a schedule that
@@ -3591,11 +4634,31 @@ class AutomationRuns extends GlimmerComponent<{
     showPage: (page: number) => void;
     // The kind of each trigger the card declares, by label.
     triggerKind: (label: string | null) => string | undefined;
+    // What an opened run reads its details with.
+    realm: string | undefined;
+    tools: Tools | undefined;
   };
 }> {
   get rows() {
     return runRows(this.args.runs.runs);
   }
+  // The automation's run before `run` on the page shown, leaving Previews
+  // out, as the automation's last run leaves them out: the run whose
+  // milestone times an opened run's milestones read against.
+  previousRun = (run: ListedRun): LastRun | undefined => {
+    let runs = this.args.runs.runs;
+    let index = runs.findIndex(({ id }) => id === run.id);
+    return (
+      runs
+        .slice(index + 1)
+        .find(
+          (earlier) =>
+            earlier.startedBy !== 'preview' &&
+            earlier.finishedAt !== null &&
+            earlier.milestones !== null,
+        )?.milestones ?? undefined
+    );
+  };
   rowKey = (row: RunRow) => row.key;
   // Each row's accessible name, which names the row's expander and detail:
   // with the slot's time, or, for a run that served no slot, the time the
@@ -3659,8 +4722,6 @@ class AutomationRuns extends GlimmerComponent<{
     }
   };
   progress = (run: ListedRun) => runProgress(run);
-  milestoneRows = (run: ListedRun) =>
-    run.milestones ? runMilestoneRows(run.milestones) : [];
   reason = (run: ListedRun) => runReason(run);
   slotTime = (slot: string | null) => slotTime(slot);
   // When the row's run last moved: when the run ended, started, or was made.
@@ -3842,22 +4903,12 @@ class AutomationRuns extends GlimmerComponent<{
               no milestones.
             </p>
           {{else}}
-            {{#let (this.milestoneRows row.run) as |rows|}}
-              {{#if rows.length}}
-                <div data-test-automation-run-milestones>
-                  <MilestoneTimeline
-                    @rows={{rows}}
-                    @label='Milestones of the run'
-                  />
-                </div>
-              {{else}}
-                <p class='runs__expanded-note'>
-                  The script reported no milestones on the run. A script reports
-                  milestones with realm.progress.plan and
-                  realm.progress.milestone.
-                </p>
-              {{/if}}
-            {{/let}}
+            <RunDetail
+              @run={{row.run}}
+              @realm={{@realm}}
+              @tools={{@tools}}
+              @previous={{this.previousRun row.run}}
+            />
           {{/if}}
         </:expanded>
       </List>
@@ -3944,6 +4995,9 @@ class Isolated extends Component<typeof Automation> {
   }
   get realmId() {
     return instanceRealmId(this.args.model as Automation);
+  }
+  get tools() {
+    return toolsOf(this.args.context);
   }
   private server = automationStatus(this, () => ({
     id: this.args.model.id,
@@ -4133,6 +5187,8 @@ class Isolated extends Component<typeof Automation> {
             @runs={{this.runs}}
             @showPage={{this.showRunsPage}}
             @triggerKind={{this.triggerKindOf}}
+            @realm={{this.realmHref}}
+            @tools={{this.tools}}
           />
         </PanelSection>
       {{/if}}
