@@ -2973,9 +2973,6 @@ const SHOWN_TASKS = 5;
 // notable tasks the script reported inside the milestone, in order.
 class MilestoneTimeline extends GlimmerComponent<{
   Args: { rows: MilestoneRow[]; label: string };
-  // More under a row, after its tasks: the run's timeline puts the script's
-  // milestones under the script's step.
-  Blocks: { body: [MilestoneRow] };
 }> {
   // The milestones whose every task shows, by row key.
   private allTasksShown = new TrackedSet<string>();
@@ -3073,9 +3070,6 @@ class MilestoneTimeline extends GlimmerComponent<{
               </ul>
             {{/let}}
           {{/if}}
-          {{#if (has-block 'body')}}
-            {{yield row to='body'}}
-          {{/if}}
         {{/let}}
       </:default>
     </Timeline>
@@ -3118,7 +3112,9 @@ class MilestoneTimeline extends GlimmerComponent<{
         align-items: center;
         gap: var(--boxel-sp-xs);
       }
+      /* A long detail wraps beside the chip rather than dropping below it. */
       .milestones__text {
+        flex: 1 1 12rem;
         color: var(--muted-foreground);
       }
       .milestones__earlier {
@@ -3129,7 +3125,9 @@ class MilestoneTimeline extends GlimmerComponent<{
         flex-direction: column;
         gap: var(--boxel-sp-5xs);
         margin: var(--boxel-sp-4xs) 0 0;
-        padding-inline-start: var(--boxel-sp-sm);
+        /* Wide enough that each bullet sits under the milestone's name, not
+           out over the timeline's rail. */
+        padding-inline-start: var(--boxel-sp-lg);
         list-style: disc;
         overflow-wrap: break-word;
       }
@@ -3603,13 +3601,15 @@ interface RunCallApiCall {
   ms?: number;
   bytes?: number;
 }
+// An AI request. The report also carries the provider's `costInUsd`, which
+// the card never reads: an end user sees what AI cost only as the credits
+// Boxel charged (boxel ADR 049 §1.4), on the Cost tab.
 interface RunResolveCall {
   seq: number;
   at: string;
   model?: string;
   status?: number;
   ms?: number;
-  costInUsd?: number;
 }
 interface RunReport {
   dryRun: boolean;
@@ -3997,11 +3997,21 @@ const LEVEL_LOOKS: Record<RunLogLevel, { label: string; tone: RunTone }> = {
 const SHOWN_LOG_LINES = 200;
 const EARLIER_LOG_LINES = 500;
 
-const LOG_TIME = new Intl.DateTimeFormat('en-US', {
+// A time of a run, to the second, in the viewer's own time zone with the
+// zone named, as the log and the timeline show each time.
+const RUN_CLOCK = new Intl.DateTimeFormat('en-US', {
   hour: 'numeric',
   minute: '2-digit',
   second: '2-digit',
+  timeZoneName: 'short',
 });
+function runClock(at: string | number): string {
+  // The zone stays on the line with its time.
+  return RUN_CLOCK.format(new Date(at)).replace(/ (\S+)$/, '\u00a0$1');
+}
+function msBetween(from: string | null, to: string | null): number | undefined {
+  return from && to ? Date.parse(to) - Date.parse(from) : undefined;
+}
 
 // The run's steps, in order: Boxel admits the run, the script runs, and
 // Boxel commits the files the script staged. The script's step holds the
@@ -4052,12 +4062,15 @@ function runStepRows(
         detail = 'The run ended before Boxel started the run.';
       } else if (run.state === 'pending') {
         detail = 'Waiting to start';
-      } else if (timings?.queuedMs != null) {
-        detail = `Waited ${durationText(timings.queuedMs)} to start`;
+      } else if (run.startedAt) {
+        let waited = msBetween(run.createdAt, run.startedAt);
+        detail = `Started ${runClock(run.startedAt)}${
+          waited === undefined ? '' : ` · Waited ${durationText(waited)}`
+        }`;
       }
     } else if (step === 'script') {
-      if (timings?.runMs != null && state !== 'not-started') {
-        detail = `The run took ${durationText(timings.runMs)} from start to finish`;
+      if (state !== 'not-started' && !run.milestones?.milestones.length) {
+        detail = 'The script reported no milestones on the run.';
       }
     } else if (run.startedBy === 'preview' && run.state === 'complete') {
       badge = 'Skipped';
@@ -4087,14 +4100,6 @@ const CREDIT_KINDS: { kind: string; label: string }[] = [
 
 function credits(n: number): string {
   return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
-}
-
-function usd(n: number): string {
-  return n.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 4,
-  });
 }
 
 // One opened run: the run's steps, with the script's milestones inside the
@@ -4147,6 +4152,43 @@ class RunDetail extends GlimmerComponent<{
       ? runMilestoneRows(this.args.run.milestones, this.args.previous)
       : [];
   }
+  // One serial timeline: admission, then the script's milestones in the
+  // order the script runs them (the ones ahead included), then the steps
+  // after the script. The script shows as a step of its own only when the
+  // run has no milestones to stand for the script.
+  get timelineRows(): MilestoneRow[] {
+    let milestones = this.milestoneRows;
+    let rows = this.steps.flatMap((row) =>
+      row.id === 'script' && milestones.length > 0 ? milestones : [row],
+    );
+    // An ended run says when the run ended, and how long the run took from
+    // start to finish, on the row where the run ended.
+    let { run } = this.args;
+    if (run.finishedAt) {
+      let last = -1;
+      rows.forEach((row, index) => {
+        if (row.state !== 'not-started' && row.badge !== 'Skipped') {
+          last = index;
+        }
+      });
+      if (last >= 0) {
+        let took = msBetween(run.startedAt, run.finishedAt);
+        let end = `${run.state === 'complete' ? 'Finished' : 'Ended'} ${runClock(
+          run.finishedAt,
+        )}${took === undefined ? '' : ` · ${durationText(took)} in all`}`;
+        let row = rows[last];
+        rows[last] = {
+          ...row,
+          detail: row.detail ? `${row.detail} · ${end}` : end,
+        };
+      }
+    }
+    return rows;
+  }
+  // The viewer's own time zone, which every time of the run reads in.
+  get timeZone() {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
   get running() {
     return (
       this.args.run.state === 'pending' || this.args.run.state === 'running'
@@ -4157,7 +4199,7 @@ class RunDetail extends GlimmerComponent<{
       { value: 'log', label: 'Log' },
       { value: 'calls', label: 'Calls' },
       { value: 'writes', label: 'Writes' },
-      { value: 'cost', label: 'Cost and timings' },
+      { value: 'cost', label: 'Cost' },
     ];
   }
   showTab = (tab: string) => (this.tab = tab);
@@ -4213,15 +4255,13 @@ class RunDetail extends GlimmerComponent<{
       n === 1 ? 'line' : 'lines'
     }: a run’s log holds at most 10,000 lines and 5,000,000 characters.`;
   }
-  lineTime = (line: RunLogLine) => LOG_TIME.format(new Date(line.at));
+  lineTime = (line: RunLogLine) => runClock(line.at);
   lineLook = (line: RunLogLine) => LEVEL_LOOKS[line.level ?? 'info'];
   lineSource = (line: RunLogLine) =>
     line.source === 'script' ? 'Script' : 'Boxel';
   lineNumber = (line: RunLogLine) =>
     line.scriptLine === undefined ? undefined : `line ${line.scriptLine}`;
 
-  duration = (ms: number | undefined) =>
-    ms === undefined ? '—' : durationText(ms);
   // A call's time, to the millisecond below a second, since most calls
   // take less than one.
   callTime = (ms: number | undefined) =>
@@ -4247,8 +4287,6 @@ class RunDetail extends GlimmerComponent<{
           label: String(call.status),
           tone: call.status < 400 ? 'success' : 'danger',
         };
-  cost = (call: RunResolveCall) =>
-    call.costInUsd === undefined ? '—' : usd(call.costInUsd);
 
   get writesSentence() {
     let report = this.report;
@@ -4317,65 +4355,20 @@ class RunDetail extends GlimmerComponent<{
     }
     let { cost } = report;
     return [
-      { label: 'Outside service calls', value: tally(cost.callApiCalls) },
+      { label: 'Outside service calls made', value: tally(cost.callApiCalls) },
       { label: 'Data received', value: bytes(cost.callApiResponseBytes) },
-      { label: 'AI requests', value: tally(cost.resolveCalls) },
+      { label: 'AI requests made', value: tally(cost.resolveCalls) },
       { label: 'Files saved', value: tally(cost.writes) },
     ];
   }
-  get timingItems(): StatusItem[] {
-    let timings = this.report?.timings;
-    if (!timings) {
-      return [];
-    }
-    let items: StatusItem[] = [{ label: 'Queued', date: timings.createdAt }];
-    if (timings.startedAt) {
-      items.push({ label: 'Started', date: timings.startedAt });
-    }
-    if (timings.finishedAt) {
-      items.push({ label: 'Finished', date: timings.finishedAt });
-    }
-    items.push(
-      {
-        label: 'Waited to start',
-        value: this.duration(timings.queuedMs ?? undefined),
-      },
-      { label: 'Ran for', value: this.duration(timings.runMs ?? undefined) },
-      {
-        label: 'Commit took',
-        value: this.duration(timings.commitMs ?? undefined),
-      },
-    );
-    return items;
-  }
-
   <template>
     <div class='run-detail' data-test-automation-run-timeline={{@run.id}}>
-      <MilestoneTimeline @rows={{this.steps}} @label='Steps of the run'>
-        <:body as |step|>
-          {{#if (eq step.id 'script')}}
-            {{#if this.milestoneRows.length}}
-              <div
-                class='run-detail__milestones'
-                data-test-automation-run-milestones
-              >
-                <MilestoneTimeline
-                  @rows={{this.milestoneRows}}
-                  @label='Milestones of the run'
-                />
-              </div>
-            {{else if (eq step.state 'not-started')}}
-              {{! The script hasn't started, so no milestone shows yet. }}
-            {{else}}
-              <p class='run-detail__note'>
-                The script reported no milestones on the run. A script reports
-                milestones with realm.progress.plan and
-                realm.progress.milestone.
-              </p>
-            {{/if}}
-          {{/if}}
-        </:body>
-      </MilestoneTimeline>
+      <div data-test-automation-run-milestones>
+        <MilestoneTimeline
+          @rows={{this.timelineRows}}
+          @label='Timeline of the run'
+        />
+      </div>
 
       {{#if (eq this.reportFailure 'refused')}}
         <Callout
@@ -4412,6 +4405,10 @@ class RunDetail extends GlimmerComponent<{
                 @wrap={{true}}
                 data-test-automation-run-log-levels
               />
+              <p class='run-detail__note' data-test-automation-run-time-zone>
+                Boxel shows each time of the run in the viewer’s time zone,
+                {{this.timeZone}}.
+              </p>
               {{#if this.log.dropped}}
                 <p
                   class='run-detail__note'
@@ -4582,7 +4579,6 @@ class RunDetail extends GlimmerComponent<{
                         <th scope='col'>Model</th>
                         <th scope='col'>Status</th>
                         <th scope='col'>Time</th>
-                        <th scope='col'>Cost</th>
                       </tr>
                     </:head>
                     <:body>
@@ -4606,7 +4602,6 @@ class RunDetail extends GlimmerComponent<{
                             <td class='run-detail__time'>{{this.callTime
                                 call.ms
                               }}</td>
-                            <td>{{this.cost call}}</td>
                           </tr>
                         {{/let}}
                       {{/each}}
@@ -4658,17 +4653,21 @@ class RunDetail extends GlimmerComponent<{
                   </Table>
                 {{/if}}
                 {{#if this.report.writes.committed.length}}
-                  <ul
-                    class='run-detail__files'
-                    aria-label='Files the run saved'
-                  >
-                    {{#each this.report.writes.committed as |path|}}
-                      <li data-test-automation-run-saved={{path}}><Token
-                          @value={{path}}
-                          @wrap={{true}}
-                        /></li>
-                    {{/each}}
-                  </ul>
+                  <Table @label='Files the run saved' @striped={{false}}>
+                    <:head>
+                      <tr><th scope='col'>File</th></tr>
+                    </:head>
+                    <:body>
+                      {{#each this.report.writes.committed as |path|}}
+                        <tr data-test-automation-run-saved={{path}}>
+                          <td class='run-detail__message'><Token
+                              @value={{path}}
+                              @wrap={{true}}
+                            /></td>
+                        </tr>
+                      {{/each}}
+                    </:body>
+                  </Table>
                 {{/if}}
               {{else if this.reportFailure}}
                 {{! The callout above says Boxel couldn't read the run. }}
@@ -4693,8 +4692,6 @@ class RunDetail extends GlimmerComponent<{
                 {{/unless}}
                 <h4 class='run-detail__heading'>What the run used</h4>
                 <StatusFacts @items={{this.usageItems}} />
-                <h4 class='run-detail__heading'>Timings</h4>
-                <StatusFacts @items={{this.timingItems}} @columns={{3}} />
               {{else if this.reportFailure}}
                 {{! The callout above says Boxel couldn't read the run. }}
               {{else}}
@@ -4712,9 +4709,6 @@ class RunDetail extends GlimmerComponent<{
         gap: var(--boxel-sp-sm);
         min-width: 0;
       }
-      .run-detail__milestones {
-        margin-block-start: var(--boxel-sp-xs);
-      }
       .run-detail__panel {
         display: flex;
         flex-direction: column;
@@ -4725,6 +4719,10 @@ class RunDetail extends GlimmerComponent<{
       .run-detail__heading {
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
+      }
+      /* A section after the first starts clear of the one above it. */
+      .run-detail__heading:not(:first-child) {
+        margin-block-start: var(--boxel-sp-sm);
       }
       .run-detail__note {
         font-size: var(--boxel-font-size-xs);
@@ -4737,13 +4735,6 @@ class RunDetail extends GlimmerComponent<{
       .run-detail__message {
         min-width: 0;
         overflow-wrap: break-word;
-      }
-      .run-detail__files {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-5xs);
-        margin: 0;
-        padding-inline-start: var(--boxel-sp-sm);
       }
     </style>
   </template>
