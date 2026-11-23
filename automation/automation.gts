@@ -2604,7 +2604,7 @@ function stateLook(status: ServerStatus | undefined): StateLook | undefined {
 // What the state means for the next run, as a sentence.
 function stateSentence(status: ServerStatus): string {
   if (!status.switchedOn) {
-    return 'Nobody has turned this automation on, so Boxel runs nothing. Anyone who can edit this workspace can turn the automation on, and that person then pays for every run.';
+    return 'Nobody has turned this automation on, so Boxel runs nothing. A realm administrator can turn this automation on, and that person then pays for every run.';
   }
   switch (status.state) {
     case 'active':
