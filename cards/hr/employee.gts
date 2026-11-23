@@ -159,8 +159,7 @@ function salaryShort(m?: Partial<Employee>): string {
   return formatMoney(m?.salary, { compact: true }) ?? '—';
 }
 
-// The facts every format draws from, in the mockup's order; isolated shows
-// them all, embedded the first six.
+// The isolated view's Details panel, in the mockup's order.
 function employeeFacts(m?: Partial<Employee>): DescriptionsItem[] {
   return [
     { label: 'Start date', value: m?.startDate ? formatDay(m.startDate) : '—' },
@@ -195,14 +194,17 @@ class EmployeeIsolated extends Component<typeof Employee> {
     return [
       { label: 'Email', value: m?.email || '—' },
       { label: 'Phone', value: m?.phone || '—' },
+      { label: 'Boxel account', value: m?.userId || '—' },
     ];
   }
 
   get employmentFacts(): DescriptionsItem[] {
     let m = this.args.model;
     let rows: DescriptionsItem[] = [
+      { label: 'Employee number', value: m?.employeeNumber || '—' },
       { label: 'Role', value: m?.role || '—' },
       { label: 'Department', value: m?.department || '—' },
+      { label: 'Location', value: m?.location || '—' },
       {
         label: 'Start date',
         value: m?.startDate ? formatDay(m.startDate) : '—',
@@ -513,8 +515,18 @@ export class Employee extends PersonBase {
   static displayName = 'Employee';
   static icon = BriefcaseIcon;
 
+  @field employeeNumber = contains(StringField, {
+    description: 'The number the organization assigns this person',
+  });
+  @field userId = contains(StringField, {
+    description:
+      "Boxel account: this person's Boxel user id, such as @avery:boxel.ai. It is the value actor() returns, so apps and realm policies can match the signed-in person to this record. Only realm writers should change it: never grant an update on a card keyed on its userId",
+  });
   @field role = contains(StringField);
   @field department = contains(StringField);
+  @field location = contains(StringField, {
+    description: 'Where this person mainly works: an office, campus or site',
+  });
   @field startDate = contains(DateField);
   @field status = contains(EmployeeStatusField);
   @field employmentType = contains(EmployeeEmploymentTypeField);
