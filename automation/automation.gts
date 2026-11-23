@@ -2973,16 +2973,18 @@ class MilestoneTimeline extends GlimmerComponent<{
         max-inline-size: 34rem;
       }
       /* Fills the timeline's marker with a light tint of the state's color,
-         the glyph in the color itself. */
+         the glyph in the color's ink, which keeps the glyph legible on the
+         tint in both light and dark themes. */
       .milestones__mark {
         --milestone-color: var(--muted-foreground);
+        --milestone-ink: var(--milestone-color);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         inline-size: 100%;
         block-size: 100%;
         border-radius: 50%;
-        color: var(--milestone-color);
+        color: var(--milestone-ink);
         background: color-mix(
           in oklab,
           var(--milestone-color) 14%,
@@ -2991,12 +2993,15 @@ class MilestoneTimeline extends GlimmerComponent<{
       }
       .milestones__mark[data-milestone-state='reached'] {
         --milestone-color: var(--success);
+        --milestone-ink: var(--success-ink);
       }
       .milestones__mark[data-milestone-state='running'] {
         --milestone-color: var(--info);
+        --milestone-ink: var(--info-ink);
       }
       .milestones__mark[data-milestone-state='failed'] {
         --milestone-color: var(--destructive);
+        --milestone-ink: var(--destructive-ink);
       }
       .milestones__mark[data-milestone-state='not-started'] {
         background: var(--card, #fff);
