@@ -1759,7 +1759,7 @@ function fileName(url: string | undefined): string | undefined {
 // read, and a viewer the realm hands to its policy, whom a grant may admit to
 // the card but never to the server's state. Then `visible` stays false and the
 // views show the card's own fields alone, as they do when the route can't be
-// asked.
+// asked or the request fails.
 type AutomationState = 'active' | 'paused' | 'waiting-for-credits' | 'done';
 type PauseReason =
   | 'requested'
@@ -1914,7 +1914,7 @@ const WEBHOOK_TRIGGER_CANT_FIRE =
 // Any other viewer the realm admits, whether the realm's permissions let them
 // read or the realm hands them to its policy, is told they aren't a direct
 // writer (`meta.directWriter: false`). Then the editor takes a typed path, as
-// it does when the route can't be asked.
+// it does when the route can't be asked or the request fails.
 interface AutomationWebhook {
   webhookPath: string;
   owner: string;
