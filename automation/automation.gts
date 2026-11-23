@@ -96,7 +96,6 @@ import {
 import { Table } from '@cardstack/pretui/components/table';
 import { Tabs } from '@cardstack/pretui/components/tabs';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
-import { ToggleGroup } from '@cardstack/pretui/components/toggle-group';
 import { Token } from '@cardstack/pretui/components/token';
 import { and, bool, eq, gt, or } from '@cardstack/pretui/helpers';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
@@ -268,7 +267,7 @@ const CAP_DEFAULTS: Record<string, number> = {
   resolveCalls: 5,
   aiCredits: 300,
   writes: 50,
-  seconds: 300,
+  seconds: 1200,
   dailyCredits: 500,
   monthlyCredits: 10_000,
 };
@@ -2981,8 +2980,15 @@ class MilestoneTimeline extends GlimmerComponent<{
 }> {
   // The milestones whose every task shows, by row key.
   private allTasksShown = new TrackedSet<string>();
+  // Each milestone's state chip sits on the milestone's title line, in the
+  // state's own tone.
   get events(): TimelineEvent[] {
-    return this.args.rows.map((row) => ({ id: row.id, title: row.name }));
+    return this.args.rows.map((row) => ({
+      id: row.id,
+      title: row.name,
+      status: row.badge,
+      statusTone: row.tone,
+    }));
   }
   rowOf = (event: TimelineEvent): MilestoneRow =>
     this.args.rows.find((row) => row.id === event.id)!;
@@ -3040,12 +3046,9 @@ class MilestoneTimeline extends GlimmerComponent<{
       </:marker>
       <:default as |event|>
         {{#let (this.rowOf event) as |row|}}
-          <span class='milestones__detail'>
-            <Chip @label={{row.badge}} @tone={{row.tone}} />
-            {{#if row.detail}}
-              <span class='milestones__text'>{{row.detail}}</span>
-            {{/if}}
-          </span>
+          {{#if row.detail}}
+            <span class='milestones__text'>{{row.detail}}</span>
+          {{/if}}
           {{#if row.tasks.length}}
             {{#let (this.shownTasks row) as |shown|}}
               {{#if shown.earlier}}
@@ -3111,15 +3114,7 @@ class MilestoneTimeline extends GlimmerComponent<{
       .milestones__mark[data-milestone-state='not-started'] {
         background: var(--card, #fff);
       }
-      .milestones__detail {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-      }
-      /* A long detail wraps beside the chip rather than dropping below it. */
       .milestones__text {
-        flex: 1 1 12rem;
         color: var(--muted-foreground);
       }
       .milestones__earlier {
@@ -3615,6 +3610,9 @@ interface RunResolveCall {
   model?: string;
   status?: number;
   ms?: number;
+  // The tokens the request read and wrote, as the provider reported them.
+  inputTokens?: number;
+  outputTokens?: number;
 }
 interface RunReport {
   dryRun: boolean;
@@ -4079,12 +4077,19 @@ function automationRunLog(
   );
 }
 
+// The log's levels, most severe first. The filter shows a level and every
+// level more severe than it, as log filters do: Warnings shows warnings and
+// errors, and All shows every line.
 const LOG_LEVELS: { value: RunLogLevel; label: string }[] = [
   { value: 'error', label: 'Errors' },
   { value: 'warn', label: 'Warnings' },
   { value: 'info', label: 'Info' },
-  { value: 'log', label: 'Log' },
+  { value: 'log', label: 'All' },
 ];
+function levelsFrom(least: RunLogLevel): RunLogLevel[] {
+  let index = LOG_LEVELS.findIndex(({ value }) => value === least);
+  return LOG_LEVELS.slice(0, index + 1).map(({ value }) => value);
+}
 const LEVEL_LOOKS: Record<RunLogLevel, { label: string; tone: RunTone }> = {
   error: { label: 'Error', tone: 'danger' },
   warn: { label: 'Warning', tone: 'warning' },
@@ -4221,7 +4226,11 @@ class RunDetail extends GlimmerComponent<{
   // A row's run is the same run for as long as the row is open.
   private runId = this.args.run.id;
   @tracked tab = 'log';
-  @tracked levels: RunLogLevel[] = LOG_LEVELS.map(({ value }) => value);
+  // The least severe level the log shows; every more severe level shows too.
+  @tracked leastLevel: RunLogLevel = 'log';
+  get levels(): RunLogLevel[] {
+    return levelsFrom(this.leastLevel);
+  }
   @tracked shownLineCount = SHOWN_LOG_LINES;
 
   private reportResource = automationRunReport(this, () => ({
@@ -4335,16 +4344,23 @@ class RunDetail extends GlimmerComponent<{
         0,
       );
     }
+    // Each option counts the lines the option shows: its level and every
+    // more severe one.
     return LOG_LEVELS.map(({ value, label }) => {
-      let n = counts[value];
+      let n = log
+        ? levelsFrom(value).reduce(
+            (sum, level) => sum + (counts[level] ?? 0),
+            0,
+          )
+        : undefined;
       return {
         value,
         label: n === undefined ? label : `${label} (${tally(n)})`,
       };
     });
   }
-  showLevels = (values: string[]) => {
-    this.levels = values as RunLogLevel[];
+  showLevels = (value: string) => {
+    this.leastLevel = value as RunLogLevel;
     this.shownLineCount = SHOWN_LOG_LINES;
   };
   get shownLines(): RunLogLine[] {
@@ -4392,6 +4408,10 @@ class RunDetail extends GlimmerComponent<{
           label: call.code === 'failed' ? 'Failed' : 'Refused',
           tone: 'danger',
         };
+  tokens = (call: RunResolveCall) =>
+    call.inputTokens === undefined && call.outputTokens === undefined
+      ? '—'
+      : `${tally(call.inputTokens ?? 0)} in · ${tally(call.outputTokens ?? 0)} out`;
   resolveStatus = (call: RunResolveCall): { label: string; tone: RunTone } =>
     call.status === undefined
       ? { label: 'No answer', tone: 'danger' }
@@ -4512,9 +4532,10 @@ class RunDetail extends GlimmerComponent<{
     let storage = this.storage;
     return storage ? storage.fileBytes + storage.indexBytes : 0;
   }
-  // A day of storage for every file the automation's runs keep, at today's
-  // prices, to two significant figures: a few small files cost a small
-  // fraction of a credit a day.
+  // A day of storage for every file the automation's runs keep, margin
+  // included, as the server prices the daily storage charge, to two
+  // significant figures: a few small files cost a small fraction of a credit
+  // a day.
   get dailyStorageCredits() {
     let credits = this.storage?.dailyCredits;
     return credits == null
@@ -4549,7 +4570,7 @@ class RunDetail extends GlimmerComponent<{
     ];
     if (this.dailyStorageCredits) {
       sentences.push(
-        `At today’s prices, a day of storage for those files costs ${this.dailyStorageCredits} credits.`,
+        `A day of storage for those files costs ${this.dailyStorageCredits} credits.`,
       );
     }
     return sentences.join(' ');
@@ -4666,16 +4687,17 @@ class RunDetail extends GlimmerComponent<{
         <:default as |tab|>
           {{#if (eq tab 'log')}}
             <div class='run-detail__panel' data-test-automation-run-log>
-              <ToggleGroup
-                @label='Levels to show'
-                @multiple={{true}}
-                @options={{this.levelOptions}}
-                @values={{this.levels}}
-                @onValuesChange={{this.showLevels}}
-                @size='s'
-                @wrap={{true}}
-                data-test-automation-run-log-levels
-              />
+              <div class='run-detail__levels'>
+                <SegmentedControl
+                  @label='Lines to show'
+                  @options={{this.levelOptions}}
+                  @value={{this.leastLevel}}
+                  @onValueChange={{this.showLevels}}
+                  data-test-automation-run-log-levels
+                />
+                <span class='run-detail__note'>Each level includes the more
+                  severe ones.</span>
+              </div>
               {{#if this.log.dropped}}
                 <p
                   class='run-detail__note'
@@ -4752,25 +4774,17 @@ class RunDetail extends GlimmerComponent<{
                 {{! The callout above says why no line shows. }}
               {{else if this.log.loading}}
                 <LoadingState @label='Loading the log' />
-              {{else if this.levels.length}}
+              {{else}}
                 <EmptyState
                   @size='s'
                   @texture={{false}}
                   @title='No lines'
                   @message={{if
                     this.running
-                    'The run hasn’t written a line at the picked levels yet.'
-                    'The run wrote no lines at the picked levels.'
+                    'The run hasn’t written a line at this level yet.'
+                    'The run wrote no lines at this level.'
                   }}
                   data-test-automation-run-log-empty
-                />
-              {{else}}
-                <EmptyState
-                  @size='s'
-                  @texture={{false}}
-                  @title='Pick a level'
-                  @message='Pick one or more levels above to show the log’s lines.'
-                  data-test-automation-run-log-no-level
                 />
               {{/if}}
             </div>
@@ -4845,6 +4859,7 @@ class RunDetail extends GlimmerComponent<{
                       <tr>
                         <th scope='col'>Model</th>
                         <th scope='col'>Status</th>
+                        <th scope='col'>Tokens</th>
                         <th scope='col'>Time</th>
                       </tr>
                     </:head>
@@ -4866,6 +4881,10 @@ class RunDetail extends GlimmerComponent<{
                                 @appearance='plain'
                               />
                             </td>
+                            <td
+                              class='run-detail__time'
+                              data-test-automation-run-resolve-tokens
+                            >{{this.tokens call}}</td>
                             <td class='run-detail__time'>{{this.callTime
                                 call.ms
                               }}</td>
@@ -5075,6 +5094,12 @@ class RunDetail extends GlimmerComponent<{
       .run-detail__note {
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
+      }
+      .run-detail__levels {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
       }
       .run-detail__limits {
         display: flex;
