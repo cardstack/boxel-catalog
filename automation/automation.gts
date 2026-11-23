@@ -3601,9 +3601,9 @@ interface RunCallApiCall {
   ms?: number;
   bytes?: number;
 }
-// An AI request. The report also carries the provider's `costInUsd`, which
-// the card never reads: an end user sees what AI cost only as the credits
-// Boxel charged (boxel ADR 049 §1.4), on the Cost tab.
+// An AI request. The report carries no cost for it: an end user sees what AI
+// cost only as the credits Boxel charged (boxel ADR 049 §1.4), on the Cost
+// tab.
 interface RunResolveCall {
   seq: number;
   at: string;
@@ -4557,11 +4557,11 @@ class RunDetail extends GlimmerComponent<{
     }
     let { count, bytes: runBytes } = this.runStorage;
     let sentences = [
-      count > 0
-        ? `The run saved ${this.plural(count, 'file', 'files')} (${bytes(
-            runBytes,
-          )}) that still exist.`
-        : 'The run added no files the automation keeps.',
+      count === 1
+        ? `The run saved 1 file (${bytes(runBytes)}) that still exists.`
+        : count > 1
+          ? `The run saved ${count} files (${bytes(runBytes)}) that still exist.`
+          : 'The run added no files the automation keeps.',
       `The automation’s runs keep ${this.plural(
         storage.files.length,
         'file',
