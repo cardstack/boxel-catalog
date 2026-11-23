@@ -3808,6 +3808,9 @@ interface SwitchOnEstimate {
     // absent before the viewer's first one.
     recentPreviewCredits?: number;
   };
+  // What the server says about the card that bears on switching on, such as
+  // webhook triggers that start no runs.
+  notices?: { code: string; message: string }[];
   broadReaders?: {
     anyone: boolean;
     everySignedInUser: boolean;
@@ -3818,11 +3821,14 @@ interface SwitchOnEstimate {
 // The routes the switch-on screen calls on the realm server. Each acts as the
 // signed-in person, and answers only a direct writer of the workspace.
 const SWITCH_ON_ROUTE = '_automation-switch-on';
+const WEBHOOK_NOTICE = 'webhook-triggers-start-no-runs';
 const RESUME_ROUTE = '_automation-resume';
 
 // How long the screen waits, after writing a new monthly limit to the card,
 // for the realm server to read the card with that limit.
 const CAP_SAVED_WAIT_MS = 30_000;
+const NO_LIMITS =
+  'The automation has no limits yet. Set the limits in the automation’s editor, then turn on the automation.';
 const CAP_SAVED_POLL_MS = 500;
 
 // Whether a paused automation waits for someone to agree to what its card
@@ -3918,13 +3924,17 @@ export class SwitchOnDialog extends GlimmerComponent<{
   get title() {
     return this.mode === 'reconfirm'
       ? 'Resume the automation'
-      : 'Turn the automation on';
+      : 'Turn on the automation';
   }
   get openLabel() {
-    return this.mode === 'reconfirm' ? 'Review and resume' : 'Turn on';
+    return this.mode === 'reconfirm'
+      ? 'Review and resume'
+      : 'Turn on the automation';
   }
   get confirmLabel() {
-    return this.mode === 'reconfirm' ? 'Resume and pay' : 'Turn on and pay';
+    return this.mode === 'reconfirm'
+      ? 'Resume and pay'
+      : 'Turn on the automation and pay';
   }
   // Why Boxel paused an automation that the screen resumes.
   get reconfirmLead() {
@@ -3954,6 +3964,10 @@ export class SwitchOnDialog extends GlimmerComponent<{
     if (!Number.isInteger(cap) || cap < 0) {
       return 'Enter a whole number of credits, or 0 to forbid any spending.';
     }
+    let daily = this.args.model.caps?.dailyCredits;
+    if (typeof daily === 'number' && cap < daily) {
+      return `The monthly limit can’t be below the daily limit of ${tally(daily)} credits. Enter at least ${tally(daily)}, or lower the daily limit in the automation’s editor.`;
+    }
     return undefined;
   }
   get capBelowEstimate() {
@@ -3969,15 +3983,18 @@ export class SwitchOnDialog extends GlimmerComponent<{
       ? 'The limit is below the estimate, so Boxel may stop starting runs before the month ends.'
       : 'Boxel starts no run in a calendar month once the automation’s charges that month reach this limit.';
   }
+  get noLimits() {
+    return !this.args.model.caps;
+  }
 
   get estimateItems() {
     let e = this.estimate?.estimate;
     if (!e) {
       return [];
     }
-    let runs = Math.ceil(
-      e.unboundedRunsPerMonth + e.boundedRunsPerMonth + e.onceRuns,
-    );
+    let exactRuns =
+      e.unboundedRunsPerMonth + e.boundedRunsPerMonth + e.onceRuns;
+    let runs = Math.round(exactRuns);
     return [
       {
         key: 'estimate',
@@ -3994,7 +4011,12 @@ export class SwitchOnDialog extends GlimmerComponent<{
       {
         key: 'runs',
         label: 'Runs counted',
-        value: runs === 1 ? '1 run a month' : `${tally(runs)} runs a month`,
+        value:
+          exactRuns > 0 && exactRuns < 1
+            ? 'Less than 1 run a month'
+            : runs === 1
+              ? '1 run a month'
+              : `${tally(runs)} runs a month`,
         hint: 'Every scheduled run in an average month, and each one-time run still to come.',
       },
       {
@@ -4016,12 +4038,20 @@ export class SwitchOnDialog extends GlimmerComponent<{
   get broadReaderLines() {
     return broadReaderLines(this.estimate?.broadReaders);
   }
+  // Whether the server starts no runs from webhook deliveries, so the card's
+  // webhook triggers can't fire.
+  get webhooksStartNoRuns() {
+    return (this.estimate?.notices ?? []).some(
+      (notice) => notice.code === WEBHOOK_NOTICE,
+    );
+  }
   get canConfirm() {
     return (
       this.estimate !== undefined &&
       !this.loading &&
       !this.saving &&
-      !this.capProblem
+      !this.capProblem &&
+      !this.noLimits
     );
   }
 
@@ -4061,7 +4091,7 @@ export class SwitchOnDialog extends GlimmerComponent<{
     if (!result.ok) {
       throw new Error(
         result.errors?.[0] ??
-          `The realm server answered ${result.status} for the estimate.`,
+          `Boxel answered with status ${result.status} for the estimate.`,
       );
     }
     return result.body?.data?.attributes as SwitchOnEstimate;
@@ -4082,12 +4112,11 @@ export class SwitchOnDialog extends GlimmerComponent<{
   // Writes the monthly limit to the card, and waits for the realm server to
   // read the card with that limit.
   private async writeCap(cap: number) {
-    let model = this.args.model;
-    if (model.caps) {
-      model.caps.monthlyCredits = cap;
-    } else {
-      model.caps = new AutomationCaps({ ...CAP_DEFAULTS, monthlyCredits: cap });
+    let caps = this.args.model.caps;
+    if (!caps) {
+      throw new Error(NO_LIMITS);
     }
+    caps.monthlyCredits = cap;
     let started = Date.now();
     for (;;) {
       let estimate = await this.fetchEstimate();
@@ -4097,7 +4126,7 @@ export class SwitchOnDialog extends GlimmerComponent<{
       }
       if (Date.now() - started > CAP_SAVED_WAIT_MS) {
         throw new Error(
-          'Boxel saved the new monthly limit, but the realm server hasn’t read the card with the new limit yet. Try again in a moment.',
+          'Boxel hasn’t read the automation with the new monthly limit yet. Try again in a moment.',
         );
       }
       await new Promise((resolve) => setTimeout(resolve, CAP_SAVED_POLL_MS));
@@ -4123,10 +4152,11 @@ export class SwitchOnDialog extends GlimmerComponent<{
       });
       if (!result.ok) {
         this.failure =
-          result.errors?.[0] ?? `The realm server answered ${result.status}.`;
+          result.errors?.[0] ?? `Boxel answered with status ${result.status}.`;
         if (result.status === 409) {
           // The card changed after the screen read it: show the limits the
-          // card holds.
+          // card holds, in place of the one typed.
+          this.typedCap = undefined;
           await this.readEstimate();
         }
         return;
@@ -4141,9 +4171,11 @@ export class SwitchOnDialog extends GlimmerComponent<{
 
   <template>
     {{#if this.available}}
-      <Button {{on 'click' this.show}} data-test-automation-switch-on>
-        {{this.openLabel}}
-      </Button>
+      <div class='switch-on__open'>
+        <Button {{on 'click' this.show}} data-test-automation-switch-on>
+          {{this.openLabel}}
+        </Button>
+      </div>
       <Dialog
         @open={{this.open}}
         @onClose={{this.close}}
@@ -4152,12 +4184,20 @@ export class SwitchOnDialog extends GlimmerComponent<{
       >
         <:title>{{this.title}}</:title>
         <:default>
-          <div class='switch-on' data-test-automation-switch-on-screen>
+          <Stack @gap='m' data-test-automation-switch-on-screen>
             {{#if this.reconfirmLead}}
               <p
                 class='switch-on__lead'
                 data-test-automation-switch-on-reconfirm
               >{{this.reconfirmLead}}</p>
+            {{/if}}
+            {{#if this.noLimits}}
+              <div data-test-automation-switch-on-no-limits>
+                <Callout
+                  @tone='warning'
+                  @title='The automation has no limits'
+                >{{NO_LIMITS}}</Callout>
+              </div>
             {{/if}}
             {{#if this.estimate}}
               <Descriptions
@@ -4191,10 +4231,16 @@ export class SwitchOnDialog extends GlimmerComponent<{
                       {{#each this.webhookTriggers as |label|}}
                         <Token @value={{label}} />
                       {{/each}}
+                      {{#if this.webhooksStartNoRuns}}
+                        <span data-test-automation-switch-on-webhook-notice>
+                          Boxel doesn’t run automations from webhooks, so these
+                          triggers can’t fire.
+                        </span>
+                      {{/if}}
                     {{/if}}
                   </li>
                 </ul>
-                The monthly limit covers every charge, including these.
+                Boxel counts these charges toward the monthly limit too.
               </Callout>
               <Field
                 @label='Monthly limit, in credits'
@@ -4205,6 +4251,7 @@ export class SwitchOnDialog extends GlimmerComponent<{
                 <NumberInput
                   @controlId={{id}}
                   @value={{this.cap}}
+                  @invalid={{if this.capProblem true false}}
                   @min={{0}}
                   @onInput={{this.setCap}}
                   data-test-automation-switch-on-cap
@@ -4215,10 +4262,13 @@ export class SwitchOnDialog extends GlimmerComponent<{
                 @title='You become the payer'
                 data-test-automation-switch-on-payer
               >
-                Boxel charges every scheduled run, and the storage of the files
-                the runs create, to your credits, up to the monthly limit.
-                Anyone who can edit this workspace can pause the automation, or
-                resume the automation and become the payer instead.
+                Boxel charges every scheduled run to your credits, and the
+                storage of the files the runs create for every day the
+                automation stays on. The monthly limit stops Boxel from starting
+                runs, while the storage charge continues until someone removes
+                the automation. Anyone who can edit this workspace can pause the
+                automation, or resume the automation and become the payer
+                instead.
               </Callout>
               {{#if this.broadReaderLines.length}}
                 <Callout
@@ -4261,7 +4311,7 @@ export class SwitchOnDialog extends GlimmerComponent<{
                 >{{this.failure}}</Callout>
               </div>
             {{/if}}
-          </div>
+          </Stack>
         </:default>
         <:footer>
           <Button
@@ -4288,9 +4338,8 @@ export class SwitchOnDialog extends GlimmerComponent<{
       </Dialog>
     {{/if}}
     <style scoped>
-      .switch-on {
-        display: grid;
-        gap: var(--boxel-sp);
+      .switch-on__open {
+        margin: 0 0 var(--boxel-sp-sm);
       }
       .switch-on__lead,
       .switch-on__warning-lead {
@@ -4497,14 +4546,12 @@ class Isolated extends Component<typeof Automation> {
           <p class='automation__lead' data-test-automation-state-sentence>
             {{this.stateSentence}}
           </p>
-          <div class='automation__switch-on'>
-            <SwitchOnDialog
-              @model={{this.automation}}
-              @context={{@context}}
-              @realm={{this.realmHref}}
-              @status={{this.status}}
-            />
-          </div>
+          <SwitchOnDialog
+            @model={{this.automation}}
+            @context={{@context}}
+            @realm={{this.realmHref}}
+            @status={{this.status}}
+          />
           <StatusFacts @items={{this.statusItems}} @columns={{2}} />
           {{#if this.pauseProblems.length}}
             <Callout
@@ -4732,9 +4779,6 @@ class Isolated extends Component<typeof Automation> {
       .automation__lead {
         margin: 0 0 var(--boxel-sp-sm);
         color: var(--foreground);
-      }
-      .automation__switch-on:not(:empty) {
-        margin: 0 0 var(--boxel-sp-sm);
       }
       .automation__problems {
         display: grid;
