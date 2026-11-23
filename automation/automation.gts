@@ -4222,6 +4222,14 @@ class RunDetail extends GlimmerComponent<{
 
   duration = (ms: number | undefined) =>
     ms === undefined ? '—' : durationText(ms);
+  // A call's time, to the millisecond below a second, since most calls
+  // take less than one.
+  callTime = (ms: number | undefined) =>
+    ms === undefined
+      ? '—'
+      : ms < 1000
+        ? `${Math.round(ms)} ms`
+        : durationText(ms);
   callStatus = (call: RunCallApiCall): { label: string; tone: RunTone } =>
     call.status !== undefined
       ? {
@@ -4539,10 +4547,15 @@ class RunDetail extends GlimmerComponent<{
                                 @appearance='plain'
                               />
                             </td>
-                            <td>{{this.duration call.ms}}</td>
+                            <td class='run-detail__time'>{{this.callTime
+                                call.ms
+                              }}</td>
                             <td>
                               {{#if call.bytes}}
-                                <FormatBytes @value={{call.bytes}} />
+                                <FormatBytes
+                                  @value={{call.bytes}}
+                                  @base='decimal'
+                                />
                               {{else}}
                                 —
                               {{/if}}
@@ -4590,7 +4603,9 @@ class RunDetail extends GlimmerComponent<{
                                 @appearance='plain'
                               />
                             </td>
-                            <td>{{this.duration call.ms}}</td>
+                            <td class='run-detail__time'>{{this.callTime
+                                call.ms
+                              }}</td>
                             <td>{{this.cost call}}</td>
                           </tr>
                         {{/let}}
@@ -4633,7 +4648,10 @@ class RunDetail extends GlimmerComponent<{
                               @value={{file.path}}
                               @wrap={{true}}
                             /></td>
-                          <td><FormatBytes @value={{file.size}} /></td>
+                          <td><FormatBytes
+                              @value={{file.size}}
+                              @base='decimal'
+                            /></td>
                         </tr>
                       {{/each}}
                     </:body>
@@ -4662,11 +4680,7 @@ class RunDetail extends GlimmerComponent<{
             <div class='run-detail__panel' data-test-automation-run-cost>
               {{#if this.report}}
                 <h4 class='run-detail__heading'>Credits</h4>
-                <StatusFacts
-                  @items={{this.costItems}}
-                  @columns={{3}}
-                  @size='s'
-                />
+                <StatusFacts @items={{this.costItems}} @columns={{3}} />
                 {{#unless this.report.dryRun}}
                   <p
                     class='run-detail__note'
@@ -4678,13 +4692,9 @@ class RunDetail extends GlimmerComponent<{
                   </p>
                 {{/unless}}
                 <h4 class='run-detail__heading'>What the run used</h4>
-                <StatusFacts @items={{this.usageItems}} @size='s' />
+                <StatusFacts @items={{this.usageItems}} />
                 <h4 class='run-detail__heading'>Timings</h4>
-                <StatusFacts
-                  @items={{this.timingItems}}
-                  @columns={{3}}
-                  @size='s'
-                />
+                <StatusFacts @items={{this.timingItems}} @columns={{3}} />
               {{else if this.reportFailure}}
                 {{! The callout above says Boxel couldn't read the run. }}
               {{else}}
@@ -4717,7 +4727,7 @@ class RunDetail extends GlimmerComponent<{
         font-weight: 600;
       }
       .run-detail__note {
-        font-size: var(--boxel-font-size-sm);
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .run-detail__time {
