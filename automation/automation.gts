@@ -2130,6 +2130,8 @@ interface ListedRun {
   errorReason: string | null;
   errorMessage: string | null;
   scriptLine: number | null;
+  // The cap a `hit-a-cap` run reached, by the caps' own names.
+  cap: string | null;
   canceledBy: string | null;
   canceledByAPerson: boolean;
   viewerCanceled: boolean;
@@ -2394,8 +2396,7 @@ const PAUSE_CANCELED: Record<string, string> = {
     'Boxel canceled the run when Boxel paused the automation: the automation’s settings have problems.',
 };
 
-// A run's per-run limit in words, by the name the server's message gives
-// the limit (`The run hit its writes cap`).
+// A run's per-run limit in words, by the cap's name in a capped run's `cap`.
 const CAP_WORDS: Record<string, string> = {
   callApiCalls: 'outside calls',
   responseBytes: 'outside response size',
@@ -2404,8 +2405,6 @@ const CAP_WORDS: Record<string, string> = {
   writes: 'saves',
   seconds: 'time',
 };
-
-const HIT_A_CAP = /hit its (\w+) cap/;
 
 interface RunReason {
   // A sentence on why the run ended as the run did.
@@ -2463,8 +2462,7 @@ function runReason(run: ListedRun): RunReason | undefined {
         text: 'Boxel stopped the run when the run reached the time limit. Someone who can edit this workspace raises the limit in the edit view and resumes the automation.',
       };
     case 'hit-a-cap': {
-      let cap = message ? HIT_A_CAP.exec(message)?.[1] : undefined;
-      let words = cap ? CAP_WORDS[cap] : undefined;
+      let words = run.cap ? CAP_WORDS[run.cap] : undefined;
       return {
         text: `${
           words
