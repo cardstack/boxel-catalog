@@ -16,7 +16,10 @@
       "photo": {
         "url": "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
         "sourceMode": "url"
-      }
+      },
+      "employeeId": "E-1024",
+      "location": "Lisbon office",
+      "userId": "@sofia.reyes:boxel.example"
     },
     "relationships": {
       "manager": {

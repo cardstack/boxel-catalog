@@ -166,6 +166,7 @@ function employeeFacts(m?: Partial<Employee>): DescriptionsItem[] {
     { label: 'Start date', value: m?.startDate ? formatDay(m.startDate) : '—' },
     { label: 'Tenure', value: m?.tenure?.label || '—' },
     { label: 'Department', value: m?.department || '—' },
+    { label: 'Location', value: m?.location || '—' },
     { label: 'PTO allowance', value: daysLabel(m?.ptoAllowanceDays) },
     { label: 'Salary', value: formatMoney(m?.salary) ?? '—' },
     { label: 'Email', value: m?.email || '—' },
@@ -195,14 +196,17 @@ class EmployeeIsolated extends Component<typeof Employee> {
     return [
       { label: 'Email', value: m?.email || '—' },
       { label: 'Phone', value: m?.phone || '—' },
+      { label: 'Boxel account', value: m?.userId || '—' },
     ];
   }
 
   get employmentFacts(): DescriptionsItem[] {
     let m = this.args.model;
     let rows: DescriptionsItem[] = [
+      { label: 'Employee ID', value: m?.employeeId || '—' },
       { label: 'Role', value: m?.role || '—' },
       { label: 'Department', value: m?.department || '—' },
+      { label: 'Location', value: m?.location || '—' },
       {
         label: 'Start date',
         value: m?.startDate ? formatDay(m.startDate) : '—',
@@ -513,8 +517,18 @@ export class Employee extends PersonBase {
   static displayName = 'Employee';
   static icon = BriefcaseIcon;
 
+  @field employeeId = contains(StringField, {
+    description: 'The number the organization assigns this person',
+  });
+  @field userId = contains(StringField, {
+    description:
+      "Boxel account: this person's Boxel user id, such as @avery:boxel.ai. It is the value actor() returns, so apps and realm policies can match the signed-in person to this record",
+  });
   @field role = contains(StringField);
   @field department = contains(StringField);
+  @field location = contains(StringField, {
+    description: 'Where this person mainly works: an office, campus or site',
+  });
   @field startDate = contains(DateField);
   @field status = contains(EmployeeStatusField);
   @field employmentType = contains(EmployeeEmploymentTypeField);
