@@ -6050,6 +6050,21 @@ export class SwitchOnDialog extends GlimmerComponent<{
   </template>
 }
 
+// Whether the way into the automations console shows: to a direct writer,
+// on a card that knows its realm, outside the console itself.
+function showsConsoleAction(
+  model: { [realmURL]?: URL },
+  context: CardContext | undefined,
+  directWriter: boolean,
+  inConsole: boolean | undefined,
+): boolean {
+  return (
+    directWriter &&
+    !inConsole &&
+    Boolean(model[realmURL] && context?.toolContext)
+  );
+}
+
 // The way from an automation's card to the automations console: the realm
 // config card's Automations section, opened with the automation's row in
 // view and marked. Shown to the realm's direct writers alone, the only
@@ -6073,10 +6088,11 @@ class ShowInConsole extends GlimmerComponent<{
     | undefined;
 
   get shows() {
-    return (
-      this.args.directWriter &&
-      !this.inConsole &&
-      Boolean(this.args.model[realmURL] && this.args.context?.toolContext)
+    return showsConsoleAction(
+      this.args.model,
+      this.args.context,
+      this.args.directWriter,
+      this.inConsole,
     );
   }
 
@@ -7665,6 +7681,19 @@ class AtAGlance extends Component<typeof Automation> {
   get directWriter() {
     return this.server.current.visible;
   }
+  @consume(AutomationsConsoleContextName) declare inConsole:
+    | boolean
+    | undefined;
+  // Whether ShowInConsole renders for this viewer, for a view that lays out
+  // a place for the action only when the action shows.
+  get showsConsoleAction() {
+    return showsConsoleAction(
+      this.args.model,
+      this.args.context,
+      this.directWriter,
+      this.inConsole,
+    );
+  }
   get look() {
     return stateLook(this.status);
   }
@@ -8956,34 +8985,60 @@ class Embedded extends AtAGlance {
   <template>
     <div class='ae' data-test-automation-embedded>
       <div class='ae__body'>
-        <Item
-          @size='s'
-          @alignStart={{true}}
-          @title={{@model.cardTitle}}
-          @description={{@model.cardDescription}}
-        >
-          <:leading>
-            <span class='ae__icon' aria-hidden='true'>
-              <CalendarClockIcon width='20' height='20' />
-            </span>
-          </:leading>
-          <:trailing>
-            {{#if this.look}}
-              <Chip
-                @label={{this.look.label}}
-                @tone={{this.look.tone}}
-                data-test-automation-embedded-state={{this.look.label}}
+        {{! Item lays out an actions column whenever it gets an actions block,
+            so the block is passed only to a viewer the action shows to. }}
+        {{#if this.showsConsoleAction}}
+          <Item
+            @size='s'
+            @alignStart={{true}}
+            @title={{@model.cardTitle}}
+            @description={{@model.cardDescription}}
+          >
+            <:leading>
+              <span class='ae__icon' aria-hidden='true'>
+                <CalendarClockIcon width='20' height='20' />
+              </span>
+            </:leading>
+            <:trailing>
+              {{#if this.look}}
+                <Chip
+                  @label={{this.look.label}}
+                  @tone={{this.look.tone}}
+                  data-test-automation-embedded-state={{this.look.label}}
+                />
+              {{/if}}
+            </:trailing>
+            <:actions>
+              <ShowInConsole
+                @model={{@model}}
+                @context={{@context}}
+                @directWriter={{this.directWriter}}
               />
-            {{/if}}
-          </:trailing>
-          <:actions>
-            <ShowInConsole
-              @model={{@model}}
-              @context={{@context}}
-              @directWriter={{this.directWriter}}
-            />
-          </:actions>
-        </Item>
+            </:actions>
+          </Item>
+        {{else}}
+          <Item
+            @size='s'
+            @alignStart={{true}}
+            @title={{@model.cardTitle}}
+            @description={{@model.cardDescription}}
+          >
+            <:leading>
+              <span class='ae__icon' aria-hidden='true'>
+                <CalendarClockIcon width='20' height='20' />
+              </span>
+            </:leading>
+            <:trailing>
+              {{#if this.look}}
+                <Chip
+                  @label={{this.look.label}}
+                  @tone={{this.look.tone}}
+                  data-test-automation-embedded-state={{this.look.label}}
+                />
+              {{/if}}
+            </:trailing>
+          </Item>
+        {{/if}}
 
         {{#if this.triggerLines.length}}
           <div class='ae__grid'>
