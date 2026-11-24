@@ -12,6 +12,7 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import NumberField from 'https://cardstack.com/base/number';
+import BooleanField from 'https://cardstack.com/base/boolean';
 import DateTimeField from 'https://cardstack.com/base/datetime';
 import {
   actor,
@@ -38,6 +39,7 @@ import {
   localClock,
   minutesLabel,
   openMinutes,
+  openShiftStart,
   todayKey,
   zonedToUtc,
   type FoldedDay,
@@ -133,10 +135,16 @@ class RecordView extends Component<typeof AttendanceRecord> {
 
   get todayLine(): string {
     let d = this.today;
-    if (this.isIn) {
-      let since = d?.firstIn ? `In since ${d.firstIn}` : 'In';
+    let start = openShiftStart(this.record.punches);
+    if (start) {
+      let opened = localClock(start, this.timezone);
+      let since =
+        opened.day === todayKey(this.timezone)
+          ? opened.label
+          : `${opened.label} yesterday`;
+      // Today's closed shifts, plus the open one from when it started.
       let worked = (d?.minutes ?? 0) + openMinutes(this.record.punches);
-      return `${since} · ${minutesLabel(worked)}`;
+      return `In since ${since} · ${minutesLabel(worked)}`;
     }
     if (!d) {
       return 'Not checked in today';
@@ -150,7 +158,9 @@ class RecordView extends Component<typeof AttendanceRecord> {
   }
 
   get hideCheckIn(): boolean {
-    return this.isIn || this.denied('checkIn');
+    return (
+      this.isIn || Boolean(this.record.requiresCode) || this.denied('checkIn')
+    );
   }
 
   get hideCheckOut(): boolean {
@@ -160,7 +170,7 @@ class RecordView extends Component<typeof AttendanceRecord> {
   get showCodeCheckIn(): boolean {
     return (
       !this.isIn &&
-      Boolean(this.record.display?.id) &&
+      Boolean(this.record.requiresCode) &&
       !this.denied('checkInWithCode')
     );
   }
@@ -397,7 +407,7 @@ class Isolated extends RecordView {
         }
         await this.ops.requestCorrection({
           direction: this.correctionDirection,
-          punchedAt: at.toISOString(),
+          punchedAt: at.toISOString().replace('.000Z', 'Z'),
           reason: this.correctionReason,
           nonce: nonce(),
         });
@@ -711,8 +721,13 @@ export class AttendanceRecord extends CardDef {
   @field year = contains(StringField);
   @field schedule = contains(WorkSchedule);
   @field punches = containsMany(PunchEvent);
-  // Set when check-in requires the reception display's code.
+  // The reception display whose code a check-in with code is matched against.
+  // Staff can't read it, so the screen reads `requiresCode` instead.
   @field display = linksTo(ReceptionDisplay, { searchable: true });
+  @field requiresCode = contains(BooleanField, {
+    description:
+      'Check in only with the code on the linked reception display. Set it together with display',
+  });
 
   @field employeeName = contains(StringField, {
     computeVia: function (this: AttendanceRecord) {
@@ -765,18 +780,13 @@ export class AttendanceRecord extends CardDef {
   } satisfies OperationDeclaration;
 
   @operation static checkIn = {
-    base: 'appendContainsMany',
-    field: 'punches',
+    base: 'transform',
     params: { punchedAt: StringField },
     input: STAMP_PUNCH,
-    item: {
-      kind: 'punch',
-      direction: 'in',
-      punchedAt: params('punchedAt'),
-      assurance: 'button',
-      by: actor(),
-      state: 'recorded',
-    },
+    transformations: bxl`
+      assert(.requiresCode != true; "Check in with the code on the reception display"; { snapshot: true });
+      .punches += [{ kind: "punch", direction: "in", punchedAt: params("punchedAt"), assurance: "button", by: actor(), state: "recorded" }];
+    `,
   } satisfies OperationDeclaration;
 
   @operation static checkOut = {
@@ -795,7 +805,8 @@ export class AttendanceRecord extends CardDef {
   } satisfies OperationDeclaration;
 
   // A check-in that proves presence: the code must be the one the linked
-  // reception display shows now, and issued within the last 165 seconds.
+  // reception display shows now or showed just before, issued within the last
+  // 165 seconds.
   @operation static checkInWithCode = {
     base: 'transform',
     params: {
@@ -805,8 +816,9 @@ export class AttendanceRecord extends CardDef {
     },
     input: bxl`NOW() as $n | . + { punchedAt: (TEXT($n; "yyyy-mm-dd") + "T" + TEXT($n; "hh:mm:ss") + "Z"), cutoff: ($n - 165 / 86400) }`,
     transformations: bxl`
-      assert(.display.code == params("code"); "That code is not the one on the reception display"; { snapshot: true });
-      assert(.display.issuedAtSerial > params("cutoff"); "That code has expired. Scan the display again"; { snapshot: true });
+      assert((params("code") | length) > 0; "Enter the code shown on the reception screen");
+      assert(OR(.display.code == params("code"); .display.previousCode == params("code")); "That code is not the one on the reception display"; { snapshot: true });
+      assert(OR((.display.code == params("code") and .display.issuedAtSerial > params("cutoff")); (.display.previousCode == params("code") and .display.previousIssuedAtSerial > params("cutoff"))); "That code has expired. Scan the display again"; { snapshot: true });
       .punches += [{ kind: "punch", direction: "in", punchedAt: params("punchedAt"), assurance: "kiosk", kioskCode: params("code"), by: actor(), state: "recorded" }];
     `,
   } satisfies OperationDeclaration;
@@ -822,10 +834,14 @@ export class AttendanceRecord extends CardDef {
       nonce: StringField,
     },
     input: bxl`NOW() as $n | . + { eventId: ("c-" + TEXT($n; "yyyymmddhhmmss") + "-" + params("nonce")), requestedAt: (TEXT($n; "yyyy-mm-dd") + "T" + TEXT($n; "hh:mm:ss") + "Z") }`,
+    // punchedAt is the caller's, so its shape is checked here: a UTC time to
+    // the second, no later than now. Same-shape ISO strings compare in order.
     transformations: bxl`
       assert(OR(params("direction") == "in"; params("direction") == "out"); "Say whether the missing punch was a check in or a check out");
       assert((params("reason") | length) > 0; "Add a note saying what happened");
       assert((params("nonce") | length) > 0; "The request is missing its id");
+      assert(params("punchedAt") | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"); "Enter the date and time of the missing punch");
+      assert(params("punchedAt") <= params("requestedAt"); "A missing punch can't be in the future");
       assert(any(.punches[]; .eventId == params("eventId")) == false; "That correction was already sent. Send it again to get a new id");
       .punches += [{ eventId: params("eventId"), kind: "correction", direction: params("direction"), punchedAt: params("punchedAt"), assurance: "correction", reason: params("reason"), by: actor(), state: "pending", requestedAt: params("requestedAt") }];
     `,

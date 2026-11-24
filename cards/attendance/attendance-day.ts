@@ -121,6 +121,66 @@ function instant(value: Date | string | null | undefined): Date | null {
   return Number.isNaN(at.getTime()) ? null : at;
 }
 
+interface Counted {
+  at: Date;
+  direction: string;
+}
+
+interface Shift {
+  start: Date;
+  end: Date | null;
+  punches: number;
+}
+
+// A shift can run past midnight, so ins and outs are paired across the whole
+// history, not within a day: an in opens a shift and the next out within 16
+// hours closes it.
+const MAX_SHIFT_MS = 16 * 60 * 60 * 1000;
+
+function counted(punches: PunchLike[] | null | undefined): Counted[] {
+  let list: Counted[] = [];
+  for (let p of punches ?? []) {
+    if (!countsTowardDays(p)) {
+      continue;
+    }
+    let at = instant(p.punchedAt);
+    if (at) {
+      list.push({ at, direction: String(p.direction) });
+    }
+  }
+  return list.sort((a, b) => a.at.getTime() - b.at.getTime());
+}
+
+// Shifts in order, plus the outs that closed nothing.
+function pairShifts(list: Counted[]): { shifts: Shift[]; strayOuts: Date[] } {
+  let shifts: Shift[] = [];
+  let strayOuts: Date[] = [];
+  let open: Shift | null = null;
+  for (let p of list) {
+    if (open && p.at.getTime() - open.start.getTime() > MAX_SHIFT_MS) {
+      shifts.push(open);
+      open = null;
+    }
+    if (p.direction === 'in') {
+      if (open) {
+        open.punches++;
+      } else {
+        open = { start: p.at, end: null, punches: 1 };
+      }
+    } else if (open) {
+      shifts.push({ ...open, end: p.at, punches: open.punches + 1 });
+      open = null;
+    } else {
+      strayOuts.push(p.at);
+    }
+  }
+  if (open) {
+    shifts.push(open);
+  }
+  return { shifts, strayOuts };
+}
+
+// Each shift belongs to the day it started on.
 export function foldDays(
   punches: PunchLike[] | null | undefined,
   schedule: ScheduleLike | null | undefined,
@@ -129,59 +189,63 @@ export function foldDays(
   let arrival = clockMinutes(schedule?.scheduledArrival);
   let departure = clockMinutes(schedule?.scheduledDeparture);
   let grace = schedule?.graceMinutes ?? 0;
+  let { shifts, strayOuts } = pairShifts(counted(punches));
 
-  let byDay = new Map<
-    string,
-    { at: Date; direction: string; local: ReturnType<typeof localClock> }[]
-  >();
-  for (let p of punches ?? []) {
-    if (!countsTowardDays(p)) {
-      continue;
-    }
-    let at = instant(p.punchedAt);
-    if (!at) {
-      continue;
-    }
-    let local = localClock(at, timezone);
-    let list = byDay.get(local.day) ?? [];
-    list.push({ at, direction: String(p.direction), local });
-    byDay.set(local.day, list);
+  let byDay = new Map<string, { shifts: Shift[]; strayOuts: Date[] }>();
+  let bucket = (at: Date) => {
+    let key = localClock(at, timezone).day;
+    let entry = byDay.get(key) ?? { shifts: [], strayOuts: [] };
+    byDay.set(key, entry);
+    return entry;
+  };
+  for (let shift of shifts) {
+    bucket(shift.start).shifts.push(shift);
+  }
+  for (let at of strayOuts) {
+    bucket(at).strayOuts.push(at);
   }
 
   let days: FoldedDay[] = [];
-  for (let [key, list] of [...byDay.entries()].sort(([a], [b]) =>
+  for (let [key, entry] of [...byDay.entries()].sort(([a], [b]) =>
     a.localeCompare(b),
   )) {
-    list.sort((a, b) => a.at.getTime() - b.at.getTime());
-    let minutes = 0;
-    let open: Date | null = null;
-    for (let p of list) {
-      if (p.direction === 'in' && !open) {
-        open = p.at;
-      } else if (p.direction === 'out' && open) {
-        minutes += Math.max(
-          0,
-          Math.round((p.at.getTime() - open.getTime()) / 60000),
-        );
-        open = null;
-      }
-    }
-    let first = list.find((p) => p.direction === 'in');
-    let stillIn = list[list.length - 1].direction === 'in';
-    let outs = list.filter((p) => p.direction === 'out');
-    let last = stillIn ? undefined : outs[outs.length - 1];
+    let first = entry.shifts[0];
+    let last = entry.shifts[entry.shifts.length - 1];
+    let minutes = entry.shifts.reduce(
+      (sum, s) =>
+        s.end
+          ? sum + Math.round((s.end.getTime() - s.start.getTime()) / 60000)
+          : sum,
+      0,
+    );
+    let firstLocal = first ? localClock(first.start, timezone) : undefined;
+    let lastOutAt = last
+      ? last.end
+      : entry.strayOuts[entry.strayOuts.length - 1];
+    let lastLocal = lastOutAt ? localClock(lastOutAt, timezone) : undefined;
+    let sameDay = lastLocal?.day === key;
     let rawLate =
-      first && arrival !== null ? first.local.minutes - arrival : null;
+      firstLocal && arrival !== null ? firstLocal.minutes - arrival : null;
+    // An out after midnight is never early.
     let rawEarly =
-      last && departure !== null ? departure - last.local.minutes : null;
+      first && lastLocal && sameDay && departure !== null
+        ? departure - lastLocal.minutes
+        : null;
     let late = rawLate !== null && rawLate > grace;
     let early = rawEarly !== null && rawEarly > grace;
+    let stillIn = Boolean(last && !last.end);
     days.push({
       key,
-      firstIn: first?.local.label ?? '',
-      lastOut: last?.local.label ?? '',
+      firstIn: firstLocal?.label ?? '',
+      lastOut: lastLocal
+        ? sameDay
+          ? lastLocal.label
+          : `${lastLocal.label} (next day)`
+        : '',
       minutes,
-      punchCount: list.length,
+      punchCount:
+        entry.shifts.reduce((n, s) => n + s.punches, 0) +
+        entry.strayOuts.length,
       lateBy: Math.max(0, rawLate ?? 0),
       earlyBy: Math.max(0, rawEarly ?? 0),
       stillIn,
@@ -193,7 +257,7 @@ export function foldDays(
             ? 'late'
             : early
               ? 'early'
-              : !last
+              : stillIn
                 ? 'no-checkout'
                 : 'on-time',
     });
@@ -201,46 +265,39 @@ export function foldDays(
   return days;
 }
 
-// A shift can run past midnight, so whether someone is in is read from their
-// last counted punch, not from today's: in, and within the last 16 hours.
-const MAX_SHIFT_MS = 16 * 60 * 60 * 1000;
-
-export function lastCountedPunch(
+// The shift still open now, read from the same pairing the days use.
+export function openShiftStart(
   punches: PunchLike[] | null | undefined,
-): { direction: string; at: Date } | undefined {
-  let last: { direction: string; at: Date } | undefined;
-  for (let p of punches ?? []) {
-    if (!countsTowardDays(p)) {
-      continue;
-    }
-    let at = instant(p.punchedAt);
-    if (at && (!last || at.getTime() > last.at.getTime())) {
-      last = { direction: String(p.direction), at };
-    }
+  now = new Date(),
+): Date | undefined {
+  let { shifts } = pairShifts(counted(punches));
+  let last = shifts[shifts.length - 1];
+  if (
+    last &&
+    !last.end &&
+    now.getTime() - last.start.getTime() < MAX_SHIFT_MS
+  ) {
+    return last.start;
   }
-  return last;
+  return undefined;
 }
 
 export function isCheckedIn(
   punches: PunchLike[] | null | undefined,
   now = new Date(),
 ): boolean {
-  let last = lastCountedPunch(punches);
-  return (
-    last?.direction === 'in' && now.getTime() - last.at.getTime() < MAX_SHIFT_MS
-  );
+  return Boolean(openShiftStart(punches, now));
 }
 
-// Minutes since the open check-in, for someone still in.
+// Minutes since the open shift started, for someone still in.
 export function openMinutes(
   punches: PunchLike[] | null | undefined,
   now = new Date(),
 ): number {
-  let last = lastCountedPunch(punches);
-  if (!last || last.direction !== 'in') {
-    return 0;
-  }
-  return Math.max(0, Math.round((now.getTime() - last.at.getTime()) / 60000));
+  let start = openShiftStart(punches, now);
+  return start
+    ? Math.max(0, Math.round((now.getTime() - start.getTime()) / 60000))
+    : 0;
 }
 
 // A wall-clock time typed in the organization's zone ("2026-11-20T08:30"),
