@@ -866,7 +866,7 @@ export class AttendanceRecord extends CardDef {
       assert(OR(params("direction") == "in"; params("direction") == "out"); "Say whether the missing punch was a check in or a check out");
       assert((params("reason") | length) > 0; "Add a note saying what happened");
       assert((params("nonce") | length) > 0; "The request is missing its id");
-      assert(params("punchedAt") | test("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$"); "Enter the date and time of the missing punch");
+      assert(params("punchedAt") | test("^[0-9]{4}-((0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-8])|(0[13-9]|1[0-2])-(29|30)|(0[13578]|1[02])-31|02-29)T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$"); "Enter the date and time of the missing punch");
       assert(params("punchedAt") <= params("requestedAt"); "A missing punch can't be in the future");
       assert(any(.punches[]; .eventId == params("eventId")) == false; "That correction was already sent. Send it again to get a new id");
       .punches += [{ eventId: params("eventId"), kind: "correction", direction: params("direction"), punchedAt: params("punchedAt"), assurance: "correction", reason: params("reason"), by: actor(), state: "pending", requestedAt: params("requestedAt") }];

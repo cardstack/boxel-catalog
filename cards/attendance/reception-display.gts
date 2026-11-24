@@ -91,6 +91,9 @@ class DisplayView extends Component<typeof ReceptionDisplay> {
       this.shownAt = sentAt;
       this.error = undefined;
     } catch (err) {
+      // The rotation may have landed without its answer, which would leave
+      // this screen's code too old to accept, so stop showing it.
+      this.shownCode = undefined;
       this.error =
         err instanceof OperationsError
           ? (err.detail ?? err.message)

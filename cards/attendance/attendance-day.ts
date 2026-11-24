@@ -124,6 +124,7 @@ function instant(value: Date | string | null | undefined): Date | null {
 interface Counted {
   at: Date;
   direction: string;
+  corrected: boolean;
 }
 
 interface Shift {
@@ -135,7 +136,7 @@ interface Shift {
 
 // A shift can run past midnight, so ins and outs are paired across the whole
 // history, not within a day: an in opens a shift and the next out within 12
-// hours closes it. A longer one counts nothing until a correction fixes it,
+// hours closes it. A longer one counts nothing until a correction closes it,
 // so a forgotten checkout isn't paid. A second in more than 30 minutes after
 // the last one starts a new shift.
 const MAX_SHIFT_MS = 12 * 60 * 60 * 1000;
@@ -149,7 +150,11 @@ function counted(punches: PunchLike[] | null | undefined): Counted[] {
     }
     let at = instant(p.punchedAt);
     if (at) {
-      list.push({ at, direction: String(p.direction) });
+      list.push({
+        at,
+        direction: String(p.direction),
+        corrected: p.kind === 'correction',
+      });
     }
   }
   return list.sort((a, b) => a.at.getTime() - b.at.getTime());
@@ -161,7 +166,14 @@ function pairShifts(list: Counted[]): { shifts: Shift[]; strayOuts: Date[] } {
   let strayOuts: Date[] = [];
   let open: Shift | null = null;
   for (let p of list) {
-    if (open && p.at.getTime() - open.start.getTime() > MAX_SHIFT_MS) {
+    // An approved correction may close a shift of any length: a manager has
+    // confirmed when the person left.
+    let capped = !(p.direction === 'out' && p.corrected);
+    if (
+      open &&
+      capped &&
+      p.at.getTime() - open.start.getTime() > MAX_SHIFT_MS
+    ) {
       shifts.push(open);
       open = null;
     }
