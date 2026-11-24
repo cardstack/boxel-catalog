@@ -4293,10 +4293,21 @@ class RunDetail extends GlimmerComponent<{
   get steps() {
     return runStepRows(this.args.run, this.report);
   }
+  // Once the run reaches its commit the script is over, so every milestone
+  // the script reached is finished. The commit's own step says how the run
+  // ended, which the server's milestones would otherwise also pin on the
+  // last milestone.
   get milestoneRows() {
-    return this.args.run.milestones
-      ? runMilestoneRows(this.args.run.milestones, this.args.previous)
-      : [];
+    let { milestones, step } = this.args.run;
+    if (!milestones) {
+      return [];
+    }
+    return runMilestoneRows(
+      step === 'commit'
+        ? { ...milestones, state: 'complete', failedIn: null, current: null }
+        : milestones,
+      this.args.previous,
+    );
   }
   // One serial timeline: admission, then the script's milestones in the
   // order the script runs them (the ones ahead included), then the steps
