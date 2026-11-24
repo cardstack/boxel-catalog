@@ -2819,7 +2819,7 @@ interface MilestoneRow {
   name: string;
   state: MilestoneState;
   badge: string;
-  tone: 'neutral' | 'success' | 'warning' | 'danger';
+  tone: 'neutral' | 'info' | 'success' | 'danger';
   detail?: string;
 }
 
@@ -2894,7 +2894,7 @@ const MILESTONE_LOOKS: Record<
   { badge: string; tone: MilestoneRow['tone'] }
 > = {
   reached: { badge: 'Done', tone: 'success' },
-  running: { badge: 'Running', tone: 'warning' },
+  running: { badge: 'Running', tone: 'info' },
   failed: { badge: 'Failed here', tone: 'danger' },
   stopped: { badge: 'Stopped here', tone: 'neutral' },
   'not-started': { badge: 'Not started', tone: 'neutral' },
@@ -2921,7 +2921,7 @@ function runLead(run: LastRun): string {
 
 // The milestones as a timeline, one row each, joined by the timeline's rail
 // so they read as a progression. Each marker is shaded in its state's color:
-// gray before the milestone runs, yellow while it runs, green once it is
+// gray before the milestone runs, blue while it runs, green once it is
 // done, red where the run ended with an error.
 class MilestoneTimeline extends GlimmerComponent<{
   Args: { rows: MilestoneRow[]; label: string };
@@ -2975,16 +2975,18 @@ class MilestoneTimeline extends GlimmerComponent<{
         max-inline-size: 34rem;
       }
       /* Fills the timeline's marker with a light tint of the state's color,
-         the glyph in the color itself. */
+         the glyph in the color's ink, which keeps the glyph legible on the
+         tint in both light and dark themes. */
       .milestones__mark {
         --milestone-color: var(--muted-foreground);
+        --milestone-ink: var(--milestone-color);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         inline-size: 100%;
         block-size: 100%;
         border-radius: 50%;
-        color: var(--milestone-color);
+        color: var(--milestone-ink);
         background: color-mix(
           in oklab,
           var(--milestone-color) 14%,
@@ -2993,12 +2995,15 @@ class MilestoneTimeline extends GlimmerComponent<{
       }
       .milestones__mark[data-milestone-state='reached'] {
         --milestone-color: var(--success);
+        --milestone-ink: var(--success-ink);
       }
       .milestones__mark[data-milestone-state='running'] {
-        --milestone-color: var(--warning);
+        --milestone-color: var(--info);
+        --milestone-ink: var(--info-ink);
       }
       .milestones__mark[data-milestone-state='failed'] {
         --milestone-color: var(--destructive);
+        --milestone-ink: var(--destructive-ink);
       }
       .milestones__mark[data-milestone-state='not-started'] {
         background: var(--card, #fff);
@@ -3176,7 +3181,7 @@ class FittedMilestones extends GlimmerComponent<{
         --milestone-color: var(--success-ink);
       }
       .fm__mark[data-step-state='in-progress'] {
-        --milestone-color: var(--warning-ink);
+        --milestone-color: var(--info-ink);
       }
       .fm__mark[data-step-state='error'] {
         --milestone-color: var(--destructive-ink);
@@ -5126,7 +5131,7 @@ const STEP_STATES: Record<MilestoneState, StepState> = {
 };
 
 const GLANCE_HUES: Record<GlanceKind, string> = {
-  running: 'var(--warning)',
+  running: 'var(--info)',
   failed: 'var(--destructive)',
   stopped: 'var(--muted-foreground)',
   complete: 'var(--success)',
@@ -6253,16 +6258,16 @@ class Fitted extends AtAGlance {
         color: var(--muted-foreground);
       }
       /* The milestones in the colors the isolated view gives them: green
-         once done, yellow while running, red where the run failed and gray
+         once done, blue while running, red where the run failed and gray
          where Boxel stopped the run. A short list can start partway through
          the run, so it leaves out the step numbers, which would count from
          its own first row. */
       .af__list {
         --pretui-step-upcoming-marker-fg: transparent;
         --pretui-step-complete-bar: var(--success);
-        --pretui-step-in-progress-bar: var(--warning);
-        --pretui-step-in-progress-ring: var(--warning);
-        --pretui-step-in-progress-marker-fg: var(--warning-ink);
+        --pretui-step-in-progress-bar: var(--info);
+        --pretui-step-in-progress-ring: var(--info);
+        --pretui-step-in-progress-marker-fg: var(--info-ink);
         --pretui-step-blocked-tone: var(--foreground);
         --pretui-step-blocked-marker-fg: var(--muted-foreground);
         --pretui-step-blocked-ring: var(--muted-foreground);
@@ -6745,9 +6750,9 @@ class Embedded extends AtAGlance {
       .ae__track {
         display: none;
         --pretui-step-complete-bar: var(--success);
-        --pretui-step-in-progress-bar: var(--warning);
-        --pretui-step-in-progress-ring: var(--warning);
-        --pretui-step-in-progress-marker-fg: var(--warning-ink);
+        --pretui-step-in-progress-bar: var(--info);
+        --pretui-step-in-progress-ring: var(--info);
+        --pretui-step-in-progress-marker-fg: var(--info-ink);
         --pretui-step-blocked-tone: var(--foreground);
         --pretui-step-blocked-marker-fg: var(--muted-foreground);
         --pretui-step-blocked-ring: var(--muted-foreground);
