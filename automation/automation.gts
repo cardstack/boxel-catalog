@@ -1760,7 +1760,12 @@ function fileName(url: string | undefined): string | undefined {
 // the card but never to the server's state. Then `visible` stays false and the
 // views show the card's own fields alone, as they do when the route can't be
 // asked or the request fails.
-type AutomationState = 'active' | 'paused' | 'waiting-for-credits' | 'done';
+type AutomationState =
+  | 'active'
+  | 'paused'
+  | 'waiting-for-credits'
+  | 'waiting-for-key-approval'
+  | 'done';
 type PauseReason =
   | 'requested'
   | 'realm-archived'
@@ -2373,14 +2378,18 @@ const NOT_STARTED: Record<string, string> = {
     'Boxel didn’t start the run because someone suspended the shared key an outside service uses. Someone who can edit this workspace resumes the shared key, or the key’s owner swaps in another key.',
   'credential-rejected':
     'Boxel didn’t start the run because the outside service refused the key or connection the automation uses. The person the run acts as reconnects or replaces the key.',
+  'waiting-for-key-approval':
+    'Boxel didn’t start the run because the automation is waiting for key approval. Boxel starts runs again once someone approves the automation’s use of each key.',
+  'key-approval-ended':
+    'Boxel didn’t start the run because an approval of the automation’s use of a key ended, or someone changed the automation after the approval. Boxel starts runs again once someone approves the automation’s use of each key again.',
   'run-admission-failed':
     'Boxel didn’t start the run because Boxel couldn’t ask the workspace whether the run may start. Boxel asks again at the next run.',
   'run-admission-unavailable':
     'Boxel didn’t start the run because a published workspace doesn’t run automations.',
 };
 
-// Why Boxel paused the automation, for a run the pause canceled when no
-// person asked for the pause.
+// Why Boxel stopped the automation, for a run a pause canceled when no
+// person asked for the pause, or that the wait for key approval canceled.
 const PAUSE_CANCELED: Record<string, string> = {
   'caps-raised':
     'Boxel canceled the run when Boxel paused the automation: someone raised a limit above what the payer agreed to pay for.',
@@ -2396,6 +2405,8 @@ const PAUSE_CANCELED: Record<string, string> = {
     'Boxel canceled the run when Boxel paused the automation after the automation’s runs kept failing.',
   'invalid-declaration':
     'Boxel canceled the run when Boxel paused the automation: the automation’s settings have problems.',
+  'waiting-for-key-approval':
+    'Boxel canceled the run when the automation began waiting for key approval. Boxel starts runs again once someone approves the automation’s use of each key.',
 };
 
 // A run's per-run limit in words, by the cap's name in a capped run's `cap`.
@@ -2597,6 +2608,8 @@ function stateLook(status: ServerStatus | undefined): StateLook | undefined {
       return { label: 'Paused', tone: 'warning' };
     case 'waiting-for-credits':
       return { label: 'Waiting for credits', tone: 'warning' };
+    case 'waiting-for-key-approval':
+      return { label: 'Waiting for key approval', tone: 'warning' };
     case 'done':
       return { label: 'Done', tone: 'info' };
   }
@@ -2612,6 +2625,8 @@ function stateSentence(status: ServerStatus): string {
       return 'Boxel runs this automation each time a trigger fires and charges the payer for every run.';
     case 'waiting-for-credits':
       return 'The payer has no credits left, so Boxel holds every run. Boxel runs the automation again once the payer adds credits.';
+    case 'waiting-for-key-approval':
+      return 'Boxel holds every run until someone approves the automation’s use of each key.';
     case 'done':
       return 'The automation has no runs left on any trigger, so Boxel runs nothing more. Boxel runs the automation again when someone who can edit this workspace adds a trigger.';
     case 'paused':
@@ -2742,9 +2757,11 @@ function statusItems(status: ServerStatus): StatusItem[] {
     items.push(
       status.state === 'paused'
         ? { label: 'Next run', value: 'None while paused' }
-        : status.nextRun
-          ? { label: 'Next run', date: status.nextRun }
-          : { label: 'Next run', value: 'None' },
+        : status.state === 'waiting-for-key-approval'
+          ? { label: 'Next run', value: 'None while waiting for key approval' }
+          : status.nextRun
+            ? { label: 'Next run', date: status.nextRun }
+            : { label: 'Next run', value: 'None' },
     );
     let last = lastRunText(status);
     items.push(
@@ -3282,8 +3299,10 @@ function statusOfTrigger(
     return undefined;
   }
   let trigger = status.triggers.find((t) => t.label === label);
-  // A paused automation runs nothing, whatever its schedule says.
-  return trigger && status.state === 'paused'
+  // A paused automation, or one waiting for key approval, runs nothing,
+  // whatever its schedule says.
+  return trigger &&
+    (status.state === 'paused' || status.state === 'waiting-for-key-approval')
     ? { ...trigger, nextRun: undefined }
     : trigger;
 }
@@ -5407,13 +5426,18 @@ class AtAGlance extends Component<typeof Automation> {
   }
 
   // Why Boxel holds the automation's runs, or why the last one failed, for a
-  // direct writer: a pause, waiting for credits, or a failure streak.
+  // direct writer: a pause, waiting for credits or for key approval, or a
+  // failure streak.
   get statusNote() {
     let status = this.status;
     if (!status?.switchedOn) {
       return undefined;
     }
-    if (status.state === 'paused' || status.state === 'waiting-for-credits') {
+    if (
+      status.state === 'paused' ||
+      status.state === 'waiting-for-credits' ||
+      status.state === 'waiting-for-key-approval'
+    ) {
       return stateSentence(status);
     }
     let error = status.lastFailure?.message || status.lastFailure?.reason;
