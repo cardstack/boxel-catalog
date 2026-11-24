@@ -868,10 +868,6 @@ export class AutomationTrigger extends FieldDef {
     get hasWebhookList() {
       return this.webhooks.list !== undefined;
     }
-    // The server reports that it starts no runs from webhook deliveries.
-    get warnNoWebhookRuns() {
-      return this.webhooks.deliveriesStartRuns === false;
-    }
     // Each webhook as a choice. A path the card already holds that the list
     // lacks stays a choice too, so the picker shows the current value and
     // the problem under the field says why it can't stay.
@@ -1108,12 +1104,6 @@ export class AutomationTrigger extends FieldDef {
               />
             {{/if}}
           </Field>
-          {{#if this.warnNoWebhookRuns}}
-            <p
-              class='automation-trigger-edit__notice'
-              data-test-automation-webhook-notice
-            >{{WEBHOOK_TRIGGER_CANT_FIRE}}</p>
-          {{/if}}
         {{else if this.webhooks.loading}}
           <LoadingState
             @label='Reading this workspace’s incoming webhooks'
@@ -1194,10 +1184,6 @@ export class AutomationTrigger extends FieldDef {
         }
         .automation-trigger-edit__stops :deep(.pretui-time) {
           width: 100%;
-        }
-        .automation-trigger-edit__notice {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
         }
         /* Pret UI's Input inherits its font, so a wrapper sets it. */
         .automation-trigger-edit__mono {
@@ -1781,6 +1767,7 @@ type PauseReason =
   | 'caps-raised'
   | 'batched-ai-enabled'
   | 'webhook-changed'
+  | 'webhook-owner-lost-access'
   | 'repeated-failures'
   | 'invalid-declaration';
 // One thing the server found wrong when the server read the card as an
@@ -1853,14 +1840,12 @@ type RunUsage = {
 type ServerStatus =
   | {
       switchedOn: false;
-      webhookDeliveriesStartRuns?: boolean;
       lastRun?: LastRun | null;
       currentRun?: LastRun | null;
       lastRunUsage?: RunUsage | null;
     }
   | {
       switchedOn: true;
-      webhookDeliveriesStartRuns?: boolean;
       lastRun?: LastRun | null;
       currentRun?: LastRun | null;
       state: AutomationState;
@@ -1923,12 +1908,6 @@ type StatusState = {
 
 const STATUS_PATH = '_automation-status';
 
-// The warning under a webhook trigger while the server reports that it
-// starts no runs from webhook deliveries (`webhookDeliveriesStartRuns`, in
-// the status route's attributes and the webhook list's meta).
-const WEBHOOK_TRIGGER_CANT_FIRE =
-  'This trigger can’t fire, Boxel doesn’t run automations from webhooks.';
-
 // An incoming webhook an automation may name, as the realm's
 // `_automation-webhooks` route lists it: one that a direct writer of the
 // realm made. The route lists webhooks only to the realm's direct writers.
@@ -1946,9 +1925,6 @@ type WebhooksState = {
   // fails, or says the viewer isn't a direct writer: the editor then takes a
   // typed path.
   list: AutomationWebhook[] | undefined;
-  // What the route's meta says: whether the server starts runs from webhook
-  // deliveries. Undefined until the route answers.
-  deliveriesStartRuns: boolean | undefined;
 };
 const WEBHOOKS_PATH = '_automation-webhooks';
 
@@ -1979,7 +1955,6 @@ function automationWebhooks(
           state: new TrackedObject<WebhooksState>({
             loading: false,
             list: undefined,
-            deliveriesStartRuns: undefined,
           }),
         };
       }
@@ -2009,9 +1984,6 @@ function automationWebhooks(
             state.list = (
               (result.body?.data ?? []) as { attributes: AutomationWebhook }[]
             ).map(({ attributes }) => attributes);
-            let startsRuns = result.body?.meta?.webhookDeliveriesStartRuns;
-            state.deliveriesStartRuns =
-              typeof startsRuns === 'boolean' ? startsRuns : undefined;
           }
         } catch {
           // The editor takes a typed path while there is no list.
@@ -2413,6 +2385,8 @@ const PAUSE_CANCELED: Record<string, string> = {
     'Boxel canceled the run when Boxel paused the automation: someone turned on batched AI after the payer agreed to the limits.',
   'webhook-changed':
     'Boxel canceled the run when Boxel paused the automation: a workspace administrator pointed a trigger at a webhook the payer didn’t agree to.',
+  'webhook-owner-lost-access':
+    'Boxel canceled the run when Boxel paused the automation: the person who made a trigger’s incoming webhook can no longer edit this workspace.',
   'payer-lost-access':
     'Boxel canceled the run when Boxel paused the automation: the payer can no longer edit this workspace.',
   'realm-archived':
@@ -2659,6 +2633,8 @@ function stateSentence(status: ServerStatus): string {
           return 'Someone turned on batched AI after the payer agreed to the limits, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to batched AI.';
         case 'webhook-changed':
           return 'A workspace administrator pointed a trigger at an incoming webhook the payer didn’t agree to, so Boxel paused the automation. Boxel runs nothing until a workspace administrator resumes the automation and agrees to the new webhook.';
+        case 'webhook-owner-lost-access':
+          return 'The person who made a trigger’s incoming webhook can no longer edit this workspace, so Boxel paused the automation. Boxel runs nothing until a workspace administrator points the trigger at one of the workspace’s webhooks, or gives that person edit access again, and resumes the automation.';
         case 'repeated-failures':
           return repeatedFailuresSentence(status);
         case 'invalid-declaration':
@@ -5549,15 +5525,11 @@ interface SwitchOnEstimate {
     // absent before the viewer's first one.
     recentPreviewCredits?: number;
   };
-  // What the server says about the card that bears on switching on, such as
-  // webhook triggers that start no runs.
-  notices?: { code: string; message: string }[];
 }
 
 // The routes the switch-on screen calls on the realm server. Each acts as the
 // signed-in person, and answers only a direct writer of the workspace.
 const SWITCH_ON_ROUTE = '_automation-switch-on';
-const WEBHOOK_NOTICE = 'webhook-triggers-start-no-runs';
 const RESUME_ROUTE = '_automation-resume';
 
 // How long the screen waits, after writing a new monthly limit to the card,
@@ -5738,13 +5710,6 @@ export class SwitchOnDialog extends GlimmerComponent<{
     this.estimateItems.find((item) => item.key === key)?.hint;
   get webhookTriggers() {
     return this.estimate?.estimate.webhookTriggers ?? [];
-  }
-  // Whether the server starts no runs from webhook deliveries, so the card's
-  // webhook triggers can't fire.
-  get webhooksStartNoRuns() {
-    return (this.estimate?.notices ?? []).some(
-      (notice) => notice.code === WEBHOOK_NOTICE,
-    );
   }
   get canConfirm() {
     return (
@@ -5934,12 +5899,6 @@ export class SwitchOnDialog extends GlimmerComponent<{
                       {{#each this.webhookTriggers as |label|}}
                         <Token @value={{label}} />
                       {{/each}}
-                      {{#if this.webhooksStartNoRuns}}
-                        <span data-test-automation-switch-on-webhook-notice>
-                          Boxel doesn’t run automations from webhooks, so these
-                          triggers can’t fire.
-                        </span>
-                      {{/if}}
                     {{/if}}
                   </li>
                 </ul>
@@ -6183,11 +6142,6 @@ class Isolated extends Component<typeof Automation> {
   timeZoneAt = (index: number) => this.args.model.triggers?.[index]?.timeZone;
   triggerStatusAt = (index: number) =>
     statusOfTrigger(this.status, this.args.model.triggers?.[index]?.label);
-  // Whether the trigger at `index` is a webhook trigger on a server that
-  // reports it starts no runs from webhook deliveries.
-  cantFireAt = (index: number) =>
-    this.args.model.triggers?.[index]?.kind === 'webhook' &&
-    this.status?.webhookDeliveriesStartRuns === false;
   <template>
     <article class='automation' data-test-automation>
       <header class='automation__header'>
@@ -6311,12 +6265,6 @@ class Isolated extends Component<typeof Automation> {
             {{#each @fields.triggers as |Trigger index|}}
               <div class='automation__row'>
                 <Trigger />
-                {{#if (this.cantFireAt index)}}
-                  <p
-                    class='automation__trigger-warning'
-                    data-test-automation-webhook-notice
-                  >{{WEBHOOK_TRIGGER_CANT_FIRE}}</p>
-                {{/if}}
                 {{#let (this.triggerStatusAt index) as |progress|}}
                   {{#if progress}}
                     <div
@@ -6484,11 +6432,6 @@ class Isolated extends Component<typeof Automation> {
       }
       .automation__row {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-      }
-      .automation__trigger-warning {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
       }
       .automation__progress {
         margin-top: var(--boxel-sp-xs);
