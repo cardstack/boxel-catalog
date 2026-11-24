@@ -126,12 +126,13 @@ jobs:
               process.exit(pairs ? 0 : 10);
             '
           }
-          # Sets $prs to the PR behind each commit on main's own line between the cache's catalog commit
-          # and this push: a two-parent "Merge pull request #N" commit names its PR, and GitHub is asked
-          # for any other commit's. PRs merged into those PRs' branches are followed by the caller.
+          # Sets $prs to the PR behind each commit between the cache's catalog commit and this push that
+          # is on main's own line or that GitHub made (a merge, squash or rebase off that line, brought
+          # in by a local merge): a two-parent "Merge pull request #N" commit names its PR, and GitHub
+          # is asked for any other's. PRs merged into those PRs' branches are followed by the caller.
           # Returns 1 with $unknown set when any of that can't be read.
           prs_since_cache() {
-            local cache event head range sha line parents subject found lookups=0
+            local cache event head range sha line parents committer subject found mainline=" " lookups=0
             prs=""
             if ! cache=$(retry gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq '"\(.event) \(.head_sha)"'); then
               unknown="the cache from run $run_id couldn't be read"
@@ -147,7 +148,7 @@ jobs:
             if ! range=$(retry gh api "repos/$GITHUB_REPOSITORY/compare/$head...$GITHUB_SHA?per_page=250" --jq '
                 if (.status != "ahead" and .status != "identical") or .total_commits > (.commits | length)
                 then error("incomplete")
-                else .commits[] | [.sha, (.parents[0].sha // ""), (.parents | length), (.commit.message | split("\n")[0])] | @tsv
+                else .commits[] | [.sha, (.parents[0].sha // ""), (.parents | length), (.committer.login // "-"), (.commit.message | split("\n")[0])] | @tsv
                 end'); then
               unknown="the commits since the cache from run $run_id couldn't be listed"
               return 1
@@ -158,24 +159,30 @@ jobs:
                 unknown="main's history since the cache from run $run_id couldn't be followed"
                 return 1
               fi
-              parents=$(cut -f3 <<< "$line")
-              subject=$(cut -f4- <<< "$line")
-              if [ "$parents" = 2 ] && [[ "$subject" =~ ^Merge\ pull\ request\ \#([0-9]+)\  ]]; then
-                prs="$prs ${BASH_REMATCH[1]}"
-              else
-                lookups=$((lookups + 1))
-                if [ "$lookups" -gt 100 ]; then
-                  unknown="more than 100 commits landed since the cache from run $run_id"
-                  return 1
-                fi
-                if ! found=$(retry gh api "repos/$GITHUB_REPOSITORY/commits/$sha/pulls" --jq '[.[] | select(.merged_at != null) | .number] | join(" ")') || [ -z "$found" ]; then
-                  unknown="no merged PR could be found for $sha"
-                  return 1
-                fi
-                prs="$prs $found"
-              fi
+              mainline="$mainline$sha "
               sha=$(cut -f2 <<< "$line")
             done
+            while IFS=$'\t' read -r sha line parents committer subject; do
+              [ -n "$sha" ] || continue
+              case "$mainline" in
+                *" $sha "*) ;;
+                *) [ "$committer" = web-flow ] || continue ;;
+              esac
+              if [ "$parents" = 2 ] && [[ "$subject" =~ ^Merge\ pull\ request\ \#([0-9]+)\  ]]; then
+                prs="$prs ${BASH_REMATCH[1]}"
+                continue
+              fi
+              lookups=$((lookups + 1))
+              if [ "$lookups" -gt 100 ]; then
+                unknown="more than 100 commits landed since the cache from run $run_id"
+                return 1
+              fi
+              if ! found=$(retry gh api "repos/$GITHUB_REPOSITORY/commits/$sha/pulls" --jq '[.[] | select(.merged_at != null) | .number] | join(" ")') || [ -z "$found" ]; then
+                unknown="no merged PR could be found for $sha"
+                return 1
+              fi
+              prs="$prs $found"
+            done <<< "$range"
             prs=$(tr ' ' '\n' <<< "$prs" | sort -un | tr '\n' ' ')
             return 0
           }
@@ -231,7 +238,7 @@ jobs:
                   reason="PR #$PR_NUMBER, merged since the cache from run $run_id, couldn't be read for a boxel pairing, so it runs boxel main"
                   run_id=""
                 elif ! branch=$(retry gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
-                    --jq "if .head.repo.full_name == \"$GITHUB_REPOSITORY\" then .head.ref else \"\" end") ||
+                    --jq "if (.head.repo.full_name // \"\" | ascii_downcase) == (\"$GITHUB_REPOSITORY\" | ascii_downcase) then .head.ref else \"\" end") ||
                   ! stacked=$( [ -z "$branch" ] || retry gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" -f state=closed -f base="$branch" -f per_page=100 \
                     --jq 'if length == 100 then error("more than one page") else [.[] | select(.merged_at != null) | .number] | join(" ") end'); then
                   reason="the PRs merged into PR #$PR_NUMBER's branch couldn't be listed, so it runs boxel main"
