@@ -4,6 +4,7 @@ import GlimmerComponent from '@glimmer/component';
 import type Owner from '@ember/owner';
 import { cached, tracked } from '@glimmer/tracking';
 import { modifier } from 'ember-modifier';
+import { consume } from 'ember-provide-consume-context';
 import { resource, use } from 'ember-resources';
 import { TrackedObject, TrackedSet } from 'tracked-built-ins';
 import { markDefinition } from '@cardstack/base/mark-definition';
@@ -105,6 +106,11 @@ import PlusIcon from '@cardstack/boxel-icons/plus';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
 import TrashIcon from '@cardstack/boxel-icons/trash-2';
 import ZapIcon from '@cardstack/boxel-icons/zap';
+import LayoutListIcon from '@cardstack/boxel-icons/layout-list';
+import {
+  AutomationsConsoleContextName,
+  showAutomationInConsole,
+} from '@cardstack/base/realm-automations';
 import { describeCron } from '@cardstack/catalog/automation/describe-cron';
 import { cronTriggerProblem } from '@cardstack/runtime-common/automation-cron-rule';
 import { CodeEdit, CodeView } from '@cardstack/catalog/fields/code/code';
@@ -3909,6 +3915,84 @@ class AutomationRuns extends GlimmerComponent<{
   </template>
 }
 
+// The way from an automation's card to the automations console: the realm
+// config card's Automations section, opened with the automation's row in
+// view and marked. Shown to the realm's direct writers alone, the only
+// viewers the console lists automations for, and left out of the automation
+// rows the console itself shows.
+class ShowInConsole extends GlimmerComponent<{
+  Args: {
+    model: Automation;
+    context: CardContext | undefined;
+    // Whether the status route answered that the viewer is a direct writer.
+    directWriter: boolean;
+    // An icon button for the fitted view's narrow heading row, or a labelled
+    // button.
+    iconOnly?: boolean;
+  };
+  Element: HTMLElement;
+}> {
+  @consume(AutomationsConsoleContextName) declare inConsole:
+    | boolean
+    | undefined;
+
+  get shows() {
+    return (
+      this.args.directWriter &&
+      !this.inConsole &&
+      Boolean(this.args.model[realmURL] && this.args.context?.toolContext)
+    );
+  }
+
+  @tracked private opening = false;
+
+  // A click opens the console and nothing else: the card around the button
+  // opens the automation on a click of its own.
+  show = async (event: Event) => {
+    event.stopPropagation();
+    let realm = this.args.model[realmURL]?.href;
+    let toolContext = this.args.context?.toolContext;
+    if (!realm || !toolContext || this.opening) {
+      return;
+    }
+    this.opening = true;
+    try {
+      await showAutomationInConsole(toolContext, realm, this.args.model.id);
+    } finally {
+      this.opening = false;
+    }
+  };
+
+  <template>
+    {{#if this.shows}}
+      {{#if @iconOnly}}
+        <IconButton
+          @label='Show in Automations'
+          @tooltip='Show the automation in the workspace’s Automations list'
+          @icon={{LayoutListIcon}}
+          @size='xs'
+          @appearance='plain'
+          @busy={{this.opening}}
+          {{on 'click' this.show}}
+          data-test-automation-show-in-console
+          ...attributes
+        />
+      {{else}}
+        <Button
+          @size='s'
+          @icon={{LayoutListIcon}}
+          @busy={{this.opening}}
+          {{on 'click' this.show}}
+          data-test-automation-show-in-console
+          ...attributes
+        >
+          Show in Automations
+        </Button>
+      {{/if}}
+    {{/if}}
+  </template>
+}
+
 class Isolated extends Component<typeof Automation> {
   // Leads the triggers: how many there are, and how they combine.
   get showsBatchedAI() {
@@ -3953,6 +4037,9 @@ class Isolated extends Component<typeof Automation> {
   }));
   get status() {
     return this.server.current.visible ? this.server.current.status : undefined;
+  }
+  get directWriter() {
+    return this.server.current.visible;
   }
   get statusKnown() {
     return this.server.current.known;
@@ -4076,6 +4163,11 @@ class Isolated extends Component<typeof Automation> {
           {{#if this.showsBatchedAI}}
             <Chip @label={{this.batchedAILabel}} @tone='info' />
           {{/if}}
+          <ShowInConsole
+            @model={{@model}}
+            @context={{@context}}
+            @directWriter={{this.directWriter}}
+          />
         </Stack>
       </header>
 
@@ -5399,6 +5491,9 @@ class AtAGlance extends Component<typeof Automation> {
   get status() {
     return this.server.current.visible ? this.server.current.status : undefined;
   }
+  get directWriter() {
+    return this.server.current.visible;
+  }
   get look() {
     return stateLook(this.status);
   }
@@ -5922,6 +6017,13 @@ class Fitted extends AtAGlance {
               data-test-automation-fitted-state={{this.look.label}}
             />
           {{/if}}
+          <ShowInConsole
+            class='af__console'
+            @model={{@model}}
+            @context={{@context}}
+            @directWriter={{this.directWriter}}
+            @iconOnly={{true}}
+          />
         </div>
 
         {{#if this.payer}}
@@ -6219,6 +6321,10 @@ class Fitted extends AtAGlance {
         display: none;
         flex-shrink: 0;
       }
+      .af__console {
+        display: none;
+        flex-shrink: 0;
+      }
       .af__focus,
       .af__when,
       .af__more,
@@ -6428,9 +6534,11 @@ class Fitted extends AtAGlance {
         color: var(--muted-foreground);
       }
 
-      /* A strip has room for the state beside the title. */
+      /* A strip has room for the state, and the way into the console,
+         beside the title. */
       @container (min-width: 240px) {
-        .af__state {
+        .af__state,
+        .af__console {
           display: inline-flex;
         }
       }
@@ -6689,13 +6797,20 @@ class Embedded extends AtAGlance {
             </span>
           </:leading>
           <:trailing>
-            {{#if this.look}}
-              <Chip
-                @label={{this.look.label}}
-                @tone={{this.look.tone}}
-                data-test-automation-embedded-state={{this.look.label}}
+            <Stack @orientation='horizontal' @gap='xs'>
+              {{#if this.look}}
+                <Chip
+                  @label={{this.look.label}}
+                  @tone={{this.look.tone}}
+                  data-test-automation-embedded-state={{this.look.label}}
+                />
+              {{/if}}
+              <ShowInConsole
+                @model={{@model}}
+                @context={{@context}}
+                @directWriter={{this.directWriter}}
               />
-            {{/if}}
+            </Stack>
           </:trailing>
         </Item>
 
