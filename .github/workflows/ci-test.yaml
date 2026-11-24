@@ -129,16 +129,19 @@ jobs:
           # Sets $prs to the PR behind each commit between the cache's catalog commit and this push that
           # is on main's own line or that GitHub made (a merge, squash or rebase off that line, brought
           # in by a local merge): a two-parent "Merge pull request #N" commit names its PR, and GitHub
-          # is asked for any other's. PRs merged into those PRs' branches are followed by the caller.
-          # Returns 1 with $unknown set when any of that can't be read.
+          # is asked for any other's. It adds every PR marked merged into main from a minute before
+          # the cache's catalog commit, other than the one that commit merged, which catches one
+          # merged only because a local merge carried its commits in. PRs merged into those PRs' branches are followed by the caller. Returns 1
+          # with $unknown set when any of that can't be read.
           prs_since_cache() {
-            local cache event head range sha line parents committer subject found mainline=" " lookups=0
+            local cache event head since range sha line parents committer subject found mainline=" " lookups=0
             prs=""
-            if ! cache=$(retry gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq '"\(.event) \(.head_sha)"'); then
+            if ! cache=$(retry gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" \
+                --jq '"\(.event) \(.head_sha) \(.head_commit.timestamp | fromdateiso8601 - 60 | todateiso8601)"'); then
               unknown="the cache from run $run_id couldn't be read"
               return 1
             fi
-            read -r event head <<< "$cache"
+            read -r event head since <<< "$cache"
             # A dispatched run may have built on any boxel commit, so only push and schedule caches
             # are known to suit their own catalog commit.
             case "$event" in
@@ -153,6 +156,15 @@ jobs:
               unknown="the commits since the cache from run $run_id couldn't be listed"
               return 1
             fi
+            if ! found=$(retry gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" -f state=closed -f base=main \
+                -f sort=updated -f direction=desc -f per_page=100 --jq "
+                  if length == 100 and .[-1].updated_at >= \"$since\" then error(\"more than one page\")
+                  else [.[] | select(.merged_at != null and .merged_at >= \"$since\" and .merge_commit_sha != \"$head\") | .number] | join(\" \")
+                  end"); then
+              unknown="the PRs merged since the cache from run $run_id couldn't be listed"
+              return 1
+            fi
+            prs="$prs $found"
             sha=$GITHUB_SHA
             while [ "$sha" != "$head" ]; do
               if ! line=$(grep -m1 "^$sha"$'\t' <<< "$range"); then
