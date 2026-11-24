@@ -927,16 +927,20 @@ export class AttendanceRecord extends CardDef {
       state: StringField,
     },
     // A request that fails the checks makes `select` produce nothing, which
-    // the realm refuses as a payload the input stage could not shape.
+    // the realm refuses as a payload the input stage could not shape. A
+    // declared day is approved as filed, so it is capped: at most 5 days,
+    // starting from 14 days ago to 30 days ahead.
     input: bxl`
-      select(
+      NOW() as $n
+      | (["sick", "personal"] | any(. == params("ptoType"))) as $declared
+      | select(
         (["vacation", "sick", "personal", "parental", "unpaid"] | any(. == params("ptoType")))
-        and (params("startDate") | test("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"))
-        and (params("endDate") | test("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"))
+        and (params("startDate") | test("^[0-9]{4}-((0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-8])|(0[13-9]|1[0-2])-(29|30)|(0[13578]|1[02])-31|02-29)$"))
+        and (params("endDate") | test("^[0-9]{4}-((0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-8])|(0[13-9]|1[0-2])-(29|30)|(0[13578]|1[02])-31|02-29)$"))
         and params("endDate") >= params("startDate")
+        and (IF($declared; (DATEVALUE(params("endDate")) - DATEVALUE(params("startDate")) <= 4 and DATEVALUE(params("startDate")) >= INT($n) - 14 and DATEVALUE(params("startDate")) <= INT($n) + 30); true))
       )
-      | NOW() as $n
-      | . + { requestedDate: TEXT($n; "yyyy-mm-dd"), declared: OR(params("ptoType") == "sick"; params("ptoType") == "personal"), state: IF(OR(params("ptoType") == "sick"; params("ptoType") == "personal"); "approved"; "pending") }
+      | . + { requestedDate: TEXT($n; "yyyy-mm-dd"), declared: $declared, state: IF($declared; "approved"; "pending") }
     `,
     fill: {
       ptoType: params('ptoType'),

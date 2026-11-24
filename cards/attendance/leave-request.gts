@@ -10,6 +10,7 @@ import {
   actor,
   bxl,
   operation,
+  params,
   type OperationDeclaration,
 } from 'https://cardstack.com/base/operations';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
@@ -37,24 +38,39 @@ const DATA_ONLY = {
   head: 'unshareable',
 } as const;
 
+interface LeaveFacts {
+  ptoType?: string | null;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  state?: string | null;
+}
+
+function typeLabel(m: LeaveFacts): string {
+  return LEAVE_TYPES.find((t) => t.value === m.ptoType)?.label ?? 'Leave';
+}
+
+function rangeLabel(m: LeaveFacts): string {
+  let start = dayKeyOf(m.startDate);
+  let end = dayKeyOf(m.endDate);
+  return start === end || !end ? start : `${start} to ${end}`;
+}
+
+function daysText(m: LeaveFacts): string {
+  let days = leaveDays(m);
+  return days === 1 ? '1 day' : `${days} days`;
+}
+
 class Summary extends Component<typeof LeaveRequest> {
   get typeLabel(): string {
-    return (
-      LEAVE_TYPES.find((t) => t.value === this.args.model.ptoType)?.label ??
-      this.args.model.ptoType ??
-      'Leave'
-    );
+    return typeLabel(this.args.model);
   }
 
   get range(): string {
-    let start = dayKeyOf(this.args.model.startDate);
-    let end = dayKeyOf(this.args.model.endDate);
-    return start === end || !end ? start : `${start} to ${end}`;
+    return rangeLabel(this.args.model);
   }
 
   get daysLabel(): string {
-    let days = leaveDays(this.args.model);
-    return days === 1 ? '1 day' : `${days} days`;
+    return daysText(this.args.model);
   }
 
   get stateLabel(): string {
@@ -125,6 +141,26 @@ export class LeaveRequest extends PtoRequest {
     },
   });
 
+  // The catalog names these from the linked employee, which a request filed
+  // through `requestLeave` doesn't carry; name them from the card itself.
+  @field employeeName = contains(StringField, {
+    computeVia: function (this: LeaveRequest) {
+      return this.employee?.name || this.userId || '';
+    },
+  });
+
+  @field title = contains(StringField, {
+    computeVia: function (this: LeaveRequest) {
+      return `${typeLabel(this)} leave · ${daysText(this)} · ${this.employeeName}`;
+    },
+  });
+
+  @field cardTitle = contains(StringField, {
+    computeVia: function (this: LeaveRequest) {
+      return this.cardInfo?.name?.trim() || this.title;
+    },
+  });
+
   @operation static read = {
     base: 'read',
     links: 'ids',
@@ -168,21 +204,43 @@ export class LeaveRequest extends PtoRequest {
     },
   } satisfies OperationDeclaration;
 
-  // Approved leave of the people I manage; the Today board picks out who is
-  // away on the day it shows.
+  // Approved leave of the people I manage that has not ended (`since` is the
+  // earliest end day); the Today board picks out who is away on the day it shows. `managerUserId` is stamped when
+  // the request is filed, so when someone's manager changes an admin re-stamps
+  // their open leave.
   @operation static teamLeave = {
     base: 'query',
     links: 'ids',
     html: DATA_ONLY,
+    params: { since: StringField },
     query: {
       filter: {
         on: () => LeaveRequest,
-        eq: { managerUserId: actor(), state: 'approved' },
+        every: [
+          {
+            on: () => LeaveRequest,
+            eq: { managerUserId: actor(), state: 'approved' },
+          },
+          {
+            on: () => LeaveRequest,
+            range: { endDate: { gte: params('since') } },
+          },
+        ],
       },
       sort: [{ on: () => LeaveRequest, by: 'startDate', direction: 'desc' }],
     },
   } satisfies OperationDeclaration;
 
+  static atom = class Atom extends Component<typeof LeaveRequest> {
+    <template>
+      <span class='atom'>{{@model.title}}</span>
+      <style scoped>
+        .atom {
+          font-weight: 600;
+        }
+      </style>
+    </template>
+  };
   static isolated = Summary;
   static embedded = Summary;
   static fitted = Summary;

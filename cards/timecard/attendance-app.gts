@@ -1,7 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
-import { tracked } from '@glimmer/tracking';
+import { cached, tracked } from '@glimmer/tracking';
 import type { ComponentLike } from '@glint/template';
 import {
   CardDef,
@@ -141,20 +141,21 @@ interface LiveCardsSignature {
     entries: { id: string }[] | undefined;
     context: CardContext | undefined;
   };
-  Blocks: { default: [cards: unknown[]] };
+  Blocks: { default: [record: AttendanceRecord | undefined] };
 }
 
-// A saved search lists ids; this loads each one as a live card.
-class LiveCards extends GlimmerComponent<LiveCardsSignature> {
+// A saved search lists ids; this loads the first as a live record. `mine`
+// sorts the latest year first, so that is the current one.
+class FirstRecord extends GlimmerComponent<LiveCardsSignature> {
   collection = this.args.context?.getCardCollection(this, () =>
-    this.args.entries?.map((e) => e.id),
+    this.args.entries?.slice(0, 1).map((e) => e.id),
   );
 
-  get cards(): unknown[] {
-    return this.collection?.cards ?? [];
+  get record(): AttendanceRecord | undefined {
+    return this.collection?.cards?.[0] as AttendanceRecord | undefined;
   }
 
-  <template>{{yield this.cards}}</template>
+  <template>{{yield this.record}}</template>
 }
 
 interface LeaveListSignature {
@@ -193,7 +194,7 @@ class LeaveList extends GlimmerComponent<LeaveListSignature> {
               {{#if row.note}}<span class='note'>{{row.note}}</span>{{/if}}
             </div>
             <StatusChip @value={{row.stateLabel}} />
-            {{#if @decide}}
+            {{#if @onDecide}}
               {{#unless (this.hide row)}}
                 <Button
                   @tone='success'
@@ -607,7 +608,18 @@ class AppView extends Component<typeof AttendanceApp> {
   leaveToApprove = operations<typeof LeaveRequest>(
     LeaveRequest,
   ).leaveToApprove.query({});
-  teamLeave = operations<typeof LeaveRequest>(LeaveRequest).teamLeave.query({});
+  // Leave that ended before yesterday is no use to the board. A day of slack
+  // keeps a leave that ends today listed in any zone.
+  @cached
+  get teamLeave() {
+    let yesterday = localClock(
+      new Date(Date.now() - 86_400_000),
+      this.timezone,
+    ).day;
+    return operations<typeof LeaveRequest>(LeaveRequest).teamLeave.query({
+      since: yesterday,
+    });
+  }
 
   get timezone(): string {
     return this.args.model.timezone || 'UTC';
@@ -646,12 +658,12 @@ class AppView extends Component<typeof AttendanceApp> {
                 />
               </:empty>
             </LiveRecords>
-            <LiveCards
+            <FirstRecord
               @entries={{results.entries}}
               @context={{@context}}
-              as |cards|
+              as |record|
             >
-              {{#each cards key='id' as |record|}}
+              {{#if record}}
                 <section aria-labelledby='leave-heading' class='leave-section'>
                   <h2 id='leave-heading'>My leave</h2>
                   <@context.searchResultsComponent
@@ -666,8 +678,8 @@ class AppView extends Component<typeof AttendanceApp> {
                     />
                   </@context.searchResultsComponent>
                 </section>
-              {{/each}}
-            </LiveCards>
+              {{/if}}
+            </FirstRecord>
           </@context.searchResultsComponent>
         {{/if}}
       </section>
