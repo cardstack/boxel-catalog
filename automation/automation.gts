@@ -3922,7 +3922,8 @@ class AutomationRuns extends GlimmerComponent<{
 // rows the console itself shows.
 class ShowInConsole extends GlimmerComponent<{
   Args: {
-    model: Automation;
+    // The automation card: its id, and the realm the card lives in.
+    model: { id?: string; [realmURL]?: URL };
     context: CardContext | undefined;
     // Whether the status route answered that the viewer is a direct writer.
     directWriter: boolean;
@@ -3951,13 +3952,14 @@ class ShowInConsole extends GlimmerComponent<{
   show = async (event: Event) => {
     event.stopPropagation();
     let realm = this.args.model[realmURL]?.href;
+    let id = this.args.model.id;
     let toolContext = this.args.context?.toolContext;
-    if (!realm || !toolContext || this.opening) {
+    if (!realm || !id || !toolContext || this.opening) {
       return;
     }
     this.opening = true;
     try {
-      await showAutomationInConsole(toolContext, realm, this.args.model.id);
+      await showAutomationInConsole(toolContext, realm, id);
     } finally {
       this.opening = false;
     }
