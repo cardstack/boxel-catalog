@@ -14,11 +14,14 @@ import StringField from 'https://cardstack.com/base/string';
 import NumberField from 'https://cardstack.com/base/number';
 import BooleanField from 'https://cardstack.com/base/boolean';
 import DateTimeField from 'https://cardstack.com/base/datetime';
+import DateField from 'https://cardstack.com/base/date';
 import {
   actor,
   bxl,
+  instance,
   operation,
   operations,
+  params,
   OperationsError,
   type OperationDeclaration,
 } from 'https://cardstack.com/base/operations';
@@ -30,7 +33,9 @@ import { SegmentedControl } from '@cardstack/pretui/components/segmented-control
 import { Textarea } from '@cardstack/pretui/components/textarea';
 
 import { Employee } from '../hr/employee';
+import { PtoTypeField } from '../hr/pto-request';
 import { ReceptionDisplay } from './reception-display';
+import { LeaveRequest } from './leave-request';
 import {
   VERDICT_LABEL,
   foldDays,
@@ -73,6 +78,14 @@ export class WorkSchedule extends FieldDef {
   @field scheduledArrival = contains(StringField);
   @field scheduledDeparture = contains(StringField);
   @field graceMinutes = contains(NumberField);
+}
+
+// Whole days of leave a year, set by an admin. No carry-over.
+export class LeaveAllowances extends FieldDef {
+  static displayName = 'Leave Allowances';
+  @field vacation = contains(NumberField);
+  @field sick = contains(NumberField);
+  @field personal = contains(NumberField);
 }
 
 export class AttendanceDay extends FieldDef {
@@ -733,6 +746,14 @@ export class AttendanceRecord extends CardDef {
   @field userId = contains(StringField);
   @field managerUserId = contains(StringField);
   @field year = contains(StringField);
+  @field yearStart = contains(DateField, {
+    description:
+      'First day of the year. Leave that starts from this day counts toward the allowances',
+  });
+  @field yearEnd = contains(DateField, {
+    description: 'Last day of the year',
+  });
+  @field allowances = contains(LeaveAllowances);
   @field schedule = contains(WorkSchedule);
   @field punches = containsMany(PunchEvent);
   // The reception display whose code a punch with code is matched against.
@@ -888,6 +909,46 @@ export class AttendanceRecord extends CardDef {
       (.punches[] | select(.eventId == params("eventId")) | .decidedBy) = actor();
       (.punches[] | select(.eventId == params("eventId")) | .decidedAt) = params("decidedAt");
     `,
+  } satisfies OperationDeclaration;
+
+  // Vacation and the other types wait for the manager; sick and personal days
+  // are declared, so they are approved as filed. `input` sets state and
+  // declared, so the caller can't choose them.
+  @operation static requestLeave = {
+    base: 'create',
+    of: LeaveRequest,
+    params: {
+      ptoType: PtoTypeField,
+      startDate: DateField,
+      endDate: DateField,
+      reason: StringField,
+      requestedDate: StringField,
+      declared: BooleanField,
+      state: StringField,
+    },
+    // A request that fails the checks makes `select` produce nothing, which
+    // the realm refuses as a payload the input stage could not shape.
+    input: bxl`
+      select(
+        (["vacation", "sick", "personal", "parental", "unpaid"] | any(. == params("ptoType")))
+        and (params("startDate") | test("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"))
+        and (params("endDate") | test("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"))
+        and params("endDate") >= params("startDate")
+      )
+      | NOW() as $n
+      | . + { requestedDate: TEXT($n; "yyyy-mm-dd"), declared: OR(params("ptoType") == "sick"; params("ptoType") == "personal"), state: IF(OR(params("ptoType") == "sick"; params("ptoType") == "personal"); "approved"; "pending") }
+    `,
+    fill: {
+      ptoType: params('ptoType'),
+      startDate: params('startDate'),
+      endDate: params('endDate'),
+      reason: params('reason'),
+      requestedDate: params('requestedDate'),
+      declared: params('declared'),
+      state: params('state'),
+      userId: actor(),
+      managerUserId: instance('managerUserId'),
+    },
   } satisfies OperationDeclaration;
 
   @operation static mine = {
