@@ -6095,6 +6095,10 @@ class ShowInConsole extends GlimmerComponent<{
     this.opening = true;
     try {
       await showAutomationInConsole(toolContext, realm, id);
+    } catch (error) {
+      // The host reports a card that fails to open; the button only has to
+      // return to its idle state.
+      console.error('Show in Automations could not open the console', error);
     } finally {
       this.opening = false;
     }
@@ -6296,6 +6300,7 @@ class Isolated extends Component<typeof Automation> {
           />
         </div>
         <Stack
+          class='automation__chips'
           @orientation='horizontal'
           @wrap={{true}}
           @gap='xs'
@@ -6597,6 +6602,13 @@ class Isolated extends Component<typeof Automation> {
       @container (inline-size < 40rem) {
         .automation {
           padding: var(--boxel-sp);
+        }
+        /* A narrow header gives the chips a row of their own under the
+           title, so the title's column keeps room for the title and the
+           Show in Automations button. */
+        .automation__chips {
+          grid-column: 2 / -1;
+          justify-content: start;
         }
       }
     </style>
