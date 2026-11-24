@@ -2363,25 +2363,25 @@ const NOT_STARTED: Record<string, string> = {
   'insufficient-credits':
     'Boxel didn’t start the run because the payer’s credit balance was too low. Boxel starts the next run once the payer adds credits.',
   'daily-credit-cap-reached':
-    'Boxel didn’t start the run because the automation reached the daily credit limit. Boxel starts runs again the next day, or once someone raises the limit and resumes the automation.',
+    'Boxel didn’t start the run because the automation reached the daily credit limit. Boxel starts runs again the next day, or once a realm administrator raises the limit and resumes the automation.',
   'monthly-credit-cap-reached':
-    'Boxel didn’t start the run because the automation reached the monthly credit limit. Boxel starts runs again the next month, or once someone raises the limit and resumes the automation.',
+    'Boxel didn’t start the run because the automation reached the monthly credit limit. Boxel starts runs again the next month, or once a realm administrator raises the limit and resumes the automation.',
   'pricing-unavailable':
     'Boxel didn’t start the run because Boxel couldn’t read the current prices. Boxel starts the next run once Boxel can read the prices again.',
   'not-a-direct-writer':
-    'Boxel didn’t start the run because the person the run acts as can no longer edit this workspace. Someone who can edit this workspace resumes the automation and becomes the payer.',
+    'Boxel didn’t start the run because the person the run acts as is no longer a realm administrator. A realm administrator resumes the automation and becomes the payer.',
   'session-revoked':
-    'Boxel didn’t start the run because the person the run acts as signed out of every session. That person signs in again, and someone who can edit this workspace resumes the automation.',
+    'Boxel didn’t start the run because the person the run acts as signed out of every session. That person signs in again, and a realm administrator resumes the automation.',
   'account-deactivated':
-    'Boxel didn’t start the run because someone deactivated the account of the person the run acts as. Someone who can edit this workspace resumes the automation and becomes the payer.',
+    'Boxel didn’t start the run because someone deactivated the account of the person the run acts as. A realm administrator resumes the automation and becomes the payer.',
   'account-unverifiable':
     'Boxel didn’t start the run because Boxel couldn’t check the account of the person the run acts as. Boxel checks again at the next run.',
   'payer-changed':
     'Boxel didn’t start the run because someone else became the payer after Boxel queued the run. The next run acts as the new payer.',
   'automation-paused':
-    'Boxel didn’t start the run because someone paused the automation after Boxel queued the run. Boxel starts runs again once someone who can edit this workspace resumes the automation.',
+    'Boxel didn’t start the run because a realm administrator paused the automation after Boxel queued the run. Boxel starts runs again once a realm administrator resumes the automation.',
   'not-switched-on':
-    'Boxel didn’t start the run because nobody has the automation turned on. Boxel starts runs once someone who can edit this workspace turns the automation on.',
+    'Boxel didn’t start the run because nobody has the automation turned on. Boxel starts runs once a realm administrator turns the automation on.',
   'missing-script':
     'Boxel didn’t start the run because Boxel couldn’t read the script. Someone fixes the script link in the edit view.',
   'not-an-automation':
@@ -2391,7 +2391,7 @@ const NOT_STARTED: Record<string, string> = {
   'binding-needs-reapproval':
     'Boxel didn’t start the run because an outside service the automation calls changed since someone approved the service. The person the run acts as approves the service again in the secure window.',
   'share-suspended':
-    'Boxel didn’t start the run because someone suspended the shared key an outside service uses. Someone who can edit this workspace resumes the shared key, or the key’s owner swaps in another key.',
+    'Boxel didn’t start the run because someone suspended the shared key an outside service uses. A realm administrator resumes the shared key, or the key’s owner swaps in another key.',
   'credential-rejected':
     'Boxel didn’t start the run because the outside service refused the key or connection the automation uses. The person the run acts as reconnects or replaces the key.',
   'waiting-for-key-approval':
@@ -2414,7 +2414,7 @@ const PAUSE_CANCELED: Record<string, string> = {
   'webhook-changed':
     'Boxel canceled the run when Boxel paused the automation: a workspace administrator pointed a trigger at a webhook the payer didn’t agree to.',
   'payer-lost-access':
-    'Boxel canceled the run when Boxel paused the automation: the payer can no longer edit this workspace.',
+    'Boxel canceled the run when Boxel paused the automation: the payer is no longer a realm administrator.',
   'realm-archived':
     'Boxel canceled the run when someone archived this workspace.',
   'repeated-failures':
@@ -2488,7 +2488,7 @@ function runReason(run: ListedRun): RunReason | undefined {
       };
     case 'timed-out':
       return {
-        text: 'Boxel stopped the run when the run reached the time limit. Someone who can edit this workspace raises the limit in the edit view and resumes the automation.',
+        text: 'Boxel stopped the run when the run reached the time limit. A realm administrator raises the limit in the edit view and resumes the automation.',
       };
     case 'hit-a-cap': {
       let words = run.cap ? CAP_WORDS[run.cap] : undefined;
@@ -2497,7 +2497,7 @@ function runReason(run: ListedRun): RunReason | undefined {
           words
             ? `Boxel stopped the run when the run reached the limit on ${words}.`
             : 'Boxel stopped the run when the run reached one of the run’s limits.'
-        } Someone who can edit this workspace raises the limit in the edit view and resumes the automation.`,
+        } A realm administrator raises the limit in the edit view and resumes the automation.`,
       };
     }
   }
@@ -2646,25 +2646,25 @@ function stateSentence(status: ServerStatus): string {
     case 'waiting-for-key-approval':
       return 'Boxel holds every run until someone approves the automation’s use of each key.';
     case 'done':
-      return 'The automation has no runs left on any trigger, so Boxel runs nothing more. Boxel runs the automation again when someone who can edit this workspace adds a trigger.';
+      return 'The automation has no runs left on any trigger, so Boxel runs nothing more. Boxel runs the automation again when a realm administrator adds a trigger.';
     case 'paused':
       switch (status.pauseReason) {
         case 'realm-archived':
-          return 'Someone archived this workspace, so Boxel paused the automation. Boxel runs nothing until someone restores the workspace and resumes the automation.';
+          return 'Someone archived this workspace, so Boxel paused the automation. Boxel runs nothing until a realm administrator restores the workspace and resumes the automation.';
         case 'payer-lost-access':
-          return 'The payer can no longer edit this workspace, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and becomes the new payer.';
+          return 'The payer is no longer a realm administrator, so Boxel paused the automation. Boxel runs nothing until a realm administrator resumes the automation and becomes the new payer.';
         case 'caps-raised':
-          return 'Someone raised a limit above what the payer agreed to pay for, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to the new limits.';
+          return 'Someone raised a limit above what the payer agreed to pay for, so Boxel paused the automation. Boxel runs nothing until a realm administrator resumes the automation and agrees to the new limits.';
         case 'batched-ai-enabled':
-          return 'Someone turned on batched AI after the payer agreed to the limits, so Boxel paused the automation. Boxel runs nothing until someone who can edit this workspace resumes the automation and agrees to batched AI.';
+          return 'Someone turned on batched AI after the payer agreed to the limits, so Boxel paused the automation. Boxel runs nothing until a realm administrator resumes the automation and agrees to batched AI.';
         case 'webhook-changed':
           return 'A workspace administrator pointed a trigger at an incoming webhook the payer didn’t agree to, so Boxel paused the automation. Boxel runs nothing until a workspace administrator resumes the automation and agrees to the new webhook.';
         case 'repeated-failures':
           return repeatedFailuresSentence(status);
         case 'invalid-declaration':
-          return 'Boxel paused the automation because the automation’s settings have problems. Boxel will resume the automation once someone who can edit this workspace fixes each problem below.';
+          return 'Boxel paused the automation because the automation’s settings have problems. Boxel will resume the automation once a realm administrator fixes each problem below.';
         default:
-          return 'Someone who can edit this workspace paused the automation, so Boxel runs nothing until someone resumes the automation.';
+          return 'A realm administrator paused the automation, so Boxel runs nothing until a realm administrator resumes the automation.';
       }
   }
 }
@@ -2679,7 +2679,7 @@ function repeatedFailuresSentence(
     count === 1
       ? 'a run'
       : `${count && count > 1 ? tally(count) : 'several'} runs in a row`;
-  return `Boxel paused the automation after ${runs} failed. Boxel runs nothing until someone who can edit this workspace fixes what the runs fail on and resumes the automation.`;
+  return `Boxel paused the automation after ${runs} failed. Boxel runs nothing until a realm administrator fixes what the runs fail on and resumes the automation.`;
 }
 
 // Each problem the server found, with where on the card the problem is: a
@@ -4703,7 +4703,7 @@ class RunDetail extends GlimmerComponent<{
       {{#if (eq this.reportFailure 'refused')}}
         <Callout
           @tone='warning'
-          @title='Only the workspace’s direct writers can read the run’s details'
+          @title='Only a realm administrator can read the run’s details'
           data-test-automation-run-report-failed='refused'
         />
       {{else if this.reportFailure}}
@@ -4747,7 +4747,7 @@ class RunDetail extends GlimmerComponent<{
               {{#if (eq this.log.failure 'refused')}}
                 <Callout
                   @tone='warning'
-                  @title='Only the workspace’s direct writers can read the run’s log'
+                  @title='Only a realm administrator can read the run’s log'
                   data-test-automation-run-log-failed='refused'
                 />
               {{else if this.log.failure}}
@@ -5968,10 +5968,10 @@ export class SwitchOnDialog extends GlimmerComponent<{
                 Boxel charges every scheduled run to your credits, and the
                 storage of the files the runs create for every day the
                 automation stays on. The monthly limit stops Boxel from starting
-                runs, while the storage charge continues until someone removes
-                the automation. Anyone who can edit this workspace can pause the
-                automation, or resume the automation and become the payer
-                instead.
+                runs, while the storage charge continues until a realm
+                administrator removes the automation. Any realm administrator
+                can pause the automation, or resume the automation and become
+                the payer instead.
               </Callout>
             {{else if this.estimateFailure}}
               <div data-test-automation-switch-on-estimate-failure>
@@ -6173,7 +6173,7 @@ class Isolated extends Component<typeof Automation> {
   // run ends and the script reports milestones.
   get milestonesEmptyMessage() {
     if (!this.status) {
-      return 'Someone who can edit this workspace sees the milestones of the last run here.';
+      return 'A realm administrator sees the milestones of the last run here.';
     }
     return this.status.lastRun
       ? 'The last run reported no milestones. A script reports milestones with realm.progress.plan and realm.progress.milestone.'
@@ -6264,8 +6264,8 @@ class Isolated extends Component<typeof Automation> {
           @title='Who turns this automation on, and who pays'
           data-test-automation-who-pays
         >
-          This automation runs only after someone who can edit this workspace
-          turns the automation on. That person pays for every run.
+          This automation runs only after a realm administrator turns the
+          automation on. That person pays for every run.
         </Callout>
       {{/if}}
 
