@@ -5826,6 +5826,9 @@ export class SwitchOnDialog extends GlimmerComponent<{
   confirm = async () => {
     this.submitted = true;
     let cap = this.cap;
+    // The screen the person clicked in decides the route, even when the
+    // status changes while the screen waits for the card to save the limit.
+    let mode = this.mode;
     if (!this.canConfirm || cap === null) {
       return;
     }
@@ -5836,7 +5839,7 @@ export class SwitchOnDialog extends GlimmerComponent<{
         await this.writeCap(cap);
       }
       let result = await this.request({
-        route: this.mode === 'reconfirm' ? RESUME_ROUTE : SWITCH_ON_ROUTE,
+        route: mode === 'reconfirm' ? RESUME_ROUTE : SWITCH_ON_ROUTE,
         method: 'POST',
         monthlyCredits: cap,
       });
@@ -5877,7 +5880,6 @@ export class SwitchOnDialog extends GlimmerComponent<{
           <Stack @gap='m' data-test-automation-switch-on-screen>
             {{#if this.reconfirmLead}}
               <p
-                class='switch-on__lead'
                 data-test-automation-switch-on-reconfirm
               >{{this.reconfirmLead}}</p>
             {{/if}}
@@ -6011,9 +6013,6 @@ export class SwitchOnDialog extends GlimmerComponent<{
     <style scoped>
       .switch-on__open {
         margin: 0 0 var(--boxel-sp-sm);
-      }
-      .switch-on__lead {
-        margin: 0;
       }
       .switch-on__value {
         display: block;
