@@ -937,6 +937,8 @@ export class AttendanceRecord extends CardDef {
         (["vacation", "sick", "personal", "parental", "unpaid"] | any(. == params("ptoType")))
         and (params("startDate") | test("^[0-9]{4}-((0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-8])|(0[13-9]|1[0-2])-(29|30)|(0[13578]|1[02])-31|02-29)$"))
         and (params("endDate") | test("^[0-9]{4}-((0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-8])|(0[13-9]|1[0-2])-(29|30)|(0[13578]|1[02])-31|02-29)$"))
+        and (TEXT(DATEVALUE(params("startDate")); "yyyy-mm-dd") == params("startDate"))
+        and (TEXT(DATEVALUE(params("endDate")); "yyyy-mm-dd") == params("endDate"))
         and params("endDate") >= params("startDate")
         and (IF($declared; (DATEVALUE(params("endDate")) - DATEVALUE(params("startDate")) <= 4 and DATEVALUE(params("startDate")) >= INT($n) - 14 and DATEVALUE(params("startDate")) <= INT($n) + 30); true))
       )

@@ -90,17 +90,23 @@ export function leaveBalances(
   let from = dayKeyOf(yearStart);
   let to = dayKeyOf(yearEnd);
   return BALANCE_TYPES.map((type) => {
-    let used = leave
-      .filter((l) => {
-        let start = dayKeyOf(l.startDate);
-        return (
-          l.ptoType === type &&
-          l.state === 'approved' &&
-          (!from || start >= from) &&
-          (!to || start <= to)
-        );
-      })
-      .reduce((sum, l) => sum + leaveDays(l), 0);
+    // Distinct days, so overlapping requests for the same day count once.
+    let days = new Set<number>();
+    for (let l of leave) {
+      let start = dayKeyOf(l.startDate);
+      if (
+        l.ptoType === type &&
+        l.state === 'approved' &&
+        (!from || start >= from) &&
+        (!to || start <= to)
+      ) {
+        let first = dayNumber(start);
+        for (let i = 0; i < leaveDays(l); i++) {
+          days.add(first + i);
+        }
+      }
+    }
+    let used = days.size;
     let allowed =
       (allowances?.[type as keyof AllowancesLike] as number | undefined) ?? 0;
     return {
