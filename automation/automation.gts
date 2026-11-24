@@ -2386,7 +2386,7 @@ const PAUSE_CANCELED: Record<string, string> = {
   'webhook-changed':
     'Boxel canceled the run when Boxel paused the automation: a workspace administrator pointed a trigger at a webhook the payer didn’t agree to.',
   'webhook-owner-lost-access':
-    'Boxel canceled the run when Boxel paused the automation: the person who made a trigger’s incoming webhook can no longer edit this workspace.',
+    'Boxel canceled the run when Boxel paused the automation: the person who made a trigger’s incoming webhook is no longer a realm administrator.',
   'payer-lost-access':
     'Boxel canceled the run when Boxel paused the automation: the payer is no longer a realm administrator.',
   'realm-archived':
@@ -2634,7 +2634,7 @@ function stateSentence(status: ServerStatus): string {
         case 'webhook-changed':
           return 'A workspace administrator pointed a trigger at an incoming webhook the payer didn’t agree to, so Boxel paused the automation. Boxel runs nothing until a workspace administrator resumes the automation and agrees to the new webhook.';
         case 'webhook-owner-lost-access':
-          return 'The person who made a trigger’s incoming webhook can no longer edit this workspace, so Boxel paused the automation. Boxel runs nothing until a workspace administrator points the trigger at one of the workspace’s webhooks, or gives that person edit access again, and resumes the automation.';
+          return 'The person who made a trigger’s incoming webhook is no longer a realm administrator, so Boxel paused the automation. Boxel runs nothing until a realm administrator does one of two things and then resumes the automation: points the trigger at one of this workspace’s webhooks, or makes the webhook’s maker a realm administrator again. The trigger’s editor marks the webhook as “Not one of this workspace’s webhooks”.';
         case 'repeated-failures':
           return repeatedFailuresSentence(status);
         case 'invalid-declaration':
