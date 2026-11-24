@@ -5,7 +5,7 @@ import type Owner from '@ember/owner';
 import { cached, tracked } from '@glimmer/tracking';
 import { modifier } from 'ember-modifier';
 import { resource, use } from 'ember-resources';
-import { TrackedObject } from 'tracked-built-ins';
+import { TrackedObject, TrackedSet } from 'tracked-built-ins';
 import { markDefinition } from '@cardstack/base/mark-definition';
 import { nowDate } from '@cardstack/base/helpers/clock';
 import {
@@ -45,6 +45,7 @@ import {
 } from '@cardstack/runtime-common';
 import AuthedFetchTool from '@cardstack/boxel-host/tools/authed-fetch';
 import AutomationRequestTool from '@cardstack/boxel-host/tools/automation-request';
+import ReadAutomationRunTool from '@cardstack/boxel-host/tools/read-automation-run';
 import ReadSourceTool from '@cardstack/boxel-host/tools/read-source';
 import WriteTextFileTool from '@cardstack/boxel-host/tools/write-text-file';
 import { Button } from '@cardstack/pretui/components/button';
@@ -88,7 +89,13 @@ import {
   Timeline,
   type TimelineEvent,
 } from '@cardstack/pretui/components/timeline';
+import {
+  StatementTable,
+  type StatementColumn,
+  type StatementRow,
+} from '@cardstack/pretui/components/statement-table';
 import { Table } from '@cardstack/pretui/components/table';
+import { Tabs } from '@cardstack/pretui/components/tabs';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
 import { Token } from '@cardstack/pretui/components/token';
 import { and, bool, eq, gt, or } from '@cardstack/pretui/helpers';
@@ -261,7 +268,7 @@ const CAP_DEFAULTS: Record<string, number> = {
   resolveCalls: 5,
   aiCredits: 300,
   writes: 50,
-  seconds: 300,
+  seconds: 1200,
   dailyCredits: 500,
   monthlyCredits: 10_000,
 };
@@ -1797,8 +1804,13 @@ interface RunMilestone {
   startedAt: string;
   endedAt: string | null;
   ms: number;
-  done?: number;
-  total?: number;
+  // The notable tasks the script reported inside the milestone with
+  // `realm.progress.task(text)`, in order.
+  tasks?: RunTask[];
+}
+interface RunTask {
+  text: string;
+  at: string;
 }
 interface LastRun {
   runId: string;
@@ -1812,6 +1824,9 @@ interface LastRun {
   ahead: string[];
   failedIn: string | null;
   dropped: number;
+  // Tasks the script reported that the run didn't record: past the most a
+  // run records, or inside a milestone the run didn't record.
+  tasksDropped?: number;
 }
 interface RunFailure {
   runId: string;
@@ -2507,8 +2522,9 @@ function runLook(run: ListedRun): { label: string; tone: RunTone } {
 }
 
 // How far a run got through the script's milestones, in a line: the
-// milestone a running run is in, the one a failed run failed in, or how many
-// a run that ended reached. Undefined when the script reported none.
+// milestone a running run is in with the last task the script reported in
+// it, the one a failed run failed in, or how many a run that ended reached.
+// Undefined when the script reported none.
 function runProgress(run: ListedRun): string | undefined {
   let m = run.milestones;
   if (!m || (m.milestones.length === 0 && m.plan.length === 0)) {
@@ -2518,8 +2534,9 @@ function runProgress(run: ListedRun): string | undefined {
   let total = reached + m.ahead.length;
   let last = m.milestones.at(-1);
   if (run.state === 'running') {
+    let task = last?.tasks?.at(-1)?.text;
     return m.current
-      ? `Milestone ${tally(reached)} of ${tally(total)}: ${m.current}`
+      ? `Milestone ${tally(reached)} of ${tally(total)}: ${m.current}${task ? ` — ${task}` : ''}`
       : `The run has reached no milestone yet; the script plans ${tally(total)}.`;
   }
   if (run.state === 'error' && m.failedIn) {
@@ -2815,26 +2832,43 @@ type MilestoneState =
 
 interface MilestoneRow {
   id: string;
+  // Tells one run's milestone from another's at the same place, so a list of
+  // tasks opened on one run stays closed on the next.
+  key: string;
   name: string;
   state: MilestoneState;
   badge: string;
   tone: 'neutral' | 'success' | 'warning' | 'danger';
   detail?: string;
+  // The notable tasks the script reported inside the milestone, in order.
+  tasks: string[];
 }
 
-function countText(done?: number, total?: number): string | undefined {
-  if (done === undefined) {
-    return undefined;
+// How long the milestone of each name took on an earlier run: the first
+// time that run reached the milestone, as a run's plan names each milestone
+// once.
+function milestoneTimes(run: LastRun | undefined): Map<string, number> {
+  let times = new Map<string, number>();
+  for (let milestone of run?.milestones ?? []) {
+    if (!times.has(milestone.name)) {
+      times.set(milestone.name, milestone.ms);
+    }
   }
-  return total !== undefined
-    ? `${tally(done)} of ${tally(total)}`
-    : tally(done);
+  return times;
 }
 
 // One row per milestone the run reached, in the order reached, then one per
-// milestone of the plan the run hasn't reached.
-function runMilestoneRows(run: LastRun): MilestoneRow[] {
+// milestone of the plan the run hasn't reached. With `previous`, the run
+// before this one, each row also says how long the milestone took on that
+// run, so a running run's current milestone and the ones ahead read against
+// the last run's pace.
+function runMilestoneRows(run: LastRun, previous?: LastRun): MilestoneRow[] {
   let lastIndex = run.milestones.length - 1;
+  let before = milestoneTimes(previous);
+  let lastRunPart = (name: string) => {
+    let ms = before.get(name);
+    return ms === undefined ? undefined : `Last run took ${durationText(ms)}`;
+  };
   let rows: MilestoneRow[] = run.milestones.map((milestone, index) => {
     let last = index === lastIndex;
     let state: MilestoneState =
@@ -2852,27 +2886,32 @@ function runMilestoneRows(run: LastRun): MilestoneRow[] {
         : state === 'reached'
           ? `Took ${time}`
           : `Ran for ${time}`,
-      countText(milestone.done, milestone.total),
+      lastRunPart(milestone.name),
       !milestone.planned && run.plan.length > 0 ? 'Not in the plan' : undefined,
     ].filter((part): part is string => Boolean(part));
     let look = MILESTONE_LOOKS[state];
     return {
       id: `${index}`,
+      key: `${run.runId}:${index}`,
       name: milestone.name,
       state,
       badge: look.badge,
       tone: look.tone,
       detail: parts.join(' · '),
+      tasks: (milestone.tasks ?? []).map(({ text }) => text),
     };
   });
   return [
     ...rows,
     ...run.ahead.map((name, index) => ({
       id: `ahead-${index}`,
+      key: `${run.runId}:ahead-${index}`,
       name,
       state: 'not-started' as const,
       badge: 'Not started',
       tone: 'neutral' as const,
+      detail: lastRunPart(name),
+      tasks: [],
     })),
   ];
 }
@@ -2881,10 +2920,12 @@ function runMilestoneRows(run: LastRun): MilestoneRow[] {
 function declaredMilestoneRows(names: string[]): MilestoneRow[] {
   return names.map((name, index) => ({
     id: `${index}`,
+    key: `declared-${index}`,
     name,
     state: 'not-started',
     badge: 'Not started',
     tone: 'neutral',
+    tasks: [],
   }));
 }
 
@@ -2900,36 +2941,82 @@ const MILESTONE_LOOKS: Record<
 };
 
 function runLead(run: LastRun): string {
+  let lead: string;
   if (run.state === 'running') {
-    return 'The milestones the script has reported on the run in progress.';
+    lead = 'The milestones the script has reported on the run in progress.';
+  } else {
+    let ended =
+      run.state === 'complete'
+        ? 'completed'
+        : run.state === 'error'
+          ? 'ended with an error'
+          : 'Boxel stopped';
+    lead = `The milestones the script reported on the last run, which ${ended}.`;
   }
-  let ended =
-    run.state === 'complete'
-      ? 'completed'
-      : run.state === 'error'
-        ? 'ended with an error'
-        : 'Boxel stopped';
-  let lead = `The milestones the script reported on the last run, which ${ended}.`;
   if (run.dropped > 0) {
     lead += ` The script marked ${tally(run.dropped)} more ${
       run.dropped === 1 ? 'milestone' : 'milestones'
     } past the ${tally(MAX_RUN_MILESTONES)} a run records, so the last milestone shown also holds the time of the unrecorded milestones.`;
   }
+  let tasksDropped = run.tasksDropped ?? 0;
+  if (tasksDropped > 0) {
+    lead += ` Boxel didn’t record ${tally(tasksDropped)} more ${
+      tasksDropped === 1 ? 'task' : 'tasks'
+    } the script reported: a run records at most ${tally(MAX_RUN_TASKS)} tasks, and none inside a milestone Boxel didn’t record.`;
+  }
   return lead;
 }
+
+// The most tasks a milestone lists before a button shows the rest: the
+// latest ones, since the latest says what the run did last.
+const SHOWN_TASKS = 5;
 
 // The milestones as a timeline, one row each, joined by the timeline's rail
 // so they read as a progression. Each marker is shaded in its state's color:
 // gray before the milestone runs, yellow while it runs, green once it is
-// done, red where the run ended with an error.
+// done, red where the run ended with an error. Under each milestone, the
+// notable tasks the script reported inside the milestone, in order.
 class MilestoneTimeline extends GlimmerComponent<{
   Args: { rows: MilestoneRow[]; label: string };
 }> {
+  // The milestones whose every task shows, by row key.
+  private allTasksShown = new TrackedSet<string>();
+  // Each milestone's state chip sits on the milestone's title line, in the
+  // state's own tone.
   get events(): TimelineEvent[] {
-    return this.args.rows.map((row) => ({ id: row.id, title: row.name }));
+    return this.args.rows.map((row) => ({
+      id: row.id,
+      title: row.name,
+      status: row.badge,
+      statusTone: row.tone,
+    }));
   }
   rowOf = (event: TimelineEvent): MilestoneRow =>
     this.args.rows.find((row) => row.id === event.id)!;
+  // The tasks a milestone shows, and the earlier ones the toggle shows or
+  // hides. The toggle stays where it is either way, so focus stays on it.
+  shownTasks = (
+    row: MilestoneRow,
+  ): { tasks: string[]; earlier: number; expanded: boolean } => {
+    let earlier = Math.max(row.tasks.length - SHOWN_TASKS, 0);
+    let expanded = this.allTasksShown.has(row.key);
+    return {
+      tasks: expanded ? row.tasks : row.tasks.slice(-SHOWN_TASKS),
+      earlier,
+      expanded,
+    };
+  };
+  earlierTasksLabel = (earlier: number, expanded: boolean): string =>
+    `${expanded ? 'Hide' : 'Show'} ${tally(earlier)} earlier ${
+      earlier === 1 ? 'task' : 'tasks'
+    }`;
+  toggleEarlierTasks = (row: MilestoneRow) => {
+    if (this.allTasksShown.has(row.key)) {
+      this.allTasksShown.delete(row.key);
+    } else {
+      this.allTasksShown.add(row.key);
+    }
+  };
   <template>
     <Timeline
       @events={{this.events}}
@@ -2960,12 +3047,38 @@ class MilestoneTimeline extends GlimmerComponent<{
       </:marker>
       <:default as |event|>
         {{#let (this.rowOf event) as |row|}}
-          <span class='milestones__detail'>
-            <Chip @label={{row.badge}} @tone={{row.tone}} />
-            {{#if row.detail}}
-              <span class='milestones__text'>{{row.detail}}</span>
-            {{/if}}
-          </span>
+          {{#if row.detail}}
+            <span class='milestones__text'>{{row.detail}}</span>
+          {{/if}}
+          {{#if row.tasks.length}}
+            {{#let (this.shownTasks row) as |shown|}}
+              {{#if shown.earlier}}
+                <Button
+                  @appearance='link'
+                  @size='s'
+                  class='milestones__earlier'
+                  aria-expanded={{if shown.expanded 'true' 'false'}}
+                  data-test-automation-milestone-earlier-tasks
+                  {{on 'click' (fn this.toggleEarlierTasks row)}}
+                >{{this.earlierTasksLabel
+                    shown.earlier
+                    shown.expanded
+                  }}</Button>
+              {{/if}}
+              <ul
+                class='milestones__tasks'
+                aria-label='Tasks in {{row.name}}'
+                data-test-automation-milestone-tasks
+              >
+                {{#each shown.tasks as |task|}}
+                  <li
+                    class='milestones__task'
+                    data-test-automation-milestone-task
+                  >{{task}}</li>
+                {{/each}}
+              </ul>
+            {{/let}}
+          {{/if}}
         {{/let}}
       </:default>
     </Timeline>
@@ -3002,13 +3115,24 @@ class MilestoneTimeline extends GlimmerComponent<{
       .milestones__mark[data-milestone-state='not-started'] {
         background: var(--card, #fff);
       }
-      .milestones__detail {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-      }
       .milestones__text {
+        color: var(--muted-foreground);
+      }
+      .milestones__earlier {
+        margin-block-start: var(--boxel-sp-4xs);
+      }
+      .milestones__tasks {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-5xs);
+        margin: var(--boxel-sp-4xs) 0 0;
+        /* Wide enough that each bullet sits under the milestone's name, not
+           out over the timeline's rail. */
+        padding-inline-start: var(--boxel-sp-lg);
+        list-style: disc;
+        overflow-wrap: break-word;
+      }
+      .milestones__task::marker {
         color: var(--muted-foreground);
       }
     </style>
@@ -3017,9 +3141,9 @@ class MilestoneTimeline extends GlimmerComponent<{
 
 // The milestones a fitted view lists: the isolated view's timeline, compact,
 // with each milestone's state marked as the isolated view marks it and its
-// name, and its count or where Boxel stopped the run beside it.
+// name, and its time, last task or where Boxel stopped the run beside it.
 class FittedMilestones extends GlimmerComponent<{
-  // `details` adds each milestone's count and time under its name, for a
+  // `details` adds each milestone's time and last task under its name, for a
   // view tall enough for two lines a milestone.
   // `earlier` and `later` say how many milestones the list leaves out
   // before and after it; the list marks each by running its rail on past
@@ -3192,8 +3316,9 @@ class FittedMilestones extends GlimmerComponent<{
   </template>
 }
 
-// The most milestones the server records for one run.
+// The most milestones and the most tasks the server records for one run.
 const MAX_RUN_MILESTONES = 200;
+const MAX_RUN_TASKS = 200;
 
 // A trigger's times read in the trigger's own zone, as the trigger's
 // sentences do.
@@ -3459,6 +3584,1570 @@ class ScriptEditor extends GlimmerComponent<{
   </template>
 }
 
+// One run as the automations console shows the run when its row opens, read
+// from the realm server's `_automation-run-report` route through the host's
+// `read-automation-run` tool, for the realm's direct writers.
+type RunLogLevel = 'log' | 'info' | 'warn' | 'error';
+interface RunCallApiCall {
+  seq: number;
+  at: string;
+  operation: string;
+  method?: string;
+  // The request's destination, with query values masked.
+  destination?: string;
+  // The vendor's status; absent when Boxel refused the call or the call
+  // failed, and `code` then says which.
+  status?: number;
+  code?: string;
+  ms?: number;
+  bytes?: number;
+}
+// An AI request. The report carries no cost for it: an end user sees what AI
+// cost only as the credits Boxel charged (boxel ADR 049 §1.4), on the Cost
+// tab.
+interface RunResolveCall {
+  seq: number;
+  at: string;
+  model?: string;
+  status?: number;
+  ms?: number;
+  // The tokens the request read and wrote, as the provider reported them.
+  inputTokens?: number;
+  outputTokens?: number;
+}
+interface RunReport {
+  dryRun: boolean;
+  state: RunState;
+  timings: {
+    createdAt: string;
+    startedAt: string | null;
+    commitStartedAt: string | null;
+    committedAt: string | null;
+    finishedAt: string | null;
+    queuedMs: number | null;
+    runMs: number | null;
+    commitMs: number | null;
+  };
+  log: {
+    lines: number;
+    dropped: number;
+    byLevel: Partial<Record<RunLogLevel, number>>;
+  };
+  callApiCalls: RunCallApiCall[];
+  resolveCalls: RunResolveCall[];
+  writes: {
+    count: number;
+    // A complete Preview's staged files, unless a later Preview replaced
+    // the batch (`stagedReplacedBy`).
+    staged?: { path: string; size: number }[];
+    stagedReplacedBy?: string;
+    // The realm-local paths a landed commit saved.
+    committed?: string[];
+  };
+  cost: {
+    credits: number;
+    creditsByKind: Record<string, number>;
+    callApiCalls: number;
+    callApiResponseBytes: number;
+    resolveCalls: number;
+    writes: number;
+    aiCreditsSpent: number;
+    aiCreditsReserved: number;
+  };
+}
+interface ReadRunAnswer {
+  ok: boolean;
+  status: number;
+  body: {
+    data?: { id: string; attributes: Record<string, unknown> };
+  };
+}
+
+async function readRun(
+  tools: Tools,
+  input: Record<string, unknown>,
+): Promise<ReadRunAnswer | undefined> {
+  let result = await new ReadAutomationRunTool(tools).execute({
+    json: input,
+  });
+  return result?.json as ReadRunAnswer | undefined;
+}
+
+// Why a read of a run came back empty: the realm server refused the viewer
+// (a 4xx: only the realm's direct writers read a run), or the read failed
+// on the way and the console tries again.
+type RunReadFailure = 'refused' | 'unreachable';
+
+type RunReportState = {
+  loading: boolean;
+  failure: RunReadFailure | undefined;
+  report: RunReport | undefined;
+};
+
+// How often the console asks for new lines while the run is pending or
+// running and no `job` event wakes the console sooner, and how long the
+// console waits before reading again after a read fails on the way.
+const RUN_LOG_FOLLOW_MS = 2000;
+// The most lines one page of the log holds.
+const RUN_LOG_PAGE = 500;
+
+function refused(answer: ReadRunAnswer | undefined): boolean {
+  return Boolean(answer && answer.status >= 400 && answer.status < 500);
+}
+
+// A run's report, read again on each `job` realm event naming the run (the
+// run started, reached a milestone, reported a task, committed or ended),
+// and whenever `reread` is called: the run's log reads a new page, since a
+// call, an AI request or a console line sends no `job` event, and Boxel
+// writes the run's charges after the run's last event. A read that fails on
+// the way is tried again after `RUN_LOG_FOLLOW_MS`; a refusal ends the
+// reads. The state is kept for as long as the run is the same, so a change
+// to the card (a save) keeps what the tabs show.
+function automationRunReport(
+  owner: object,
+  args: () => {
+    realm: string | undefined;
+    runId: string;
+    tools: Tools | undefined;
+  },
+) {
+  let kept:
+    | { key: string; state: RunReportState; reread: () => void }
+    | undefined;
+  return use(
+    owner,
+    resource(({ on }) => {
+      let { realm, runId, tools } = args();
+      let key = `${realm}|${runId}`;
+      if (!kept || kept.key !== key) {
+        kept = {
+          key,
+          state: new TrackedObject<RunReportState>({
+            loading: true,
+            failure: undefined,
+            report: undefined,
+          }),
+          reread: () => undefined,
+        };
+      }
+      let current = kept;
+      let state = current.state;
+      if (!realm || !tools) {
+        state.loading = false;
+        return current;
+      }
+      let ended = false;
+      let latest = 0;
+      let retry: ReturnType<typeof setTimeout> | undefined;
+      let read = async () => {
+        let asked = ++latest;
+        clearTimeout(retry);
+        await Promise.resolve();
+        if (ended || asked !== latest || state.failure === 'refused') {
+          return;
+        }
+        let answer: ReadRunAnswer | undefined;
+        try {
+          answer = await readRun(tools, {
+            realm,
+            run: runId,
+            read: 'report',
+          });
+        } catch {
+          answer = undefined;
+        }
+        if (ended || asked !== latest) {
+          return;
+        }
+        state.loading = false;
+        let attributes = answer?.ok ? answer.body.data?.attributes : undefined;
+        if (attributes) {
+          state.report = attributes as unknown as RunReport;
+          state.failure = undefined;
+        } else if (refused(answer)) {
+          state.failure = 'refused';
+        } else {
+          state.failure = 'unreachable';
+          retry = setTimeout(() => read(), RUN_LOG_FOLLOW_MS);
+        }
+      };
+      current.reread = () => {
+        read();
+      };
+      read();
+      let unsubscribe = subscribeToRealm(realm, (event) => {
+        if (event.eventName === 'job' && event.runId === runId) {
+          read();
+        }
+      });
+      on.cleanup(() => {
+        ended = true;
+        clearTimeout(retry);
+        unsubscribe?.();
+      });
+      return current;
+    }),
+  );
+}
+
+// The storage an automation's runs keep, as the realm server's
+// `_automation-storage` route answers it: each file a run created that still
+// exists, with its size on disk and in the index, and what one day of that
+// storage costs in credits at today's prices (null while the server has no
+// prices).
+interface AutomationStorage {
+  switchedOn: boolean;
+  files: { path: string; run: string; fileBytes: number; indexBytes: number }[];
+  fileBytes: number;
+  indexBytes: number;
+  dailyCredits: number | null;
+}
+type AutomationStorageState = {
+  storage: AutomationStorage | undefined;
+  failure: RunReadFailure | undefined;
+};
+
+// The automation's storage, read when a run opens and again whenever
+// `reread` is called: the run's log reads a new page, so a commit that saved
+// files shows in the storage too. A read that fails on the way is tried
+// again after `RUN_LOG_FOLLOW_MS`; a refusal ends the reads.
+function automationStorage(
+  owner: object,
+  args: () => {
+    realm: string | undefined;
+    automation: string | undefined;
+    tools: Tools | undefined;
+  },
+) {
+  let kept:
+    | { key: string; state: AutomationStorageState; reread: () => void }
+    | undefined;
+  return use(
+    owner,
+    resource(({ on }) => {
+      let { realm, automation, tools } = args();
+      let key = `${realm}|${automation}`;
+      if (!kept || kept.key !== key) {
+        kept = {
+          key,
+          state: new TrackedObject<AutomationStorageState>({
+            storage: undefined,
+            failure: undefined,
+          }),
+          reread: () => undefined,
+        };
+      }
+      let current = kept;
+      let state = current.state;
+      if (!realm || !automation || !tools) {
+        return current;
+      }
+      let ended = false;
+      let latest = 0;
+      let retry: ReturnType<typeof setTimeout> | undefined;
+      let read = async () => {
+        let asked = ++latest;
+        clearTimeout(retry);
+        await Promise.resolve();
+        if (ended || asked !== latest || state.failure === 'refused') {
+          return;
+        }
+        let answer: ReadRunAnswer | undefined;
+        try {
+          answer = await readRun(tools, { realm, automation, read: 'storage' });
+        } catch {
+          answer = undefined;
+        }
+        if (ended || asked !== latest) {
+          return;
+        }
+        let attributes = answer?.ok ? answer.body.data?.attributes : undefined;
+        if (attributes) {
+          state.storage = attributes as unknown as AutomationStorage;
+          state.failure = undefined;
+        } else if (refused(answer)) {
+          state.failure = 'refused';
+        } else {
+          state.failure = 'unreachable';
+          retry = setTimeout(() => read(), RUN_LOG_FOLLOW_MS);
+        }
+      };
+      current.reread = () => {
+        read();
+      };
+      read();
+      on.cleanup(() => {
+        ended = true;
+        clearTimeout(retry);
+      });
+      return current;
+    }),
+  );
+}
+
+interface RunLogLine {
+  seq: number;
+  // ms since the epoch
+  at: number;
+  source: 'script' | 'platform';
+  kind: string;
+  level?: RunLogLevel;
+  message: string;
+  scriptLine?: number;
+}
+type RunLogState = {
+  loading: boolean;
+  failure: RunReadFailure | undefined;
+  // The run's state as the last page read the run.
+  runState: RunState | undefined;
+  lines: RunLogLine[];
+  // The lines Boxel refused past the log's cap.
+  dropped: number;
+};
+
+// A run's log, kept only to the levels asked for, followed while the run
+// goes. This follows the rules of the platform's `followAutomationRunLog`
+// (`runtime-common/automation-run-log-follow.ts`), which reads through a
+// fetch a card doesn't have, so a change to one belongs in both: the console
+// reads page after page, reads on at once while a page says the log holds
+// more, and otherwise asks again every `RUN_LOG_FOLLOW_MS` while the run is
+// pending or running. A `job` event naming the run reads at once, and one
+// that comes while a read is in flight ends the next wait at once. Boxel
+// writes the run's last line just after the run ends, so once a page finds
+// the run ended with nothing more, the console reads once more an interval
+// later, which a wake doesn't shorten, and then stops. A refusal stops the
+// reads; any other failure is tried again at the next interval, or at once
+// on a wake. `onProgress` hears of each page that brings lines or a new
+// state. The state and the place in the log are kept for as long as the
+// run and the levels are the same, so a change to the card (a save) picks
+// the log up where the log was.
+function automationRunLog(
+  owner: object,
+  args: () => {
+    realm: string | undefined;
+    runId: string;
+    tools: Tools | undefined;
+    levels: RunLogLevel[];
+    onProgress: () => void;
+  },
+) {
+  let kept:
+    | {
+        key: string;
+        state: RunLogState;
+        after: number;
+        endedReads: number;
+        done: boolean;
+      }
+    | undefined;
+  return use(
+    owner,
+    resource(({ on }) => {
+      let { realm, runId, tools, levels, onProgress } = args();
+      let key = `${realm}|${runId}|${levels.join(',')}`;
+      if (!kept || kept.key !== key) {
+        kept = {
+          key,
+          state: new TrackedObject<RunLogState>({
+            loading: true,
+            failure: undefined,
+            runState: undefined,
+            lines: [],
+            dropped: 0,
+          }),
+          after: -1,
+          endedReads: 0,
+          done: false,
+        };
+      }
+      let current = kept;
+      let state = current.state;
+      if (!realm || !tools || levels.length === 0 || current.done) {
+        state.loading = false;
+        return state;
+      }
+      let stopped = false;
+      let woken = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let wakeUp: (() => void) | undefined;
+      let wait = (wakeable: boolean) =>
+        new Promise<void>((settle) => {
+          if (wakeable && woken) {
+            woken = false;
+            settle();
+            return;
+          }
+          let done = () => {
+            clearTimeout(timer);
+            wakeUp = undefined;
+            settle();
+          };
+          timer = setTimeout(done, RUN_LOG_FOLLOW_MS);
+          if (wakeable) {
+            wakeUp = done;
+          }
+        });
+      let follow = async () => {
+        await Promise.resolve();
+        while (!stopped) {
+          woken = false;
+          let answer: ReadRunAnswer | undefined;
+          try {
+            answer = await readRun(tools, {
+              realm,
+              run: runId,
+              read: 'log',
+              after: current.after,
+              limit: RUN_LOG_PAGE,
+              levels,
+            });
+          } catch {
+            answer = undefined;
+          }
+          if (stopped) {
+            return;
+          }
+          state.loading = false;
+          let page = answer?.ok
+            ? (answer.body.data?.attributes as
+                | {
+                    state: RunState;
+                    lines: RunLogLine[];
+                    next: number;
+                    more: boolean;
+                    dropped: number;
+                  }
+                | undefined)
+            : undefined;
+          if (!page) {
+            if (refused(answer)) {
+              state.failure = 'refused';
+              current.done = true;
+              return;
+            }
+            state.failure = 'unreachable';
+            await wait(true);
+            continue;
+          }
+          state.failure = undefined;
+          let moved = page.lines.length > 0 || page.state !== state.runState;
+          if (page.lines.length > 0) {
+            state.lines = [...state.lines, ...page.lines];
+          }
+          state.dropped = page.dropped;
+          state.runState = page.state;
+          current.after = page.next;
+          if (moved) {
+            onProgress();
+          }
+          if (page.more) {
+            continue;
+          }
+          if (page.state === 'pending' || page.state === 'running') {
+            await wait(true);
+            continue;
+          }
+          if (current.endedReads > 0) {
+            // The trailing read: the run's charges land after the run's
+            // last event, so the report reads once more too.
+            onProgress();
+            current.done = true;
+            return;
+          }
+          current.endedReads++;
+          await wait(false);
+        }
+      };
+      follow();
+      let unsubscribe = subscribeToRealm(realm, (event) => {
+        if (event.eventName === 'job' && event.runId === runId) {
+          if (wakeUp) {
+            wakeUp();
+          } else {
+            woken = true;
+          }
+        }
+      });
+      on.cleanup(() => {
+        stopped = true;
+        clearTimeout(timer);
+        unsubscribe?.();
+      });
+      return state;
+    }),
+  );
+}
+
+// The log's levels, most severe first. The filter shows a level and every
+// level more severe than it, as log filters do: Warnings shows warnings and
+// errors, and All shows every line.
+const LOG_LEVELS: { value: RunLogLevel; label: string }[] = [
+  { value: 'error', label: 'Errors' },
+  { value: 'warn', label: 'Warnings' },
+  { value: 'info', label: 'Info' },
+  { value: 'log', label: 'All' },
+];
+function levelsFrom(least: RunLogLevel): RunLogLevel[] {
+  let index = LOG_LEVELS.findIndex(({ value }) => value === least);
+  return LOG_LEVELS.slice(0, index + 1).map(({ value }) => value);
+}
+const LEVEL_LOOKS: Record<RunLogLevel, { label: string; tone: RunTone }> = {
+  error: { label: 'Error', tone: 'danger' },
+  warn: { label: 'Warning', tone: 'warning' },
+  info: { label: 'Info', tone: 'info' },
+  log: { label: 'Log', tone: 'neutral' },
+};
+// The most log lines the console lists at first: the latest ones, since the
+// latest say what the run did last. A button lists earlier lines a batch at
+// a time, so a long log never renders whole at once.
+const SHOWN_LOG_LINES = 200;
+const EARLIER_LOG_LINES = 500;
+
+// A time of a run, to the second, in the viewer's own time zone, which one
+// line at the top of an opened run names.
+const RUN_CLOCK = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  second: '2-digit',
+});
+function runClock(at: string | number): string {
+  return RUN_CLOCK.format(new Date(at));
+}
+function msBetween(from: string | null, to: string | null): number | undefined {
+  return from && to ? Date.parse(to) - Date.parse(from) : undefined;
+}
+
+// The run's steps, in order: Boxel admits the run, the script runs, and
+// Boxel commits the files the script staged. The script's step holds the
+// run milestones. A step another part of a run needs, such as the batches
+// of AI requests a batched run waits on, goes into `RUN_STEPS` between the
+// script and the commit.
+const RUN_STEPS: {
+  step: NonNullable<ListedRun['step']>;
+  name: string;
+}[] = [
+  { step: 'admission', name: 'Admission' },
+  { step: 'script', name: 'Script' },
+  { step: 'commit', name: 'Commit' },
+];
+
+function runStepRows(
+  run: ListedRun,
+  report: RunReport | undefined,
+): MilestoneRow[] {
+  let reached = RUN_STEPS.findIndex(({ step }) => step === run.step);
+  let timings = report?.timings;
+  // A run canceled while waiting, or one Boxel ended because the run's job
+  // was lost, ended before any attempt started the run: the run stopped at
+  // admission.
+  let endedUnstarted =
+    reached < 0 && (run.state === 'error' || run.state === 'canceled');
+  if (endedUnstarted) {
+    reached = 0;
+  }
+  return RUN_STEPS.map(({ step, name }, index) => {
+    let state: MilestoneState =
+      reached < 0 || index > reached
+        ? 'not-started'
+        : index < reached
+          ? 'reached'
+          : run.state === 'running'
+            ? 'running'
+            : run.state === 'error'
+              ? 'failed'
+              : run.state === 'canceled'
+                ? 'stopped'
+                : 'reached';
+    let look = MILESTONE_LOOKS[state];
+    let badge = look.badge;
+    let detail: string | undefined;
+    if (step === 'admission') {
+      if (endedUnstarted) {
+        detail = 'The run ended before Boxel started the run.';
+      } else if (run.state === 'pending') {
+        detail = 'Waiting to start';
+      } else if (run.startedAt) {
+        let waited = msBetween(run.createdAt, run.startedAt);
+        detail = `Started ${runClock(run.startedAt)}${
+          waited === undefined ? '' : ` · Waited ${durationText(waited)}`
+        }`;
+      }
+    } else if (step === 'script') {
+      if (state !== 'not-started' && !run.milestones?.milestones.length) {
+        detail = 'The script reported no milestones on the run.';
+      }
+    } else if (run.startedBy === 'preview' && run.state === 'complete') {
+      badge = 'Skipped';
+      detail = 'A Preview saves nothing, so Boxel skipped the commit.';
+    } else if (timings?.commitMs != null) {
+      detail = `Took ${durationText(timings.commitMs)}`;
+    }
+    return {
+      id: step,
+      key: `${run.id}:${step}`,
+      name,
+      state,
+      badge,
+      tone: look.tone,
+      detail,
+      tasks: [],
+    };
+  });
+}
+
+const CREDIT_KINDS: { kind: string; label: string }[] = [
+  { kind: 'run', label: 'Compute and network' },
+  { kind: 'ai', label: 'AI requests' },
+  { kind: 'batched_ai', label: 'Batched AI requests' },
+  { kind: 'run_indexing', label: 'Indexing the saved files' },
+];
+
+function credits(n: number): string {
+  return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+// One opened run: the run's steps, with the script's milestones inside the
+// script's step, then the run's log, calls, writes, and cost, a tab each.
+// Everything reads live while the run goes.
+class RunDetail extends GlimmerComponent<{
+  Args: {
+    run: ListedRun;
+    realm: string | undefined;
+    // The automation card's id, whose storage the run adds to.
+    automation: string | undefined;
+    // The per-run limits the automation sets, which the Limits tab measures
+    // the run against.
+    caps: AutomationCaps | undefined;
+    tools: Tools | undefined;
+    // The automation's run before this one, whose milestone times the
+    // milestones read against.
+    previous: LastRun | undefined;
+  };
+}> {
+  // A row's run is the same run for as long as the row is open.
+  private runId = this.args.run.id;
+  @tracked tab = 'log';
+  // The least severe level the log shows; every more severe level shows too.
+  @tracked leastLevel: RunLogLevel = 'log';
+  get levels(): RunLogLevel[] {
+    return levelsFrom(this.leastLevel);
+  }
+  @tracked shownLineCount = SHOWN_LOG_LINES;
+
+  private reportResource = automationRunReport(this, () => ({
+    realm: this.args.realm,
+    runId: this.runId,
+    tools: this.args.tools,
+  }));
+  private logResource = automationRunLog(this, () => ({
+    realm: this.args.realm,
+    runId: this.runId,
+    tools: this.args.tools,
+    levels: this.levels,
+    onProgress: () => {
+      this.reportResource.current.reread();
+      this.storageResource.current.reread();
+    },
+  }));
+  private storageResource = automationStorage(this, () => ({
+    realm: this.args.realm,
+    automation: this.args.automation,
+    tools: this.args.tools,
+  }));
+
+  get report() {
+    return this.reportResource.current.state.report;
+  }
+  // Why the run's details didn't read, while no earlier read shows them.
+  get reportFailure() {
+    return this.report ? undefined : this.reportResource.current.state.failure;
+  }
+  get log() {
+    return this.logResource.current;
+  }
+  get steps() {
+    return runStepRows(this.args.run, this.report);
+  }
+  get milestoneRows() {
+    return this.args.run.milestones
+      ? runMilestoneRows(this.args.run.milestones, this.args.previous)
+      : [];
+  }
+  // One serial timeline: admission, then the script's milestones in the
+  // order the script runs them (the ones ahead included), then the steps
+  // after the script. The script shows as a step of its own only when the
+  // run has no milestones to stand for the script.
+  get timelineRows(): MilestoneRow[] {
+    let milestones = this.milestoneRows;
+    let rows = this.steps.flatMap((row) =>
+      row.id === 'script' && milestones.length > 0 ? milestones : [row],
+    );
+    // An ended run says when the run ended, and how long the run took from
+    // start to finish, on the row where the run ended.
+    let { run } = this.args;
+    if (run.finishedAt) {
+      let last = -1;
+      rows.forEach((row, index) => {
+        if (row.state !== 'not-started' && row.badge !== 'Skipped') {
+          last = index;
+        }
+      });
+      if (last >= 0) {
+        let took = msBetween(run.startedAt, run.finishedAt);
+        let end = `${run.state === 'complete' ? 'Finished' : 'Ended'} ${runClock(
+          run.finishedAt,
+        )}${took === undefined ? '' : ` · ${durationText(took)} in all`}`;
+        let row = rows[last];
+        rows[last] = {
+          ...row,
+          detail: row.detail ? `${row.detail} · ${end}` : end,
+        };
+      }
+    }
+    return rows;
+  }
+  // The viewer's own time zone, which every time of the run reads in.
+  get timeZone() {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+  get running() {
+    return (
+      this.args.run.state === 'pending' || this.args.run.state === 'running'
+    );
+  }
+  get tabs() {
+    return [
+      { value: 'log', label: 'Log' },
+      { value: 'calls', label: 'Calls' },
+      { value: 'writes', label: 'Writes' },
+      { value: 'cost', label: 'Cost' },
+      { value: 'limits', label: 'Limits' },
+    ];
+  }
+  showTab = (tab: string) => (this.tab = tab);
+
+  // Each level's count. The report counts only the lines that store a level,
+  // while the log's level filter reads a line with no level (a milestone, a
+  // task, most of Boxel's own lines) as info, so info is every line the
+  // other levels don't count.
+  get levelOptions() {
+    let log = this.report?.log;
+    let counts: Partial<Record<RunLogLevel, number>> = {};
+    if (log) {
+      let { byLevel } = log;
+      counts = {
+        log: byLevel.log ?? 0,
+        warn: byLevel.warn ?? 0,
+        error: byLevel.error ?? 0,
+      };
+      counts.info = Math.max(
+        log.lines - counts.log! - counts.warn! - counts.error!,
+        0,
+      );
+    }
+    // Each option counts the lines the option shows: its level and every
+    // more severe one.
+    return LOG_LEVELS.map(({ value, label }) => {
+      let n = log
+        ? levelsFrom(value).reduce(
+            (sum, level) => sum + (counts[level] ?? 0),
+            0,
+          )
+        : undefined;
+      return {
+        value,
+        label: n === undefined ? label : `${label} (${tally(n)})`,
+      };
+    });
+  }
+  showLevels = (value: string) => {
+    this.leastLevel = value as RunLogLevel;
+    this.shownLineCount = SHOWN_LOG_LINES;
+  };
+  get shownLines(): RunLogLine[] {
+    return this.log.lines.slice(-this.shownLineCount);
+  }
+  get earlierLines() {
+    return Math.min(
+      Math.max(this.log.lines.length - this.shownLineCount, 0),
+      EARLIER_LOG_LINES,
+    );
+  }
+  get earlierLinesLabel() {
+    let n = this.earlierLines;
+    return `Show ${tally(n)} earlier ${n === 1 ? 'line' : 'lines'}`;
+  }
+  showEarlierLines = () => (this.shownLineCount += EARLIER_LOG_LINES);
+  get droppedSentence() {
+    let n = this.log.dropped;
+    return `Boxel didn’t keep ${tally(n)} more ${
+      n === 1 ? 'line' : 'lines'
+    }: a run’s log holds at most 10,000 lines and 5,000,000 characters.`;
+  }
+  lineTime = (line: RunLogLine) => runClock(line.at);
+  lineLook = (line: RunLogLine) => LEVEL_LOOKS[line.level ?? 'info'];
+  lineSource = (line: RunLogLine) =>
+    line.source === 'script' ? 'Script' : 'Boxel';
+  lineNumber = (line: RunLogLine) =>
+    line.scriptLine === undefined ? undefined : `line ${line.scriptLine}`;
+
+  // A call's time, to the millisecond below a second, since most calls
+  // take less than one.
+  callTime = (ms: number | undefined) =>
+    ms === undefined
+      ? '—'
+      : ms < 1000
+        ? `${Math.round(ms)} ms`
+        : durationText(ms);
+  callStatus = (call: RunCallApiCall): { label: string; tone: RunTone } =>
+    call.status !== undefined
+      ? {
+          label: String(call.status),
+          tone: call.status < 400 ? 'success' : 'danger',
+        }
+      : {
+          label: call.code === 'failed' ? 'Failed' : 'Refused',
+          tone: 'danger',
+        };
+  tokens = (call: RunResolveCall) =>
+    call.inputTokens === undefined && call.outputTokens === undefined
+      ? '—'
+      : `${tally(call.inputTokens ?? 0)} in · ${tally(call.outputTokens ?? 0)} out`;
+  resolveStatus = (call: RunResolveCall): { label: string; tone: RunTone } =>
+    call.status === undefined
+      ? { label: 'No answer', tone: 'danger' }
+      : {
+          label: String(call.status),
+          tone: call.status < 400 ? 'success' : 'danger',
+        };
+
+  get writesSentence() {
+    let report = this.report;
+    if (!report) {
+      return undefined;
+    }
+    let { writes, dryRun, state } = report;
+    if (dryRun) {
+      if (state === 'pending' || state === 'running') {
+        return 'A Preview stages the files the script writes, and keeps the files once the Preview completes. A Preview saves nothing to the workspace.';
+      }
+      if (state !== 'complete') {
+        return 'The Preview ended before completing, so Boxel kept none of the files the script staged.';
+      }
+      if (writes.stagedReplacedBy) {
+        return 'A later Preview of the automation replaced the files this Preview staged.';
+      }
+      return writes.staged?.length
+        ? `The Preview staged ${tally(writes.staged.length)} ${
+            writes.staged.length === 1 ? 'file' : 'files'
+          }, and saved nothing to the workspace.`
+        : 'The script staged no files.';
+    }
+    if (writes.committed) {
+      return `The run saved ${tally(writes.count)} ${
+        writes.count === 1 ? 'file' : 'files'
+      } to the workspace.`;
+    }
+    if (writes.count > 0) {
+      return `The run saved ${tally(writes.count)} ${
+        writes.count === 1 ? 'file' : 'files'
+      } to the workspace. The run’s log reached the log’s limit before the log named the files.`;
+    }
+    return state === 'complete'
+      ? 'The run saved no files.'
+      : state === 'pending' || state === 'running'
+        ? 'The run saves the files the script writes once the script finishes.'
+        : 'The run saved no files: the run ended before the commit.';
+  }
+
+  get storage() {
+    return this.storageResource.current.state.storage;
+  }
+  // The run's charges as a receipt: one line per kind of charge, and a
+  // total that is the sum of the lines, so the total reads as their sum.
+  get receiptColumns(): StatementColumn[] {
+    return [
+      { key: 'charge', label: 'Charge' },
+      {
+        key: 'credits',
+        label: 'Boxel Credits',
+        kind: 'number',
+        digits: this.receiptDigits,
+        width: '8rem',
+      },
+    ];
+  }
+  get receiptLines(): { key: string; label: string; credits: number }[] {
+    let byKind = this.report?.cost.creditsByKind ?? {};
+    let lines = CREDIT_KINDS.map(({ kind, label }) => ({
+      key: kind,
+      label,
+      credits: byKind[kind] ?? 0,
+    }));
+    let named = new Set(CREDIT_KINDS.map(({ kind }) => kind));
+    let other = Object.entries(byKind)
+      .filter(([kind]) => !named.has(kind))
+      .reduce((sum, [, credits]) => sum + credits, 0);
+    if (other) {
+      lines.push({ key: 'other', label: 'Other charges', credits: other });
+    }
+    return lines;
+  }
+  get receiptDigits() {
+    return this.receiptLines.every(({ credits }) => Number.isInteger(credits))
+      ? 0
+      : 2;
+  }
+  get receiptRows(): StatementRow[] {
+    let lines = this.receiptLines;
+    let total = lines.reduce((sum, { credits }) => sum + credits, 0);
+    return [
+      ...lines.map(({ key, label, credits }) => ({
+        key,
+        cells: { charge: label, credits },
+        data: { testAutomationRunCharge: key },
+      })),
+      {
+        key: 'total',
+        role: 'total' as const,
+        cells: { charge: 'Total charged for the run', credits: total },
+        data: { testAutomationRunCharge: 'total' },
+      },
+    ];
+  }
+  // What the run adds to the automation's storage: the files the run created
+  // that still exist, and their size on disk and in the index.
+  get runStorage() {
+    let files = (this.storage?.files ?? []).filter(
+      (file) => file.run === this.args.run.id,
+    );
+    return {
+      count: files.length,
+      bytes: files.reduce(
+        (sum, file) => sum + file.fileBytes + file.indexBytes,
+        0,
+      ),
+    };
+  }
+  get storageBytes() {
+    let storage = this.storage;
+    return storage ? storage.fileBytes + storage.indexBytes : 0;
+  }
+  // A day of storage for every file the automation's runs keep, margin
+  // included, as the server prices the daily storage charge, to two
+  // significant figures: a few small files cost a small fraction of a credit
+  // a day.
+  get dailyStorageCredits() {
+    let credits = this.storage?.dailyCredits;
+    return credits == null
+      ? undefined
+      : credits.toLocaleString('en-US', { maximumSignificantDigits: 2 });
+  }
+  get heldCredits() {
+    let held = this.report?.cost.aiCreditsReserved ?? 0;
+    return held > 0 ? credits(held) : undefined;
+  }
+  plural = (n: number, one: string, many: string) =>
+    `${tally(n)} ${n === 1 ? one : many}`;
+  // What the run adds to the automation's storage, what the automation's
+  // runs keep in all, and what a day of that storage costs.
+  get storageSentence() {
+    let storage = this.storage;
+    if (!storage) {
+      return 'Boxel is reading the automation’s storage.';
+    }
+    let { count, bytes: runBytes } = this.runStorage;
+    let sentences = [
+      count === 1
+        ? `The run saved 1 file (${bytes(runBytes)}) that still exists.`
+        : count > 1
+          ? `The run saved ${count} files (${bytes(runBytes)}) that still exist.`
+          : 'The run added no files the automation keeps.',
+      `The automation’s runs keep ${this.plural(
+        storage.files.length,
+        'file',
+        'files',
+      )} in all (${bytes(this.storageBytes)}).`,
+    ];
+    if (this.dailyStorageCredits) {
+      sentences.push(
+        `A day of storage for those files costs ${this.dailyStorageCredits} credits.`,
+      );
+    }
+    return sentences.join(' ');
+  }
+  // How far the run went toward each limit the automation sets for a run, in
+  // the order the card's limits list them. A limit the card leaves unset
+  // reads as no limit; a limit of 0 allows none of that use.
+  get limitRows(): {
+    key: string;
+    label: string;
+    text: string;
+    value: number;
+    max: number;
+    hue: string | undefined;
+    reached: boolean;
+  }[] {
+    let report = this.report;
+    if (!report) {
+      return [];
+    }
+    let { cost, timings } = report;
+    let caps = this.args.caps;
+    let ranMs =
+      timings.runMs ??
+      (this.args.run.startedAt
+        ? Date.now() - Date.parse(this.args.run.startedAt)
+        : 0);
+    let used: Record<string, number> = {
+      callApiCalls: cost.callApiCalls,
+      responseBytes: cost.callApiResponseBytes,
+      writes: cost.writes,
+      resolveCalls: cost.resolveCalls,
+      aiCredits: cost.aiCreditsSpent,
+      seconds: Math.round(ranMs / 1000),
+    };
+    let show = (key: string, n: number) =>
+      key === 'responseBytes'
+        ? bytes(n)
+        : key === 'seconds'
+          ? durationText(n * 1000)
+          : key === 'aiCredits'
+            ? `${tally(n)} ${n === 1 ? 'credit' : 'credits'}`
+            : tally(n);
+    return RUN_LIMITS.map(({ key, label }) => {
+      let n = used[key] ?? 0;
+      let cap = caps?.[key as keyof AutomationCaps] as
+        | number
+        | null
+        | undefined;
+      let limited = typeof cap === 'number';
+      let limit = limited ? (cap as number) : 0;
+      let share = limit > 0 ? n / limit : n > 0 ? 1 : 0;
+      let reached = limited && n >= limit && (limit > 0 || n > 0);
+      return {
+        key,
+        label,
+        text: !limited
+          ? `${show(key, n)}, no limit set`
+          : limit === 0
+            ? n > 0
+              ? `${show(key, n)} of none allowed`
+              : 'None allowed'
+            : `${key === 'aiCredits' ? tally(n) : show(key, n)} of ${show(
+                key,
+                limit,
+              )}`,
+        value: limit > 0 ? Math.min(n, limit) : reached ? 1 : 0,
+        max: limit > 0 ? limit : 1,
+        hue: reached
+          ? 'var(--destructive)'
+          : limited && share >= LIMIT_NEAR_SHARE
+            ? 'var(--warning)'
+            : undefined,
+        reached,
+      };
+    });
+  }
+
+  <template>
+    <div class='run-detail' data-test-automation-run-timeline={{@run.id}}>
+      <p class='run-detail__note' data-test-automation-run-time-zone>
+        All times are in the local time zone,
+        {{this.timeZone}}.
+      </p>
+      <div data-test-automation-run-milestones>
+        <MilestoneTimeline
+          @rows={{this.timelineRows}}
+          @label='Timeline of the run'
+        />
+      </div>
+
+      {{#if (eq this.reportFailure 'refused')}}
+        <Callout
+          @tone='warning'
+          @title='Only the workspace’s direct writers can read the run’s details'
+          data-test-automation-run-report-failed='refused'
+        />
+      {{else if this.reportFailure}}
+        <Callout
+          @tone='warning'
+          @title='Boxel couldn’t read the run’s details'
+          data-test-automation-run-report-failed='unreachable'
+        >
+          Boxel tries again every few seconds.
+        </Callout>
+      {{/if}}
+
+      <Tabs
+        @options={{this.tabs}}
+        @value={{this.tab}}
+        @onValueChange={{this.showTab}}
+        data-test-automation-run-tabs
+      >
+        <:default as |tab|>
+          {{#if (eq tab 'log')}}
+            <div class='run-detail__panel' data-test-automation-run-log>
+              <div class='run-detail__levels'>
+                <SegmentedControl
+                  @label='Lines to show'
+                  @options={{this.levelOptions}}
+                  @value={{this.leastLevel}}
+                  @onValueChange={{this.showLevels}}
+                  data-test-automation-run-log-levels
+                />
+                <span class='run-detail__note'>Each level includes the more
+                  severe ones.</span>
+              </div>
+              {{#if this.log.dropped}}
+                <p
+                  class='run-detail__note'
+                  data-test-automation-run-log-dropped
+                >
+                  {{this.droppedSentence}}
+                </p>
+              {{/if}}
+              {{#if (eq this.log.failure 'refused')}}
+                <Callout
+                  @tone='warning'
+                  @title='Only the workspace’s direct writers can read the run’s log'
+                  data-test-automation-run-log-failed='refused'
+                />
+              {{else if this.log.failure}}
+                <Callout
+                  @tone='warning'
+                  @title='Boxel couldn’t read the run’s log'
+                  data-test-automation-run-log-failed='unreachable'
+                >
+                  Boxel tries again every few seconds.
+                </Callout>
+              {{/if}}
+              {{#if this.shownLines.length}}
+                {{#if this.earlierLines}}
+                  <Button
+                    @appearance='link'
+                    @size='s'
+                    data-test-automation-run-log-earlier
+                    {{on 'click' this.showEarlierLines}}
+                  >{{this.earlierLinesLabel}}</Button>
+                {{/if}}
+                <Table @label='Lines of the run’s log' @striped={{false}}>
+                  <:head>
+                    <tr>
+                      <th scope='col'>Time</th>
+                      <th scope='col'>Level</th>
+                      <th scope='col'>From</th>
+                      <th scope='col'>Message</th>
+                    </tr>
+                  </:head>
+                  <:body>
+                    {{#each this.shownLines as |line|}}
+                      {{#let (this.lineLook line) as |look|}}
+                        <tr
+                          data-test-automation-run-log-line={{line.seq}}
+                          data-test-automation-run-log-level={{look.label}}
+                        >
+                          <td class='run-detail__time'>{{this.lineTime
+                              line
+                            }}</td>
+                          <td>
+                            <Chip
+                              @label={{look.label}}
+                              @tone={{look.tone}}
+                              @appearance='plain'
+                            />
+                          </td>
+                          <td>{{this.lineSource line}}</td>
+                          <td class='run-detail__message'>
+                            {{line.message}}
+                            {{#let (this.lineNumber line) as |number|}}
+                              {{#if number}}
+                                <Token @value={{number}} />
+                              {{/if}}
+                            {{/let}}
+                          </td>
+                        </tr>
+                      {{/let}}
+                    {{/each}}
+                  </:body>
+                </Table>
+              {{else if this.log.failure}}
+                {{! The callout above says why no line shows. }}
+              {{else if this.log.loading}}
+                <LoadingState @label='Loading the log' />
+              {{else}}
+                <EmptyState
+                  @size='s'
+                  @texture={{false}}
+                  @title='No lines'
+                  @message={{if
+                    this.running
+                    'The run hasn’t written a line at this level yet.'
+                    'The run wrote no lines at this level.'
+                  }}
+                  data-test-automation-run-log-empty
+                />
+              {{/if}}
+            </div>
+          {{else if (eq tab 'calls')}}
+            <div class='run-detail__panel' data-test-automation-run-calls>
+              {{#if this.report}}
+                <h4 class='run-detail__heading'>Outside service calls</h4>
+                {{#if this.report.callApiCalls.length}}
+                  <Table
+                    @label='Outside service calls of the run'
+                    @striped={{false}}
+                  >
+                    <:head>
+                      <tr>
+                        <th scope='col'>Operation</th>
+                        <th scope='col'>Status</th>
+                        <th scope='col'>Time</th>
+                        <th scope='col'>Size</th>
+                      </tr>
+                    </:head>
+                    <:body>
+                      {{#each this.report.callApiCalls as |call|}}
+                        {{#let (this.callStatus call) as |status|}}
+                          <tr data-test-automation-run-call={{call.seq}}>
+                            <td class='run-detail__message'>
+                              {{operationTitle call.operation}}
+                              {{#if call.destination}}
+                                <Token
+                                  @value='{{call.method}} {{call.destination}}'
+                                  @wrap={{true}}
+                                />
+                              {{/if}}
+                            </td>
+                            <td>
+                              <Chip
+                                @label={{status.label}}
+                                @tone={{status.tone}}
+                                @appearance='plain'
+                              />
+                            </td>
+                            <td class='run-detail__time'>{{this.callTime
+                                call.ms
+                              }}</td>
+                            <td>
+                              {{#if call.bytes}}
+                                <FormatBytes
+                                  @value={{call.bytes}}
+                                  @base='decimal'
+                                />
+                              {{else}}
+                                —
+                              {{/if}}
+                            </td>
+                          </tr>
+                        {{/let}}
+                      {{/each}}
+                    </:body>
+                  </Table>
+                {{else}}
+                  <EmptyState
+                    @size='s'
+                    @texture={{false}}
+                    @title='No outside service calls'
+                    @message='The script called no outside service.'
+                    data-test-automation-run-no-calls
+                  />
+                {{/if}}
+                <h4 class='run-detail__heading'>AI requests</h4>
+                {{#if this.report.resolveCalls.length}}
+                  <Table @label='AI requests of the run' @striped={{false}}>
+                    <:head>
+                      <tr>
+                        <th scope='col'>Model</th>
+                        <th scope='col'>Status</th>
+                        <th scope='col'>Tokens</th>
+                        <th scope='col'>Time</th>
+                      </tr>
+                    </:head>
+                    <:body>
+                      {{#each this.report.resolveCalls as |call|}}
+                        {{#let (this.resolveStatus call) as |status|}}
+                          <tr data-test-automation-run-resolve={{call.seq}}>
+                            <td class='run-detail__message'>
+                              {{#if call.model}}
+                                <Token @value={{call.model}} @wrap={{true}} />
+                              {{else}}
+                                —
+                              {{/if}}
+                            </td>
+                            <td>
+                              <Chip
+                                @label={{status.label}}
+                                @tone={{status.tone}}
+                                @appearance='plain'
+                              />
+                            </td>
+                            <td
+                              class='run-detail__time'
+                              data-test-automation-run-resolve-tokens
+                            >{{this.tokens call}}</td>
+                            <td class='run-detail__time'>{{this.callTime
+                                call.ms
+                              }}</td>
+                          </tr>
+                        {{/let}}
+                      {{/each}}
+                    </:body>
+                  </Table>
+                {{else}}
+                  <EmptyState
+                    @size='s'
+                    @texture={{false}}
+                    @title='No AI requests'
+                    @message='The script made no AI requests.'
+                    data-test-automation-run-no-resolves
+                  />
+                {{/if}}
+              {{else if this.reportFailure}}
+                {{! The callout above says Boxel couldn't read the run. }}
+              {{else}}
+                <LoadingState @label='Loading the calls' />
+              {{/if}}
+            </div>
+          {{else if (eq tab 'writes')}}
+            <div class='run-detail__panel' data-test-automation-run-writes>
+              {{#if this.report}}
+                <p data-test-automation-run-writes-sentence>
+                  {{this.writesSentence}}
+                </p>
+                {{#if this.report.writes.staged.length}}
+                  <Table @label='Files the Preview staged' @striped={{false}}>
+                    <:head>
+                      <tr>
+                        <th scope='col'>File</th>
+                        <th scope='col'>Size</th>
+                      </tr>
+                    </:head>
+                    <:body>
+                      {{#each this.report.writes.staged as |file|}}
+                        <tr data-test-automation-run-staged={{file.path}}>
+                          <td class='run-detail__message'><Token
+                              @value={{file.path}}
+                              @wrap={{true}}
+                            /></td>
+                          <td><FormatBytes
+                              @value={{file.size}}
+                              @base='decimal'
+                            /></td>
+                        </tr>
+                      {{/each}}
+                    </:body>
+                  </Table>
+                {{/if}}
+                {{#if this.report.writes.committed.length}}
+                  <Table @label='Files the run saved' @striped={{false}}>
+                    <:head>
+                      <tr><th scope='col'>File</th></tr>
+                    </:head>
+                    <:body>
+                      {{#each this.report.writes.committed as |path|}}
+                        <tr data-test-automation-run-saved={{path}}>
+                          <td class='run-detail__message'><Token
+                              @value={{path}}
+                              @wrap={{true}}
+                            /></td>
+                        </tr>
+                      {{/each}}
+                    </:body>
+                  </Table>
+                {{/if}}
+              {{else if this.reportFailure}}
+                {{! The callout above says Boxel couldn't read the run. }}
+              {{else}}
+                <LoadingState @label='Loading the writes' />
+              {{/if}}
+            </div>
+          {{else if (eq tab 'limits')}}
+            <div class='run-detail__panel' data-test-automation-run-limits>
+              {{#if this.report}}
+                <p class='run-detail__note'>
+                  How far the run went toward each limit the automation sets for
+                  a run. Boxel stops a run that tries to go past a limit.
+                </p>
+                <ul class='run-detail__limits'>
+                  {{#each this.limitRows as |limit|}}
+                    <li
+                      class='run-detail__limit'
+                      data-test-automation-run-limit={{limit.key}}
+                      data-test-automation-run-limit-reached={{if
+                        limit.reached
+                        'true'
+                      }}
+                    >
+                      <span class='run-detail__limit-head'>
+                        <span
+                          class='run-detail__limit-name'
+                        >{{limit.label}}</span>
+                        <span
+                          class='run-detail__limit-text'
+                        >{{limit.text}}</span>
+                      </span>
+                      <ProgressBar
+                        @value={{limit.value}}
+                        @max={{limit.max}}
+                        @hue={{limit.hue}}
+                        @steps={{false}}
+                        @valueText={{limit.text}}
+                        aria-label={{limit.label}}
+                      />
+                    </li>
+                  {{/each}}
+                </ul>
+              {{else if this.reportFailure}}
+                {{! The callout above says Boxel couldn't read the run. }}
+              {{else}}
+                <LoadingState @label='Loading the limits' />
+              {{/if}}
+            </div>
+          {{else}}
+            <div class='run-detail__panel' data-test-automation-run-cost>
+              {{#if this.report}}
+                <h4 class='run-detail__heading'>Charges for the run</h4>
+                <StatementTable
+                  @columns={{this.receiptColumns}}
+                  @rows={{this.receiptRows}}
+                  @label='Charges for the run'
+                  @zero='show'
+                  @density='compact'
+                  data-test-automation-run-receipt
+                />
+                {{#unless this.report.dryRun}}
+                  <p
+                    class='run-detail__note'
+                    data-test-automation-run-indexing-note
+                  >
+                    Boxel charges for indexing the saved files once Boxel
+                    finishes indexing the files, which can come after the run
+                    ends.
+                  </p>
+                {{/unless}}
+                {{#if this.heldCredits}}
+                  <p class='run-detail__note' data-test-automation-run-held>
+                    Boxel also holds
+                    {{this.heldCredits}}
+                    credits for AI answers still to come. Boxel charges what the
+                    answers cost once the answers arrive, and the hold goes
+                    away.
+                  </p>
+                {{/if}}
+
+                <h4 class='run-detail__heading'>Storage, charged daily</h4>
+                <p data-test-automation-run-storage>
+                  {{this.storageSentence}}
+                </p>
+                <Callout
+                  @tone='info'
+                  @title='How Boxel charges for storage'
+                  data-test-automation-run-storage-rules
+                >
+                  <ul class='run-detail__rules'>
+                    <li>Storage isn’t part of any one run’s total. Boxel charges
+                      the automation’s payer once a day for every file the
+                      automation’s runs created that still exists, and for the
+                      files’ entries in the workspace’s search index.</li>
+                    <li>Boxel charges every day the automation is switched on,
+                      including while the automation is paused or done. Removing
+                      the automation, or deleting the files, stops the charge.</li>
+                    <li>Boxel charges whole credits: the daily amounts add up,
+                      and Boxel charges the days together once the days cost at
+                      least 1 credit.</li>
+                    <li>A Preview saves no files, so a Preview adds no storage.</li>
+                  </ul>
+                </Callout>
+
+              {{else if this.reportFailure}}
+                {{! The callout above says Boxel couldn't read the run. }}
+              {{else}}
+                <LoadingState @label='Loading the cost' />
+              {{/if}}
+            </div>
+          {{/if}}
+        </:default>
+      </Tabs>
+    </div>
+    <style scoped>
+      .run-detail {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-sm);
+        min-width: 0;
+      }
+      .run-detail__panel {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        padding-block-start: var(--boxel-sp-xs);
+        min-width: 0;
+      }
+      .run-detail__heading {
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
+      }
+      /* A section after the first starts clear of the one above it. */
+      .run-detail__heading:not(:first-child) {
+        margin-block-start: var(--boxel-sp-sm);
+      }
+      .run-detail__note {
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+      }
+      .run-detail__levels {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .run-detail__limits {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-sm);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        max-inline-size: 34rem;
+      }
+      .run-detail__limit {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-4xs);
+      }
+      .run-detail__limit-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+      }
+      .run-detail__limit-name {
+        font-weight: 600;
+      }
+      .run-detail__limit-text {
+        color: var(--muted-foreground);
+        font-variant-numeric: tabular-nums;
+      }
+      .run-detail__rules {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-4xs);
+        margin: 0;
+        padding-inline-start: var(--boxel-sp-lg);
+      }
+      .run-detail__time {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .run-detail__message {
+        min-width: 0;
+        overflow-wrap: break-word;
+      }
+    </style>
+  </template>
+}
+
 // The automation's runs, for the realm's direct writers: one row per run,
 // newest first, with what started the run, the run's state, and why a run
 // that didn't complete ended as the run did. A later slot of a schedule that
@@ -3471,11 +5160,36 @@ class AutomationRuns extends GlimmerComponent<{
     showPage: (page: number) => void;
     // The kind of each trigger the card declares, by label.
     triggerKind: (label: string | null) => string | undefined;
+    // What an opened run reads its details with, and the limits the run is
+    // measured against.
+    realm: string | undefined;
+    automation: string | undefined;
+    caps: AutomationCaps | undefined;
+    tools: Tools | undefined;
   };
 }> {
   get rows() {
     return runRows(this.args.runs.runs);
   }
+  // The automation's run before `run` on the page shown that started and
+  // ended, leaving Previews out as the automation's last run does, and
+  // leaving out a run admission refused: the run whose milestone times an
+  // opened run's milestones read against.
+  previousRun = (run: ListedRun): LastRun | undefined => {
+    let runs = this.args.runs.runs;
+    let index = runs.findIndex(({ id }) => id === run.id);
+    return (
+      runs.slice(index + 1).find(
+        (earlier) =>
+          earlier.startedBy !== 'preview' &&
+          earlier.startedAt !== null &&
+          earlier.finishedAt !== null &&
+          // A run admission refused never ran the script, so the run
+          // has no milestone times to read against.
+          !(earlier.state === 'error' && earlier.step === 'admission'),
+      )?.milestones ?? undefined
+    );
+  };
   rowKey = (row: RunRow) => row.key;
   // Each row's accessible name, which names the row's expander and detail:
   // with the slot's time, or, for a run that served no slot, the time the
@@ -3539,8 +5253,6 @@ class AutomationRuns extends GlimmerComponent<{
     }
   };
   progress = (run: ListedRun) => runProgress(run);
-  milestoneRows = (run: ListedRun) =>
-    run.milestones ? runMilestoneRows(run.milestones) : [];
   reason = (run: ListedRun) => runReason(run);
   slotTime = (slot: string | null) => slotTime(slot);
   // When the row's run last moved: when the run ended, started, or was made.
@@ -3722,22 +5434,14 @@ class AutomationRuns extends GlimmerComponent<{
               no milestones.
             </p>
           {{else}}
-            {{#let (this.milestoneRows row.run) as |rows|}}
-              {{#if rows.length}}
-                <div data-test-automation-run-milestones>
-                  <MilestoneTimeline
-                    @rows={{rows}}
-                    @label='Milestones of the run'
-                  />
-                </div>
-              {{else}}
-                <p class='runs__expanded-note'>
-                  The script reported no milestones on the run. A script reports
-                  milestones with realm.progress.plan and
-                  realm.progress.milestone.
-                </p>
-              {{/if}}
-            {{/let}}
+            <RunDetail
+              @run={{row.run}}
+              @realm={{@realm}}
+              @automation={{@automation}}
+              @caps={{@caps}}
+              @tools={{@tools}}
+              @previous={{this.previousRun row.run}}
+            />
           {{/if}}
         </:expanded>
       </List>
@@ -4343,6 +6047,9 @@ class Isolated extends Component<typeof Automation> {
   get automation() {
     return this.args.model as Automation;
   }
+  get tools() {
+    return toolsOf(this.args.context);
+  }
   private server = automationStatus(this, () => ({
     id: this.args.model.id,
     realm: this.realmHref,
@@ -4537,6 +6244,10 @@ class Isolated extends Component<typeof Automation> {
             @runs={{this.runs}}
             @showPage={{this.showRunsPage}}
             @triggerKind={{this.triggerKindOf}}
+            @realm={{this.realmHref}}
+            @automation={{@model.id}}
+            @caps={{@model.caps}}
+            @tools={{this.tools}}
           />
         </PanelSection>
       {{/if}}
@@ -4763,7 +6474,8 @@ const STARTER_SCRIPT = `/* global realm */
 // automation's \`realm\` object. Find cards with realm.cards.search and
 // write files with realm.fs.writeText. Name the run's milestones up front
 // with realm.progress.plan, mark each as the script reaches it with
-// realm.progress.milestone, and count inside one with realm.progress.count.
+// realm.progress.milestone, and report each notable task inside one, such
+// as "Grouped the bug label", with realm.progress.task.
 
 realm.progress.plan(['Start']);
 realm.progress.milestone('Start');
@@ -5635,6 +7347,9 @@ interface MilestoneGlance {
   // The fill color of the progress bar, in the run's state color.
   hue: string;
   steps: StepItem[];
+  // Each step's last task, by the step's index. Only the fitted list shows
+  // them: the embedded track's narrow columns have no room for a task.
+  lastTasks: (string | undefined)[];
   // The index of the milestone the run is in, failed in or stopped in; the
   // last milestone otherwise.
   focus: number;
@@ -5728,6 +7443,7 @@ function milestoneGlance(
           ? ['Stopped here', row.detail].filter(Boolean).join(' · ')
           : row.detail,
     })),
+    lastTasks: rows.map((row) => row.tasks.at(-1)),
     // The milestone a run is in, failed in or stopped in. Otherwise the
     // first milestone the run didn't reach, or the last one when the run
     // reached them all, and the first one before any run.
@@ -6122,28 +7838,43 @@ class Fitted extends AtAGlance {
       ? m.headline
       : this.when;
   }
-  // The fitted lists name each milestone, with its count or where Boxel
-  // stopped the run beside it.
+  // The milestones as the fitted lists show them: each step's detail ends
+  // with the milestone's last task, joined by index here once, so the lists
+  // window over these steps rather than finding each one again.
+  @cached
+  get fittedMilestones(): MilestoneGlance | undefined {
+    let milestones = this.milestones;
+    if (!milestones) {
+      return undefined;
+    }
+    let { lastTasks } = milestones;
+    return {
+      ...milestones,
+      steps: milestones.steps.map((step, index) => {
+        let detail = [step.detail, lastTasks[index]]
+          .filter(Boolean)
+          .join(' · ');
+        return {
+          label: step.label,
+          state: step.state,
+          ...(detail ? { detail } : {}),
+        };
+      }),
+    };
+  }
+  // The fitted lists name each milestone, with its time, last task or where
+  // Boxel stopped the run beside it.
   private list(size: number) {
-    if (!this.milestones) {
+    if (!this.fittedMilestones) {
       return { steps: [], earlier: undefined, later: undefined };
     }
-    let { steps, earlier, later } = stepWindow(this.milestones, size);
-    return {
-      steps: steps.map(({ label, state, detail }) => ({
-        label,
-        state,
-        detail,
-      })),
-      earlier,
-      later,
-    };
+    return stepWindow(this.fittedMilestones, size);
   }
   // The space the card leaves the list under the bar (`fitToSpace`), in
   // pixels: the list names as many milestones as fit there around the one
   // in focus, so the run's milestone is always named and its neighbours join
   // as the card grows. With room for two lines a milestone, each also shows
-  // its count and time.
+  // its time and last task.
   @tracked private spaceForList = 0;
   @tracked private rowHeight = 24;
   // The stretch of rail that marks milestones before or after the list
@@ -6155,7 +7886,7 @@ class Fitted extends AtAGlance {
   }
   get fitList() {
     let none = { steps: [], earlier: undefined, later: undefined };
-    let milestones = this.milestones;
+    let milestones = this.fittedMilestones;
     let total = milestones?.total ?? 0;
     let space = this.spaceForList;
     if (!milestones || total === 0) {
@@ -6180,11 +7911,7 @@ class Fitted extends AtAGlance {
         size * row + (before > 0 ? more : 0) + (after > 0 ? more : 0);
       if (needed <= space) {
         return {
-          steps: window.steps.map(({ label, state, detail }) => ({
-            label,
-            state,
-            detail,
-          })),
+          steps: window.steps,
           earlier:
             before > 0
               ? `${tally(before)} earlier ${milestoneWord(before)}`
