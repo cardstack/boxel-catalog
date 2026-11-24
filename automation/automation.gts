@@ -3970,7 +3970,6 @@ class ShowInConsole extends GlimmerComponent<{
       {{#if @iconOnly}}
         <IconButton
           @label='Show in Automations'
-          @tooltip='Show the automation in the workspace’s Automations list'
           @icon={{LayoutListIcon}}
           @size='xs'
           @appearance='plain'
@@ -4148,6 +4147,12 @@ class Isolated extends Component<typeof Automation> {
           {{#if @model.cardDescription}}
             <p class='automation__summary'><@fields.cardDescription /></p>
           {{/if}}
+          <ShowInConsole
+            class='automation__console'
+            @model={{@model}}
+            @context={{@context}}
+            @directWriter={{this.directWriter}}
+          />
         </div>
         <Stack
           @orientation='horizontal'
@@ -4165,11 +4170,6 @@ class Isolated extends Component<typeof Automation> {
           {{#if this.showsBatchedAI}}
             <Chip @label={{this.batchedAILabel}} @tone='info' />
           {{/if}}
-          <ShowInConsole
-            @model={{@model}}
-            @context={{@context}}
-            @directWriter={{this.directWriter}}
-          />
         </Stack>
       </header>
 
@@ -4382,6 +4382,12 @@ class Isolated extends Component<typeof Automation> {
         grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: start;
         gap: var(--boxel-sp);
+      }
+      /* Under the title, where the title's column gives the action room,
+         rather than in the chip column, which would take that room from the
+         title. */
+      .automation__console {
+        margin-block-start: var(--boxel-sp-xs);
       }
       .automation__badge {
         display: grid;
@@ -6799,21 +6805,21 @@ class Embedded extends AtAGlance {
             </span>
           </:leading>
           <:trailing>
-            <Stack @orientation='horizontal' @gap='xs'>
-              {{#if this.look}}
-                <Chip
-                  @label={{this.look.label}}
-                  @tone={{this.look.tone}}
-                  data-test-automation-embedded-state={{this.look.label}}
-                />
-              {{/if}}
-              <ShowInConsole
-                @model={{@model}}
-                @context={{@context}}
-                @directWriter={{this.directWriter}}
+            {{#if this.look}}
+              <Chip
+                @label={{this.look.label}}
+                @tone={{this.look.tone}}
+                data-test-automation-embedded-state={{this.look.label}}
               />
-            </Stack>
+            {{/if}}
           </:trailing>
+          <:actions>
+            <ShowInConsole
+              @model={{@model}}
+              @context={{@context}}
+              @directWriter={{this.directWriter}}
+            />
+          </:actions>
         </Item>
 
         {{#if this.triggerLines.length}}
