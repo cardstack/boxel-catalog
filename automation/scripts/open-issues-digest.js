@@ -7,6 +7,9 @@
 
 realm.progress.plan(['Fetch open issues', 'Group by label', 'Write digest']);
 
+// "1 label", "3 labels": a task reads as a person would write it.
+const count = (n, word) => `${n} ${n === 1 ? word : `${word}s`}`;
+
 const {
   repository = 'automation/examples/GitHubRepository/boxel',
   reportPath = 'reports/open-issues.md',
@@ -20,6 +23,12 @@ const { body: items } = await realm.operations.invoke(
 );
 // GitHub lists pull requests as issues too; they carry a `pull_request` key.
 const issues = items.filter((item) => !item.pull_request);
+realm.progress.task(`Fetched ${count(issues.length, 'open issue')}`);
+if (items.length > issues.length) {
+  realm.progress.task(
+    `Skipped ${count(items.length - issues.length, 'pull request')} GitHub listed as issues`,
+  );
+}
 
 realm.progress.milestone('Group by label');
 const byLabel = new Map();
@@ -31,6 +40,7 @@ for (const issue of issues) {
     byLabel.set(label, [...(byLabel.get(label) ?? []), issue]);
   }
 }
+realm.progress.task(`Grouped the issues under ${count(byLabel.size, 'label')}`);
 
 realm.progress.milestone('Write digest');
 const sections = [...byLabel.entries()]
@@ -44,3 +54,4 @@ await realm.fs.writeText(
   reportPath,
   [`# Open issues in ${repository}`, '', ...sections, ''].join('\n'),
 );
+realm.progress.task(`Wrote the digest to ${reportPath}`);

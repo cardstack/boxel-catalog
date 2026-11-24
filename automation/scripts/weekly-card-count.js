@@ -2,8 +2,9 @@
 // A Realm Runner script: the body of an async function, run with the
 // automation surface's `realm` object. It counts the realm's cards of each
 // type and writes the counts to a Markdown file in the realm. It declares its
-// milestones first and marks each as it reaches it, so the automation card
-// shows how long each took on the last run.
+// milestones first, marks each as it reaches it, and reports the notable
+// tasks inside each, so the automation card shows how long each milestone
+// took on the last run and what the run did there.
 
 // The most cards one search answers with. A search answers one page of
 // cards, so the script reads the workspace a page at a time until no more
@@ -45,10 +46,6 @@ for (;;) {
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   counted += cards.length;
-  // One count a page keeps a large workspace well under a run's limit on
-  // progress calls. Cards saved while the script reads can move the total,
-  // and a count may never pass its total.
-  realm.progress.count(counted, Math.max(total, counted));
   start += size;
   // The total bounds the pages too, so a search that keeps answering empty
   // pages still ends.
@@ -56,6 +53,14 @@ for (;;) {
     break;
   }
 }
+
+// One task for the whole count, not one a page: a page is the script's
+// unit of work, not a person's.
+realm.progress.task(
+  `Counted ${counted} ${counted === 1 ? 'card' : 'cards'} of ${counts.size} ${
+    counts.size === 1 ? 'type' : 'types'
+  }`,
+);
 
 const lines = [...counts.entries()]
   .sort(([a], [b]) => a.localeCompare(b))
@@ -73,3 +78,4 @@ await realm.fs.writeText(
     '',
   ].join('\n'),
 );
+realm.progress.task('Wrote the counts to reports/card-count.md');
