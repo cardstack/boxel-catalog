@@ -1754,11 +1754,18 @@ function fileName(url: string | undefined): string | undefined {
 // What the server knows about an automation: whether someone switched the
 // automation on, its state, who pays, and how far each trigger has got. The
 // realm's `_automation-status` route shows this only to the realm's direct
-// writers. Any other viewer the realm's permissions let read is told it isn't
-// a direct writer (`meta.directWriter: false`), and a viewer only a policy
-// grant admits is refused with a 401 or 403. Either way `visible` stays false
-// and the views show the card's own fields alone.
-type AutomationState = 'active' | 'paused' | 'waiting-for-credits' | 'done';
+// writers. Any other viewer the realm admits is told they aren't a direct
+// writer (`meta.directWriter: false`): a viewer the realm's permissions let
+// read, and a viewer the realm hands to its policy, whom a grant may admit to
+// the card but never to the server's state. Then `visible` stays false and the
+// views show the card's own fields alone, as they do when the route can't be
+// asked or the request fails.
+type AutomationState =
+  | 'active'
+  | 'paused'
+  | 'waiting-for-credits'
+  | 'waiting-for-key-approval'
+  | 'done';
 type PauseReason =
   | 'requested'
   | 'realm-archived'
@@ -1917,10 +1924,10 @@ const WEBHOOK_TRIGGER_CANT_FIRE =
 // An incoming webhook an automation may name, as the realm's
 // `_automation-webhooks` route lists it: one that a direct writer of the
 // realm made. The route lists webhooks only to the realm's direct writers.
-// Any other viewer the realm's permissions let read is told it isn't a
-// direct writer (`meta.directWriter: false`), and a viewer only a policy
-// grant admits is refused with a 401 or 403. Either way the editor takes a
-// typed path.
+// Any other viewer the realm admits, whether the realm's permissions let them
+// read or the realm hands them to its policy, is told they aren't a direct
+// writer (`meta.directWriter: false`). Then the editor takes a typed path, as
+// it does when the route can't be asked or the request fails.
 interface AutomationWebhook {
   webhookPath: string;
   owner: string;
@@ -2379,14 +2386,18 @@ const NOT_STARTED: Record<string, string> = {
     'Boxel didn’t start the run because someone suspended the shared key an outside service uses. Someone who can edit this workspace resumes the shared key, or the key’s owner swaps in another key.',
   'credential-rejected':
     'Boxel didn’t start the run because the outside service refused the key or connection the automation uses. The person the run acts as reconnects or replaces the key.',
+  'waiting-for-key-approval':
+    'Boxel didn’t start the run because the automation is waiting for key approval. Boxel starts runs again once someone approves the automation’s use of each key.',
+  'key-approval-ended':
+    'Boxel didn’t start the run because an approval of the automation’s use of a key ended, or someone changed the automation after the approval. Boxel starts runs again once someone approves the automation’s use of each key again.',
   'run-admission-failed':
     'Boxel didn’t start the run because Boxel couldn’t ask the workspace whether the run may start. Boxel asks again at the next run.',
   'run-admission-unavailable':
     'Boxel didn’t start the run because a published workspace doesn’t run automations.',
 };
 
-// Why Boxel paused the automation, for a run the pause canceled when no
-// person asked for the pause.
+// Why Boxel stopped the automation, for a run a pause canceled when no
+// person asked for the pause, or that the wait for key approval canceled.
 const PAUSE_CANCELED: Record<string, string> = {
   'caps-raised':
     'Boxel canceled the run when Boxel paused the automation: someone raised a limit above what the payer agreed to pay for.',
@@ -2402,6 +2413,8 @@ const PAUSE_CANCELED: Record<string, string> = {
     'Boxel canceled the run when Boxel paused the automation after the automation’s runs kept failing.',
   'invalid-declaration':
     'Boxel canceled the run when Boxel paused the automation: the automation’s settings have problems.',
+  'waiting-for-key-approval':
+    'Boxel canceled the run when the automation began waiting for key approval. Boxel starts runs again once someone approves the automation’s use of each key.',
 };
 
 // A run's per-run limit in words, by the cap's name in a capped run's `cap`.
@@ -2605,6 +2618,8 @@ function stateLook(status: ServerStatus | undefined): StateLook | undefined {
       return { label: 'Paused', tone: 'warning' };
     case 'waiting-for-credits':
       return { label: 'Waiting for credits', tone: 'warning' };
+    case 'waiting-for-key-approval':
+      return { label: 'Waiting for key approval', tone: 'warning' };
     case 'done':
       return { label: 'Done', tone: 'info' };
   }
@@ -2620,6 +2635,8 @@ function stateSentence(status: ServerStatus): string {
       return 'Boxel runs this automation each time a trigger fires and charges the payer for every run.';
     case 'waiting-for-credits':
       return 'The payer has no credits left, so Boxel holds every run. Boxel runs the automation again once the payer adds credits.';
+    case 'waiting-for-key-approval':
+      return 'Boxel holds every run until someone approves the automation’s use of each key.';
     case 'done':
       return 'The automation has no runs left on any trigger, so Boxel runs nothing more. Boxel runs the automation again when someone who can edit this workspace adds a trigger.';
     case 'paused':
@@ -2750,9 +2767,11 @@ function statusItems(status: ServerStatus): StatusItem[] {
     items.push(
       status.state === 'paused'
         ? { label: 'Next run', value: 'None while paused' }
-        : status.nextRun
-          ? { label: 'Next run', date: status.nextRun }
-          : { label: 'Next run', value: 'None' },
+        : status.state === 'waiting-for-key-approval'
+          ? { label: 'Next run', value: 'None while waiting for key approval' }
+          : status.nextRun
+            ? { label: 'Next run', date: status.nextRun }
+            : { label: 'Next run', value: 'None' },
     );
     let last = lastRunText(status);
     items.push(
@@ -2830,7 +2849,7 @@ interface MilestoneRow {
   name: string;
   state: MilestoneState;
   badge: string;
-  tone: 'neutral' | 'success' | 'warning' | 'danger';
+  tone: 'neutral' | 'info' | 'success' | 'danger';
   detail?: string;
   // The notable tasks the script reported inside the milestone, in order.
   tasks: string[];
@@ -2903,7 +2922,7 @@ const MILESTONE_LOOKS: Record<
   { badge: string; tone: MilestoneRow['tone'] }
 > = {
   reached: { badge: 'Done', tone: 'success' },
-  running: { badge: 'Running', tone: 'warning' },
+  running: { badge: 'Running', tone: 'info' },
   failed: { badge: 'Failed here', tone: 'danger' },
   stopped: { badge: 'Stopped here', tone: 'neutral' },
   'not-started': { badge: 'Not started', tone: 'neutral' },
@@ -2942,7 +2961,7 @@ const SHOWN_TASKS = 5;
 
 // The milestones as a timeline, one row each, joined by the timeline's rail
 // so they read as a progression. Each marker is shaded in its state's color:
-// gray before the milestone runs, yellow while it runs, green once it is
+// gray before the milestone runs, blue while it runs, green once it is
 // done, red where the run ended with an error. Under each milestone, the
 // notable tasks the script reported inside the milestone, in order.
 class MilestoneTimeline extends GlimmerComponent<{
@@ -3052,16 +3071,18 @@ class MilestoneTimeline extends GlimmerComponent<{
         max-inline-size: 34rem;
       }
       /* Fills the timeline's marker with a light tint of the state's color,
-         the glyph in the color itself. */
+         the glyph in the color's ink, which keeps the glyph legible on the
+         tint in both light and dark themes. */
       .milestones__mark {
         --milestone-color: var(--muted-foreground);
+        --milestone-ink: var(--milestone-color);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         inline-size: 100%;
         block-size: 100%;
         border-radius: 50%;
-        color: var(--milestone-color);
+        color: var(--milestone-ink);
         background: color-mix(
           in oklab,
           var(--milestone-color) 14%,
@@ -3070,12 +3091,15 @@ class MilestoneTimeline extends GlimmerComponent<{
       }
       .milestones__mark[data-milestone-state='reached'] {
         --milestone-color: var(--success);
+        --milestone-ink: var(--success-ink);
       }
       .milestones__mark[data-milestone-state='running'] {
-        --milestone-color: var(--warning);
+        --milestone-color: var(--info);
+        --milestone-ink: var(--info-ink);
       }
       .milestones__mark[data-milestone-state='failed'] {
         --milestone-color: var(--destructive);
+        --milestone-ink: var(--destructive-ink);
       }
       .milestones__mark[data-milestone-state='not-started'] {
         background: var(--card, #fff);
@@ -3268,7 +3292,7 @@ class FittedMilestones extends GlimmerComponent<{
         --milestone-color: var(--success-ink);
       }
       .fm__mark[data-step-state='in-progress'] {
-        --milestone-color: var(--warning-ink);
+        --milestone-color: var(--info-ink);
       }
       .fm__mark[data-step-state='error'] {
         --milestone-color: var(--destructive-ink);
@@ -3370,8 +3394,10 @@ function statusOfTrigger(
     return undefined;
   }
   let trigger = status.triggers.find((t) => t.label === label);
-  // A paused automation runs nothing, whatever its schedule says.
-  return trigger && status.state === 'paused'
+  // A paused automation, or one waiting for key approval, runs nothing,
+  // whatever its schedule says.
+  return trigger &&
+    (status.state === 'paused' || status.state === 'waiting-for-key-approval')
     ? { ...trigger, nextRun: undefined }
     : trigger;
 }
@@ -5223,7 +5249,7 @@ const STEP_STATES: Record<MilestoneState, StepState> = {
 };
 
 const GLANCE_HUES: Record<GlanceKind, string> = {
-  running: 'var(--warning)',
+  running: 'var(--info)',
   failed: 'var(--destructive)',
   stopped: 'var(--muted-foreground)',
   complete: 'var(--success)',
@@ -5500,13 +5526,18 @@ class AtAGlance extends Component<typeof Automation> {
   }
 
   // Why Boxel holds the automation's runs, or why the last one failed, for a
-  // direct writer: a pause, waiting for credits, or a failure streak.
+  // direct writer: a pause, waiting for credits or for key approval, or a
+  // failure streak.
   get statusNote() {
     let status = this.status;
     if (!status?.switchedOn) {
       return undefined;
     }
-    if (status.state === 'paused' || status.state === 'waiting-for-credits') {
+    if (
+      status.state === 'paused' ||
+      status.state === 'waiting-for-credits' ||
+      status.state === 'waiting-for-key-approval'
+    ) {
       return stateSentence(status);
     }
     let error = status.lastFailure?.message || status.lastFailure?.reason;
@@ -6362,16 +6393,16 @@ class Fitted extends AtAGlance {
         color: var(--muted-foreground);
       }
       /* The milestones in the colors the isolated view gives them: green
-         once done, yellow while running, red where the run failed and gray
+         once done, blue while running, red where the run failed and gray
          where Boxel stopped the run. A short list can start partway through
          the run, so it leaves out the step numbers, which would count from
          its own first row. */
       .af__list {
         --pretui-step-upcoming-marker-fg: transparent;
         --pretui-step-complete-bar: var(--success);
-        --pretui-step-in-progress-bar: var(--warning);
-        --pretui-step-in-progress-ring: var(--warning);
-        --pretui-step-in-progress-marker-fg: var(--warning-ink);
+        --pretui-step-in-progress-bar: var(--info);
+        --pretui-step-in-progress-ring: var(--info);
+        --pretui-step-in-progress-marker-fg: var(--info-ink);
         --pretui-step-blocked-tone: var(--foreground);
         --pretui-step-blocked-marker-fg: var(--muted-foreground);
         --pretui-step-blocked-ring: var(--muted-foreground);
@@ -6854,9 +6885,9 @@ class Embedded extends AtAGlance {
       .ae__track {
         display: none;
         --pretui-step-complete-bar: var(--success);
-        --pretui-step-in-progress-bar: var(--warning);
-        --pretui-step-in-progress-ring: var(--warning);
-        --pretui-step-in-progress-marker-fg: var(--warning-ink);
+        --pretui-step-in-progress-bar: var(--info);
+        --pretui-step-in-progress-ring: var(--info);
+        --pretui-step-in-progress-marker-fg: var(--info-ink);
         --pretui-step-blocked-tone: var(--foreground);
         --pretui-step-blocked-marker-fg: var(--muted-foreground);
         --pretui-step-blocked-ring: var(--muted-foreground);

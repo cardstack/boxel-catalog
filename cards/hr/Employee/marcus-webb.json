@@ -32,7 +32,10 @@
       "onboardingStatus": null,
       "ptoAllowanceDays": null,
       "weeklyInterviewCapacityHours": null,
-      "teachingQualifications": []
+      "teachingQualifications": [],
+      "employeeNumber": "E-1031",
+      "location": "Remote",
+      "userId": "@marcus.webb:boxel.example"
     },
     "relationships": {
       "manager": {
