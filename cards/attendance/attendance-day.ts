@@ -128,14 +128,18 @@ interface Counted {
 
 interface Shift {
   start: Date;
+  lastIn: Date;
   end: Date | null;
   punches: number;
 }
 
 // A shift can run past midnight, so ins and outs are paired across the whole
-// history, not within a day: an in opens a shift and the next out within 16
-// hours closes it.
-const MAX_SHIFT_MS = 16 * 60 * 60 * 1000;
+// history, not within a day: an in opens a shift and the next out within 12
+// hours closes it. A longer one counts nothing until a correction fixes it,
+// so a forgotten checkout isn't paid. A second in more than 30 minutes after
+// the last one starts a new shift.
+const MAX_SHIFT_MS = 12 * 60 * 60 * 1000;
+const REPEAT_IN_MS = 30 * 60 * 1000;
 
 function counted(punches: PunchLike[] | null | undefined): Counted[] {
   let list: Counted[] = [];
@@ -161,11 +165,20 @@ function pairShifts(list: Counted[]): { shifts: Shift[]; strayOuts: Date[] } {
       shifts.push(open);
       open = null;
     }
+    if (
+      open &&
+      p.direction === 'in' &&
+      p.at.getTime() - open.lastIn.getTime() > REPEAT_IN_MS
+    ) {
+      shifts.push(open);
+      open = null;
+    }
     if (p.direction === 'in') {
       if (open) {
         open.punches++;
+        open.lastIn = p.at;
       } else {
-        open = { start: p.at, end: null, punches: 1 };
+        open = { start: p.at, lastIn: p.at, end: null, punches: 1 };
       }
     } else if (open) {
       shifts.push({ ...open, end: p.at, punches: open.punches + 1 });

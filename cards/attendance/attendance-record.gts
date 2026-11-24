@@ -20,7 +20,6 @@ import {
   operation,
   operations,
   OperationsError,
-  params,
   type OperationDeclaration,
 } from 'https://cardstack.com/base/operations';
 import ClockIcon from '@cardstack/boxel-icons/clock';
@@ -164,14 +163,26 @@ class RecordView extends Component<typeof AttendanceRecord> {
   }
 
   get hideCheckOut(): boolean {
-    return !this.isIn || this.denied('checkOut');
+    return (
+      !this.isIn || Boolean(this.record.requiresCode) || this.denied('checkOut')
+    );
   }
 
-  get showCodeCheckIn(): boolean {
+  get codeOperation(): 'checkInWithCode' | 'checkOutWithCode' {
+    return this.isIn ? 'checkOutWithCode' : 'checkInWithCode';
+  }
+
+  get codeLabel(): string {
+    return this.isIn ? 'Check out with code' : 'Check in with code';
+  }
+
+  get codeBusyLabel(): string {
+    return this.isIn ? 'Checking out…' : 'Checking in…';
+  }
+
+  get showCodeForm(): boolean {
     return (
-      !this.isIn &&
-      Boolean(this.record.requiresCode) &&
-      !this.denied('checkInWithCode')
+      Boolean(this.record.requiresCode) && !this.denied(this.codeOperation)
     );
   }
 
@@ -208,18 +219,21 @@ class RecordView extends Component<typeof AttendanceRecord> {
 
   setCode = (value: string) => (this.code = value.trim().toUpperCase());
 
-  checkInWithCode = (event?: Event) => {
+  punchWithCode = (event?: Event) => {
     event?.preventDefault();
+    let name = this.codeOperation;
     return this.run(
-      'checkInWithCode',
+      name,
       async () => {
         if (!this.code) {
           throw new Error('Enter the code shown on the reception screen.');
         }
-        await this.ops.checkInWithCode({ code: this.code });
+        await this.ops[name]({ code: this.code });
         this.code = '';
       },
-      'Checked in at reception.',
+      name === 'checkInWithCode'
+        ? 'Checked in at reception.'
+        : 'Checked out at reception.',
     );
   };
 }
@@ -257,11 +271,11 @@ class Embedded extends RecordView {
           >Check out</Button>
         {{/unless}}
       </div>
-      {{#if this.showCodeCheckIn}}
+      {{#if this.showCodeForm}}
         <form
           class='code'
-          aria-label='Check in with the reception code'
-          {{on 'submit' this.checkInWithCode}}
+          aria-label={{this.codeLabel}}
+          {{on 'submit' this.punchWithCode}}
         >
           <Input
             @value={{this.code}}
@@ -271,10 +285,10 @@ class Embedded extends RecordView {
           />
           <Button
             type='submit'
-            @busy={{this.isBusy 'checkInWithCode'}}
-            @busyLabel='Checking in…'
-            @disabled={{this.otherBusy 'checkInWithCode'}}
-          >Check in with code</Button>
+            @busy={{this.isBusy this.codeOperation}}
+            @busyLabel={{this.codeBusyLabel}}
+            @disabled={{this.otherBusy this.codeOperation}}
+          >{{this.codeLabel}}</Button>
         </form>
       {{/if}}
       <p class='message {{if this.failed "is-error"}}' role='status'>
@@ -465,11 +479,11 @@ class Isolated extends RecordView {
         </div>
       </header>
 
-      {{#if this.showCodeCheckIn}}
+      {{#if this.showCodeForm}}
         <form
           class='code'
-          aria-label='Check in with the reception code'
-          {{on 'submit' this.checkInWithCode}}
+          aria-label={{this.codeLabel}}
+          {{on 'submit' this.punchWithCode}}
         >
           <Input
             @value={{this.code}}
@@ -479,10 +493,10 @@ class Isolated extends RecordView {
           />
           <Button
             type='submit'
-            @busy={{this.isBusy 'checkInWithCode'}}
-            @busyLabel='Checking in…'
-            @disabled={{this.otherBusy 'checkInWithCode'}}
-          >Check in with code</Button>
+            @busy={{this.isBusy this.codeOperation}}
+            @busyLabel={{this.codeBusyLabel}}
+            @disabled={{this.otherBusy this.codeOperation}}
+          >{{this.codeLabel}}</Button>
         </form>
       {{/if}}
 
@@ -721,12 +735,13 @@ export class AttendanceRecord extends CardDef {
   @field year = contains(StringField);
   @field schedule = contains(WorkSchedule);
   @field punches = containsMany(PunchEvent);
-  // The reception display whose code a check-in with code is matched against.
-  // Staff can't read it, so the screen reads `requiresCode` instead.
+  // The reception display whose code a punch with code is matched against.
+  // Staff can't read it, so `requiresCode` is what refuses button punches and
+  // what the screen reads.
   @field display = linksTo(ReceptionDisplay, { searchable: true });
   @field requiresCode = contains(BooleanField, {
     description:
-      'Check in only with the code on the linked reception display. Set it together with display',
+      'Check in and out only with the code on the linked reception display. Set it together with display',
   });
 
   @field employeeName = contains(StringField, {
@@ -790,21 +805,16 @@ export class AttendanceRecord extends CardDef {
   } satisfies OperationDeclaration;
 
   @operation static checkOut = {
-    base: 'appendContainsMany',
-    field: 'punches',
+    base: 'transform',
     params: { punchedAt: StringField },
     input: STAMP_PUNCH,
-    item: {
-      kind: 'punch',
-      direction: 'out',
-      punchedAt: params('punchedAt'),
-      assurance: 'button',
-      by: actor(),
-      state: 'recorded',
-    },
+    transformations: bxl`
+      assert(.requiresCode != true; "Check out with the code on the reception display"; { snapshot: true });
+      .punches += [{ kind: "punch", direction: "out", punchedAt: params("punchedAt"), assurance: "button", by: actor(), state: "recorded" }];
+    `,
   } satisfies OperationDeclaration;
 
-  // A check-in that proves presence: the code must be the one the linked
+  // Check in and out that prove presence: the code must be the one the linked
   // reception display shows now or showed just before, issued within the last
   // 165 seconds.
   @operation static checkInWithCode = {
@@ -820,6 +830,22 @@ export class AttendanceRecord extends CardDef {
       assert(OR(.display.code == params("code"); .display.previousCode == params("code")); "That code is not the one on the reception display"; { snapshot: true });
       assert(OR((.display.code == params("code") and .display.issuedAtSerial > params("cutoff")); (.display.previousCode == params("code") and .display.previousIssuedAtSerial > params("cutoff"))); "That code has expired. Scan the display again"; { snapshot: true });
       .punches += [{ kind: "punch", direction: "in", punchedAt: params("punchedAt"), assurance: "kiosk", kioskCode: params("code"), by: actor(), state: "recorded" }];
+    `,
+  } satisfies OperationDeclaration;
+
+  @operation static checkOutWithCode = {
+    base: 'transform',
+    params: {
+      code: StringField,
+      punchedAt: StringField,
+      cutoff: NumberField,
+    },
+    input: bxl`NOW() as $n | . + { punchedAt: (TEXT($n; "yyyy-mm-dd") + "T" + TEXT($n; "hh:mm:ss") + "Z"), cutoff: ($n - 165 / 86400) }`,
+    transformations: bxl`
+      assert((params("code") | length) > 0; "Enter the code shown on the reception screen");
+      assert(OR(.display.code == params("code"); .display.previousCode == params("code")); "That code is not the one on the reception display"; { snapshot: true });
+      assert(OR((.display.code == params("code") and .display.issuedAtSerial > params("cutoff")); (.display.previousCode == params("code") and .display.previousIssuedAtSerial > params("cutoff"))); "That code has expired. Scan the display again"; { snapshot: true });
+      .punches += [{ kind: "punch", direction: "out", punchedAt: params("punchedAt"), assurance: "kiosk", kioskCode: params("code"), by: actor(), state: "recorded" }];
     `,
   } satisfies OperationDeclaration;
 
@@ -840,7 +866,7 @@ export class AttendanceRecord extends CardDef {
       assert(OR(params("direction") == "in"; params("direction") == "out"); "Say whether the missing punch was a check in or a check out");
       assert((params("reason") | length) > 0; "Add a note saying what happened");
       assert((params("nonce") | length) > 0; "The request is missing its id");
-      assert(params("punchedAt") | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"); "Enter the date and time of the missing punch");
+      assert(params("punchedAt") | test("^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$"); "Enter the date and time of the missing punch");
       assert(params("punchedAt") <= params("requestedAt"); "A missing punch can't be in the future");
       assert(any(.punches[]; .eventId == params("eventId")) == false; "That correction was already sent. Send it again to get a new id");
       .punches += [{ eventId: params("eventId"), kind: "correction", direction: params("direction"), punchedAt: params("punchedAt"), assurance: "correction", reason: params("reason"), by: actor(), state: "pending", requestedAt: params("requestedAt") }];

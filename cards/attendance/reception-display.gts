@@ -175,7 +175,8 @@ class DisplayView extends Component<typeof ReceptionDisplay> {
   </template>
 }
 
-// The reception screen's rotating code. A check-in that requires presence
+// The reception screen's rotating code. Run one screen per display card: two
+// screens rotating the same card replace each other's codes. A check-in that requires presence
 // asserts against the code and issue time stored here. Whoever may call
 // `rotate` or read this card can check in without being there, so grant both
 // only to the account the reception screen runs as, never to staff.
