@@ -2608,19 +2608,26 @@ function stateLook(status: ServerStatus | undefined): StateLook | undefined {
 }
 
 // The ways a realm administrator can fix what paused the automation, when
-// the state sentence offers a choice, listed in order under the sentence.
-function stateSteps(status: ServerStatus): string[] {
+// there is a choice, with the sentence that introduces them. The isolated
+// view shows these in place of the state sentence, which stands alone in the
+// views that have no room for a list.
+function stateSteps(
+  status: ServerStatus,
+): { lead: string; steps: string[] } | undefined {
   if (
     status.switchedOn &&
     status.state === 'paused' &&
     status.pauseReason === 'webhook-owner-lost-access'
   ) {
-    return [
-      'Edit the automation, and in the trigger’s Webhook field pick one of this workspace’s webhooks, or',
-      'Make the person who made the webhook a realm administrator again.',
-    ];
+    return {
+      lead: 'The person who made a trigger’s incoming webhook is no longer a realm administrator, so Boxel paused the automation. Boxel runs nothing until a realm administrator does one of these two things and then resumes the automation:',
+      steps: [
+        'Edit the automation, and in the trigger’s Webhook field pick one of this workspace’s webhooks, or',
+        'Make the person who made the webhook a realm administrator again.',
+      ],
+    };
   }
-  return [];
+  return undefined;
 }
 
 // What the state means for the next run, as a sentence.
@@ -2650,7 +2657,7 @@ function stateSentence(status: ServerStatus): string {
         case 'webhook-changed':
           return 'A workspace administrator pointed a trigger at an incoming webhook the payer didn’t agree to, so Boxel paused the automation. Boxel runs nothing until a workspace administrator resumes the automation and agrees to the new webhook.';
         case 'webhook-owner-lost-access':
-          return 'The person who made a trigger’s incoming webhook is no longer a realm administrator, so Boxel paused the automation. Boxel runs nothing until a realm administrator does one of these two things and then resumes the automation.';
+          return 'The person who made a trigger’s incoming webhook is no longer a realm administrator, so Boxel paused the automation. Boxel runs nothing until a realm administrator fixes the trigger’s webhook and resumes the automation.';
         case 'repeated-failures':
           return repeatedFailuresSentence(status);
         case 'invalid-declaration':
@@ -6096,17 +6103,14 @@ class Isolated extends Component<typeof Automation> {
   get look() {
     return stateLook(this.status);
   }
-  // The sentence introduces the listed steps, when there are any, so it ends
-  // with a colon here. The fitted view shows the sentence alone.
   get stateSentence() {
     if (!this.status) {
       return undefined;
     }
-    let sentence = stateSentence(this.status);
-    return this.stateSteps.length ? sentence.replace(/\.$/, ':') : sentence;
+    return stateSteps(this.status)?.lead ?? stateSentence(this.status);
   }
   get stateSteps() {
-    return this.status ? stateSteps(this.status) : [];
+    return this.status ? (stateSteps(this.status)?.steps ?? []) : [];
   }
   get statusItems() {
     return this.status ? statusItems(this.status) : [];
