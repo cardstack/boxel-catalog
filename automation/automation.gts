@@ -834,7 +834,7 @@ export class AutomationTrigger extends FieldDef {
               !this.webhooks.list.some(
                 (webhook) => webhook.webhookPath === m.webhookPath,
               )
-            ? 'Pick one of this workspace’s incoming webhooks: Boxel turns the automation on only with a webhook that a workspace administrator made'
+            ? 'Pick one of this workspace’s incoming webhooks: Boxel turns the automation on only with a webhook that a realm administrator made'
             : undefined,
         time: blank(m.time) ? 'Required: enter a time' : undefined,
         untilDate:
@@ -1079,7 +1079,7 @@ export class AutomationTrigger extends FieldDef {
         {{else if this.hasWebhookList}}
           <Field
             @label='Webhook'
-            @hint='Each delivery to this webhook starts a run. The list shows every webhook that a workspace administrator made.'
+            @hint='Each delivery to this webhook starts a run. The list shows every webhook that a realm administrator made.'
             @error={{this.problems.webhookPath}}
             @required={{true}}
             as |id|
@@ -1099,7 +1099,7 @@ export class AutomationTrigger extends FieldDef {
                 @size='s'
                 @texture={{false}}
                 @title='No incoming webhooks'
-                @message='No workspace administrator has made an incoming webhook. Once a workspace administrator makes a webhook, reopen the editor to pick the webhook.'
+                @message='No realm administrator has made an incoming webhook. Once a realm administrator makes a webhook, reopen the editor to pick the webhook.'
                 data-test-automation-webhook-picker-empty
               />
             {{/if}}
@@ -2384,7 +2384,7 @@ const PAUSE_CANCELED: Record<string, string> = {
   'batched-ai-enabled':
     'Boxel canceled the run because someone turned on batched AI after the payer agreed to the limits.',
   'webhook-changed':
-    'Boxel canceled the run because a workspace administrator pointed a trigger at a webhook the payer didn’t agree to.',
+    'Boxel canceled the run because a realm administrator pointed a trigger at a webhook the payer didn’t agree to.',
   'webhook-owner-lost-access':
     'Boxel canceled the run because the person who made a trigger’s incoming webhook is no longer a realm administrator.',
   'payer-lost-access':
@@ -2655,7 +2655,7 @@ function stateSentence(status: ServerStatus): string {
         case 'batched-ai-enabled':
           return 'Someone turned on batched AI after the payer agreed to the limits, so Boxel paused the automation. Boxel runs nothing until a realm administrator resumes the automation and agrees to batched AI.';
         case 'webhook-changed':
-          return 'A workspace administrator pointed a trigger at an incoming webhook the payer didn’t agree to, so Boxel paused the automation. Boxel runs nothing until a workspace administrator resumes the automation and agrees to the new webhook.';
+          return 'A realm administrator pointed a trigger at an incoming webhook the payer didn’t agree to, so Boxel paused the automation. Boxel runs nothing until a realm administrator resumes the automation and agrees to the new webhook.';
         case 'webhook-owner-lost-access':
           return 'The person who made a trigger’s incoming webhook is no longer a realm administrator, so Boxel paused the automation. Boxel runs nothing until a realm administrator fixes the trigger’s webhook and resumes the automation.';
         case 'repeated-failures':
