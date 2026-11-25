@@ -6709,7 +6709,7 @@ const FIX_REASONS: Record<SlotApprovalFix, string> = {
   'share-key': 'To share a key the automation can use',
 };
 
-// The key a slot sends, as a sentence names the key.
+// The key a slot uses, as a sentence names the key.
 function keyWords(slot: SlotApproval): string {
   if (slot.share) {
     return `the shared key “${slot.share.label}”`;
@@ -6766,8 +6766,8 @@ function slotSentence(slot: SlotApproval): string {
       return 'Nobody has shared a key for this service in this workspace. A realm administrator needs to share a key, and the key’s owner then needs to approve the automation’s use of the key.';
     case 'needs-reapproval':
       return slot.viewerIsKeyOwner
-        ? `The service request changed since you approved the request. You need to review the changes before Boxel sends ${key} again.`
-        : `The service request changed since ${lowerFirst(who)} approved the request. ${who} needs to review the changes before Boxel sends ${key} again.`;
+        ? `The service request changed since you approved the request. You need to review the changes before Boxel uses ${key} again.`
+        : `The service request changed since ${lowerFirst(who)} approved the request. ${who} needs to review the changes before Boxel uses ${key} again.`;
     case 'share-suspended':
       return suspendedSentence(slot);
     case 'key-rejected':
@@ -6802,7 +6802,7 @@ class KeyApprovalsSection extends GlimmerComponent<{
     }
     return slots.every(({ state }) => state === 'approved')
       ? 'The owner of each key the automation uses approved the automation’s use of the key. Each approval lasts until someone changes the automation’s script, triggers, params or outside services.'
-      : 'The owner of each key the automation uses approved the automation’s use of the key, but a run that sends a key marked below fails until someone fixes the key.';
+      : 'The owner of each key the automation uses approved the automation’s use of the key, but a run that uses a key marked below fails until someone fixes the key.';
   }
   get operations() {
     return this.args.approvals.operations.filter(
