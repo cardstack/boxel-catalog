@@ -5740,7 +5740,8 @@ class SwitchOnKeyApprovals extends GlimmerComponent<{
           {{#unless @confirmed}}
             Boxel turns on the automation now.
           {{/unless}}
-          The automation waits and runs nothing until each approval is in place.
+          The automation waits and runs nothing until all approvals are in
+          place.
         </Callout>
       {{/if}}
       {{#if @nobodyYet}}
@@ -5751,17 +5752,24 @@ class SwitchOnKeyApprovals extends GlimmerComponent<{
         >
           <:default>
             The automation calls a service with a key that a realm administrator
-            shares with the realm, and nobody has shared a key yet. The
-            automation waits and runs nothing until a realm administrator shares
-            a key and the key’s owner approves the automation’s use of the key.
+            shares with the realm, and nobody has shared a key yet.
+            {{#if @confirmed}}
+              The automation waits and runs nothing until a realm administrator
+              shares a key and the key’s owner approves the automation’s use of
+              the key.
+            {{else}}
+              Share a key with the realm first, and then turn on the automation.
+            {{/if}}
           </:default>
           <:action>
-            <Button
-              @appearance='outlined'
-              @size='sm'
-              {{on 'click' @onShareKey}}
-              data-test-automation-switch-on-share-key
-            >Share a key</Button>
+            {{#if @confirmed}}
+              <Button
+                @appearance='outlined'
+                @size='sm'
+                {{on 'click' @onShareKey}}
+                data-test-automation-switch-on-share-key
+              >Share a key</Button>
+            {{/if}}
           </:action>
         </Callout>
       {{/if}}
@@ -6078,7 +6086,8 @@ export class SwitchOnDialog extends GlimmerComponent<{
       !this.loading &&
       !this.saving &&
       !this.capProblem &&
-      !this.noLimits
+      !this.noLimits &&
+      !this.nobodyYet
     );
   }
 
@@ -6127,9 +6136,13 @@ export class SwitchOnDialog extends GlimmerComponent<{
   };
 
   // Opens the secure window's share page for the automation's realm, where a
-  // realm administrator shares a key with the realm.
+  // realm administrator shares a key with the realm. When the person comes
+  // back to the page, the screen reads the switch-on route again, so a key
+  // shared meanwhile shows who approves the key.
   shareKey = async () => {
     this.windowFailure = undefined;
+    window.removeEventListener('focus', this.readAfterSharing);
+    window.addEventListener('focus', this.readAfterSharing, { once: true });
     try {
       await new OpenSecureWindowTool(this.tools!).execute({
         mode: 'share-key',
@@ -6138,6 +6151,16 @@ export class SwitchOnDialog extends GlimmerComponent<{
       });
     } catch (e) {
       this.windowFailure = e instanceof Error ? e.message : String(e);
+    }
+  };
+  readAfterSharing = () => {
+    if (this.isDestroying || this.isDestroyed || !this.open) {
+      return;
+    }
+    if (this.confirmedMode) {
+      this.rereadApprovals();
+    } else {
+      this.readEstimate();
     }
   };
 
@@ -6151,6 +6174,7 @@ export class SwitchOnDialog extends GlimmerComponent<{
     this.rereadTimer = setInterval(this.rereadApprovals, APPROVAL_REREAD_MS);
   }
   private stopRereading() {
+    window.removeEventListener('focus', this.readAfterSharing);
     window.removeEventListener('focus', this.rereadApprovals);
     if (this.rereadTimer !== undefined) {
       clearInterval(this.rereadTimer);
@@ -6439,7 +6463,7 @@ export class SwitchOnDialog extends GlimmerComponent<{
                 Boxel counts these charges toward the monthly limit too.
               </Callout>
               <Field
-                @label='Monthly limit, in credits'
+                @label='Monthly limit, in Boxel credits'
                 @hint={{this.capHint}}
                 @error={{this.capProblem}}
                 as |id|
@@ -6518,6 +6542,11 @@ export class SwitchOnDialog extends GlimmerComponent<{
                 {{on 'click' this.readEstimate}}
                 data-test-automation-switch-on-retry
               >Try again</Button>
+            {{else if this.nobodyYet}}
+              <Button
+                {{on 'click' this.shareKey}}
+                data-test-automation-switch-on-share-key
+              >Share a key</Button>
             {{else}}
               <Button
                 @busy={{this.saving}}
