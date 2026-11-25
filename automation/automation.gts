@@ -5271,8 +5271,8 @@ class AutomationRuns extends GlimmerComponent<{
   }
   // The rows whose detail is open: the List's own expansion, kept here so a
   // revealed run opens too.
-  @tracked expandedKeys: string[] = [];
-  onExpandedChange = (keys: string[]) => {
+  @tracked expandedKeys: (string | number)[] = [];
+  onExpandedChange = (keys: (string | number)[]) => {
     this.expandedKeys = keys;
   };
   #revealed: RevealRequest | undefined;
@@ -5308,6 +5308,25 @@ class AutomationRuns extends GlimmerComponent<{
       });
     },
   );
+  // The automation's run before `run` on the page shown that started and
+  // ended, leaving Previews out as the automation's last run does, and
+  // leaving out a run admission refused: the run whose milestone times an
+  // opened run's milestones read against.
+  previousRun = (run: ListedRun): LastRun | undefined => {
+    let runs = this.args.runs.runs;
+    let index = runs.findIndex(({ id }) => id === run.id);
+    return (
+      runs.slice(index + 1).find(
+        (earlier) =>
+          earlier.startedBy !== 'preview' &&
+          earlier.startedAt !== null &&
+          earlier.finishedAt !== null &&
+          // A run admission refused never ran the script, so the run
+          // has no milestone times to read against.
+          !(earlier.state === 'error' && earlier.step === 'admission'),
+      )?.milestones ?? undefined
+    );
+  };
   rowKey = (row: RunRow) => row.key;
   // Each row's accessible name, which names the row's expander and detail:
   // with the slot's time, or, for a run that served no slot, the time the
