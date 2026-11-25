@@ -2694,9 +2694,9 @@ function stateSentence(status: ServerStatus): string {
     case 'active':
       return 'Boxel runs this automation each time a trigger fires and charges the payer for every run.';
     case 'waiting-for-credits':
-      return 'The payer has no credits left, so Boxel holds every run. Boxel runs the automation again once the payer adds credits.';
+      return 'The payer has no credits left, so Boxel has paused every run. Boxel runs the automation again once the payer adds credits.';
     case 'waiting-for-key-approval':
-      return 'Boxel holds every run until someone approves the automation’s use of each key.';
+      return 'Boxel has paused every run until someone approves the automation’s use of each key.';
     case 'done':
       return 'The automation has no runs left on any trigger, so Boxel runs nothing more. Boxel runs the automation again when a realm administrator adds a trigger.';
     case 'paused':
