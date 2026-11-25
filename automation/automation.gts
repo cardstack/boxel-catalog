@@ -2438,7 +2438,7 @@ const PAUSE_CANCELED: Record<string, string> = {
   'webhook-owner-lost-access':
     'Boxel canceled the run because the person who made a trigger’s incoming webhook is no longer a realm administrator.',
   'payer-lost-access':
-    'Boxel canceled the run because the payer is no longer a realm administrator.',
+    'Boxel canceled the run because the payer’s account can no longer pay for runs.',
   'realm-archived':
     'Boxel canceled the run because someone archived this workspace.',
   'repeated-failures':
@@ -2704,7 +2704,7 @@ function stateSentence(status: ServerStatus): string {
         case 'realm-archived':
           return 'Someone archived this workspace, so Boxel paused the automation. Boxel runs nothing until a realm administrator restores the workspace and resumes the automation.';
         case 'payer-lost-access':
-          return 'The payer is no longer a realm administrator, so Boxel paused the automation. Boxel runs nothing until a realm administrator resumes the automation and becomes the new payer.';
+          return 'The payer’s account can no longer pay for runs, so Boxel paused the automation. Boxel runs nothing until a realm administrator resumes the automation and becomes the new payer.';
         case 'caps-raised':
           return 'Someone raised a limit above what the payer agreed to pay for, so Boxel paused the automation. Boxel runs nothing until a realm administrator resumes the automation and agrees to the new limits.';
         case 'batched-ai-enabled':
