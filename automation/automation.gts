@@ -122,7 +122,6 @@ import {
   automationNoticeText,
   showAutomationInConsole,
 } from '@cardstack/base/realm-automations';
-import type { AutomationNotice } from '@cardstack/runtime-common/automation-notices';
 import { describeCron } from '@cardstack/catalog/automation/describe-cron';
 import { cronTriggerProblem } from '@cardstack/runtime-common/automation-cron-rule';
 import { CodeEdit, CodeView } from '@cardstack/catalog/fields/code/code';
@@ -1890,6 +1889,47 @@ type ServerStatus =
       // notices.
       notice?: AutomationNotice | null;
     };
+// What tells the realm's direct writers the automation stopped doing its job,
+// as the status route reports it: why (a pause reason, a wait, or the code a
+// refused run ended with), whom the notice is for and whether the viewer is
+// one of them, the run it is about, the operation a refused run named, and
+// what fixes a rejected credential.
+interface AutomationNotice {
+  reason:
+    | 'repeated-failures'
+    | 'payer-lost-access'
+    | 'caps-raised'
+    | 'batched-ai-enabled'
+    | 'webhook-changed'
+    | 'webhook-owner-lost-access'
+    | 'invalid-declaration'
+    | 'waiting-for-key-approval'
+    | 'binding-not-approved'
+    | 'binding-needs-reapproval'
+    | 'share-suspended'
+    | 'key-approval-ended'
+    | 'waiting-for-credits'
+    | 'credential-rejected';
+  audience:
+    | 'payer'
+    | 'other-direct-writers'
+    | 'direct-writers'
+    | 'client-owner';
+  forViewer: boolean;
+  run: {
+    runId: string;
+    reason: string | null;
+    message: string | null;
+    finishedAt: string | null;
+  } | null;
+  operation: { name: string; module: string; typeName: string } | null;
+  credential:
+    | { kind: 'reconnect'; keyId: string }
+    | { kind: 'connect-again'; keyId: string }
+    | { kind: 'fix-client'; clientKeyId: string }
+    | { kind: 'fix-share'; shareId: string }
+    | null;
+}
 // A limit the automation is near or at.
 interface LimitNear {
   name: string;
