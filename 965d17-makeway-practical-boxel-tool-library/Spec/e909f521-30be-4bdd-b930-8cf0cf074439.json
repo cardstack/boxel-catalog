@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../aspect-ratio-command",
+        "name": "AspectRatioCommand"
+      },
+      "specType": "command",
+      "containedExamples": [],
+      "cardTitle": "AspectRatioCommand",
+      "cardDescription": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
