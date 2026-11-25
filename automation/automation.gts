@@ -6696,9 +6696,15 @@ class KeyApprovalsSection extends GlimmerComponent<{
   };
 }> {
   get lead() {
-    return this.args.approvals.approved
+    if (!this.args.approvals.approved) {
+      return 'Boxel holds every run until the owner of each key approves the automation’s use of the key.';
+    }
+    let everyKeyWorks = this.args.approvals.operations.every(({ slots }) =>
+      slots.every(({ state }) => state === 'approved'),
+    );
+    return everyKeyWorks
       ? 'The owner of each key the automation uses approved the automation’s use of the key. Each approval lasts until someone changes the automation’s script, triggers, params or outside services.'
-      : 'Boxel holds every run until the owner of each key approves the automation’s use of the key.';
+      : 'The owner of each key the automation uses approved the automation’s use of the key, but a run that sends a key marked below fails until someone fixes the key.';
   }
   get operations() {
     return this.args.approvals.operations.filter(
@@ -6793,7 +6799,7 @@ class KeyApprovalsSection extends GlimmerComponent<{
                         @month='short'
                         @day='numeric'
                         @year='numeric'
-                      />.
+                      />
                     </span>
                   {{/if}}
                 </:description>
