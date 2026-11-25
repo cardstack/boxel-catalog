@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Warm socks (wool/thermal)",
+      "category": "wardrobe",
+      "status": "have",
+      "need": 5,
+      "why": "cold weather",
+      "litres": 0.2,
+      "kg": 0.1,
+      "kind": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/hokkaido"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

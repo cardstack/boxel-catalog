@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Any personal medication",
+      "category": "medicine",
+      "status": "needed",
+      "need": 1,
+      "why": "personal health needs",
+      "litres": 0.2,
+      "kg": 0.1,
+      "kind": null,
+      "leaveWhy": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/bali"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

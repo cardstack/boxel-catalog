@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Phone charger",
+      "category": "electronics",
+      "status": "needed",
+      "need": 1,
+      "why": "keep devices charged",
+      "litres": 0.2,
+      "kg": 0.1,
+      "kind": null,
+      "leaveWhy": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/bali"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

@@ -1,0 +1,408 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Travel Helper",
+      "summary": "A packing list that researches your trip and sees what you own. Say where and when, and it looks up the weather day by day, writes short sourced notes, colours the page after the destination and drafts a list sized to the trip. Then scan your things with your phone: the camera ticks off the list, adds what is new, and the computer view updates live. Several bags, each drawn as a suitcase, backpack or duffel that fills as you pack, with a weight dial against its limit. Things you own carry over to the next trip, and **Put away** remembers where each one lives. Comes with two example trips: *Hokkaido in November* (part-way packed) and *Bali in December* (freshly researched).",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/trip"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/pack-item"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/thing"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/snap"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/travel-ai"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../Trip/hokkaido"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../Trip/bali"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../PackItem/bali-01"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../PackItem/bali-02"
+        }
+      },
+      "examples.4": {
+        "links": {
+          "self": "../PackItem/bali-03"
+        }
+      },
+      "examples.5": {
+        "links": {
+          "self": "../PackItem/bali-04"
+        }
+      },
+      "examples.6": {
+        "links": {
+          "self": "../PackItem/bali-05"
+        }
+      },
+      "examples.7": {
+        "links": {
+          "self": "../PackItem/bali-06"
+        }
+      },
+      "examples.8": {
+        "links": {
+          "self": "../PackItem/bali-07"
+        }
+      },
+      "examples.9": {
+        "links": {
+          "self": "../PackItem/bali-08"
+        }
+      },
+      "examples.10": {
+        "links": {
+          "self": "../PackItem/bali-09"
+        }
+      },
+      "examples.11": {
+        "links": {
+          "self": "../PackItem/bali-10"
+        }
+      },
+      "examples.12": {
+        "links": {
+          "self": "../PackItem/bali-11"
+        }
+      },
+      "examples.13": {
+        "links": {
+          "self": "../PackItem/bali-12"
+        }
+      },
+      "examples.14": {
+        "links": {
+          "self": "../PackItem/bali-13"
+        }
+      },
+      "examples.15": {
+        "links": {
+          "self": "../PackItem/bali-14"
+        }
+      },
+      "examples.16": {
+        "links": {
+          "self": "../PackItem/bali-15"
+        }
+      },
+      "examples.17": {
+        "links": {
+          "self": "../PackItem/bali-16"
+        }
+      },
+      "examples.18": {
+        "links": {
+          "self": "../PackItem/bali-17"
+        }
+      },
+      "examples.19": {
+        "links": {
+          "self": "../PackItem/bali-18"
+        }
+      },
+      "examples.20": {
+        "links": {
+          "self": "../PackItem/bali-19"
+        }
+      },
+      "examples.21": {
+        "links": {
+          "self": "../PackItem/bali-20"
+        }
+      },
+      "examples.22": {
+        "links": {
+          "self": "../PackItem/bali-21"
+        }
+      },
+      "examples.23": {
+        "links": {
+          "self": "../PackItem/bali-22"
+        }
+      },
+      "examples.24": {
+        "links": {
+          "self": "../PackItem/bali-23"
+        }
+      },
+      "examples.25": {
+        "links": {
+          "self": "../PackItem/bali-24"
+        }
+      },
+      "examples.26": {
+        "links": {
+          "self": "../PackItem/bali-25"
+        }
+      },
+      "examples.27": {
+        "links": {
+          "self": "../PackItem/bali-26"
+        }
+      },
+      "examples.28": {
+        "links": {
+          "self": "../PackItem/bali-27"
+        }
+      },
+      "examples.29": {
+        "links": {
+          "self": "../PackItem/bali-28"
+        }
+      },
+      "examples.30": {
+        "links": {
+          "self": "../PackItem/bali-29"
+        }
+      },
+      "examples.31": {
+        "links": {
+          "self": "../PackItem/bali-30"
+        }
+      },
+      "examples.32": {
+        "links": {
+          "self": "../PackItem/bali-31"
+        }
+      },
+      "examples.33": {
+        "links": {
+          "self": "../PackItem/hokkaido-01"
+        }
+      },
+      "examples.34": {
+        "links": {
+          "self": "../PackItem/hokkaido-02"
+        }
+      },
+      "examples.35": {
+        "links": {
+          "self": "../PackItem/hokkaido-03"
+        }
+      },
+      "examples.36": {
+        "links": {
+          "self": "../PackItem/hokkaido-04"
+        }
+      },
+      "examples.37": {
+        "links": {
+          "self": "../PackItem/hokkaido-05"
+        }
+      },
+      "examples.38": {
+        "links": {
+          "self": "../PackItem/hokkaido-06"
+        }
+      },
+      "examples.39": {
+        "links": {
+          "self": "../PackItem/hokkaido-07"
+        }
+      },
+      "examples.40": {
+        "links": {
+          "self": "../PackItem/hokkaido-08"
+        }
+      },
+      "examples.41": {
+        "links": {
+          "self": "../PackItem/hokkaido-09"
+        }
+      },
+      "examples.42": {
+        "links": {
+          "self": "../PackItem/hokkaido-10"
+        }
+      },
+      "examples.43": {
+        "links": {
+          "self": "../PackItem/hokkaido-11"
+        }
+      },
+      "examples.44": {
+        "links": {
+          "self": "../PackItem/hokkaido-12"
+        }
+      },
+      "examples.45": {
+        "links": {
+          "self": "../PackItem/hokkaido-13"
+        }
+      },
+      "examples.46": {
+        "links": {
+          "self": "../PackItem/hokkaido-14"
+        }
+      },
+      "examples.47": {
+        "links": {
+          "self": "../PackItem/hokkaido-15"
+        }
+      },
+      "examples.48": {
+        "links": {
+          "self": "../PackItem/hokkaido-16"
+        }
+      },
+      "examples.49": {
+        "links": {
+          "self": "../PackItem/hokkaido-17"
+        }
+      },
+      "examples.50": {
+        "links": {
+          "self": "../PackItem/hokkaido-18"
+        }
+      },
+      "examples.51": {
+        "links": {
+          "self": "../PackItem/hokkaido-19"
+        }
+      },
+      "examples.52": {
+        "links": {
+          "self": "../PackItem/hokkaido-20"
+        }
+      },
+      "examples.53": {
+        "links": {
+          "self": "../PackItem/hokkaido-21"
+        }
+      },
+      "examples.54": {
+        "links": {
+          "self": "../PackItem/hokkaido-22"
+        }
+      },
+      "examples.55": {
+        "links": {
+          "self": "../PackItem/hokkaido-23"
+        }
+      },
+      "examples.56": {
+        "links": {
+          "self": "../PackItem/hokkaido-24"
+        }
+      },
+      "examples.57": {
+        "links": {
+          "self": "../PackItem/hokkaido-25"
+        }
+      },
+      "examples.58": {
+        "links": {
+          "self": "../PackItem/hokkaido-26"
+        }
+      },
+      "examples.59": {
+        "links": {
+          "self": "../PackItem/hokkaido-27"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/1-research.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/2-list.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../Screenshots/3-setup.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/4-bags.png"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "@cardstack/catalog/Category/travel-lifestyle"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "@cardstack/catalog/Category/home-living"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/app"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/ai"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/travel-helper.png"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "CardListing"
+      }
+    }
+  }
+}

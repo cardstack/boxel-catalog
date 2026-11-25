@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Sarong",
+      "category": "wardrobe",
+      "status": "needed",
+      "need": 1,
+      "why": "temple etiquette, Tirta Empul",
+      "litres": 0.5,
+      "kg": 0.2,
+      "kind": null,
+      "leaveWhy": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/bali"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

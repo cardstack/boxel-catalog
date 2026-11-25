@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Swimsuit",
+      "category": "wardrobe",
+      "status": "needed",
+      "need": 2,
+      "why": "beach days, snorkelling, Tirta Empul",
+      "litres": 0.5,
+      "kg": 0.15,
+      "kind": null,
+      "leaveWhy": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/bali"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}

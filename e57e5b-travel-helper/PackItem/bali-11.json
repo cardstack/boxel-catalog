@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Snorkel gear",
+      "category": "other",
+      "status": "needed",
+      "need": 1,
+      "why": "snorkelling beaches (optional, can rent)",
+      "litres": 3,
+      "kg": 0.5,
+      "kind": null,
+      "leaveWhy": null
+    },
+    "relationships": {
+      "trip": {
+        "links": {
+          "self": "../Trip/bali"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../items",
+        "name": "PackItem"
+      }
+    }
+  }
+}
