@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "What's going on here?",
+      "brief": "A Thematic Apperception style picture: what this person reads into an open everyday scene.",
+      "mode": "react",
+      "prompt": null,
+      "subject": null,
+      "look": "illustration",
+      "edits": 0,
+      "editPrompt": null,
+      "seed": "two people at a kitchen table late at night, one standing by the window looking out, a laptop open between them",
+      "seedImage": null,
+      "questions": "What's going on in this picture?\nHow does it feel to you?\nWhat happens next?"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../picture",
+        "name": "PictureQuestion"
+      }
+    }
+  }
+}

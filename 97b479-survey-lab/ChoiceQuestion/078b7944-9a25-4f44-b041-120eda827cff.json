@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Sample participant · A work app you use every day changes its layout overnight. …",
+      "brief": "Aim 5: familiar vs fresh",
+      "prompt": "A work app you use every day changes its layout overnight. Which is closest to how you'd react?",
+      "options": "I'm irritated until I find everything again\nI'm fine with it if it ends up faster\nI like it when it looks fresher, even if I have to relearn\nI barely notice\nIt depends on the change",
+      "multi": false,
+      "maxPicks": null,
+      "allowOther": true,
+      "shuffle": true,
+      "media": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../choice",
+        "name": "ChoiceQuestion"
+      }
+    }
+  }
+}

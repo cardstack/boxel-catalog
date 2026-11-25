@@ -1,0 +1,21 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "What you'd let AI build",
+      "brief": "Which kinds of work app are people ready to let AI build first? Forcing a top 3 shows priorities rather than a wish list.",
+      "prompt": "Which of these would you let an AI build for your team? Pick your top 3.",
+      "options": "A tracker for tasks or requests\nA dashboard over our data\nA form or intake flow\nA client-facing portal\nAn approval workflow\nA reporting tool for finance\nAn onboarding guide for new staff\nA booking or scheduling tool",
+      "multi": true,
+      "maxPicks": 3,
+      "allowOther": true,
+      "shuffle": true
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../choice",
+        "name": "ChoiceQuestion"
+      }
+    }
+  }
+}
