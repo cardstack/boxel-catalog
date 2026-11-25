@@ -5086,9 +5086,16 @@ class RunDetail extends GlimmerComponent<{
                       the automation’s payer once a day for every file the
                       automation’s runs created that still exists, and for the
                       files’ entries in the workspace’s search index.</li>
-                    <li>Boxel charges every day the automation is switched on,
-                      including while the automation is paused or done. Removing
-                      the automation, or deleting the files, stops the charge.</li>
+                    <li>Boxel charges for every day the automation is active,
+                      even when the automation is active for only part of the
+                      day.</li>
+                    <li>Boxel stops charging while the automation is paused,
+                      waiting for credits, waiting for key approval or done, and
+                      starts charging again on the day the automation becomes
+                      active again. The files stay in the workspace while the
+                      charge is stopped.</li>
+                    <li>Removing the automation, or deleting the files, also
+                      stops the charge.</li>
                     <li>Boxel charges whole credits: the daily amounts add up,
                       and Boxel charges the days together once the days cost at
                       least 1 credit.</li>
