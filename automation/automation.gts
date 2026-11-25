@@ -5102,8 +5102,7 @@ class RunDetail extends GlimmerComponent<{
                       the day the status reads On again. The files stay in the
                       workspace while Boxel isn’t charging for the files.</li>
                     <li>Boxel also stops charging when a realm administrator
-                      removes the automation, or when someone deletes the
-                      files.</li>
+                      removes the automation, or when someone deletes the files.</li>
                     <li>Boxel charges whole credits: the daily amounts add up,
                       and Boxel charges the days together once the days cost at
                       least 1 credit.</li>
