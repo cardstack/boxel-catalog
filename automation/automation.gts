@@ -120,6 +120,7 @@ import LayoutListIcon from '@cardstack/boxel-icons/layout-list';
 import {
   AutomationsConsoleContextName,
   automationNoticeText,
+  automationPausedReason,
   showAutomationInConsole,
 } from '@cardstack/base/realm-automations';
 import { describeCron } from '@cardstack/catalog/automation/describe-cron';
@@ -6869,7 +6870,7 @@ class AutomationNoticeCallout extends GlimmerComponent<{
       case 'key-approval-ended':
         return automation
           ? {
-              label: 'Approve in the secure window',
+              label: 'Approve',
               input: { mode: 'approve', automation, reason },
             }
           : undefined;
@@ -8558,6 +8559,14 @@ class AtAGlance extends Component<typeof Automation> {
   }
   // Whether the automation has a notice for the viewer: the card marks its
   // icon, so a list of automations shows which ones need the viewer.
+  // Why Boxel paused the automation, in a few words, while the automation is
+  // paused: the console's row says why in place of a next run.
+  get pausedReason(): string | undefined {
+    let status = this.status;
+    return status?.switchedOn && status.state === 'paused'
+      ? automationPausedReason(status.pauseReason)
+      : undefined;
+  }
   get needsAttention() {
     let status = this.status;
     return Boolean(status?.switchedOn && status.notice?.forViewer);
@@ -9209,6 +9218,14 @@ class Fitted extends AtAGlance {
           {{/if}}
         </ul>
 
+        {{#if this.pausedReason}}
+          <p
+            class='af__fact af__fact--next af__fact--paused'
+            data-test-automation-fitted-paused
+          >
+            {{this.pausedReason}}
+          </p>
+        {{/if}}
         {{#if this.nextRun}}
           <p class='af__fact af__fact--next' data-test-automation-fitted-next>
             Next run
