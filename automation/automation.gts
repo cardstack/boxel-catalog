@@ -6096,8 +6096,14 @@ class Isolated extends Component<typeof Automation> {
   get look() {
     return stateLook(this.status);
   }
+  // The sentence introduces the listed steps, when there are any, so it ends
+  // with a colon here. The fitted view shows the sentence alone.
   get stateSentence() {
-    return this.status ? stateSentence(this.status) : undefined;
+    if (!this.status) {
+      return undefined;
+    }
+    let sentence = stateSentence(this.status);
+    return this.stateSteps.length ? sentence.replace(/\.$/, ':') : sentence;
   }
   get stateSteps() {
     return this.status ? stateSteps(this.status) : [];
