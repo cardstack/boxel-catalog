@@ -6687,7 +6687,7 @@ function slotSentence(slot: SlotApproval): string {
 // window page that fixes it. The section reads the automation's status,
 // which an `automation` event refreshes, so an approval that lands shows
 // without a reload.
-class KeyApprovals extends GlimmerComponent<{
+class KeyApprovalsSection extends GlimmerComponent<{
   Args: {
     approvals: KeyApprovalStatus;
     automation: string | undefined;
@@ -6840,6 +6840,9 @@ class KeyApprovals extends GlimmerComponent<{
         display: block;
       }
     </style>
+  </template>
+}
+
 // Whether the way into the automations console shows: to a direct writer,
 // on a card that knows its realm, outside the console itself.
 function showsConsoleAction(
@@ -7196,7 +7199,7 @@ class Isolated extends Component<typeof Automation> {
           @collapsible={{false}}
           data-test-automation-key-approvals
         >
-          <KeyApprovals
+          <KeyApprovalsSection
             @approvals={{this.keyApprovals}}
             @automation={{@model.id}}
             @realm={{this.realmHref}}
