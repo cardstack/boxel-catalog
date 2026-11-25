@@ -2616,7 +2616,7 @@ function stateSteps(status: ServerStatus): string[] {
     status.pauseReason === 'webhook-owner-lost-access'
   ) {
     return [
-      'Edit the automation, and in the trigger’s Webhook field pick one of this workspace’s webhooks.',
+      'Edit the automation, and in the trigger’s Webhook field pick one of this workspace’s webhooks, or',
       'Make the person who made the webhook a realm administrator again.',
     ];
   }
