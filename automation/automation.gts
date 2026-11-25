@@ -4,6 +4,7 @@ import GlimmerComponent from '@glimmer/component';
 import type Owner from '@ember/owner';
 import { cached, tracked } from '@glimmer/tracking';
 import { modifier } from 'ember-modifier';
+import { consume } from 'ember-provide-consume-context';
 import { resource, use } from 'ember-resources';
 import { TrackedObject, TrackedSet } from 'tracked-built-ins';
 import { markDefinition } from '@cardstack/base/mark-definition';
@@ -114,6 +115,11 @@ import PlusIcon from '@cardstack/boxel-icons/plus';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
 import TrashIcon from '@cardstack/boxel-icons/trash-2';
 import ZapIcon from '@cardstack/boxel-icons/zap';
+import LayoutListIcon from '@cardstack/boxel-icons/layout-list';
+import {
+  AutomationsConsoleContextName,
+  showAutomationInConsole,
+} from '@cardstack/base/realm-automations';
 import { describeCron } from '@cardstack/catalog/automation/describe-cron';
 import { cronTriggerProblem } from '@cardstack/runtime-common/automation-cron-rule';
 import { CodeEdit, CodeView } from '@cardstack/catalog/fields/code/code';
@@ -5623,6 +5629,9 @@ interface KeyApprovalShare {
   id: string;
   label: string;
   owner: string | null;
+  // The share's owner resumes or swaps a suspended share before anyone can
+  // approve the slot.
+  suspended?: true;
 }
 
 interface OperationKeyApproval {
@@ -5661,14 +5670,32 @@ interface OtherApprover {
   owner: string;
 }
 
-// The approver a missing approval waits on most: a slot nobody can fill yet,
-// then one another person approves, then one the payer approves.
-function neediestApprover(
+type MissingKeyApproval = NonNullable<OperationKeyApproval['missing']>[number];
+
+// A missing approval whose share is suspended: the share's owner resumes the
+// share before anyone approves the slot.
+function waitsOnSuspendedShare(missing: MissingKeyApproval): boolean {
+  return (
+    Boolean(missing.shares?.length) &&
+    missing.shares!.every((share) => share.suspended)
+  );
+}
+
+// Who a missing approval waits on most: a slot nobody can fill yet, then a
+// suspended share, then one another person approves, then one the payer
+// approves.
+function neediestWait(
   operation: OperationKeyApproval,
-): KeyApprover | undefined {
-  let approvers = (operation.missing ?? []).map((m) => m.canApprove);
-  return (['nobody-yet', 'another-key-owner', 'payer'] as const).find((a) =>
-    approvers.includes(a),
+): KeyApprover | 'share-suspended' | undefined {
+  let missing = operation.missing ?? [];
+  if (missing.some((m) => m.canApprove === 'nobody-yet')) {
+    return 'nobody-yet';
+  }
+  if (missing.some(waitsOnSuspendedShare)) {
+    return 'share-suspended';
+  }
+  return (['another-key-owner', 'payer'] as const).find((a) =>
+    missing.some((m) => m.canApprove === a),
   );
 }
 
@@ -5701,6 +5728,129 @@ function needsReconfirm(status: ServerStatus | undefined): boolean {
     (status.pauseReason === 'caps-raised' ||
       status.pauseReason === 'batched-ai-enabled')
   );
+}
+
+// The switch-on screen's key approvals: each declared operation with the
+// operation's key approval, and what each missing approval waits for. Before
+// the person confirms, the copy says what turning on does; after, the copy
+// says what the automation waits for.
+class SwitchOnKeyApprovals extends GlimmerComponent<{
+  Args: {
+    rows: KeyApprovalRow[];
+    otherApprovers: OtherApprover[];
+    nobodyYet: boolean;
+    payerApproves: boolean;
+    confirmed: boolean;
+    windowFailure: string | undefined;
+    onShareKey: () => void;
+  };
+}> {
+  <template>
+    {{#if @rows.length}}
+      <PanelSection
+        @title='Keys the automation uses'
+        @collapsible={{false}}
+        @level={{4}}
+        data-test-automation-switch-on-keys
+      >
+        <Stack @gap='xs'>
+          {{#each @rows as |row|}}
+            <div data-test-automation-switch-on-key={{row.key}}>
+              <Item @size='s' @wrap={{true}}>
+                <:title>{{row.title}}</:title>
+                <:description>
+                  on
+                  <Token @value={{row.typeName}} />
+                  {{#if row.detail}}
+                    <span
+                      class='switch-on-keys__detail'
+                      data-test-automation-switch-on-key-detail
+                    >{{row.detail}}</span>
+                  {{/if}}
+                </:description>
+                <:trailing>
+                  <Chip
+                    @label={{row.look.label}}
+                    @tone={{row.look.tone}}
+                    data-test-automation-switch-on-key-state={{row.look.label}}
+                  />
+                </:trailing>
+              </Item>
+            </div>
+          {{/each}}
+        </Stack>
+      </PanelSection>
+      {{#if @otherApprovers.length}}
+        <Callout
+          @tone='warning'
+          @title='Another person approves a key'
+          data-test-automation-switch-on-other-approvers
+        >
+          <ul class='switch-on-keys__list'>
+            {{#each @otherApprovers as |approver|}}
+              <li>{{approver.owner}}
+                approves the automation’s use of the key
+                <strong>{{approver.label}}</strong>.</li>
+            {{/each}}
+          </ul>
+          {{#unless @confirmed}}
+            Boxel turns on the automation now.
+          {{/unless}}
+          The automation waits and runs nothing until each approval is in place.
+        </Callout>
+      {{/if}}
+      {{#if @nobodyYet}}
+        <Callout
+          @tone='warning'
+          @title='No key shared with the realm'
+          data-test-automation-switch-on-no-share
+        >
+          <:default>
+            The automation calls a service with a key that a realm administrator
+            shares with the realm, and nobody has shared a key yet. The
+            automation waits and runs nothing until a realm administrator shares
+            a key and the key’s owner approves the automation’s use of the key.
+          </:default>
+          <:action>
+            <Button
+              @appearance='outlined'
+              @size='sm'
+              {{on 'click' @onShareKey}}
+              data-test-automation-switch-on-share-key
+            >Share a key</Button>
+          </:action>
+        </Callout>
+      {{/if}}
+      {{#if @payerApproves}}
+        <Callout
+          @tone='info'
+          @title='You approve the keys in the same step'
+          data-test-automation-switch-on-payer-approves
+        >
+          Turning on the automation opens Boxel’s secure window, where you
+          approve the calls the automation makes with your keys. Boxel starts
+          running the automation once every key approval is in place.
+        </Callout>
+      {{/if}}
+      {{#if @windowFailure}}
+        <Callout
+          @tone='danger'
+          @title='Boxel couldn’t open the secure window'
+          data-test-automation-switch-on-window-failure
+        >{{@windowFailure}}</Callout>
+      {{/if}}
+    {{/if}}
+    <style scoped>
+      .switch-on-keys__detail {
+        display: block;
+        margin-top: var(--boxel-sp-4xs);
+      }
+      .switch-on-keys__list {
+        margin: var(--boxel-sp-4xs) 0;
+        padding-inline-start: var(--boxel-sp-lg);
+      }
+    </style>
+  </template>
 }
 
 // The switch-on screen. A direct writer of the workspace turns the
@@ -5741,6 +5891,8 @@ export class SwitchOnDialog extends GlimmerComponent<{
   // automation waits for key approval.
   @tracked confirmedMode: 'switch-on' | 'reconfirm' | undefined;
   @tracked windowFailure: string | undefined;
+  // Whether the browser blocked the secure window the screen opened.
+  @tracked windowBlocked = false;
 
   get mode(): 'switch-on' | 'reconfirm' {
     if (this.confirmedMode) {
@@ -5779,7 +5931,7 @@ export class SwitchOnDialog extends GlimmerComponent<{
         };
       }
       let missing = operation.missing ?? [];
-      switch (neediestApprover(operation)) {
+      switch (neediestWait(operation)) {
         case 'nobody-yet':
           return {
             ...row,
@@ -5787,6 +5939,14 @@ export class SwitchOnDialog extends GlimmerComponent<{
             detail:
               'A realm administrator shares a key with the realm before anyone can approve the call.',
           };
+        case 'share-suspended': {
+          let share = missing.find(waitsOnSuspendedShare)?.shares?.[0];
+          return {
+            ...row,
+            look: { label: 'Share suspended', tone: 'warning' },
+            detail: `${ownerName(share)} resumes the share ${share?.label ?? ''} before anyone approves the call.`,
+          };
+        }
         case 'another-key-owner': {
           let share = missing.find((m) => m.canApprove === 'another-key-owner')
             ?.shares?.[0];
@@ -5809,16 +5969,24 @@ export class SwitchOnDialog extends GlimmerComponent<{
       }
     });
   }
+  // Whether some missing approval is the payer's to give in the secure
+  // window: not one whose share is suspended, which the share's owner
+  // resumes first.
   get payerApproves() {
     return (this.keyApprovals?.operations ?? []).some((o) =>
-      (o.missing ?? []).some((m) => m.canApprove === 'payer'),
+      (o.missing ?? []).some(
+        (m) => m.canApprove === 'payer' && !waitsOnSuspendedShare(m),
+      ),
     );
   }
   get otherApprovers(): OtherApprover[] {
     let found = new Map<string, OtherApprover>();
     for (let operation of this.keyApprovals?.operations ?? []) {
       for (let missing of operation.missing ?? []) {
-        if (missing.canApprove !== 'another-key-owner') {
+        if (
+          missing.canApprove !== 'another-key-owner' ||
+          waitsOnSuspendedShare(missing)
+        ) {
           continue;
         }
         for (let share of missing.shares ?? []) {
@@ -5979,6 +6147,7 @@ export class SwitchOnDialog extends GlimmerComponent<{
     this.confirmedApprovals = undefined;
     this.confirmedMode = undefined;
     this.windowFailure = undefined;
+    this.windowBlocked = false;
     this.open = true;
     this.readEstimate();
   };
@@ -6002,11 +6171,12 @@ export class SwitchOnDialog extends GlimmerComponent<{
   approveKeys = async () => {
     this.windowFailure = undefined;
     try {
-      await new OpenSecureWindowTool(this.tools!).execute({
+      let result = await new OpenSecureWindowTool(this.tools!).execute({
         mode: 'approve',
         automation: this.args.model.id,
         reason: 'To approve the calls the automation makes with your keys',
       });
+      this.windowBlocked = result?.status === 'blocked';
     } catch (e) {
       this.windowFailure = e instanceof Error ? e.message : String(e);
     }
@@ -6043,12 +6213,23 @@ export class SwitchOnDialog extends GlimmerComponent<{
       this.rereadTimer = undefined;
     }
   }
+  // Each read is numbered, so only the latest answer counts.
+  private rereads = 0;
   rereadApprovals = async () => {
     if (this.isDestroying || this.isDestroyed || !this.confirmedMode) {
       return;
     }
+    let read = ++this.rereads;
     try {
       let estimate = await this.fetchEstimate();
+      if (
+        read !== this.rereads ||
+        this.isDestroying ||
+        this.isDestroyed ||
+        !this.confirmedMode
+      ) {
+        return;
+      }
       if (estimate.keyApprovals) {
         this.confirmedApprovals = estimate.keyApprovals;
       }
@@ -6222,19 +6403,34 @@ export class SwitchOnDialog extends GlimmerComponent<{
                   @title='The automation is waiting for key approval'
                   data-test-automation-switch-on-waiting
                 >
-                  Boxel turned on the automation. The automation runs nothing
-                  until every key approval below is in place.
+                  {{if
+                    (eq this.mode 'reconfirm')
+                    'Boxel resumed the automation.'
+                    'Boxel turned on the automation.'
+                  }}
+                  The automation runs nothing until every key approval below is
+                  in place.
                 </Callout>
                 {{#if this.payerApproves}}
                   <Callout
                     @tone='info'
-                    @title='Approve the calls in the secure window'
+                    @title={{if
+                      this.windowBlocked
+                      'Open the secure window'
+                      'Approve the calls in the secure window'
+                    }}
                     data-test-automation-switch-on-approve-keys
                   >
                     <:default>
-                      Boxel opened the secure window, where you approve the
-                      calls the automation makes with your keys, in one step.
-                      Once you approve the calls, the screen shows the
+                      {{#if this.windowBlocked}}
+                        The browser kept Boxel from opening the secure window.
+                        Open the secure window to approve the calls the
+                        automation makes with your keys, in one step.
+                      {{else}}
+                        Boxel opened the secure window, where you approve the
+                        calls the automation makes with your keys, in one step.
+                      {{/if}}
+                      Once every key approval is in place, the screen shows the
                       automation as on.
                     </:default>
                     <:action>
@@ -6243,94 +6439,24 @@ export class SwitchOnDialog extends GlimmerComponent<{
                         @size='sm'
                         {{on 'click' this.approveKeys}}
                         data-test-automation-switch-on-reopen-window
-                      >Open the secure window again</Button>
+                      >{{if
+                          this.windowBlocked
+                          'Open the secure window'
+                          'Open the secure window again'
+                        }}</Button>
                     </:action>
                   </Callout>
                 {{/if}}
               {{/if}}
-              {{#if this.keyRows.length}}
-                <PanelSection
-                  @title='Keys the automation uses'
-                  @collapsible={{false}}
-                  @level={{4}}
-                  data-test-automation-switch-on-keys
-                >
-                  <Stack @gap='xs'>
-                    {{#each this.keyRows as |row|}}
-                      <div data-test-automation-switch-on-key={{row.key}}>
-                        <Item @size='s' @wrap={{true}}>
-                          <:title>{{row.title}}</:title>
-                          <:description>
-                            on
-                            <Token @value={{row.typeName}} />
-                            {{#if row.detail}}
-                              <span
-                                class='switch-on__key-detail'
-                                data-test-automation-switch-on-key-detail
-                              >{{row.detail}}</span>
-                            {{/if}}
-                          </:description>
-                          <:trailing>
-                            <Chip
-                              @label={{row.look.label}}
-                              @tone={{row.look.tone}}
-                              data-test-automation-switch-on-key-state={{row.look.label}}
-                            />
-                          </:trailing>
-                        </Item>
-                      </div>
-                    {{/each}}
-                  </Stack>
-                </PanelSection>
-                {{#if this.otherApprovers.length}}
-                  <Callout
-                    @tone='warning'
-                    @title='Another person approves a key'
-                    data-test-automation-switch-on-other-approvers
-                  >
-                    <ul class='switch-on__list'>
-                      {{#each this.otherApprovers as |approver|}}
-                        <li>{{approver.owner}}
-                          approves the automation’s use of the key
-                          <strong>{{approver.label}}</strong>.</li>
-                      {{/each}}
-                    </ul>
-                    Boxel turns on the automation now. The automation waits and
-                    runs nothing until each approval is in place.
-                  </Callout>
-                {{/if}}
-                {{#if this.nobodyYet}}
-                  <Callout
-                    @tone='warning'
-                    @title='No key shared with the realm'
-                    data-test-automation-switch-on-no-share
-                  >
-                    <:default>
-                      The automation calls a service with a key that a realm
-                      administrator shares with the realm, and nobody has shared
-                      a key yet. The automation waits and runs nothing until a
-                      realm administrator shares a key and approves the
-                      automation’s use of the key.
-                    </:default>
-                    <:action>
-                      <Button
-                        @appearance='outlined'
-                        @size='sm'
-                        {{on 'click' this.shareKey}}
-                        data-test-automation-switch-on-share-key
-                      >Share a key</Button>
-                    </:action>
-                  </Callout>
-                {{/if}}
-                {{#if this.windowFailure}}
-                  <div data-test-automation-switch-on-window-failure>
-                    <Callout
-                      @tone='danger'
-                      @title='Boxel couldn’t open the secure window'
-                    >{{this.windowFailure}}</Callout>
-                  </div>
-                {{/if}}
-              {{/if}}
+              <SwitchOnKeyApprovals
+                @rows={{this.keyRows}}
+                @otherApprovers={{this.otherApprovers}}
+                @nobodyYet={{this.nobodyYet}}
+                @payerApproves={{false}}
+                @confirmed={{true}}
+                @windowFailure={{this.windowFailure}}
+                @onShareKey={{this.shareKey}}
+              />
             {{else if this.estimate}}
               <Descriptions
                 @items={{this.estimateItems}}
@@ -6383,101 +6509,15 @@ export class SwitchOnDialog extends GlimmerComponent<{
                   data-test-automation-switch-on-cap
                 />
               </Field>
-              {{#if this.keyRows.length}}
-                <PanelSection
-                  @title='Keys the automation uses'
-                  @collapsible={{false}}
-                  @level={{4}}
-                  data-test-automation-switch-on-keys
-                >
-                  <Stack @gap='xs'>
-                    {{#each this.keyRows as |row|}}
-                      <div data-test-automation-switch-on-key={{row.key}}>
-                        <Item @size='s' @wrap={{true}}>
-                          <:title>{{row.title}}</:title>
-                          <:description>
-                            on
-                            <Token @value={{row.typeName}} />
-                            {{#if row.detail}}
-                              <span
-                                class='switch-on__key-detail'
-                                data-test-automation-switch-on-key-detail
-                              >{{row.detail}}</span>
-                            {{/if}}
-                          </:description>
-                          <:trailing>
-                            <Chip
-                              @label={{row.look.label}}
-                              @tone={{row.look.tone}}
-                              data-test-automation-switch-on-key-state={{row.look.label}}
-                            />
-                          </:trailing>
-                        </Item>
-                      </div>
-                    {{/each}}
-                  </Stack>
-                </PanelSection>
-                {{#if this.otherApprovers.length}}
-                  <Callout
-                    @tone='warning'
-                    @title='Another person approves a key'
-                    data-test-automation-switch-on-other-approvers
-                  >
-                    <ul class='switch-on__list'>
-                      {{#each this.otherApprovers as |approver|}}
-                        <li>{{approver.owner}}
-                          approves the automation’s use of the key
-                          <strong>{{approver.label}}</strong>.</li>
-                      {{/each}}
-                    </ul>
-                    Boxel turns on the automation now. The automation waits and
-                    runs nothing until each approval is in place.
-                  </Callout>
-                {{/if}}
-                {{#if this.nobodyYet}}
-                  <Callout
-                    @tone='warning'
-                    @title='No key shared with the realm'
-                    data-test-automation-switch-on-no-share
-                  >
-                    <:default>
-                      The automation calls a service with a key that a realm
-                      administrator shares with the realm, and nobody has shared
-                      a key yet. The automation waits and runs nothing until a
-                      realm administrator shares a key and approves the
-                      automation’s use of the key.
-                    </:default>
-                    <:action>
-                      <Button
-                        @appearance='outlined'
-                        @size='sm'
-                        {{on 'click' this.shareKey}}
-                        data-test-automation-switch-on-share-key
-                      >Share a key</Button>
-                    </:action>
-                  </Callout>
-                {{/if}}
-                {{#if this.payerApproves}}
-                  <Callout
-                    @tone='info'
-                    @title='You approve the keys in the same step'
-                    data-test-automation-switch-on-payer-approves
-                  >
-                    Turning on the automation opens Boxel’s secure window, where
-                    you approve the calls the automation makes with your keys.
-                    Boxel starts running the automation once you approve the
-                    calls.
-                  </Callout>
-                {{/if}}
-                {{#if this.windowFailure}}
-                  <div data-test-automation-switch-on-window-failure>
-                    <Callout
-                      @tone='danger'
-                      @title='Boxel couldn’t open the secure window'
-                    >{{this.windowFailure}}</Callout>
-                  </div>
-                {{/if}}
-              {{/if}}
+              <SwitchOnKeyApprovals
+                @rows={{this.keyRows}}
+                @otherApprovers={{this.otherApprovers}}
+                @nobodyYet={{this.nobodyYet}}
+                @payerApproves={{this.payerApproves}}
+                @confirmed={{false}}
+                @windowFailure={{this.windowFailure}}
+                @onShareKey={{this.shareKey}}
+              />
               <Callout
                 @tone='info'
                 @title='You become the payer'
@@ -6564,10 +6604,6 @@ export class SwitchOnDialog extends GlimmerComponent<{
       .switch-on__list {
         margin: var(--boxel-sp-4xs) 0;
         padding-inline-start: var(--boxel-sp-lg);
-      }
-      .switch-on__key-detail {
-        display: block;
-        margin-top: var(--boxel-sp-4xs);
       }
     </style>
   </template>
@@ -6804,6 +6840,102 @@ class KeyApprovals extends GlimmerComponent<{
         display: block;
       }
     </style>
+// Whether the way into the automations console shows: to a direct writer,
+// on a card that knows its realm, outside the console itself.
+function showsConsoleAction(
+  model: { [realmURL]?: URL },
+  context: CardContext | undefined,
+  directWriter: boolean,
+  inConsole: boolean | undefined,
+): boolean {
+  return (
+    directWriter &&
+    !inConsole &&
+    Boolean(model[realmURL] && context?.toolContext)
+  );
+}
+
+// The way from an automation's card to the automations console: the realm
+// config card's Automations section, opened with the automation's row in
+// view and marked. Shown to the realm's direct writers alone, the only
+// viewers the console lists automations for, and left out of the automation
+// rows the console itself shows.
+class ShowInConsole extends GlimmerComponent<{
+  Args: {
+    // The automation card: its id, and the realm the card lives in.
+    model: { id?: string; [realmURL]?: URL };
+    context: CardContext | undefined;
+    // Whether the status route answered that the viewer is a direct writer.
+    directWriter: boolean;
+    // An icon button for the fitted view's narrow heading row, or a labelled
+    // button.
+    iconOnly?: boolean;
+  };
+  Element: HTMLElement;
+}> {
+  @consume(AutomationsConsoleContextName) declare inConsole:
+    | boolean
+    | undefined;
+
+  get shows() {
+    return showsConsoleAction(
+      this.args.model,
+      this.args.context,
+      this.args.directWriter,
+      this.inConsole,
+    );
+  }
+
+  @tracked private opening = false;
+
+  // A click opens the console and nothing else: the card around the button
+  // opens the automation on a click of its own.
+  show = async (event: Event) => {
+    event.stopPropagation();
+    let realm = this.args.model[realmURL]?.href;
+    let id = this.args.model.id;
+    let toolContext = this.args.context?.toolContext;
+    if (!realm || !id || !toolContext || this.opening) {
+      return;
+    }
+    this.opening = true;
+    try {
+      await showAutomationInConsole(toolContext, realm, id);
+    } catch (error) {
+      // The host reports a card that fails to open; the button only has to
+      // return to its idle state.
+      console.error('Show in Automations could not open the console', error);
+    } finally {
+      this.opening = false;
+    }
+  };
+
+  <template>
+    {{#if this.shows}}
+      {{#if @iconOnly}}
+        <IconButton
+          @label='Show in Automations'
+          @icon={{LayoutListIcon}}
+          @size='xs'
+          @appearance='plain'
+          @busy={{this.opening}}
+          {{on 'click' this.show}}
+          data-test-automation-show-in-console
+          ...attributes
+        />
+      {{else}}
+        <Button
+          @size='s'
+          @icon={{LayoutListIcon}}
+          @busy={{this.opening}}
+          {{on 'click' this.show}}
+          data-test-automation-show-in-console
+          ...attributes
+        >
+          Show in Automations
+        </Button>
+      {{/if}}
+    {{/if}}
   </template>
 }
 
@@ -6858,6 +6990,9 @@ class Isolated extends Component<typeof Automation> {
   }));
   get status() {
     return this.server.current.visible ? this.server.current.status : undefined;
+  }
+  get directWriter() {
+    return this.server.current.visible;
   }
   get statusKnown() {
     return this.server.current.known;
@@ -6972,8 +7107,15 @@ class Isolated extends Component<typeof Automation> {
           {{#if @model.cardDescription}}
             <p class='automation__summary'><@fields.cardDescription /></p>
           {{/if}}
+          <ShowInConsole
+            class='automation__console'
+            @model={{@model}}
+            @context={{@context}}
+            @directWriter={{this.directWriter}}
+          />
         </div>
         <Stack
+          class='automation__chips'
           @orientation='horizontal'
           @wrap={{true}}
           @gap='xs'
@@ -7228,6 +7370,12 @@ class Isolated extends Component<typeof Automation> {
         align-items: start;
         gap: var(--boxel-sp);
       }
+      /* Under the title, where the title's column gives the action room,
+         rather than in the chip column, which would take that room from the
+         title. */
+      .automation__console {
+        margin-block-start: var(--boxel-sp-xs);
+      }
       .automation__badge {
         display: grid;
         place-items: center;
@@ -7287,6 +7435,13 @@ class Isolated extends Component<typeof Automation> {
       @container (inline-size < 40rem) {
         .automation {
           padding: var(--boxel-sp);
+        }
+        /* A narrow header gives the chips a row of their own under the
+           title, so the title's column keeps room for the title and the
+           Show in Automations button. */
+        .automation__chips {
+          grid-column: 2 / -1;
+          justify-content: start;
         }
       }
     </style>
@@ -8340,6 +8495,22 @@ class AtAGlance extends Component<typeof Automation> {
   get status() {
     return this.server.current.visible ? this.server.current.status : undefined;
   }
+  get directWriter() {
+    return this.server.current.visible;
+  }
+  @consume(AutomationsConsoleContextName) declare inConsole:
+    | boolean
+    | undefined;
+  // Whether ShowInConsole renders for this viewer, for a view that lays out
+  // a place for the action only when the action shows.
+  get showsConsoleAction() {
+    return showsConsoleAction(
+      this.args.model,
+      this.args.context,
+      this.directWriter,
+      this.inConsole,
+    );
+  }
   get look() {
     return stateLook(this.status);
   }
@@ -8863,6 +9034,13 @@ class Fitted extends AtAGlance {
               data-test-automation-fitted-state={{this.look.label}}
             />
           {{/if}}
+          <ShowInConsole
+            class='af__console'
+            @model={{@model}}
+            @context={{@context}}
+            @directWriter={{this.directWriter}}
+            @iconOnly={{true}}
+          />
         </div>
 
         {{#if this.payer}}
@@ -9160,6 +9338,10 @@ class Fitted extends AtAGlance {
         display: none;
         flex-shrink: 0;
       }
+      .af__console {
+        display: none;
+        flex-shrink: 0;
+      }
       .af__focus,
       .af__when,
       .af__more,
@@ -9369,9 +9551,11 @@ class Fitted extends AtAGlance {
         color: var(--muted-foreground);
       }
 
-      /* A strip has room for the state beside the title. */
+      /* A strip has room for the state, and the way into the console,
+         beside the title. */
       @container (min-width: 240px) {
-        .af__state {
+        .af__state,
+        .af__console {
           display: inline-flex;
         }
       }
@@ -9618,27 +9802,60 @@ class Embedded extends AtAGlance {
   <template>
     <div class='ae' data-test-automation-embedded>
       <div class='ae__body'>
-        <Item
-          @size='s'
-          @alignStart={{true}}
-          @title={{@model.cardTitle}}
-          @description={{@model.cardDescription}}
-        >
-          <:leading>
-            <span class='ae__icon' aria-hidden='true'>
-              <CalendarClockIcon width='20' height='20' />
-            </span>
-          </:leading>
-          <:trailing>
-            {{#if this.look}}
-              <Chip
-                @label={{this.look.label}}
-                @tone={{this.look.tone}}
-                data-test-automation-embedded-state={{this.look.label}}
+        {{! Item lays out an actions column whenever it gets an actions block,
+            so the block is passed only to a viewer the action shows to. }}
+        {{#if this.showsConsoleAction}}
+          <Item
+            @size='s'
+            @alignStart={{true}}
+            @title={{@model.cardTitle}}
+            @description={{@model.cardDescription}}
+          >
+            <:leading>
+              <span class='ae__icon' aria-hidden='true'>
+                <CalendarClockIcon width='20' height='20' />
+              </span>
+            </:leading>
+            <:trailing>
+              {{#if this.look}}
+                <Chip
+                  @label={{this.look.label}}
+                  @tone={{this.look.tone}}
+                  data-test-automation-embedded-state={{this.look.label}}
+                />
+              {{/if}}
+            </:trailing>
+            <:actions>
+              <ShowInConsole
+                @model={{@model}}
+                @context={{@context}}
+                @directWriter={{this.directWriter}}
               />
-            {{/if}}
-          </:trailing>
-        </Item>
+            </:actions>
+          </Item>
+        {{else}}
+          <Item
+            @size='s'
+            @alignStart={{true}}
+            @title={{@model.cardTitle}}
+            @description={{@model.cardDescription}}
+          >
+            <:leading>
+              <span class='ae__icon' aria-hidden='true'>
+                <CalendarClockIcon width='20' height='20' />
+              </span>
+            </:leading>
+            <:trailing>
+              {{#if this.look}}
+                <Chip
+                  @label={{this.look.label}}
+                  @tone={{this.look.tone}}
+                  data-test-automation-embedded-state={{this.look.label}}
+                />
+              {{/if}}
+            </:trailing>
+          </Item>
+        {{/if}}
 
         {{#if this.triggerLines.length}}
           <div class='ae__grid'>
