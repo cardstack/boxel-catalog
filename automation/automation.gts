@@ -6260,14 +6260,25 @@ export class SwitchOnDialog extends GlimmerComponent<{
       clearInterval(this.rereadTimer);
       this.rereadTimer = undefined;
     }
+    // A read still in flight answers for a screen that has stopped reading.
+    this.rereads++;
   }
-  // Each read is numbered, so only the latest answer counts.
+  // Each read is numbered, so only the latest answer counts, and a read
+  // starts only once the one before it has answered, so a slow route still
+  // gets its answers through.
   private rereads = 0;
+  private rereading = false;
   rereadApprovals = async () => {
-    if (this.isDestroying || this.isDestroyed || !this.confirmedMode) {
+    if (
+      this.isDestroying ||
+      this.isDestroyed ||
+      !this.confirmedMode ||
+      this.rereading
+    ) {
       return;
     }
     let read = ++this.rereads;
+    this.rereading = true;
     try {
       let estimate = await this.fetchEstimate();
       if (
@@ -6286,6 +6297,8 @@ export class SwitchOnDialog extends GlimmerComponent<{
       }
     } catch {
       // The next read tries again.
+    } finally {
+      this.rereading = false;
     }
   };
   setCap = (value: number | null) => {
