@@ -6785,10 +6785,7 @@ class KeyApprovalsSection extends GlimmerComponent<{
   get lead() {
     let slots = this.args.approvals.operations.flatMap(({ slots }) => slots);
     if (!this.args.approvals.approved) {
-      let waiting = slots.filter(({ state }) => state !== 'approved').length;
-      return waiting === 1
-        ? 'One key below needs attention before Boxel runs the automation.'
-        : `${waiting} keys below need attention before Boxel runs the automation.`;
+      return 'Boxel runs the automation once the owner of each key marked below approves the automation’s use of the key.';
     }
     return slots.every(({ state }) => state === 'approved')
       ? 'The owner of each key the automation uses approved the automation’s use of the key. Each approval lasts until someone changes the automation’s script, triggers, params or outside services.'
