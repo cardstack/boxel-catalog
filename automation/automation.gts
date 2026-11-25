@@ -6739,14 +6739,14 @@ function suspendedSentence(slot: SlotApproval): string {
   let key = keyWords(slot);
   switch (slot.share?.suspensionReason) {
     case 'owner-lost-write':
-      return `Boxel suspended ${key} because the key’s owner is no longer a realm administrator. A realm administrator swaps in another key.`;
+      return `Boxel suspended ${key} because the key’s owner is no longer a realm administrator. A realm administrator needs to swap in another key.`;
     case 'key-deleted':
-      return `Boxel suspended ${key} because the key’s owner deleted the key. A realm administrator swaps in another key.`;
+      return `Boxel suspended ${key} because the key’s owner deleted the key. A realm administrator needs to swap in another key.`;
     default: {
       let who = slot.share?.suspendedByViewer
         ? 'You'
         : (slot.share?.suspendedBy ?? 'A realm administrator');
-      return `${who} suspended ${key}. A realm administrator resumes the shared key, or swaps in another key.`;
+      return `${who} suspended ${key}. A realm administrator needs to resume the shared key, or swap in another key.`;
     }
   }
 }
@@ -6760,20 +6760,20 @@ function slotSentence(slot: SlotApproval): string {
       return `${who} approved the automation’s use of ${key}.`;
     case 'waiting':
       return slot.viewerIsKeyOwner
-        ? `You approve the automation’s use of ${key}.`
-        : `${who} approves the automation’s use of ${key}.`;
+        ? `You need to approve the automation’s use of ${key}.`
+        : `${who} needs to approve the automation’s use of ${key}.`;
     case 'no-share':
-      return 'Nobody has shared a key for this service in this workspace. A realm administrator shares a key, and the key’s owner then approves the automation’s use of the key.';
+      return 'Nobody has shared a key for this service in this workspace. A realm administrator needs to share a key, and the key’s owner then needs to approve the automation’s use of the key.';
     case 'needs-reapproval':
       return slot.viewerIsKeyOwner
-        ? `The service request changed since you approved the request. You review the changes before Boxel sends ${key} again.`
-        : `The service request changed since ${lowerFirst(who)} approved the request. ${who} reviews the changes before Boxel sends ${key} again.`;
+        ? `The service request changed since you approved the request. You need to review the changes before Boxel sends ${key} again.`
+        : `The service request changed since ${lowerFirst(who)} approved the request. ${who} needs to review the changes before Boxel sends ${key} again.`;
     case 'share-suspended':
       return suspendedSentence(slot);
     case 'key-rejected':
       return slot.viewerIsKeyOwner
-        ? `The service refused ${key}. You replace the key, or sign in to the service again.`
-        : `The service refused ${key}. ${who} replaces the key, or signs in to the service again.`;
+        ? `The service refused ${key}. You need to replace the key, or sign in to the service again.`
+        : `The service refused ${key}. ${who} needs to replace the key, or sign in to the service again.`;
   }
 }
 
@@ -6798,7 +6798,7 @@ class KeyApprovalsSection extends GlimmerComponent<{
   get lead() {
     let slots = this.args.approvals.operations.flatMap(({ slots }) => slots);
     if (!this.args.approvals.approved) {
-      return 'Boxel runs the automation once the owner of each key marked below approves the automation’s use of the key.';
+      return 'Boxel holds every run until the owner of each key marked below approves the automation’s use of the key.';
     }
     return slots.every(({ state }) => state === 'approved')
       ? 'The owner of each key the automation uses approved the automation’s use of the key. Each approval lasts until someone changes the automation’s script, triggers, params or outside services.'
@@ -6928,8 +6928,8 @@ class KeyApprovalsSection extends GlimmerComponent<{
               </:leading>
               <:description>
                 Boxel can’t read this outside service in this workspace, so a
-                run can’t call the service. A realm administrator fixes the
-                outside service in the edit view.
+                run can’t call the service. A realm administrator needs to fix
+                the outside service in the edit view.
               </:description>
             </Item>
           {{/if}}
