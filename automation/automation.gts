@@ -2607,6 +2607,22 @@ function stateLook(status: ServerStatus | undefined): StateLook | undefined {
   }
 }
 
+// The ways a realm administrator can fix what paused the automation, when
+// the state sentence offers a choice, listed in order under the sentence.
+function stateSteps(status: ServerStatus): string[] {
+  if (
+    status.switchedOn &&
+    status.state === 'paused' &&
+    status.pauseReason === 'webhook-owner-lost-access'
+  ) {
+    return [
+      'Edit the automation, and in the trigger’s Webhook field pick one of this workspace’s webhooks.',
+      'Make the person who made the webhook a realm administrator again.',
+    ];
+  }
+  return [];
+}
+
 // What the state means for the next run, as a sentence.
 function stateSentence(status: ServerStatus): string {
   if (!status.switchedOn) {
@@ -2634,7 +2650,7 @@ function stateSentence(status: ServerStatus): string {
         case 'webhook-changed':
           return 'A workspace administrator pointed a trigger at an incoming webhook the payer didn’t agree to, so Boxel paused the automation. Boxel runs nothing until a workspace administrator resumes the automation and agrees to the new webhook.';
         case 'webhook-owner-lost-access':
-          return 'The person who made a trigger’s incoming webhook is no longer a realm administrator, so Boxel paused the automation. Boxel runs nothing until a realm administrator does one of two things and then resumes the automation: points the trigger at one of this workspace’s webhooks, or makes the webhook’s maker a realm administrator again. The trigger’s editor marks the webhook as “Not one of this workspace’s webhooks”.';
+          return 'The person who made a trigger’s incoming webhook is no longer a realm administrator, so Boxel paused the automation. Boxel runs nothing until a realm administrator does one of these two things and then resumes the automation.';
         case 'repeated-failures':
           return repeatedFailuresSentence(status);
         case 'invalid-declaration':
@@ -6083,6 +6099,9 @@ class Isolated extends Component<typeof Automation> {
   get stateSentence() {
     return this.status ? stateSentence(this.status) : undefined;
   }
+  get stateSteps() {
+    return this.status ? stateSteps(this.status) : [];
+  }
   get statusItems() {
     return this.status ? statusItems(this.status) : [];
   }
@@ -6183,6 +6202,13 @@ class Isolated extends Component<typeof Automation> {
           <p class='automation__lead' data-test-automation-state-sentence>
             {{this.stateSentence}}
           </p>
+          {{#if this.stateSteps.length}}
+            <ol class='automation__steps' data-test-automation-state-steps>
+              {{#each this.stateSteps as |step|}}
+                <li>{{step}}</li>
+              {{/each}}
+            </ol>
+          {{/if}}
           <SwitchOnDialog
             @model={{this.automation}}
             @context={{@context}}
@@ -6413,6 +6439,13 @@ class Isolated extends Component<typeof Automation> {
       }
       .automation__lead {
         margin: 0 0 var(--boxel-sp-sm);
+        color: var(--foreground);
+      }
+      .automation__steps {
+        margin: 0 0 var(--boxel-sp-sm);
+        padding-inline-start: var(--boxel-sp-lg);
+        display: grid;
+        gap: var(--boxel-sp-4xs);
         color: var(--foreground);
       }
       .automation__problems {
