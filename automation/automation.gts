@@ -2380,23 +2380,23 @@ const NOT_STARTED: Record<string, string> = {
 // person asked for the pause, or that the wait for key approval canceled.
 const PAUSE_CANCELED: Record<string, string> = {
   'caps-raised':
-    'Boxel canceled the run when Boxel paused the automation: someone raised a limit above what the payer agreed to pay for.',
+    'Boxel canceled the run because someone raised a limit above what the payer agreed to pay for.',
   'batched-ai-enabled':
-    'Boxel canceled the run when Boxel paused the automation: someone turned on batched AI after the payer agreed to the limits.',
+    'Boxel canceled the run because someone turned on batched AI after the payer agreed to the limits.',
   'webhook-changed':
-    'Boxel canceled the run when Boxel paused the automation: a workspace administrator pointed a trigger at a webhook the payer didn’t agree to.',
+    'Boxel canceled the run because a workspace administrator pointed a trigger at a webhook the payer didn’t agree to.',
   'webhook-owner-lost-access':
-    'Boxel canceled the run when Boxel paused the automation: the person who made a trigger’s incoming webhook is no longer a realm administrator.',
+    'Boxel canceled the run because the person who made a trigger’s incoming webhook is no longer a realm administrator.',
   'payer-lost-access':
-    'Boxel canceled the run when Boxel paused the automation: the payer is no longer a realm administrator.',
+    'Boxel canceled the run because the payer is no longer a realm administrator.',
   'realm-archived':
-    'Boxel canceled the run when someone archived this workspace.',
+    'Boxel canceled the run because someone archived this workspace.',
   'repeated-failures':
-    'Boxel canceled the run when Boxel paused the automation after the automation’s runs kept failing.',
+    'Boxel canceled the run because the automation’s runs kept failing.',
   'invalid-declaration':
-    'Boxel canceled the run when Boxel paused the automation: the automation’s settings have problems.',
+    'Boxel canceled the run because the automation’s settings have problems.',
   'waiting-for-key-approval':
-    'Boxel canceled the run when the automation began waiting for key approval. Boxel starts runs again once someone approves the automation’s use of each key.',
+    'Boxel canceled the run because the automation is waiting for key approval. Boxel starts runs again once someone approves the automation’s use of each key.',
 };
 
 // A run's per-run limit in words, by the cap's name in a capped run's `cap`.
