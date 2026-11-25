@@ -7053,8 +7053,6 @@ class Isolated extends Component<typeof Automation> {
         <PanelSection
           @title='Key approvals'
           @collapsible={{false}}
-          id='automation-key-approvals'
-          data-automation-key-approvals
           data-test-automation-key-approvals
         >
           <KeyApprovals
