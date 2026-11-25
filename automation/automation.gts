@@ -6924,13 +6924,13 @@ class AutomationNoticeCallout extends GlimmerComponent<{
       {{/if}}
       {{#if this.blocked}}
         <p class='notice__fix' data-test-automation-notice-blocked>
-          The browser blocked the secure window. Choose Open the secure window
-          in the dialog Boxel shows.
+          The browser blocked the popup. Use the button in the dialog Boxel
+          shows to open the popup.
         </p>
       {{/if}}
       {{#if this.failure}}
         <p class='notice__fix' data-test-automation-notice-failure>
-          Boxel couldn’t open the secure window:
+          Boxel couldn’t open the popup:
           {{this.failure}}. Try again, or ask a realm administrator.
         </p>
       {{/if}}
