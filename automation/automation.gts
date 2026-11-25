@@ -44,7 +44,6 @@ import {
   type ResolvedCodeRef,
 } from '@cardstack/runtime-common';
 import AuthedFetchTool from '@cardstack/boxel-host/tools/authed-fetch';
-import OpenSecureWindowTool from '@cardstack/boxel-host/tools/open-secure-window';
 import AutomationRequestTool from '@cardstack/boxel-host/tools/automation-request';
 import OpenSecureWindowTool from '@cardstack/boxel-host/tools/open-secure-window';
 import ReadAutomationRunTool from '@cardstack/boxel-host/tools/read-automation-run';
