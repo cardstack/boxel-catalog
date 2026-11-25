@@ -2450,7 +2450,7 @@ const NOT_STARTED: Record<string, string> = {
   'binding-needs-reapproval':
     'Boxel didn’t start the run because an outside service the automation calls changed since someone approved the service. The person the run acts as approves the service again in the secure window.',
   'share-suspended':
-    'Boxel didn’t start the run because someone suspended the shared key an outside service uses. A realm administrator resumes the shared key, or the key’s owner swaps in another key.',
+    'Boxel didn’t start the run because someone suspended the shared key an outside service uses. A realm administrator resumes the shared key, or replaces the shared key with another key.',
   'credential-rejected':
     'Boxel didn’t start the run because the outside service refused the key or connection the automation uses. The person the run acts as reconnects or replaces the key.',
   'waiting-for-key-approval':
@@ -6695,7 +6695,7 @@ const SLOT_LOOKS: Record<
 const FIX_LABELS: Record<Exclude<SlotApprovalFix, 'approve'>, string> = {
   'review-changes': 'Review the changes',
   'replace-key': 'Replace the key',
-  'swap-key': 'Swap in a key',
+  'swap-key': 'Replace the shared key',
   'share-key': 'Share a key',
 };
 
@@ -6705,7 +6705,7 @@ const FIX_REASONS: Record<SlotApprovalFix, string> = {
   'review-changes':
     'To review the calls the automation makes that changed since you approved them',
   'replace-key': 'To replace the key the service refused',
-  'swap-key': 'To swap one of your keys into the suspended shared key',
+  'swap-key': 'To replace the suspended shared key with one of your keys',
   'share-key': 'To share a key the automation can use',
 };
 
@@ -6739,14 +6739,14 @@ function suspendedSentence(slot: SlotApproval): string {
   let key = keyWords(slot);
   switch (slot.share?.suspensionReason) {
     case 'owner-lost-write':
-      return `Boxel suspended ${key} because the key’s owner is no longer a realm administrator. A realm administrator needs to swap in another key.`;
+      return `Boxel suspended ${key} because the key’s owner is no longer a realm administrator. A realm administrator needs to replace the shared key with another key.`;
     case 'key-deleted':
-      return `Boxel suspended ${key} because the key’s owner deleted the key. A realm administrator needs to swap in another key.`;
+      return `Boxel suspended ${key} because the key’s owner deleted the key. A realm administrator needs to replace the shared key with another key.`;
     default: {
       let who = slot.share?.suspendedByViewer
         ? 'You'
         : (slot.share?.suspendedBy ?? 'A realm administrator');
-      return `${who} suspended ${key}. A realm administrator needs to resume the shared key, or swap in another key.`;
+      return `${who} suspended ${key}. A realm administrator needs to resume the shared key, or replace the shared key with another key.`;
     }
   }
 }
