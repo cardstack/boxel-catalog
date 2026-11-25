@@ -47,12 +47,11 @@ import {
 import AuthedFetchTool from '@cardstack/boxel-host/tools/authed-fetch';
 import OpenSecureWindowTool from '@cardstack/boxel-host/tools/open-secure-window';
 import AutomationRequestTool from '@cardstack/boxel-host/tools/automation-request';
-import OpenSecureWindowTool from '@cardstack/boxel-host/tools/open-secure-window';
 import ReadAutomationRunTool from '@cardstack/boxel-host/tools/read-automation-run';
 import ReadSourceTool from '@cardstack/boxel-host/tools/read-source';
 import WriteTextFileTool from '@cardstack/boxel-host/tools/write-text-file';
-import { Badge } from '@cardstack/pretui/components/badge';
 import { Button } from '@cardstack/pretui/components/button';
+import { Indicator } from '@cardstack/pretui/components/indicator';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
 import { List } from '@cardstack/pretui/components/list';
 import { LoadingState } from '@cardstack/pretui/components/loading-state';
@@ -2610,6 +2609,11 @@ function rowTime(iso: string): string {
 
 // One row of the run list: a run, or a later slot that joined a run.
 // `skipped` is the joined slot on a skipped slot's row, absent on a run's.
+// A request to open one run in the Runs section and scroll to it.
+interface RevealRequest {
+  runId: string;
+}
+
 interface RunRow {
   key: string;
   run: ListedRun;
@@ -5258,8 +5262,8 @@ class AutomationRuns extends GlimmerComponent<{
     caps: AutomationCaps | undefined;
     tools: Tools | undefined;
     // A run to open and scroll into view, such as the run a notice is about.
-    // Each new value opens that run once the page shown lists it.
-    reveal?: string;
+    // Each new request opens that run once the page shown lists it.
+    reveal?: RevealRequest;
   };
 }> {
   get rows() {
@@ -5271,48 +5275,39 @@ class AutomationRuns extends GlimmerComponent<{
   onExpandedChange = (keys: string[]) => {
     this.expandedKeys = keys;
   };
-  #revealed: string | undefined;
-  // Opens the run `@reveal` names and scrolls the run's row into view, once
-  // per value, as soon as the page shown lists the run.
+  #revealed: RevealRequest | undefined;
+  // Opens the run `@reveal` names, scrolls the run's row into view and moves
+  // focus to the row's expander, once per request, as soon as the page shown
+  // lists the run.
   revealRun = modifier(
-    (element: HTMLElement, [reveal, rows]: [string | undefined, RunRow[]]) => {
+    (
+      element: HTMLElement,
+      [reveal, rows]: [RevealRequest | undefined, RunRow[]],
+    ) => {
       if (
         !reveal ||
         reveal === this.#revealed ||
-        !rows.some((row) => row.key === reveal)
+        !rows.some((row) => row.key === reveal.runId)
       ) {
         return;
       }
       this.#revealed = reveal;
+      let { runId } = reveal;
       requestAnimationFrame(() => {
-        if (!this.expandedKeys.includes(reveal)) {
-          this.expandedKeys = [...this.expandedKeys, reveal];
+        if (!this.expandedKeys.includes(runId)) {
+          this.expandedKeys = [...this.expandedKeys, runId];
         }
-        element
-          .querySelector(`[data-automation-run-row='${CSS.escape(reveal)}']`)
-          ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        let row = element.querySelector<HTMLElement>(
+          `[data-automation-run-row='${CSS.escape(runId)}']`,
+        );
+        row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        row
+          ?.closest('li')
+          ?.querySelector<HTMLElement>('button[aria-expanded]')
+          ?.focus({ preventScroll: true });
       });
     },
   );
-  // The automation's run before `run` on the page shown that started and
-  // ended, leaving Previews out as the automation's last run does, and
-  // leaving out a run admission refused: the run whose milestone times an
-  // opened run's milestones read against.
-  previousRun = (run: ListedRun): LastRun | undefined => {
-    let runs = this.args.runs.runs;
-    let index = runs.findIndex(({ id }) => id === run.id);
-    return (
-      runs.slice(index + 1).find(
-        (earlier) =>
-          earlier.startedBy !== 'preview' &&
-          earlier.startedAt !== null &&
-          earlier.finishedAt !== null &&
-          // A run admission refused never ran the script, so the run
-          // has no milestone times to read against.
-          !(earlier.state === 'error' && earlier.step === 'admission'),
-      )?.milestones ?? undefined
-    );
-  };
   rowKey = (row: RunRow) => row.key;
   // Each row's accessible name, which names the row's expander and detail:
   // with the slot's time, or, for a run that served no slot, the time the
@@ -6707,24 +6702,26 @@ class ShowInConsole extends GlimmerComponent<{
 }
 
 // What a notice's fix opens: the secure window's page for the key fix, by
-// the mode the host's OpenSecureWindow tool takes, with the button's label.
+// what the host's OpenSecureWindow tool takes, with the button's label.
+type SecureWindowInput = Parameters<OpenSecureWindowTool['execute']>[0];
 interface NoticeFix {
   label: string;
-  input: Record<string, string>;
+  input: SecureWindowInput;
 }
 
 // The notice an automation's realm administrators get when the automation
 // stopped doing its job: what happened, who fixes it, and the fix itself for
-// a viewer the notice is for. A key fix opens the secure window's approve,
-// review-changes, connect or swap page; every other fix is on this card
-// (resume, the card's settings) or with the payer's credits. A notice about
-// a run leads to that run in the Runs section.
+// a viewer the notice is for. A key fix opens the secure window: approving
+// the automation itself for a key approval, the connect page on the broken
+// connection, or the swap page for a broken share. Every other fix is on this
+// card (resume, the card's settings) or with the payer's credits. A notice
+// about a run leads to that run in the Runs section.
 class AutomationNoticeCallout extends GlimmerComponent<{
   Args: {
     notice: AutomationNotice;
     name: string;
-    // The automation card: its id, operations and realm.
-    model: Partial<Automation>;
+    // The automation card's id.
+    automation: string | undefined;
     realm: string | undefined;
     tools: Tools | undefined;
     showRun: (runId: string) => void;
@@ -6738,110 +6735,80 @@ class AutomationNoticeCallout extends GlimmerComponent<{
     return this.args.notice.run?.runId;
   }
 
-  // The operation a key fix opens the secure window on: the one a refused
-  // run names, or else the first the card declares, since the secure
-  // window gathers every operation on the card that needs approving into
-  // one confirmation.
-  get operation():
-    | { module: string; name: string; operation: string }
-    | undefined {
-    let refused = this.args.notice.operation;
-    if (refused) {
-      return {
-        module: refused.module,
-        name: refused.typeName,
-        operation: refused.name,
-      };
-    }
-    let declared = (this.args.model.operations ?? []).find(
-      (op) => op?.operation && op.targetType?.module && op.targetType?.name,
-    );
-    return declared
-      ? {
-          module: String(declared.targetType!.module),
-          name: String(declared.targetType!.name),
-          operation: declared.operation!,
-        }
-      : undefined;
-  }
-
   get fix(): NoticeFix | undefined {
-    let { notice, realm } = this.args;
-    let operation = this.operation;
-    let onOperation = (mode: string, label: string) =>
-      operation && realm
-        ? {
-            label,
-            input: {
-              mode,
-              ...operation,
-              realm,
-              reason: this.text.happened,
-            },
-          }
-        : undefined;
+    let { notice, realm, automation } = this.args;
+    let reason = this.text.happened;
+    // A credential that still refuses is fixed at the credential, whatever
+    // paused the automation over it.
+    switch (notice.credential?.kind) {
+      case 'reconnect':
+        return {
+          label: 'Reconnect the account',
+          input: {
+            mode: 'connect',
+            reconnect: notice.credential.keyId,
+            reason,
+          },
+        };
+      case 'connect-again':
+        return realm
+          ? {
+              label: 'Connect the account',
+              input: { mode: 'connect', realm, reason },
+            }
+          : undefined;
+      case 'fix-share':
+        return realm
+          ? {
+              label: 'Swap in a working key',
+              input: {
+                mode: 'swap-key',
+                realm,
+                share: notice.credential.shareId,
+                reason,
+              },
+            }
+          : undefined;
+      case 'fix-client':
+        return undefined;
+    }
     switch (notice.reason) {
+      // The secure window approves every key approval the automation is
+      // missing that the viewer can give, for this automation, which is what
+      // ends its wait.
       case 'waiting-for-key-approval':
       case 'binding-not-approved':
-      case 'key-approval-ended':
-        return onOperation('approve', 'Approve in the secure window');
       case 'binding-needs-reapproval':
-        return onOperation('review-changes', 'Review the changes');
-      case 'credential-rejected':
-        switch (notice.credential?.kind) {
-          case 'reconnect':
-          case 'connect-again':
-            return onOperation('connect', 'Reconnect the account');
-          case 'fix-share':
-            return realm
-              ? {
-                  label: 'Swap in a working key',
-                  input: {
-                    mode: 'swap-key',
-                    realm,
-                    share: notice.credential.shareId,
-                    reason: this.text.happened,
-                  },
-                }
-              : undefined;
-          default:
-            return undefined;
-        }
+      case 'key-approval-ended':
+        return automation
+          ? {
+              label: 'Approve in the secure window',
+              input: { mode: 'approve', automation, reason },
+            }
+          : undefined;
       default:
         return undefined;
     }
   }
 
-  // While the automation waits for key approval, the card's Key approvals
-  // section, when the card shows one, lists each key with the fix for it.
-  get keyApprovalsSection(): HTMLElement | undefined {
-    return this.args.notice.reason === 'waiting-for-key-approval'
-      ? (document.getElementById('automation-key-approvals') ?? undefined)
-      : undefined;
-  }
-
   @tracked private opening = false;
   @tracked private blocked = false;
+  @tracked private failure: string | undefined;
 
   openFix = async () => {
-    let section = this.keyApprovalsSection;
-    if (section) {
-      section.scrollIntoView({ block: 'start', behavior: 'smooth' });
-      return;
-    }
     let fix = this.fix;
     let tools = this.args.tools;
     if (!fix || !tools || this.opening) {
       return;
     }
     this.opening = true;
+    this.blocked = false;
+    this.failure = undefined;
     try {
-      let result = await new OpenSecureWindowTool(tools).execute(
-        fix.input as any,
-      );
+      let result = await new OpenSecureWindowTool(tools).execute(fix.input);
       this.blocked = result?.status === 'blocked';
     } catch (error) {
-      console.error('The notice could not open the secure window', error);
+      this.failure = error instanceof Error ? error.message : String(error);
     } finally {
       this.opening = false;
     }
@@ -6868,9 +6835,15 @@ class AutomationNoticeCallout extends GlimmerComponent<{
         </p>
       {{/if}}
       {{#if this.blocked}}
-        <p class='notice__fix'>
-          The browser blocked the secure window. Use the button Boxel shows to
-          open the secure window.
+        <p class='notice__fix' data-test-automation-notice-blocked>
+          The browser blocked the secure window. Choose Open the secure window
+          in the dialog Boxel shows.
+        </p>
+      {{/if}}
+      {{#if this.failure}}
+        <p class='notice__fix' data-test-automation-notice-failure>
+          Boxel couldn’t open the secure window:
+          {{this.failure}}. Try again, or ask a realm administrator.
         </p>
       {{/if}}
       <Stack @orientation='horizontal' @wrap={{true}} @gap='xs'>
@@ -6903,7 +6876,7 @@ class AutomationNoticeCallout extends GlimmerComponent<{
         margin: 0 0 var(--boxel-sp-xs);
       }
       .notice__error {
-        font-family: var(--font-mono, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         overflow-wrap: anywhere;
       }
@@ -6991,13 +6964,15 @@ class Isolated extends Component<typeof Automation> {
   }
   // The Runs section's disclosure, which a notice's Show the run opens.
   @tracked runsOpen = false;
-  @tracked revealRun: string | undefined;
+  // Each Show the run is a request of its own, so a second click for the
+  // same run opens and scrolls to the run again.
+  @tracked revealRun: RevealRequest | undefined;
   toggleRuns = (open: boolean) => {
     this.runsOpen = open;
   };
   showNoticeRun = (runId: string) => {
     this.runsOpen = true;
-    this.revealRun = runId;
+    this.revealRun = { runId };
     if (this.runList.current.state.page !== 1) {
       this.showRunsPage(1);
     }
@@ -7124,7 +7099,7 @@ class Isolated extends Component<typeof Automation> {
         <AutomationNoticeCallout
           @notice={{this.notice}}
           @name={{this.noticeName}}
-          @model={{@model}}
+          @automation={{@model.id}}
           @realm={{this.realmHref}}
           @tools={{this.tools}}
           @showRun={{this.showNoticeRun}}
@@ -9008,16 +8983,16 @@ class Fitted extends AtAGlance {
     <div class='af' data-fit-root data-test-automation-fitted>
       <div class='af__body' data-fit-body>
         <div class='af__head'>
-          <Badge
-            @dot={{true}}
+          <Indicator
+            @tone='danger'
             @invisible={{not this.needsAttention}}
-            @label='needs attention'
+            @label='Needs attention'
             data-test-automation-fitted-notice={{if this.needsAttention 'true'}}
           >
             <span class='af__icon' aria-hidden='true'>
               <CalendarClockIcon width='16' height='16' />
             </span>
-          </Badge>
+          </Indicator>
           <div class='af__heading'>
             <p class='af__eyebrow'>Automation</p>
             <h3 class='af__title'>{{@model.cardTitle}}</h3>
@@ -9808,10 +9783,10 @@ class Embedded extends AtAGlance {
             @description={{@model.cardDescription}}
           >
             <:leading>
-              <Badge
-                @dot={{true}}
+              <Indicator
+                @tone='danger'
                 @invisible={{not this.needsAttention}}
-                @label='needs attention'
+                @label='Needs attention'
                 data-test-automation-embedded-notice={{if
                   this.needsAttention
                   'true'
@@ -9820,7 +9795,7 @@ class Embedded extends AtAGlance {
                 <span class='ae__icon' aria-hidden='true'>
                   <CalendarClockIcon width='20' height='20' />
                 </span>
-              </Badge>
+              </Indicator>
             </:leading>
             <:trailing>
               {{#if this.look}}
@@ -9847,10 +9822,10 @@ class Embedded extends AtAGlance {
             @description={{@model.cardDescription}}
           >
             <:leading>
-              <Badge
-                @dot={{true}}
+              <Indicator
+                @tone='danger'
                 @invisible={{not this.needsAttention}}
-                @label='needs attention'
+                @label='Needs attention'
                 data-test-automation-embedded-notice={{if
                   this.needsAttention
                   'true'
@@ -9859,7 +9834,7 @@ class Embedded extends AtAGlance {
                 <span class='ae__icon' aria-hidden='true'>
                   <CalendarClockIcon width='20' height='20' />
                 </span>
-              </Badge>
+              </Indicator>
             </:leading>
             <:trailing>
               {{#if this.look}}
