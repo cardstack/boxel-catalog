@@ -1910,11 +1910,7 @@ interface AutomationNotice {
     | 'key-approval-ended'
     | 'waiting-for-credits'
     | 'credential-rejected';
-  audience:
-    | 'payer'
-    | 'other-direct-writers'
-    | 'direct-writers'
-    | 'client-owner';
+  audience: 'payer' | 'direct-writers' | 'client-owner';
   forViewer: boolean;
   run: {
     runId: string;
