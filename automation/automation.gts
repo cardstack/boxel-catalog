@@ -6695,7 +6695,7 @@ const SLOT_LOOKS: Record<
 const FIX_LABELS: Record<Exclude<SlotApprovalFix, 'approve'>, string> = {
   'review-changes': 'Review the changes',
   'replace-key': 'Replace the key',
-  'swap-key': 'Replace the shared key',
+  'swap-key': 'Replace the key',
   'share-key': 'Share a key',
 };
 
