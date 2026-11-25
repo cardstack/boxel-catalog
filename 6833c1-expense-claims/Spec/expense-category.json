@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Expense Category\n\nOne kind of spend (Travel, Client meals, Office supplies and so on) with an English and a Malay label, the expense account a bill line posts to, and the highest amount one receipt may claim. A receipt over the cap is flagged for the approver, not refused.\n\nPart of Expense Claims.",
+      "ref": {
+        "module": "../expense-category",
+        "name": "ExpenseCategory"
+      },
+      "specType": "card",
+      "cardInfo": {
+        "name": "Expense Category",
+        "summary": "A kind of spend staff can claim, with its labels, its expense account and a cap per receipt."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../ExpenseCategory/meals"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

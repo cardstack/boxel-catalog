@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "labelEn": "Travel & transport",
+      "labelMs": "Perjalanan & pengangkutan",
+      "account": "6810",
+      "capAmount": 500
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../expense-category",
+        "name": "ExpenseCategory"
+      }
+    }
+  }
+}

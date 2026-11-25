@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "labelEn": "Other",
+      "labelMs": "Lain-lain",
+      "account": "6999",
+      "capAmount": 100
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../expense-category",
+        "name": "ExpenseCategory"
+      }
+    }
+  }
+}

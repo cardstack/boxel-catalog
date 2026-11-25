@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Expense Desk\n\nThe home of Expense Claims. Tiles count the claims waiting on approvers (and how many carry policy flags), the approved claims ready for the books, the ones already in the books, and the drafts and claims sent back, plus what was submitted this month. Each tile opens its set; tap a claim to open it. **New claim** starts a claim with the next number in the desk's pattern (for example EC-2026-0003) and the desk's policy linked. The claims are a query-backed link, so a new claim appears on its own.\n\nPart of Expense Claims.",
+      "ref": {
+        "module": "../expense-desk",
+        "name": "ExpenseDesk"
+      },
+      "specType": "card",
+      "cardInfo": {
+        "name": "Expense Desk",
+        "summary": "The app's home: every claim in the workspace in the sets people act on, and a New claim button."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../ExpenseDesk/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,1644 @@
+// The system of record, card-native (proof of concept, starting with bills).
+// In the demo, a run's books are a fold over posted events held as JSON. Here the record is card
+// data: a posted bill is a Bill card whose lines, ledger lines and totals are fields the index can
+// see, written by operations the realm runs for every caller. Posting operations are declared below
+// each type (see `enter` on Bill); the realm, not the browser, decides whether a post is valid.
+import {
+  CardDef,
+  FieldDef,
+  Component,
+  field,
+  contains,
+  containsMany,
+  linksTo,
+  linksToMany,
+} from '@cardstack/base/card-api';
+import StringField from '@cardstack/base/string';
+import NumberField from '@cardstack/base/number';
+import BooleanField from '@cardstack/base/boolean';
+import enumField from '@cardstack/base/enum';
+import BookIcon from '@cardstack/boxel-icons/book-open';
+import {
+  linkTo,
+  operation,
+  params,
+  actor,
+  instance,
+  bxl,
+  type OperationDeclaration,
+} from '@cardstack/base/operations';
+import { Product } from '../commerce/product';
+import { SavedReport, ReportFilter } from './ledger-saved-report';
+import { BillPayment, PaymentApplication } from './ledger-payments';
+import { Deposit, DepositItem } from './ledger-sales';
+import {
+  StockLot,
+  Draw,
+  LandedAllocation,
+  RoastBatch,
+  Fulfillment,
+  CountAdjustment,
+  LandedCost,
+} from './ledger-stock';
+import {
+  EntryLine,
+  AmountLine,
+  PayrollRun,
+  BankPayment,
+  Transfer,
+  CardCharge,
+  LoanPayment,
+  AssetDisposal,
+  VendorCredit,
+  JournalEntry,
+  ScheduledEntry,
+  DepreciationRun,
+} from './ledger-cash';
+import {
+  Sheet,
+  Part,
+  Facts,
+  Lines,
+  Strip,
+  Fit,
+  money,
+  day,
+  type Fact,
+} from './record-kit';
+import {
+  PostingLine,
+  inHome,
+  currencyFacts,
+  FX_CHECKS,
+  SETTLE_FX_CHECKS,
+  useCurrencyOperation,
+} from './ledger-document';
+import { DocumentStatusField } from './ledger-status';
+import { IsoDateField } from './ledger-dates';
+import {
+  settingsLink,
+  settingsOf,
+  FIXED_ACCOUNTS,
+  type SettingKey,
+  type TaxCodeSettings,
+} from './ledger-settings';
+import { PaymentTerm, termsFacts } from './ledger-terms';
+import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
+import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
+import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
+import { Vendor } from './ledger-vendor';
+import { Paycheck } from './ledger-payroll';
+import { InventoryStock } from '@cardstack/catalog/cards/fulfilment/inventory-stock';
+import { TimeActivity } from './ledger-time';
+import { TaxCode } from './ledger-tax-codes';
+import {
+  BankTransaction,
+  BankStatementImport,
+  ImportRejection,
+} from './ledger-bank';
+
+// ── reference cards: the chart, vendors, products ───────────────────────────
+// Each account type: its label, the statement section it rolls up to, and its cash flow activity.
+export const ACCOUNT_TYPES: Record<
+  string,
+  { label: string; section: string; cashFlow: string }
+> = {
+  bank: { label: 'Bank', section: 'asset', cashFlow: 'cash' },
+  ar: { label: 'Accounts receivable', section: 'asset', cashFlow: 'operating' },
+  inventory: { label: 'Inventory', section: 'asset', cashFlow: 'operating' },
+  clearing: { label: 'Clearing', section: 'asset', cashFlow: 'operating' },
+  asset: {
+    label: 'Other current asset',
+    section: 'asset',
+    cashFlow: 'operating',
+  },
+  fixed: { label: 'Fixed asset', section: 'asset', cashFlow: 'investing' },
+  contra: { label: 'Contra asset', section: 'asset', cashFlow: 'operating' },
+  ap: {
+    label: 'Accounts payable',
+    section: 'liability',
+    cashFlow: 'operating',
+  },
+  cc: { label: 'Credit card', section: 'liability', cashFlow: 'operating' },
+  liability: {
+    label: 'Other current liability',
+    section: 'liability',
+    cashFlow: 'operating',
+  },
+  longterm: {
+    label: 'Long-term liability',
+    section: 'liability',
+    cashFlow: 'financing',
+  },
+  equity: { label: 'Equity', section: 'equity', cashFlow: 'financing' },
+  income: { label: 'Income', section: 'income', cashFlow: 'income' },
+  cogs: { label: 'Cost of goods sold', section: 'cogs', cashFlow: 'income' },
+  expense: { label: 'Expense', section: 'expense', cashFlow: 'income' },
+  other: { label: 'Other expense', section: 'expense', cashFlow: 'income' },
+};
+const PL_SECTIONS = ['income', 'cogs', 'expense'];
+/** The P&L section an account type rolls up to, or '' for a balance sheet type. */
+export const plSection = (type: string | undefined) => {
+  let section = ACCOUNT_TYPES[type ?? '']?.section ?? '';
+  return PL_SECTIONS.includes(section) ? section : '';
+};
+const AccountTypeField = enumField(StringField, {
+  options: Object.entries(ACCOUNT_TYPES).map(([value, t]) => ({
+    value,
+    label: t.label,
+  })),
+  displayName: 'Account type',
+});
+
+export class LedgerAccount extends CardDef {
+  static displayName = 'Account';
+  static icon = BookIcon;
+  @field code = contains(StringField);
+  @field name = contains(StringField);
+  @field type = contains(AccountTypeField);
+  @field section = contains(StringField, {
+    computeVia: function (this: LedgerAccount) {
+      return ACCOUNT_TYPES[this.type ?? '']?.section ?? '';
+    },
+  });
+  @field active = contains(BooleanField);
+  @field cardTitle = contains(StringField, {
+    computeVia: function (this: LedgerAccount) {
+      return `${this.code ?? ''} ${this.name ?? ''}`.trim() || 'Account';
+    },
+  });
+  static embedded = class extends Component<typeof LedgerAccount> {
+    <template>
+      <Strip
+        @eyebrow='Account'
+        @title={{@model.cardTitle}}
+        @meta={{@model.type}}
+      />
+    </template>
+  };
+  static fitted = class extends Component<typeof LedgerAccount> {
+    <template>
+      <Fit
+        @eyebrow='Account'
+        @title={{@model.cardTitle}}
+        @meta={{@model.type}}
+      />
+    </template>
+  };
+  static isolated = class extends Component<typeof LedgerAccount> {
+    get facts(): Fact[] {
+      let m = this.args.model;
+      return [
+        { key: 'Number', value: m.code ?? '', mono: true },
+        { key: 'Type', value: m.type ?? '' },
+        { key: 'Active', value: m.active === false ? 'No' : 'Yes' },
+      ];
+    }
+    <template>
+      <Sheet
+        @eyebrow='Chart of accounts'
+        @title={{@model.name}}
+        @meta={{@model.code}}
+      ><Part @title='Account'><Facts @items={{this.facts}} /></Part></Sheet>
+    </template>
+  };
+}
+
+/** One product in a bundle, and how much of it a bundle holds. */
+export class BundleComponent extends FieldDef {
+  static displayName = 'Bundle component';
+  @field sku = contains(StringField);
+  @field qty = contains(NumberField); // thousandths of a unit, per bundle
+}
+
+// The matrix Product, plus the ledger accounts an inventory item posts to.
+export class Item extends Product {
+  static displayName = 'Product';
+  @field assetAccount = contains(StringField);
+  @field cogsAccount = contains(StringField);
+  @field incomeAccount = contains(StringField); // the account a sale of it credits
+  @field salesPriceMinor = contains(NumberField); // the price a sale line starts from, per unit
+  @field reorderPoint = contains(NumberField); // thousandths of a unit; at or below it, stock is low
+  @field reorderQty = contains(NumberField); // thousandths of a unit to order
+  // A bundle holds no stock of its own: selling it sells each component.
+  @field components = containsMany(BundleComponent);
+  @field isBundle = contains(BooleanField, {
+    computeVia: function (this: Item) {
+      return (this.components ?? []).filter(Boolean).length > 0;
+    },
+  });
+  // The fulfilment cluster's stock rows for this SKU, by warehouse. Its units are its own (each, case),
+  // so they're shown beside the books' quantity, not reconciled with it.
+  @field warehouseStock = linksToMany(() => InventoryStock, {
+    query: {
+      filter: { eq: { sku: '$this.sku' } },
+      page: { size: 20 },
+    },
+    eager: false,
+  });
+  static isolated = class extends Component<typeof Item> {
+    get facts(): Fact[] {
+      let m = this.args.model;
+      return [
+        { key: 'SKU', value: m.sku ?? '', mono: true },
+        { key: 'Type', value: m.isBundle ? 'Bundle' : (m.productType ?? '') },
+        { key: 'Asset account', value: m.assetAccount ?? '' },
+        { key: 'Cost account', value: m.cogsAccount ?? '' },
+        ...(m.incomeAccount
+          ? [{ key: 'Income account', value: m.incomeAccount }]
+          : []),
+        ...(m.salesPriceMinor != null
+          ? [{ key: 'Sales price', value: money(m.salesPriceMinor) }]
+          : []),
+        ...(m.reorderPoint != null
+          ? [
+              {
+                key: 'Reorder at',
+                value: `${(m.reorderPoint / 1000).toLocaleString('en-US')}${m.reorderQty ? ` · order ${(m.reorderQty / 1000).toLocaleString('en-US')}` : ''}`,
+              },
+            ]
+          : []),
+        ...(m.components ?? []).filter(Boolean).map((c) => ({
+          key: `Holds ${c!.sku ?? ''}`,
+          value: ((c!.qty ?? 0) / 1000).toLocaleString('en-US'),
+        })),
+      ];
+    }
+    get warehouseRows(): Fact[] {
+      return (this.args.model.warehouseStock ?? [])
+        .filter(Boolean)
+        .map((w) => ({
+          key: (w as any).warehouse?.warehouseName ?? 'Warehouse',
+          value: `${(w as any).quantityOnHand ?? 0} on hand · ${(w as any).stockState ?? ''}`,
+        }));
+    }
+    <template>
+      <Sheet
+        @eyebrow='Product'
+        @title={{@model.cardTitle}}
+        @meta={{@model.sku}}
+      ><Part @title='Product'><Facts @items={{this.facts}} /></Part>
+        {{#if this.warehouseRows.length}}<Part @title='In the warehouses'><Facts
+              @items={{this.warehouseRows}}
+            /></Part>{{/if}}</Sheet>
+    </template>
+  };
+}
+
+interface BundleProduct {
+  sku?: string | null;
+  productName?: string | null;
+  salesPriceMinor?: number | null;
+  incomeAccount?: string | null;
+  components?: ({ sku?: string | null; qty?: number | null } | null)[] | null;
+}
+
+/**
+ * The sale lines `count` of a bundle add to a draft: one per component, at that product's own
+ * price, so fulfillment draws by component and a post's price-times-quantity check holds per line.
+ */
+export function bundleSaleLines(
+  bundle: BundleProduct,
+  products: Map<string, BundleProduct>,
+  count: number,
+) {
+  if (!(count > 0)) throw new Error('Enter how many bundles.');
+  let components = (bundle.components ?? []).filter(Boolean);
+  if (!components.length)
+    throw new Error(`${bundle.productName} holds no products.`);
+  return components.map((k) => {
+    let item = products.get(k!.sku ?? '');
+    if (!item)
+      throw new Error(
+        `${bundle.productName} holds ${k!.sku}, which isn't a product.`,
+      );
+    if ((item.components ?? []).some(Boolean))
+      throw new Error(
+        `${bundle.productName} holds ${item.productName}, which is a bundle too. A bundle holds products only.`,
+      );
+    if (!((item.salesPriceMinor ?? 0) > 0))
+      throw new Error(`Give ${item.productName} a sales price first.`);
+    let account = item.incomeAccount || bundle.incomeAccount;
+    if (!account)
+      throw new Error(`Give ${item.productName} an income account first.`);
+    let qty = Math.round((k!.qty ?? 0) * count);
+    if (!(qty > 0))
+      throw new Error(
+        `${bundle.productName} holds no quantity of ${item.productName}.`,
+      );
+    let priceMinor = item.salesPriceMinor!;
+    return {
+      sku: k!.sku!,
+      description: `${bundle.productName}: ${item.productName}`,
+      qty,
+      priceMinor,
+      amountMinor: Math.round((priceMinor * qty) / 1000),
+      account,
+      taxCode: null,
+      cls: null,
+      loc: null,
+    };
+  });
+}
+
+/**
+ * A product's low-stock reading against its reorder point: empty (not listed) with no reorder point
+ * or for a bundle, which holds no stock. Past the lots read (`capped`), a low reading can't be
+ * trusted, so it reads Check.
+ */
+export function lowStockStatus(
+  item: { reorderPoint?: number | null; isBundle?: boolean | null },
+  onHand: number,
+  capped: boolean,
+): '' | 'OK' | 'Check' | 'Low' {
+  if (item.reorderPoint == null || item.isBundle) return '';
+  if (onHand > item.reorderPoint) return 'OK';
+  return capped ? 'Check' : 'Low';
+}
+
+// ── a bill ───────────────────────────────────────────────────────────────────
+export class BillLine extends FieldDef {
+  static displayName = 'Bill line';
+  @field account = contains(StringField); // an expense or clearing account, or empty for a product line
+  @field sku = contains(StringField); // a product, or empty for an account line
+  @field qty = contains(NumberField); // thousandths of a unit (pounds, bags)
+  @field unitCostMinor = contains(NumberField); // cents per unit
+  @field amountMinor = contains(NumberField); // cents; for a product line, unitCost × qty / 1000, rounded
+  @field lot = contains(StringField);
+  @field debitAccount = contains(StringField); // the account the line debits: the item's asset account for inventory
+  @field description = contains(StringField);
+  @field cls = contains(StringField);
+  @field loc = contains(StringField);
+  @field project = contains(StringField);
+}
+
+export class Bill extends CardDef {
+  static displayName = 'Bill';
+  static icon = BookIcon;
+  @field billNo = contains(StringField);
+  @field vendorId = contains(StringField);
+  @field vendor = linksTo(Vendor);
+  @field date = contains(IsoDateField); // YYYY-MM-DD
+  @field due = contains(IsoDateField);
+  @field terms = linksTo(() => PaymentTerm);
+  // The operational document it was posted from, when it came from procurement or commerce (see ledger-bridge).
+  @field purchaseOrder = linksTo(() => PurchaseOrder);
+  @field sourceInvoice = linksTo(() => CommerceInvoice);
+  @field currency = contains(StringField); // empty: the home currency
+  @field rateMicros = contains(NumberField); // home units per unit of `currency`, times a million
+  @field memo = contains(StringField);
+  @field lines = containsMany(BillLine);
+  @field status = contains(DocumentStatusField); // only the post operation moves it
+  @field enteredBy = contains(StringField); // stamped by the realm when the draft is created
+  @field postedBy = contains(StringField); // stamped by the realm when the bill is posted
+  @field paidMinor = contains(NumberField);
+  // A void keeps the bill and its posting; the mirror entry posts into the void date's journal month.
+  @field voidDate = contains(IsoDateField); // written only by void
+  @field voidedBy = contains(StringField);
+  @field voidReason = contains(StringField);
+  @field totalMinor = contains(NumberField, {
+    computeVia: function (this: Bill) {
+      return (this.lines ?? []).reduce((n, l) => n + (l?.amountMinor ?? 0), 0);
+    },
+  });
+  @field openMinor = contains(NumberField, {
+    computeVia: function (this: Bill) {
+      return this.voidDate ? 0 : (this.totalMinor ?? 0) - (this.paidMinor ?? 0);
+    },
+  });
+  // What the bill posts: a debit per line, and one credit to Accounts Payable for the total. Indexed,
+  // so "every line on 6800 in March" is a query, not a replay.
+  @field ledgerLines = containsMany(PostingLine, {
+    computeVia: function (this: Bill) {
+      let doc = this.billNo ?? '',
+        date = this.date ?? '',
+        party = this.vendorId ?? '';
+      let lines = [
+        ...(this.lines ?? [])
+          .filter((l) => l && (l.amountMinor ?? 0) > 0)
+          .map((l) => ({
+            account: l.debitAccount || l.account,
+            debitMinor: l.amountMinor ?? 0,
+            creditMinor: 0,
+            date,
+            cls: l.cls,
+            loc: l.loc,
+            project: l.project,
+            party: '',
+            doc,
+          })),
+        {
+          account: '2000',
+          debitMinor: 0,
+          creditMinor: this.totalMinor ?? 0,
+          date,
+          party,
+          doc,
+        },
+      ];
+      // A bill in another currency posts in the home currency at its rate.
+      return inHome(lines, this.rateMicros, '2000').map(
+        (l) => new PostingLine(l),
+      );
+    },
+  });
+  @field cardTitle = contains(StringField, {
+    computeVia: function (this: Bill) {
+      return `Bill ${this.billNo ?? ''}${this.vendorId ? ' · ' + this.vendorId : ''}`;
+    },
+  });
+  /**
+   * Post a draft bill. A create can't check anything (its program never runs), but a transform can:
+   * the realm runs these asserts against the bill as stored, for every caller, and refuses with the
+   * message. Posting is one-way: nothing grants a raw edit, so a posted bill stays as posted.
+   */
+  @operation static post = {
+    base: 'transform',
+    transformations: {
+      $bxl: `
+      assert(if .status == null then true else .status == "draft" end; "Only a draft bill can be posted. This one is already posted.");
+      assert((.lines | length) > 0; "A bill needs at least one line.");
+      assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
+      assert([.lines[].amountMinor] | all(. > 0); "Every line needs a positive amount.");
+      assert([.lines[].amountMinor | floor] == [.lines[].amountMinor]; "Amounts are in whole cents.");
+      assert([.lines[] | select(.sku != null) | .unitCostMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its unit cost times its quantity.");
+      assert([.lines[] | select(.sku == null) | .account != null] | all; "Every line needs an account or a product.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the bill can't post.");
+      assert(if realmConfig().chart == null then true else (([.lines[].account, .lines[].debitAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this bill isn't in the chart of accounts. Add it to the chart, then post.");${FX_CHECKS}
+      .status = "posted";
+      .postedBy = actor();
+    `,
+    },
+  } satisfies OperationDeclaration;
+  /** Put a draft in another currency at a rate, or back in the home currency. */
+  @operation static useCurrency = useCurrencyOperation;
+  /**
+   * Record part or all of a payment against this bill. Sent in the same batch as the payment's post,
+   * so the payment and the bills it pays land together. Refuses paying a draft or paying more than
+   * the bill has open.
+   */
+  @operation static applyPayment = {
+    base: 'transform',
+    params: {
+      amountMinor: NumberField,
+      paymentNo: StringField,
+      vendorId: StringField,
+      currency: StringField, // the payment's or credit's currency; null for the home currency
+      rateMicros: NumberField, // the bill's rate as the payment clears it; null for the home currency
+    },
+    transformations: {
+      $bxl: `
+      assert(.status == "posted"; "Only a posted bill can be paid.");
+      assert(.voidDate == null; "This bill is void, so it can't be paid.");
+      assert(params("vendorId") == .vendorId; "A payment pays only its own vendor's bills. This bill is from someone else.");
+      assert(params("currency") == .currency; "A payment or credit applies only to bills in its own currency.");
+      assert(params("rateMicros") == .rateMicros; "A payment clears a bill at the rate it was booked at.");
+      assert(params("amountMinor") > 0; "A payment amount must be positive.");${SETTLE_FX_CHECKS}
+      assert([.lines[].amountMinor] + [0 - .paidMinor - params("amountMinor")] | add | . >= 0; "That pays more than the bill has open.");
+      .paidMinor |= . + params("amountMinor");
+    `,
+    },
+  } satisfies OperationDeclaration;
+  /** Take back a payment or vendor credit, when its posting is reversed. Sent in the same batch as the reversal. */
+  @operation static unapplyPayment = {
+    base: 'transform',
+    params: {
+      amountMinor: NumberField,
+      paymentNo: StringField,
+      vendorId: StringField,
+    },
+    transformations: bxl`
+      assert(params("vendorId") == .vendorId; "That payment wasn't to this vendor.");
+      assert(params("amountMinor") > 0; "The amount taken back must be positive.");
+      assert([.paidMinor - params("amountMinor")] | all(. >= 0); "That takes back more than was paid on this bill.");
+      .paidMinor |= . - params("amountMinor");
+    `,
+  } satisfies OperationDeclaration;
+  /**
+   * Void the bill. Nothing is deleted: the bill keeps its posting, and the same batch posts the mirror
+   * entry into the journal month of the void date. Refused while anything is paid on it.
+   */
+  @operation static void = {
+    base: 'transform',
+    params: { date: StringField, reason: StringField },
+    transformations: bxl`
+      assert(.status == "posted"; "Only a posted bill can be voided. Delete a draft instead.");
+      assert(.voidDate == null; "This bill is already void.");
+      assert([.paidMinor + 0] | all(. == 0); "Payments or credits are applied to this bill. Reverse them first, then void it.");
+      assert(params("date") >= .date; "A void can't be dated before the bill.");
+      assert(params("date") > realmConfig().closedThrough; "That date is on or before the closing date. Void it in an open month.");
+      assert(params("reason") != null; "Say why the bill is void.");
+      assert(params("reason") != ""; "Say why the bill is void.");
+      .voidDate = params("date");
+      .voidReason = params("reason");
+      .voidedBy = actor();
+    `,
+  } satisfies OperationDeclaration;
+  /**
+   * Receive one stock lot from this bill. Sent in the same batch as post, so the bill and its lots
+   * land together or not at all.
+   */
+  @operation static receiveLot = {
+    base: 'create',
+    of: StockLot,
+    params: {
+      sku: StringField,
+      lot: StringField,
+      qty: NumberField,
+      costMinor: NumberField,
+      received: StringField,
+      asset: StringField,
+      part5000Minor: NumberField,
+      part5100Minor: NumberField,
+    },
+    fill: {
+      sku: params('sku'),
+      lot: params('lot'),
+      qty: params('qty'),
+      costMinor: params('costMinor'),
+      received: params('received'),
+      asset: params('asset'),
+      part5000Minor: params('part5000Minor'),
+      part5100Minor: params('part5100Minor'),
+      consumedQty: 0,
+      landedMinor: 0,
+      source: instance('billNo'),
+    },
+  } satisfies OperationDeclaration;
+
+  static isolated = class extends Component<typeof Bill> {
+    get facts(): Fact[] {
+      let m = this.args.model;
+      return [
+        { key: 'Bill no.', value: m.billNo ?? '', mono: true },
+        { key: 'Vendor', value: m.vendorId ?? '' },
+        { key: 'Bill date', value: day(m.date) },
+        { key: 'Due', value: day(m.due) },
+        ...currencyFacts(m.currency, m.rateMicros),
+        ...termsFacts(m.date, m.due, m.terms),
+        { key: 'Posted by', value: m.postedBy ?? '' },
+        ...(m.voidDate
+          ? [
+              {
+                key: 'Voided',
+                value: `${day(m.voidDate)} by ${m.voidedBy ?? ''}${m.voidReason ? ' · ' + m.voidReason : ''}`,
+              },
+            ]
+          : []),
+      ];
+    }
+    get postLines() {
+      return (this.args.model.ledgerLines ?? []).map((l) => ({
+        accountCode: l?.account,
+        accountName: [l?.cls, l?.project, l?.loc, l?.party]
+          .filter(Boolean)
+          .join(' · '),
+        debitMinor: l?.debitMinor ?? 0,
+        creditMinor: l?.creditMinor ?? 0,
+      }));
+    }
+    get status() {
+      let m = this.args.model;
+      return m.voidDate
+        ? 'Void'
+        : (m.openMinor ?? 0) <= 0
+          ? 'Paid'
+          : (m.paidMinor ?? 0) > 0
+            ? 'Partial'
+            : 'Open';
+    }
+    <template>
+      <Sheet
+        @eyebrow='Bill'
+        @title={{@model.cardTitle}}
+        @meta={{@model.memo}}
+        @figure={{money @model.totalMinor @model.currency}}
+        @figureLabel='Total'
+        @status={{this.status}}
+      >
+        <Part @title='Bill'><Facts @items={{this.facts}} /></Part>
+        <Part @title='Posts to the ledger'><Lines
+            @lines={{this.postLines}}
+            @owner={{@model}}
+            @context={{@context}}
+            @viewCard={{@viewCard}}
+          /></Part>
+      </Sheet>
+    </template>
+  };
+  static embedded = class extends Component<typeof Bill> {
+    <template>
+      <Strip
+        @eyebrow='Bill'
+        @title={{@model.cardTitle}}
+        @meta={{@model.date}}
+        @figure={{money @model.totalMinor @model.currency}}
+      />
+    </template>
+  };
+  static fitted = class extends Component<typeof Bill> {
+    <template>
+      <Fit
+        @eyebrow='Bill'
+        @title={{@model.billNo}}
+        @figure={{money @model.totalMinor @model.currency}}
+        @meta={{@model.vendorId}}
+      />
+    </template>
+  };
+}
+
+// ── the company: settings the posting rules read ────────────────────────────
+const FISCAL_MONTH = new Intl.DateTimeFormat('en-US', {
+  month: 'long',
+  timeZone: 'UTC',
+});
+export class Ledger extends CardDef {
+  static displayName = 'Ledger';
+  static icon = BookIcon;
+  static prefersWideFormat = true;
+  @field company = contains(StringField);
+  // The books' settings, from the realm's configuration (see ledger-settings).
+  @field settings = settingsLink();
+  @field accounts = linksToMany(() => LedgerAccount, {
+    query: { page: { size: 500 } },
+  });
+  @field taxCodes = linksToMany(() => TaxCode, {
+    query: { page: { size: 200 } },
+  });
+  @field closedThrough = contains(IsoDateField, {
+    computeVia: function (this: Ledger) {
+      return settingsOf(this).closedThrough;
+    },
+  });
+  @field currency = contains(StringField, {
+    computeVia: function (this: Ledger) {
+      return settingsOf(this).currency;
+    },
+  });
+  @field fiscalYearStart = contains(NumberField, {
+    computeVia: function (this: Ledger) {
+      return settingsOf(this).fiscalYearStart;
+    },
+  });
+  @field billCount = contains(NumberField);
+  @field cardTitle = contains(StringField, {
+    computeVia: function (this: Ledger) {
+      return this.company || 'Ledger';
+    },
+  });
+  /** Save a report with its settings and customization. The realm stamps who saved it. */
+  @operation static saveReport = {
+    base: 'create',
+    of: SavedReport,
+    params: {
+      name: StringField,
+      kind: StringField,
+      kindLabel: StringField,
+      fromMonth: StringField,
+      toMonth: StringField,
+      asOfMonth: StringField,
+      basis: StringField,
+      columns: StringField,
+      compare: StringField,
+      account: StringField,
+      statement: StringField,
+      columnKeys: StringField,
+      filters: ReportFilter,
+      groupBy: StringField,
+      sortBy: StringField,
+      sortDir: StringField,
+      visibility: StringField,
+    },
+    fill: {
+      name: params('name'),
+      kind: params('kind'),
+      kindLabel: params('kindLabel'),
+      fromMonth: params('fromMonth'),
+      toMonth: params('toMonth'),
+      asOfMonth: params('asOfMonth'),
+      basis: params('basis'),
+      columns: params('columns'),
+      compare: params('compare'),
+      account: params('account'),
+      statement: params('statement'),
+      columnKeys: params('columnKeys'),
+      filters: params('filters'),
+      groupBy: params('groupBy'),
+      sortBy: params('sortBy'),
+      sortDir: params('sortDir'),
+      visibility: params('visibility'),
+      savedBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /**
+   * Enter a draft bill: the realm stamps who entered it and creates the Bill card as a draft. It
+   * checks nothing (a create can't assert); Bill.post does the checking.
+   */
+  @operation static enterBill = {
+    base: 'create',
+    of: Bill,
+    params: {
+      billNo: StringField,
+      vendorId: StringField,
+      date: StringField,
+      due: StringField,
+      memo: StringField,
+      lines: BillLine,
+    },
+    fill: {
+      billNo: params('billNo'),
+      vendorId: params('vendorId'),
+      date: params('date'),
+      due: params('due'),
+      memo: params('memo'),
+      lines: params('lines'),
+      status: 'draft',
+      enteredBy: actor(),
+      paidMinor: 0,
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the bill a purchase order's received goods become in the books (see ledger-bridge). */
+  @operation static billFromPurchaseOrder = {
+    base: 'create',
+    of: Bill,
+    params: {
+      billNo: StringField,
+      vendorId: StringField,
+      date: StringField,
+      due: StringField,
+      memo: StringField,
+      lines: BillLine,
+      vendor: linkTo(Vendor),
+      purchaseOrder: linkTo(PurchaseOrder),
+    },
+    fill: {
+      billNo: params('billNo'),
+      vendorId: params('vendorId'),
+      date: params('date'),
+      due: params('due'),
+      memo: params('memo'),
+      lines: params('lines'),
+      vendor: params('vendor'),
+      purchaseOrder: params('purchaseOrder'),
+      status: 'draft',
+      enteredBy: actor(),
+      paidMinor: 0,
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the bill a vendor's commerce invoice becomes in the books (see ledger-bridge). */
+  @operation static billFromCommerce = {
+    base: 'create',
+    of: Bill,
+    params: {
+      billNo: StringField,
+      vendorId: StringField,
+      date: StringField,
+      due: StringField,
+      memo: StringField,
+      lines: BillLine,
+      vendor: linkTo(Vendor),
+      sourceInvoice: linkTo(CommerceInvoice),
+    },
+    fill: {
+      billNo: params('billNo'),
+      vendorId: params('vendorId'),
+      date: params('date'),
+      due: params('due'),
+      memo: params('memo'),
+      lines: params('lines'),
+      vendor: params('vendor'),
+      sourceInvoice: params('sourceInvoice'),
+      status: 'draft',
+      enteredBy: actor(),
+      paidMinor: 0,
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the books' bill payment for a commerce payment of a vendor's invoice (see ledger-bridge). */
+  @operation static billPaymentFromCommerce = {
+    base: 'create',
+    of: BillPayment,
+    params: {
+      paymentNo: StringField,
+      vendorId: StringField,
+      date: StringField,
+      fromAccount: StringField,
+      memo: StringField,
+      applications: PaymentApplication,
+      vendor: linkTo(Vendor),
+      sourcePayment: linkTo(CommercePayment),
+    },
+    fill: {
+      paymentNo: params('paymentNo'),
+      vendorId: params('vendorId'),
+      date: params('date'),
+      fromAccount: params('fromAccount'),
+      memo: params('memo'),
+      applications: params('applications'),
+      vendor: params('vendor'),
+      sourcePayment: params('sourcePayment'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a bill on the vendor's payment terms: enterBill, linked to the terms its due date came from. */
+  @operation static enterBillOnTerms = {
+    ...this.enterBill,
+    params: { ...this.enterBill.params, terms: linkTo(PaymentTerm) },
+    fill: { ...this.enterBill.fill, terms: params('terms') },
+  } satisfies OperationDeclaration;
+  /** Enter a draft bill payment: stamped with who entered it; BillPayment.post checks it. */
+  @operation static enterPayment = {
+    base: 'create',
+    of: BillPayment,
+    params: {
+      paymentNo: StringField,
+      vendorId: StringField,
+      date: StringField,
+      fromAccount: StringField,
+      method: StringField,
+      memo: StringField,
+      applications: PaymentApplication,
+    },
+    fill: {
+      paymentNo: params('paymentNo'),
+      vendorId: params('vendorId'),
+      date: params('date'),
+      fromAccount: params('fromAccount'),
+      method: params('method'),
+      memo: params('memo'),
+      applications: params('applications'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a bank deposit or processor payout; Deposit.post checks it, and is sent with markDeposited on each item. */
+  @operation static enterDeposit = {
+    base: 'create',
+    of: Deposit,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      bank: StringField,
+      clearingAccount: StringField,
+      processor: StringField,
+      items: DepositItem,
+      feeMinor: NumberField,
+      feeAccount: StringField,
+      cls: StringField,
+      loc: StringField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      bank: params('bank'),
+      clearingAccount: params('clearingAccount'),
+      processor: params('processor'),
+      items: params('items'),
+      feeMinor: params('feeMinor'),
+      feeAccount: params('feeAccount'),
+      cls: params('cls'),
+      loc: params('loc'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a roast batch; RoastBatch.post checks it, sent with StockLot.draw per input and produceLot. */
+  @operation static enterRoast = {
+    base: 'create',
+    of: RoastBatch,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      loc: StringField,
+      inputs: Draw,
+      outputSku: StringField,
+      outputLot: StringField,
+      outputAsset: StringField,
+      outputQty: NumberField,
+      outputPart5000Minor: NumberField,
+      outputPart5100Minor: NumberField,
+      chargedWeight: NumberField,
+      finishedWeight: NumberField,
+      roastLog: StringField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      loc: params('loc'),
+      inputs: params('inputs'),
+      outputSku: params('outputSku'),
+      outputLot: params('outputLot'),
+      outputAsset: params('outputAsset'),
+      outputQty: params('outputQty'),
+      outputPart5000Minor: params('outputPart5000Minor'),
+      outputPart5100Minor: params('outputPart5100Minor'),
+      chargedWeight: params('chargedWeight'),
+      finishedWeight: params('finishedWeight'),
+      roastLog: params('roastLog'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the fulfillment of a sale (its cost of goods sold); posted with StockLot.draw per lot. */
+  @operation static enterFulfillment = {
+    base: 'create',
+    of: Fulfillment,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      saleNo: StringField,
+      customerId: StringField,
+      cls: StringField,
+      loc: StringField,
+      draws: Draw,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      saleNo: params('saleNo'),
+      customerId: params('customerId'),
+      cls: params('cls'),
+      loc: params('loc'),
+      draws: params('draws'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a count adjustment; posted with StockLot.draw per lot. */
+  @operation static enterCount = {
+    base: 'create',
+    of: CountAdjustment,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      reason: StringField,
+      account: StringField,
+      draws: Draw,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      reason: params('reason'),
+      account: params('account'),
+      draws: params('draws'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a landed-cost allocation; posted with StockLot.addCost per lot. */
+  @operation static enterLanded = {
+    base: 'create',
+    of: LandedCost,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      driver: StringField,
+      clearingAccount: StringField,
+      amountMinor: NumberField,
+      allocations: LandedAllocation,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      driver: params('driver'),
+      clearingAccount: params('clearingAccount'),
+      amountMinor: params('amountMinor'),
+      allocations: params('allocations'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a payroll run from the payroll provider; PayrollRun.post checks it. */
+  @operation static enterPayroll = {
+    base: 'create',
+    of: PayrollRun,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      provider: StringField,
+      bank: StringField,
+      employerTaxAccount: StringField,
+      liabilityAccount: StringField,
+      employerTaxMinor: NumberField,
+      withholdingMinor: NumberField,
+      deductionsMinor: NumberField,
+      netMinor: NumberField,
+      wages: AmountLine,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      provider: params('provider'),
+      bank: params('bank'),
+      employerTaxAccount: params('employerTaxAccount'),
+      liabilityAccount: params('liabilityAccount'),
+      employerTaxMinor: params('employerTaxMinor'),
+      withholdingMinor: params('withholdingMinor'),
+      deductionsMinor: params('deductionsMinor'),
+      netMinor: params('netMinor'),
+      wages: params('wages'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a payroll run worked out from pay setups, a paycheck per employee; PayrollRun.post checks it. */
+  @operation static enterPayrollRun = {
+    base: 'create',
+    of: PayrollRun,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      bank: StringField,
+      employerTaxAccount: StringField,
+      liabilityAccount: StringField,
+      schedule: StringField,
+      periodStart: StringField,
+      periodEnd: StringField,
+      headcount: NumberField,
+      fitMinor: NumberField,
+      ssWagesMinor: NumberField,
+      ssTaxMinor: NumberField,
+      medicareWagesMinor: NumberField,
+      medicareTaxMinor: NumberField,
+      stateWagesMinor: NumberField,
+      stateTaxMinor: NumberField,
+      sdiPflMinor: NumberField,
+      futaWagesMinor: NumberField,
+      futaMinor: NumberField,
+      sutaWagesMinor: NumberField,
+      sutaMinor: NumberField,
+      section125Minor: NumberField,
+      addlMedicareMinor: NumberField,
+      addlMedicareWagesMinor: NumberField,
+      fitWagesMinor: NumberField,
+      employerTaxMinor: NumberField,
+      withholdingMinor: NumberField,
+      deductionsMinor: NumberField,
+      netMinor: NumberField,
+      wages: AmountLine,
+      paychecks: Paycheck,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      bank: params('bank'),
+      employerTaxAccount: params('employerTaxAccount'),
+      liabilityAccount: params('liabilityAccount'),
+      schedule: params('schedule'),
+      periodStart: params('periodStart'),
+      periodEnd: params('periodEnd'),
+      headcount: params('headcount'),
+      fitMinor: params('fitMinor'),
+      ssWagesMinor: params('ssWagesMinor'),
+      ssTaxMinor: params('ssTaxMinor'),
+      medicareWagesMinor: params('medicareWagesMinor'),
+      medicareTaxMinor: params('medicareTaxMinor'),
+      stateWagesMinor: params('stateWagesMinor'),
+      stateTaxMinor: params('stateTaxMinor'),
+      sdiPflMinor: params('sdiPflMinor'),
+      futaWagesMinor: params('futaWagesMinor'),
+      futaMinor: params('futaMinor'),
+      sutaWagesMinor: params('sutaWagesMinor'),
+      sutaMinor: params('sutaMinor'),
+      section125Minor: params('section125Minor'),
+      addlMedicareMinor: params('addlMedicareMinor'),
+      addlMedicareWagesMinor: params('addlMedicareWagesMinor'),
+      fitWagesMinor: params('fitWagesMinor'),
+      employerTaxMinor: params('employerTaxMinor'),
+      withholdingMinor: params('withholdingMinor'),
+      deductionsMinor: params('deductionsMinor'),
+      netMinor: params('netMinor'),
+      wages: params('wages'),
+      paychecks: params('paychecks'),
+      provider: 'Books',
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a payroll remittance, sales tax payment or owner draw; BankPayment.post checks it. */
+  @operation static enterBankPayment = {
+    base: 'create',
+    of: BankPayment,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      kind: StringField,
+      bank: StringField,
+      account: StringField,
+      payee: StringField,
+      period: StringField,
+      amountMinor: NumberField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      kind: params('kind'),
+      bank: params('bank'),
+      account: params('account'),
+      payee: params('payee'),
+      period: params('period'),
+      amountMinor: params('amountMinor'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the payment of a filed sales tax return; posting it records the payment on the return. */
+  @operation static enterTaxPayment = {
+    base: 'create',
+    of: BankPayment,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      bank: StringField,
+      payee: StringField,
+      period: StringField,
+      returnPeriodEnd: StringField,
+      amountMinor: NumberField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('period'),
+      kind: 'sales tax',
+      bank: params('bank'),
+      account: '2200',
+      payee: params('payee'),
+      period: params('period'),
+      returnPeriodEnd: params('returnPeriodEnd'),
+      amountMinor: params('amountMinor'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a transfer between accounts; Transfer.post checks it. */
+  @operation static enterTransfer = {
+    base: 'create',
+    of: Transfer,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      fromAccount: StringField,
+      toAccount: StringField,
+      amountMinor: NumberField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      fromAccount: params('fromAccount'),
+      toAccount: params('toAccount'),
+      amountMinor: params('amountMinor'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Record time worked; billable time waits to be invoiced. */
+  @operation static enterTime = {
+    base: 'create',
+    of: TimeActivity,
+    params: {
+      date: StringField,
+      workerKind: StringField,
+      worker: StringField,
+      customerId: StringField,
+      projectId: StringField,
+      serviceSku: StringField,
+      hours: NumberField,
+      rateMinor: NumberField,
+      costRateMinor: NumberField,
+      billable: BooleanField,
+      description: StringField,
+    },
+    fill: {
+      date: params('date'),
+      workerKind: params('workerKind'),
+      worker: params('worker'),
+      customerId: params('customerId'),
+      projectId: params('projectId'),
+      serviceSku: params('serviceSku'),
+      hours: params('hours'),
+      rateMinor: params('rateMinor'),
+      costRateMinor: params('costRateMinor'),
+      billable: params('billable'),
+      description: params('description'),
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Record a statement import's receipt. Its lines come in the same batch through enterBankLine. */
+  @operation static enterBankImport = {
+    base: 'create',
+    of: BankStatementImport,
+    params: {
+      importNo: StringField,
+      account: StringField,
+      fileName: StringField,
+      format: StringField,
+      contentHash: StringField,
+      importedOn: StringField,
+      firstDate: StringField,
+      lastDate: StringField,
+      acceptedCount: NumberField,
+      skippedCount: NumberField,
+      rejected: ImportRejection,
+    },
+    fill: {
+      importNo: params('importNo'),
+      account: params('account'),
+      fileName: params('fileName'),
+      format: params('format'),
+      contentHash: params('contentHash'),
+      importedOn: params('importedOn'),
+      firstDate: params('firstDate'),
+      lastDate: params('lastDate'),
+      acceptedCount: params('acceptedCount'),
+      skippedCount: params('skippedCount'),
+      rejected: params('rejected'),
+      importedBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** One line from a bank statement, waiting for review. */
+  @operation static enterBankLine = {
+    base: 'create',
+    of: BankTransaction,
+    params: {
+      account: StringField,
+      externalId: StringField,
+      date: StringField,
+      description: StringField,
+      amountMinor: NumberField,
+      reference: StringField,
+      payee: StringField,
+      importNo: StringField,
+    },
+    fill: {
+      account: params('account'),
+      externalId: params('externalId'),
+      date: params('date'),
+      description: params('description'),
+      amountMinor: params('amountMinor'),
+      reference: params('reference'),
+      payee: params('payee'),
+      importNo: params('importNo'),
+      status: 'for-review',
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a credit card charge; CardCharge.post checks it. */
+  @operation static enterCardCharge = {
+    base: 'create',
+    of: CardCharge,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      card: StringField,
+      account: StringField,
+      vendor: StringField,
+      cls: StringField,
+      support: StringField,
+      amountMinor: NumberField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      card: params('card'),
+      account: params('account'),
+      vendor: params('vendor'),
+      cls: params('cls'),
+      support: params('support'),
+      amountMinor: params('amountMinor'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a loan payment; LoanPayment.post checks it. */
+  @operation static enterLoanPayment = {
+    base: 'create',
+    of: LoanPayment,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      loan: StringField,
+      bank: StringField,
+      loanAccount: StringField,
+      interestAccount: StringField,
+      amountMinor: NumberField,
+      principalMinor: NumberField,
+      interestMinor: NumberField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      loan: params('loan'),
+      bank: params('bank'),
+      loanAccount: params('loanAccount'),
+      interestAccount: params('interestAccount'),
+      amountMinor: params('amountMinor'),
+      principalMinor: params('principalMinor'),
+      interestMinor: params('interestMinor'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the disposal of a fixed asset; AssetDisposal.post checks it. */
+  @operation static enterDisposal = {
+    base: 'create',
+    of: AssetDisposal,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      asset: StringField,
+      bank: StringField,
+      assetAccount: StringField,
+      accumulatedAccount: StringField,
+      gainLossAccount: StringField,
+      proceedsMinor: NumberField,
+      costMinor: NumberField,
+      accumulatedMinor: NumberField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      asset: params('asset'),
+      bank: params('bank'),
+      assetAccount: params('assetAccount'),
+      accumulatedAccount: params('accumulatedAccount'),
+      gainLossAccount: params('gainLossAccount'),
+      proceedsMinor: params('proceedsMinor'),
+      costMinor: params('costMinor'),
+      accumulatedMinor: params('accumulatedMinor'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a vendor credit; posted with Bill.applyPayment on the bill it is applied to; VendorCredit.post checks it. */
+  @operation static enterVendorCredit = {
+    base: 'create',
+    of: VendorCredit,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      vendorId: StringField,
+      billNo: StringField,
+      account: StringField,
+      amountMinor: NumberField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      vendorId: params('vendorId'),
+      billNo: params('billNo'),
+      account: params('account'),
+      amountMinor: params('amountMinor'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a journal entry; JournalEntry.post checks it. */
+  @operation static enterJournal = {
+    base: 'create',
+    of: JournalEntry,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      preparer: StringField,
+      reviewer: StringField,
+      support: StringField,
+      lines: EntryLine,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      preparer: actor(), // whoever enters it; the param is kept for callers that send it
+      reviewer: params('reviewer'),
+      support: params('support'),
+      lines: params('lines'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft one period of a schedule; ScheduledEntry.post checks it. */
+  @operation static enterScheduled = {
+    base: 'create',
+    of: ScheduledEntry,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      schedule: StringField,
+      kind: StringField,
+      period: NumberField,
+      lines: EntryLine,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      schedule: params('schedule'),
+      kind: params('kind'),
+      period: params('period'),
+      lines: params('lines'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a month of depreciation; DepreciationRun.post checks it. */
+  @operation static enterDepreciation = {
+    base: 'create',
+    of: DepreciationRun,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      month: StringField,
+      assets: AmountLine,
+      lines: EntryLine,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      month: params('month'),
+      assets: params('assets'),
+      lines: params('lines'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  static embedded = class extends Component<typeof Ledger> {
+    <template>
+      <Strip
+        @eyebrow='Ledger'
+        @title={{@model.company}}
+        @meta={{@model.closedThrough}}
+      />
+    </template>
+  };
+  static fitted = class extends Component<typeof Ledger> {
+    <template>
+      <Fit
+        @eyebrow='Ledger'
+        @title={{@model.company}}
+        @meta={{@model.closedThrough}}
+      />
+    </template>
+  };
+  static isolated = class extends Component<typeof Ledger> {
+    get facts(): Fact[] {
+      let m = this.args.model,
+        s = settingsOf(m);
+      let codes = new Set(
+          (m.accounts ?? []).map((a) => a?.code).filter(Boolean) as string[],
+        ),
+        noCard = (s.chart ?? []).filter((c) => !codes.has(c)),
+        notInChart = s.chart
+          ? [...codes].filter((c) => !s.chart!.includes(c))
+          : [],
+        fixedMissing = s.chart
+          ? FIXED_ACCOUNTS.filter((c) => !s.chart!.includes(c))
+          : [];
+      let facts: (Fact & { setting: SettingKey })[] = [
+        { setting: 'currency', key: 'Home currency', value: s.currency },
+        {
+          setting: 'fiscalYearStart',
+          key: 'Fiscal year starts',
+          value: FISCAL_MONTH.format(
+            new Date(Date.UTC(2000, s.fiscalYearStart - 1, 1)),
+          ),
+        },
+        {
+          setting: 'closedThrough',
+          key: 'Closing date',
+          value: s.closedThrough
+            ? day(s.closedThrough)
+            : 'None: any date posts',
+        },
+        {
+          setting: 'materiality',
+          key: 'Materiality',
+          value:
+            s.materialityMinor === undefined
+              ? 'None: no entry needs a reviewer'
+              : money(s.materialityMinor),
+        },
+        {
+          setting: 'chart',
+          key: 'Chart',
+          value: !s.chart
+            ? 'Not set: any code posts'
+            : noCard.length || notInChart.length || fixedMissing.length
+              ? [
+                  fixedMissing.length
+                    ? `Missing ${fixedMissing.join(', ')}, which the books post to on their own`
+                    : '',
+                  noCard.length
+                    ? `No account card for ${noCard.join(', ')}`
+                    : '',
+                  notInChart.length
+                    ? `Not in the chart: ${notInChart.join(', ')}`
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join('. ')
+              : `${s.chart.length} codes, each with an account card`,
+        },
+        {
+          setting: 'multicurrency',
+          key: 'Multicurrency',
+          value: s.multicurrency
+            ? 'On'
+            : 'Off: every document is in the home currency',
+        },
+        {
+          setting: 'currencies',
+          key: 'Other currencies',
+          value: s.currencies.length ? s.currencies.join(', ') : 'None',
+        },
+        {
+          setting: 'taxCodes',
+          key: 'Tax codes',
+          value: taxCodesFact(s.taxCodes, m.taxCodes),
+        },
+      ];
+      // A malformed setting is shown as it is, since the operations enforce the raw value.
+      return facts.map(({ setting, ...f }) =>
+        s.invalid[setting]
+          ? { ...f, value: s.invalid[setting]!, strong: true }
+          : f,
+      );
+    }
+    <template>
+      <Sheet
+        @eyebrow='System of record'
+        @title={{@model.company}}
+        @note='These settings live in the realm configuration: the config object in its realm.json.'
+      ><Part @title='Settings'><Facts @items={{this.facts}} /></Part></Sheet>
+    </template>
+  };
+}
+
+// The tax codes in the settings against the TaxCode cards: a code either side lacks, or whose rates
+// differ, is named.
+function taxCodesFact(
+  settings: TaxCodeSettings | undefined,
+  cards: (TaxCode | undefined)[] | undefined,
+) {
+  if (!settings) return 'Not set: only sales without tax codes post';
+  let key = (rates: { agency: string; ratePpm: number }[]) =>
+    rates
+      .map((r) => `${r.agency}:${r.ratePpm}`)
+      .sort()
+      .join(',');
+  let byCode = new Map(
+    (cards ?? [])
+      .filter(Boolean)
+      .map((c) => [c!.code ?? '', key(c!.components())] as const),
+  );
+  let codes = Object.keys(settings),
+    noCard = codes.filter((c) => !byCode.has(c)),
+    notSet = [...byCode.keys()].filter((c) => !(c in settings)),
+    differ = codes.filter(
+      (c) => byCode.has(c) && byCode.get(c) !== key(settings[c]),
+    );
+  return noCard.length || notSet.length || differ.length
+    ? [
+        noCard.length ? `No tax code card for ${noCard.join(', ')}` : '',
+        notSet.length ? `Not in the settings: ${notSet.join(', ')}` : '',
+        differ.length
+          ? `Rates differ from the card for ${differ.join(', ')}`
+          : '',
+      ]
+        .filter(Boolean)
+        .join('. ')
+    : `${codes.length} codes, each matching its card`;
+}
+
+export { PostingLine as LedgerLine };
+
+export { Vendor };

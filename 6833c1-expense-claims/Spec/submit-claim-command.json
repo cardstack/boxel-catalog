@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Submit Expense Claim\n\nInput: a saved claim. Refuses with every problem at once, in words for the employee (a line without an amount, a category or a required receipt). Otherwise it builds the approval chain (manager first, then the roles the policy's ApprovalRules require for the total, never the employee themself), stores why each extra approver is there, and stores the policy flags for the approvers.\n\nPart of Expense Claims.",
+      "ref": {
+        "module": "../commands/submit-claim-command",
+        "name": "SubmitClaimCommand"
+      },
+      "specType": "command",
+      "cardInfo": {
+        "name": "Submit Expense Claim",
+        "summary": "Checks a draft claim against its policy, starts its approval chain and records the policy flags."
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

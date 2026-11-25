@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Scan Receipts\n\nInput: a draft (or returned) claim; optionally one line number, and a model to use instead of the policy's. For each line whose receipt photo has not been read yet and that has an empty field, Read Receipt reads the photo and the empty fields are filled: merchant, date, amount, and a category from the policy's list.\n\n- It never overwrites what the employee typed. Where the receipt disagrees (another total or date), it says so instead.\n- It leaves the amount empty when the receipt is in another currency than the books, fills no date after today or more than a year back (a year misread on faded print), and fills nothing from a picture that is not a receipt.\n- Each filled field is marked AI on the line until someone changes its value, and the photo is recorded as read, so the same photo is not read (and paid for) twice. A new photo on the line can be read.\n\nThe model is the policy's `scanModel`; empty = `anthropic/claude-haiku-5.5` (about USD 0.0004 a receipt; on six real thermal receipts, some upside down or sideways, it read 23 of 24 fields right; `anthropic/claude-opus-4.8` read 24 of 24 at about USD 0.01). The button is on the claim's page and in its edit form while the claim is a draft.\n\nPart of Expense Claims.",
+      "ref": {
+        "module": "../commands/scan-receipt-command",
+        "name": "ScanReceiptCommand"
+      },
+      "specType": "command",
+      "cardInfo": {
+        "name": "Scan Receipts",
+        "summary": "Reads the receipt photos on a draft claim with AI and fills only the empty fields, marked for the employee to check."
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "claimNo": "EC-2026-0004",
+      "purpose": "Customer visit in Kuala Lumpur (12–13 Nov)",
+      "lines": [
+        {
+          "date": "2026-11-13",
+          "merchant": "Hotel Demo Inn",
+          "amount": 226.8,
+          "receipt": {
+            "url": null,
+            "sourceMode": "file"
+          },
+          "note": null,
+          "aiFilled": [
+            "merchant=Hotel Demo Inn",
+            "date=2026-11-13",
+            "amount=226.8",
+            "category=Travel & transport",
+            "receipt=../receipts/demo-hotel.jpg"
+          ]
+        }
+      ],
+      "approvalNotes": [],
+      "policyFlags": [],
+      "submittedDate": "2026-11-17",
+      "approvalChain": {
+        "startedAt": "2026-11-17T13:40:56.746Z",
+        "steps": [
+          {
+            "decision": "approved",
+            "decidedAt": "2026-11-17T13:42:56.755Z",
+            "comment": "Within the hotel limit. Approved.",
+            "openedAt": "2026-11-17T13:40:56.746Z",
+            "holdReason": null,
+            "conditions": null
+          }
+        ]
+      },
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "employee": {
+        "links": {
+          "self": "../@cardstack/catalog/cards/hr/Employee/marcus-webb"
+        }
+      },
+      "policy": {
+        "links": {
+          "self": "../ExpensePolicy/default"
+        }
+      },
+      "lines.0.receipt.file": {
+        "links": {
+          "self": "../receipts/demo-hotel.jpg"
+        }
+      },
+      "lines.0.category": {
+        "links": {
+          "self": "../ExpenseCategory/travel"
+        }
+      },
+      "approvalChain.steps.0.approver": {
+        "links": {
+          "self": "../@cardstack/catalog/cards/hr/Employee/sofia-reyes"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../expense-claim",
+        "name": "ExpenseClaim"
+      }
+    }
+  }
+}

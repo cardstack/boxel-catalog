@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Expense Policy\n\nEverything a company sets for claims, as data: the categories staff may claim, the amount from which a receipt is required, how many days after a receipt it may still be claimed, the ApprovalRules that add sign-off above an amount, who fills each role those rules name, and the Ledger approved claims go to. The currency is not stored here: it is the books' home currency from the workspace's realm configuration.\n\nPart of Expense Claims.",
+      "ref": {
+        "module": "../expense-policy",
+        "name": "ExpensePolicy"
+      },
+      "specType": "card",
+      "cardInfo": {
+        "name": "Expense Policy",
+        "summary": "The company's rules for claims: categories, receipt threshold, submission window, extra sign-off and the books."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../ExpensePolicy/default"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

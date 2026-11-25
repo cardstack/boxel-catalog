@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ruleName": "Finance sign-off above 500",
+      "priority": 10,
+      "isActive": true,
+      "minValue": {
+        "amount": 500,
+        "currency": null
+      },
+      "requiredRoles": [
+        "Finance"
+      ],
+      "isParallel": false,
+      "guidance": "Claims above 500, in the books' currency, need Finance after the manager approves. The amount is compared without its currency."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/cards/legal/approval-rule",
+        "name": "ApprovalRule"
+      }
+    }
+  }
+}

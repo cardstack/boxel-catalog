@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "labelEn": "Office supplies",
+      "labelMs": "Bekalan pejabat",
+      "account": "6830",
+      "capAmount": 200
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../expense-category",
+        "name": "ExpenseCategory"
+      }
+    }
+  }
+}

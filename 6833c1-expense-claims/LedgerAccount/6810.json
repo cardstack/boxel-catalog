@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "6810",
+      "name": "Travel & Transport",
+      "type": "expense",
+      "active": true,
+      "cardInfo": {
+        "name": "6810 Travel & Transport"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/cards/accounting/ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

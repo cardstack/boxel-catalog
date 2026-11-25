@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "6830",
+      "name": "Office Supplies",
+      "type": "expense",
+      "active": true,
+      "cardInfo": {
+        "name": "6830 Office Supplies"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/cards/accounting/ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

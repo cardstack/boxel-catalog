@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "labelEn": "Client meals",
+      "labelMs": "Makan bersama pelanggan",
+      "account": "6820",
+      "capAmount": 150
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../expense-category",
+        "name": "ExpenseCategory"
+      }
+    }
+  }
+}

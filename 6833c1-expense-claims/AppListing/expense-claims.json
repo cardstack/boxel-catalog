@@ -1,0 +1,254 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Expense Claims",
+      "summary": "Staff expense claims for a small company, from receipt to the books. Employees photograph receipts, and AI reads each one and fills only the empty fields (merchant, date, amount, category), marked for them to check; it never fills an amount in another currency. Their manager approves first, and the policy adds Finance above its limit, using the catalog's HR approval chain and ApprovalRule unchanged. At submission the policy flags what an approver should check: a receipt over its category's cap, an old or future-dated receipt, or the same receipt claimed twice. An approved claim goes to the books as a draft Bill through the Ledger's own enterBill, one bill per claim, for an accountant to post. The Expense Desk shows what is waiting on approvers, ready for the books or sent back, and starts new claims. Comes with a policy, five categories mapped to expense accounts, a Finance rule, demo books and example claims. Amounts use your workspace's home currency (the `currency` in realm.json config); the examples are in Malaysian ringgit. The receipt-reading model is a policy setting.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "supportingCards.0": {
+        "links": {
+          "self": "../ExpenseCategory/travel"
+        }
+      },
+      "supportingCards.1": {
+        "links": {
+          "self": "../ExpenseCategory/meals"
+        }
+      },
+      "supportingCards.2": {
+        "links": {
+          "self": "../ExpenseCategory/supplies"
+        }
+      },
+      "supportingCards.3": {
+        "links": {
+          "self": "../ExpenseCategory/training"
+        }
+      },
+      "supportingCards.4": {
+        "links": {
+          "self": "../ExpenseCategory/other"
+        }
+      },
+      "supportingCards.5": {
+        "links": {
+          "self": "../ApprovalRule/finance-over-500"
+        }
+      },
+      "supportingCards.6": {
+        "links": {
+          "self": "../Ledger/books"
+        }
+      },
+      "supportingCards.7": {
+        "links": {
+          "self": "../LedgerAccount/1000"
+        }
+      },
+      "supportingCards.8": {
+        "links": {
+          "self": "../LedgerAccount/1100"
+        }
+      },
+      "supportingCards.9": {
+        "links": {
+          "self": "../LedgerAccount/2000"
+        }
+      },
+      "supportingCards.10": {
+        "links": {
+          "self": "../LedgerAccount/2200"
+        }
+      },
+      "supportingCards.11": {
+        "links": {
+          "self": "../LedgerAccount/3900"
+        }
+      },
+      "supportingCards.12": {
+        "links": {
+          "self": "../LedgerAccount/5000"
+        }
+      },
+      "supportingCards.13": {
+        "links": {
+          "self": "../LedgerAccount/5100"
+        }
+      },
+      "supportingCards.14": {
+        "links": {
+          "self": "../LedgerAccount/6810"
+        }
+      },
+      "supportingCards.15": {
+        "links": {
+          "self": "../LedgerAccount/6820"
+        }
+      },
+      "supportingCards.16": {
+        "links": {
+          "self": "../LedgerAccount/6830"
+        }
+      },
+      "supportingCards.17": {
+        "links": {
+          "self": "../LedgerAccount/6840"
+        }
+      },
+      "supportingCards.18": {
+        "links": {
+          "self": "../LedgerAccount/6999"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/app"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/community"
+        }
+      },
+      "tags.2": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/user-contributed"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "@cardstack/catalog/Category/accounting-finance"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "@cardstack/catalog/Category/hr-people-management"
+        }
+      },
+      "specs.0": {
+        "links": {
+          "self": "../Spec/expense-desk"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/expense-claim"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/expense-policy"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/expense-category"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/submit-claim-command"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/send-claim-to-books-command"
+        }
+      },
+      "tags.3": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/ai"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/scan-receipt-command"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/read-receipt-command"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/1-read-receipts-phone.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/2-claim-ai-and-flags.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../Screenshots/3-expense-desk.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/4-posted-to-books.png"
+        }
+      },
+      "images.4": {
+        "links": {
+          "self": "../Screenshots/5-policy-as-data.png"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/expense-claims.png"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../ExpenseDesk/main"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../ExpenseClaim/EC-2026-0002"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../ExpenseClaim/EC-2026-0004"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../ExpenseClaim/EC-2026-0003"
+        }
+      },
+      "examples.4": {
+        "links": {
+          "self": "../ExpenseClaim/EC-2026-0001"
+        }
+      },
+      "examples.5": {
+        "links": {
+          "self": "../ExpensePolicy/default"
+        }
+      },
+      "supportingCards.19": {
+        "links": {
+          "self": "../Bill/7860e063-75cd-44f8-af23-dbe9d1b67a31"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "AppListing"
+      },
+      "_touched": 1794924383186
+    }
+  }
+}

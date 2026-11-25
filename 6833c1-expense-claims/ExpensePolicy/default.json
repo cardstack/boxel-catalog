@@ -1,0 +1,64 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "policyName": "Staff expense policy",
+      "receiptRequiredAbove": 20,
+      "submitWithinDays": 30,
+      "scanModel": null,
+      "roleApprovers": [
+        {
+          "role": "Finance"
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../expense-policy",
+        "name": "ExpensePolicy"
+      }
+    },
+    "relationships": {
+      "categories.0": {
+        "links": {
+          "self": "../ExpenseCategory/travel"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "../ExpenseCategory/meals"
+        }
+      },
+      "categories.2": {
+        "links": {
+          "self": "../ExpenseCategory/supplies"
+        }
+      },
+      "categories.3": {
+        "links": {
+          "self": "../ExpenseCategory/training"
+        }
+      },
+      "categories.4": {
+        "links": {
+          "self": "../ExpenseCategory/other"
+        }
+      },
+      "approvalRules.0": {
+        "links": {
+          "self": "../ApprovalRule/finance-over-500"
+        }
+      },
+      "roleApprovers.0.approver": {
+        "links": {
+          "self": "../@cardstack/catalog/cards/hr/Employee/sofia-reyes"
+        }
+      },
+      "ledger": {
+        "links": {
+          "self": "../Ledger/books"
+        }
+      }
+    }
+  }
+}

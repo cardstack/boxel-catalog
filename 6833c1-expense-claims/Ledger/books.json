@@ -1,0 +1,19 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "company": "Demo Company",
+      "billCount": 0,
+      "cardInfo": {
+        "name": "Demo Company · books",
+        "summary": "The books approved expense claims go into as draft bills. Settings (currency, chart, closing date) are in realm.json → config."
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/cards/accounting/ledger-cards",
+        "name": "Ledger"
+      }
+    }
+  }
+}

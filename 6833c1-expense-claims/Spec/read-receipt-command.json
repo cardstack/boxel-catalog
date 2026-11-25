@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Read Receipt\n\nInput: a picture URL (a file in your workspace, a web image or a data URL), the category labels to choose from, and optionally an OpenRouter model. Returns whether the picture is a receipt, the merchant, the date (yyyy-mm-dd), the total, its currency and the category, with null for anything the model cannot read clearly, plus the model's reply and the cost of the call when OpenRouter reports it. Dates are read the way the receipt's country writes them (05/11/2026 on a Malaysian receipt is 5 November).\n\nSaves nothing: use it to read a receipt from your own card, or to compare models on the same pictures. Photos are scaled to 1600 px on the long edge before sending.\n\nPart of Expense Claims.",
+      "ref": {
+        "module": "../commands/read-receipt-command",
+        "name": "ReadReceiptCommand"
+      },
+      "specType": "command",
+      "cardInfo": {
+        "name": "Read Receipt",
+        "summary": "Reads one receipt picture with a vision model and returns merchant, date, total, currency and category. Saves nothing."
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

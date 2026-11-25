@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Send Expense Claim to Books\n\nInput: an approved claim (and, optionally, the Ledger; otherwise the one its policy names). Checks first what posting would refuse: the currency, and that each line's account is in the books' chart. Then enters a draft Bill with Ledger.enterBill: the claim number is the bill number, the employee is the vendor, dated the day the claim was approved (today, if that day is in a closed period). Running it again, or after the link was lost, links the bill already in the books instead of entering a second one.\n\nPart of Expense Claims.",
+      "ref": {
+        "module": "../commands/send-claim-to-books-command",
+        "name": "SendClaimToBooksCommand"
+      },
+      "specType": "command",
+      "cardInfo": {
+        "name": "Send Expense Claim to Books",
+        "summary": "Turns an approved claim into a draft Bill in the books, one bill per claim, and links it."
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
