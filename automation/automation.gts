@@ -2116,7 +2116,8 @@ function automationStatus(
       let latest = 0;
       // A run moving (a `job` event) changes no key approval, so that read
       // skips the check, which looks up every declared operation, and keeps
-      // the approvals the last read answered.
+      // the approvals the last read answered. A run that ends checks again:
+      // a service refusing the run's key marks the key rejected.
       let read = async ({ checkKeys = true }: { checkKeys?: boolean } = {}) => {
         let asked = ++latest;
         await Promise.resolve();
@@ -2177,7 +2178,9 @@ function automationStatus(
         ) {
           read();
         } else if (event.eventName === 'job' && event.automation === id) {
-          read({ checkKeys: false });
+          read({
+            checkKeys: event.state === 'complete' || event.state === 'error',
+          });
         }
       });
       on.cleanup(() => {
