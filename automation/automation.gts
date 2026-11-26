@@ -2117,16 +2117,22 @@ function automationStatus(
       // A run moving (a `job` event) changes no key approval, so that read
       // skips the check, which looks up every declared operation, and keeps
       // the approvals the last read answered. A run that ends checks again:
-      // a service refusing the run's key marks the key rejected.
+      // a service refusing the run's key marks the key rejected. Reads are
+      // latest-wins, so a check one read asked for stays owed (`keysOwed`)
+      // until a read that made the check lands: a later read, even a run's,
+      // makes the check for it rather than dropping it.
+      let keysOwed = false;
       let read = async ({ checkKeys = true }: { checkKeys?: boolean } = {}) => {
+        keysOwed ||= checkKeys;
         let asked = ++latest;
         await Promise.resolve();
         if (ended || asked !== latest) {
           return;
         }
+        let checking = keysOwed;
         try {
           let result = await new AuthedFetchTool(tools).execute({
-            url: keyApprovals && checkKeys ? `${url}&keyApprovals=true` : url,
+            url: keyApprovals && checking ? `${url}&keyApprovals=true` : url,
             acceptHeader: 'application/json',
           });
           if (ended || asked !== latest) {
@@ -2136,19 +2142,22 @@ function automationStatus(
             result.ok && result.body?.meta?.directWriter !== false
               ? (result.body?.data?.attributes as ServerStatus | undefined)
               : undefined;
-          let kept = state.status?.switchedOn && state.status.keyApprovals;
+          let shownKeys = state.status?.switchedOn && state.status.keyApprovals;
           if (
             keyApprovals &&
-            !checkKeys &&
-            kept &&
+            !checking &&
+            shownKeys &&
             status?.switchedOn &&
             !status.keyApprovals
           ) {
-            status = { ...status, keyApprovals: kept };
+            status = { ...status, keyApprovals: shownKeys };
           }
           state.status = status;
           state.visible = Boolean(status);
           state.known = true;
+          if (checking) {
+            keysOwed = false;
+          }
         } catch {
           if (!ended && asked === latest) {
             state.status = undefined;
