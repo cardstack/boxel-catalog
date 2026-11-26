@@ -34,7 +34,8 @@ jobs:
   # the realm-server re-indexes only the files this run changed and what depends on them. The pin
   # keeps the cached rows true to the code that reads them. A run with no usable cache (none
   # uploaded or expired, a fork, a PR that needs a boxel change newer than the cache) indexes the
-  # whole catalog on boxel main.
+  # whole catalog on boxel main. Only the scheduled run moves the pin to boxel main; a push to main
+  # restores the last cache like a PR does and uploads its own on the same pin.
   choose-cache:
     name: Choose the index cache
     runs-on: ubuntu-latest
@@ -44,10 +45,10 @@ jobs:
       build: ${{ steps.cache.outputs.build }}
       skip: ${{ steps.cache.outputs.skip }}
     steps:
-      # A PR's `Merges after:` line is read with boxel's own pairing parser. Without it, the PR runs
-      # boxel main.
+      # A PR's `Merges after:` line is read with boxel's own pairing parser, on the PR's run and on
+      # the push that merges it. Without it, the run uses boxel main.
       - name: Check out boxel's catalog scripts
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
         continue-on-error: true
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
@@ -57,7 +58,7 @@ jobs:
           sparse-checkout: packages/catalog/scripts
 
       - name: Setup Node.js
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
         continue-on-error: true
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
@@ -113,7 +114,9 @@ jobs:
           # when it doesn't. Read live, so a description edited before a re-run counts.
           merges_after_boxel() {
             local body
-            body=$(retry gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.body // ""') || body="$PR_BODY"
+            # A push has no event body to fall back on, so an unread description counts as unknown.
+            body=$(retry gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.body // ""') ||
+              { [ "$EVENT" = push ] && return 1; body="$PR_BODY"; }
             BODY="$body" node --input-type=module -e '
               const { readDeclarations } = await import(process.env.PAIRING);
               const { declarations } = readDeclarations(process.env.BODY);
@@ -122,6 +125,78 @@ jobs:
               );
               process.exit(pairs ? 0 : 10);
             '
+          }
+          # Sets $prs to the PR behind each commit between the cache's catalog commit and this push that
+          # is on main's own line or that GitHub made (a merge, squash or rebase off that line, brought
+          # in by a local merge): a two-parent "Merge pull request #N" commit names its PR, and GitHub
+          # is asked for any other's. It adds every PR marked merged into main from a minute before
+          # the cache's catalog commit, other than the one that commit merged, which catches one
+          # merged only because a local merge carried its commits in. PRs merged into those PRs' branches are followed by the caller. Returns 1
+          # with $unknown set when any of that can't be read.
+          prs_since_cache() {
+            local cache event head since range sha line parents committer subject found mainline=" " lookups=0
+            prs=""
+            if ! cache=$(retry gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" \
+                --jq '"\(.event) \(.head_sha) \(.head_commit.timestamp | fromdateiso8601 - 60 | todateiso8601)"'); then
+              unknown="the cache from run $run_id couldn't be read"
+              return 1
+            fi
+            read -r event head since <<< "$cache"
+            # A dispatched run may have built on any boxel commit, so only push and schedule caches
+            # are known to suit their own catalog commit.
+            case "$event" in
+              push|schedule) ;;
+              *) unknown="the cache from run $run_id was built by a $event run"; return 1 ;;
+            esac
+            if ! range=$(retry gh api "repos/$GITHUB_REPOSITORY/compare/$head...$GITHUB_SHA?per_page=250" --jq '
+                if (.status != "ahead" and .status != "identical") or .total_commits > (.commits | length)
+                then error("incomplete")
+                else .commits[] | [.sha, (.parents[0].sha // ""), (.parents | length), (.committer.login // "-"), (.commit.message | split("\n")[0])] | @tsv
+                end'); then
+              unknown="the commits since the cache from run $run_id couldn't be listed"
+              return 1
+            fi
+            if ! found=$(retry gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" -f state=closed -f base=main \
+                -f sort=updated -f direction=desc -f per_page=100 --jq "
+                  if length == 100 and .[-1].updated_at >= \"$since\" then error(\"more than one page\")
+                  else [.[] | select(.merged_at != null and .merged_at >= \"$since\" and .merge_commit_sha != \"$head\") | .number] | join(\" \")
+                  end"); then
+              unknown="the PRs merged since the cache from run $run_id couldn't be listed"
+              return 1
+            fi
+            prs="$prs $found"
+            sha=$GITHUB_SHA
+            while [ "$sha" != "$head" ]; do
+              if ! line=$(grep -m1 "^$sha"$'\t' <<< "$range"); then
+                unknown="main's history since the cache from run $run_id couldn't be followed"
+                return 1
+              fi
+              mainline="$mainline$sha "
+              sha=$(cut -f2 <<< "$line")
+            done
+            while IFS=$'\t' read -r sha line parents committer subject; do
+              [ -n "$sha" ] || continue
+              case "$mainline" in
+                *" $sha "*) ;;
+                *) [ "$committer" = web-flow ] || continue ;;
+              esac
+              if [ "$parents" = 2 ] && [[ "$subject" =~ ^Merge\ pull\ request\ \#([0-9]+)\  ]]; then
+                prs="$prs ${BASH_REMATCH[1]}"
+                continue
+              fi
+              lookups=$((lookups + 1))
+              if [ "$lookups" -gt 100 ]; then
+                unknown="more than 100 commits landed since the cache from run $run_id"
+                return 1
+              fi
+              if ! found=$(retry gh api "repos/$GITHUB_REPOSITORY/commits/$sha/pulls" --jq '[.[] | select(.merged_at != null) | .number] | join(" ")') || [ -z "$found" ]; then
+                unknown="no merged PR could be found for $sha"
+                return 1
+              fi
+              prs="$prs $found"
+            done <<< "$range"
+            prs=$(tr ' ' '\n' <<< "$prs" | sort -un | tr '\n' ' ')
+            return 0
           }
           newest_cache_or_reason() {
             if run_id=$(retry newest_cache_run); then
@@ -150,7 +225,42 @@ jobs:
                 newest_cache_or_reason
               fi
             fi
-          elif [ "$EVENT" = push ] || [ "$EVENT" = schedule ]; then
+          elif [ "$EVENT" = push ]; then
+            # The cache's boxel commit holds only while no PR that landed since the cache's catalog
+            # commit needs a newer boxel.
+            newest_cache_or_reason
+            if [ -n "$run_id" ]; then
+              PR_BODY=""
+              prs_since_cache || { reason="$unknown, so it runs boxel main"; run_id=""; }
+              # A PR merged into a landed PR's branch landed with it, even when a squash left no
+              # commit of its own.
+              set -- $prs
+              seen=" "
+              while [ $# -gt 0 ] && [ -n "$run_id" ]; do
+                PR_NUMBER=$1
+                shift
+                case "$seen" in *" $PR_NUMBER "*) continue ;; esac
+                seen="$seen$PR_NUMBER "
+                pairing=0
+                merges_after_boxel || pairing=$?
+                if [ "$pairing" = 0 ]; then
+                  reason="PR #$PR_NUMBER, merged since the cache from run $run_id, merges after a boxel PR, so it runs boxel main"
+                  run_id=""
+                elif [ "$pairing" != 10 ]; then
+                  reason="PR #$PR_NUMBER, merged since the cache from run $run_id, couldn't be read for a boxel pairing, so it runs boxel main"
+                  run_id=""
+                elif ! branch=$(retry gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+                    --jq "if (.head.repo.full_name // \"\" | ascii_downcase) == (\"$GITHUB_REPOSITORY\" | ascii_downcase) then .head.ref else \"\" end") ||
+                  ! stacked=$( [ -z "$branch" ] || retry gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" -f state=closed -f base="$branch" -f per_page=100 \
+                    --jq 'if length == 100 then error("more than one page") else [.[] | select(.merged_at != null) | .number] | join(" ") end'); then
+                  reason="the PRs merged into PR #$PR_NUMBER's branch couldn't be listed, so it runs boxel main"
+                  run_id=""
+                else
+                  set -- "$@" $stacked
+                fi
+              done
+            fi
+          elif [ "$EVENT" = schedule ]; then
             newest_cache_or_reason
           fi
           cache_sha=""
@@ -161,9 +271,9 @@ jobs:
               run_id=""
             fi
           fi
-          # A main run reuses the last cache only while boxel main hasn't moved; otherwise it
+          # A scheduled run reuses the last cache only while boxel main hasn't moved; otherwise it
           # indexes from scratch on the new commit and its cache moves the pin forward.
-          if [ -n "$run_id" ] && { [ "$EVENT" = push ] || [ "$EVENT" = schedule ]; }; then
+          if [ -n "$run_id" ] && [ "$EVENT" = schedule ]; then
             main_sha=$(retry gh api repos/cardstack/boxel/commits/main --jq .sha) || main_sha=""
             if [ -z "$main_sha" ]; then
               echo "Couldn't read boxel main's commit, so the cache from run $run_id is kept."
@@ -173,7 +283,7 @@ jobs:
               cache_sha=""
             fi
             # A scheduled run only exists to move the pin, so it stops here when the pin holds.
-            [ "$EVENT" = schedule ] && [ -n "$run_id" ] && skip=true
+            [ -n "$run_id" ] && skip=true
           fi
           boxel_ref="${cache_sha:-$BOXEL_INPUT}"
           if [ "$skip" = true ]; then
