@@ -1,0 +1,16 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Logo design",
+      "unit": "package",
+      "price": 1500000
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../service-item",
+        "name": "ServiceItem"
+      }
+    }
+  }
+}
