@@ -5142,9 +5142,17 @@ class RunDetail extends GlimmerComponent<{
                       the automation’s payer once a day for every file the
                       automation’s runs created that still exists, and for the
                       files’ entries in the workspace’s search index.</li>
-                    <li>Boxel charges every day the automation is switched on,
-                      including while the automation is paused or done. Removing
-                      the automation, or deleting the files, stops the charge.</li>
+                    <li>Boxel charges for every day the automation’s status
+                      reads On, even when the status reads On for only part of
+                      the day.</li>
+                    <li>Boxel doesn’t charge for a day the automation spends
+                      wholly paused, waiting for credits, waiting for key
+                      approval or done. Boxel still charges for the day the
+                      automation stops partway through, and charges again from
+                      the day the status reads On again. The files stay in the
+                      workspace while Boxel isn’t charging for the files.</li>
+                    <li>Boxel also stops charging when a realm administrator
+                      removes the automation, or when someone deletes the files.</li>
                     <li>Boxel charges whole credits: the daily amounts add up,
                       and Boxel charges the days together once the days cost at
                       least 1 credit.</li>
@@ -6601,11 +6609,12 @@ export class SwitchOnDialog extends GlimmerComponent<{
               >
                 Boxel charges every scheduled run to your credits, and the
                 storage of the files the runs create for every day the
-                automation stays on. The monthly limit stops Boxel from starting
-                runs, while the storage charge continues until a realm
-                administrator removes the automation. Any realm administrator
-                can pause the automation, or resume the automation and become
-                the payer instead.
+                automation’s status reads On. The monthly limit stops Boxel from
+                starting runs, and Boxel stops charging for storage while the
+                automation is paused, waiting for credits, waiting for key
+                approval or done. Any realm administrator can pause the
+                automation, or resume the automation and become the payer
+                instead.
               </Callout>
             {{else if this.estimateFailure}}
               <div data-test-automation-switch-on-estimate-failure>
