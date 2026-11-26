@@ -45,12 +45,13 @@ import {
   type ResolvedCodeRef,
 } from '@cardstack/runtime-common';
 import AuthedFetchTool from '@cardstack/boxel-host/tools/authed-fetch';
-import AutomationRequestTool from '@cardstack/boxel-host/tools/automation-request';
 import OpenSecureWindowTool from '@cardstack/boxel-host/tools/open-secure-window';
+import AutomationRequestTool from '@cardstack/boxel-host/tools/automation-request';
 import ReadAutomationRunTool from '@cardstack/boxel-host/tools/read-automation-run';
 import ReadSourceTool from '@cardstack/boxel-host/tools/read-source';
 import WriteTextFileTool from '@cardstack/boxel-host/tools/write-text-file';
 import { Button } from '@cardstack/pretui/components/button';
+import { Indicator } from '@cardstack/pretui/components/indicator';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
 import { List } from '@cardstack/pretui/components/list';
 import { LoadingState } from '@cardstack/pretui/components/loading-state';
@@ -100,7 +101,7 @@ import { Table } from '@cardstack/pretui/components/table';
 import { Tabs } from '@cardstack/pretui/components/tabs';
 import { TimeInput } from '@cardstack/pretui/components/time-input';
 import { Token } from '@cardstack/pretui/components/token';
-import { and, bool, eq, gt, or } from '@cardstack/pretui/helpers';
+import { and, bool, eq, gt, not, or } from '@cardstack/pretui/helpers';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import CalendarCheckIcon from '@cardstack/boxel-icons/calendar-check';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
@@ -118,6 +119,8 @@ import ZapIcon from '@cardstack/boxel-icons/zap';
 import LayoutListIcon from '@cardstack/boxel-icons/layout-list';
 import {
   AutomationsConsoleContextName,
+  automationNoticeText,
+  automationPausedReason,
   showAutomationInConsole,
 } from '@cardstack/base/realm-automations';
 import { describeCron } from '@cardstack/catalog/automation/describe-cron';
@@ -1882,7 +1885,48 @@ type ServerStatus =
       spentToday?: number;
       lastRunUsage?: RunUsage | null;
       triggers: TriggerStatus[];
+      // What tells the realm's direct writers the automation stopped doing
+      // its job, and what fixes it. Absent from a server that doesn't report
+      // notices.
+      notice?: AutomationNotice | null;
     };
+// What tells the realm's direct writers the automation stopped doing its job,
+// as the status route reports it: why (a pause reason, a wait, or the code a
+// refused run ended with), whom the notice is for and whether the viewer is
+// one of them, the run it is about, the operation a refused run named, and
+// what fixes a rejected credential.
+interface AutomationNotice {
+  reason:
+    | 'repeated-failures'
+    | 'payer-lost-access'
+    | 'caps-raised'
+    | 'batched-ai-enabled'
+    | 'webhook-changed'
+    | 'webhook-owner-lost-access'
+    | 'invalid-declaration'
+    | 'waiting-for-key-approval'
+    | 'binding-not-approved'
+    | 'binding-needs-reapproval'
+    | 'share-suspended'
+    | 'key-approval-ended'
+    | 'waiting-for-credits'
+    | 'credential-rejected';
+  audience: 'payer' | 'direct-writers' | 'client-owner';
+  forViewer: boolean;
+  run: {
+    runId: string;
+    reason: string | null;
+    message: string | null;
+    finishedAt: string | null;
+  } | null;
+  operation: { name: string; module: string; typeName: string } | null;
+  credential:
+    | { kind: 'reconnect'; keyId: string }
+    | { kind: 'connect-again'; keyId: string }
+    | { kind: 'fix-client'; clientKeyId: string }
+    | { kind: 'fix-share'; shareId: string }
+    | null;
+}
 // A limit the automation is near or at.
 interface LimitNear {
   name: string;
@@ -2395,7 +2439,7 @@ const PAUSE_CANCELED: Record<string, string> = {
   'webhook-owner-lost-access':
     'Boxel canceled the run because the person who made a trigger’s incoming webhook is no longer a realm administrator.',
   'payer-lost-access':
-    'Boxel canceled the run because the payer is no longer a realm administrator.',
+    'Boxel canceled the run because the payer’s account can no longer pay for runs.',
   'realm-archived':
     'Boxel canceled the run because someone archived this workspace.',
   'repeated-failures':
@@ -2562,6 +2606,11 @@ function rowTime(iso: string): string {
 
 // One row of the run list: a run, or a later slot that joined a run.
 // `skipped` is the joined slot on a skipped slot's row, absent on a run's.
+// A request to open one run in the Runs section and scroll to it.
+interface RevealRequest {
+  runId: string;
+}
+
 interface RunRow {
   key: string;
   run: ListedRun;
@@ -2646,9 +2695,9 @@ function stateSentence(status: ServerStatus): string {
     case 'active':
       return 'Boxel runs this automation each time a trigger fires and charges the payer for every run.';
     case 'waiting-for-credits':
-      return 'The payer has no credits left, so Boxel holds every run. Boxel runs the automation again once the payer adds credits.';
+      return 'The payer has no credits left, so Boxel has paused every run. Boxel runs the automation again once the payer adds credits.';
     case 'waiting-for-key-approval':
-      return 'Boxel holds every run until someone approves the automation’s use of each key.';
+      return 'Boxel has paused every run until someone approves the automation’s use of each key.';
     case 'done':
       return 'The automation has no runs left on any trigger, so Boxel runs nothing more. Boxel runs the automation again when a realm administrator adds a trigger.';
     case 'paused':
@@ -2656,7 +2705,7 @@ function stateSentence(status: ServerStatus): string {
         case 'realm-archived':
           return 'Someone archived this workspace, so Boxel paused the automation. Boxel runs nothing until a realm administrator restores the workspace and resumes the automation.';
         case 'payer-lost-access':
-          return 'The payer is no longer a realm administrator, so Boxel paused the automation. Boxel runs nothing until a realm administrator resumes the automation and becomes the new payer.';
+          return 'The payer’s account can no longer pay for runs, so Boxel paused the automation. Boxel runs nothing until a realm administrator resumes the automation and becomes the new payer.';
         case 'caps-raised':
           return 'Someone raised a limit above what the payer agreed to pay for, so Boxel paused the automation. Boxel runs nothing until a realm administrator resumes the automation and agrees to the new limits.';
         case 'batched-ai-enabled':
@@ -5217,11 +5266,53 @@ class AutomationRuns extends GlimmerComponent<{
     automation: string | undefined;
     caps: AutomationCaps | undefined;
     tools: Tools | undefined;
+    // A run to open and scroll into view, such as the run a notice is about.
+    // Each new request opens that run once the page shown lists it.
+    reveal?: RevealRequest;
   };
 }> {
   get rows() {
     return runRows(this.args.runs.runs);
   }
+  // The rows whose detail is open: the List's own expansion, kept here so a
+  // revealed run opens too.
+  @tracked expandedKeys: (string | number)[] = [];
+  onExpandedChange = (keys: (string | number)[]) => {
+    this.expandedKeys = keys;
+  };
+  #revealed: RevealRequest | undefined;
+  // Opens the run `@reveal` names, scrolls the run's row into view and moves
+  // focus to the row's expander, once per request, as soon as the page shown
+  // lists the run.
+  revealRun = modifier(
+    (
+      element: HTMLElement,
+      [reveal, rows]: [RevealRequest | undefined, RunRow[]],
+    ) => {
+      if (
+        !reveal ||
+        reveal === this.#revealed ||
+        !rows.some((row) => row.key === reveal.runId)
+      ) {
+        return;
+      }
+      this.#revealed = reveal;
+      let { runId } = reveal;
+      requestAnimationFrame(() => {
+        if (!this.expandedKeys.includes(runId)) {
+          this.expandedKeys = [...this.expandedKeys, runId];
+        }
+        let row = element.querySelector<HTMLElement>(
+          `[data-automation-run-row='${CSS.escape(runId)}']`,
+        );
+        row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        row
+          ?.closest('li')
+          ?.querySelector<HTMLElement>('button[aria-expanded]')
+          ?.focus({ preventScroll: true });
+      });
+    },
+  );
   // The automation's run before `run` on the page shown that started and
   // ended, leaving Previews out as the automation's last run does, and
   // leaving out a run admission refused: the run whose milestone times an
@@ -5328,6 +5419,9 @@ class AutomationRuns extends GlimmerComponent<{
         @label='Runs of the automation'
         @bordered={{true}}
         @busy={{@runs.paging}}
+        @expandedKeys={{this.expandedKeys}}
+        @onExpandedChange={{this.onExpandedChange}}
+        {{this.revealRun @reveal this.rows}}
         data-test-automation-runs
       >
         <:item as |row|>
@@ -5380,6 +5474,7 @@ class AutomationRuns extends GlimmerComponent<{
                 @size='s'
                 @wrap={{true}}
                 @alignStart={{true}}
+                data-automation-run-row={{row.run.id}}
                 data-test-automation-run={{row.run.id}}
                 data-test-automation-run-state={{look.label}}
               >
@@ -6703,6 +6798,189 @@ class ShowInConsole extends GlimmerComponent<{
   </template>
 }
 
+// What a notice's fix opens: the secure window's page for the key fix, by
+// what the host's OpenSecureWindow tool takes, with the button's label.
+type SecureWindowInput = Parameters<OpenSecureWindowTool['execute']>[0];
+interface NoticeFix {
+  label: string;
+  input: SecureWindowInput;
+}
+
+// The notice an automation's realm administrators get when the automation
+// stopped doing its job: what happened, who fixes it, and the fix itself for
+// a viewer the notice is for. A key fix opens the secure window: approving
+// the automation itself for a key approval, the connect page on the broken
+// connection, or the swap page for a broken share. Every other fix is on this
+// card (resume, the card's settings) or with the payer's credits. A notice
+// about a run leads to that run in the Runs section.
+class AutomationNoticeCallout extends GlimmerComponent<{
+  Args: {
+    notice: AutomationNotice;
+    name: string;
+    // The automation card's id.
+    automation: string | undefined;
+    realm: string | undefined;
+    tools: Tools | undefined;
+    showRun: (runId: string) => void;
+  };
+}> {
+  get text() {
+    return automationNoticeText(this.args.notice, this.args.name);
+  }
+
+  get runId() {
+    return this.args.notice.run?.runId;
+  }
+
+  get fix(): NoticeFix | undefined {
+    let { notice, realm, automation } = this.args;
+    let reason = this.text.happened;
+    // A credential that still refuses is fixed at the credential, whatever
+    // paused the automation over it.
+    switch (notice.credential?.kind) {
+      case 'reconnect':
+        return {
+          label: 'Reconnect the account',
+          input: {
+            mode: 'connect',
+            reconnect: notice.credential.keyId,
+            reason,
+          },
+        };
+      case 'connect-again':
+        return realm
+          ? {
+              label: 'Connect the account',
+              input: { mode: 'connect', realm, reason },
+            }
+          : undefined;
+      case 'fix-share':
+        return realm
+          ? {
+              label: 'Swap in a working key',
+              input: {
+                mode: 'swap-key',
+                realm,
+                share: notice.credential.shareId,
+                reason,
+              },
+            }
+          : undefined;
+      case 'fix-client':
+        return undefined;
+    }
+    switch (notice.reason) {
+      // The secure window approves every key approval the automation is
+      // missing that the viewer can give, for this automation, which is what
+      // ends its wait.
+      case 'waiting-for-key-approval':
+      case 'binding-not-approved':
+      case 'binding-needs-reapproval':
+      case 'key-approval-ended':
+        return automation
+          ? {
+              label: 'Approve',
+              input: { mode: 'approve', automation, reason },
+            }
+          : undefined;
+      default:
+        return undefined;
+    }
+  }
+
+  @tracked private opening = false;
+  @tracked private blocked = false;
+  @tracked private failure: string | undefined;
+
+  openFix = async () => {
+    let fix = this.fix;
+    let tools = this.args.tools;
+    if (!fix || !tools || this.opening) {
+      return;
+    }
+    this.opening = true;
+    this.blocked = false;
+    this.failure = undefined;
+    try {
+      let result = await new OpenSecureWindowTool(tools).execute(fix.input);
+      this.blocked = result?.status === 'blocked';
+    } catch (error) {
+      this.failure = error instanceof Error ? error.message : String(error);
+    } finally {
+      this.opening = false;
+    }
+  };
+
+  showRun = () => {
+    if (this.runId) {
+      this.args.showRun(this.runId);
+    }
+  };
+
+  <template>
+    <Callout
+      @tone='warning'
+      @title={{this.text.happened}}
+      data-test-automation-notice={{@notice.reason}}
+    >
+      <p class='notice__fix' data-test-automation-notice-fix>
+        {{this.text.fix}}
+      </p>
+      {{#if @notice.run.message}}
+        <p class='notice__error' data-test-automation-notice-error>
+          {{@notice.run.message}}
+        </p>
+      {{/if}}
+      {{#if this.blocked}}
+        <p class='notice__fix' data-test-automation-notice-blocked>
+          The browser blocked the popup. Use the button in the dialog Boxel
+          shows to open the popup.
+        </p>
+      {{/if}}
+      {{#if this.failure}}
+        <p class='notice__fix' data-test-automation-notice-failure>
+          Boxel couldn’t open the popup:
+          {{this.failure}}. Try again, or ask a realm administrator.
+        </p>
+      {{/if}}
+      <Stack @orientation='horizontal' @wrap={{true}} @gap='xs'>
+        {{#if this.fix}}
+          <Button
+            @size='s'
+            @tone='primary'
+            @appearance='accent'
+            @busy={{this.opening}}
+            {{on 'click' this.openFix}}
+            data-test-automation-notice-action={{this.fix.input.mode}}
+          >
+            {{this.fix.label}}
+          </Button>
+        {{/if}}
+        {{#if this.runId}}
+          <Button
+            @size='s'
+            {{on 'click' this.showRun}}
+            data-test-automation-notice-show-run={{this.runId}}
+          >
+            Show the run
+          </Button>
+        {{/if}}
+      </Stack>
+    </Callout>
+    <style scoped>
+      .notice__fix,
+      .notice__error {
+        margin: 0 0 var(--boxel-sp-xs);
+      }
+      .notice__error {
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-xs);
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </template>
+}
+
 class Isolated extends Component<typeof Automation> {
   // Leads the triggers: how many there are, and how they combine.
   get showsBatchedAI() {
@@ -6772,6 +7050,30 @@ class Isolated extends Component<typeof Automation> {
   get showsRuns() {
     return this.runs.visible;
   }
+  // The automation's notice, when the viewer is someone the notice is for.
+  get notice(): AutomationNotice | undefined {
+    let status = this.status;
+    let notice = status?.switchedOn ? status.notice : undefined;
+    return notice?.forViewer ? notice : undefined;
+  }
+  get noticeName() {
+    return this.args.model.cardTitle?.trim() || 'the automation';
+  }
+  // The Runs section's disclosure, which a notice's Show the run opens.
+  @tracked runsOpen = false;
+  // Each Show the run is a request of its own, so a second click for the
+  // same run opens and scrolls to the run again.
+  @tracked revealRun: RevealRequest | undefined;
+  toggleRuns = (open: boolean) => {
+    this.runsOpen = open;
+  };
+  showNoticeRun = (runId: string) => {
+    this.runsOpen = true;
+    this.revealRun = { runId };
+    if (this.runList.current.state.page !== 1) {
+      this.showRunsPage(1);
+    }
+  };
   showRunsPage = (page: number) => this.runList.current.showPage(page);
   get runsSummary() {
     let total = this.runs.total;
@@ -6890,6 +7192,16 @@ class Isolated extends Component<typeof Automation> {
         </Stack>
       </header>
 
+      {{#if this.notice}}
+        <AutomationNoticeCallout
+          @notice={{this.notice}}
+          @name={{this.noticeName}}
+          @automation={{@model.id}}
+          @realm={{this.realmHref}}
+          @tools={{this.tools}}
+          @showRun={{this.showNoticeRun}}
+        />
+      {{/if}}
       {{#if this.status}}
         <PanelSection
           @title='Status'
@@ -6949,7 +7261,8 @@ class Isolated extends Component<typeof Automation> {
       {{#if this.showsRuns}}
         <PanelSection
           @title='Runs'
-          @defaultOpen={{false}}
+          @open={{this.runsOpen}}
+          @onToggle={{this.toggleRuns}}
           @summary={{this.runsSummary}}
           data-test-automation-runs-section
         >
@@ -6961,6 +7274,7 @@ class Isolated extends Component<typeof Automation> {
             @automation={{@model.id}}
             @caps={{@model.caps}}
             @tools={{this.tools}}
+            @reveal={{this.revealRun}}
           />
         </PanelSection>
       {{/if}}
@@ -8252,6 +8566,20 @@ class AtAGlance extends Component<typeof Automation> {
       this.inConsole,
     );
   }
+  // Whether the automation has a notice for the viewer: the card marks its
+  // icon, so a list of automations shows which ones need the viewer.
+  // Why Boxel paused the automation, in a few words, while the automation is
+  // paused: the console's row says why in place of a next run.
+  get pausedReason(): string | undefined {
+    let status = this.status;
+    return status?.switchedOn && status.state === 'paused'
+      ? automationPausedReason(status.pauseReason)
+      : undefined;
+  }
+  get needsAttention() {
+    let status = this.status;
+    return Boolean(status?.switchedOn && status.notice?.forViewer);
+  }
   get look() {
     return stateLook(this.status);
   }
@@ -8760,9 +9088,16 @@ class Fitted extends AtAGlance {
     <div class='af' data-fit-root data-test-automation-fitted>
       <div class='af__body' data-fit-body>
         <div class='af__head'>
-          <span class='af__icon' aria-hidden='true'>
-            <CalendarClockIcon width='16' height='16' />
-          </span>
+          <Indicator
+            @tone='attention'
+            @invisible={{not this.needsAttention}}
+            @label='Needs attention'
+            data-test-automation-fitted-notice={{if this.needsAttention 'true'}}
+          >
+            <span class='af__icon' aria-hidden='true'>
+              <CalendarClockIcon width='16' height='16' />
+            </span>
+          </Indicator>
           <div class='af__heading'>
             <p class='af__eyebrow'>Automation</p>
             <h3 class='af__title'>{{@model.cardTitle}}</h3>
@@ -8892,6 +9227,14 @@ class Fitted extends AtAGlance {
           {{/if}}
         </ul>
 
+        {{#if this.pausedReason}}
+          <p
+            class='af__fact af__fact--next af__fact--paused'
+            data-test-automation-fitted-paused
+          >
+            {{this.pausedReason}}
+          </p>
+        {{/if}}
         {{#if this.nextRun}}
           <p class='af__fact af__fact--next' data-test-automation-fitted-next>
             Next run
@@ -9553,9 +9896,19 @@ class Embedded extends AtAGlance {
             @description={{@model.cardDescription}}
           >
             <:leading>
-              <span class='ae__icon' aria-hidden='true'>
-                <CalendarClockIcon width='20' height='20' />
-              </span>
+              <Indicator
+                @tone='attention'
+                @invisible={{not this.needsAttention}}
+                @label='Needs attention'
+                data-test-automation-embedded-notice={{if
+                  this.needsAttention
+                  'true'
+                }}
+              >
+                <span class='ae__icon' aria-hidden='true'>
+                  <CalendarClockIcon width='20' height='20' />
+                </span>
+              </Indicator>
             </:leading>
             <:trailing>
               {{#if this.look}}
@@ -9582,9 +9935,19 @@ class Embedded extends AtAGlance {
             @description={{@model.cardDescription}}
           >
             <:leading>
-              <span class='ae__icon' aria-hidden='true'>
-                <CalendarClockIcon width='20' height='20' />
-              </span>
+              <Indicator
+                @tone='attention'
+                @invisible={{not this.needsAttention}}
+                @label='Needs attention'
+                data-test-automation-embedded-notice={{if
+                  this.needsAttention
+                  'true'
+                }}
+              >
+                <span class='ae__icon' aria-hidden='true'>
+                  <CalendarClockIcon width='20' height='20' />
+                </span>
+              </Indicator>
             </:leading>
             <:trailing>
               {{#if this.look}}
