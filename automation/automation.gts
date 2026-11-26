@@ -9080,7 +9080,7 @@ class Fitted extends AtAGlance {
       <div class='af__body' data-fit-body>
         <div class='af__head'>
           <Indicator
-            @tone='danger'
+            @tone='attention'
             @invisible={{not this.needsAttention}}
             @label='Needs attention'
             data-test-automation-fitted-notice={{if this.needsAttention 'true'}}
@@ -9888,7 +9888,7 @@ class Embedded extends AtAGlance {
           >
             <:leading>
               <Indicator
-                @tone='danger'
+                @tone='attention'
                 @invisible={{not this.needsAttention}}
                 @label='Needs attention'
                 data-test-automation-embedded-notice={{if
@@ -9927,7 +9927,7 @@ class Embedded extends AtAGlance {
           >
             <:leading>
               <Indicator
-                @tone='danger'
+                @tone='attention'
                 @invisible={{not this.needsAttention}}
                 @label='Needs attention'
                 data-test-automation-embedded-notice={{if
