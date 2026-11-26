@@ -51,7 +51,11 @@ export class TodayBoard extends GlimmerComponent<TodayBoardSignature> {
   );
 
   get board(): Board {
-    let records = (this.team?.cards ?? []) as AttendanceRecord[];
+    // Folded only once every record has loaded, so an older year never stands
+    // in for a newer one still on its way.
+    let records = (
+      this.team?.isLoaded ? this.team.cards : []
+    ) as AttendanceRecord[];
     let leave = (this.leave?.cards ?? []) as LeaveRequest[];
     return foldBoard(
       records.map((r) => ({

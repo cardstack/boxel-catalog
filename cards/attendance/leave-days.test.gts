@@ -13,7 +13,11 @@ function leave(
   return { userId: 'ada', ptoType, startDate, endDate, state };
 }
 
-function balance(requests: LeaveLike[], type = 'vacation', year = YEAR) {
+function balance(
+  requests: LeaveLike[],
+  type = 'vacation',
+  year: readonly [string, string] = YEAR,
+) {
   let allowances = { vacation: 10, sick: 5, personal: 2 };
   return leaveBalances(allowances, requests, year[0], year[1]).find(
     (b) => b.type === type,

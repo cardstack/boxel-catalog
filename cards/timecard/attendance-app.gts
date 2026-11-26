@@ -506,9 +506,9 @@ class ManagerPanel extends GlimmerComponent<ManagerPanelSignature> {
   }
 
   get teamLoaded(): boolean {
-    return (
-      (this.teamCards?.cards?.length ?? 0) >= (this.args.team?.length ?? 0)
-    );
+    // The collection drops a record it can't load, so wait on its own loaded
+    // flag rather than for every entry to arrive.
+    return Boolean(this.teamCards?.isLoaded);
   }
 
   get teamLoading(): boolean {
