@@ -559,6 +559,14 @@ export class Employee extends PersonBase {
     },
   });
 
+  // A realm policy matches it against actor() to let a manager read their
+  // reports' records.
+  @field managerUserId = contains(StringField, {
+    computeVia: function (this: Employee) {
+      return this.manager?.userId ?? '';
+    },
+  });
+
   @field tenure = contains(DurationField, {
     computeVia: function (this: Employee) {
       let days = daysBetween(this.startDate);
