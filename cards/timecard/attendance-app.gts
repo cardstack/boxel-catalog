@@ -466,7 +466,7 @@ class LeaveSection extends GlimmerComponent<LeaveSectionSignature> {
         color: var(--muted-foreground);
       }
       .message.is-error {
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
     </style>
   </template>
@@ -597,7 +597,7 @@ class ManagerPanel extends GlimmerComponent<ManagerPanelSignature> {
         color: var(--muted-foreground);
       }
       .message.is-error {
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
     </style>
   </template>

@@ -165,10 +165,10 @@ export class TodayBoard extends GlimmerComponent<TodayBoardSignature> {
         font-size: var(--boxel-font-size-sm);
       }
       .expected .detail {
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .in .detail {
-        color: var(--success);
+        color: var(--success-ink);
       }
     </style>
   </template>
