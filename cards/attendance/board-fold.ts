@@ -15,6 +15,7 @@ export interface BoardPerson {
   id: string;
   name: string;
   userId: string;
+  year?: string | null;
   punches: PunchLike[] | null | undefined;
   schedule: ScheduleLike | null | undefined;
 }
@@ -31,6 +32,22 @@ export interface Board {
   expected: BoardEntry[];
   onLeave: BoardEntry[];
   notDue: BoardEntry[];
+}
+
+// A person has one record per year; only the latest counts. People without a
+// userId stand alone, keyed by record id.
+export function currentRecords<
+  T extends { id: string; userId?: string | null; year?: string | null },
+>(records: T[]): T[] {
+  let latest = new Map<string, T>();
+  for (let r of records) {
+    let key = r.userId || r.id;
+    let seen = latest.get(key);
+    if (!seen || (r.year ?? '') > (seen.year ?? '')) {
+      latest.set(key, r);
+    }
+  }
+  return [...latest.values()];
 }
 
 function isWeekend(day: string): boolean {
@@ -50,7 +67,7 @@ export function foldBoard(
 ): Board {
   let board: Board = { in: [], out: [], expected: [], onLeave: [], notDue: [] };
   let clock = localClock(now, timezone);
-  for (let p of people) {
+  for (let p of currentRecords(people)) {
     let name = p.name || p.userId;
     if (isCheckedIn(p.punches, now)) {
       let start = openShiftStart(p.punches, now);

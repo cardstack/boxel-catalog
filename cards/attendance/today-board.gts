@@ -58,6 +58,7 @@ export class TodayBoard extends GlimmerComponent<TodayBoardSignature> {
         id: r.id,
         name: r.employeeName ?? '',
         userId: r.userId ?? '',
+        year: r.year,
         punches: r.punches,
         schedule: r.schedule,
       })),

@@ -25,6 +25,7 @@ import { StatusChip } from '@cardstack/pretui/components/status-chip';
 
 import { AttendanceRecord } from '../attendance/attendance-record';
 import { LeaveRequest } from '../attendance/leave-request';
+import { currentRecords } from '../attendance/board-fold';
 import { TodayBoard } from '../attendance/today-board';
 import { localClock } from '../attendance/attendance-day';
 import {
@@ -496,6 +497,11 @@ class ManagerPanel extends GlimmerComponent<ManagerPanelSignature> {
     this.args.queue?.map((e) => e.id),
   );
 
+  get currentTeam(): { id: string }[] | undefined {
+    let cards = (this.teamCards?.cards ?? []) as AttendanceRecord[];
+    return cards.length ? currentRecords(cards) : this.args.team;
+  }
+
   get names(): Record<string, string> {
     let names: Record<string, string> = {};
     for (let r of (this.teamCards?.cards ?? []) as AttendanceRecord[]) {
@@ -566,7 +572,7 @@ class ManagerPanel extends GlimmerComponent<ManagerPanelSignature> {
       <section aria-labelledby='team-heading'>
         <h2 id='team-heading'>My team</h2>
         <LiveRecords
-          @entries={{@team}}
+          @entries={{this.currentTeam}}
           @isLoading={{@isLoading}}
           @context={{@context}}
         >
