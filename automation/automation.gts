@@ -46,6 +46,7 @@ import {
 } from '@cardstack/runtime-common';
 import AuthedFetchTool from '@cardstack/boxel-host/tools/authed-fetch';
 import AutomationRequestTool from '@cardstack/boxel-host/tools/automation-request';
+import OpenSecureWindowTool from '@cardstack/boxel-host/tools/open-secure-window';
 import ReadAutomationRunTool from '@cardstack/boxel-host/tools/read-automation-run';
 import ReadSourceTool from '@cardstack/boxel-host/tools/read-source';
 import WriteTextFileTool from '@cardstack/boxel-host/tools/write-text-file';
@@ -5562,7 +5563,99 @@ interface SwitchOnEstimate {
     // absent before the viewer's first one.
     recentPreviewCredits?: number;
   };
+  // Each declared operation's key approval, with the viewer as the payer
+  // before the automation is on, and with the payer once the automation is
+  // on. Absent when the realm can't check.
+  keyApprovals?: KeyApprovals;
 }
+
+// Who can give a key approval the automation is missing: the payer (for the
+// payer's own key, or a share whose key the payer owns), the owner of the key
+// a share in the realm holds, or nobody yet, when no share in the realm fills
+// an `{{apiKey}}` slot.
+type KeyApprover = 'payer' | 'another-key-owner' | 'nobody-yet';
+
+// A share that can fill a slot. The realm server names the share's owner
+// only to a viewer who may see that person, and null otherwise.
+interface KeyApprovalShare {
+  id: string;
+  label: string;
+  owner: string | null;
+  // The share's owner resumes or swaps a suspended share before anyone can
+  // approve the slot.
+  suspended?: true;
+}
+
+interface OperationKeyApproval {
+  operation: string;
+  targetType: { module: string; name: string };
+  state: 'approved' | 'missing' | 'unavailable';
+  missing?: {
+    slot: string;
+    canApprove: KeyApprover;
+    shares?: KeyApprovalShare[];
+  }[];
+  refusal?: { code: string; detail: string };
+}
+
+// The automation's key approvals, as the switch-on routes answer them.
+interface KeyApprovals {
+  approved: boolean;
+  version: string;
+  operations: OperationKeyApproval[];
+}
+
+// One row of the screen's key approvals: an operation, the operation's
+// state, and who gives a missing approval.
+interface KeyApprovalRow {
+  key: string;
+  title: string;
+  typeName: string;
+  look: { label: string; tone: 'success' | 'warning' | 'danger' | 'info' };
+  detail?: string;
+}
+
+// A missing approval someone other than the payer gives: the share's key and
+// the person who owns the key.
+interface OtherApprover {
+  label: string;
+  owner: string;
+}
+
+type MissingKeyApproval = NonNullable<OperationKeyApproval['missing']>[number];
+
+// A missing approval whose share is suspended: the share's owner resumes the
+// share before anyone approves the slot.
+function waitsOnSuspendedShare(missing: MissingKeyApproval): boolean {
+  return (
+    Boolean(missing.shares?.length) &&
+    missing.shares!.every((share) => share.suspended)
+  );
+}
+
+// Who a missing approval waits on most: a slot nobody can fill yet, then a
+// suspended share, then one another person approves, then one the payer
+// approves.
+function neediestWait(
+  operation: OperationKeyApproval,
+): KeyApprover | 'share-suspended' | undefined {
+  let missing = operation.missing ?? [];
+  if (missing.some((m) => m.canApprove === 'nobody-yet')) {
+    return 'nobody-yet';
+  }
+  if (missing.some(waitsOnSuspendedShare)) {
+    return 'share-suspended';
+  }
+  return (['another-key-owner', 'payer'] as const).find((a) =>
+    missing.some((m) => m.canApprove === a),
+  );
+}
+
+function ownerName(share: KeyApprovalShare | undefined): string {
+  return share?.owner ?? 'The owner of the key';
+}
+
+const APPROVAL_REREAD_MS = 4_000;
 
 // The routes the switch-on screen calls on the realm server. Each acts as the
 // signed-in person, and answers only a direct writer of the workspace.
@@ -5587,6 +5680,137 @@ function needsReconfirm(status: ServerStatus | undefined): boolean {
     (status.pauseReason === 'caps-raised' ||
       status.pauseReason === 'batched-ai-enabled')
   );
+}
+
+// The switch-on screen's key approvals: each declared operation with the
+// operation's key approval, and what each missing approval waits for. Before
+// the person confirms, the copy says what turning on does; after, the copy
+// says what the automation waits for.
+class SwitchOnKeyApprovals extends GlimmerComponent<{
+  Args: {
+    rows: KeyApprovalRow[];
+    otherApprovers: OtherApprover[];
+    nobodyYet: boolean;
+    payerApproves: boolean;
+    confirmed: boolean;
+    windowFailure: string | undefined;
+    onShareKey: () => void;
+  };
+}> {
+  <template>
+    {{#if @rows.length}}
+      <PanelSection
+        @title='Keys the automation uses'
+        @collapsible={{false}}
+        @level={{4}}
+        data-test-automation-switch-on-keys
+      >
+        <Stack @gap='xs'>
+          {{#each @rows as |row|}}
+            <div data-test-automation-switch-on-key={{row.key}}>
+              <Item @size='s' @wrap={{true}}>
+                <:title>{{row.title}}</:title>
+                <:description>
+                  on
+                  <Token @value={{row.typeName}} />
+                  {{#if row.detail}}
+                    <span
+                      class='switch-on-keys__detail'
+                      data-test-automation-switch-on-key-detail
+                    >{{row.detail}}</span>
+                  {{/if}}
+                </:description>
+                <:trailing>
+                  <Chip
+                    @label={{row.look.label}}
+                    @tone={{row.look.tone}}
+                    data-test-automation-switch-on-key-state={{row.look.label}}
+                  />
+                </:trailing>
+              </Item>
+            </div>
+          {{/each}}
+        </Stack>
+      </PanelSection>
+      {{#if @otherApprovers.length}}
+        <Callout
+          @tone='warning'
+          @title='Another person approves a key'
+          data-test-automation-switch-on-other-approvers
+        >
+          <ul class='switch-on-keys__list'>
+            {{#each @otherApprovers as |approver|}}
+              <li>{{approver.owner}}
+                approves the automation’s use of the key
+                <strong>{{approver.label}}</strong>.</li>
+            {{/each}}
+          </ul>
+          {{#unless @confirmed}}
+            Boxel turns on the automation now.
+          {{/unless}}
+          The automation waits and runs nothing until all approvals are in
+          place.
+        </Callout>
+      {{/if}}
+      {{#if @nobodyYet}}
+        <Callout
+          @tone='warning'
+          @title='No key shared with the realm'
+          data-test-automation-switch-on-no-share
+        >
+          <:default>
+            The automation calls a service with a key that a realm administrator
+            shares with the realm, and nobody has shared a key yet.
+            {{#if @confirmed}}
+              The automation waits and runs nothing until a realm administrator
+              shares a key and the key’s owner approves the automation’s use of
+              the key.
+            {{else}}
+              Share a key with the realm first, and then turn on the automation.
+            {{/if}}
+          </:default>
+          <:action>
+            {{#if @confirmed}}
+              <Button
+                @appearance='outlined'
+                @size='sm'
+                {{on 'click' @onShareKey}}
+                data-test-automation-switch-on-share-key
+              >Share a key</Button>
+            {{/if}}
+          </:action>
+        </Callout>
+      {{/if}}
+      {{#if @payerApproves}}
+        <Callout
+          @tone='info'
+          @title='You approve the keys in the same step'
+          data-test-automation-switch-on-payer-approves
+        >
+          Turning on the automation opens Boxel’s secure window, where you
+          approve the calls the automation makes with your keys. Boxel starts
+          running the automation once every key approval is in place.
+        </Callout>
+      {{/if}}
+      {{#if @windowFailure}}
+        <Callout
+          @tone='danger'
+          @title='Boxel couldn’t open the secure window'
+          data-test-automation-switch-on-window-failure
+        >{{@windowFailure}}</Callout>
+      {{/if}}
+    {{/if}}
+    <style scoped>
+      .switch-on-keys__detail {
+        display: block;
+        margin-top: var(--boxel-sp-4xs);
+      }
+      .switch-on-keys__list {
+        margin: var(--boxel-sp-4xs) 0;
+        padding-inline-start: var(--boxel-sp-lg);
+      }
+    </style>
+  </template>
 }
 
 // The switch-on screen. A direct writer of the workspace turns the
@@ -5620,15 +5844,131 @@ export class SwitchOnDialog extends GlimmerComponent<{
   @tracked submitted = false;
   @tracked saving = false;
   @tracked failure: string | undefined;
+  // The key approvals the screen shows: the estimate's before the person
+  // confirms, then each answer of the switch-on route after.
+  @tracked confirmedApprovals: KeyApprovals | undefined;
+  // The screen the person confirmed in, which stays open while the
+  // automation waits for key approval.
+  @tracked confirmedMode: 'switch-on' | 'reconfirm' | undefined;
+  @tracked windowFailure: string | undefined;
+  // Whether the browser blocked the secure window the screen opened.
+  @tracked windowBlocked = false;
 
   get mode(): 'switch-on' | 'reconfirm' {
+    if (this.confirmedMode) {
+      return this.confirmedMode;
+    }
     return needsReconfirm(this.args.status) ? 'reconfirm' : 'switch-on';
   }
   get available() {
     let status = this.args.status;
     return (
       Boolean(this.args.realm && this.args.model.id && this.tools) &&
-      (status?.switchedOn === false || this.mode === 'reconfirm')
+      (status?.switchedOn === false ||
+        this.mode === 'reconfirm' ||
+        this.confirmedMode !== undefined)
+    );
+  }
+
+  get keyApprovals(): KeyApprovals | undefined {
+    return this.confirmedApprovals ?? this.estimate?.keyApprovals;
+  }
+  get keyRows(): KeyApprovalRow[] {
+    return (this.keyApprovals?.operations ?? []).map((operation, index) => {
+      let row = {
+        key: `${index}`,
+        title: operationTitle(operation.operation),
+        typeName: operation.targetType.name,
+      };
+      if (operation.state === 'approved') {
+        return { ...row, look: { label: 'Approved', tone: 'success' } };
+      }
+      if (operation.state === 'unavailable') {
+        return {
+          ...row,
+          look: { label: 'Unavailable', tone: 'danger' },
+          detail: operation.refusal?.detail,
+        };
+      }
+      let missing = operation.missing ?? [];
+      switch (neediestWait(operation)) {
+        case 'nobody-yet':
+          return {
+            ...row,
+            look: { label: 'No key shared', tone: 'warning' },
+            detail:
+              'A realm administrator shares a key with the realm before anyone can approve the call.',
+          };
+        case 'share-suspended': {
+          let share = missing.find(waitsOnSuspendedShare)?.shares?.[0];
+          return {
+            ...row,
+            look: { label: 'Share suspended', tone: 'warning' },
+            detail: `${ownerName(share)} resumes the share ${share?.label ?? ''} before anyone approves the call.`,
+          };
+        }
+        case 'another-key-owner': {
+          let share = missing.find((m) => m.canApprove === 'another-key-owner')
+            ?.shares?.[0];
+          return {
+            ...row,
+            look: { label: 'Another person approves', tone: 'warning' },
+            detail: share
+              ? `${ownerName(share)} approves the use of the key ${share.label}.`
+              : 'The owner of the shared key approves the call.',
+          };
+        }
+        default:
+          return {
+            ...row,
+            look: {
+              label: this.confirmedMode ? 'Waiting for you' : 'You approve',
+              tone: 'info',
+            },
+          };
+      }
+    });
+  }
+  // Whether some missing approval is the payer's to give in the secure
+  // window: not one whose share is suspended, which the share's owner
+  // resumes first.
+  get payerApproves() {
+    return (this.keyApprovals?.operations ?? []).some((o) =>
+      (o.missing ?? []).some(
+        (m) => m.canApprove === 'payer' && !waitsOnSuspendedShare(m),
+      ),
+    );
+  }
+  get otherApprovers(): OtherApprover[] {
+    let found = new Map<string, OtherApprover>();
+    for (let operation of this.keyApprovals?.operations ?? []) {
+      for (let missing of operation.missing ?? []) {
+        if (
+          missing.canApprove !== 'another-key-owner' ||
+          waitsOnSuspendedShare(missing)
+        ) {
+          continue;
+        }
+        for (let share of missing.shares ?? []) {
+          found.set(share.id, {
+            label: share.label,
+            owner: ownerName(share),
+          });
+        }
+      }
+    }
+    return [...found.values()];
+  }
+  get nobodyYet() {
+    return (this.keyApprovals?.operations ?? []).some((o) =>
+      (o.missing ?? []).some((m) => m.canApprove === 'nobody-yet'),
+    );
+  }
+  // Once the person confirms: the automation is on and every approval is
+  // there.
+  get active() {
+    return (
+      this.confirmedMode !== undefined && this.keyApprovals?.approved === true
     );
   }
   get tools() {
@@ -5754,7 +6094,8 @@ export class SwitchOnDialog extends GlimmerComponent<{
       !this.loading &&
       !this.saving &&
       !this.capProblem &&
-      !this.noLimits
+      !this.noLimits &&
+      !this.nobodyYet
     );
   }
 
@@ -5764,12 +6105,128 @@ export class SwitchOnDialog extends GlimmerComponent<{
     this.failure = undefined;
     this.estimate = undefined;
     this.estimateFailure = undefined;
+    this.confirmedApprovals = undefined;
+    this.confirmedMode = undefined;
+    this.windowFailure = undefined;
+    this.windowBlocked = false;
     this.open = true;
     this.readEstimate();
   };
   close = () => {
     if (!this.saving) {
       this.open = false;
+      this.confirmedMode = undefined;
+      this.confirmedApprovals = undefined;
+      this.stopRereading();
+    }
+  };
+
+  willDestroy() {
+    super.willDestroy();
+    this.stopRereading();
+  }
+
+  // Opens the secure window on the automation's key approvals: the window
+  // gathers every approval the automation is missing that the person can
+  // give into one confirmation.
+  approveKeys = async () => {
+    this.windowFailure = undefined;
+    try {
+      let result = await new OpenSecureWindowTool(this.tools!).execute({
+        mode: 'approve',
+        automation: this.args.model.id,
+        reason: 'To approve the calls the automation makes with your keys',
+      });
+      this.windowBlocked = result?.status === 'blocked';
+    } catch (e) {
+      this.windowFailure = e instanceof Error ? e.message : String(e);
+    }
+  };
+
+  // Opens the secure window's share page for the automation's realm, where a
+  // realm administrator shares a key with the realm. When the person comes
+  // back to the page, the screen reads the switch-on route again, so a key
+  // shared meanwhile shows who approves the key.
+  shareKey = async () => {
+    this.windowFailure = undefined;
+    window.removeEventListener('focus', this.readAfterSharing);
+    window.addEventListener('focus', this.readAfterSharing, { once: true });
+    try {
+      await new OpenSecureWindowTool(this.tools!).execute({
+        mode: 'share-key',
+        realm: this.args.realm,
+        reason: 'To share a key the automation can use',
+      });
+    } catch (e) {
+      this.windowFailure = e instanceof Error ? e.message : String(e);
+    }
+  };
+  readAfterSharing = () => {
+    if (this.isDestroying || this.isDestroyed || !this.open) {
+      return;
+    }
+    if (this.confirmedMode) {
+      this.rereadApprovals();
+    } else {
+      this.readEstimate();
+    }
+  };
+
+  // While the automation waits for key approval, the screen asks the
+  // switch-on route again each time the person comes back to the page, and
+  // every few seconds, until every approval is there.
+  private rereadTimer: ReturnType<typeof setInterval> | undefined;
+  private startRereading() {
+    this.stopRereading();
+    window.addEventListener('focus', this.rereadApprovals);
+    this.rereadTimer = setInterval(this.rereadApprovals, APPROVAL_REREAD_MS);
+  }
+  private stopRereading() {
+    window.removeEventListener('focus', this.readAfterSharing);
+    window.removeEventListener('focus', this.rereadApprovals);
+    if (this.rereadTimer !== undefined) {
+      clearInterval(this.rereadTimer);
+      this.rereadTimer = undefined;
+    }
+    // A read still in flight answers for a screen that has stopped reading.
+    this.rereads++;
+  }
+  // Each read is numbered, so only the latest answer counts, and a read
+  // starts only once the one before it has answered, so a slow route still
+  // gets its answers through.
+  private rereads = 0;
+  private rereading = false;
+  rereadApprovals = async () => {
+    if (
+      this.isDestroying ||
+      this.isDestroyed ||
+      !this.confirmedMode ||
+      this.rereading
+    ) {
+      return;
+    }
+    let read = ++this.rereads;
+    this.rereading = true;
+    try {
+      let estimate = await this.fetchEstimate();
+      if (
+        read !== this.rereads ||
+        this.isDestroying ||
+        this.isDestroyed ||
+        !this.confirmedMode
+      ) {
+        return;
+      }
+      if (estimate.keyApprovals) {
+        this.confirmedApprovals = estimate.keyApprovals;
+      }
+      if (this.active) {
+        this.stopRereading();
+      }
+    } catch {
+      // The next read tries again.
+    } finally {
+      this.rereading = false;
     }
   };
   setCap = (value: number | null) => {
@@ -5867,7 +6324,22 @@ export class SwitchOnDialog extends GlimmerComponent<{
         }
         return;
       }
-      this.open = false;
+      let approvals = result.body?.meta?.keyApprovals as
+        | KeyApprovals
+        | undefined;
+      if (!approvals || approvals.approved) {
+        this.open = false;
+        return;
+      }
+      // The automation is on and waits for key approval: the screen stays
+      // open on what each approval waits for, and opens the secure window
+      // for the approvals the person gives.
+      this.confirmedMode = mode;
+      this.confirmedApprovals = approvals;
+      this.startRereading();
+      if (this.payerApproves) {
+        await this.approveKeys();
+      }
     } catch (e) {
       this.failure = e instanceof Error ? e.message : String(e);
     } finally {
@@ -5904,7 +6376,77 @@ export class SwitchOnDialog extends GlimmerComponent<{
                 >{{NO_LIMITS}}</Callout>
               </div>
             {{/if}}
-            {{#if this.estimate}}
+            {{#if this.confirmedMode}}
+              {{#if this.active}}
+                <Callout
+                  @tone='success'
+                  @title='The automation is on'
+                  data-test-automation-switch-on-active
+                >
+                  Every key approval is in place, so Boxel runs the automation
+                  each time a trigger fires.
+                </Callout>
+              {{else}}
+                <Callout
+                  @tone='warning'
+                  @title='The automation is waiting for key approval'
+                  data-test-automation-switch-on-waiting
+                >
+                  {{if
+                    (eq this.mode 'reconfirm')
+                    'Boxel resumed the automation.'
+                    'Boxel turned on the automation.'
+                  }}
+                  The automation runs nothing until every key approval below is
+                  in place.
+                </Callout>
+                {{#if this.payerApproves}}
+                  <Callout
+                    @tone='info'
+                    @title={{if
+                      this.windowBlocked
+                      'Open the secure window'
+                      'Approve the calls in the secure window'
+                    }}
+                    data-test-automation-switch-on-approve-keys
+                  >
+                    <:default>
+                      {{#if this.windowBlocked}}
+                        The browser kept Boxel from opening the secure window.
+                        Open the secure window to approve the calls the
+                        automation makes with your keys, in one step.
+                      {{else}}
+                        Boxel opened the secure window, where you approve the
+                        calls the automation makes with your keys, in one step.
+                      {{/if}}
+                      Once every key approval is in place, the screen shows the
+                      automation as on.
+                    </:default>
+                    <:action>
+                      <Button
+                        @appearance='outlined'
+                        @size='sm'
+                        {{on 'click' this.approveKeys}}
+                        data-test-automation-switch-on-reopen-window
+                      >{{if
+                          this.windowBlocked
+                          'Open the secure window'
+                          'Open the secure window again'
+                        }}</Button>
+                    </:action>
+                  </Callout>
+                {{/if}}
+              {{/if}}
+              <SwitchOnKeyApprovals
+                @rows={{this.keyRows}}
+                @otherApprovers={{this.otherApprovers}}
+                @nobodyYet={{this.nobodyYet}}
+                @payerApproves={{false}}
+                @confirmed={{true}}
+                @windowFailure={{this.windowFailure}}
+                @onShareKey={{this.shareKey}}
+              />
+            {{else if this.estimate}}
               <Descriptions
                 @items={{this.estimateItems}}
                 @columns={{2}}
@@ -5942,7 +6484,7 @@ export class SwitchOnDialog extends GlimmerComponent<{
                 Boxel counts these charges toward the monthly limit too.
               </Callout>
               <Field
-                @label='Monthly limit, in credits'
+                @label='Monthly limit, in Boxel credits'
                 @hint={{this.capHint}}
                 @error={{this.capProblem}}
                 as |id|
@@ -5956,6 +6498,15 @@ export class SwitchOnDialog extends GlimmerComponent<{
                   data-test-automation-switch-on-cap
                 />
               </Field>
+              <SwitchOnKeyApprovals
+                @rows={{this.keyRows}}
+                @otherApprovers={{this.otherApprovers}}
+                @nobodyYet={{this.nobodyYet}}
+                @payerApproves={{this.payerApproves}}
+                @confirmed={{false}}
+                @windowFailure={{this.windowFailure}}
+                @onShareKey={{this.shareKey}}
+              />
               <Callout
                 @tone='info'
                 @title='You become the payer'
@@ -5995,25 +6546,37 @@ export class SwitchOnDialog extends GlimmerComponent<{
           </Stack>
         </:default>
         <:footer>
-          <Button
-            @tone='neutral'
-            @appearance='outlined'
-            @disabled={{this.saving}}
-            {{on 'click' this.close}}
-          >Cancel</Button>
-          {{#if this.estimateFailure}}
+          {{#if this.confirmedMode}}
             <Button
-              @busy={{this.loading}}
-              {{on 'click' this.readEstimate}}
-              data-test-automation-switch-on-retry
-            >Try again</Button>
+              {{on 'click' this.close}}
+              data-test-automation-switch-on-close
+            >Close</Button>
           {{else}}
             <Button
-              @busy={{this.saving}}
-              @disabled={{if this.estimate false true}}
-              {{on 'click' this.confirm}}
-              data-test-automation-switch-on-confirm
-            >{{this.confirmLabel}}</Button>
+              @tone='neutral'
+              @appearance='outlined'
+              @disabled={{this.saving}}
+              {{on 'click' this.close}}
+            >Cancel</Button>
+            {{#if this.estimateFailure}}
+              <Button
+                @busy={{this.loading}}
+                {{on 'click' this.readEstimate}}
+                data-test-automation-switch-on-retry
+              >Try again</Button>
+            {{else if this.nobodyYet}}
+              <Button
+                {{on 'click' this.shareKey}}
+                data-test-automation-switch-on-share-key
+              >Share a key</Button>
+            {{else}}
+              <Button
+                @busy={{this.saving}}
+                @disabled={{if this.estimate false true}}
+                {{on 'click' this.confirm}}
+                data-test-automation-switch-on-confirm
+              >{{this.confirmLabel}}</Button>
+            {{/if}}
           {{/if}}
         </:footer>
       </Dialog>
