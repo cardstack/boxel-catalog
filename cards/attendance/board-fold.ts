@@ -43,7 +43,9 @@ export function currentRecords<
   for (let r of records) {
     let key = r.userId || r.id;
     let seen = latest.get(key);
-    if (!seen || (r.year ?? '') > (seen.year ?? '')) {
+    let year = r.year ?? '';
+    let seenYear = seen?.year ?? '';
+    if (!seen || year > seenYear || (year === seenYear && r.id > seen.id)) {
       latest.set(key, r);
     }
   }

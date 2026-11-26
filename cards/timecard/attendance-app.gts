@@ -498,8 +498,21 @@ class ManagerPanel extends GlimmerComponent<ManagerPanelSignature> {
   );
 
   get currentTeam(): { id: string }[] | undefined {
-    let cards = (this.teamCards?.cards ?? []) as AttendanceRecord[];
-    return cards.length ? currentRecords(cards) : this.args.team;
+    // Deduped only once every record has loaded, so an older year never shows
+    // in place of a newer one that is still on its way.
+    return this.teamLoaded
+      ? currentRecords((this.teamCards?.cards ?? []) as AttendanceRecord[])
+      : [];
+  }
+
+  get teamLoaded(): boolean {
+    return (
+      (this.teamCards?.cards?.length ?? 0) >= (this.args.team?.length ?? 0)
+    );
+  }
+
+  get teamLoading(): boolean {
+    return Boolean(this.args.isLoading) || !this.teamLoaded;
   }
 
   get names(): Record<string, string> {
@@ -573,7 +586,7 @@ class ManagerPanel extends GlimmerComponent<ManagerPanelSignature> {
         <h2 id='team-heading'>My team</h2>
         <LiveRecords
           @entries={{this.currentTeam}}
-          @isLoading={{@isLoading}}
+          @isLoading={{this.teamLoading}}
           @context={{@context}}
         >
           <:empty>
