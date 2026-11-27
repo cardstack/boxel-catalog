@@ -1885,11 +1885,73 @@ type ServerStatus =
       spentToday?: number;
       lastRunUsage?: RunUsage | null;
       triggers: TriggerStatus[];
+      // Each declared operation's key approvals, read only by a view that
+      // asks for them (`keyApprovals=true`). Absent when the realm can't
+      // check them.
+      keyApprovals?: KeyApprovalStatus;
       // What tells the realm's direct writers the automation stopped doing
       // its job, and what fixes it. Absent from a server that doesn't report
       // notices.
       notice?: AutomationNotice | null;
     };
+// Where one credential slot of an operation stands: its key's owner
+// approved the automation's use of the key (`approved`), hasn't yet
+// (`waiting`), or the slot can't be served at all for now: no share in the
+// realm (`no-share`), a request changed since its owner approved the request
+// (`needs-reapproval`), a suspended share (`share-suspended`), or a key the
+// service refused (`key-rejected`).
+type SlotApprovalState =
+  | 'approved'
+  | 'waiting'
+  | 'no-share'
+  | 'needs-reapproval'
+  | 'share-suspended'
+  | 'key-rejected';
+// The secure window page that fixes a slot, when the viewer can fix it.
+type SlotApprovalFix =
+  | 'approve'
+  | 'review-changes'
+  | 'replace-key'
+  | 'swap-key'
+  | 'share-key';
+interface SlotApproval {
+  slot: string;
+  kind: 'userKey' | 'apiKey';
+  state: SlotApprovalState;
+  // The share the slot sends. A suspended share says why: a realm
+  // administrator suspended the share (`suspended-by-writer`, with who in
+  // `suspendedBy` when the viewer may see them, or `suspendedByViewer`), the
+  // key's owner is no longer a realm administrator (`owner-lost-write`), or
+  // the key's owner deleted the key (`key-deleted`).
+  share?: {
+    id: string;
+    label: string;
+    suspensionReason?: string;
+    suspendedBy?: string | null;
+    suspendedByViewer?: boolean;
+  };
+  // The personal key the slot sends, named only to the key's owner.
+  key?: { name: string };
+  viewerIsKeyOwner: boolean;
+  // The key owner's Matrix id, only when ADR 011 lets the viewer see them;
+  // null otherwise.
+  keyOwner: string | null;
+  approvedAt?: string;
+  fix?: SlotApprovalFix;
+  // Set when the viewer can't fix the slot: the key's owner fixes it.
+  actor?: 'key-owner';
+}
+interface OperationApproval {
+  operation: string;
+  targetType: { module: string; name: string };
+  state: 'approved' | 'missing' | 'unavailable';
+  refusal?: { code: string; detail: string };
+  slots: SlotApproval[];
+}
+interface KeyApprovalStatus {
+  approved: boolean;
+  operations: OperationApproval[];
+}
 // What tells the realm's direct writers the automation stopped doing its job,
 // as the status route reports it: why (a pause reason, a wait, or the code a
 // refused run ended with), whom the notice is for and whether the viewer is
@@ -2058,13 +2120,17 @@ function automationStatus(
     realm: string | undefined;
     realmId: string | undefined;
     tools: Tools | undefined;
+    // Ask for the automation's key approvals too. Checking them looks up
+    // each declared operation, so only the isolated view, which shows them,
+    // asks.
+    keyApprovals?: boolean;
   },
 ) {
   let kept: { url: string | undefined; state: StatusState } | undefined;
   return use(
     owner,
     resource(({ on }) => {
-      let { id, realm, realmId, tools } = args();
+      let { id, realm, realmId, tools, keyApprovals } = args();
       let path = id && realmId ? pathInRealm(id, realmId) : undefined;
       let url =
         realm && path !== undefined
@@ -2092,15 +2158,25 @@ function automationStatus(
       }
       let ended = false;
       let latest = 0;
-      let read = async () => {
+      // A run moving (a `job` event) changes no key approval, so that read
+      // skips the check, which looks up every declared operation, and keeps
+      // the approvals the last read answered. A run that ends checks again:
+      // a service refusing the run's key marks the key rejected. Reads are
+      // latest-wins, so a check one read asked for stays owed (`keysOwed`)
+      // until a read that made the check lands: a later read, even a run's,
+      // makes the check for it rather than dropping it.
+      let keysOwed = false;
+      let read = async ({ checkKeys = true }: { checkKeys?: boolean } = {}) => {
+        keysOwed ||= checkKeys;
         let asked = ++latest;
         await Promise.resolve();
         if (ended || asked !== latest) {
           return;
         }
+        let checking = keysOwed;
         try {
           let result = await new AuthedFetchTool(tools).execute({
-            url,
+            url: keyApprovals && checking ? `${url}&keyApprovals=true` : url,
             acceptHeader: 'application/json',
           });
           if (ended || asked !== latest) {
@@ -2110,9 +2186,22 @@ function automationStatus(
             result.ok && result.body?.meta?.directWriter !== false
               ? (result.body?.data?.attributes as ServerStatus | undefined)
               : undefined;
+          let shownKeys = state.status?.switchedOn && state.status.keyApprovals;
+          if (
+            keyApprovals &&
+            !checking &&
+            shownKeys &&
+            status?.switchedOn &&
+            !status.keyApprovals
+          ) {
+            status = { ...status, keyApprovals: shownKeys };
+          }
           state.status = status;
           state.visible = Boolean(status);
           state.known = true;
+          if (checking) {
+            keysOwed = false;
+          }
         } catch {
           if (!ended && asked === latest) {
             state.status = undefined;
@@ -2138,10 +2227,13 @@ function automationStatus(
             event.invalidations.some(
               (u) => u === realm + path || u === `${realm}${path}.json`,
             )) ||
-          ((event.eventName === 'job' || event.eventName === 'automation') &&
-            event.automation === id)
+          (event.eventName === 'automation' && event.automation === id)
         ) {
           read();
+        } else if (event.eventName === 'job' && event.automation === id) {
+          read({
+            checkKeys: event.state === 'complete' || event.state === 'error',
+          });
         }
       });
       on.cleanup(() => {
@@ -2414,7 +2506,7 @@ const NOT_STARTED: Record<string, string> = {
   'binding-needs-reapproval':
     'Boxel didn’t start the run because an outside service the automation calls changed since someone approved the service. The person the run acts as approves the service again in the secure window.',
   'share-suspended':
-    'Boxel didn’t start the run because someone suspended the shared key an outside service uses. A realm administrator resumes the shared key, or the key’s owner swaps in another key.',
+    'Boxel didn’t start the run because someone suspended the shared key an outside service uses. A realm administrator resumes the shared key, or replaces the shared key with another key.',
   'credential-rejected':
     'Boxel didn’t start the run because the outside service refused the key or connection the automation uses. The person the run acts as reconnects or replaces the key.',
   'waiting-for-key-approval':
@@ -6699,6 +6791,337 @@ export class SwitchOnDialog extends GlimmerComponent<{
   </template>
 }
 
+// A slot's state as a chip.
+const SLOT_LOOKS: Record<
+  SlotApprovalState,
+  { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral' }
+> = {
+  approved: { label: 'Approved', tone: 'success' },
+  waiting: { label: 'Waiting for approval', tone: 'warning' },
+  'no-share': { label: 'No shared key', tone: 'warning' },
+  'needs-reapproval': { label: 'Needs reapproval', tone: 'warning' },
+  'share-suspended': { label: 'Shared key suspended', tone: 'danger' },
+  'key-rejected': { label: 'Key rejected', tone: 'danger' },
+};
+
+// The button that opens the secure window on the page that fixes a slot.
+// Approving is one button for the whole automation, above the rows: the
+// secure window gathers every approval the viewer can give into one
+// confirmation.
+const FIX_LABELS: Record<Exclude<SlotApprovalFix, 'approve'>, string> = {
+  'review-changes': 'Review the changes',
+  'replace-key': 'Replace the key',
+  'swap-key': 'Replace the key',
+  'share-key': 'Share a key',
+};
+
+// The one line the secure window shows as the card's words, per page.
+const FIX_REASONS: Record<SlotApprovalFix, string> = {
+  approve: 'To approve the calls the automation makes with your keys',
+  'review-changes':
+    'To review the calls the automation makes that changed since you approved them',
+  'replace-key': 'To replace the key the service refused',
+  'swap-key': 'To replace the suspended shared key with one of your keys',
+  'share-key': 'To share a key the automation can use',
+};
+
+// The key a slot uses, as a sentence names the key.
+function keyWords(slot: SlotApproval): string {
+  if (slot.share) {
+    return `the shared key “${slot.share.label}”`;
+  }
+  if (slot.key) {
+    return `the key “${slot.key.name}”`;
+  }
+  return slot.kind === 'apiKey' ? 'a shared key' : 'the key';
+}
+
+// Who acts for a slot, as the subject of a sentence: the viewer, the key's
+// owner by Matrix id when ADR 011 lets the viewer see them, or a description.
+function ownerWords(slot: SlotApproval): string {
+  if (slot.viewerIsKeyOwner) {
+    return 'You';
+  }
+  if (slot.keyOwner) {
+    return slot.keyOwner;
+  }
+  return slot.kind === 'apiKey' && !slot.share
+    ? 'The owner of a shared key'
+    : 'The key’s owner';
+}
+
+// Why a share is suspended, and who brings the share back, as sentences.
+function suspendedSentence(slot: SlotApproval): string {
+  let key = keyWords(slot);
+  switch (slot.share?.suspensionReason) {
+    case 'owner-lost-write':
+      return `Boxel suspended ${key} because the key’s owner is no longer a realm administrator. A realm administrator needs to replace the shared key with another key.`;
+    case 'key-deleted':
+      return `Boxel suspended ${key} because the key’s owner deleted the key. A realm administrator needs to replace the shared key with another key.`;
+    default: {
+      let who = slot.share?.suspendedByViewer
+        ? 'You'
+        : (slot.share?.suspendedBy ?? 'A realm administrator');
+      return `${who} suspended ${key}. A realm administrator needs to resume the shared key, or replace the shared key with another key.`;
+    }
+  }
+}
+
+// What a slot's state means, and who acts on it, as a sentence.
+function slotSentence(slot: SlotApproval): string {
+  let who = ownerWords(slot);
+  let key = keyWords(slot);
+  switch (slot.state) {
+    case 'approved':
+      return `${who} approved the automation’s use of ${key}.`;
+    case 'waiting':
+      return slot.viewerIsKeyOwner
+        ? `You need to approve the automation’s use of ${key}.`
+        : `${who} needs to approve the automation’s use of ${key}.`;
+    case 'no-share':
+      return 'Nobody has shared a key for this service in this workspace. A realm administrator needs to share a key, and the key’s owner then needs to approve the automation’s use of the key.';
+    case 'needs-reapproval':
+      return slot.viewerIsKeyOwner
+        ? `The service request changed since you approved the request. You need to review the changes before Boxel uses ${key} again.`
+        : `The service request changed since ${lowerFirst(who)} approved the request. ${who} needs to review the changes before Boxel uses ${key} again.`;
+    case 'share-suspended':
+      return suspendedSentence(slot);
+    case 'key-rejected':
+      return slot.viewerIsKeyOwner
+        ? `The service refused ${key}. You need to replace the key, or sign in to the service again.`
+        : `The service refused ${key}. ${who} needs to replace the key, or sign in to the service again.`;
+  }
+}
+
+// Each declared operation of a switched-on automation, with where each of the
+// operation's keys stands and, for a key the viewer can fix, the secure
+// window page that fixes it. The section reads the automation's status,
+// which an `automation` event refreshes, so an approval, a share or a
+// replaced key shows without a reload.
+class KeyApprovalsSection extends GlimmerComponent<{
+  Args: {
+    approvals: KeyApprovalStatus;
+    automation: string | undefined;
+    realm: string | undefined;
+    tools: Tools | undefined;
+  };
+}> {
+  // Whether the browser blocked the secure window the section opened, and
+  // why opening it failed, if it did.
+  @tracked windowBlocked = false;
+  @tracked windowFailure: string | undefined;
+
+  get lead() {
+    let slots = this.args.approvals.operations.flatMap(({ slots }) => slots);
+    if (!this.args.approvals.approved) {
+      return 'Boxel holds every run until the owner of each key marked below approves the automation’s use of the key.';
+    }
+    return slots.every(({ state }) => state === 'approved')
+      ? 'The owner of each key the automation uses approved the automation’s use of the key. Each approval lasts until someone changes the automation’s script, triggers, params or outside services.'
+      : 'The owner of each key the automation uses approved the automation’s use of the key, but a run that uses a key marked below fails until someone fixes the key.';
+  }
+  get operations() {
+    return this.args.approvals.operations.filter(
+      ({ state, slots }) => state === 'unavailable' || slots.length > 0,
+    );
+  }
+  // Whether the viewer can approve any key the automation still waits on.
+  get viewerApproves() {
+    return (
+      Boolean(this.args.tools) &&
+      this.args.approvals.operations.some(({ slots }) =>
+        slots.some(({ fix }) => fix === 'approve'),
+      )
+    );
+  }
+  look = (slot: SlotApproval) => SLOT_LOOKS[slot.state];
+  sentence = (slot: SlotApproval) => slotSentence(slot);
+  fixLabel = (slot: SlotApproval) =>
+    slot.fix && slot.fix !== 'approve' ? FIX_LABELS[slot.fix] : undefined;
+  // Whether the row offers its own fix: every fix but approving, which the
+  // button above the rows covers, and only where the card can open the
+  // secure window.
+  offersFix = (slot: SlotApproval) =>
+    Boolean(this.args.tools && this.fixLabel(slot));
+  // The fix button's accessible name, which names the operation, since rows
+  // can share a button's label.
+  fixName = (operation: OperationApproval, slot: SlotApproval) =>
+    `${this.fixLabel(slot)} for ${operation.operation} on ${operation.targetType.name}`;
+  approve = () =>
+    this.open({ mode: 'approve', automation: this.args.automation }, 'approve');
+  fix = (operation: OperationApproval, slot: SlotApproval) => {
+    let { realm } = this.args;
+    if (!slot.fix || slot.fix === 'approve') {
+      return;
+    }
+    let input =
+      slot.fix === 'share-key'
+        ? { mode: 'share-key', realm }
+        : slot.fix === 'swap-key'
+          ? { mode: 'swap-key', realm, share: slot.share?.id }
+          : {
+              mode: slot.fix,
+              module: operation.targetType.module,
+              name: operation.targetType.name,
+              realm,
+              operation: operation.operation,
+            };
+    return this.open(input, slot.fix);
+  };
+  private open = async (
+    input: Record<string, string | undefined>,
+    fix: SlotApprovalFix,
+  ) => {
+    let { tools } = this.args;
+    if (!tools) {
+      return;
+    }
+    this.windowFailure = undefined;
+    try {
+      let result = await new OpenSecureWindowTool(tools).execute({
+        ...input,
+        reason: FIX_REASONS[fix],
+      });
+      this.windowBlocked = result?.status === 'blocked';
+    } catch (e) {
+      this.windowFailure = e instanceof Error ? e.message : String(e);
+    }
+  };
+
+  <template>
+    <p class='key-approvals__lead' data-test-automation-key-approvals-lead>
+      {{this.lead}}
+    </p>
+    {{#if this.viewerApproves}}
+      <div class='key-approvals__approve'>
+        <Button
+          @appearance='outlined'
+          @size='s'
+          data-test-automation-key-approval-fix='approve'
+          {{on 'click' this.approve}}
+        >Approve your keys in the secure window</Button>
+      </div>
+    {{/if}}
+    {{#if this.windowBlocked}}
+      <Callout
+        @tone='warning'
+        @title='The browser blocked the secure window'
+        data-test-automation-key-approvals-window-blocked
+      >
+        The browser kept Boxel from opening the secure window. Boxel shows a
+        button that opens the secure window.
+      </Callout>
+    {{/if}}
+    {{#if this.windowFailure}}
+      <Callout
+        @tone='danger'
+        @title='Boxel couldn’t open the secure window'
+        data-test-automation-key-approvals-window-failure
+      >
+        {{this.windowFailure}}
+      </Callout>
+    {{/if}}
+    <ul class='key-approvals'>
+      {{#each this.operations as |operation|}}
+        <li
+          class='key-approvals__operation'
+          data-test-automation-key-approval={{operation.operation}}
+        >
+          <h3 class='key-approvals__name'>
+            <Token @value={{operation.operation}} />
+            on
+            {{operation.targetType.name}}
+          </h3>
+          {{#if (eq operation.state 'unavailable')}}
+            <Item
+              @size='s'
+              @wrap={{true}}
+              @alignStart={{true}}
+              data-test-automation-key-approval-unavailable
+            >
+              <:leading>
+                <Chip @label='Unavailable' @tone='neutral' />
+              </:leading>
+              <:description>
+                Boxel can’t read this outside service in this workspace, so a
+                run can’t call the service. A realm administrator needs to fix
+                the outside service in the edit view.
+              </:description>
+            </Item>
+          {{/if}}
+          {{#each operation.slots as |slot|}}
+            {{#let (this.look slot) as |look|}}
+              <Item
+                @size='s'
+                @wrap={{true}}
+                @alignStart={{true}}
+                data-test-automation-key-approval-slot={{slot.slot}}
+                data-test-automation-key-approval-state={{slot.state}}
+              >
+                <:leading>
+                  <Chip @label={{look.label}} @tone={{look.tone}} />
+                </:leading>
+                <:description>
+                  <span
+                    data-test-automation-key-approval-sentence
+                  >{{this.sentence slot}}</span>
+                  {{#if slot.approvedAt}}
+                    <span
+                      class='key-approvals__since'
+                      data-test-automation-key-approval-since
+                    >
+                      Approved
+                      <FormatDate
+                        @date={{slot.approvedAt}}
+                        @month='short'
+                        @day='numeric'
+                        @year='numeric'
+                      />
+                    </span>
+                  {{/if}}
+                </:description>
+                <:actions>
+                  {{#if (this.offersFix slot)}}
+                    <Button
+                      @appearance='outlined'
+                      @size='s'
+                      aria-label={{this.fixName operation slot}}
+                      data-test-automation-key-approval-fix={{slot.fix}}
+                      {{on 'click' (fn this.fix operation slot)}}
+                    >{{this.fixLabel slot}}</Button>
+                  {{/if}}
+                </:actions>
+              </Item>
+            {{/let}}
+          {{/each}}
+        </li>
+      {{/each}}
+    </ul>
+    <style scoped>
+      .key-approvals__approve {
+        margin-block-end: var(--boxel-sp-sm);
+      }
+      .key-approvals {
+        list-style: none;
+        padding: 0;
+        display: grid;
+        gap: var(--boxel-sp);
+      }
+      .key-approvals__operation {
+        display: grid;
+        gap: var(--boxel-sp-xs);
+      }
+      .key-approvals__name {
+        font: inherit;
+        font-weight: 600;
+      }
+      .key-approvals__since {
+        display: block;
+      }
+    </style>
+  </template>
+}
+
 // Whether the way into the automations console shows: to a direct writer,
 // on a card that knows its realm, outside the console itself.
 function showsConsoleAction(
@@ -7028,6 +7451,7 @@ class Isolated extends Component<typeof Automation> {
     realm: this.realmHref,
     realmId: this.realmId,
     tools: toolsOf(this.args.context),
+    keyApprovals: true,
   }));
   get status() {
     return this.server.current.visible ? this.server.current.status : undefined;
@@ -7037,6 +7461,15 @@ class Isolated extends Component<typeof Automation> {
   }
   get statusKnown() {
     return this.server.current.known;
+  }
+  get keyApprovals() {
+    let status = this.status;
+    return status?.switchedOn &&
+      status.keyApprovals?.operations.some(
+        ({ state, slots }) => state === 'unavailable' || slots.length > 0,
+      )
+      ? status.keyApprovals
+      : undefined;
   }
   private runList = automationRuns(this, () => ({
     id: this.args.model.id,
@@ -7256,6 +7689,21 @@ class Isolated extends Component<typeof Automation> {
           This automation runs only after a realm administrator turns the
           automation on. That person pays for every run.
         </Callout>
+      {{/if}}
+
+      {{#if this.keyApprovals}}
+        <PanelSection
+          @title='Key approvals'
+          @collapsible={{false}}
+          data-test-automation-key-approvals
+        >
+          <KeyApprovalsSection
+            @approvals={{this.keyApprovals}}
+            @automation={{@model.id}}
+            @realm={{this.realmHref}}
+            @tools={{this.tools}}
+          />
+        </PanelSection>
       {{/if}}
 
       {{#if this.showsRuns}}
