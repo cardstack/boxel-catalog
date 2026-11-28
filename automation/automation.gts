@@ -5537,7 +5537,7 @@ class AutomationRuns extends GlimmerComponent<{
   }
   get cancelTitle() {
     let run = this.canceling;
-    return run ? `Cancel the ${this.runName(run)} run?` : '';
+    return run ? 'Cancel the run?' : '';
   }
   askCancel = (run: ListedRun) => {
     this.cancelFailure = undefined;
@@ -5799,7 +5799,7 @@ class AutomationRuns extends GlimmerComponent<{
         @onOpenChange={{this.onCancelOpenChange}}
         @title={{this.cancelTitle}}
         @confirmLabel='Cancel run'
-        @cancelLabel='Keep running'
+        @cancelLabel='Keep the run'
         @busy={{this.cancelBusy}}
         @onConfirm={{this.cancelRun}}
         @onCancel={{this.keepRun}}
@@ -5807,8 +5807,9 @@ class AutomationRuns extends GlimmerComponent<{
       >
         <Stack @gap='s'>
           <p>
-            Boxel stops the run and saves nothing the run wrote. The
-            automation’s next run still comes due as scheduled.
+            Boxel stops the run and saves nothing the run wrote. Canceling one
+            run leaves the automation as the automation is: on stays on, and
+            paused stays paused.
           </p>
           {{#if this.cancelFailure}}
             <Callout
@@ -7560,6 +7561,9 @@ class AutomationControls extends GlimmerComponent<{
   };
 }> {
   @tracked confirming: ControlAction | undefined;
+  // One click id per confirmation, so confirming again after a lost answer
+  // names the run the first confirm started rather than starting another.
+  private click: string | undefined;
   @tracked busy = false;
   @tracked failure: string | undefined;
   // What the last control that succeeded said, kept until the next one.
@@ -7582,7 +7586,20 @@ class AutomationControls extends GlimmerComponent<{
   // agreed to resumes here. One paused for a raised limit or batched AI
   // resumes through the switch-on screen, which shows the estimate again.
   get canResume() {
-    return this.state === 'paused' && !needsReconfirm(this.args.status);
+    return (
+      this.state === 'paused' &&
+      !needsReconfirm(this.args.status) &&
+      this.monthlyCap !== undefined
+    );
+  }
+  // A paused automation whose card has no monthly limit can't resume: the
+  // resumer agrees to the card's monthly limit.
+  get resumeNeedsCap() {
+    return (
+      this.state === 'paused' &&
+      !needsReconfirm(this.args.status) &&
+      this.monthlyCap === undefined
+    );
   }
   get available() {
     return Boolean(this.args.realm && this.args.model.id && this.args.tools);
@@ -7595,7 +7612,7 @@ class AutomationControls extends GlimmerComponent<{
     let status = this.args.status;
     return status.switchedOn && status.payer
       ? status.payer
-      : 'another realm administrator';
+      : 'the current payer, a person who shares no workspace with you';
   }
   get monthlyCap(): number | undefined {
     let cap = this.args.model.caps?.monthlyCredits;
@@ -7692,10 +7709,6 @@ class AutomationControls extends GlimmerComponent<{
   get confirmingRemove() {
     return this.confirming === 'remove';
   }
-  // A Resume needs the card's monthly limit, which the resumer agrees to.
-  get resumeBlocked() {
-    return this.confirming === 'resume' && this.monthlyCap === undefined;
-  }
   get monthlyCapWords() {
     let cap = this.monthlyCap;
     return cap === undefined ? '' : tally(cap);
@@ -7707,6 +7720,7 @@ class AutomationControls extends GlimmerComponent<{
   ask = (action: ControlAction) => {
     this.failure = undefined;
     this.done = undefined;
+    this.click = crypto.randomUUID();
     this.confirming = action;
   };
   onOpenChange = (open: boolean) => {
@@ -7734,7 +7748,7 @@ class AutomationControls extends GlimmerComponent<{
 
   confirm = async () => {
     let action = this.confirming;
-    if (!action || this.busy || this.resumeBlocked) {
+    if (!action || this.busy) {
       return;
     }
     let becamePayer = action === 'resume' && !this.viewerIsPayer;
@@ -7747,7 +7761,7 @@ class AutomationControls extends GlimmerComponent<{
         case 'run-now':
           result = await this.request(
             action === 'preview' ? PREVIEW_ROUTE : RUN_NOW_ROUTE,
-            { click: crypto.randomUUID() },
+            { click: this.click },
           );
           break;
         case 'pause':
@@ -7789,6 +7803,26 @@ class AutomationControls extends GlimmerComponent<{
     }
   };
 
+  // What the last control said, while the status still reads as that control
+  // left the automation: a later pause, resume, remove or switch-on by anyone
+  // makes it stale.
+  get shownDone() {
+    let done = this.done;
+    if (!done) {
+      return undefined;
+    }
+    let status = this.args.status;
+    switch (done.action) {
+      case 'pause':
+        return this.state === 'paused' ? done : undefined;
+      case 'resume':
+        return status.switchedOn && this.state !== 'paused' ? done : undefined;
+      case 'remove':
+        return status.switchedOn ? undefined : done;
+      default:
+        return done;
+    }
+  }
   get doneTitle() {
     switch (this.done?.action) {
       case 'preview':
@@ -7809,8 +7843,34 @@ class AutomationControls extends GlimmerComponent<{
   }
   get doneTone() {
     return this.done?.action === 'remove' || this.done?.action === 'pause'
-      ? 'neutral'
+      ? 'info'
       : 'success';
+  }
+  // The control that opened the confirmation can leave with the status the
+  // control changed, so focus moves to what the control says it did.
+  focusOnInsert = modifier((element: HTMLElement) => {
+    element.focus();
+  });
+  // The title of a failure, by what the confirmation asked for.
+  get failureTitle() {
+    switch (this.confirming) {
+      case 'preview':
+        return 'Boxel didn’t start the Preview';
+      case 'run-now':
+        return 'Boxel didn’t start the run';
+      case 'pause':
+        return 'Boxel didn’t pause the automation';
+      case 'resume':
+        return 'Boxel didn’t resume the automation';
+      case 'remove':
+        return 'Boxel didn’t remove the automation';
+      default:
+        return 'Boxel didn’t finish the request';
+    }
+  }
+  // Resume starts the follow-up runs the pause held, when it held any.
+  get resumeStartsHeld() {
+    return this.heldFollowUps.length > 0;
   }
 
   <template>
@@ -7856,25 +7916,27 @@ class AutomationControls extends GlimmerComponent<{
         {{/if}}
       </Stack>
 
-      {{#if this.done}}
+      {{#if this.shownDone}}
         <Callout
           class='controls__done'
           @tone={{this.doneTone}}
           @title={{this.doneTitle}}
-          data-test-automation-control-done={{this.done.action}}
+          tabindex='-1'
+          {{this.focusOnInsert}}
+          data-test-automation-control-done={{this.shownDone.action}}
         >
-          {{#if (eq this.done.action 'preview')}}
+          {{#if (eq this.shownDone.action 'preview')}}
             The Preview shows under Runs, with the files the script staged, the
             log, the timings and the cost. A Preview saves nothing, and Boxel
             charges the Preview to you.
-          {{else if (eq this.done.action 'run-now')}}
+          {{else if (eq this.shownDone.action 'run-now')}}
             The run shows under Runs, with the log, the timings and the cost.
             Boxel charges the run to you.
-          {{else if (eq this.done.action 'pause')}}
+          {{else if (eq this.shownDone.action 'pause')}}
             Boxel starts no run until a realm administrator resumes the
             automation.
-          {{else if (eq this.done.action 'resume')}}
-            {{#if this.done.becamePayer}}
+          {{else if (eq this.shownDone.action 'resume')}}
+            {{#if this.shownDone.becamePayer}}
               <span data-test-automation-control-new-payer>
                 You are now the automation’s payer. Boxel charges every later
                 run to your credits, up to the monthly limit of
@@ -7884,7 +7946,7 @@ class AutomationControls extends GlimmerComponent<{
             {{else}}
               Boxel runs the automation again each time a trigger fires.
             {{/if}}
-          {{else if (eq this.done.action 'remove')}}
+          {{else if (eq this.shownDone.action 'remove')}}
             The card and the script stay. Turn the automation on again to run
             the automation on the triggers.
           {{/if}}
@@ -7931,6 +7993,20 @@ class AutomationControls extends GlimmerComponent<{
         </Callout>
       {{/if}}
 
+      {{#if this.resumeNeedsCap}}
+        <Callout
+          class='controls__held'
+          @tone='warning'
+          @title='Set a monthly limit to resume'
+          data-test-automation-resume-needs-cap
+        >
+          The automation’s card sets no monthly limit, and the realm
+          administrator who resumes the automation agrees to the card’s monthly
+          limit. Set a monthly limit in the automation’s editor, then resume the
+          automation.
+        </Callout>
+      {{/if}}
+
       <AlertDialog
         @open={{this.dialogOpen}}
         @onOpenChange={{this.onOpenChange}}
@@ -7972,19 +8048,12 @@ class AutomationControls extends GlimmerComponent<{
             {{/if}}
           {{else if this.confirmingResume}}
             <p>
-              Boxel runs the automation again each time a trigger fires, and
-              starts the follow-up runs the pause held.
+              Boxel runs the automation again each time a trigger fires{{if
+                this.resumeStartsHeld
+                ', and starts the follow-up runs the pause held'
+              }}.
             </p>
-            {{#if this.resumeBlocked}}
-              <Callout
-                @tone='danger'
-                @title='The automation has no monthly limit'
-                data-test-automation-confirm-no-cap
-              >
-                Set a monthly limit in the automation’s editor, then resume the
-                automation.
-              </Callout>
-            {{else if this.viewerIsPayer}}
+            {{#if this.viewerIsPayer}}
               <p>
                 Boxel keeps charging the runs to you, up to the monthly limit of
                 {{this.monthlyCapWords}}
@@ -7997,9 +8066,11 @@ class AutomationControls extends GlimmerComponent<{
                 data-test-automation-confirm-new-payer
               >
                 Resuming the automation makes you the payer in place of
-                {{this.payerName}}. Boxel charges every later run, and each
-                follow-up run the pause held, to your credits, up to the monthly
-                limit of
+                {{this.payerName}}. Boxel charges every later run{{if
+                  this.resumeStartsHeld
+                  ', and each follow-up run the pause held,'
+                }}
+                to your credits, up to the monthly limit of
                 {{this.monthlyCapWords}}
                 credits.
               </Callout>
@@ -8025,7 +8096,7 @@ class AutomationControls extends GlimmerComponent<{
           {{#if this.failure}}
             <Callout
               @tone='danger'
-              @title='Boxel refused the request'
+              @title={{this.failureTitle}}
               data-test-automation-confirm-failure
             >{{this.failure}}</Callout>
           {{/if}}
