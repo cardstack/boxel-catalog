@@ -7945,9 +7945,9 @@ class AutomationControls extends GlimmerComponent<{
         <Stack @gap='s'>
           {{#if this.confirmingPreview}}
             <p>
-              Boxel runs the script now and saves nothing: the files the script
-              writes are staged for you to look at. Boxel charges the Preview to
-              you.
+              Boxel runs the script now and saves nothing: Boxel stages the
+              files the script writes, for you to look at. Boxel charges the
+              Preview to you.
             </p>
           {{else if this.confirmingRunNow}}
             <p>
