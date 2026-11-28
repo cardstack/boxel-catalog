@@ -5803,7 +5803,7 @@ class AutomationRuns extends GlimmerComponent<{
         @busy={{this.cancelBusy}}
         @onConfirm={{this.cancelRun}}
         @onCancel={{this.keepRun}}
-        data-test-automation-confirm='cancel-run'
+        data-test-automation-confirm={{if this.cancelOpen 'cancel-run'}}
       >
         <Stack @gap='s'>
           <p>
@@ -8160,6 +8160,13 @@ class Isolated extends Component<typeof Automation> {
       this.showRunsPage(1);
     }
   };
+  // A run a control just started: the Runs section opens on page 1, read
+  // again so the page lists the new run, and the run's row opens.
+  showStartedRun = (runId: string) => {
+    this.runsOpen = true;
+    this.revealRun = { runId };
+    this.showRunsPage(1);
+  };
   showRunsPage = (page: number) => this.runList.current.showPage(page);
   get runsSummary() {
     let total = this.runs.total;
@@ -8315,7 +8322,7 @@ class Isolated extends Component<typeof Automation> {
             @realm={{this.realmHref}}
             @status={{this.status}}
             @tools={{this.tools}}
-            @showRun={{this.showNoticeRun}}
+            @showRun={{this.showStartedRun}}
           />
           <StatusFacts @items={{this.statusItems}} @columns={{2}} />
           {{#if this.pauseProblems.length}}
