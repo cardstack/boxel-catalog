@@ -65,6 +65,7 @@ import {
   type StepState,
 } from '@cardstack/pretui/components/step-list';
 import { Chip } from '@cardstack/pretui/components/chip';
+import { AlertDialog } from '@cardstack/pretui/components/alert-dialog';
 import { Dialog } from '@cardstack/pretui/components/dialog';
 import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
 import { Combobox } from '@cardstack/pretui/components/combobox';
@@ -1893,7 +1894,23 @@ type ServerStatus =
       // its job, and what fixes it. Absent from a server that doesn't report
       // notices.
       notice?: AutomationNotice | null;
+      // The automation's batches of AI requests whose follow-up run hasn't
+      // ended, earliest deadline first, and how many there are in all. A
+      // pause holds each follow-up until a resume, and a remove drops it,
+      // while Boxel still bills the batch. Absent from a server that doesn't
+      // report open batches.
+      openBatches?: OpenBatch[];
+      openBatchCount?: number;
     };
+// One of the automation's open batches of AI requests: when the batch is due
+// back, how many requests the batch holds, and whether a pause holds the
+// batch's follow-up run.
+interface OpenBatch {
+  batchId: string;
+  deadline: string;
+  requestCount: number;
+  followUpHeld: boolean;
+}
 // Where one credential slot of an operation stands: its key's owner
 // approved the automation's use of the key (`approved`), hasn't yet
 // (`waiting`), or the slot can't be served at all for now: no share in the
@@ -5340,6 +5357,24 @@ class RunDetail extends GlimmerComponent<{
   </template>
 }
 
+// The routes behind the automation's controls, each a POST a direct writer
+// of the realm makes through `AutomationRequestTool`.
+const PREVIEW_ROUTE = '_automation-preview';
+const RUN_NOW_ROUTE = '_automation-run-now';
+const PAUSE_ROUTE = '_automation-pause';
+const REMOVE_ROUTE = '_automation-remove';
+const RUN_CANCEL_ROUTE = '_automation-run-cancel';
+
+// What a refused control request says, from the realm server's answer.
+function refusalOf(result: {
+  status?: number | null;
+  errors?: string[] | null;
+}): string {
+  return (
+    result.errors?.[0] ?? `Boxel answered with status ${result.status ?? '?'}.`
+  );
+}
+
 // The automation's runs, for the realm's direct writers: one row per run,
 // newest first, with what started the run, the run's state, and why a run
 // that didn't complete ended as the run did. A later slot of a schedule that
@@ -5488,6 +5523,63 @@ class AutomationRuns extends GlimmerComponent<{
   };
   progress = (run: ListedRun) => runProgress(run);
   reason = (run: ListedRun) => runReason(run);
+  // A run that hasn't ended can be canceled, until its commit starts.
+  cancelable = (run: ListedRun) =>
+    Boolean(this.args.realm && this.args.tools) &&
+    (run.state === 'pending' || run.state === 'running') &&
+    run.step !== 'commit';
+  // The run the cancel confirmation is about.
+  @tracked canceling: ListedRun | undefined;
+  @tracked cancelBusy = false;
+  @tracked cancelFailure: string | undefined;
+  get cancelOpen() {
+    return this.canceling !== undefined;
+  }
+  get cancelTitle() {
+    let run = this.canceling;
+    return run ? 'Cancel the run?' : '';
+  }
+  askCancel = (run: ListedRun) => {
+    this.cancelFailure = undefined;
+    this.canceling = run;
+  };
+  onCancelOpenChange = (open: boolean) => {
+    if (!open && !this.cancelBusy) {
+      this.canceling = undefined;
+      this.cancelFailure = undefined;
+    }
+  };
+  keepRun = () => {
+    if (!this.cancelBusy) {
+      this.canceling = undefined;
+      this.cancelFailure = undefined;
+    }
+  };
+  cancelRun = async () => {
+    let run = this.canceling;
+    if (!run || this.cancelBusy) {
+      return;
+    }
+    this.cancelBusy = true;
+    this.cancelFailure = undefined;
+    try {
+      let result = await new AutomationRequestTool(this.args.tools!).execute({
+        route: RUN_CANCEL_ROUTE,
+        method: 'POST',
+        realm: this.args.realm,
+        run: run.id,
+      });
+      if (result.ok) {
+        this.canceling = undefined;
+      } else {
+        this.cancelFailure = refusalOf(result);
+      }
+    } catch (e) {
+      this.cancelFailure = e instanceof Error ? e.message : String(e);
+    } finally {
+      this.cancelBusy = false;
+    }
+  };
   slotTime = (slot: string | null) => slotTime(slot);
   // When the row's run last moved: when the run ended, started, or was made.
   when = (run: ListedRun) => run.finishedAt ?? run.startedAt ?? run.createdAt;
@@ -5641,6 +5733,16 @@ class AutomationRuns extends GlimmerComponent<{
                       >{{progress}}</p>
                     {{/if}}
                   {{/let}}
+                  {{#if (this.cancelable row.run)}}
+                    <Button
+                      class='runs__cancel'
+                      @size='sm'
+                      @appearance='outlined'
+                      @tone='danger'
+                      {{on 'click' (fn this.askCancel row.run)}}
+                      data-test-automation-run-cancel={{row.run.id}}
+                    >Cancel run</Button>
+                  {{/if}}
                   {{#if reason}}
                     <p
                       class='runs__reason'
@@ -5692,6 +5794,32 @@ class AutomationRuns extends GlimmerComponent<{
           data-test-automation-runs-pager
         />
       {{/if}}
+      <AlertDialog
+        @open={{this.cancelOpen}}
+        @onOpenChange={{this.onCancelOpenChange}}
+        @title={{this.cancelTitle}}
+        @confirmLabel='Cancel run'
+        @cancelLabel='Keep the run'
+        @busy={{this.cancelBusy}}
+        @onConfirm={{this.cancelRun}}
+        @onCancel={{this.keepRun}}
+        data-test-automation-confirm={{if this.cancelOpen 'cancel-run'}}
+      >
+        <Stack @gap='s'>
+          <p>
+            Boxel stops the run and saves nothing the run wrote. Canceling one
+            run leaves the automation as the automation is: on stays on, and
+            paused stays paused.
+          </p>
+          {{#if this.cancelFailure}}
+            <Callout
+              @tone='danger'
+              @title='Boxel didn’t cancel the run'
+              data-test-automation-confirm-failure
+            >{{this.cancelFailure}}</Callout>
+          {{/if}}
+        </Stack>
+      </AlertDialog>
     {{else if @runs.loading}}
       <LoadingState @label='Loading runs' />
     {{else}}
@@ -5726,6 +5854,9 @@ class AutomationRuns extends GlimmerComponent<{
       }
       .runs__pager {
         margin-top: var(--boxel-sp-sm);
+      }
+      .runs__cancel {
+        margin-top: var(--boxel-sp-xs);
       }
     </style>
   </template>
@@ -7404,6 +7535,612 @@ class AutomationNoticeCallout extends GlimmerComponent<{
   </template>
 }
 
+type ControlAction = 'preview' | 'run-now' | 'pause' | 'resume' | 'remove';
+
+// The words a batch count reads as: "1 open batch", "3 open batches".
+function openBatchWords(n: number): string {
+  return n === 1 ? '1 open batch' : `${tally(n)} open batches`;
+}
+
+// The automation's controls for the realm's direct writers: Preview and Run
+// now, whether or not the automation is switched on, and Pause, Resume and
+// Remove for a switched-on automation. Each asks for a confirmation that says
+// what the control does, who pays, and what becomes of the automation's open
+// batches of AI requests. A Preview or a Run now that starts opens the run's
+// row in the Runs section, which shows the run's log, timings and cost, and a
+// Preview's staged files. A paused automation lists the follow-up runs the
+// pause holds, each with its batch's deadline.
+class AutomationControls extends GlimmerComponent<{
+  Args: {
+    model: Automation;
+    realm: string | undefined;
+    status: ServerStatus;
+    tools: Tools | undefined;
+    // Opens the run's row in the Runs section.
+    showRun: (runId: string) => void;
+  };
+}> {
+  @tracked confirming: ControlAction | undefined;
+  // One click id per confirmation, so confirming again after a lost answer
+  // names the run the first confirm started rather than starting another.
+  private click: string | undefined;
+  @tracked busy = false;
+  @tracked failure: string | undefined;
+  // What the last control that succeeded said, kept until the next one.
+  @tracked done:
+    | {
+        action: ControlAction;
+        // The status shown when the control landed, until the next read.
+        statusBefore: ServerStatus;
+        becamePayer?: boolean;
+        waitsForKeys?: boolean;
+      }
+    | undefined;
+
+  get switchedOn() {
+    return this.args.status.switchedOn;
+  }
+  get state() {
+    let status = this.args.status;
+    return status.switchedOn ? status.state : undefined;
+  }
+  get canPause() {
+    let state = this.state;
+    return state !== undefined && state !== 'paused' && state !== 'done';
+  }
+  // A paused automation whose card asks for nothing beyond what the payer
+  // agreed to resumes here. One paused for a raised limit or batched AI
+  // resumes through the switch-on screen, which shows the estimate again.
+  get canResume() {
+    return (
+      this.state === 'paused' &&
+      !needsReconfirm(this.args.status) &&
+      this.monthlyCap !== undefined
+    );
+  }
+  // A paused automation whose card has no monthly limit can't resume: the
+  // resumer agrees to the card's monthly limit.
+  get resumeNeedsCap() {
+    return (
+      this.state === 'paused' &&
+      !needsReconfirm(this.args.status) &&
+      this.monthlyCap === undefined
+    );
+  }
+  get available() {
+    return Boolean(this.args.realm && this.args.model.id && this.args.tools);
+  }
+  get viewerIsPayer() {
+    let status = this.args.status;
+    return status.switchedOn ? status.viewerIsPayer : false;
+  }
+  get payerName() {
+    let status = this.args.status;
+    return status.switchedOn && status.payer
+      ? status.payer
+      : 'the current payer, a person who shares no workspace with you';
+  }
+  get monthlyCap(): number | undefined {
+    let cap = this.args.model.caps?.monthlyCredits;
+    return typeof cap === 'number' ? cap : undefined;
+  }
+  get openBatches(): OpenBatch[] {
+    let status = this.args.status;
+    return status.switchedOn ? (status.openBatches ?? []) : [];
+  }
+  get openBatchCount() {
+    let status = this.args.status;
+    return status.switchedOn
+      ? (status.openBatchCount ?? this.openBatches.length)
+      : 0;
+  }
+  // The follow-up runs a paused automation holds, each with its batch's
+  // deadline.
+  get heldFollowUps(): OpenBatch[] {
+    return this.state === 'paused'
+      ? this.openBatches.filter((batch) => batch.followUpHeld)
+      : [];
+  }
+  get heldNotListed() {
+    let shown = this.heldFollowUps.length;
+    return shown > 0 && this.openBatchCount > shown
+      ? this.openBatchCount - shown
+      : 0;
+  }
+  get heldNotListedWords() {
+    return tally(this.heldNotListed);
+  }
+  batchTitle = (batch: OpenBatch) =>
+    batch.requestCount === 1
+      ? 'A batch of 1 AI request'
+      : `A batch of ${tally(batch.requestCount)} AI requests`;
+
+  get dialogTitle() {
+    switch (this.confirming) {
+      case 'preview':
+        return 'Preview the automation?';
+      case 'run-now':
+        return 'Run the automation now?';
+      case 'pause':
+        return 'Pause the automation?';
+      case 'resume':
+        return 'Resume the automation?';
+      case 'remove':
+        return 'Remove the automation?';
+      default:
+        return '';
+    }
+  }
+  get confirmLabel() {
+    switch (this.confirming) {
+      case 'preview':
+        return 'Preview';
+      case 'run-now':
+        return 'Run now';
+      case 'pause':
+        return 'Pause';
+      case 'resume':
+        return this.viewerIsPayer ? 'Resume' : 'Resume and pay';
+      case 'remove':
+        return 'Remove';
+      default:
+        return 'Continue';
+    }
+  }
+  get confirmTone(): 'primary' | 'warning' | 'danger' {
+    switch (this.confirming) {
+      case 'pause':
+        return 'warning';
+      case 'remove':
+        return 'danger';
+      default:
+        return 'primary';
+    }
+  }
+  get dialogOpen() {
+    return this.confirming !== undefined;
+  }
+  get confirmingPreview() {
+    return this.confirming === 'preview';
+  }
+  get confirmingRunNow() {
+    return this.confirming === 'run-now';
+  }
+  get confirmingPause() {
+    return this.confirming === 'pause';
+  }
+  get confirmingResume() {
+    return this.confirming === 'resume';
+  }
+  get confirmingRemove() {
+    return this.confirming === 'remove';
+  }
+  get monthlyCapWords() {
+    let cap = this.monthlyCap;
+    return cap === undefined ? '' : tally(cap);
+  }
+  get openBatchesWords() {
+    return openBatchWords(this.openBatchCount);
+  }
+
+  ask = (action: ControlAction) => {
+    this.failure = undefined;
+    this.done = undefined;
+    this.click = crypto.randomUUID();
+    this.confirming = action;
+  };
+  onOpenChange = (open: boolean) => {
+    if (!open && !this.busy) {
+      this.confirming = undefined;
+      this.failure = undefined;
+    }
+  };
+  cancelConfirm = () => {
+    if (!this.busy) {
+      this.confirming = undefined;
+      this.failure = undefined;
+    }
+  };
+
+  private request(route: string, attributes: Record<string, unknown> = {}) {
+    return new AutomationRequestTool(this.args.tools!).execute({
+      route,
+      method: 'POST',
+      realm: this.args.realm,
+      automation: this.args.model.id,
+      ...attributes,
+    });
+  }
+
+  confirm = async () => {
+    let action = this.confirming;
+    if (!action || this.busy) {
+      return;
+    }
+    let becamePayer = action === 'resume' && !this.viewerIsPayer;
+    this.busy = true;
+    this.failure = undefined;
+    try {
+      let result;
+      switch (action) {
+        case 'preview':
+        case 'run-now':
+          result = await this.request(
+            action === 'preview' ? PREVIEW_ROUTE : RUN_NOW_ROUTE,
+            { click: this.click },
+          );
+          break;
+        case 'pause':
+          result = await this.request(PAUSE_ROUTE);
+          break;
+        case 'resume':
+          result = await this.request(RESUME_ROUTE, {
+            monthlyCredits: this.monthlyCap,
+          });
+          break;
+        case 'remove':
+          result = await this.request(REMOVE_ROUTE);
+          break;
+      }
+      if (!result.ok) {
+        this.failure = refusalOf(result);
+        return;
+      }
+      this.confirming = undefined;
+      let approvals = result.body?.meta?.keyApprovals as
+        | KeyApprovals
+        | undefined;
+      this.done = {
+        action,
+        statusBefore: this.args.status,
+        becamePayer,
+        waitsForKeys: approvals ? !approvals.approved : false,
+      };
+      let runId = result.body?.data?.id;
+      if (
+        (action === 'preview' || action === 'run-now') &&
+        typeof runId === 'string'
+      ) {
+        this.args.showRun(runId);
+      }
+    } catch (e) {
+      this.failure = e instanceof Error ? e.message : String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
+  // What the last control said: while the status read before the control
+  // landed is still the one shown, and then while the status reads as the
+  // control left the automation. A later pause, resume, remove or switch-on
+  // by anyone makes it stale.
+  get shownDone() {
+    let done = this.done;
+    if (!done) {
+      return undefined;
+    }
+    let status = this.args.status;
+    let outcome: boolean;
+    switch (done.action) {
+      case 'pause':
+        outcome = this.state === 'paused';
+        break;
+      case 'resume':
+        outcome = status.switchedOn && this.state !== 'paused';
+        break;
+      case 'remove':
+        outcome = !status.switchedOn;
+        break;
+      default:
+        return done;
+    }
+    return outcome || status === done.statusBefore ? done : undefined;
+  }
+  get doneTitle() {
+    switch (this.done?.action) {
+      case 'preview':
+        return 'Boxel started a Preview';
+      case 'run-now':
+        return 'Boxel started a run';
+      case 'pause':
+        return 'Boxel paused the automation';
+      case 'resume':
+        return this.done.waitsForKeys
+          ? 'Boxel resumed the automation, which waits for key approval'
+          : 'Boxel resumed the automation';
+      case 'remove':
+        return 'Boxel removed the automation';
+      default:
+        return '';
+    }
+  }
+  get doneTone() {
+    return this.done?.action === 'remove' || this.done?.action === 'pause'
+      ? 'info'
+      : 'success';
+  }
+  // The control that opened the confirmation can leave with the status the
+  // control changed, so focus moves to what the control says it did.
+  focusOnInsert = modifier((element: HTMLElement) => {
+    element.focus();
+  });
+  // The title of a failure, by what the confirmation asked for.
+  get failureTitle() {
+    switch (this.confirming) {
+      case 'preview':
+        return 'Boxel didn’t start the Preview';
+      case 'run-now':
+        return 'Boxel didn’t start the run';
+      case 'pause':
+        return 'Boxel didn’t pause the automation';
+      case 'resume':
+        return 'Boxel didn’t resume the automation';
+      case 'remove':
+        return 'Boxel didn’t remove the automation';
+      default:
+        return 'Boxel didn’t finish the request';
+    }
+  }
+  // Resume starts the follow-up runs the pause held, when it held any.
+  get resumeStartsHeld() {
+    return this.heldFollowUps.length > 0;
+  }
+
+  <template>
+    {{#if this.available}}
+      <Stack
+        class='controls'
+        @orientation='horizontal'
+        @wrap={{true}}
+        @gap='xs'
+        data-test-automation-controls
+      >
+        <Button
+          @appearance='outlined'
+          {{on 'click' (fn this.ask 'preview')}}
+          data-test-automation-control='preview'
+        >Preview</Button>
+        <Button
+          @appearance='outlined'
+          {{on 'click' (fn this.ask 'run-now')}}
+          data-test-automation-control='run-now'
+        >Run now</Button>
+        {{#if this.canPause}}
+          <Button
+            @appearance='outlined'
+            @tone='warning'
+            {{on 'click' (fn this.ask 'pause')}}
+            data-test-automation-control='pause'
+          >Pause</Button>
+        {{/if}}
+        {{#if this.canResume}}
+          <Button
+            {{on 'click' (fn this.ask 'resume')}}
+            data-test-automation-control='resume'
+          >Resume</Button>
+        {{/if}}
+        {{#if this.switchedOn}}
+          <Button
+            @appearance='outlined'
+            @tone='danger'
+            {{on 'click' (fn this.ask 'remove')}}
+            data-test-automation-control='remove'
+          >Remove</Button>
+        {{/if}}
+      </Stack>
+
+      {{#if this.shownDone}}
+        <Callout
+          class='controls__done'
+          @tone={{this.doneTone}}
+          @title={{this.doneTitle}}
+          tabindex='-1'
+          {{this.focusOnInsert}}
+          data-test-automation-control-done={{this.shownDone.action}}
+        >
+          {{#if (eq this.shownDone.action 'preview')}}
+            The Preview shows under Runs, with the files the script staged, the
+            log, the timings and the cost. A Preview saves nothing, and Boxel
+            charges the Preview to you.
+          {{else if (eq this.shownDone.action 'run-now')}}
+            The run shows under Runs, with the log, the timings and the cost.
+            Boxel charges the run to you.
+          {{else if (eq this.shownDone.action 'pause')}}
+            Boxel starts no run until a realm administrator resumes the
+            automation.
+          {{else if (eq this.shownDone.action 'resume')}}
+            {{#if this.shownDone.becamePayer}}
+              <span data-test-automation-control-new-payer>
+                You are now the automation’s payer. Boxel charges every later
+                run to your credits, up to the monthly limit of
+                {{this.monthlyCapWords}}
+                credits.
+              </span>
+            {{else}}
+              Boxel runs the automation again each time a trigger fires.
+            {{/if}}
+          {{else if (eq this.shownDone.action 'remove')}}
+            The card and the script stay. Turn the automation on again to run
+            the automation on the triggers.
+          {{/if}}
+        </Callout>
+      {{/if}}
+
+      {{#if this.heldFollowUps.length}}
+        <Callout
+          class='controls__held'
+          @tone='warning'
+          @title='Follow-up runs on hold'
+          data-test-automation-held-follow-ups
+        >
+          <p class='controls__lead'>
+            The pause holds the follow-up run of each batch of AI requests
+            below. Boxel starts each follow-up run when a realm administrator
+            resumes the automation, and still bills each batch meanwhile.
+          </p>
+          <ul class='controls__batches'>
+            {{#each this.heldFollowUps as |batch|}}
+              <li data-test-automation-held-follow-up={{batch.batchId}}>
+                <Item @size='s' @wrap={{true}} @title={{this.batchTitle batch}}>
+                  <:description>
+                    Due back
+                    <FormatDate
+                      @date={{batch.deadline}}
+                      @month='short'
+                      @day='numeric'
+                      @hour='numeric'
+                      @minute='2-digit'
+                    />
+                  </:description>
+                </Item>
+              </li>
+            {{/each}}
+          </ul>
+          {{#if this.heldNotListed}}
+            <p class='controls__more' data-test-automation-held-more>
+              And
+              {{this.heldNotListedWords}}
+              more.
+            </p>
+          {{/if}}
+        </Callout>
+      {{/if}}
+
+      {{#if this.resumeNeedsCap}}
+        <Callout
+          class='controls__held'
+          @tone='warning'
+          @title='Set a monthly limit to resume'
+          data-test-automation-resume-needs-cap
+        >
+          The automation’s card sets no monthly limit, and the realm
+          administrator who resumes the automation agrees to the card’s monthly
+          limit. Set a monthly limit in the automation’s editor, then resume the
+          automation.
+        </Callout>
+      {{/if}}
+
+      <AlertDialog
+        @open={{this.dialogOpen}}
+        @onOpenChange={{this.onOpenChange}}
+        @title={{this.dialogTitle}}
+        @confirmLabel={{this.confirmLabel}}
+        @tone={{this.confirmTone}}
+        @busy={{this.busy}}
+        @onConfirm={{this.confirm}}
+        @onCancel={{this.cancelConfirm}}
+        data-test-automation-confirm={{this.confirming}}
+      >
+        <Stack @gap='s'>
+          {{#if this.confirmingPreview}}
+            <p>
+              Boxel runs the script now and saves nothing: Boxel stages the
+              files the script writes, for you to look at. Boxel charges the
+              Preview to you.
+            </p>
+          {{else if this.confirmingRunNow}}
+            <p>
+              Boxel runs the script now and saves what the script writes,
+              whether or not the automation is on. Boxel charges the run to you.
+            </p>
+          {{else if this.confirmingPause}}
+            <p>
+              Boxel cancels the automation’s waiting and running runs, and
+              starts no run until a realm administrator resumes the automation.
+            </p>
+            {{#if this.openBatchCount}}
+              <Callout
+                @tone='warning'
+                @title='The automation has {{this.openBatchesWords}} of AI requests'
+                data-test-automation-confirm-open-batches
+              >
+                Pausing the automation holds the follow-up run of each open
+                batch until a realm administrator resumes the automation. Boxel
+                still bills each batch.
+              </Callout>
+            {{/if}}
+          {{else if this.confirmingResume}}
+            <p>
+              Boxel runs the automation again each time a trigger fires{{if
+                this.resumeStartsHeld
+                ', and starts the follow-up runs the pause held'
+              }}.
+            </p>
+            {{#if this.viewerIsPayer}}
+              <p>
+                Boxel keeps charging the runs to you, up to the monthly limit of
+                {{this.monthlyCapWords}}
+                credits.
+              </p>
+            {{else}}
+              <Callout
+                @tone='info'
+                @title='You become the payer'
+                data-test-automation-confirm-new-payer
+              >
+                Resuming the automation makes you the payer in place of
+                {{this.payerName}}. Boxel charges every later run{{if
+                  this.resumeStartsHeld
+                  ', and each follow-up run the pause held,'
+                }}
+                to your credits, up to the monthly limit of
+                {{this.monthlyCapWords}}
+                credits.
+              </Callout>
+            {{/if}}
+          {{else if this.confirmingRemove}}
+            <p>
+              Boxel turns the automation off and cancels the automation’s
+              waiting and running runs. The card and the script stay, and any
+              realm administrator can turn the automation on again.
+            </p>
+            {{#if this.openBatchCount}}
+              <Callout
+                @tone='warning'
+                @title='The automation has {{this.openBatchesWords}} of AI requests'
+                data-test-automation-confirm-open-batches
+              >
+                Removing the automation drops the follow-up run of each open
+                batch, so no run picks up the batch’s results. Boxel still bills
+                each batch.
+              </Callout>
+            {{/if}}
+          {{/if}}
+          {{#if this.failure}}
+            <Callout
+              @tone='danger'
+              @title={{this.failureTitle}}
+              data-test-automation-confirm-failure
+            >{{this.failure}}</Callout>
+          {{/if}}
+        </Stack>
+      </AlertDialog>
+    {{/if}}
+    <style scoped>
+      .controls {
+        margin: 0 0 var(--boxel-sp-sm);
+      }
+      .controls__done,
+      .controls__held {
+        margin: 0 0 var(--boxel-sp-sm);
+      }
+      .controls__lead {
+        margin: 0 0 var(--boxel-sp-xs);
+      }
+      .controls__batches {
+        display: grid;
+        gap: var(--boxel-sp-4xs);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .controls__more {
+        margin: var(--boxel-sp-4xs) 0 0;
+      }
+    </style>
+  </template>
+}
+
 class Isolated extends Component<typeof Automation> {
   // Leads the triggers: how many there are, and how they combine.
   get showsBatchedAI() {
@@ -7506,6 +8243,13 @@ class Isolated extends Component<typeof Automation> {
     if (this.runList.current.state.page !== 1) {
       this.showRunsPage(1);
     }
+  };
+  // A run a control just started: the Runs section opens on page 1, read
+  // again so the page lists the new run, and the run's row opens.
+  showStartedRun = (runId: string) => {
+    this.runsOpen = true;
+    this.revealRun = { runId };
+    this.showRunsPage(1);
   };
   showRunsPage = (page: number) => this.runList.current.showPage(page);
   get runsSummary() {
@@ -7656,6 +8400,13 @@ class Isolated extends Component<typeof Automation> {
             @context={{@context}}
             @realm={{this.realmHref}}
             @status={{this.status}}
+          />
+          <AutomationControls
+            @model={{this.automation}}
+            @realm={{this.realmHref}}
+            @status={{this.status}}
+            @tools={{this.tools}}
+            @showRun={{this.showStartedRun}}
           />
           <StatusFacts @items={{this.statusItems}} @columns={{2}} />
           {{#if this.pauseProblems.length}}
