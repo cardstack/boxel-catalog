@@ -4,6 +4,7 @@ import GlimmerComponent from '@glimmer/component';
 import type Owner from '@ember/owner';
 import { cached, tracked } from '@glimmer/tracking';
 import { modifier } from 'ember-modifier';
+import { registerDestructor } from '@ember/destroyable';
 import { consume } from 'ember-provide-consume-context';
 import { resource, use } from 'ember-resources';
 import { TrackedObject, TrackedSet } from 'tracked-built-ins';
@@ -3965,42 +3966,101 @@ function automationRunReport(
 
 // The storage an automation's runs keep, as the realm server's
 // `_automation-storage` route answers it: each file a run created that still
-// exists, with its size on disk and in the index, and what one day of that
+// exists, with its size on disk and in the index, what one day of that
 // storage costs in credits at today's prices (null while the server has no
-// prices).
+// prices), the storage charges so far, newest first, and why and since when
+// Boxel isn't charging while the automation isn't active.
 interface AutomationStorage {
   switchedOn: boolean;
-  files: { path: string; run: string; fileBytes: number; indexBytes: number }[];
+  payer: string | null;
+  viewerIsPayer: boolean;
+  files: {
+    path: string;
+    run: string;
+    createdAt: string;
+    fileBytes: number;
+    indexBytes: number;
+    // How many of the automation's runs the run list puts ahead of the run
+    // that created the file, so the view can open the page that holds the
+    // run; null when the run no longer exists.
+    runsAhead?: number | null;
+  }[];
   fileBytes: number;
   indexBytes: number;
   dailyCredits: number | null;
+  charges?: StorageCharge[];
+  // Whether the automation has charges older than the ones listed.
+  moreCharges?: boolean;
+  chargeStopped?: StorageChargeStopped | null;
+}
+// One storage charge: `day` is the charge's last day and `firstDay` its
+// first, both YYYY-MM-DD in UTC; `days` is how many days in between Boxel
+// billed (a day the automation spent wholly stopped isn't billed); and
+// `fileBytes` and `indexBytes` are the bytes measured on those days,
+// averaged. A server that lists only `day` and `credits` reads as a charge
+// for that day alone.
+interface StorageCharge {
+  day: string;
+  firstDay?: string;
+  days?: number;
+  fileBytes?: number;
+  indexBytes?: number;
+  credits: number;
+}
+// Why Boxel isn't charging for the storage, and from which day (YYYY-MM-DD,
+// UTC) Boxel stopped charging.
+interface StorageChargeStopped {
+  state: 'paused' | 'waiting-for-credits' | 'waiting-for-key-approval' | 'done';
+  pauseReason: string | null;
+  since: string;
+  fromDay?: string;
 }
 type AutomationStorageState = {
   storage: AutomationStorage | undefined;
   failure: RunReadFailure | undefined;
 };
 
-// The automation's storage, read when a run opens and again whenever
-// `reread` is called: the run's log reads a new page, so a commit that saved
-// files shows in the storage too. A read that fails on the way is tried
-// again after `RUN_LOG_FOLLOW_MS`; a refusal ends the reads.
+// The automation's storage, read when a run opens or the isolated view's
+// Storage section shows, and again whenever `reread` is called or `refresh`
+// takes a new value: the run's log reads a new page, or the automation's last
+// run or state moves on, so a commit that saved files shows in the storage
+// too. The resource also runs again whenever anything `args` reads changes,
+// such as each status read; a run that changes neither the realm, the
+// automation nor `refresh` reads nothing. A read that fails on the way is
+// tried again after `RUN_LOG_FOLLOW_MS`; a refusal ends the reads.
 function automationStorage(
   owner: object,
   args: () => {
     realm: string | undefined;
     automation: string | undefined;
     tools: Tools | undefined;
+    refresh?: string;
   },
 ) {
-  let kept:
-    | { key: string; state: AutomationStorageState; reread: () => void }
-    | undefined;
+  // What lasts across the resource's runs for one realm and automation: the
+  // answer, the `refresh` last read for, and the read in flight and its
+  // retry, which a run that reads nothing leaves going.
+  type Kept = {
+    key: string;
+    state: AutomationStorageState;
+    reread: () => void;
+    refresh: string | undefined;
+    latest: number;
+    retry: ReturnType<typeof setTimeout> | undefined;
+  };
+  let kept: Kept | undefined;
+  let destroyed = false;
+  registerDestructor(owner, () => {
+    destroyed = true;
+    clearTimeout(kept?.retry);
+  });
   return use(
     owner,
-    resource(({ on }) => {
-      let { realm, automation, tools } = args();
+    resource(() => {
+      let { realm, automation, tools, refresh = '' } = args();
       let key = `${realm}|${automation}`;
       if (!kept || kept.key !== key) {
+        clearTimeout(kept?.retry);
         kept = {
           key,
           state: new TrackedObject<AutomationStorageState>({
@@ -4008,6 +4068,9 @@ function automationStorage(
             failure: undefined,
           }),
           reread: () => undefined,
+          refresh: undefined,
+          latest: 0,
+          retry: undefined,
         };
       }
       let current = kept;
@@ -4015,14 +4078,12 @@ function automationStorage(
       if (!realm || !automation || !tools) {
         return current;
       }
-      let ended = false;
-      let latest = 0;
-      let retry: ReturnType<typeof setTimeout> | undefined;
+      let gone = () => destroyed || kept !== current;
       let read = async () => {
-        let asked = ++latest;
-        clearTimeout(retry);
+        let asked = ++current.latest;
+        clearTimeout(current.retry);
         await Promise.resolve();
-        if (ended || asked !== latest || state.failure === 'refused') {
+        if (gone() || asked !== current.latest || state.failure === 'refused') {
           return;
         }
         let answer: ReadRunAnswer | undefined;
@@ -4031,7 +4092,7 @@ function automationStorage(
         } catch {
           answer = undefined;
         }
-        if (ended || asked !== latest) {
+        if (gone() || asked !== current.latest) {
           return;
         }
         let attributes = answer?.ok ? answer.body.data?.attributes : undefined;
@@ -4042,17 +4103,16 @@ function automationStorage(
           state.failure = 'refused';
         } else {
           state.failure = 'unreachable';
-          retry = setTimeout(() => read(), RUN_LOG_FOLLOW_MS);
+          current.retry = setTimeout(() => read(), RUN_LOG_FOLLOW_MS);
         }
       };
       current.reread = () => {
         read();
       };
-      read();
-      on.cleanup(() => {
-        ended = true;
-        clearTimeout(retry);
-      });
+      if (current.refresh !== refresh) {
+        current.refresh = refresh;
+        read();
+      }
       return current;
     }),
   );
@@ -4753,7 +4813,12 @@ class RunDetail extends GlimmerComponent<{
         'files',
       )} in all (${bytes(this.storageBytes)}).`,
     ];
-    if (this.dailyStorageCredits) {
+    let stopped = storage.chargeStopped;
+    if (stopped) {
+      sentences.push(
+        `The automation is ${STOPPED_STATE_WORDS[stopped.state]}, so Boxel doesn’t charge for the storage of those files.`,
+      );
+    } else if (this.dailyStorageCredits) {
       sentences.push(
         `A day of storage for those files costs ${this.dailyStorageCredits} credits.`,
       );
@@ -7122,6 +7187,433 @@ class KeyApprovalsSection extends GlimmerComponent<{
   </template>
 }
 
+// How the Storage section names a state in which Boxel doesn't charge for
+// storage.
+const STOPPED_STATE_WORDS: Record<StorageChargeStopped['state'], string> = {
+  paused: 'paused',
+  'waiting-for-credits': 'waiting for credits',
+  'waiting-for-key-approval': 'waiting for key approval',
+  done: 'done',
+};
+
+// How many storage charges a storage route that doesn't say whether it left
+// older ones out lists at most.
+const OLDER_SERVER_CHARGES_LISTED = 30;
+
+// The month a YYYY-MM-DD day falls in, as the YYYY-MM-01 day that starts it.
+function monthOf(day: string): string {
+  return `${day.slice(0, 7)}-01`;
+}
+
+// A cell of the charge history's first column: the days one charge covers,
+// or the month a subtotal adds up.
+type ChargeDaysCell =
+  | { kind: 'span'; firstDay: string; lastDay: string; days: number }
+  | { kind: 'month'; month: string };
+// A cell of the charge history's second column: the bytes billed a day.
+type ChargeBytesCell = { fileBytes: number; indexBytes: number } | undefined;
+
+// The isolated view's Storage section, for the realm's direct writers: every
+// file the automation's runs created that still exists, with totals, what a
+// day of that storage costs, whether Boxel is charging at all, and each
+// storage charge from the ledger with the days the charge covers, a month at
+// a time with each month's total.
+class StorageSection extends GlimmerComponent<{
+  Args: {
+    storage: AutomationStorage;
+    // Opens the Runs section on the run that created a file, at the page of
+    // the run list that holds the run.
+    showRun: (runId: string, page: number) => void;
+  };
+}> {
+  get files() {
+    return this.args.storage.files;
+  }
+  // Whether there is anything to total: a file, or a charge for files since
+  // deleted. With neither, the empty state says storage costs nothing yet.
+  get hasStorage() {
+    return this.files.length > 0 || this.charges.length > 0;
+  }
+  get charges(): StorageCharge[] {
+    return this.args.storage.charges ?? [];
+  }
+  // Whether the listed charges leave older ones out, so the oldest month
+  // listed may be missing some of its charges. A server that doesn't say
+  // lists at most 30 charges, so a list that long may be cut.
+  get chargesCut() {
+    return (
+      this.args.storage.moreCharges ??
+      this.charges.length >= OLDER_SERVER_CHARGES_LISTED
+    );
+  }
+  // Whether the current month's total may be missing charges: the list is
+  // cut inside the current month.
+  get thisMonthCut() {
+    let oldest = this.charges[this.charges.length - 1];
+    return (
+      this.chargesCut &&
+      oldest !== undefined &&
+      monthOf(oldest.day) === this.thisMonth
+    );
+  }
+  get stopped() {
+    return this.args.storage.chargeStopped ?? undefined;
+  }
+  get stoppedSentence() {
+    let stopped = this.stopped;
+    if (!stopped) {
+      return undefined;
+    }
+    return `The automation is ${STOPPED_STATE_WORDS[stopped.state]}, so Boxel doesn’t charge for the automation’s storage.`;
+  }
+  // The current UTC month, as the charges' days are UTC days.
+  get thisMonth() {
+    return monthOf(new Date().toISOString().slice(0, 10));
+  }
+  get chargedThisMonth() {
+    return this.charges
+      .filter(({ day }) => monthOf(day) === this.thisMonth)
+      .reduce((sum, charge) => sum + charge.credits, 0);
+  }
+  // A day of the storage, to two significant figures: a few small files cost
+  // a small fraction of a credit a day.
+  get dailyCharge() {
+    let { storage } = this.args;
+    if (!storage.switchedOn) {
+      return 'None while the automation is off';
+    }
+    if (this.stopped) {
+      return `None while the automation is ${STOPPED_STATE_WORDS[this.stopped.state]}`;
+    }
+    if (storage.dailyCredits == null) {
+      return 'Unknown';
+    }
+    return `${storage.dailyCredits.toLocaleString('en-US', {
+      maximumSignificantDigits: 2,
+    })} credits a day`;
+  }
+  // The totals, each a text or a byte count FormatBytes sets, as the file
+  // and charge rows set theirs.
+  get facts(): { label: string; value?: string; bytes?: number }[] {
+    let { storage } = this.args;
+    let month = this.chargedThisMonth;
+    return [
+      { label: 'Files', value: tally(storage.files.length) },
+      { label: 'On disk', bytes: storage.fileBytes },
+      { label: 'In the index', bytes: storage.indexBytes },
+      { label: 'Daily charge', value: this.dailyCharge },
+      {
+        label: 'Boxel charged this month',
+        value: `${this.thisMonthCut ? 'At least ' : ''}${tally(month)} ${
+          month === 1 ? 'credit' : 'credits'
+        }`,
+      },
+    ];
+  }
+  get chargeColumns(): StatementColumn[] {
+    return [
+      { key: 'days', label: 'Days', kind: 'custom' },
+      {
+        key: 'bytes',
+        label: 'Billed a day',
+        kind: 'custom',
+        priority: 'secondary',
+      },
+      {
+        key: 'credits',
+        label: 'Boxel Credits',
+        kind: 'number',
+        digits: 0,
+        width: '8rem',
+      },
+    ];
+  }
+  // The charges newest first, a month at a time, each month closing with
+  // the month's total. When the list leaves older charges out, the oldest
+  // month listed gets no total, since its charges may not all be listed.
+  get chargeRows(): StatementRow[] {
+    let rows: StatementRow[] = [];
+    let month: string | undefined;
+    let monthTotal = 0;
+    let closeMonth = (oldest = false) => {
+      if (month && !(oldest && this.chargesCut)) {
+        rows.push({
+          key: `month-${month}`,
+          role: 'subtotal',
+          cells: {
+            days: { kind: 'month', month } satisfies ChargeDaysCell,
+            credits: monthTotal,
+          },
+          data: { testAutomationStorageMonth: month.slice(0, 7) },
+        });
+      }
+    };
+    for (let charge of this.charges) {
+      let chargeMonth = monthOf(charge.day);
+      if (chargeMonth !== month) {
+        closeMonth();
+        month = chargeMonth;
+        monthTotal = 0;
+      }
+      monthTotal += charge.credits;
+      let days = charge.days ?? 1;
+      rows.push({
+        key: charge.day,
+        cells: {
+          days: {
+            kind: 'span',
+            firstDay: charge.firstDay ?? charge.day,
+            lastDay: charge.day,
+            days,
+          } satisfies ChargeDaysCell,
+          bytes: (days > 0 && charge.fileBytes != null
+            ? {
+                fileBytes: charge.fileBytes,
+                indexBytes: charge.indexBytes ?? 0,
+              }
+            : undefined) satisfies ChargeBytesCell,
+          credits: charge.credits,
+        },
+        data: { testAutomationStorageCharge: charge.day },
+      });
+    }
+    closeMonth(true);
+    return rows;
+  }
+  isBytes = (index: number) => this.facts[index]?.bytes != null;
+  bytesOf = (index: number) => this.facts[index]?.bytes ?? 0;
+  daysCell = (value: unknown) => value as ChargeDaysCell;
+  bytesCell = (value: unknown) => value as ChargeBytesCell;
+  isMonth = (cell: ChargeDaysCell) => cell.kind === 'month';
+  spansDays = (cell: ChargeDaysCell) =>
+    cell.kind === 'span' && cell.firstDay !== cell.lastDay;
+  dayCount = (cell: ChargeDaysCell) =>
+    cell.kind === 'span'
+      ? `Boxel billed ${tally(cell.days)} ${cell.days === 1 ? 'day' : 'days'}`
+      : '';
+  showRunName = (path: string) => `Show the run that created ${path}`;
+  // The run list's page that holds the run, or undefined when the run no
+  // longer exists or the server doesn't say where the run is.
+  runPage = (file: AutomationStorage['files'][number]) =>
+    typeof file.runsAhead === 'number'
+      ? Math.floor(file.runsAhead / RUNS_PAGE) + 1
+      : undefined;
+  showFileRun = (file: AutomationStorage['files'][number]) => {
+    let page = this.runPage(file);
+    if (page !== undefined) {
+      this.args.showRun(file.run, page);
+    }
+  };
+
+  <template>
+    {{#if this.stopped}}
+      <div class='storage__stopped'>
+        <Callout
+          @tone='info'
+          @title='Boxel isn’t charging for storage'
+          data-test-automation-storage-stopped={{this.stopped.state}}
+        >
+          <p>{{this.stoppedSentence}}
+            The files stay in the workspace, and Boxel charges again from the
+            day the automation’s status reads On again.</p>
+          {{#if this.stopped.fromDay}}
+            <p class='storage__from'>
+              Boxel doesn’t charge from
+              <span data-test-automation-storage-stopped-from><FormatDate
+                  @date={{this.stopped.fromDay}}
+                  @month='short'
+                  @day='numeric'
+                  @year='numeric'
+                /></span>
+            </p>
+          {{/if}}
+        </Callout>
+      </div>
+    {{/if}}
+    <p class='storage__lead' data-test-automation-storage-lead>
+      Boxel charges the automation’s payer for each day the automation’s status
+      reads On, for every file the automation’s runs created that still exists
+      and for the files’ entries in the workspace’s search index. Boxel charges
+      whole credits, so one charge covers the days since the charge before, once
+      those days cost at least 1 credit.
+    </p>
+    {{#if this.hasStorage}}
+      <Descriptions
+        @items={{this.facts}}
+        @columns={{3}}
+        @layout='vertical'
+        @size='s'
+        data-test-automation-storage-totals
+      >
+        <:value as |fact index|>
+          {{#if (this.isBytes index)}}
+            <FormatBytes @value={{this.bytesOf index}} @base='decimal' />
+          {{else}}
+            {{fact.value}}
+          {{/if}}
+        </:value>
+      </Descriptions>
+    {{/if}}
+
+    <h4 class='storage__heading'>Files</h4>
+    {{#if this.files.length}}
+      <Table
+        class='storage__files'
+        @label='Files the automation’s runs created'
+        @striped={{false}}
+        data-test-automation-storage-files
+      >
+        <:head>
+          <tr>
+            <th scope='col'>File</th>
+            <th scope='col'>Created</th>
+            <th scope='col'>On disk</th>
+            <th scope='col'>In the index</th>
+            <th scope='col'><VisuallyHidden>Run</VisuallyHidden></th>
+          </tr>
+        </:head>
+        <:body>
+          {{#each this.files as |file|}}
+            <tr data-test-automation-storage-file={{file.path}}>
+              <td><Token @value={{file.path}} @wrap={{true}} /></td>
+              <td><FormatDate
+                  @date={{file.createdAt}}
+                  @month='short'
+                  @day='numeric'
+                  @year='numeric'
+                  @hour='numeric'
+                  @minute='2-digit'
+                /></td>
+              <td data-test-automation-storage-file-bytes><FormatBytes
+                  @value={{file.fileBytes}}
+                  @base='decimal'
+                /></td>
+              <td data-test-automation-storage-index-bytes><FormatBytes
+                  @value={{file.indexBytes}}
+                  @base='decimal'
+                /></td>
+              <td>
+                {{#if (this.runPage file)}}
+                  <Button
+                    @appearance='link'
+                    @size='s'
+                    aria-label={{this.showRunName file.path}}
+                    {{on 'click' (fn this.showFileRun file)}}
+                    data-test-automation-storage-show-run={{file.run}}
+                  >Show the run</Button>
+                {{/if}}
+              </td>
+            </tr>
+          {{/each}}
+        </:body>
+      </Table>
+    {{else}}
+      <EmptyState
+        @size='s'
+        @texture={{false}}
+        @title={{if this.charges.length 'No files' 'Storage costs nothing yet'}}
+        @message={{if
+          this.charges.length
+          'No file the automation’s runs created still exists, so a day of storage costs nothing.'
+          'The automation’s runs haven’t created any files, so storage costs nothing yet. Boxel charges for storage once a run creates a file.'
+        }}
+        data-test-automation-storage-empty
+      />
+    {{/if}}
+
+    {{#if this.charges.length}}
+      <h4 class='storage__heading'>Charges</h4>
+      <StatementTable
+        @columns={{this.chargeColumns}}
+        @rows={{this.chargeRows}}
+        @label='Storage charges'
+        @zero='show'
+        @density='compact'
+        data-test-automation-storage-charges
+      >
+        <:cell as |value _row column|>
+          {{#if (eq column.key 'days')}}
+            {{#let (this.daysCell value) as |cell|}}
+              {{#if (this.isMonth cell)}}
+                Boxel charged in
+                <FormatDate
+                  @date={{cell.month}}
+                  @month='long'
+                  @year='numeric'
+                />
+              {{else}}
+                <span class='storage__span'>
+                  <span data-test-automation-storage-charge-days>
+                    {{#if (this.spansDays cell)}}
+                      <FormatDate
+                        @date={{cell.firstDay}}
+                        @month='short'
+                        @day='numeric'
+                      />
+                      –
+                    {{/if}}
+                    <FormatDate
+                      @date={{cell.lastDay}}
+                      @month='short'
+                      @day='numeric'
+                      @year='numeric'
+                    />
+                  </span>
+                  {{#if (this.spansDays cell)}}
+                    <span
+                      class='storage__count'
+                      data-test-automation-storage-charge-count
+                    >{{this.dayCount cell}}</span>
+                  {{/if}}
+                </span>
+              {{/if}}
+            {{/let}}
+          {{else}}
+            {{#let (this.bytesCell value) as |billed|}}
+              {{#if billed}}
+                <span data-test-automation-storage-charge-bytes>
+                  <FormatBytes @value={{billed.fileBytes}} @base='decimal' />
+                  on disk,
+                  <FormatBytes @value={{billed.indexBytes}} @base='decimal' />
+                  in the index
+                </span>
+              {{/if}}
+            {{/let}}
+          {{/if}}
+        </:cell>
+      </StatementTable>
+    {{/if}}
+    <style scoped>
+      .storage__stopped {
+        margin-block-end: var(--boxel-sp-sm);
+      }
+      .storage__from {
+        margin-block-start: var(--boxel-sp-4xs);
+        font-weight: 600;
+      }
+      .storage__lead {
+        margin: 0 0 var(--boxel-sp-sm);
+        color: var(--foreground);
+      }
+      .storage__heading {
+        margin: var(--boxel-sp) 0 var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
+      }
+      .storage__files {
+        --pretui-table-max-height: 20rem;
+      }
+      .storage__span {
+        display: grid;
+      }
+      .storage__count {
+        color: var(--muted-foreground);
+        font-size: var(--boxel-font-size-xs);
+      }
+    </style>
+  </template>
+}
+
 // Whether the way into the automations console shows: to a direct writer,
 // on a card that knows its realm, outside the console itself.
 function showsConsoleAction(
@@ -7483,6 +7975,30 @@ class Isolated extends Component<typeof Automation> {
   get showsRuns() {
     return this.runs.visible;
   }
+  // The automation's storage, read again whenever the automation's last run
+  // or state moves on, since a run that saves files adds to the storage and
+  // a state change starts or stops the charge.
+  private storageRead = automationStorage(this, () => ({
+    realm: this.directWriter ? this.realmHref : undefined,
+    automation: this.args.model.id,
+    tools: toolsOf(this.args.context),
+    refresh: [
+      this.status?.switchedOn ? this.status.state : 'off',
+      this.status?.lastRun?.runId,
+      this.status?.lastRun?.state,
+    ].join('|'),
+  }));
+  get storage() {
+    return this.storageRead.current.state.storage;
+  }
+  get storageFailure() {
+    return this.storageRead.current.state.failure;
+  }
+  // Only the realm's direct writers read the storage; the route refuses
+  // anyone else, and the section stays hidden for them.
+  get showsStorage() {
+    return this.directWriter && this.storageFailure !== 'refused';
+  }
   // The automation's notice, when the viewer is someone the notice is for.
   get notice(): AutomationNotice | undefined {
     let status = this.status;
@@ -7500,11 +8016,14 @@ class Isolated extends Component<typeof Automation> {
   toggleRuns = (open: boolean) => {
     this.runsOpen = open;
   };
-  showNoticeRun = (runId: string) => {
+  // Opens the Runs section on a run, at `page` of the run list: a notice's
+  // run is among the newest, and a stored file names how far down the list
+  // its run is.
+  showNoticeRun = (runId: string, page = 1) => {
     this.runsOpen = true;
     this.revealRun = { runId };
-    if (this.runList.current.state.page !== 1) {
-      this.showRunsPage(1);
+    if (this.runList.current.state.page !== page) {
+      this.showRunsPage(page);
     }
   };
   showRunsPage = (page: number) => this.runList.current.showPage(page);
@@ -7724,6 +8243,31 @@ class Isolated extends Component<typeof Automation> {
             @tools={{this.tools}}
             @reveal={{this.revealRun}}
           />
+        </PanelSection>
+      {{/if}}
+
+      {{#if this.showsStorage}}
+        <PanelSection
+          @title='Storage'
+          @collapsible={{false}}
+          data-test-automation-storage
+        >
+          {{#if this.storage}}
+            <StorageSection
+              @storage={{this.storage}}
+              @showRun={{this.showNoticeRun}}
+            />
+          {{else if this.storageFailure}}
+            <Callout
+              @tone='warning'
+              @title='Boxel couldn’t read the storage'
+              data-test-automation-storage-unreachable
+            >
+              Boxel tries again every few seconds.
+            </Callout>
+          {{else}}
+            <LoadingState @label='Loading the storage' />
+          {{/if}}
         </PanelSection>
       {{/if}}
 
