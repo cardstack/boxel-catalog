@@ -7195,6 +7195,11 @@ class StorageSection extends GlimmerComponent<{
   get files() {
     return this.args.storage.files;
   }
+  // Whether there is anything to total: a file, or a charge for files since
+  // deleted. With neither, the empty state says storage costs nothing yet.
+  get hasStorage() {
+    return this.files.length > 0 || this.charges.length > 0;
+  }
   get charges(): StorageCharge[] {
     return this.args.storage.charges ?? [];
   }
@@ -7334,24 +7339,28 @@ class StorageSection extends GlimmerComponent<{
 
   <template>
     {{#if this.stopped}}
-      <Callout
-        @tone='info'
-        @title='Boxel isn’t charging for storage'
-        data-test-automation-storage-stopped={{this.stopped.state}}
-      >
-        <p>{{this.stoppedSentence}}
+      <div class='storage__stopped'>
+        <Callout
+          @tone='info'
+          @title='Boxel isn’t charging for storage'
+          data-test-automation-storage-stopped={{this.stopped.state}}
+        >
+          <p>{{this.stoppedSentence}}
+            The files stay in the workspace, and Boxel charges again from the
+            day the automation’s status reads On again.</p>
           {{#if this.stopped.fromDay}}
-            Boxel stopped charging from
-            <span data-test-automation-storage-stopped-from><FormatDate
-                @date={{this.stopped.fromDay}}
-                @month='short'
-                @day='numeric'
-                @year='numeric'
-              /></span>.
+            <p class='storage__from'>
+              Not charged from
+              <span data-test-automation-storage-stopped-from><FormatDate
+                  @date={{this.stopped.fromDay}}
+                  @month='short'
+                  @day='numeric'
+                  @year='numeric'
+                /></span>
+            </p>
           {{/if}}
-          The files stay in the workspace, and Boxel charges again from the day
-          the automation’s status reads On again.</p>
-      </Callout>
+        </Callout>
+      </div>
     {{/if}}
     <p class='storage__lead' data-test-automation-storage-lead>
       Boxel charges the automation’s payer once a day for every file the
@@ -7360,21 +7369,23 @@ class StorageSection extends GlimmerComponent<{
       covers every day since the charge before, once those days cost at least 1
       credit.
     </p>
-    <Descriptions
-      @items={{this.facts}}
-      @columns={{3}}
-      @layout='vertical'
-      @size='s'
-      data-test-automation-storage-totals
-    >
-      <:value as |fact index|>
-        {{#if (this.isBytes index)}}
-          <FormatBytes @value={{this.bytesOf index}} @base='decimal' />
-        {{else}}
-          {{fact.value}}
-        {{/if}}
-      </:value>
-    </Descriptions>
+    {{#if this.hasStorage}}
+      <Descriptions
+        @items={{this.facts}}
+        @columns={{3}}
+        @layout='vertical'
+        @size='s'
+        data-test-automation-storage-totals
+      >
+        <:value as |fact index|>
+          {{#if (this.isBytes index)}}
+            <FormatBytes @value={{this.bytesOf index}} @base='decimal' />
+          {{else}}
+            {{fact.value}}
+          {{/if}}
+        </:value>
+      </Descriptions>
+    {{/if}}
 
     <h4 class='storage__heading'>Files</h4>
     {{#if this.files.length}}
@@ -7506,6 +7517,13 @@ class StorageSection extends GlimmerComponent<{
       </StatementTable>
     {{/if}}
     <style scoped>
+      .storage__stopped {
+        margin-block-end: var(--boxel-sp-sm);
+      }
+      .storage__from {
+        margin-block-start: var(--boxel-sp-4xs);
+        font-weight: 600;
+      }
       .storage__lead {
         margin: 0 0 var(--boxel-sp-sm);
         color: var(--foreground);
