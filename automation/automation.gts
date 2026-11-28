@@ -7568,7 +7568,13 @@ class AutomationControls extends GlimmerComponent<{
   @tracked failure: string | undefined;
   // What the last control that succeeded said, kept until the next one.
   @tracked done:
-    | { action: ControlAction; becamePayer?: boolean; waitsForKeys?: boolean }
+    | {
+        action: ControlAction;
+        // The status shown when the control landed, until the next read.
+        statusBefore: ServerStatus;
+        becamePayer?: boolean;
+        waitsForKeys?: boolean;
+      }
     | undefined;
 
   get switchedOn() {
@@ -7786,6 +7792,7 @@ class AutomationControls extends GlimmerComponent<{
         | undefined;
       this.done = {
         action,
+        statusBefore: this.args.status,
         becamePayer,
         waitsForKeys: approvals ? !approvals.approved : false,
       };
@@ -7803,25 +7810,31 @@ class AutomationControls extends GlimmerComponent<{
     }
   };
 
-  // What the last control said, while the status still reads as that control
-  // left the automation: a later pause, resume, remove or switch-on by anyone
-  // makes it stale.
+  // What the last control said: while the status read before the control
+  // landed is still the one shown, and then while the status reads as the
+  // control left the automation. A later pause, resume, remove or switch-on
+  // by anyone makes it stale.
   get shownDone() {
     let done = this.done;
     if (!done) {
       return undefined;
     }
     let status = this.args.status;
+    let outcome: boolean;
     switch (done.action) {
       case 'pause':
-        return this.state === 'paused' ? done : undefined;
+        outcome = this.state === 'paused';
+        break;
       case 'resume':
-        return status.switchedOn && this.state !== 'paused' ? done : undefined;
+        outcome = status.switchedOn && this.state !== 'paused';
+        break;
       case 'remove':
-        return status.switchedOn ? undefined : done;
+        outcome = !status.switchedOn;
+        break;
       default:
         return done;
     }
+    return outcome || status === done.statusBefore ? done : undefined;
   }
   get doneTitle() {
     switch (this.done?.action) {
