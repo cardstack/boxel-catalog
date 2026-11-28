@@ -3965,31 +3965,67 @@ function automationRunReport(
 
 // The storage an automation's runs keep, as the realm server's
 // `_automation-storage` route answers it: each file a run created that still
-// exists, with its size on disk and in the index, and what one day of that
+// exists, with its size on disk and in the index, what one day of that
 // storage costs in credits at today's prices (null while the server has no
-// prices).
+// prices), the storage charges so far, newest first, and why and since when
+// Boxel isn't charging while the automation isn't active.
 interface AutomationStorage {
   switchedOn: boolean;
-  files: { path: string; run: string; fileBytes: number; indexBytes: number }[];
+  payer: string | null;
+  viewerIsPayer: boolean;
+  files: {
+    path: string;
+    run: string;
+    createdAt: string;
+    fileBytes: number;
+    indexBytes: number;
+  }[];
   fileBytes: number;
   indexBytes: number;
   dailyCredits: number | null;
+  charges?: StorageCharge[];
+  chargeStopped?: StorageChargeStopped | null;
+}
+// One storage charge: `day` is the charge's last day and `firstDay` its
+// first, both YYYY-MM-DD in UTC; `days` is how many days in between Boxel
+// billed (a day the automation spent wholly stopped isn't billed); and
+// `fileBytes` and `indexBytes` are the bytes measured on those days,
+// averaged. A server that lists only `day` and `credits` reads as a charge
+// for that day alone.
+interface StorageCharge {
+  day: string;
+  firstDay?: string;
+  days?: number;
+  fileBytes?: number;
+  indexBytes?: number;
+  credits: number;
+}
+// Why Boxel isn't charging for the storage, and from which day (YYYY-MM-DD,
+// UTC) Boxel stopped charging.
+interface StorageChargeStopped {
+  state: 'paused' | 'waiting-for-credits' | 'waiting-for-key-approval' | 'done';
+  pauseReason: string | null;
+  since: string;
+  fromDay?: string;
 }
 type AutomationStorageState = {
   storage: AutomationStorage | undefined;
   failure: RunReadFailure | undefined;
 };
 
-// The automation's storage, read when a run opens and again whenever
-// `reread` is called: the run's log reads a new page, so a commit that saved
-// files shows in the storage too. A read that fails on the way is tried
-// again after `RUN_LOG_FOLLOW_MS`; a refusal ends the reads.
+// The automation's storage, read when a run opens or the isolated view's
+// Storage section shows, and again whenever `reread` is called or `refresh`
+// changes: the run's log reads a new page, or the automation's last run or
+// state moves on, so a commit that saved files shows in the storage too. A
+// read that fails on the way is tried again after `RUN_LOG_FOLLOW_MS`; a
+// refusal ends the reads.
 function automationStorage(
   owner: object,
   args: () => {
     realm: string | undefined;
     automation: string | undefined;
     tools: Tools | undefined;
+    refresh?: string;
   },
 ) {
   let kept:
@@ -7122,6 +7158,380 @@ class KeyApprovalsSection extends GlimmerComponent<{
   </template>
 }
 
+// How the Storage section names a state in which Boxel doesn't charge for
+// storage.
+const STOPPED_STATE_WORDS: Record<StorageChargeStopped['state'], string> = {
+  paused: 'paused',
+  'waiting-for-credits': 'waiting for credits',
+  'waiting-for-key-approval': 'waiting for key approval',
+  done: 'done',
+};
+
+// The month a YYYY-MM-DD day falls in, as the YYYY-MM-01 day that starts it.
+function monthOf(day: string): string {
+  return `${day.slice(0, 7)}-01`;
+}
+
+// A cell of the charge history's first column: the days one charge covers,
+// or the month a subtotal adds up.
+type ChargeDaysCell =
+  | { kind: 'span'; firstDay: string; lastDay: string; days: number }
+  | { kind: 'month'; month: string };
+// A cell of the charge history's second column: the bytes billed a day.
+type ChargeBytesCell = { fileBytes: number; indexBytes: number } | undefined;
+
+// The isolated view's Storage section, for the realm's direct writers: every
+// file the automation's runs created that still exists, with totals, what a
+// day of that storage costs, whether Boxel is charging at all, and each
+// storage charge from the ledger with the days the charge covers, a month at
+// a time with each month's total.
+class StorageSection extends GlimmerComponent<{
+  Args: {
+    storage: AutomationStorage;
+    // Opens the Runs section on the run that created a file.
+    showRun: (runId: string) => void;
+  };
+}> {
+  get files() {
+    return this.args.storage.files;
+  }
+  get charges(): StorageCharge[] {
+    return this.args.storage.charges ?? [];
+  }
+  get stopped() {
+    return this.args.storage.chargeStopped ?? undefined;
+  }
+  get stoppedSentence() {
+    let stopped = this.stopped;
+    if (!stopped) {
+      return undefined;
+    }
+    return `The automation is ${STOPPED_STATE_WORDS[stopped.state]}, so Boxel doesn’t charge for the automation’s storage.`;
+  }
+  // The current UTC month, as the charges' days are UTC days.
+  get thisMonth() {
+    return monthOf(new Date().toISOString().slice(0, 10));
+  }
+  get chargedThisMonth() {
+    return this.charges
+      .filter(({ day }) => monthOf(day) === this.thisMonth)
+      .reduce((sum, charge) => sum + charge.credits, 0);
+  }
+  // A day of the storage, to two significant figures: a few small files cost
+  // a small fraction of a credit a day.
+  get dailyCharge() {
+    let { storage } = this.args;
+    if (!storage.switchedOn) {
+      return 'None while the automation is off';
+    }
+    if (this.stopped) {
+      return `None while the automation is ${STOPPED_STATE_WORDS[this.stopped.state]}`;
+    }
+    if (storage.dailyCredits == null) {
+      return 'Unknown';
+    }
+    return `${storage.dailyCredits.toLocaleString('en-US', {
+      maximumSignificantDigits: 2,
+    })} credits a day`;
+  }
+  // The totals, each a text or a byte count FormatBytes sets, as the file
+  // and charge rows set theirs.
+  get facts(): { label: string; value?: string; bytes?: number }[] {
+    let { storage } = this.args;
+    let month = this.chargedThisMonth;
+    return [
+      { label: 'Files', value: tally(storage.files.length) },
+      { label: 'On disk', bytes: storage.fileBytes },
+      { label: 'In the index', bytes: storage.indexBytes },
+      { label: 'Daily charge', value: this.dailyCharge },
+      {
+        label: 'Charged this month',
+        value: `${tally(month)} ${month === 1 ? 'credit' : 'credits'}`,
+      },
+    ];
+  }
+  get chargeColumns(): StatementColumn[] {
+    return [
+      { key: 'days', label: 'Days', kind: 'custom' },
+      {
+        key: 'bytes',
+        label: 'Billed a day',
+        kind: 'custom',
+        priority: 'secondary',
+      },
+      {
+        key: 'credits',
+        label: 'Boxel Credits',
+        kind: 'number',
+        digits: 0,
+        width: '8rem',
+      },
+    ];
+  }
+  // The charges newest first, a month at a time, each month closing with
+  // the month's total.
+  get chargeRows(): StatementRow[] {
+    let rows: StatementRow[] = [];
+    let month: string | undefined;
+    let monthTotal = 0;
+    let closeMonth = () => {
+      if (month) {
+        rows.push({
+          key: `month-${month}`,
+          role: 'subtotal',
+          cells: {
+            days: { kind: 'month', month } satisfies ChargeDaysCell,
+            credits: monthTotal,
+          },
+          data: { testAutomationStorageMonth: month.slice(0, 7) },
+        });
+      }
+    };
+    for (let charge of this.charges) {
+      let chargeMonth = monthOf(charge.day);
+      if (chargeMonth !== month) {
+        closeMonth();
+        month = chargeMonth;
+        monthTotal = 0;
+      }
+      monthTotal += charge.credits;
+      let days = charge.days ?? 1;
+      rows.push({
+        key: charge.day,
+        cells: {
+          days: {
+            kind: 'span',
+            firstDay: charge.firstDay ?? charge.day,
+            lastDay: charge.day,
+            days,
+          } satisfies ChargeDaysCell,
+          bytes: (days > 0 && charge.fileBytes != null
+            ? {
+                fileBytes: charge.fileBytes,
+                indexBytes: charge.indexBytes ?? 0,
+              }
+            : undefined) satisfies ChargeBytesCell,
+          credits: charge.credits,
+        },
+        data: { testAutomationStorageCharge: charge.day },
+      });
+    }
+    closeMonth();
+    return rows;
+  }
+  isBytes = (index: number) => this.facts[index]?.bytes != null;
+  bytesOf = (index: number) => this.facts[index]?.bytes ?? 0;
+  daysCell = (value: unknown) => value as ChargeDaysCell;
+  bytesCell = (value: unknown) => value as ChargeBytesCell;
+  isMonth = (cell: ChargeDaysCell) => cell.kind === 'month';
+  spansDays = (cell: ChargeDaysCell) =>
+    cell.kind === 'span' && cell.firstDay !== cell.lastDay;
+  dayCount = (cell: ChargeDaysCell) =>
+    cell.kind === 'span'
+      ? `${tally(cell.days)} ${cell.days === 1 ? 'day' : 'days'} billed`
+      : '';
+  showRunName = (path: string) => `Show the run that created ${path}`;
+
+  <template>
+    {{#if this.stopped}}
+      <Callout
+        @tone='info'
+        @title='Boxel isn’t charging for storage'
+        data-test-automation-storage-stopped={{this.stopped.state}}
+      >
+        <p>{{this.stoppedSentence}}
+          {{#if this.stopped.fromDay}}
+            Boxel stopped charging from
+            <span data-test-automation-storage-stopped-from><FormatDate
+                @date={{this.stopped.fromDay}}
+                @month='short'
+                @day='numeric'
+                @year='numeric'
+              /></span>.
+          {{/if}}
+          The files stay in the workspace, and Boxel charges again from the day
+          the automation’s status reads On again.</p>
+      </Callout>
+    {{/if}}
+    <p class='storage__lead' data-test-automation-storage-lead>
+      Boxel charges the automation’s payer once a day for every file the
+      automation’s runs created that still exists, and for the files’ entries in
+      the workspace’s search index. Boxel charges whole credits, so one charge
+      covers every day since the charge before, once those days cost at least 1
+      credit.
+    </p>
+    <Descriptions
+      @items={{this.facts}}
+      @columns={{3}}
+      @layout='vertical'
+      @size='s'
+      data-test-automation-storage-totals
+    >
+      <:value as |fact index|>
+        {{#if (this.isBytes index)}}
+          <FormatBytes @value={{this.bytesOf index}} @base='decimal' />
+        {{else}}
+          {{fact.value}}
+        {{/if}}
+      </:value>
+    </Descriptions>
+
+    <h4 class='storage__heading'>Files</h4>
+    {{#if this.files.length}}
+      <Table
+        class='storage__files'
+        @label='Files the automation’s runs created'
+        @striped={{false}}
+        data-test-automation-storage-files
+      >
+        <:head>
+          <tr>
+            <th scope='col'>File</th>
+            <th scope='col'>Created</th>
+            <th scope='col'>On disk</th>
+            <th scope='col'>In the index</th>
+            <th scope='col'><VisuallyHidden>Run</VisuallyHidden></th>
+          </tr>
+        </:head>
+        <:body>
+          {{#each this.files as |file|}}
+            <tr data-test-automation-storage-file={{file.path}}>
+              <td class='storage__path'><Token
+                  @value={{file.path}}
+                  @wrap={{true}}
+                /></td>
+              <td><FormatDate
+                  @date={{file.createdAt}}
+                  @month='short'
+                  @day='numeric'
+                  @year='numeric'
+                  @hour='numeric'
+                  @minute='2-digit'
+                /></td>
+              <td data-test-automation-storage-file-bytes><FormatBytes
+                  @value={{file.fileBytes}}
+                  @base='decimal'
+                /></td>
+              <td data-test-automation-storage-index-bytes><FormatBytes
+                  @value={{file.indexBytes}}
+                  @base='decimal'
+                /></td>
+              <td>
+                <Button
+                  @appearance='link'
+                  @size='s'
+                  aria-label={{this.showRunName file.path}}
+                  data-test-automation-storage-show-run={{file.run}}
+                  {{on 'click' (fn @showRun file.run)}}
+                >Show the run</Button>
+              </td>
+            </tr>
+          {{/each}}
+        </:body>
+      </Table>
+    {{else}}
+      <EmptyState
+        @size='s'
+        @texture={{false}}
+        @title={{if this.charges.length 'No files' 'Storage costs nothing yet'}}
+        @message={{if
+          this.charges.length
+          'No file the automation’s runs created still exists, so a day of storage costs nothing.'
+          'The automation’s runs haven’t created any files, so storage costs nothing yet. Boxel charges for storage once a run saves a file.'
+        }}
+        data-test-automation-storage-empty
+      />
+    {{/if}}
+
+    {{#if this.charges.length}}
+      <h4 class='storage__heading'>Charges</h4>
+      <StatementTable
+        @columns={{this.chargeColumns}}
+        @rows={{this.chargeRows}}
+        @label='Storage charges'
+        @zero='show'
+        @density='compact'
+        data-test-automation-storage-charges
+      >
+        <:cell as |value _row column|>
+          {{#if (eq column.key 'days')}}
+            {{#let (this.daysCell value) as |cell|}}
+              {{#if (this.isMonth cell)}}
+                Charged in
+                <FormatDate
+                  @date={{cell.month}}
+                  @month='long'
+                  @year='numeric'
+                />
+              {{else}}
+                <span class='storage__span'>
+                  <span data-test-automation-storage-charge-days>
+                    {{#if (this.spansDays cell)}}
+                      <FormatDate
+                        @date={{cell.firstDay}}
+                        @month='short'
+                        @day='numeric'
+                      />
+                      –
+                    {{/if}}
+                    <FormatDate
+                      @date={{cell.lastDay}}
+                      @month='short'
+                      @day='numeric'
+                      @year='numeric'
+                    />
+                  </span>
+                  {{#if (this.spansDays cell)}}
+                    <span
+                      class='storage__count'
+                      data-test-automation-storage-charge-count
+                    >{{this.dayCount cell}}</span>
+                  {{/if}}
+                </span>
+              {{/if}}
+            {{/let}}
+          {{else}}
+            {{#let (this.bytesCell value) as |billed|}}
+              {{#if billed}}
+                <span data-test-automation-storage-charge-bytes>
+                  <FormatBytes @value={{billed.fileBytes}} @base='decimal' />
+                  on disk,
+                  <FormatBytes @value={{billed.indexBytes}} @base='decimal' />
+                  in the index
+                </span>
+              {{/if}}
+            {{/let}}
+          {{/if}}
+        </:cell>
+      </StatementTable>
+    {{/if}}
+    <style scoped>
+      .storage__lead {
+        margin: 0 0 var(--boxel-sp-sm);
+        color: var(--foreground);
+      }
+      .storage__heading {
+        margin: var(--boxel-sp) 0 var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
+      }
+      .storage__files {
+        --pretui-table-max-height: 20rem;
+      }
+      .storage__path {
+        overflow-wrap: anywhere;
+      }
+      .storage__span {
+        display: grid;
+      }
+      .storage__count {
+        color: var(--muted-foreground);
+        font-size: var(--boxel-font-size-xs);
+      }
+    </style>
+  </template>
+}
+
 // Whether the way into the automations console shows: to a direct writer,
 // on a card that knows its realm, outside the console itself.
 function showsConsoleAction(
@@ -7483,6 +7893,30 @@ class Isolated extends Component<typeof Automation> {
   get showsRuns() {
     return this.runs.visible;
   }
+  // The automation's storage, read again whenever the automation's last run
+  // or state moves on, since a run that saves files adds to the storage and
+  // a state change starts or stops the charge.
+  private storageRead = automationStorage(this, () => ({
+    realm: this.directWriter ? this.realmHref : undefined,
+    automation: this.args.model.id,
+    tools: toolsOf(this.args.context),
+    refresh: [
+      this.status?.switchedOn ? this.status.state : 'off',
+      this.status?.lastRun?.runId,
+      this.status?.lastRun?.state,
+    ].join('|'),
+  }));
+  get storage() {
+    return this.storageRead.current.state.storage;
+  }
+  get storageFailure() {
+    return this.storageRead.current.state.failure;
+  }
+  // Only the realm's direct writers read the storage; the route refuses
+  // anyone else, and the section stays hidden for them.
+  get showsStorage() {
+    return this.directWriter && this.storageFailure !== 'refused';
+  }
   // The automation's notice, when the viewer is someone the notice is for.
   get notice(): AutomationNotice | undefined {
     let status = this.status;
@@ -7724,6 +8158,32 @@ class Isolated extends Component<typeof Automation> {
             @tools={{this.tools}}
             @reveal={{this.revealRun}}
           />
+        </PanelSection>
+      {{/if}}
+
+      {{#if this.showsStorage}}
+        <PanelSection
+          @title='Storage'
+          @collapsible={{false}}
+          data-test-automation-storage
+        >
+          {{#if this.storage}}
+            <StorageSection
+              @storage={{this.storage}}
+              @showRun={{this.showNoticeRun}}
+            />
+          {{else if this.storageFailure}}
+            <Callout
+              @tone='warning'
+              @title='Boxel couldn’t read the storage'
+              data-test-automation-storage-unreachable
+            >
+              Boxel couldn’t reach the realm server to read the automation’s
+              storage. Boxel tries again every few seconds.
+            </Callout>
+          {{else}}
+            <LoadingState @label='Loading the storage' />
+          {{/if}}
         </PanelSection>
       {{/if}}
 
